@@ -33,11 +33,20 @@ const CATEGORY_OPTIONS = [
   { value: "done", label: "Done" },
 ];
 
-const CATEGORY_COLORS: Record<string, string> = {
-  todo: "bg-ui-bg-tertiary text-ui-text",
-  inprogress: "bg-status-info/20 text-status-info",
-  done: "bg-status-success/20 text-status-success",
-};
+const CATEGORY_BADGE_VARIANTS = {
+  todo: "neutral",
+  inprogress: "info",
+  done: "success",
+} as const;
+
+const DEFAULT_CATEGORY_BADGE_VARIANT = "neutral";
+
+function getCategoryBadgeTone(category: string) {
+  return (
+    CATEGORY_BADGE_VARIANTS[category as keyof typeof CATEGORY_BADGE_VARIANTS] ??
+    DEFAULT_CATEGORY_BADGE_VARIANT
+  );
+}
 
 /** Workflow state editor for customizing project issue states. */
 export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettingsProps) {
@@ -238,7 +247,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                 </Typography>
                 <Flex gap="sm" wrap>
                   {groupedStates[category].map((state) => (
-                    <Badge key={state.id} className={CATEGORY_COLORS[state.category]}>
+                    <Badge key={state.id} statusTone={getCategoryBadgeTone(state.category)}>
                       {state.name}
                     </Badge>
                   ))}

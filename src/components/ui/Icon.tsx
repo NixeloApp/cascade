@@ -10,6 +10,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { LucideIcon } from "lucide-react";
 import { forwardRef, type SVGProps } from "react";
 import { cn } from "@/lib/utils";
+import { type IconTone, iconToneClasses } from "./icon-tones";
 
 const iconVariants = cva("", {
   variants: {
@@ -21,17 +22,7 @@ const iconVariants = cva("", {
       lg: "w-6 h-6",
       xl: "w-8 h-8",
     },
-    tone: {
-      default: "",
-      secondary: "text-ui-text-secondary",
-      tertiary: "text-ui-text-tertiary",
-      brand: "text-brand",
-      success: "text-status-success",
-      warning: "text-status-warning",
-      error: "text-status-error",
-      info: "text-status-info",
-      accent: "text-accent",
-    },
+    tone: iconToneClasses,
     animation: {
       none: "",
       pulse: "animate-pulse",
@@ -52,7 +43,7 @@ interface IconProps
     VariantProps<typeof iconVariants> {
   /** The Lucide icon component to render */
   icon: LucideIcon;
-  /** Additional className for the icon */
+  /** Additional className for layout/animation details not owned by size/tone */
   className?: string;
 }
 
@@ -64,7 +55,7 @@ interface IconProps
  * import { Bug, Calendar } from "@/lib/icons";
  *
  * <Icon icon={Bug} size="lg" />
- * <Icon icon={Calendar} size="sm" className="text-brand" />
+ * <Icon icon={Calendar} size="sm" tone="brand" />
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
@@ -80,4 +71,5 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
 );
 Icon.displayName = "Icon";
 
-export { iconVariants };
+export { iconToneClasses, iconVariants };
+export type { IconTone };

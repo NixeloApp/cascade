@@ -83,7 +83,10 @@ describe("issue queries", () => {
       // Get the issue to find its key
       const issue = await t.run(async (runCtx) => runCtx.db.get(issueId));
 
-      const result = await ctx.asUser.query(api.issues.queries.getByKey, { key: issue?.key });
+      const result = await ctx.asUser.query(api.issues.queries.getByKey, {
+        key: issue?.key,
+        organizationId: ctx.organizationId,
+      });
 
       expect(result).not.toBeNull();
       expect(result?.title).toBe("Find by Key");
@@ -92,6 +95,7 @@ describe("issue queries", () => {
     it("should return null for non-existent key", async () => {
       const result = await ctx.asUser.query(api.issues.queries.getByKey, {
         key: "NONEXISTENT-999",
+        organizationId: ctx.organizationId,
       });
       expect(result).toBeNull();
     });
@@ -103,8 +107,41 @@ describe("issue queries", () => {
       const otherUserId = await createTestUser(t);
       const asOther = asAuthenticatedUser(t, otherUserId);
 
-      const result = await asOther.query(api.issues.queries.getByKey, { key: issue?.key });
+      const result = await asOther.query(api.issues.queries.getByKey, {
+        key: issue?.key,
+        organizationId: ctx.organizationId,
+      });
       expect(result).toBeNull();
+    });
+
+    it("should return the issue from the requested organization when keys collide", async () => {
+      const firstProjectId = await createProjectInOrganization(t, ctx.userId, ctx.organizationId, {
+        key: "DEMO",
+      });
+      const firstIssueId = await createTestIssue(t, firstProjectId, ctx.userId, {
+        title: "First org issue",
+      });
+
+      const otherContext = await createTestContext(t, { email: "other-org@example.com" });
+      const secondProjectId = await createProjectInOrganization(
+        t,
+        otherContext.userId,
+        otherContext.organizationId,
+        { key: "DEMO" },
+      );
+      await createTestIssue(t, secondProjectId, otherContext.userId, {
+        title: "Second org issue",
+      });
+
+      const issue = await t.run(async (runCtx) => runCtx.db.get(firstIssueId));
+      const result = await ctx.asUser.query(api.issues.queries.getByKey, {
+        key: issue?.key,
+        organizationId: ctx.organizationId,
+      });
+
+      expect(result).not.toBeNull();
+      expect(result?.title).toBe("First org issue");
+      expect(result?.organizationId).toBe(ctx.organizationId);
     });
   });
 

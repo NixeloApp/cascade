@@ -69,7 +69,7 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
         <Card padding="xl" variant="ghost">
           <Stack align="center" gap="lg">
             <IconCircle size="md" variant="success">
-              <Icon icon={CheckCircle} size="lg" className="text-status-success" />
+              <Icon icon={CheckCircle} size="lg" tone="success" />
             </IconCircle>
             <Stack align="center" gap="sm">
               <Typography color="secondary">
@@ -91,7 +91,7 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
         <Card padding="xl" variant="ghost">
           <Stack align="center" gap="lg">
             <IconCircle size="md" variant="warning">
-              <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
+              <Icon icon={AlertTriangle} size="lg" tone="warning" />
             </IconCircle>
             <Typography color="secondary" className="text-center">
               This unsubscribe link is invalid or has expired.
@@ -107,7 +107,7 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
       <Card padding="xl" variant="ghost">
         <Stack align="center" gap="lg">
           <IconCircle size="md" variant="error">
-            <Icon icon={XCircle} size="lg" className="text-status-error" />
+            <Icon icon={XCircle} size="lg" tone="error" />
           </IconCircle>
           <Typography color="secondary" className="text-center">
             We couldn't process your unsubscribe request.

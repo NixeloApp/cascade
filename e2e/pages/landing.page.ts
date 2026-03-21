@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 import { isLocatorVisible } from "../utils/locator-state";
 import { BasePage } from "./base.page";
 
@@ -100,12 +101,8 @@ export class LandingPage extends BasePage {
     this.learnMoreLinks = page.getByRole("link", { name: /learn more/i });
 
     // Proof / Pricing Section
-    this.proofHeading = page.getByRole("heading", {
-      name: /better product ops usually starts with fewer disconnected surfaces/i,
-    });
-    this.pricingHeading = page.getByRole("heading", {
-      name: /pricing that scales with your team/i,
-    });
+    this.proofHeading = page.getByTestId(TEST_IDS.LANDING.PROOF_SECTION);
+    this.pricingHeading = page.getByTestId(TEST_IDS.LANDING.PRICING_SECTION);
     this.pricingStarterPlan = page.getByRole("heading", { name: /^starter$/i });
     this.pricingTeamPlan = page.getByRole("heading", { name: /^team$/i });
     this.pricingEnterprisePlan = page.getByRole("heading", { name: /^enterprise$/i });

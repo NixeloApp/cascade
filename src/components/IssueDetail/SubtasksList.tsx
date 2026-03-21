@@ -34,6 +34,7 @@ interface SubtasksListProps {
   issueId: Id<"issues">;
   projectId: Id<"projects">;
   subtasks: Subtask[] | undefined;
+  showHeading?: boolean;
 }
 
 /**
@@ -41,7 +42,12 @@ interface SubtasksListProps {
  * Includes progress tracking, creation form, and list
  * Extracted from IssueDetailModal for better organization
  */
-export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps) {
+export function SubtasksList({
+  issueId,
+  projectId,
+  subtasks,
+  showHeading = true,
+}: SubtasksListProps) {
   const [isCreatingSubtask, setIsCreatingSubtask] = useState(false);
   const [subtaskTitle, setSubtaskTitle] = useState("");
 
@@ -74,14 +80,20 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
   return (
     <Stack gap="sm">
       <Flex justify="between" align="center">
-        <Typography variant="label">
-          Sub-tasks
-          {totalSubtasks > 0 && (
-            <Typography variant="caption" color="tertiary" as="span" className="ml-2">
-              ({completedSubtasks}/{totalSubtasks} completed)
-            </Typography>
-          )}
-        </Typography>
+        {showHeading ? (
+          <Typography variant="label">
+            Sub-tasks
+            {totalSubtasks > 0 && (
+              <Typography variant="caption" color="tertiary" as="span" className="ml-2">
+                ({completedSubtasks}/{totalSubtasks} completed)
+              </Typography>
+            )}
+          </Typography>
+        ) : totalSubtasks > 0 ? (
+          <Typography variant="meta" color="secondary">
+            {`${completedSubtasks}/${totalSubtasks} completed`}
+          </Typography>
+        ) : null}
         <Button variant="ghost" size="sm" onClick={() => setIsCreatingSubtask(true)}>
           + Add Sub-task
         </Button>
@@ -165,7 +177,7 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
       ) : (
         !isCreatingSubtask && (
           <Typography variant="muted" className="italic">
-            No sub-tasks yet
+            No subtasks yet
           </Typography>
         )
       )}

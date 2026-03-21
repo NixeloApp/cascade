@@ -34,10 +34,18 @@ describe("HeroSection", () => {
     );
   });
 
+  it("renders the compact proof signals under the hero actions", () => {
+    render(<HeroSection />);
+
+    expect(screen.getByText("Built for product, ops, and client delivery")).toBeInTheDocument();
+    expect(screen.getByText("AI-native search and action layer")).toBeInTheDocument();
+    expect(screen.getByText("Less context duplicated across tools")).toBeInTheDocument();
+  });
+
   it("renders the product showcase preview", () => {
     render(<HeroSection />);
 
-    expect(screen.getByText("Live workspace preview")).toBeInTheDocument();
+    expect(screen.getByText("Workspace cockpit")).toBeInTheDocument();
     expect(screen.getByText("Product control tower")).toBeInTheDocument();
     expect(screen.getByText("AI workspace assistant")).toBeInTheDocument();
   });

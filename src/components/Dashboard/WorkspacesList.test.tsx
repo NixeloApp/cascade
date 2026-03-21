@@ -82,7 +82,11 @@ describe("WorkspacesList", () => {
     render(<WorkspacesList {...defaultProps} projects={[]} />);
 
     expect(screen.getByText("No projects")).toBeInTheDocument();
-    expect(screen.getByText("You're not a member of any projects yet")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Projects you belong to will show their board, docs, and tracked work here.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("should render Go to Workspaces button in empty state", () => {

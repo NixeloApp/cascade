@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Camera, ImageIcon } from "lucide-react";
 import { useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid, GridItem } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import {
@@ -69,7 +69,7 @@ type ProfileUser = {
  */
 export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
-    <Grid cols={2} colsMd={3} colsLg={5} gap="sm">
+    <Grid cols={2} colsSm={3} colsLg={5} gap="sm">
       {USER_STATS_ITEMS.map((item) => (
         <Card key={item.key} recipe="profileMetricTile" padding="sm">
           <Stack gap="xs" align="center">
@@ -90,28 +90,37 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
 export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: number } }) {
   const rows = [
     {
-      label: "User ID:",
+      label: "User ID",
       value: <Typography variant="monoWrapConstrained">{user._id}</Typography>,
     },
     {
-      label: "Member Since:",
+      label: "Member Since",
       value: <Typography variant="small">{formatDate(user._creationTime)}</Typography>,
     },
     {
-      label: "Email Verified:",
+      label: "Email Verified",
       value: <Typography variant="small">{user.emailVerificationTime ? "Yes" : "No"}</Typography>,
     },
   ];
 
   return (
     <Card variant="default" padding="md" style={{ height: "100%" }}>
-      <Typography variant="h5">Account Information</Typography>
+      <Stack gap="sm">
+        <Typography variant="h5">Account Information</Typography>
+        <Typography variant="small" color="secondary">
+          Core account metadata stays visible here without competing with the editing controls.
+        </Typography>
+      </Stack>
       <Stack gap="sm">
         {rows.map((row) => (
-          <Grid key={row.label} cols={1} colsSm={2} gap="xs">
-            <Typography variant="label">{row.label}</Typography>
-            {row.value}
-          </Grid>
+          <Card key={row.label} variant="section" padding="sm">
+            <Grid cols={1} colsSm={2} gap="xs">
+              <Typography variant="label" color="secondary">
+                {row.label}
+              </Typography>
+              {row.value}
+            </Grid>
+          </Card>
         ))}
       </Stack>
     </Card>
@@ -155,30 +164,28 @@ export function ProfileHeader({
   onAvatarClick?: () => void;
 }) {
   return (
-    <Grid cols={1} colsSm={5} gap="lg">
-      <GridItem colSpanSm={1}>
-        <MediaPreviewFrame surface="avatar">
-          <Avatar
-            src={user.image}
-            name={user.name}
-            email={user.email}
-            variant="brand"
-            size="profile"
-          />
-          {isOwnProfile && onAvatarClick && (
-            <MediaPreviewAction placement="avatarUpload">
-              <IconButton variant="solid" size="sm" onClick={onAvatarClick} tooltip="Change avatar">
-                <Icon icon={Camera} size="sm" />
-              </IconButton>
-            </MediaPreviewAction>
-          )}
-        </MediaPreviewFrame>
-      </GridItem>
+    <Flex direction="column" gap="lg" directionSm="row" alignSm="center">
+      <MediaPreviewFrame surface="avatar">
+        <Avatar
+          src={user.image}
+          name={user.name}
+          email={user.email}
+          variant="brand"
+          size="profile"
+        />
+        {isOwnProfile && onAvatarClick ? (
+          <MediaPreviewAction placement="avatarUpload">
+            <IconButton variant="solid" size="sm" onClick={onAvatarClick} tooltip="Change avatar">
+              <Icon icon={Camera} size="sm" />
+            </IconButton>
+          </MediaPreviewAction>
+        ) : null}
+      </MediaPreviewFrame>
 
-      <GridItem colSpanSm={4}>
+      <FlexItem flex="1">
         {isEditing ? (
           <Stack gap="sm">
-            <Flex gap="sm">
+            <Grid cols={1} colsSm={2} gap="sm">
               <Input
                 label="First Name"
                 value={firstName}
@@ -191,7 +198,7 @@ export function ProfileHeader({
                 onChange={(e) => onLastNameChange(e.target.value)}
                 placeholder="Last name"
               />
-            </Flex>
+            </Grid>
             <Input
               label="Display Name"
               value={name}
@@ -206,7 +213,7 @@ export function ProfileHeader({
               placeholder="your.email@example.com"
               type="email"
             />
-            <Flex gap="sm">
+            <Flex gap="sm" wrap>
               <Button onClick={onSave} size="sm">
                 Save
               </Button>
@@ -216,18 +223,22 @@ export function ProfileHeader({
             </Flex>
           </Stack>
         ) : (
-          <Stack gap="sm">
-            <Typography variant="h3">{user.name || "Anonymous User"}</Typography>
-            <Typography variant="profileEmail">{user.email}</Typography>
-            {isOwnProfile && (
-              <Button onClick={onEditClick} variant="secondary" size="sm">
-                Edit Profile
-              </Button>
-            )}
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Typography variant="h3">{user.name || "Anonymous User"}</Typography>
+              <Typography variant="profileEmail">{user.email}</Typography>
+            </Stack>
+            {isOwnProfile ? (
+              <Flex gap="sm" wrap>
+                <Button onClick={onEditClick} variant="secondary" size="sm">
+                  Edit Profile
+                </Button>
+              </Flex>
+            ) : null}
           </Stack>
         )}
-      </GridItem>
-    </Grid>
+      </FlexItem>
+    </Flex>
   );
 }
 
@@ -314,7 +325,7 @@ function LoadedProfileContent({
             cols={1}
             colsLg={showAccountInfo ? 5 : 1}
             gap="md"
-            style={isOwnProfile ? { marginTop: "-0.5rem" } : undefined}
+            style={isOwnProfile ? { marginTop: "-0.375rem" } : undefined}
           >
             <GridItem colSpanLg={showAccountInfo ? 3 : 5}>
               <Card variant="section" padding="lg">

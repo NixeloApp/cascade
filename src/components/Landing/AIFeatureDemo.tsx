@@ -1,11 +1,13 @@
-import { cva } from "class-variance-authority";
+import type { HTMLAttributes, ReactNode } from "react";
 import { Bot, Search, Sparkles } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Container } from "../ui/Container";
-import { Flex, FlexItem } from "../ui/Flex";
+import { Dot } from "../ui/Dot";
+import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { IconCircle } from "../ui/IconCircle";
+import { SectionIntro } from "../ui/SectionIntro";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -16,118 +18,127 @@ const answerSteps = [
   "Invite teammates or clients and let AI summarize changes as the board evolves.",
 ];
 
-const aiFeatureDemoVariants = {
-  section: cva("px-6 py-24"),
-  shell: cva("rounded-3xl border-ui-border/50 bg-ui-bg-secondary/80 p-6"),
-  softCard: cva("rounded-2xl border-ui-border/40"),
-  bulletList: cva("mt-5 space-y-3"),
-  bulletDot: cva("mt-1 h-2.5 w-2.5 rounded-full bg-landing-accent"),
-  iconBadge: cva("rounded-full p-2", {
-    variants: {
-      tone: {
-        neutral: "bg-ui-bg-soft text-brand",
-        brand: "bg-brand-subtle text-brand",
-      },
-    },
-  }),
-  stepBadge: cva("flex h-6 w-6 items-center justify-center rounded-full bg-ui-bg"),
-};
-
 /** Landing section showing an AI support and knowledge mockup. */
 export function AIFeatureDemo() {
   return (
-    <section className={aiFeatureDemoVariants.section()} id="resources">
-      <Container size="lg">
-        <div className="mb-14 text-center">
-          <Badge variant="outline" shape="pill" className="mb-4">
-            AI-native workflows
-          </Badge>
-          <Typography variant="landingSectionTitle">
-            Intelligent assistance across every handoff
-          </Typography>
-          <Typography variant="lead" className="mx-auto mt-4 max-w-3xl">
-            Turn the same workspace into a search surface, operating manual, and action engine
-            without splitting your team between docs, chats, and PM tools.
-          </Typography>
-        </div>
+    <section id="resources">
+      <Container
+        size="lg"
+        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}
+      >
+        <Stack gap="2xl">
+          <SectionIntro
+            align="center"
+            eyebrow="AI-native workflows"
+            title="Intelligent assistance across every handoff"
+            description="Turn the same workspace into a search surface, operating manual, and action engine without splitting your team between docs, chats, and PM tools."
+          />
 
-        <Grid cols={1} colsLg={5} gap="xl">
-          <Card className={cn(aiFeatureDemoVariants.shell(), "lg:col-span-2")}>
-            <Flex align="center" gap="sm" className="mb-5">
-              <div className={aiFeatureDemoVariants.iconBadge({ tone: "neutral" })}>
-                <Search className="h-4 w-4" />
-              </div>
-              <div>
-                <Typography variant="label">Operator question</Typography>
-                <Typography variant="caption">Search, docs, and work context together</Typography>
-              </div>
-            </Flex>
-
-            <Card variant="section" padding="md" className={aiFeatureDemoVariants.softCard()}>
-              <Typography variant="small">
-                “How do I add a board to my project and keep the client-facing summary updated?”
-              </Typography>
-            </Card>
-
-            <div className={aiFeatureDemoVariants.bulletList()}>
-              {[
-                "Understands project structure, issue history, and linked documents",
-                "Keeps the answer grounded in your actual workspace, not a generic help center",
-                "Can immediately turn the answer into a next action",
-              ].map((item) => (
-                <Flex key={item} align="start" gap="sm">
-                  <div className={aiFeatureDemoVariants.bulletDot()} />
-                  <Typography variant="small" color="secondary">
-                    {item}
-                  </Typography>
-                </Flex>
-              ))}
-            </div>
-          </Card>
-
-          <Card className={cn(aiFeatureDemoVariants.shell(), "lg:col-span-3")}>
-            <Flex align="center" justify="between" className="mb-5">
-              <Flex align="center" gap="sm">
-                <div className={aiFeatureDemoVariants.iconBadge({ tone: "brand" })}>
-                  <Bot className="h-4 w-4" />
-                </div>
-                <div>
-                  <Typography variant="label">Nixelo AI</Typography>
-                  <Typography variant="caption">Grounded answer with next steps</Typography>
-                </div>
-              </Flex>
-              <Badge variant="brand" shape="pill">
-                <Sparkles className="h-3.5 w-3.5" />
-                Context aware
-              </Badge>
-            </Flex>
-
-            <Card variant="section" padding="lg" className={aiFeatureDemoVariants.softCard()}>
-              <Typography variant="small" color="secondary" className="mb-4 leading-7">
-                To add a new board, open the workspace from the sidebar, choose the project, and
-                create the board from the project overview. If you attach the related spec and
-                enable the client summary view, updates from linked issues and status changes can be
-                summarized automatically.
-              </Typography>
-
-              <Stack gap="md">
-                {answerSteps.map((step, index) => (
-                  <Flex key={step} align="start" gap="sm">
-                    <FlexItem shrink={false} className={aiFeatureDemoVariants.stepBadge()}>
-                      <Typography as="span" variant="label">
-                        {index + 1}
-                      </Typography>
-                    </FlexItem>
-                    <Typography variant="small" color="secondary">
-                      {step}
+          <Grid cols={1} colsLg={5} gap="xl">
+            <AIFeatureShell className="lg:col-span-2">
+              <Stack gap="lg">
+                <Flex align="center" gap="sm">
+                  <IconCircle size="sm" variant="soft" tone="brand">
+                    <Search size={16} />
+                  </IconCircle>
+                  <div>
+                    <Typography variant="label">Operator question</Typography>
+                    <Typography variant="caption">
+                      Search, docs, and work context together
                     </Typography>
-                  </Flex>
-                ))}
+                  </div>
+                </Flex>
+
+                <AIFeatureInsetCard padding="md">
+                  <Typography variant="small">
+                    “How do I add a board to my project and keep the client-facing summary updated?”
+                  </Typography>
+                </AIFeatureInsetCard>
+
+                <Stack gap="md">
+                  {[
+                    "Understands project structure, issue history, and linked documents",
+                    "Keeps the answer grounded in your actual workspace, not a generic help center",
+                    "Can immediately turn the answer into a next action",
+                  ].map((item) => (
+                    <Flex key={item} align="start" gap="sm">
+                      <Dot size="md" color="brand" className="mt-1" />
+                      <Typography variant="small" color="secondary">
+                        {item}
+                      </Typography>
+                    </Flex>
+                  ))}
+                </Stack>
               </Stack>
-            </Card>
-          </Card>
-        </Grid>
+            </AIFeatureShell>
+
+            <AIFeatureShell className="lg:col-span-3">
+              <Stack gap="lg">
+                <Flex align="center" justify="between">
+                  <Flex align="center" gap="sm">
+                    <IconCircle size="sm" variant="brand">
+                      <Bot size={16} />
+                    </IconCircle>
+                    <div>
+                      <Typography variant="label">Nixelo AI</Typography>
+                      <Typography variant="caption">Grounded answer with next steps</Typography>
+                    </div>
+                  </Flex>
+                  <Badge variant="brand" shape="pill">
+                    <Sparkles size={14} />
+                    Context aware
+                  </Badge>
+                </Flex>
+
+                <AIFeatureInsetCard padding="lg">
+                  <Stack gap="md">
+                    <Typography variant="small" color="secondary">
+                      To add a new board, open the workspace from the sidebar, choose the project,
+                      and create the board from the project overview. If you attach the related spec
+                      and enable the client summary view, updates from linked issues and status
+                      changes can be summarized automatically.
+                    </Typography>
+
+                    <Stack gap="md">
+                      {answerSteps.map((step, index) => (
+                        <Flex key={step} align="start" gap="sm">
+                          <IconCircle size="xs" variant="soft">
+                            <Typography as="span" variant="label">
+                              {index + 1}
+                            </Typography>
+                          </IconCircle>
+                          <Typography variant="small" color="secondary">
+                            {step}
+                          </Typography>
+                        </Flex>
+                      ))}
+                    </Stack>
+                  </Stack>
+                </AIFeatureInsetCard>
+              </Stack>
+            </AIFeatureShell>
+          </Grid>
+        </Stack>
       </Container>
     </section>
+  );
+}
+
+function AIFeatureShell({
+  children,
+  className,
+}: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
+  return (
+    <Card recipe="landingStoryCard" padding="none" className={className}>
+      {children}
+    </Card>
+  );
+}
+
+function AIFeatureInsetCard({ children, padding }: { children: ReactNode; padding: "md" | "lg" }) {
+  return (
+    <Card recipe="overlayInset" variant="section" padding={padding}>
+      {children}
+    </Card>
   );
 }

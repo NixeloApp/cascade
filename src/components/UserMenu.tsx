@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/DropdownMenu";
+import { Icon } from "./ui/Icon";
 import { Typography } from "./ui/Typography";
 /** User dropdown menu with settings and sign out options. */
 export function UserMenu() {
@@ -58,17 +59,19 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         {orgSlug && (
           <DropdownMenuGroup>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild icon={<Icon icon={Settings} size="sm" />}>
               <Link to={ROUTES.settings.profile.path} params={{ orgSlug }} className="w-full">
-                <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void signOut()} variant="danger">
-          <LogOut className="mr-2 h-4 w-4" />
+        <DropdownMenuItem
+          onClick={() => void signOut()}
+          variant="danger"
+          icon={<Icon icon={LogOut} size="sm" />}
+        >
           <span>Sign out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

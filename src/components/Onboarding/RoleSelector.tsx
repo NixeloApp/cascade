@@ -6,12 +6,14 @@
  * Routes to appropriate onboarding flow.
  */
 
+import type { LucideIcon } from "lucide-react";
 import { Check, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
@@ -22,7 +24,7 @@ interface RoleSelectorProps {
 }
 
 interface RoleCardProps {
-  icon: React.ReactNode;
+  icon: LucideIcon;
   title: string;
   description: string;
   selected: boolean;
@@ -59,11 +61,11 @@ function RoleCard({
             getCardRecipeClassName(
               selected ? "onboardingRoleIndicatorSelected" : "onboardingRoleIndicator",
             ),
-            "absolute right-4 top-4 z-10 h-6 w-6",
+            "absolute right-4 top-4 z-10 size-6",
           )}
         >
-          <Flex align="center" justify="center" className="h-full w-full">
-            {selected ? <Check className="h-3.5 w-3.5" /> : null}
+          <Flex align="center" justify="center" className="size-full">
+            {selected ? <Icon icon={Check} size="xsPlus" /> : null}
           </Flex>
         </div>
 
@@ -81,7 +83,7 @@ function RoleCard({
               "p-6 transition-default",
             )}
           >
-            {icon}
+            <Icon icon={icon} size="xl" />
           </div>
 
           <Stack gap="md" align="center">
@@ -137,7 +139,7 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
       className="animate-in fade-in slide-in-from-bottom-8 duration-enter-slow"
     >
       <RoleCard
-        icon={<Users className="w-10 h-10" />}
+        icon={Users}
         title="Team Lead"
         description="I'll be building new projects and inviting my team to join"
         selected={localSelected === "team_lead"}
@@ -146,7 +148,7 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
         data-testid={TEST_IDS.ONBOARDING.TEAM_LEAD_CARD}
       />
       <RoleCard
-        icon={<User className="w-10 h-10" />}
+        icon={User}
         title="Team Member"
         description="I'm joining an existing workspace to collaborate on tasks"
         selected={localSelected === "team_member"}

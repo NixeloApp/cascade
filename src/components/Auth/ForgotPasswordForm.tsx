@@ -13,12 +13,13 @@ import { showError } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
 
 interface ForgotPasswordFormProps {
   onCodeSent: (email: string) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 /**
@@ -66,11 +67,8 @@ export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormPro
   };
 
   return (
-    <div className="w-full">
-      <Typography variant="authTitle" className="mb-4">
-        Reset your password
-      </Typography>
-      <Typography variant="authBody" className="mb-4">
+    <Stack gap="lg">
+      <Typography variant="authBody">
         Enter your email and we'll send you a code to reset your password.
       </Typography>
       <form ref={formRef} onSubmit={handleSubmit}>
@@ -82,12 +80,18 @@ export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormPro
             required
             data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
           />
-          <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-            {submitting ? "Sending..." : "Send reset code"}
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={submitting}
+            isLoading={submitting}
+          >
+            Send reset code
           </Button>
-          <AuthLinkButton onClick={onBack}>Back to sign in</AuthLinkButton>
+          {onBack ? <AuthLinkButton onClick={onBack}>Back to sign in</AuthLinkButton> : null}
         </Flex>
       </form>
-    </div>
+    </Stack>
   );
 }

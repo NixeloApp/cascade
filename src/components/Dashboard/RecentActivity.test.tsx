@@ -46,7 +46,11 @@ describe("RecentActivity", () => {
     render(<RecentActivity activities={[]} />);
 
     expect(screen.getByText("No activity")).toBeInTheDocument();
-    expect(screen.getByText("Fresh updates from your team will appear here.")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Issue movement, comments, and status changes will show up here once work starts moving.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("renders the activity timeline with metadata and timeline rail", () => {

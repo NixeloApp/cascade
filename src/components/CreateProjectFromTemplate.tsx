@@ -62,6 +62,19 @@ interface ProjectConfigurationProps {
   onDescriptionChange: (description: string) => void;
 }
 
+const PROJECT_TEMPLATE_DIALOG_COPY = {
+  configure: {
+    description:
+      "Confirm the workspace, project key, and starter structure before creating the new project hub.",
+    title: "Configure Project",
+  },
+  select: {
+    description:
+      "Choose a starting template first. You can rename it, change the key, and pick the workspace next.",
+    title: "Choose a Template",
+  },
+} as const;
+
 function getCategoryColor(category: string): string {
   switch (category) {
     case "software":
@@ -118,12 +131,8 @@ function CreateProjectFooter({
 function TemplateSelection({ templates, onSelectTemplate }: TemplateSelectionProps) {
   return (
     <Stack gap="lg">
-      <Typography variant="p" color="secondary">
-        Start with a pre-configured template to save time and follow best practices
-      </Typography>
-
       {!templates ? (
-        <Card padding="xl" variant="ghost">
+        <Card recipe="overlayInset" variant="section" padding="xl">
           <Flex align="center" justify="center">
             <LoadingSpinner />
           </Flex>
@@ -177,6 +186,99 @@ function TemplateSelection({ templates, onSelectTemplate }: TemplateSelectionPro
   );
 }
 
+function TemplateSummary({
+  selectedTemplate,
+}: {
+  selectedTemplate: NonNullable<FunctionReturnType<typeof api.projectTemplates.get>>;
+}) {
+  return (
+    <Card recipe="overlayInset" variant="section" padding="md">
+      <Stack gap="md">
+        <Flex align="start" gap="md">
+          <Typography variant="h3" as="span">
+            {selectedTemplate.icon}
+          </Typography>
+          <Stack gap="xs">
+            <Flex align="center" gap="sm" wrap>
+              <Typography variant="h3">{selectedTemplate.name}</Typography>
+              <Badge
+                size="sm"
+                variant={
+                  getCategoryColor(selectedTemplate.category) as "brand" | "accent" | "neutral"
+                }
+              >
+                {selectedTemplate.category}
+              </Badge>
+              <Badge size="sm" variant="neutral" className="capitalize">
+                {selectedTemplate.boardType}
+              </Badge>
+            </Flex>
+            <Typography variant="small" color="secondary">
+              {selectedTemplate.description}
+            </Typography>
+          </Stack>
+        </Flex>
+
+        <Grid cols={1} colsSm={3} gap="md">
+          <Card recipe="overlayInset" variant="section" padding="sm">
+            <Stack gap="xs">
+              <Typography variant="eyebrowWide">Workflow</Typography>
+              <Typography variant="h4">{selectedTemplate.workflowStates.length}</Typography>
+              <Typography variant="small" color="secondary">
+                Starter states ready for the project board.
+              </Typography>
+            </Stack>
+          </Card>
+          <Card recipe="overlayInset" variant="section" padding="sm">
+            <Stack gap="xs">
+              <Typography variant="eyebrowWide">Labels</Typography>
+              <Typography variant="h4">{selectedTemplate.defaultLabels.length}</Typography>
+              <Typography variant="small" color="secondary">
+                Pre-configured tags included from day one.
+              </Typography>
+            </Stack>
+          </Card>
+          <Card recipe="overlayInset" variant="section" padding="sm">
+            <Stack gap="xs">
+              <Typography variant="eyebrowWide">Board</Typography>
+              <Typography variant="h4" className="capitalize">
+                {selectedTemplate.boardType}
+              </Typography>
+              <Typography variant="small" color="secondary">
+                Delivery mode applied across the new project.
+              </Typography>
+            </Stack>
+          </Card>
+        </Grid>
+
+        <Stack gap="sm">
+          <Typography variant="label">Included in the template</Typography>
+          <Stack gap="sm">
+            <Flex align="center" gap="sm">
+              <Icon icon={CheckCircle} tone="success" />
+              <Typography variant="small">
+                {selectedTemplate.workflowStates.length} workflow states
+              </Typography>
+            </Flex>
+            <Flex align="center" gap="sm">
+              <Icon icon={CheckCircle} tone="success" />
+              <Typography variant="small">
+                {selectedTemplate.defaultLabels.length} pre-configured labels
+              </Typography>
+            </Flex>
+            <Flex align="center" gap="sm">
+              <Icon icon={CheckCircle} tone="success" />
+              <Typography variant="small" className="capitalize">
+                {selectedTemplate.boardType} board type
+              </Typography>
+            </Flex>
+          </Stack>
+        </Stack>
+      </Stack>
+    </Card>
+  );
+}
+
 function ProjectConfiguration({
   selectedTemplate,
   workspaces,
@@ -191,22 +293,7 @@ function ProjectConfiguration({
 }: ProjectConfigurationProps) {
   return (
     <Stack gap="lg">
-      {selectedTemplate && (
-        <Card recipe="commandSection" padding="md">
-          <Flex align="center" gap="md">
-            <Typography variant="h3" as="span">
-              {selectedTemplate.icon}
-            </Typography>
-            <Stack gap="none">
-              <Typography variant="h3">{selectedTemplate.name}</Typography>
-              <Typography variant="small" color="secondary">
-                {selectedTemplate.workflowStates.length} workflow states,{" "}
-                {selectedTemplate.defaultLabels.length} default labels
-              </Typography>
-            </Stack>
-          </Flex>
-        </Card>
-      )}
+      {selectedTemplate ? <TemplateSummary selectedTemplate={selectedTemplate} /> : null}
 
       <Stack gap="md">
         {workspaces && workspaces.length > 1 && (
@@ -249,32 +336,6 @@ function ProjectConfiguration({
           placeholder="Project description..."
         />
       </Stack>
-
-      {selectedTemplate && (
-        <Stack gap="sm">
-          <Typography variant="label">What's Included:</Typography>
-          <Stack gap="sm">
-            <Flex align="center" gap="sm">
-              <Icon icon={CheckCircle} className="text-status-success" />
-              <Typography variant="small">
-                {selectedTemplate.workflowStates.length} workflow states
-              </Typography>
-            </Flex>
-            <Flex align="center" gap="sm">
-              <Icon icon={CheckCircle} className="text-status-success" />
-              <Typography variant="small">
-                {selectedTemplate.defaultLabels.length} pre-configured labels
-              </Typography>
-            </Flex>
-            <Flex align="center" gap="sm">
-              <Icon icon={CheckCircle} className="text-status-success" />
-              <Typography variant="small" className="capitalize">
-                {selectedTemplate.boardType} board type
-              </Typography>
-            </Flex>
-          </Stack>
-        </Stack>
-      )}
     </Stack>
   );
 }
@@ -385,13 +446,18 @@ export function CreateProjectFromTemplate({
     resetForm();
   };
   const canCreate = Boolean(projectName.trim() && projectKey.trim() && selectedWorkspaceId);
+  const dialogCopy =
+    step === "select"
+      ? PROJECT_TEMPLATE_DIALOG_COPY.select
+      : PROJECT_TEMPLATE_DIALOG_COPY.configure;
 
   return (
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={step === "select" ? "Choose a Template" : "Configure Project"}
-      size="xl"
+      title={dialogCopy.title}
+      description={dialogCopy.description}
+      size="lg"
       footer={
         step === "configure" ? (
           <CreateProjectFooter

@@ -10,13 +10,8 @@ import { api } from "@convex/_generated/api";
 import type { ComponentType } from "react";
 import { useEffect } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { HourComplianceDashboard } from "./Admin/HourComplianceDashboard";
-import { IpRestrictionsSettings } from "./Admin/IpRestrictionsSettings";
-import { OAuthFeatureFlagSettings } from "./Admin/OAuthFeatureFlagSettings";
-import { OAuthHealthDashboard } from "./Admin/OAuthHealthDashboard";
-import { OrganizationSettings } from "./Admin/OrganizationSettings";
-import { UserManagement } from "./Admin/UserManagement";
-import { UserTypeManager } from "./Admin/UserTypeManager";
+import { PageControls, PageStack } from "./layout";
+import { AdminTab } from "./Settings/AdminTab";
 import { ApiKeysManager } from "./Settings/ApiKeysManager";
 import { DevToolsTab } from "./Settings/DevToolsTab";
 import { GitHubIntegration } from "./Settings/GitHubIntegration";
@@ -44,15 +39,6 @@ const INTEGRATION_SECTIONS = [
   { key: "slack", Component: SlackIntegration },
   { key: "google-calendar", Component: GoogleCalendarIntegration },
   { key: "pumble", Component: PumbleIntegration },
-] as const;
-const ADMIN_SECTIONS = [
-  { key: "organization", Component: OrganizationSettings },
-  { key: "oauth-health", Component: OAuthHealthDashboard },
-  { key: "oauth-flags", Component: OAuthFeatureFlagSettings },
-  { key: "ip-restrictions", Component: IpRestrictionsSettings },
-  { key: "user-management", Component: UserManagement },
-  { key: "user-types", Component: UserTypeManager },
-  { key: "hour-compliance", Component: HourComplianceDashboard },
 ] as const;
 
 const SETTINGS_TAB_CONTENT = {
@@ -103,24 +89,28 @@ export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps
       }}
       className="w-full"
     >
-      <TabsList size="compact" layout="settings">
-        {visibleTabs.map((tab) => (
-          <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
-            <span className="lg:hidden">{tab.shortLabel ?? tab.label}</span>
-            <span className="hidden lg:inline">{tab.label}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <PageStack>
+        <PageControls padding="sm" gap="sm" spacing="stack">
+          <TabsList size="compact" layout="settings" aria-label="Settings sections">
+            {visibleTabs.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
+                <span className="lg:hidden">{tab.shortLabel ?? tab.label}</span>
+                <span className="hidden lg:inline">{tab.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </PageControls>
 
-      {visibleTabs.map((tab) => {
-        const Content = SETTINGS_TAB_CONTENT[tab.value];
+        {visibleTabs.map((tab) => {
+          const Content = SETTINGS_TAB_CONTENT[tab.value];
 
-        return (
-          <TabsContent key={tab.value} value={tab.value} className="mt-0">
-            <Content />
-          </TabsContent>
-        );
-      })}
+          return (
+            <TabsContent key={tab.value} value={tab.value} className="mt-0">
+              <Content />
+            </TabsContent>
+          );
+        })}
+      </PageStack>
     </Tabs>
   );
 }
@@ -129,16 +119,6 @@ function IntegrationsTab() {
   return (
     <Stack gap="lg">
       {INTEGRATION_SECTIONS.map(({ key, Component }) => (
-        <Component key={key} />
-      ))}
-    </Stack>
-  );
-}
-
-function AdminTab() {
-  return (
-    <Stack gap="xl">
-      {ADMIN_SECTIONS.map(({ key, Component }) => (
         <Component key={key} />
       ))}
     </Stack>

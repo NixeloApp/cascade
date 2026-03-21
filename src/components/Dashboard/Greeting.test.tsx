@@ -16,7 +16,8 @@ describe("Greeting", () => {
 
     render(<Greeting userName="Taylor Rivera" completedCount={1} />);
 
-    expect(screen.getByText("Command Center")).toBeInTheDocument();
+    expect(screen.getByText("Today")).toBeInTheDocument();
+    expect(screen.getByText("1 task completed this week")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Good morning, Taylor\./i })).toBeInTheDocument();
     expect(screen.getByText("1 task")).toBeInTheDocument();
     expect(
@@ -38,6 +39,7 @@ describe("Greeting", () => {
 
     render(<Greeting completedCount={0} />);
 
+    expect(screen.getByText("Command overview")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Good evening, there\./i })).toBeInTheDocument();
     expect(
       screen.getByText(

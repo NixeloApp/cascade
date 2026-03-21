@@ -24,6 +24,10 @@ export const PALETTE_COLORS: EventColor[] = [
   "gray",
 ];
 
+function isEventColor(value: string | null | undefined): value is EventColor {
+  return !!value && PALETTE_COLORS.includes(value as EventColor);
+}
+
 export const EVENT_TYPE_DEFAULT_COLOR: Record<string, EventColor> = {
   meeting: "blue",
   deadline: "red",
@@ -100,20 +104,6 @@ export const EVENT_COLOR_CLASSES: Record<
   },
 };
 
-/** Badge styling: bg + text combined */
-export const EVENT_COLOR_BADGE: Record<EventColor, string> = {
-  blue: "bg-palette-blue-bg text-palette-blue-text",
-  red: "bg-palette-red-bg text-palette-red-text",
-  green: "bg-palette-green-bg text-palette-green-text",
-  amber: "bg-palette-amber-bg text-palette-amber-text",
-  orange: "bg-palette-orange-bg text-palette-orange-text",
-  purple: "bg-palette-purple-bg text-palette-purple-text",
-  pink: "bg-palette-pink-bg text-palette-pink-text",
-  teal: "bg-palette-teal-bg text-palette-teal-text",
-  indigo: "bg-palette-indigo-bg text-palette-indigo-text",
-  gray: "bg-palette-gray-bg text-palette-gray-text",
-};
-
 /** Color picker styling: bg swatch + selection ring */
 export const COLOR_PICKER_CLASSES: Record<EventColor, { bg: string; ring: string }> = {
   blue: { bg: "bg-palette-blue", ring: "ring-palette-blue" },
@@ -128,19 +118,64 @@ export const COLOR_PICKER_CLASSES: Record<EventColor, { bg: string; ring: string
   gray: { bg: "bg-palette-gray", ring: "ring-palette-gray" },
 };
 
-/** Dot indicator: solid bg color */
-export const DOT_COLOR_CLASSES: Record<EventColor, string> = {
-  blue: "bg-palette-blue",
-  red: "bg-palette-red",
-  green: "bg-palette-green",
-  amber: "bg-palette-amber",
-  orange: "bg-palette-orange",
-  purple: "bg-palette-purple",
-  pink: "bg-palette-pink",
-  teal: "bg-palette-teal",
-  indigo: "bg-palette-indigo",
-  gray: "bg-palette-gray",
-};
+function resolveEventColor(color?: string | null, eventType?: string): EventColor {
+  if (isEventColor(color)) {
+    return color;
+  }
+
+  const defaultColor = eventType ? EVENT_TYPE_DEFAULT_COLOR[eventType] : undefined;
+  return isEventColor(defaultColor) ? defaultColor : "blue";
+}
+
+function getEventBadgeClassByColor(color: EventColor): string {
+  switch (color) {
+    case "blue":
+      return "bg-palette-blue-bg text-palette-blue-text";
+    case "red":
+      return "bg-palette-red-bg text-palette-red-text";
+    case "green":
+      return "bg-palette-green-bg text-palette-green-text";
+    case "amber":
+      return "bg-palette-amber-bg text-palette-amber-text";
+    case "orange":
+      return "bg-palette-orange-bg text-palette-orange-text";
+    case "purple":
+      return "bg-palette-purple-bg text-palette-purple-text";
+    case "pink":
+      return "bg-palette-pink-bg text-palette-pink-text";
+    case "teal":
+      return "bg-palette-teal-bg text-palette-teal-text";
+    case "indigo":
+      return "bg-palette-indigo-bg text-palette-indigo-text";
+    case "gray":
+      return "bg-palette-gray-bg text-palette-gray-text";
+  }
+}
+
+function getDotColorClassByColor(color: EventColor): string {
+  switch (color) {
+    case "blue":
+      return "bg-palette-blue";
+    case "red":
+      return "bg-palette-red";
+    case "green":
+      return "bg-palette-green";
+    case "amber":
+      return "bg-palette-amber";
+    case "orange":
+      return "bg-palette-orange";
+    case "purple":
+      return "bg-palette-purple";
+    case "pink":
+      return "bg-palette-pink";
+    case "teal":
+      return "bg-palette-teal";
+    case "indigo":
+      return "bg-palette-indigo";
+    case "gray":
+      return "bg-palette-gray";
+  }
+}
 
 /**
  * Returns Tailwind classes for a calendar event card based on color.
@@ -152,7 +187,7 @@ export function getEventColorClasses(color: string): {
   border: string;
   text: string;
 } {
-  return EVENT_COLOR_CLASSES[color as EventColor] ?? EVENT_COLOR_CLASSES.blue;
+  return EVENT_COLOR_CLASSES[resolveEventColor(color)] ?? EVENT_COLOR_CLASSES.blue;
 }
 
 /**
@@ -160,11 +195,10 @@ export function getEventColorClasses(color: string): {
  * Falls back to type default color if no color specified.
  */
 export function getEventBadgeClass(eventType: string, color?: string | null): string {
-  const resolved = (color ?? EVENT_TYPE_DEFAULT_COLOR[eventType] ?? "blue") as EventColor;
-  return EVENT_COLOR_BADGE[resolved] ?? EVENT_COLOR_BADGE.blue;
+  return getEventBadgeClassByColor(resolveEventColor(color, eventType));
 }
 
 /** Returns the dot color class for compact calendar indicators. */
 export function getDotColorClass(color: string): string {
-  return DOT_COLOR_CLASSES[color as EventColor] ?? DOT_COLOR_CLASSES.blue;
+  return getDotColorClassByColor(resolveEventColor(color));
 }

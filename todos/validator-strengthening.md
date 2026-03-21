@@ -1,40 +1,45 @@
 # Validator Strengthening
 
 > **Priority:** P2
-> **Status:** New
-> **Last Updated:** 2026-03-19
+> **Status:** In Progress
+> **Last Updated:** 2026-03-20
 
 ## Goal
 
-Make the 47 validators stricter and more comprehensive. Currently 9 are failing and 3 advisory-only validators report real issues but don't block.
+Make the validator suite stricter and more comprehensive, then retire the temporary ratchets and debt baselines as cleanup lands.
+The validator suite itself now also needs a facelift: it has grown into a large monolithic registry with inconsistent ratchet/audit conventions and too much suite structure encoded inline.
 
-## Current Validator Failures (9)
+## Validator Suite Facelift
 
-All caused by `MeetingsWorkspace.tsx` (55 of 75 violations) plus a handful elsewhere:
+The validators are useful, but the suite itself is becoming harder to reason about:
 
-| Validator | Violations | Source |
-|-----------|-----------|--------|
-| Standards (AST) | 7 | MeetingsWorkspace.tsx (raw button, grid divs, className concat) |
-| Raw Tailwind | 30 | MeetingsWorkspace.tsx |
-| Surface shells | 2 | MeetingsWorkspace.tsx |
-| Layout prop usage | 16 | MeetingsWorkspace.tsx |
-| JSDoc coverage | 4 | Mixed files |
-| Time constants | 11 | Magic time numbers |
-| Weak assertions | 1 | Test file |
-| Nested Cards | 2 | Mixed files |
-| Border Radius | 2 | Mixed files |
+- `scripts/validate.js` is a long ordered registry with policy and grouping embedded inline
+- ratchet / baseline / audit behavior is inconsistent across checks
+- blocking vs informational checks are not structurally obvious enough
+- validator authoring conventions are implicit instead of documented
+- multiple checks re-implement similar repo-scan / ratchet / reporting patterns
 
-## Advisory Validators That Should Block
-
-These 3 validators reported real issues and have now been promoted after cleanup:
-
-- [x] **Typography drift** (0 drift points) -- promoted from advisory to blocking
-- [x] **Control chrome drift** (0 drift points) -- promoted from advisory to blocking
-- [x] **Shared shape drift** (0 repeated shape groups) -- promoted from advisory to blocking
+- [ ] Extract the validator registry into a clearer config structure instead of one long inline array in `scripts/validate.js`
+- [ ] Group validators by domain (`styling`, `routes`, `convex`, `tests`, `screenshots`, etc.) so the suite is readable and maintainable
+- [ ] Separate registry/config from runner/execution/report formatting, so suite structure is not only understandable by reading `validate.js`
+- [ ] Document the validator authoring contract inside `scripts/validate/`:
+  - expected result shape
+  - blocking vs informational behavior
+  - how `showMessagesOnPass` should be used
+  - how ratchets/baselines should work
+  - when a validator should expose `--audit`
+  - how to run a single validator through `run-check.mjs`
+- [ ] Standardize ratchet helpers further -- one shared baseline/ratchet reporting path instead of many locally-shaped variants
+- [ ] Standardize validator CLI behavior where relevant -- avoid each heavy validator inventing its own argument parsing or audit output style
+- [ ] Add a lightweight test harness for validator modules themselves so result shape, baseline semantics, and audit output do not drift silently
+- [ ] Audit expensive validators and reduce repeated whole-repo scans or duplicated file discovery where practical
+- [ ] Clarify naming -- make the file name, user-facing validator label, and domain align more obviously
+- [ ] Decide whether screenshot/spec checks should remain interleaved with code-quality checks or be grouped more explicitly as a separate coverage section
+- [ ] Keep validator output plain, technical, and predictable; avoid letting the suite UX drift into vague or editorial language
 
 ## Query/Filter Validator Gaps
 
-The current `check-queries.js` catches 6 patterns (unbounded collect, N+1, take-before-filter, missing index, large take, sequential await) but misses **14 instances** of preventable anti-patterns:
+The ratchets exist, but the underlying query/filter debt still needs to be removed from product code.
 
 ### Backend: `.take()`/`.collect()` then JS `.filter()` (11 instances)
 
@@ -58,38 +63,26 @@ Fetches all data then filters in the component when the filter could be a backen
 | `src/components/Settings/OutOfOfficeSettings.tsx:70` | `users?.filter(u => u._id !== currentUser)` | Add `excludeUserId` arg |
 | `src/components/Documents/DocumentTemplatesManager.tsx:208-209` | `templates?.filter(t => t.isBuiltIn)` split into two groups | Add `isBuiltIn` filter arg |
 
-### New validator rules to add:
-
-- [x] **Post-fetch JS filter** -- ratcheted in `check-queries.js` for backend `.take()` / `.collect()` / `safeCollect()` results followed by JS `.filter()` (41 baselined across 18 files)
-- [x] **Client-side query filter** -- ratcheted in `check-queries.js` for query-hook results filtered in React components/routes (13 baselined across 11 files)
-- [x] **Multi-filter on same result** -- ratcheted in `check-queries.js` for repeated `.filter()` passes on the same fetched/query result variable (9 baselined groups across 8 files)
-
-## New Validators to Add (Non-Query)
-
-- [x] **Screenshot manifest integrity** -- fail if any hash appears more than 2 times (legitimate dual-write is max 2; 3+ means spinner capture)
-- [x] **`.catch(() => {})` audit** -- ratcheted for E2E and screenshot tooling (225 baselined across 10 files)
-- [x] **Hardcoded timeout audit** -- extend `check-e2e-hard-rules.js` to ratchet `screenshot-pages.ts` timeout debt (7 `waitForTimeout`, 1 Promise sleep baselined) while keeping spec-file timeouts fully blocking
-- [x] **Meeting page coverage** -- `check-screenshot-coverage.js` now requires the meetings spec folder and canonical screenshots
-
 ## Existing Validator Improvements
 
-- [x] **Raw Tailwind validator** -- now ratchets repeated raw route-level `className` clusters in `check-raw-tailwind.js` (3 baselined route clusters at `3x+` reuse)
-- [x] **E2E quality validator** -- removed the `screenshot-pages.ts` skip and ratcheted its current quality debt in `check-e2e-quality.js` (58 baselined harness issues)
-- [x] **Screenshot coverage validator** -- meetings added to the required page-spec list in `check-screenshot-coverage.js`
-- [ ] **Standards validator** -- ensure new pages like MeetingsWorkspace are caught immediately (currently it does, but violations persist -- need to fix the source)
+- [ ] Ensure the standards validator keeps catching new page-level violations early, without relying on follow-up todo cleanup
+- [ ] Add validator coverage for primitive restyling drift -- repeated size/radius/chrome/color overrides on owned controls should be treated as missing variants or misuse
+- [ ] Add validator coverage for degenerate CVAs -- base-only CVAs, single-use feature CVAs, and local variant wrappers that should be plain components or shared primitives
+- [ ] Ratchet raw Tailwind downward, not just flat -- the baseline should shrink as cleanup lands instead of only blocking regressions
+- [ ] Add validator coverage for primitive-default ownership drift -- shared wrappers should not restate defaults already owned by the primitive they wrap
+- [ ] Add validator coverage that distinguishes real Tailwind-first layout from hidden local style systems (`SECTION_CLASSES`, class-string maps, helper bags) and penalizes the hidden style-system path harder
 
 ## Ratchet Strategy
 
-For advisory validators, implement a ratchet:
-- [x] Store current baseline counts in a config file -- ratcheted validators now read baseline JSON from `scripts/ci/`
-- [x] Fail if count increases (new violations) -- shared ratchet helper now enforces count overages deterministically
-- [x] Pass if count stays same or decreases (cleanup in progress) -- shared ratchet helper preserves cleanup-in-progress behavior across count-based validators
+For advisory validators, keep the ratchet only as long as cleanup is still in flight.
 - [ ] Remove ratchet once count hits zero
 
 ## Done When
 
 - [ ] All 47+ validators pass with zero violations
-- [ ] Advisory validators either block or use ratchet
-- [ ] New validators for manifest integrity, catch swallows, timeout audit, and query/filter gaps
-- [ ] Query filter validator catches backend post-fetch filtering and client-side filtering
+- [ ] Baselined query/filter debt is removed from product code so the ratchets can be deleted
 - [ ] No validator skips without explicit TODO references
+- [ ] Styling/CVA validators are strict enough that screenshot-driven cleanup does not regress on the next pass
+- [ ] Validator rules make the intended contract obvious: Tailwind for static layout, shared primitives for semantics, global CSS only for truly global/shared concerns
+- [ ] Validator rules also make icon ownership obvious: semantic size/tone through shared primitives, not ad hoc raw color and spacing classes
+- [ ] The validator suite itself is easy to extend: grouped, documented, and consistent in ratchet/audit/result behavior

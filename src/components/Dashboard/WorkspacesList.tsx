@@ -15,10 +15,10 @@ import { Folder } from "@/lib/icons";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { SkeletonProjectCard } from "../ui/Skeleton";
+import { DashboardPanel, DashboardPanelBody, DashboardPanelHeader } from "./DashboardPanel";
 
 interface Project {
   _id: Id<"projects">;
@@ -62,15 +62,10 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
   const workspacesLabel = count === 1 ? "project" : "projects";
 
   return (
-    <Card hoverable variant="soft" className="backdrop-blur-sm">
-      <CardHeader
-        title="Workspaces"
-        description={`${count} active ${workspacesLabel}`}
-        className="border-ui-border/50"
-      />
-      <CardBody>
+    <DashboardPanel surface="inset">
+      <DashboardPanelHeader title="Workspaces" description={`${count} active ${workspacesLabel}`} />
+      <DashboardPanelBody>
         {!projects ? (
-          /* Loading skeleton */
           <Flex direction="column" gap="sm">
             <SkeletonProjectCard />
             <SkeletonProjectCard />
@@ -80,8 +75,9 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
           <EmptyState
             icon={Folder}
             title="No projects"
-            description="You're not a member of any projects yet"
+            description="Projects you belong to will show their board, docs, and tracked work here."
             size="compact"
+            surface="bare"
             action={{
               label: "Go to Workspaces",
               onClick: navigateToWorkspaces,
@@ -124,7 +120,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
             })}
           </Flex>
         )}
-      </CardBody>
-    </Card>
+      </DashboardPanelBody>
+    </DashboardPanel>
   );
 }

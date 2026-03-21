@@ -30,7 +30,7 @@ function ProjectsPage() {
   };
 
   return (
-    <PageLayout maxWidth="lg" className="max-w-5xl">
+    <PageLayout maxWidth="5xl">
       <PageHeader
         title="Projects"
         description="Track active project hubs, ownership, and planning surfaces from one place."

@@ -13,13 +13,16 @@ import { Check, Github } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
-import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { LinkedRepositories } from "./LinkedRepositories";
+import {
+  SettingsIntegrationInset,
+  SettingsIntegrationMeta,
+  SettingsIntegrationSection,
+} from "./SettingsIntegrationSection";
 
 // Get the Convex HTTP URL for GitHub OAuth
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL as string;
@@ -100,50 +103,61 @@ export function GitHubIntegration() {
   };
 
   return (
-    <Card padding="lg" data-testid={TEST_IDS.SETTINGS.GITHUB_INTEGRATION}>
-      <Flex justify="between" align="start">
-        <Flex gap="lg" align="center">
-          <div className="rounded bg-ui-bg-tertiary p-2">
-            <Github className="h-6 w-6" />
-          </div>
-          <Stack gap="xs">
-            <Typography variant="h3">GitHub</Typography>
+    <SettingsIntegrationSection
+      title="GitHub"
+      description="Link repositories and keep pull request and commit context attached to work."
+      icon={Github}
+      iconTone="secondary"
+      data-testid={TEST_IDS.SETTINGS.GITHUB_INTEGRATION}
+      status={
+        githubConnection
+          ? {
+              label: "Connected",
+              variant: "success",
+            }
+          : {
+              label: "Not Connected",
+              variant: "neutral",
+            }
+      }
+      action={
+        githubConnection ? (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setDisconnectConfirmOpen(true)}
+            disabled={isDisconnecting}
+          >
+            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+          </Button>
+        ) : (
+          <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
+            {isConnecting ? "Connecting..." : "Connect GitHub"}
+          </Button>
+        )
+      }
+      summary={
+        githubConnection ? (
+          <SettingsIntegrationMeta label="Connected account">
+            <Flex align="center" gap="xs">
+              <Icon icon={Check} size="sm" tone="success" />
+              <Typography variant="small">@{githubConnection.githubUsername}</Typography>
+            </Flex>
+          </SettingsIntegrationMeta>
+        ) : (
+          <SettingsIntegrationMeta label="Connection status">
             <Typography variant="small" color="secondary">
-              Link repositories and track PRs and commits
+              Connect GitHub to link repositories and pull request activity to projects.
             </Typography>
-            {githubConnection && (
-              <Flex align="center" gap="xs" className="text-status-success">
-                <Icon icon={Check} size="sm" />
-                <Typography variant="small">
-                  Connected as @{githubConnection.githubUsername}
-                </Typography>
-              </Flex>
-            )}
-          </Stack>
-        </Flex>
-        <div>
-          {githubConnection ? (
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setDisconnectConfirmOpen(true)}
-              disabled={isDisconnecting}
-            >
-              {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-            </Button>
-          ) : (
-            <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
-              {isConnecting ? "Connecting..." : "Connect GitHub"}
-            </Button>
-          )}
-        </div>
-      </Flex>
-
-      {githubConnection && (
-        <div className="mt-6 pt-6 border-t border-ui-border">
-          <LinkedRepositories />
-        </div>
-      )}
+          </SettingsIntegrationMeta>
+        )
+      }
+    >
+      {githubConnection ? (
+        <SettingsIntegrationInset>
+          <LinkedRepositories showHeading={false} />
+        </SettingsIntegrationInset>
+      ) : null}
 
       <ConfirmDialog
         isOpen={disconnectConfirmOpen}
@@ -154,6 +168,6 @@ export function GitHubIntegration() {
         variant="danger"
         confirmLabel="Disconnect"
       />
-    </Card>
+    </SettingsIntegrationSection>
   );
 }

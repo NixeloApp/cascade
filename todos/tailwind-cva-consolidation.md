@@ -1,8 +1,8 @@
 # Tailwind-to-CVA Consolidation
 
 > **Priority:** P2
-> **Status:** New
-> **Last Updated:** 2026-03-19
+> **Status:** In Progress
+> **Last Updated:** 2026-03-20
 > **Depends on:** validator-strengthening.md (validators must block first so this work doesn't regress)
 
 ## Problem
@@ -12,52 +12,28 @@ The codebase has 148 files with raw Tailwind violations and 48 files with CVA de
 - Consolidated with a nearby CVA that does the same thing
 - Not a CVA at all (just a simple component with props)
 
-The pipeline is: **less raw Tailwind -> convert to CVA -> merge CVAs together if they overlap**.
+The pipeline is: **less raw Tailwind -> promote repeated semantics into owned primitives -> keep one-off static layout as plain Tailwind -> merge overlapping CVAs together if they overlap**.
 
-## Current State
+## Styling Contract
 
-| Metric | Count |
-|--------|-------|
-| Files with raw TW violations | 148 |
-| Files with CVA definitions | 48 |
-| CVA definitions in `src/components/ui/` | 38+ (correct location) |
-| CVA definitions in feature components | 10 (Landing page, PageLayout -- should be consolidated or moved) |
-| Typography variants | 30+ (some are one-off, could be merged) |
-| Badge variants | 10+ |
-| Card variants | 8+ |
-| Button variants | 6+ |
+- [ ] Tailwind-first for static feature/page layout -- do not create local `cva()` helpers or local string-map style systems just to name a one-off class list
+- [ ] `cva()` is for shared primitive/component semantics, not for "this file has a section/header/list/icon wrapper" naming
+- [ ] `index.css` is for tokens, global utilities, and truly shared decorative effects -- not single-page named style buckets that should have stayed in Tailwind
+- [ ] If a pattern repeats, extract a real component or add an owned primitive variant; if it does not repeat, keep it simple and local
+- [ ] Do not replace bad local `cva()` with bad local class-string objects; hidden style systems are worse, not better
+- [ ] `Icon` usage should be semantic too -- prefer owned `size`/`tone` props, keep the allowed color palette intentionally small, and use `className` mostly for layout-only concerns rather than ad hoc `text-*` color overrides
 
 ## Phase 1: Reduce Raw Tailwind
 
-Target the 148 files with raw TW violations. For each repeated pattern:
+Target the remaining raw Tailwind violations by grouping repeated class clusters into owned abstractions.
 
-- [x] Audit the 30 raw TW violations in `MeetingsWorkspace.tsx` and convert to design system components
-- [x] Absorb the repeated meetings list-shell cluster (`list-none`, branded bullet lists) into an owned `List` primitive and swap `MeetingsWorkspace.tsx` to it
-- [x] Absorb the meetings status-chip color map into owned `Badge` variants instead of local raw Tailwind state classes
-- [x] Absorb the meetings transcript scroll/pre-wrap cluster into owned `ScrollArea` sizing and `Typography` mono-block styling
-- [x] Absorb the remaining meetings status-icon tone pair into owned `Icon` semantic tones
-- [x] Absorb the mirrored `MeetingRecordingSection.tsx` status-badge cluster into owned `Badge` variants and `Icon` tones
-- [x] Absorb the mirrored `MeetingRecordingSection.tsx` results/transcript cluster into owned `List`, `Icon`, `ScrollArea`, and `Typography` contracts
-- [x] Absorb the mirrored `MeetingRecordingSection.tsx` state-shell cluster into shared `Card` status recipes and owned `Icon`/layout contracts
-- [x] Absorb the mirrored `MeetingRecordingSection.tsx` status-indicator/divider cluster into owned `Icon`, `InlineSpinner`, and `Separator` contracts so the file drops out of the raw-Tailwind baseline
-- [x] Absorb the Kanban toolbar selector/toggle icon-size cluster into owned `Icon` and button icon-slot contracts
-- [x] Absorb the time-tracking action-icon cluster into owned `Icon` and button icon-slot contracts across billing export, entry-mode toggles, and entry actions
-- [x] Absorb the `BillingReport.tsx` summary metric card cluster into an owned helper on top of `Icon`, `Stack`, and metric card recipes
-- [x] Absorb the remaining `BillingReport.tsx` team-breakdown and quick-stats shell cluster into owned `Card`, `Stack`, and `Flex` contracts so the file no longer carries inline raw class shells
-- [x] Absorb the `WebhookCard.tsx` URL/action-control cluster into owned `Typography`, `Icon`, and layout contracts and ratchet the clean raw-tailwind baseline entries
-- [x] Absorb the shared time-entry modal control cluster into owned `SegmentedControl`, `Typography`, `Icon`, and `Select` contracts so `ManualTimeEntryModal.tsx` and `TimeEntryModal.tsx` drop out of the raw-tailwind baseline
-- [x] Absorb the settings image-upload preview/action cluster into owned `MediaPreview`, `Avatar`, `Icon`, and button contracts so `AvatarUploadModal.tsx` and `CoverImageUploadModal.tsx` drop out of the raw-tailwind baseline
-- [x] Absorb the settings profile shell cluster into owned `Card`, `Grid`, `Avatar`, `MediaPreview`, `Typography`, and `Icon` contracts so `ProfileContent.tsx` drops out of the raw-tailwind baseline
-- [x] Absorb the repeated landing max-width wrapper cluster into the owned `ui/Container` primitive across `NavHeader`, `LogoBar`, `AIFeatureDemo`, `FinalCTASection`, `Footer`, and `WhyChooseSection`
-- [x] Absorb the repeated left-icon action-control cluster into owned `Button` left-icon and `DropdownMenuItem` icon contracts across filters, notifications, issue actions, document actions, and the issue breadcrumb
-- [x] Absorb the repeated `DocumentTree.tsx` chevron-size cluster into owned `Icon` sizing so section toggles and tree expand controls stop carrying local `w-3.5 h-3.5` classes
-- [x] Absorb the repeated `FilterBar.tsx` dropdown-chevron cluster into owned `Button` `rightIcon` and `Icon` contracts so filter pills stop carrying local `ml-1 w-4 h-4` chevrons
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant
-- [x] Absorb the repeated route inset panel cluster (`border border-ui-border-secondary/70 bg-ui-bg-soft/90 ...`) into owned `Card` recipes and ratchet the route-cluster baseline
-- [x] Absorb the repeated invite fullscreen state shell cluster into a local `InviteStateScreen` abstraction and ratchet the route-cluster baseline
-- [x] Absorb the repeated team-detail tab-link cluster into owned `RouteNav` / `RouteNavItem` usage and ratchet the route-cluster baseline to zero
+- [ ] Tighten raw Tailwind rules on app surfaces -- colors, radius, spacing, and shell treatments should come from owned primitives or explicit variants, not feature-local class clusters
+- [ ] Audit `className` escape-hatch usage on owned primitives -- recurring size/chrome/spacing overrides should become variants instead of one-off patches
+- [ ] Audit icon usage specifically -- repeated icon spacing, icon color overrides, and menu/button leading-icon patterns should move onto owned `Icon`, `Button`, `DropdownMenuItem`, and related primitive APIs
+- [ ] Audit landing/main-page files specifically for static layout that should just be Tailwind, not local CVAs or section-specific CSS
 
 ## Phase 2: Consolidate CVA Sprawl
 
@@ -66,6 +42,10 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [ ] Badge: audit 10+ variants for overlap -- some may be duplicating each other with minor differences
 - [ ] Card: audit 8+ variants -- ensure no feature-local Card recipes exist that should be a variant
 - [ ] Look for CVA definitions in the same file that could be a single CVA with compound variants
+- [ ] Delete or demote one-off CVAs that are only wrapping a base class or a single call site -- those should become plain components or existing primitive variants
+- [ ] Audit primitive variant APIs for gaps that force local CVAs or local raw Tailwind -- fill the primitive first, then delete the feature-local workaround
+- [ ] Landing-specific paydown: remove remaining local CVA/style-bundle debt from `FeaturesSection` and `LogoBar` without replacing it with hidden string maps or bespoke global CSS
+- [ ] Audit `index.css` additions from recent landing cleanup and fold any section-specific styles back into Tailwind/shared primitives unless they are truly global/shared effects
 
 ## Phase 3: Make It Impossible to Slop
 
@@ -73,6 +53,9 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [ ] Add a validator that flags CVA files with >10 variants (sign of sprawl -- should split or rethink)
 - [ ] Add a validator that flags raw Tailwind class clusters appearing 3+ times across files (should be a component)
 - [ ] Tighten the raw TW validator from advisory to blocking with a ratchet (current baseline: 148 files, fail on increase)
+- [ ] Add a validator that flags repeated primitive `className` overrides for size/chrome/radius/color when an owned variant should exist
+- [ ] Add a validator that flags feature-local CVAs with only base styles or a single live call site
+- [ ] Tighten validator coverage for hidden feature-local style systems: local class maps/constants that try to replace CVA should be penalized harder than explicit feature-local `cva()`
 
 ## Anti-patterns to Watch
 
@@ -82,7 +65,10 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 | One-off CVA with 2 variants used in 1 file | Just use a component with props, CVA overhead isn't worth it |
 | CVA in a feature component that duplicates a `ui/` primitive's variant | Add the variant to the primitive, delete the feature CVA |
 | Typography variant for a single use case | Use `className` override on an existing variant, or merge with a similar variant |
+| `<Icon className="text-foo h-4 w-4" />` for product semantics | Use owned `size`/`tone` props and keep icon color choices inside the shared palette |
 | `cva()` with no variants (just a base) | Use `cn()` directly or a simple component |
+| Replacing local `cva()` with `const SECTION_CLASSES = { ... }` | Keep one-off layout as plain Tailwind or extract a real component; do not create hidden local style APIs |
+| Adding page/section-specific named classes to `index.css` | Keep it in Tailwind unless the style is truly global/shared or a decorative effect used across sections |
 
 ## Done When
 
@@ -91,3 +77,6 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [ ] No CVA definition with 0 variants (just base styles)
 - [ ] Validator blocks new raw TW cluster repetition and unjustified feature CVAs
 - [ ] Typography/Badge/Card variant counts reviewed and consolidated where overlapping
+- [ ] Owned primitives cover the common styling needs without widespread `className` restyling escape hatches
+- [ ] Icon usage is mostly semantic and consistent -- shared `size`/`tone` ownership, limited color palette, and no widespread raw icon spacing/color utilities in product code
+- [ ] Static layout on landing/main-page surfaces is mostly plain Tailwind plus shared primitives, not feature-local CVAs, hidden style maps, or `index.css` escape hatches

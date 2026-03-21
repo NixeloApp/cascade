@@ -85,6 +85,38 @@ function getClassNameText(node) {
   return getAttributeValue(node, "className") || "";
 }
 
+/** Get static className text from a JSX attribute, including cn("...") literals */
+function getStaticClassNameTextFromAttribute(attribute) {
+  if (!attribute?.initializer) return "";
+
+  if (ts.isStringLiteral(attribute.initializer)) {
+    return attribute.initializer.text;
+  }
+
+  if (
+    ts.isJsxExpression(attribute.initializer) &&
+    attribute.initializer.expression &&
+    ts.isStringLiteral(attribute.initializer.expression)
+  ) {
+    return attribute.initializer.expression.text;
+  }
+
+  if (
+    ts.isJsxExpression(attribute.initializer) &&
+    attribute.initializer.expression &&
+    ts.isCallExpression(attribute.initializer.expression) &&
+    ts.isIdentifier(attribute.initializer.expression.expression) &&
+    attribute.initializer.expression.expression.text === "cn"
+  ) {
+    return attribute.initializer.expression.arguments
+      .filter((arg) => ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))
+      .map((arg) => arg.text)
+      .join(" ");
+  }
+
+  return "";
+}
+
 /** Check if file matches any pattern in list */
 function matchesPattern(rel, patterns) {
   return patterns.some((pattern) => rel.endsWith(pattern) || rel.includes(pattern));
@@ -98,6 +130,11 @@ function isTestFile(rel) {
 /** Check if file is in ui/ directory */
 function isUiFile(rel) {
   return rel.includes("src/components/ui/");
+}
+
+/** Check if file is a route file */
+function isRouteFile(rel) {
+  return rel.startsWith("src/routes/");
 }
 
 // ============================================================================
@@ -129,6 +166,9 @@ export function run() {
     function visit(node, ancestors = []) {
       if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
         const tagName = node.tagName.getText();
+        const classNameAttr = node.attributes.properties.find(
+          (property) => ts.isJsxAttribute(property) && property.name.getText() === "className",
+        );
 
         // ── Typography tags ──
         if (["p", "h1", "h2", "h3", "h4", "h5", "h6"].includes(tagName)) {
@@ -235,6 +275,21 @@ export function run() {
           const classes = getClassNameText(node).split(/\s+/);
           if (classes.includes("grid")) {
             reportError(filePath, node, `Use <Grid> instead of <${tagName} className="grid">.`);
+          }
+        }
+
+        // ── Page-level layout misuse ──
+        if (tagName === "PageLayout" && isRouteFile(rel) && classNameAttr) {
+          const classNameText = getStaticClassNameTextFromAttribute(classNameAttr);
+          const classes = classNameText.split(/\s+/).filter(Boolean);
+          if (
+            classes.some((cls) => cls === "mx-auto" || cls.startsWith("max-w-") || cls === "w-full")
+          ) {
+            reportError(
+              filePath,
+              node,
+              "PageLayout owns outer width and centering. Use the maxWidth prop instead of className shell overrides.",
+            );
           }
         }
       }

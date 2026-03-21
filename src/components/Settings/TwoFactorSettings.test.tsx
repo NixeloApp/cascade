@@ -114,7 +114,7 @@ describe("TwoFactorSettings", () => {
     render(<TwoFactorSettings />);
 
     expect(screen.getByText("Loading md")).toBeInTheDocument();
-    expect(screen.queryByText("Two-Factor Authentication")).not.toBeInTheDocument();
+    expect(screen.getByText("Two-Factor Authentication")).toBeInTheDocument();
   });
 
   it("completes the setup flow and copies backup codes", async () => {
@@ -223,5 +223,29 @@ describe("TwoFactorSettings", () => {
     expect(screen.getByText("QRST-UVWX")).toBeInTheDocument();
     expect(screen.getByText("YZAB-CDEF")).toBeInTheDocument();
     expect(mockShowSuccess).toHaveBeenCalledWith("New backup codes generated");
+  });
+
+  it("clears the regenerate dialog code when the dialog is closed", async () => {
+    const user = userEvent.setup();
+    mockUseAuthenticatedQuery.mockReturnValue(enabledStatus);
+
+    render(<TwoFactorSettings />);
+
+    await user.click(screen.getByRole("button", { name: "Regenerate Backup Codes" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Regenerate Backup Codes" });
+    const codeInput = within(dialog).getByLabelText("Authenticator Code");
+
+    await user.type(codeInput, "654321");
+    expect(codeInput).toHaveValue("654321");
+
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(
+      screen.queryByRole("dialog", { name: "Regenerate Backup Codes" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Regenerate Backup Codes" }));
+    const reopenedDialog = screen.getByRole("dialog", { name: "Regenerate Backup Codes" });
+    expect(within(reopenedDialog).getByLabelText("Authenticator Code")).toHaveValue("");
   });
 });

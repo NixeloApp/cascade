@@ -1,104 +1,119 @@
-import { render, screen } from "@testing-library/react";
-import { useConvexAuth, useQuery } from "convex/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { CreateProjectFromTemplate } from "./CreateProjectFromTemplate";
 
-// Mock Convex
-vi.mock("convex/react", () => ({
-  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
-  useQuery: vi.fn(),
-  useMutation: vi.fn(() => vi.fn()),
+const mockUseAuthenticatedQuery = vi.fn();
+const mockMutate = vi.fn();
+
+vi.mock("@/hooks/useConvexHelpers", () => ({
+  useAuthenticatedMutation: () => ({
+    canAct: true,
+    isAuthLoading: false,
+    mutate: mockMutate,
+  }),
+  useAuthenticatedQuery: (...args: unknown[]) => mockUseAuthenticatedQuery(...args),
 }));
 
-// Mock API
-vi.mock("@convex/_generated/api", () => ({
-  api: {
-    projectTemplates: {
-      list: "list",
-      get: "get",
-      createFromTemplate: "createFromTemplate",
-    },
-    workspaces: {
-      list: "list",
-    },
-  },
-}));
-
-// Mock Organization context
 vi.mock("@/hooks/useOrgContext", () => ({
   useOrganization: () => ({ organizationId: "org-123" }),
 }));
 
+vi.mock("@/lib/toast", () => ({
+  showError: vi.fn(),
+  showSuccess: vi.fn(),
+}));
+
+vi.mock("@convex/_generated/api", () => ({
+  api: {
+    projectTemplates: {
+      createFromTemplate: "projectTemplates:createFromTemplate",
+      get: "projectTemplates:get",
+      list: "projectTemplates:list",
+    },
+    workspaces: {
+      list: "workspaces:list",
+    },
+  },
+}));
+
+const TEMPLATE_LIST = [
+  {
+    _id: "template-1",
+    boardType: "kanban",
+    category: "software",
+    description: "Plan product delivery with a ready-made workflow.",
+    icon: "🚀",
+    name: "Software Delivery",
+  },
+  {
+    _id: "template-2",
+    boardType: "scrum",
+    category: "marketing",
+    description: "Organize campaign work with clear ownership.",
+    icon: "📣",
+    name: "Campaign Sprint",
+  },
+] as const;
+
+const TEMPLATE_DETAIL = {
+  ...TEMPLATE_LIST[0],
+  defaultLabels: ["frontend", "backend", "urgent"],
+  workflowStates: [
+    { category: "todo", name: "Todo", order: 0 },
+    { category: "inprogress", name: "Doing", order: 1 },
+    { category: "done", name: "Done", order: 2 },
+  ],
+};
+
+const WORKSPACES = [{ _id: "workspace-1", name: "Core Workspace" }] as const;
+
 describe("CreateProjectFromTemplate", () => {
-  it("skips queries when not authenticated", () => {
-    vi.mocked(useConvexAuth).mockReturnValue({ isAuthenticated: false, isLoading: false });
+  beforeEach(() => {
+    vi.clearAllMocks();
 
-    const useQueryMock = vi.mocked(useQuery);
-    useQueryMock.mockReturnValue(undefined);
+    mockUseAuthenticatedQuery.mockImplementation((query: string, args: unknown) => {
+      if (args === "skip") {
+        return undefined;
+      }
 
-    render(<CreateProjectFromTemplate open={true} onOpenChange={() => {}} />);
+      if (query === "projectTemplates:list") {
+        return TEMPLATE_LIST;
+      }
 
-    // When not authenticated, useQuery should be called with "skip"
-    // The component should render without crashing and show loading/empty state
-    expect(useQueryMock).toHaveBeenCalled();
+      if (query === "workspaces:list") {
+        return WORKSPACES;
+      }
 
-    // Verify no template list is rendered (since query is skipped)
-    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+      if (query === "projectTemplates:get") {
+        return TEMPLATE_DETAIL;
+      }
+
+      return undefined;
+    });
   });
 
-  it("renders template list as an unordered list (ul) with list items (li)", () => {
-    vi.mocked(useConvexAuth).mockReturnValue({ isAuthenticated: true, isLoading: false });
-
-    // Mock useQuery implementation
-    const useQueryMock = vi.mocked(useQuery);
-    useQueryMock.mockImplementation((query: any, ..._args: any[]) => {
-      // Check if the query is for projectTemplates.list
-      // In the component: useQuery(api.projectTemplates.list)
-      // Since we mocked api.projectTemplates.list as "list", we check for that string
-      if (query === "list") {
-        return [
-          {
-            _id: "template-1",
-            name: "Template 1",
-            icon: "🚀",
-            description: "Desc 1",
-            category: "software",
-            boardType: "kanban",
-          },
-          {
-            _id: "template-2",
-            name: "Template 2",
-            icon: "🐛",
-            description: "Desc 2",
-            category: "marketing",
-            boardType: "scrum",
-          },
-        ];
-      }
-      return null;
-    });
-
+  it("renders template list as an unordered list with list items", () => {
     render(<CreateProjectFromTemplate open={true} onOpenChange={() => {}} />);
 
-    // Check for unordered list
     const list = screen.getByRole("list");
-    expect(list).toBeInTheDocument();
     expect(list.tagName).toBe("UL");
 
-    // Check for list items
     const listItems = screen.getAllByRole("listitem");
     expect(listItems).toHaveLength(2);
-    expect(listItems[0].tagName).toBe("LI");
+    expect(screen.getByText("Software Delivery")).toBeInTheDocument();
+    expect(screen.getByText("Campaign Sprint")).toBeInTheDocument();
+  });
 
-    // Check that there are no headings INSIDE the list items
-    // The dialog title "Choose a Template" is a heading, so queryAllByRole('heading') will return something.
-    // We specifically check inside the list items.
-    const firstItem = listItems[0];
-    const itemHeadings = firstItem.querySelectorAll("h1, h2, h3, h4, h5, h6");
-    expect(itemHeadings.length).toBe(0);
+  it("shows the inset template summary when moving to configuration", () => {
+    render(<CreateProjectFromTemplate open={true} onOpenChange={() => {}} />);
 
-    // Verify content is still there
-    expect(screen.getByText("Template 1")).toBeInTheDocument();
-    expect(screen.getByText("Desc 1")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Software Delivery"));
+
+    expect(screen.getByRole("heading", { name: "Configure Project" })).toBeInTheDocument();
+    expect(screen.getByText("Included in the template")).toBeInTheDocument();
+    expect(screen.getByText("Starter states ready for the project board.")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PROJECT.NAME_INPUT)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PROJECT.KEY_INPUT)).toBeInTheDocument();
   });
 });

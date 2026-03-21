@@ -91,6 +91,8 @@ describe("swimlane-utils", () => {
       expect(configs).toHaveLength(5);
       expect(configs[0].id).toBe("highest");
       expect(configs[4].id).toBe("lowest");
+      expect(configs[0].color).toBe("text-priority-highest");
+      expect(configs[4].color).toBe("text-priority-lowest");
     });
 
     it("returns assignee configs based on issues", () => {

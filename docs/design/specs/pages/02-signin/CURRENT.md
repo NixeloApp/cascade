@@ -1,19 +1,22 @@
 # Sign In Page - Current State
 
 > **Route**: `/signin`
-> **Status**: 🟡 Cleaner and visually coherent, with smaller remaining weighting issues
-> **Last Updated**: 2026-03-12
+> **Status**: REVIEWED, with small weighting follow-up only
+> **Last Updated**: 2026-03-21
+
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Screenshot Matrix
 
-| Viewport | Theme | Preview |
-|----------|-------|---------|
-| Desktop | Dark | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | ![](screenshots/desktop-light.png) |
-| Tablet | Light | ![](screenshots/tablet-light.png) |
-| Mobile | Light | ![](screenshots/mobile-light.png) |
+| Viewport | Base Sign-In | Verify 2FA |
+|----------|--------------|------------|
+| Desktop Dark | ![](screenshots/desktop-dark.png) | ![](screenshots/desktop-dark-verify-2fa.png) |
+| Desktop Light | ![](screenshots/desktop-light.png) | ![](screenshots/desktop-light-verify-2fa.png) |
+| Tablet Light | ![](screenshots/tablet-light.png) | ![](screenshots/tablet-light-verify-2fa.png) |
+| Mobile Light | ![](screenshots/mobile-light.png) | ![](screenshots/mobile-light-verify-2fa.png) |
 
 ---
 
@@ -47,6 +50,7 @@
 - The page title is explicit: `Sign in to Nixelo`.
 - The account-switch link sits in the subtitle row instead of being buried below the form.
 - Legal copy is reduced to a compact footer line.
+- The screenshot suite also now covers the 2FA verification step instead of only the initial form.
 
 ---
 

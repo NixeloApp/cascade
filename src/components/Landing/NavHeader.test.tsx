@@ -65,6 +65,12 @@ describe("NavHeader", () => {
 
       expect(screen.getByRole("button", { name: /Toggle theme/i })).toBeInTheDocument();
     });
+
+    it("should render a compact navigation menu trigger", () => {
+      render(<NavHeader />);
+
+      expect(screen.getByRole("button", { name: /Menu/i })).toBeInTheDocument();
+    });
   });
 
   describe("Authentication Links", () => {

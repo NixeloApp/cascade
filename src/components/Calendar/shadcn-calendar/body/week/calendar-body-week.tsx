@@ -9,6 +9,19 @@ import { CalendarBodyDayContent } from "../day/calendar-body-day-content";
 import { CalendarBodyMarginDayMargin } from "../day/calendar-body-margin-day-margin";
 import { useCalendarInitialScroll } from "../use-calendar-initial-scroll";
 
+const ACTIVE_DAY_SCROLL_OFFSET_PX = 40;
+
+/** Keeps the active week column in view without resetting the timed scroll position. */
+export function getCalendarWeekActiveDayScrollTarget(
+  activeDayOffsetLeft: number,
+  currentScrollTop: number,
+): Pick<ScrollToOptions, "left" | "top"> {
+  return {
+    left: Math.max(0, activeDayOffsetLeft - ACTIVE_DAY_SCROLL_OFFSET_PX),
+    top: currentScrollTop,
+  };
+}
+
 /** Week view showing 7 days side-by-side with time grid. */
 export function CalendarBodyWeek(): React.ReactElement {
   const { date, events } = useCalendarContext();
@@ -36,8 +49,13 @@ export function CalendarBodyWeek(): React.ReactElement {
     }
 
     const frame = window.requestAnimationFrame(() => {
+      const targetScrollPosition = getCalendarWeekActiveDayScrollTarget(
+        activeDayElement.offsetLeft,
+        scrollElement.scrollTop,
+      );
+
       scrollElement.scrollTo({
-        left: Math.max(0, activeDayElement.offsetLeft - 40),
+        ...targetScrollPosition,
         behavior: "auto",
       });
     });
@@ -46,7 +64,12 @@ export function CalendarBodyWeek(): React.ReactElement {
   }, [activeDateString]);
 
   return (
-    <Flex flex="1" className="overflow-hidden bg-ui-bg" data-testid={TEST_IDS.CALENDAR.GRID}>
+    <Flex
+      flex="1"
+      className="overflow-hidden bg-ui-bg"
+      data-testid={TEST_IDS.CALENDAR.GRID}
+      data-calendar-view="week"
+    >
       <Card recipe="calendarDayMainPanel" className="overflow-hidden">
         <Flex direction="column" flex="1" className="overflow-hidden">
           <Flex ref={scrollRef} flex="1" className="overflow-auto">

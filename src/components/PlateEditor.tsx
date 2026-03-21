@@ -14,23 +14,26 @@ import type { Id } from "@convex/_generated/dataModel";
 
 import type { Value } from "platejs";
 import { Plate, usePlateEditor } from "platejs/react";
-import { useEffect, useState } from "react";
+import type { MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { PlateRichTextContent } from "@/components/ui/PlateRichTextContent";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { Lock } from "@/lib/icons";
+import { FileText, ListTodo, Lock, Sparkles } from "@/lib/icons";
 import {
   getEditorPlugins,
   getInitialValue,
   isEmptyValue,
+  plateValueToProseMirrorSnapshot,
   proseMirrorSnapshotToValue,
 } from "@/lib/plate/editor";
 import { markdownToValue, readMarkdownForPreview } from "@/lib/plate/markdown";
@@ -41,6 +44,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { MoveDocumentDialog } from "./MoveDocumentDialog";
 import { FloatingToolbar } from "./Plate/FloatingToolbar";
 import { SlashMenu } from "./Plate/SlashMenu";
+import { SectionErrorFallback } from "./SectionErrorFallback";
 import { MarkdownPreviewModal } from "./ui/MarkdownPreviewModal";
 import { VersionHistory } from "./VersionHistory";
 
@@ -75,7 +79,6 @@ interface PlateEditorEmptyStateProps {
   action?: {
     label: string;
     onClick: () => void;
-    variant?: React.ComponentProps<typeof Button>["variant"];
   };
 }
 
@@ -91,6 +94,20 @@ interface PlateEditorActionsArgs {
   unarchiveDocument: (args: { id: Id<"documents"> }) => Promise<unknown>;
   lockDocument: (args: { id: Id<"documents"> }) => Promise<unknown>;
   unlockDocument: (args: { id: Id<"documents"> }) => Promise<unknown>;
+}
+
+type DocumentSyncState = "ready" | "saving" | "saved" | "error";
+
+interface UsePlateDocumentSyncArgs {
+  documentId: Id<"documents">;
+  document: PlateEditorDocument | null | undefined;
+  latestSnapshot: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.getSnapshot>>;
+  latestVersion: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.latestVersion>>;
+  versions: PlateEditorVersions | undefined;
+  submitSnapshot: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.prosemirror.submitSnapshot>
+  >["mutate"];
+  updateTitle: (args: { id: Id<"documents">; title: string }) => Promise<unknown>;
 }
 
 interface UsePlateEditorUiStateArgs {
@@ -131,6 +148,11 @@ interface PlateEditorData {
     typeof useAuthenticatedQuery<typeof api.documentVersions.getVersionCount>
   >;
   versions: ReturnType<typeof useAuthenticatedQuery<typeof api.documentVersions.listVersions>>;
+  latestSnapshot: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.getSnapshot>>;
+  latestVersion: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.latestVersion>>;
+  submitSnapshot: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.prosemirror.submitSnapshot>
+  >["mutate"];
 }
 
 interface LoadedPlateEditorProps {
@@ -146,6 +168,38 @@ interface MarkdownImportPreview {
   markdown: string;
   filename: string;
 }
+
+const DOCUMENT_SAVE_DEBOUNCE_MS = 1200;
+const SAVE_RETRY_DELAY_MS = 3000;
+
+interface E2EEditorMarkdownEventDetail {
+  markdown: string;
+}
+
+interface E2EEditorValueEventDetail {
+  value: Value;
+}
+
+const DOCUMENT_STARTER_SECTIONS = [
+  {
+    title: "Capture the context",
+    description:
+      "Open with the situation, the decision that needs to land, and the constraint the team should keep in mind.",
+    icon: FileText,
+  },
+  {
+    title: "Turn notes into action",
+    description:
+      "Use checklists and linked issues while the discussion is still fresh so the document stays operational.",
+    icon: ListTodo,
+  },
+  {
+    title: "Keep the trail visible",
+    description:
+      "Summaries, owners, and follow-ups belong in the doc so launch reviews do not depend on chat archaeology.",
+    icon: Sparkles,
+  },
+] as const;
 
 function PlateEditorLoadingState({ versionsLoaded }: PlateEditorLoadingStateProps) {
   return (
@@ -176,16 +230,21 @@ function PlateEditorLoadingState({ versionsLoaded }: PlateEditorLoadingStateProp
 
 function PlateEditorEmptyState({ title, description, action }: PlateEditorEmptyStateProps) {
   return (
-    <Flex align="center" justify="center" className="h-full">
-      <Stack gap="md" align="center" className="text-center">
-        <Typography variant="h3">{title}</Typography>
-        <Typography color="secondary">{description}</Typography>
-        {action && (
-          <Button variant={action.variant ?? "outline"} onClick={action.onClick}>
-            {action.label}
-          </Button>
-        )}
-      </Stack>
+    <Flex align="center" justify="center" className="h-full px-4 py-8">
+      <EmptyState
+        icon={FileText}
+        title={title}
+        description={description}
+        surface="bare"
+        action={
+          action
+            ? {
+                label: action.label,
+                onClick: action.onClick,
+              }
+            : undefined
+        }
+      />
     </Flex>
   );
 }
@@ -290,17 +349,11 @@ function usePlateEditorActions({
 }
 
 function usePlateEditorUiState({
-  documentId,
-  document,
   versions,
-  updateTitle,
-}: UsePlateEditorUiStateArgs) {
+}: Omit<UsePlateEditorUiStateArgs, "documentId" | "document" | "updateTitle">) {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [editorSeedValue, setEditorSeedValue] = useState<Value>(getInitialValue());
-  const [editorResetKey, setEditorResetKey] = useState(0);
-  const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -313,43 +366,10 @@ function usePlateEditorUiState({
   }, []);
 
   useEffect(() => {
-    if (versions === undefined) {
-      return;
+    if (versions && versions.length === 0) {
+      setShowVersionHistory(false);
     }
-
-    const latestVersion = versions[0];
-    const nextValue = latestVersion
-      ? proseMirrorSnapshotToValue(latestVersion.snapshot)
-      : getInitialValue();
-    setEditorSeedValue(nextValue);
-    setEditorValue(nextValue);
   }, [versions]);
-
-  const handleChange = (value: Value) => {
-    setEditorValue(value);
-    console.debug("Editor content changed", value.length, "nodes");
-  };
-
-  const handleRestoreVersion = async (snapshot: unknown, version: number, title: string) => {
-    void version;
-    try {
-      if (snapshot && document) {
-        if (title !== document.title) {
-          await updateTitle({ id: documentId, title });
-        }
-        showSuccess("Version restored successfully. Refreshing...");
-        window.location.reload();
-      }
-    } catch (error) {
-      showError(error, "Failed to restore version");
-    }
-  };
-
-  const replaceEditorValue = (value: Value) => {
-    setEditorSeedValue(value);
-    setEditorValue(value);
-    setEditorResetKey((prev) => prev + 1);
-  };
 
   return {
     showVersionHistory,
@@ -357,13 +377,272 @@ function usePlateEditorUiState({
     showMoveDialog,
     setShowMoveDialog,
     showSidebar,
+    toggleSidebar: () => setShowSidebar((prev) => !prev),
+  };
+}
+
+function serializeSnapshot(snapshot: unknown): string {
+  return JSON.stringify(snapshot);
+}
+
+function clearTimeoutRef(timeoutRef: MutableRefObject<number | null>) {
+  if (timeoutRef.current !== null) {
+    window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = null;
+  }
+}
+
+function getSerializedPlateValue(value: Value): string {
+  return serializeSnapshot(plateValueToProseMirrorSnapshot(value));
+}
+
+function getSeedValueFromSnapshot(latestSnapshot: unknown): Value {
+  return latestSnapshot ? proseMirrorSnapshotToValue(latestSnapshot) : getInitialValue();
+}
+
+function createRestoredVersionPayload(snapshot: unknown, version: number, currentVersion: number) {
+  return {
+    content: serializeSnapshot(snapshot),
+    nextVersion: Math.max(currentVersion, version) + 1,
+    value: proseMirrorSnapshotToValue(snapshot),
+  };
+}
+
+function usePlateDocumentSync({
+  documentId,
+  document,
+  latestSnapshot,
+  latestVersion,
+  versions,
+  submitSnapshot,
+  updateTitle,
+}: UsePlateDocumentSyncArgs) {
+  const [editorSeedValue, setEditorSeedValue] = useState<Value>(getInitialValue());
+  const [editorResetKey, setEditorResetKey] = useState(0);
+  const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
+  const [syncState, setSyncState] = useState<DocumentSyncState>("ready");
+  const saveTimeoutRef = useRef<number | null>(null);
+  const saveStateTimeoutRef = useRef<number | null>(null);
+  const isSavingRef = useRef(false);
+  const currentVersionRef = useRef(0);
+  const lastSavedContentRef = useRef(getSerializedPlateValue(getInitialValue()));
+  const pendingContentRef = useRef<string | null>(null);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (latestSnapshot === undefined || latestVersion === undefined) {
+      return;
+    }
+
+    // When there is no ProseMirror sync snapshot, fall back to the most
+    // recent version history snapshot so older documents aren't shown as blank.
+    const effectiveSnapshot =
+      latestSnapshot ?? (versions && versions.length > 0 ? versions[0].snapshot : null);
+
+    const serializedSnapshot = effectiveSnapshot
+      ? serializeSnapshot(effectiveSnapshot)
+      : getSerializedPlateValue(getInitialValue());
+
+    // After initial hydration, only reset the editor when the incoming
+    // snapshot actually differs from what we last saved. This prevents
+    // our own autosave acknowledgments from remounting the editor and
+    // causing cursor/selection jumps.
+    if (hydratedRef.current && serializedSnapshot === lastSavedContentRef.current) {
+      currentVersionRef.current = latestVersion ?? 0;
+      return;
+    }
+
+    const nextValue = getSeedValueFromSnapshot(effectiveSnapshot);
+
+    currentVersionRef.current = latestVersion ?? 0;
+    lastSavedContentRef.current = serializedSnapshot;
+    pendingContentRef.current = null;
+    hydratedRef.current = true;
+    setEditorSeedValue(nextValue);
+    setEditorValue(nextValue);
+    setEditorResetKey((prev) => prev + 1);
+    setSyncState("ready");
+  }, [latestSnapshot, latestVersion, versions]);
+
+  useEffect(
+    () => () => {
+      clearTimeoutRef(saveTimeoutRef);
+      clearTimeoutRef(saveStateTimeoutRef);
+    },
+    [],
+  );
+
+  const markSaved = useCallback(() => {
+    setSyncState("saved");
+    clearTimeoutRef(saveStateTimeoutRef);
+    saveStateTimeoutRef.current = window.setTimeout(() => {
+      setSyncState((current) => (current === "saved" ? "ready" : current));
+      saveStateTimeoutRef.current = null;
+    }, 1500);
+  }, []);
+
+  const persistSnapshot = useCallback(
+    async (content: string) => {
+      if (isSavingRef.current) {
+        pendingContentRef.current = content;
+        return;
+      }
+
+      isSavingRef.current = true;
+      setSyncState("saving");
+      const nextVersion = currentVersionRef.current + 1;
+
+      try {
+        await submitSnapshot({
+          id: documentId,
+          version: nextVersion,
+          content,
+        });
+        currentVersionRef.current = nextVersion;
+        lastSavedContentRef.current = content;
+        markSaved();
+      } catch (error) {
+        setSyncState("error");
+        showError(error, "Failed to save document");
+        // Schedule a retry so unsaved content is not lost after a transient failure.
+        // Only set the failed content for retry if the user hasn't queued newer edits.
+        if (!pendingContentRef.current) {
+          pendingContentRef.current = content;
+        }
+        saveTimeoutRef.current = window.setTimeout(() => {
+          saveTimeoutRef.current = null;
+          const retryContent = pendingContentRef.current;
+          pendingContentRef.current = null;
+          if (retryContent && retryContent !== lastSavedContentRef.current) {
+            void persistSnapshot(retryContent);
+          }
+        }, SAVE_RETRY_DELAY_MS);
+        return;
+      } finally {
+        isSavingRef.current = false;
+      }
+
+      const pendingContent = pendingContentRef.current;
+      pendingContentRef.current = null;
+      if (pendingContent && pendingContent !== lastSavedContentRef.current) {
+        void persistSnapshot(pendingContent);
+      }
+    },
+    [documentId, markSaved, submitSnapshot],
+  );
+
+  useEffect(() => {
+    if (latestSnapshot === undefined || latestVersion === undefined) {
+      return;
+    }
+
+    const nextContent = getSerializedPlateValue(editorValue);
+    if (nextContent === lastSavedContentRef.current) {
+      return;
+    }
+
+    clearTimeoutRef(saveTimeoutRef);
+
+    saveTimeoutRef.current = window.setTimeout(() => {
+      void persistSnapshot(nextContent);
+      saveTimeoutRef.current = null;
+    }, DOCUMENT_SAVE_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeoutRef(saveTimeoutRef);
+    };
+  }, [editorValue, latestSnapshot, latestVersion, persistSnapshot]);
+
+  const handleChange = (value: Value) => {
+    setEditorValue(value);
+  };
+
+  const replaceEditorValue = (
+    value: Value,
+    options?: { savedSnapshot?: unknown; version?: number },
+  ) => {
+    setEditorSeedValue(value);
+    setEditorValue(value);
+    setEditorResetKey((prev) => prev + 1);
+
+    if (options?.savedSnapshot) {
+      lastSavedContentRef.current = serializeSnapshot(options.savedSnapshot);
+    }
+
+    if (typeof options?.version === "number") {
+      currentVersionRef.current = options.version;
+    }
+  };
+
+  const handleRestoreVersion = async (snapshot: unknown, version: number, title: string) => {
+    try {
+      // Cancel any pending autosave so it doesn't race with the restore
+      // and consume the version number we're about to use.
+      clearTimeoutRef(saveTimeoutRef);
+      pendingContentRef.current = null;
+
+      // Wait for any in-flight autosave to finish so its version increment
+      // is reflected in currentVersionRef before we compute the restore target.
+      if (isSavingRef.current) {
+        await new Promise<void>((resolve) => {
+          const check = () => {
+            if (!isSavingRef.current) {
+              resolve();
+            } else {
+              window.setTimeout(check, 50);
+            }
+          };
+          check();
+        });
+      }
+
+      // Clear again after the wait — a failed in-flight autosave may have
+      // repopulated pendingContentRef and scheduled a retry during the wait.
+      clearTimeoutRef(saveTimeoutRef);
+      pendingContentRef.current = null;
+
+      setSyncState("saving");
+
+      // Compute the target version right before submit to avoid races
+      // with any autosave that may have just completed.
+      const restoredVersion = createRestoredVersionPayload(
+        snapshot,
+        version,
+        currentVersionRef.current,
+      );
+
+      await submitSnapshot({
+        id: documentId,
+        version: restoredVersion.nextVersion,
+        content: restoredVersion.content,
+      });
+
+      // Only update title after snapshot succeeds to avoid partial restores
+      // where metadata changed but content did not.
+      if (document && title !== document.title) {
+        await updateTitle({ id: documentId, title });
+      }
+
+      replaceEditorValue(restoredVersion.value, {
+        savedSnapshot: snapshot,
+        version: restoredVersion.nextVersion,
+      });
+      markSaved();
+      showSuccess("Version restored successfully");
+    } catch (error) {
+      setSyncState("error");
+      showError(error, "Failed to restore version");
+    }
+  };
+
+  return {
     editorSeedValue,
     editorResetKey,
     editorValue,
     handleChange,
     replaceEditorValue,
-    toggleSidebar: () => setShowSidebar((prev) => !prev),
     handleRestoreVersion,
+    syncState,
   };
 }
 
@@ -384,70 +663,66 @@ function EditorCanvas({
       {!isLocked && <FloatingToolbar />}
       {isEmptyEditor && (
         <Card
-          padding="lg"
+          padding="md"
           variant="soft"
-          className="mb-4 border-ui-border-secondary/85 bg-linear-to-br from-ui-bg via-ui-bg-elevated/96 to-ui-bg-secondary/78"
+          className="mb-5 border-ui-border-secondary/85 bg-linear-to-br from-ui-bg via-ui-bg-elevated/96 to-ui-bg-secondary/78"
         >
-          <Grid cols={1} colsLg={5} gap="md">
-            <Stack gap="sm" className="lg:col-span-3">
-              <Stack gap="xs">
-                <Typography variant="label">Blank document</Typography>
+          <Stack gap="md">
+            <Flex align="start" justify="between" gap="md" wrap>
+              <Stack gap="xs" className="max-w-2xl">
+                <Badge variant="secondary" shape="pill">
+                  Blank document
+                </Badge>
+                <Typography variant="h5">
+                  Start with the handoff context, then turn the note into operational follow-up.
+                </Typography>
                 <Typography variant="small" color="secondary">
-                  Start with a short overview, key decisions, and next steps. Use `/` for blocks,
-                  headings, and lists once you begin writing.
+                  Use `/` for headings, lists, quotes, and code blocks once you begin writing. The
+                  strongest docs keep the summary, decisions, owners, and next steps in one place.
                 </Typography>
               </Stack>
 
-              <Flex wrap gap="sm">
-                <Badge variant="secondary" shape="pill">
-                  Overview
-                </Badge>
-                <Badge variant="secondary" shape="pill">
-                  Decisions
-                </Badge>
-                <Badge variant="secondary" shape="pill">
-                  Risks
-                </Badge>
-                <Badge variant="secondary" shape="pill">
-                  Next steps
-                </Badge>
-              </Flex>
+              <Badge variant="outline" shape="pill">
+                / for blocks
+              </Badge>
+            </Flex>
 
-              <Grid cols={1} colsSm={2} gap="md">
-                <Stack gap="xs">
-                  <Typography variant="eyebrowWide">Suggested outline</Typography>
-                  <Typography variant="small" color="secondary">
-                    Summary, decisions, follow-ups, owners, and review date.
-                  </Typography>
-                </Stack>
-                <Stack gap="xs">
-                  <Typography variant="eyebrowWide">Quick actions</Typography>
-                  <Typography variant="small" color="secondary">
-                    Turn decisions into checklists, link risks to issues, and assign owners while
-                    the discussion is still fresh.
-                  </Typography>
-                </Stack>
-              </Grid>
-            </Stack>
+            <Flex wrap gap="sm">
+              <Badge variant="secondary" shape="pill">
+                Summary
+              </Badge>
+              <Badge variant="secondary" shape="pill">
+                Decisions
+              </Badge>
+              <Badge variant="secondary" shape="pill">
+                Risks
+              </Badge>
+              <Badge variant="secondary" shape="pill">
+                Owners
+              </Badge>
+              <Badge variant="secondary" shape="pill">
+                Next steps
+              </Badge>
+            </Flex>
 
-            <div className="h-full p-4 bg-ui-bg/88 lg:col-span-2">
-              <Stack gap="sm">
-                <Stack gap="xs">
-                  <Typography variant="eyebrowWide">Starter flow</Typography>
-                  <Typography variant="small" color="secondary">
-                    Capture the summary first, then turn action items into tasks or linked issues.
-                  </Typography>
-                </Stack>
-                <Stack gap="xs">
-                  <Typography variant="eyebrowWide">Suggested first section</Typography>
-                  <Typography variant="small" color="secondary">
-                    Add a short context paragraph, then break out the decisions, open risks, and
-                    next steps before expanding into full notes.
-                  </Typography>
-                </Stack>
-              </Stack>
-            </div>
-          </Grid>
+            <Grid cols={1} colsMd={3} gap="md">
+              {DOCUMENT_STARTER_SECTIONS.map((section) => (
+                <Card key={section.title} variant="section" padding="md" className="h-full">
+                  <Stack gap="sm">
+                    <Badge variant="outline" shape="pill" className="w-fit">
+                      <Flex as="span" align="center" gap="xs">
+                        <Icon icon={section.icon} size="sm" />
+                        <span>{section.title}</span>
+                      </Flex>
+                    </Badge>
+                    <Typography variant="small" color="secondary">
+                      {section.description}
+                    </Typography>
+                  </Stack>
+                </Card>
+              ))}
+            </Grid>
+          </Stack>
         </Card>
       )}
       <PlateRichTextContent
@@ -469,12 +744,15 @@ function usePlateEditorData(documentId: Id<"documents">): PlateEditorData {
   const { mutate: unarchiveDocument } = useAuthenticatedMutation(api.documents.unarchiveDocument);
   const { mutate: lockDocument } = useAuthenticatedMutation(api.documents.lockDocument);
   const { mutate: unlockDocument } = useAuthenticatedMutation(api.documents.unlockDocument);
+  const { mutate: submitSnapshot } = useAuthenticatedMutation(api.prosemirror.submitSnapshot);
   const isFavorite = useAuthenticatedQuery(api.documents.isFavorite, { documentId });
   const isArchived = useAuthenticatedQuery(api.documents.isArchived, { documentId });
   const lockStatus = useAuthenticatedQuery(api.documents.getLockStatus, { documentId });
   const userId = useAuthenticatedQuery(api.presence.getUserId, {});
   const versionCount = useAuthenticatedQuery(api.documentVersions.getVersionCount, { documentId });
   const versions = useAuthenticatedQuery(api.documentVersions.listVersions, { documentId });
+  const latestSnapshot = useAuthenticatedQuery(api.prosemirror.getSnapshot, { id: documentId });
+  const latestVersion = useAuthenticatedQuery(api.prosemirror.latestVersion, { id: documentId });
 
   return {
     document,
@@ -491,6 +769,9 @@ function usePlateEditorData(documentId: Id<"documents">): PlateEditorData {
     userId,
     versionCount,
     versions,
+    latestSnapshot,
+    latestVersion,
+    submitSnapshot,
   };
 }
 
@@ -522,6 +803,9 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     userId,
     versionCount,
     versions,
+    latestSnapshot,
+    latestVersion,
+    submitSnapshot,
   } = data;
 
   const {
@@ -530,23 +814,70 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     showMoveDialog,
     setShowMoveDialog,
     showSidebar,
+    toggleSidebar,
+  } = usePlateEditorUiState({
+    versions,
+  });
+  const {
     editorSeedValue,
     editorResetKey,
     editorValue,
     handleChange,
     replaceEditorValue,
-    toggleSidebar,
     handleRestoreVersion,
-  } = usePlateEditorUiState({
+    syncState,
+  } = usePlateDocumentSync({
     documentId,
     document,
+    latestSnapshot,
+    latestVersion,
     versions,
+    submitSnapshot,
     updateTitle,
   });
   const [markdownImportPreview, setMarkdownImportPreview] = useState<MarkdownImportPreview | null>(
     null,
   );
   const isEmptyEditor = isEmptyValue(editorSeedValue);
+
+  useEffect(() => {
+    const handleE2EEditorMarkdown = (event: Event) => {
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+
+      const detail = event.detail as E2EEditorMarkdownEventDetail | undefined;
+      if (typeof detail?.markdown !== "string") {
+        return;
+      }
+
+      try {
+        replaceEditorValue(markdownToValue(detail.markdown));
+      } catch (error) {
+        showError(error, "Failed to load e2e editor markdown");
+      }
+    };
+
+    const handleE2EEditorValue = (event: Event) => {
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+
+      const detail = event.detail as E2EEditorValueEventDetail | undefined;
+      if (!Array.isArray(detail?.value)) {
+        return;
+      }
+
+      replaceEditorValue(detail.value);
+    };
+
+    window.addEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
+    window.addEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
+    return () => {
+      window.removeEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
+      window.removeEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
+    };
+  }, [replaceEditorValue]);
 
   const {
     handleTitleEdit,
@@ -613,7 +944,8 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
           showError("Markdown export not yet implemented for Plate editor");
         }}
         onShowVersionHistory={() => setShowVersionHistory(true)}
-        editorReady={true}
+        editorReady={syncState !== "saving"}
+        syncState={syncState}
       />
 
       {lockStatus?.isLocked && <LockedDocumentBanner lockStatus={lockStatus} />}
@@ -623,14 +955,10 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
           <Card padding="md" variant="ghost" className="mx-auto w-full max-w-5xl">
             <ErrorBoundary
               fallback={
-                <div className="p-6 border border-status-error/20 bg-status-error-bg text-status-error text-center">
-                  <Stack gap="sm">
-                    <Typography variant="label">Editor failed to load</Typography>
-                    <Typography variant="muted" className="opacity-80">
-                      There was an issue initializing the rich text editor.
-                    </Typography>
-                  </Stack>
-                </div>
+                <SectionErrorFallback
+                  title="Editor failed to load"
+                  message="There was an issue initializing the rich text editor."
+                />
               }
             >
               <EditorCanvas
@@ -693,9 +1021,15 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
  */
 export function PlateEditor({ documentId }: PlateEditorProps) {
   const data = usePlateEditorData(documentId);
-  const { document, userId, versions } = data;
+  const { document, userId, versions, latestSnapshot, latestVersion } = data;
 
-  if (document === undefined || userId === undefined || versions === undefined) {
+  if (
+    document === undefined ||
+    userId === undefined ||
+    versions === undefined ||
+    latestSnapshot === undefined ||
+    latestVersion === undefined
+  ) {
     return <PlateEditorLoadingState versionsLoaded={versions !== undefined} />;
   }
 

@@ -19,6 +19,10 @@ import {
 export type IssueType = IssueTypeWithSubtask;
 export type { IssuePriority };
 
+export type IssuePriorityBadgeTone = "highest" | "high" | "medium" | "low" | "lowest";
+
+export type StatusBadgeTone = "success" | "warning" | "error" | "info" | "neutral";
+
 export { ISSUE_PRIORITIES, ISSUE_TYPES_WITH_SUBTASK } from "@convex/validators";
 
 /** Icon mapping for issue types - use with <Icon icon={ISSUE_TYPE_ICONS[type]} /> */
@@ -85,6 +89,21 @@ export function getPriorityColor(
   );
 }
 
+export function getPriorityBadgeTone(priority: string): IssuePriorityBadgeTone {
+  switch (priority) {
+    case "highest":
+      return "highest";
+    case "high":
+      return "high";
+    case "medium":
+      return "medium";
+    case "low":
+      return "low";
+    default:
+      return "lowest";
+  }
+}
+
 /**
  * Get the label for an issue type
  */
@@ -122,6 +141,28 @@ export function getStatusColor(status: string): string {
       return "bg-status-error-bg text-status-error-text";
     default:
       return "bg-ui-bg-tertiary text-ui-text-secondary";
+  }
+}
+
+export function getStatusBadgeTone(status: string): StatusBadgeTone {
+  switch (status.toLowerCase()) {
+    case "active":
+    case "in progress":
+    case "confirmed":
+      return "success";
+    case "tentative":
+      return "warning";
+    case "blocked":
+    case "cancelled":
+      return "error";
+    case "future":
+    case "todo":
+      return "info";
+    case "completed":
+    case "done":
+      return "neutral";
+    default:
+      return "neutral";
   }
 }
 

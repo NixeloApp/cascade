@@ -12,7 +12,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
-import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { getPriorityBadgeTone, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { IssueDetailLayout, useIssueDetail } from "./IssueDetail";
 import { Badge } from "./ui/Badge";
@@ -91,7 +91,7 @@ export function IssueDetailModal({
                 )}
               </Button>
             </Tooltip>
-            <Badge size="md" className={getPriorityColor(issue.priority, "badge")}>
+            <Badge size="md" priorityTone={getPriorityBadgeTone(issue.priority)}>
               {issue.priority}
             </Badge>
           </Flex>

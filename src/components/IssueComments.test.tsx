@@ -110,8 +110,10 @@ describe("IssueComments", () => {
 
     render(<IssueComments issueId={issueId} projectId={projectId} />);
 
-    expect(screen.getByText("No comments yet")).toBeInTheDocument();
-    expect(screen.getByText("Be the first to comment.")).toBeInTheDocument();
+    expect(screen.getByText("No conversation yet")).toBeInTheDocument();
+    expect(
+      screen.getByText("Use comments to capture decisions, blockers, and handoff notes."),
+    ).toBeInTheDocument();
   });
 
   it("renders comments and supports loading more results", () => {

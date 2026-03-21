@@ -1,84 +1,172 @@
-import { cva } from "class-variance-authority";
+import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Building2, KanbanSquare, MessageSquare } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Icon, type IconTone } from "../ui/Icon";
+import { IconCircle } from "../ui/IconCircle";
+import { SectionIntro } from "../ui/SectionIntro";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
-const stories = [
+type EvidenceRow = {
+  label: string;
+  value: string;
+};
+
+type Story = {
+  audience: string;
+  body: string;
+  evidence: EvidenceRow[];
+  icon: LucideIcon;
+  iconTone: IconTone;
+  stat: string;
+  statLabel: string;
+  title: string;
+};
+
+const stories: Story[] = [
   {
+    audience: "Product ops",
     icon: KanbanSquare,
-    title: "Product teams stop rebuilding the same context",
-    body: "Specs, execution, and delivery signals live in the same system, so project updates stop becoming a manual reporting exercise.",
-    stat: "11h saved weekly",
+    iconTone: "brand",
+    title: "Planning, specs, and release prep stay attached",
+    body: "Boards, specs, and delivery context stay on the same execution thread, so product leads stop rebuilding updates from scattered tools.",
+    statLabel: "Recovered weekly",
+    stat: "11h",
+    evidence: [
+      {
+        label: "Comes from",
+        value: "Live board state, linked docs, and release prep in one workflow.",
+      },
+      {
+        label: "Removes",
+        value: "Manual recap docs and duplicate status decks before every review.",
+      },
+    ],
   },
   {
+    audience: "Client delivery",
     icon: MessageSquare,
-    title: "Client-facing teams keep updates grounded in real work",
-    body: "Shared issues, docs, and summaries reduce the drift between internal execution and external communication.",
-    stat: "2 fewer tools in the loop",
+    iconTone: "warning",
+    title: "Client updates start from live work, not retelling",
+    body: "Shared issues, docs, and summaries keep the external update path grounded in the same work the team is already shipping.",
+    statLabel: "Tools removed",
+    stat: "2",
+    evidence: [
+      {
+        label: "Inputs",
+        value: "Issue movement, linked briefs, and AI summaries stay in one handoff path.",
+      },
+      {
+        label: "What changes",
+        value: "Client-ready notes ship from current work instead of a separate recap workflow.",
+      },
+    ],
   },
   {
+    audience: "Operations",
     icon: Building2,
-    title: "Ops leaders get cleaner visibility without heavier process",
-    body: "Boards, docs, and timers produce a clearer operating picture without asking the team to fill out three extra systems.",
+    iconTone: "success",
+    title: "Leadership sees an operating pulse instead of admin fog",
+    body: "Boards, docs, summaries, and timers produce a cleaner operating view without asking the team to fill out another reporting layer.",
+    statLabel: "Outcome",
     stat: "Faster handoffs",
+    evidence: [
+      {
+        label: "Signals",
+        value: "Time, blockers, and delivery context stay attached to the same workspace surface.",
+      },
+      {
+        label: "Avoids",
+        value: "Separate ops trackers and manual rollups just to explain current status.",
+      },
+    ],
   },
 ];
 
-const whyChooseVariants = {
-  section: cva("px-6 py-24"),
-  iconBadge: cva("rounded-full bg-ui-bg-soft p-3 text-brand"),
-};
-
-/** Proof section with outcome-oriented customer-style cards. */
+/** Product-grounded proof section showing how work stays attached across surfaces. */
 export function WhyChooseSection() {
   return (
-    <section className={whyChooseVariants.section()}>
-      <Container size="lg">
-        <div className="mb-14 text-center">
-          <Badge variant="outline" shape="pill" className="mb-4">
-            Why teams move
-          </Badge>
-          <Typography variant="landingSectionTitle">
-            Better product ops usually starts with fewer disconnected surfaces
-          </Typography>
-          <Typography variant="lead" className="mx-auto mt-4 max-w-3xl">
-            The win is not just prettier UI. It is less repeated searching, less status translation,
-            and fewer places where the truth can drift.
-          </Typography>
-        </div>
+    <section data-testid={TEST_IDS.LANDING.PROOF_SECTION}>
+      <Container
+        size="lg"
+        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}
+      >
+        <Stack gap="2xl">
+          <SectionIntro
+            align="center"
+            eyebrow="What stays grounded"
+            title="The proof is in how work survives every handoff"
+            description="These are not abstract productivity claims. They are the concrete places where one shared workspace removes recap work, status translation, and context drift."
+          />
 
-        <Grid cols={1} colsLg={3} gap="xl">
-          {stories.map((story) => (
-            <Card key={story.title} recipe="landingStoryCard" padding="none">
-              <Flex align="center" justify="between" className="mb-5">
-                <div className={whyChooseVariants.iconBadge()}>
-                  <story.icon className="h-5 w-5" />
-                </div>
-                <Badge variant="neutral" shape="pill">
-                  {story.stat}
-                </Badge>
-              </Flex>
-
-              <Typography variant="h3">{story.title}</Typography>
-              <Typography variant="small" color="secondary" className="mt-3 leading-7">
-                {story.body}
-              </Typography>
-
-              <Button asChild variant="link" size="none" className="mt-5 text-brand">
-                <a href="#product-showcase">
-                  See the product flow
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-              </Button>
-            </Card>
-          ))}
-        </Grid>
+          <Grid cols={1} colsLg={3} gap="xl">
+            {stories.map((story) => (
+              <StoryCard key={story.title} {...story} />
+            ))}
+          </Grid>
+        </Stack>
       </Container>
     </section>
+  );
+}
+
+function StoryCard({ audience, body, evidence, icon, iconTone, stat, statLabel, title }: Story) {
+  return (
+    <Card recipe="landingStoryCard" padding="none">
+      <Stack gap="lg">
+        <Flex align="center" justify="between" gap="sm">
+          <Flex align="center" gap="sm" style={{ minWidth: 0 }}>
+            <IconCircle size="md" variant="soft">
+              <Icon icon={icon} size="md" tone={iconTone} />
+            </IconCircle>
+            <Stack gap="xs">
+              <Typography variant="pageHeaderEyebrow">{audience}</Typography>
+              <Typography variant="label">{statLabel}</Typography>
+            </Stack>
+          </Flex>
+
+          <Badge variant="outline" shape="pill">
+            {stat}
+          </Badge>
+        </Flex>
+
+        <Stack gap="sm">
+          <Typography variant="h3">{title}</Typography>
+          <Typography variant="small" color="secondary">
+            {body}
+          </Typography>
+        </Stack>
+
+        <Stack gap="sm">
+          {evidence.map((item) => (
+            <ProofEvidenceRow key={`${title}-${item.label}`} {...item} />
+          ))}
+        </Stack>
+
+        <Button asChild variant="link" size="none">
+          <a href="#product-showcase">
+            See the connected workflow
+            <Icon icon={ArrowRight} size="sm" />
+          </a>
+        </Button>
+      </Stack>
+    </Card>
+  );
+}
+
+function ProofEvidenceRow({ label, value }: EvidenceRow) {
+  return (
+    <Card recipe="overlayInset" variant="section" padding="sm">
+      <Stack gap="xs">
+        <Typography variant="pageHeaderEyebrow">{label}</Typography>
+        <Typography variant="caption">{value}</Typography>
+      </Stack>
+    </Card>
   );
 }

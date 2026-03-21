@@ -16,7 +16,6 @@ import { InlineSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { type FuzzySearchResult, highlightMatches } from "@/hooks/useFuzzySearch";
 import { X } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 
 interface FuzzySearchInputProps<T> {
   /**
@@ -237,8 +236,10 @@ export function FuzzySearchInput<T>({
           ) : (
             results.map((result, index) => (
               <Button
-                variant="unstyled"
                 key={getKey(result.item)}
+                variant="unstyled"
+                chrome={index === selectedIndex ? "listRowActive" : "listRow"}
+                chromeSize="listRow"
                 role="option"
                 aria-selected={index === selectedIndex}
                 onClick={() => {
@@ -247,10 +248,7 @@ export function FuzzySearchInput<T>({
                   onSearch("");
                 }}
                 onMouseEnter={() => setSelectedIndex(index)}
-                className={cn(
-                  "w-full px-4 py-2.5 text-left flex items-center justify-between transition-fast h-auto",
-                  index === selectedIndex ? "bg-ui-bg-hover text-ui-text" : "text-ui-text",
-                )}
+                className="transition-fast"
               >
                 <FlexItem flex="1">{renderItem(result)}</FlexItem>
                 {showScore && result.score !== undefined && result.score > 0 && (

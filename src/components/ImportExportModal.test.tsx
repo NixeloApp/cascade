@@ -155,6 +155,31 @@ describe("ImportExportModal - Component Behavior", () => {
       expect(screen.queryByText("Select Import Format")).not.toBeInTheDocument();
     });
 
+    it("should reset back to export mode when the dialog closes", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(
+        <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
+      );
+
+      await user.click(getImportModeControl());
+      expect(screen.getByText("Select Import Format")).toBeInTheDocument();
+
+      rerender(
+        <ImportExportModal
+          open={false}
+          onOpenChange={mockOnOpenChange}
+          projectId={mockProjectId}
+        />,
+      );
+
+      rerender(
+        <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
+      );
+
+      expect(screen.getByText("Select Export Format")).toBeInTheDocument();
+      expect(screen.queryByText("Select Import Format")).not.toBeInTheDocument();
+    });
+
     it("should maintain separate format selections for export and import", async () => {
       const user = userEvent.setup();
 

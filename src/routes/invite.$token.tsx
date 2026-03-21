@@ -16,6 +16,7 @@ import { AuthRedirect, SignInForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -109,7 +110,7 @@ function InviteRoute() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto mb-4" />
+          <Icon icon={Loader2} size="xl" tone="brand" animation="spin" className="mx-auto mb-4" />
           <Typography className="text-ui-text-secondary">Loading invitation...</Typography>
         </div>
       </Flex>
@@ -122,7 +123,7 @@ function InviteRoute() {
       <InviteStateScreen
         actionLabel="Go to Home"
         body="This invitation link is invalid or has been removed. Please contact the person who invited you for a new link."
-        icon={<AlertCircle className="w-12 h-12 text-status-error" />}
+        icon={<Icon icon={AlertCircle} size="xl" tone="error" />}
         iconVariant="error"
         onAction={goToHome}
         title="Invalid Invitation"
@@ -144,7 +145,7 @@ function InviteRoute() {
             to send a new invitation.
           </>
         }
-        icon={<Clock className="w-12 h-12 text-status-warning-text" />}
+        icon={<Icon icon={Clock} size="xl" />}
         iconVariant="warning"
         onAction={goToHome}
         title="Invitation Expired"
@@ -158,7 +159,7 @@ function InviteRoute() {
       <InviteStateScreen
         actionLabel="Go to Dashboard"
         body="This invitation has already been accepted. You can sign in to access your account."
-        icon={<CheckCircle className="w-12 h-12 text-status-success" />}
+        icon={<Icon icon={CheckCircle} size="xl" tone="success" />}
         iconVariant="success"
         onAction={goToHome}
         title="Already Accepted"
@@ -172,7 +173,7 @@ function InviteRoute() {
       <InviteStateScreen
         actionLabel="Go to Home"
         body="This invitation has been revoked. Please contact the team administrator if you believe this is a mistake."
-        icon={<AlertCircle className="w-12 h-12 text-status-error" />}
+        icon={<Icon icon={AlertCircle} size="xl" tone="error" />}
         iconVariant="error"
         onAction={goToHome}
         title="Invitation Revoked"
@@ -189,7 +190,7 @@ function InviteRoute() {
       {/* Header */}
       <header className="p-6 flex items-center justify-center">
         <Flex align="center" gap="sm">
-          <Flex align="center" justify="center" className="h-8 w-8 rounded-lg bg-brand-main">
+          <Flex align="center" justify="center" className="size-8 rounded-lg bg-brand-main">
             <Typography as="span" variant="label" className="text-ui-bg">
               N
             </Typography>
@@ -275,7 +276,7 @@ function InviteRoute() {
                   >
                     {isAccepting ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        <Icon icon={Loader2} size="sm" animation="spin" className="mr-2" />
                         Accepting...
                       </>
                     ) : (

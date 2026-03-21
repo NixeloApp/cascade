@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  getPriorityBadgeTone,
   getPriorityColor,
+  getStatusBadgeTone,
   getStatusColor,
   getTypeLabel,
   ISSUE_TYPE_ICONS,
@@ -116,6 +118,17 @@ describe("issue-utils", () => {
     });
   });
 
+  describe("getPriorityBadgeTone", () => {
+    it("should map each priority to an owned badge tone", () => {
+      expect(getPriorityBadgeTone("highest")).toBe("highest");
+      expect(getPriorityBadgeTone("high")).toBe("high");
+      expect(getPriorityBadgeTone("medium")).toBe("medium");
+      expect(getPriorityBadgeTone("low")).toBe("low");
+      expect(getPriorityBadgeTone("lowest")).toBe("lowest");
+      expect(getPriorityBadgeTone("unknown")).toBe("lowest");
+    });
+  });
+
   describe("getTypeLabel", () => {
     it("should return correct label for bug type", () => {
       expect(getTypeLabel("bug")).toBe("Bug");
@@ -198,6 +211,24 @@ describe("issue-utils", () => {
       expect(getStatusColor("unknown")).toBe(expected);
       expect(getStatusColor("")).toBe(expected);
       expect(getStatusColor("custom-status")).toBe(expected);
+    });
+  });
+
+  describe("getStatusBadgeTone", () => {
+    it("should map active-ish statuses to owned success badge tones", () => {
+      expect(getStatusBadgeTone("active")).toBe("success");
+      expect(getStatusBadgeTone("in progress")).toBe("success");
+      expect(getStatusBadgeTone("confirmed")).toBe("success");
+    });
+
+    it("should map warning, error, info, and neutral statuses to owned badge tones", () => {
+      expect(getStatusBadgeTone("tentative")).toBe("warning");
+      expect(getStatusBadgeTone("blocked")).toBe("error");
+      expect(getStatusBadgeTone("cancelled")).toBe("error");
+      expect(getStatusBadgeTone("future")).toBe("info");
+      expect(getStatusBadgeTone("todo")).toBe("info");
+      expect(getStatusBadgeTone("done")).toBe("neutral");
+      expect(getStatusBadgeTone("unknown")).toBe("neutral");
     });
   });
 });

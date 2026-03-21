@@ -48,6 +48,22 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
       outline:
         "bg-transparent text-ui-text-secondary border border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-soft",
     },
+    priorityTone: {
+      none: "",
+      highest: "bg-status-error-bg text-priority-highest border border-transparent",
+      high: "bg-status-warning-bg text-priority-high border border-transparent",
+      medium: "bg-status-warning-bg text-priority-medium border border-transparent",
+      low: "bg-status-info-bg text-priority-low border border-transparent",
+      lowest: "bg-ui-bg-tertiary text-priority-lowest border border-transparent",
+    },
+    statusTone: {
+      none: "",
+      success: "bg-status-success-bg text-status-success-text border border-transparent",
+      warning: "bg-status-warning-bg text-status-warning-text border border-transparent",
+      error: "bg-status-error-bg text-status-error-text border border-transparent",
+      info: "bg-status-info-bg text-status-info-text border border-transparent",
+      neutral: "bg-ui-bg-tertiary text-ui-text-secondary border border-transparent",
+    },
     size: {
       mentionInput: "px-1 py-0 text-sm",
       sm: "text-xs px-2 py-0.5",
@@ -64,6 +80,8 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
   },
   defaultVariants: {
     variant: "neutral",
+    priorityTone: "none",
+    statusTone: "none",
     size: "sm",
     shape: "rounded",
   },
@@ -87,11 +105,11 @@ export interface BadgeProps
  * <Badge variant="brand" shape="pill">New</Badge>
  */
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ className, variant, size, shape, ...props }, ref) => {
+  ({ className, variant, priorityTone, shape, size, statusTone, ...props }, ref) => {
     return (
       <span
         ref={ref}
-        className={cn(badgeVariants({ variant, size, shape }), className)}
+        className={cn(badgeVariants({ variant, priorityTone, shape, size, statusTone }), className)}
         {...props}
       />
     );

@@ -1,99 +1,239 @@
 import { Link } from "@tanstack/react-router";
-import { cva } from "class-variance-authority";
+import type { LucideIcon } from "lucide-react";
 import { ROUTES } from "@/config/routes";
-import { ArrowRight, Rocket, ShieldCheck } from "@/lib/icons";
+import { ArrowRight, Bot, Rocket, ShieldCheck } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card, getCardRecipeClassName } from "../ui/Card";
+import { Card } from "../ui/Card";
 import { Container } from "../ui/Container";
+import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
-import { Grid } from "../ui/Grid";
+import { Grid, GridItem } from "../ui/Grid";
+import { Icon, type IconTone } from "../ui/Icon";
+import { IconCircle } from "../ui/IconCircle";
+import { SectionIntro } from "../ui/SectionIntro";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
-const finalCtaVariants = {
-  section: cva("px-6 py-24"),
-  shell: cva(
-    "rounded-3xl border-ui-border/50 bg-linear-to-br from-ui-bg-secondary via-ui-bg-elevated to-ui-bg-secondary p-8 shadow-elevated md:p-12",
-  ),
-  iconBadge: cva("rounded-full p-2", {
-    variants: {
-      tone: {
-        brand: "bg-brand-subtle text-brand",
-        success: "bg-status-success/15 text-status-success-text",
-      },
-    },
-  }),
+type LaunchStep = {
+  body: string;
+  icon: LucideIcon;
+  iconTone: IconTone;
+  resultLabel: string;
+  resultValue: string;
+  stage: string;
+  title: string;
 };
 
-/** Closing CTA section for the landing page. */
+type ClosingSignal = {
+  label: string;
+  value: string;
+};
+
+const launchSteps = [
+  {
+    stage: "Day 1",
+    title: "Bring current work into one operating surface",
+    body: "Start with the live board, the linked docs, and the client-facing context your team already needs instead of building a fake pilot workflow on the side.",
+    icon: Rocket,
+    iconTone: "brand",
+    resultLabel: "Removes",
+    resultValue: "Recopying work into a throwaway rollout layer before the real team can move.",
+  },
+  {
+    stage: "First cycle",
+    title: "Run planning, search, and follow-up from the same place",
+    body: "Issues, docs, AI answers, and client-ready summaries stay attached through the first operating loop, so the team stops translating status across tools just to stay aligned.",
+    icon: Bot,
+    iconTone: "info",
+    resultLabel: "Keeps",
+    resultValue:
+      "Live delivery context grounded when the first update, review, and handoff happen.",
+  },
+  {
+    stage: "When rollout expands",
+    title: "Add governance only when the organization needs it",
+    body: "Bring in identity, audit, and network controls as the rollout gets more serious without resetting the workspace model that already fits the team.",
+    icon: ShieldCheck,
+    iconTone: "success",
+    resultLabel: "Adds",
+    resultValue:
+      "SSO, IP restrictions, and tighter rollout trust without switching products midstream.",
+  },
+] satisfies LaunchStep[];
+
+const closingSignals = [
+  {
+    label: "Same workspace core",
+    value:
+      "Boards, docs, AI assistance, and client-ready updates stay attached from the first team through the stricter rollout.",
+  },
+  {
+    label: "No fake pilot",
+    value:
+      "The first setup should already look like the product you plan to run, not a stripped-down placeholder story.",
+  },
+  {
+    label: "Control when needed",
+    value:
+      "Pricing and governance now support the rollout instead of forcing a second narrative at the end of the page.",
+  },
+] satisfies ClosingSignal[];
+
+/** Closing CTA section for the landing page, framed as a product handoff instead of generic marketing filler. */
 export function FinalCTASection() {
   return (
-    <section className={finalCtaVariants.section()}>
-      <Container size="lg">
-        <Card className={finalCtaVariants.shell()}>
-          <div className="mx-auto max-w-3xl text-center">
-            <Badge variant="outline" shape="pill" className="mb-5">
-              Built for teams that need one system, not another tab
-            </Badge>
-            <Typography variant="landingSectionTitle">
-              Make product work easier to run and easier to trust
-            </Typography>
-            <Typography variant="lead" className="mt-4">
-              Start free, bring your current workflow in, and let docs, execution, and AI assist
-              each other from day one.
-            </Typography>
+    <section id="final-cta">
+      <Container
+        size="lg"
+        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}
+      >
+        <Card recipe="showcaseShell" padding="xl">
+          <Stack gap="2xl">
+            <SectionIntro
+              align="center"
+              eyebrow="What the first operating cycle looks like"
+              title="Open one workspace, then let the same system carry the handoff"
+              description="The point of signing up is not another promise. It is being able to bring work in, run a planning cycle, and send a grounded update without rebuilding context."
+            />
 
-            <Flex justify="center" gap="md" wrap className="mt-8">
-              <Button asChild size="lg">
-                <Link to={ROUTES.signup.path}>Get started for free</Link>
-              </Button>
-              <Button asChild variant="secondary" size="lg">
-                <a href="#product-showcase">See the workflow tour</a>
-              </Button>
-            </Flex>
-          </div>
+            <Grid cols={1} colsLg={12} gap="lg">
+              <GridItem colSpanLg={8}>
+                <Card recipe="dashboardPanel" variant="section" padding="lg" className="h-full">
+                  <Stack gap="lg">
+                    <Flex align="center" justify="between" gap="md" wrap>
+                      <Stack gap="xs">
+                        <Typography variant="pageHeaderEyebrow">First operating cycle</Typography>
+                        <Typography variant="cardTitle">
+                          The first win is fewer rebuilds, not a prettier rollout deck
+                        </Typography>
+                      </Stack>
+                      <Badge variant="outline" shape="pill">
+                        Product-grounded handoff
+                      </Badge>
+                    </Flex>
 
-          <Grid cols={1} colsMd={2} gap="lg" className="mt-10">
-            <div className={getCardRecipeClassName("landingFinalFeatureCard")}>
-              <Flex align="center" gap="sm" className="mb-3">
-                <div className={finalCtaVariants.iconBadge({ tone: "brand" })}>
-                  <Rocket className="h-4 w-4" />
-                </div>
-                <Typography variant="label">Quickstart without churn</Typography>
-              </Flex>
-              <Typography variant="small" color="secondary">
-                Import the basics, keep your team moving, and expand into docs, client views, and
-                time tracking as needed.
-              </Typography>
-              <Button asChild variant="link" size="none" className="mt-4 text-brand">
-                <a href="#features">
-                  Explore the product
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-              </Button>
-            </div>
+                    <Stack gap="sm">
+                      {launchSteps.map((step) => (
+                        <LaunchStepCard key={step.title} {...step} />
+                      ))}
+                    </Stack>
+                  </Stack>
+                </Card>
+              </GridItem>
 
-            <div className={getCardRecipeClassName("landingFinalFeatureCard")}>
-              <Flex align="center" gap="sm" className="mb-3">
-                <div className={finalCtaVariants.iconBadge({ tone: "success" })}>
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <Typography variant="label">Ready for serious teams</Typography>
-              </Flex>
-              <Typography variant="small" color="secondary">
-                Flexible pricing, enterprise controls, and a product model that can handle internal
-                execution plus external-facing updates.
-              </Typography>
-              <Button asChild variant="link" size="none" className="mt-4 text-brand">
-                <a href="#pricing">
-                  Review pricing
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-              </Button>
-            </div>
-          </Grid>
+              <GridItem colSpanLg={4}>
+                <Card
+                  recipe="dashboardPanelInset"
+                  variant="section"
+                  padding="lg"
+                  className="h-full"
+                >
+                  <Stack gap="lg" className="h-full">
+                    <Stack gap="sm">
+                      <Typography variant="pageHeaderEyebrow">Choose the next move</Typography>
+                      <Typography variant="cardTitle">
+                        Start free, review the rollout, or walk the product once more
+                      </Typography>
+                      <Typography variant="small" color="secondary">
+                        However you enter, the next step should still look like the same connected
+                        workspace you just saw, not a different closing-page promise.
+                      </Typography>
+                    </Stack>
+
+                    <Stack gap="sm">
+                      {closingSignals.map((signal) => (
+                        <ClosingSignalRow key={signal.label} {...signal} />
+                      ))}
+                    </Stack>
+
+                    <div style={{ flex: 1 }} />
+
+                    <Stack gap="sm">
+                      <Button asChild size="lg" className="w-full">
+                        <Link to={ROUTES.signup.path}>Get started for free</Link>
+                      </Button>
+                      <Button asChild variant="secondary" size="lg" className="w-full">
+                        <a href="#pricing">Review rollout stages</a>
+                      </Button>
+                      <Button asChild variant="link" size="none">
+                        <a href="#product-showcase">
+                          See the workflow tour
+                          <Icon icon={ArrowRight} size="sm" />
+                        </a>
+                      </Button>
+                    </Stack>
+                  </Stack>
+                </Card>
+              </GridItem>
+            </Grid>
+          </Stack>
         </Card>
       </Container>
     </section>
   );
+}
+
+function LaunchStepCard({
+  body,
+  icon,
+  iconTone,
+  resultLabel,
+  resultValue,
+  stage,
+  title,
+}: LaunchStep) {
+  return (
+    <Card recipe="overlayInset" variant="section" padding="md">
+      <Stack gap="md">
+        <Flex align="center" justify="between" gap="sm" wrap>
+          <Flex align="center" gap="sm" style={{ minWidth: 0 }}>
+            <IconCircle size="sm" variant="soft">
+              <Icon icon={icon} size="sm" tone={iconTone} />
+            </IconCircle>
+            <Stack gap="xs">
+              <Typography variant="pageHeaderEyebrow">{stage}</Typography>
+              <Typography variant="label">{title}</Typography>
+            </Stack>
+          </Flex>
+          <Badge variant="outline" shape="pill" size="sm">
+            {resultLabel}
+          </Badge>
+        </Flex>
+
+        <Typography variant="small" color="secondary">
+          {body}
+        </Typography>
+
+        <Flex align="center" gap="xs">
+          <Dot size="sm" color={getStepDotColor(iconTone)} />
+          <Typography variant="caption">{resultValue}</Typography>
+        </Flex>
+      </Stack>
+    </Card>
+  );
+}
+
+function ClosingSignalRow({ label, value }: ClosingSignal) {
+  return (
+    <Card recipe="overlayInset" variant="section" padding="sm">
+      <Stack gap="xs">
+        <Typography variant="pageHeaderEyebrow">{label}</Typography>
+        <Typography variant="caption">{value}</Typography>
+      </Stack>
+    </Card>
+  );
+}
+
+function getStepDotColor(iconTone: IconTone) {
+  switch (iconTone) {
+    case "brand":
+      return "brand";
+    case "info":
+      return "info";
+    case "success":
+      return "success";
+    default:
+      return "muted";
+  }
 }

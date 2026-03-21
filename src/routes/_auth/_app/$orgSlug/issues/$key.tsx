@@ -15,14 +15,14 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/$key")({
 
 function IssuePage() {
   const { orgSlug, key } = Route.useParams();
-  const { billingEnabled } = useOrganization();
+  const { billingEnabled, organizationId } = useOrganization();
 
   // Parse project key from issue key (e.g., "PROJ-123" -> "PROJ")
   const parts = key.split("-");
   const projectKey = parts.slice(0, -1).join("-");
 
   // Get issue ID by key first
-  const issueByKey = useAuthenticatedQuery(api.issues.getByKey, { key });
+  const issueByKey = useAuthenticatedQuery(api.issues.getByKey, { key, organizationId });
 
   if (issueByKey === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

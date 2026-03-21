@@ -13,7 +13,6 @@ import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
@@ -294,13 +293,11 @@ interface PropertyRowProps {
 
 export function PropertyRow({ label, children }: PropertyRowProps) {
   return (
-    <Card recipe="issueMetadataRow">
-      <Flex align="center" justify="between">
-        <Typography variant="meta" color="secondary" className="min-w-24">
-          {label}
-        </Typography>
-        <FlexItem flex="1">{children}</FlexItem>
-      </Flex>
-    </Card>
+    <Flex align="center" justify="between">
+      <Typography variant="meta" color="secondary" className="min-w-24">
+        {label}
+      </Typography>
+      <FlexItem flex="1">{children}</FlexItem>
+    </Flex>
   );
 }

@@ -1,23 +1,80 @@
 /**
  * CHECK: CVA Boundaries
  *
- * Blocks importing exported CVA recipe helpers outside the shared ui layer.
+ * Blocks importing exported CVA recipe helpers outside the shared ui layer and
+ * ratchets feature-local `cva()` definitions outside `src/components/ui/`.
  * App code should consume typed component APIs, not import another component's
- * internal `*Variants` recipe and reuse it on unrelated elements.
+ * internal `*Variants` recipe and reuse it on unrelated elements, and new CVA
+ * sprawl should not spread across feature code.
  *
  * Allowed:
  * - Imports inside `src/components/ui/` (shared primitives composing other primitives)
+ * - Existing baselined feature-local CVA definitions while cleanup is in flight
+ * - Existing baselined base-only feature-local CVA definitions while cleanup is in flight
+ * - Existing baselined feature-local CVA style bundles while cleanup is in flight
+ * - Existing baselined weighted feature-local class-string style bundle penalties while cleanup is in flight
+ * - Existing baselined single-use variant-bearing feature-local CVA helpers while cleanup is in flight
+ * - Existing baselined oversized variant axes while shared primitive cleanup is in flight
  *
  * Blocked:
  * - `buttonVariants`, `tabsTriggerVariants`, `cardRecipeVariants`, etc. in routes/components pages
+ * - New or increased `cva()` definitions outside `src/components/ui/`
+ * - New or increased base-only `cva()` definitions outside `src/components/ui/`
+ * - New or increased feature-local object bundles that expose multiple `cva()` helpers as a local styling API
+ * - New or increased weighted penalties for feature-local object bundles that expose class-string styling APIs
+ * - New or increased single-use variant-bearing feature-local `cva()` helpers outside `src/components/ui/`
+ * - New or increased oversized CVA variant axes with more than 10 options
  */
 
 import fs from "node:fs";
 import path from "node:path";
+import ts from "typescript";
+import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const IMPORT_RE = /import\s*\{([\s\S]*?)\}\s*from\s*["'][^"']+["']/g;
 const CVA_HELPER_RE = /\b[A-Za-z0-9_]*(?:Variants|Style)\b/;
+const FEATURE_CVA_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "feature-cva-definitions-baseline.json",
+);
+const FEATURE_CVA_BASE_ONLY_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "feature-cva-base-only-baseline.json",
+);
+const FEATURE_CVA_STYLE_BUNDLES_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "feature-cva-style-bundles-baseline.json",
+);
+const FEATURE_CLASS_STRING_STYLE_BUNDLE_PENALTY_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "feature-class-string-style-bundle-penalty-baseline.json",
+);
+const FEATURE_CVA_SINGLE_USE_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "feature-cva-single-use-baseline.json",
+);
+const OVERSIZED_CVA_VARIANT_AXIS_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "oversized-cva-variant-axis-baseline.json",
+);
+const MAX_VARIANT_OPTIONS_PER_AXIS = 10;
+const CLASS_STRING_STYLE_BUNDLE_PENALTY_MULTIPLIER = 3;
+const STYLE_OBJECT_NAME_RE = /(?:Classes|ClassNames|Styles|Style|Variants|Recipes)$/;
+const UTILITY_CLASS_TOKEN_RE =
+  /^(?:!?)(?:[\w-]+:)*(?:flex|inline-flex|grid|block|inline-block|hidden|relative|absolute|sticky|fixed|mx-auto|text-(?:[a-z0-9-./[\]%]+)|bg-(?:[a-z0-9-./[\]%]+)|border(?:-(?:[a-z0-9-./[\]%]+))?|rounded(?:-(?:[a-z0-9-./[\]%]+))?|shadow(?:-(?:[a-z0-9-./[\]%]+))?|ring(?:-(?:[a-z0-9-./[\]%]+))?|outline(?:-(?:[a-z0-9-./[\]%]+))?|[mp][trblxy]?-(?:[a-z0-9-./[\]%]+)|gap-(?:[a-z0-9-./[\]%]+)|space-[xy]-(?:[a-z0-9-./[\]%]+)|w-(?:[a-z0-9-./[\]%]+)|h-(?:[a-z0-9-./[\]%]+)|min-w-(?:[a-z0-9-./[\]%]+)|max-w-(?:[a-z0-9-./[\]%]+)|min-h-(?:[a-z0-9-./[\]%]+)|max-h-(?:[a-z0-9-./[\]%]+)|font-(?:[a-z0-9-./[\]%]+)|leading-(?:[a-z0-9-./[\]%]+)|tracking-(?:[a-z0-9-./[\]%]+)|opacity-(?:[a-z0-9-./[\]%]+)|transition(?:-(?:[a-z0-9-./[\]%]+))?|duration-(?:[a-z0-9-./[\]%]+)|ease-(?:[a-z0-9-./[\]%]+)|items-(?:[a-z0-9-./[\]%]+)|justify-(?:[a-z0-9-./[\]%]+)|content-(?:[a-z0-9-./[\]%]+)|self-(?:[a-z0-9-./[\]%]+)|place-items-(?:[a-z0-9-./[\]%]+)|overflow(?:-(?:[a-z0-9-./[\]%]+))?|truncate|whitespace-(?:[a-z0-9-./[\]%]+)|backdrop-blur(?:-(?:[a-z0-9-./[\]%]+))?)$/i;
 
 function getLineNumber(content, index) {
   return content.slice(0, index).split("\n").length;
@@ -33,20 +90,469 @@ function parseImportedNames(rawSpecifiers) {
     .filter(Boolean);
 }
 
+function createSourceFile(filePath, content) {
+  return ts.createSourceFile(
+    filePath,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+}
+
+function isCvaCallExpression(node, sourceFile) {
+  return ts.isCallExpression(node) && node.expression.getText(sourceFile) === "cva";
+}
+
+function hasNonEmptyVariantsConfig(node, sourceFile) {
+  return getVariantAxes(node, sourceFile).length > 0;
+}
+
+function getPropertyNameText(nameNode) {
+  if (ts.isIdentifier(nameNode) || ts.isStringLiteral(nameNode) || ts.isNumericLiteral(nameNode)) {
+    return nameNode.text;
+  }
+
+  if (
+    ts.isComputedPropertyName(nameNode) &&
+    (ts.isStringLiteral(nameNode.expression) || ts.isNumericLiteral(nameNode.expression))
+  ) {
+    return nameNode.expression.text;
+  }
+
+  return null;
+}
+
+function getStaticStringValue(node) {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+    return node.text;
+  }
+
+  return null;
+}
+
+function looksLikeUtilityClassString(text) {
+  const tokens = text.trim().split(/\s+/).filter(Boolean);
+
+  if (tokens.length === 0) {
+    return false;
+  }
+
+  const utilityishTokenCount = tokens.filter((token) => UTILITY_CLASS_TOKEN_RE.test(token)).length;
+  return utilityishTokenCount >= Math.min(2, tokens.length);
+}
+
+function analyzeNumericRatchet(currentByKey, baselineByKey) {
+  const currentCountByKey = {};
+  const overagesByKey = {};
+  let totalCurrent = 0;
+  let totalBaselined = 0;
+
+  for (const key of Object.keys(currentByKey).sort((a, b) => a.localeCompare(b))) {
+    const currentCount = currentByKey[key] ?? 0;
+    const baselineCount = baselineByKey[key] ?? 0;
+    currentCountByKey[key] = currentCount;
+    totalCurrent += currentCount;
+    totalBaselined += Math.min(currentCount, baselineCount);
+
+    if (currentCount > baselineCount) {
+      overagesByKey[key] = {
+        baselineCount,
+        currentCount,
+      };
+    }
+  }
+
+  return {
+    activeKeyCount: Object.keys(currentCountByKey).length,
+    currentCountByKey,
+    overagesByKey,
+    totalBaselined,
+    totalCurrent,
+  };
+}
+
+function getVariantAxes(node, sourceFile) {
+  if (!isCvaCallExpression(node, sourceFile) || !node.arguments[1]) {
+    return [];
+  }
+
+  const config = node.arguments[1];
+  if (!ts.isObjectLiteralExpression(config)) {
+    return [];
+  }
+
+  for (const property of config.properties) {
+    if (
+      !ts.isPropertyAssignment(property) ||
+      property.name.getText(sourceFile) !== "variants" ||
+      !ts.isObjectLiteralExpression(property.initializer)
+    ) {
+      continue;
+    }
+
+    return property.initializer.properties
+      .flatMap((axisProperty) => {
+        if (
+          !ts.isPropertyAssignment(axisProperty) ||
+          !ts.isObjectLiteralExpression(axisProperty.initializer)
+        ) {
+          return [];
+        }
+
+        const axisName = getPropertyNameText(axisProperty.name);
+        if (!axisName) {
+          return [];
+        }
+
+        const axisPos = sourceFile.getLineAndCharacterOfPosition(axisProperty.getStart(sourceFile));
+        const optionEntries = axisProperty.initializer.properties
+          .flatMap((optionProperty) => {
+            if (
+              !ts.isPropertyAssignment(optionProperty) &&
+              !ts.isShorthandPropertyAssignment(optionProperty)
+            ) {
+              return [];
+            }
+
+            const optionName = getPropertyNameText(optionProperty.name);
+            if (!optionName) {
+              return [];
+            }
+
+            const optionPos = sourceFile.getLineAndCharacterOfPosition(
+              optionProperty.getStart(sourceFile),
+            );
+            return [{ name: optionName, line: optionPos.line + 1 }];
+          })
+          .sort((left, right) => left.name.localeCompare(right.name) || left.line - right.line);
+
+        return [
+          {
+            name: axisName,
+            line: axisPos.line + 1,
+            optionEntries,
+          },
+        ];
+      })
+      .sort((left, right) => left.line - right.line || left.name.localeCompare(right.name));
+  }
+
+  return [];
+}
+
+function collectFeatureCvaMetadata(filePath, content) {
+  const sourceFile = createSourceFile(filePath, content);
+  const cvaLines = [];
+  const baseOnlyLines = [];
+  const directHelpers = new Map();
+  const objectHelpers = new Map();
+  const styleBundles = [];
+  const classStringStyleBundles = [];
+
+  function registerHelper(helperName, node, hasVariants, store) {
+    const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+    const line = pos.line + 1;
+    const helper = { name: helperName, line, callCount: 0, hasVariants };
+    cvaLines.push(line);
+    if (!hasVariants) {
+      baseOnlyLines.push(line);
+    }
+    store.set(helperName, helper);
+  }
+
+  function visitDefinitions(node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      if (isCvaCallExpression(node.initializer, sourceFile)) {
+        registerHelper(
+          node.name.text,
+          node.initializer,
+          hasNonEmptyVariantsConfig(node.initializer, sourceFile),
+          directHelpers,
+        );
+      } else if (ts.isObjectLiteralExpression(node.initializer)) {
+        const styleBundleHelpers = [];
+        for (const property of node.initializer.properties) {
+          if (
+            !ts.isPropertyAssignment(property) ||
+            !isCvaCallExpression(property.initializer, sourceFile)
+          ) {
+            continue;
+          }
+
+          const propertyName = getPropertyNameText(property.name);
+          if (!propertyName) continue;
+
+          registerHelper(
+            `${node.name.text}.${propertyName}`,
+            property.initializer,
+            hasNonEmptyVariantsConfig(property.initializer, sourceFile),
+            objectHelpers,
+          );
+          styleBundleHelpers.push({
+            name: propertyName,
+            hasVariants: hasNonEmptyVariantsConfig(property.initializer, sourceFile),
+          });
+        }
+
+        if (styleBundleHelpers.length >= 2) {
+          const pos = sourceFile.getLineAndCharacterOfPosition(
+            node.initializer.getStart(sourceFile),
+          );
+          styleBundles.push({
+            name: node.name.text,
+            line: pos.line + 1,
+            helperCount: styleBundleHelpers.length,
+            variantBearingHelperCount: styleBundleHelpers.filter((helper) => helper.hasVariants)
+              .length,
+            baseOnlyHelperCount: styleBundleHelpers.filter((helper) => !helper.hasVariants).length,
+            helperNames: styleBundleHelpers
+              .map((helper) => helper.name)
+              .sort((a, b) => a.localeCompare(b)),
+          });
+        }
+
+        const classStringEntries = [];
+        for (const property of node.initializer.properties) {
+          if (!ts.isPropertyAssignment(property)) {
+            continue;
+          }
+
+          const propertyName = getPropertyNameText(property.name);
+          if (!propertyName) {
+            continue;
+          }
+
+          const stringValue = getStaticStringValue(property.initializer);
+          if (!stringValue || !looksLikeUtilityClassString(stringValue)) {
+            continue;
+          }
+
+          const propertyPos = sourceFile.getLineAndCharacterOfPosition(
+            property.getStart(sourceFile),
+          );
+          classStringEntries.push({
+            name: propertyName,
+            line: propertyPos.line + 1,
+            text: stringValue,
+            tokenCount: stringValue.trim().split(/\s+/).filter(Boolean).length,
+          });
+        }
+
+        const shouldTrackClassStringBundle =
+          classStringEntries.length >= 2 &&
+          (STYLE_OBJECT_NAME_RE.test(node.name.text) ||
+            classStringEntries.length === node.initializer.properties.length);
+
+        if (shouldTrackClassStringBundle) {
+          const pos = sourceFile.getLineAndCharacterOfPosition(
+            node.initializer.getStart(sourceFile),
+          );
+          classStringStyleBundles.push({
+            name: node.name.text,
+            line: pos.line + 1,
+            classEntryCount: classStringEntries.length,
+            penaltyPoints: classStringEntries.length * CLASS_STRING_STYLE_BUNDLE_PENALTY_MULTIPLIER,
+            entries: classStringEntries.sort(
+              (left, right) => left.line - right.line || left.name.localeCompare(right.name),
+            ),
+          });
+        }
+      }
+    }
+
+    ts.forEachChild(node, visitDefinitions);
+  }
+
+  function visitCalls(node) {
+    if (ts.isCallExpression(node)) {
+      if (ts.isIdentifier(node.expression)) {
+        const helper = directHelpers.get(node.expression.text);
+        if (helper) {
+          helper.callCount += 1;
+        }
+      } else if (
+        ts.isPropertyAccessExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression)
+      ) {
+        const helper = objectHelpers.get(
+          `${node.expression.expression.text}.${node.expression.name.text}`,
+        );
+        if (helper) {
+          helper.callCount += 1;
+        }
+      } else if (
+        ts.isElementAccessExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.argumentExpression &&
+        (ts.isStringLiteral(node.expression.argumentExpression) ||
+          ts.isNumericLiteral(node.expression.argumentExpression))
+      ) {
+        const helper = objectHelpers.get(
+          `${node.expression.expression.text}.${node.expression.argumentExpression.text}`,
+        );
+        if (helper) {
+          helper.callCount += 1;
+        }
+      }
+    }
+
+    ts.forEachChild(node, visitCalls);
+  }
+
+  visitDefinitions(sourceFile);
+  visitCalls(sourceFile);
+
+  const singleUseVariantHelpers = [...directHelpers.values(), ...objectHelpers.values()]
+    .filter((helper) => helper.hasVariants && helper.callCount <= 1)
+    .sort((a, b) => a.line - b.line || a.name.localeCompare(b.name));
+
+  return {
+    cvaLines: cvaLines.sort((a, b) => a - b),
+    baseOnlyLines: baseOnlyLines.sort((a, b) => a - b),
+    classStringStyleBundles: classStringStyleBundles.sort(
+      (a, b) => a.line - b.line || a.name.localeCompare(b.name),
+    ),
+    styleBundles: styleBundles.sort((a, b) => a.line - b.line || a.name.localeCompare(b.name)),
+    singleUseVariantHelpers,
+  };
+}
+
+function collectOversizedVariantAxes(filePath, content) {
+  const sourceFile = createSourceFile(filePath, content);
+  const rel = relPath(filePath);
+  const oversizedAxes = [];
+
+  function registerOversizedAxes(helperName, node) {
+    const variantAxes = getVariantAxes(node, sourceFile);
+    for (const axis of variantAxes) {
+      if (axis.optionEntries.length <= MAX_VARIANT_OPTIONS_PER_AXIS) {
+        continue;
+      }
+
+      oversizedAxes.push({
+        key: `${rel}#${helperName}.${axis.name}`,
+        file: rel,
+        helperName,
+        axisName: axis.name,
+        line: axis.line,
+        optionEntries: axis.optionEntries,
+      });
+    }
+  }
+
+  function visit(node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      if (isCvaCallExpression(node.initializer, sourceFile)) {
+        registerOversizedAxes(node.name.text, node.initializer);
+      } else if (ts.isObjectLiteralExpression(node.initializer)) {
+        for (const property of node.initializer.properties) {
+          if (
+            !ts.isPropertyAssignment(property) ||
+            !isCvaCallExpression(property.initializer, sourceFile)
+          ) {
+            continue;
+          }
+
+          const propertyName = getPropertyNameText(property.name);
+          if (!propertyName) continue;
+
+          registerOversizedAxes(`${node.name.text}.${propertyName}`, property.initializer);
+        }
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return oversizedAxes.sort(
+    (left, right) =>
+      left.file.localeCompare(right.file) ||
+      left.line - right.line ||
+      left.helperName.localeCompare(right.helperName) ||
+      left.axisName.localeCompare(right.axisName),
+  );
+}
+
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
   const files = walkDir(SRC_DIR, { extensions: new Set([".ts", ".tsx"]) });
+  const baselineByFile = loadCountBaseline(FEATURE_CVA_BASELINE_PATH, "cvaDefinitionsByFile");
+  const baseOnlyBaselineByFile = loadCountBaseline(
+    FEATURE_CVA_BASE_ONLY_BASELINE_PATH,
+    "baseOnlyCvaDefinitionsByFile",
+  );
+  const styleBundlesBaselineByFile = loadCountBaseline(
+    FEATURE_CVA_STYLE_BUNDLES_BASELINE_PATH,
+    "featureCvaStyleBundlesByFile",
+  );
+  const classStringStyleBundlePenaltyBaselineByFile = loadCountBaseline(
+    FEATURE_CLASS_STRING_STYLE_BUNDLE_PENALTY_BASELINE_PATH,
+    "classStringStyleBundlePenaltyByFile",
+  );
+  const singleUseVariantBaselineByFile = loadCountBaseline(
+    FEATURE_CVA_SINGLE_USE_BASELINE_PATH,
+    "singleUseVariantCvaDefinitionsByFile",
+  );
+  const oversizedVariantAxisBaselineByKey = loadCountBaseline(
+    OVERSIZED_CVA_VARIANT_AXIS_BASELINE_PATH,
+    "variantOptionsByAxis",
+  );
 
-  let errorCount = 0;
+  const importViolations = [];
+  const cvaLinesByFile = {};
+  const baseOnlyCvaLinesByFile = {};
+  const styleBundlesByFile = {};
+  const classStringStyleBundlesByFile = {};
+  const classStringStyleBundlePenaltyByFile = {};
+  const singleUseVariantHelpersByFile = {};
+  const oversizedVariantAxisOptionsByKey = {};
+  const oversizedVariantAxisMetadataByKey = {};
   const errors = [];
 
   for (const filePath of files) {
     const rel = relPath(filePath);
 
     if (rel.includes(".test.") || rel.includes(".spec.") || rel.includes(".stories.")) continue;
-    if (rel.startsWith("src/components/ui/")) continue;
 
     const content = fs.readFileSync(filePath, "utf8");
+    const oversizedVariantAxes = collectOversizedVariantAxes(filePath, content);
+    for (const axis of oversizedVariantAxes) {
+      oversizedVariantAxisOptionsByKey[axis.key] = axis.optionEntries;
+      oversizedVariantAxisMetadataByKey[axis.key] = axis;
+    }
+
+    if (!rel.startsWith("src/components/ui/")) {
+      const {
+        cvaLines,
+        baseOnlyLines,
+        classStringStyleBundles,
+        styleBundles,
+        singleUseVariantHelpers,
+      } = collectFeatureCvaMetadata(filePath, content);
+      if (cvaLines.length > 0) {
+        cvaLinesByFile[rel] = cvaLines;
+      }
+      if (baseOnlyLines.length > 0) {
+        baseOnlyCvaLinesByFile[rel] = baseOnlyLines;
+      }
+      if (classStringStyleBundles.length > 0) {
+        classStringStyleBundlesByFile[rel] = classStringStyleBundles;
+        classStringStyleBundlePenaltyByFile[rel] = classStringStyleBundles.reduce(
+          (sum, bundle) => sum + bundle.penaltyPoints,
+          0,
+        );
+      }
+      if (styleBundles.length > 0) {
+        styleBundlesByFile[rel] = styleBundles;
+      }
+      if (singleUseVariantHelpers.length > 0) {
+        singleUseVariantHelpersByFile[rel] = singleUseVariantHelpers;
+      }
+    }
+
+    if (rel.startsWith("src/components/ui/")) continue;
 
     for (const match of content.matchAll(IMPORT_RE)) {
       const specifiers = match[1] ?? "";
@@ -56,19 +562,237 @@ export function run() {
       if (cvaImports.length === 0) continue;
 
       const line = getLineNumber(content, match.index ?? 0);
-      errors.push(
+      importViolations.push(
         `  ${c.red}ERROR${c.reset} ${rel}:${line} - Imported CVA helper(s) ${cvaImports.join(
           ", ",
         )}. Keep CVA inside the owning component or add a dedicated primitive instead.`,
       );
-      errorCount++;
     }
   }
 
+  const ratchet = analyzeCountRatchet(cvaLinesByFile, baselineByFile);
+  const cvaOverages = Object.entries(ratchet.overagesByKey)
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      lineNumbers: cvaLinesByFile[file] ?? [],
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+  const baseOnlyRatchet = analyzeCountRatchet(baseOnlyCvaLinesByFile, baseOnlyBaselineByFile);
+  const baseOnlyOverages = Object.entries(baseOnlyRatchet.overagesByKey)
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      lineNumbers: baseOnlyCvaLinesByFile[file] ?? [],
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+  const styleBundlesRatchet = analyzeCountRatchet(styleBundlesByFile, styleBundlesBaselineByFile);
+  const styleBundleOverages = Object.entries(styleBundlesRatchet.overagesByKey)
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      bundles: overage.overageItems,
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+  const classStringStyleBundlePenaltyRatchet = analyzeNumericRatchet(
+    classStringStyleBundlePenaltyByFile,
+    classStringStyleBundlePenaltyBaselineByFile,
+  );
+  const classStringStyleBundlePenaltyOverages = Object.entries(
+    classStringStyleBundlePenaltyRatchet.overagesByKey,
+  )
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      bundles: classStringStyleBundlesByFile[file] ?? [],
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+  const singleUseVariantRatchet = analyzeCountRatchet(
+    singleUseVariantHelpersByFile,
+    singleUseVariantBaselineByFile,
+  );
+  const singleUseVariantOverages = Object.entries(singleUseVariantRatchet.overagesByKey)
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      helpers: overage.overageItems,
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+  const oversizedVariantAxisRatchet = analyzeCountRatchet(
+    oversizedVariantAxisOptionsByKey,
+    oversizedVariantAxisBaselineByKey,
+  );
+  const oversizedVariantAxisOverages = Object.entries(oversizedVariantAxisRatchet.overagesByKey)
+    .map(([key, overage]) => ({
+      ...oversizedVariantAxisMetadataByKey[key],
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      newOptions: overage.overageItems,
+    }))
+    .sort(
+      (left, right) =>
+        left.file.localeCompare(right.file) ||
+        left.line - right.line ||
+        left.helperName.localeCompare(right.helperName) ||
+        left.axisName.localeCompare(right.axisName),
+    );
+
+  errors.push(...importViolations);
+
+  if (cvaOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Feature-local \`cva()\` definitions are ratcheted outside \`src/components/ui/\`. Add or extend a shared primitive instead, or update the baseline only after intentional cleanup review.`,
+    );
+
+    for (const overage of cvaOverages) {
+      const linePreview = overage.lineNumbers.slice(0, 12).join(", ");
+      const remaining = overage.lineNumbers.length - Math.min(overage.lineNumbers.length, 12);
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      if (linePreview.length > 0) {
+        errors.push(
+          `    ${c.dim}lines ${linePreview}${remaining > 0 ? `, ... +${remaining} more` : ""}${c.reset}`,
+        );
+      }
+    }
+  }
+
+  if (baseOnlyOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Base-only feature-local \`cva()\` definitions are ratcheted outside \`src/components/ui/\`. If a helper has no variants, use a plain component, \`cn()\`, or move the shared API into an owned primitive.`,
+    );
+
+    for (const overage of baseOnlyOverages) {
+      const linePreview = overage.lineNumbers.slice(0, 12).join(", ");
+      const remaining = overage.lineNumbers.length - Math.min(overage.lineNumbers.length, 12);
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      if (linePreview.length > 0) {
+        errors.push(
+          `    ${c.dim}lines ${linePreview}${remaining > 0 ? `, ... +${remaining} more` : ""}${c.reset}`,
+        );
+      }
+    }
+  }
+
+  if (styleBundleOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Feature-local object bundles that expose multiple \`cva()\` helpers are ratcheted outside \`src/components/ui/\`. These style maps become a shadow design system; use plain strings/\`cn()\`, a real component, or move the shared API into an owned primitive.`,
+    );
+
+    for (const overage of styleBundleOverages) {
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      const bundlePreview = overage.bundles
+        .map((bundle) => {
+          const helperPreview = bundle.helperNames.slice(0, 6).join(", ");
+          const remaining = bundle.helperNames.length - Math.min(bundle.helperNames.length, 6);
+          return `${bundle.name} (line ${bundle.line}, ${bundle.helperCount} helpers, ${bundle.variantBearingHelperCount} variant-bearing, ${bundle.baseOnlyHelperCount} base-only${helperPreview.length > 0 ? `: ${helperPreview}${remaining > 0 ? `, ... +${remaining} more` : ""}` : ""})`;
+        })
+        .join("; ");
+      if (bundlePreview.length > 0) {
+        errors.push(`    ${c.dim}${bundlePreview}${c.reset}`);
+      }
+    }
+  }
+
+  if (classStringStyleBundlePenaltyOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Feature-local object bundles that expose class-string styling APIs are penalized harder than regular feature-local \`cva()\`. These objects hide shadow styling systems from the CVA/raw-Tailwind guardrails; move the API into an owned primitive, a real component, or plain local markup instead of a reusable class map. Current penalty: ${CLASS_STRING_STYLE_BUNDLE_PENALTY_MULTIPLIER} points per class-string entry.`,
+    );
+
+    for (const overage of classStringStyleBundlePenaltyOverages) {
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} baseline ${overage.baselineCount} penalty point(s) → current ${overage.currentCount}`,
+      );
+      const bundlePreview = overage.bundles
+        .map((bundle) => {
+          const entryPreview = bundle.entries
+            .slice(0, 6)
+            .map((entry) => `${entry.name} (line ${entry.line})`)
+            .join(", ");
+          const remaining = bundle.entries.length - Math.min(bundle.entries.length, 6);
+          return `${bundle.name} (line ${bundle.line}, ${bundle.classEntryCount} class-string entr${bundle.classEntryCount === 1 ? "y" : "ies"}, ${bundle.penaltyPoints} penalty points${entryPreview.length > 0 ? `: ${entryPreview}${remaining > 0 ? `, ... +${remaining} more` : ""}` : ""})`;
+        })
+        .join("; ");
+      if (bundlePreview.length > 0) {
+        errors.push(`    ${c.dim}${bundlePreview}${c.reset}`);
+      }
+    }
+  }
+
+  if (singleUseVariantOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Single-use variant-bearing feature-local \`cva()\` helpers are ratcheted outside \`src/components/ui/\`. Inline the styles, use a plain component with props, or move the shared API into an owned primitive.`,
+    );
+
+    for (const overage of singleUseVariantOverages) {
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      const helperPreview = overage.helpers
+        .map(
+          (helper) =>
+            `${helper.name} (line ${helper.line}, ${helper.callCount} call${helper.callCount === 1 ? "" : "s"})`,
+        )
+        .join(", ");
+      if (helperPreview.length > 0) {
+        errors.push(`    ${c.dim}${helperPreview}${c.reset}`);
+      }
+    }
+  }
+
+  if (oversizedVariantAxisOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Oversized CVA variant axes are ratcheted at ${MAX_VARIANT_OPTIONS_PER_AXIS} options per axis. Split the helper, extract a semantic primitive, or shrink the axis instead of extending an already-bloated enum.`,
+    );
+
+    for (const overage of oversizedVariantAxisOverages) {
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} ${overage.helperName}.${overage.axisName} (line ${overage.line}) baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      const optionPreview = overage.newOptions
+        .slice(0, 8)
+        .map((option) => `${option.name} (line ${option.line})`)
+        .join(", ");
+      if (optionPreview.length > 0) {
+        errors.push(`    ${c.dim}${optionPreview}${c.reset}`);
+      }
+      if (overage.newOptions.length > 8) {
+        errors.push(`    ${c.dim}... and ${overage.newOptions.length - 8} more${c.reset}`);
+      }
+    }
+  }
+
+  const failureCount =
+    importViolations.length +
+    cvaOverages.length +
+    baseOnlyOverages.length +
+    styleBundleOverages.length +
+    classStringStyleBundlePenaltyOverages.length +
+    singleUseVariantOverages.length +
+    oversizedVariantAxisOverages.length;
+  const passDetail = [
+    `${ratchet.totalCurrent} baselined feature-local cva definition(s) across ${ratchet.activeKeyCount} file(s)`,
+    `${baseOnlyRatchet.totalCurrent} baselined base-only feature-local cva definition(s) across ${baseOnlyRatchet.activeKeyCount} file(s)`,
+    `${styleBundlesRatchet.totalCurrent} baselined feature-local cva style bundle(s) across ${styleBundlesRatchet.activeKeyCount} file(s)`,
+    `${classStringStyleBundlePenaltyRatchet.totalCurrent} baselined feature-local class-string style-bundle penalty point(s) across ${classStringStyleBundlePenaltyRatchet.activeKeyCount} file(s)`,
+    `${singleUseVariantRatchet.totalCurrent} baselined single-use variant-bearing feature-local cva helper(s) across ${singleUseVariantRatchet.activeKeyCount} file(s)`,
+    `${oversizedVariantAxisRatchet.totalCurrent} baselined oversized cva variant option(s) across ${oversizedVariantAxisRatchet.activeKeyCount} axis/axes`,
+  ].join("; ");
+
   return {
-    passed: errorCount === 0,
-    errors: errorCount,
-    detail: errorCount > 0 ? `${errorCount} violation(s)` : null,
+    passed: failureCount === 0,
+    errors: failureCount,
+    detail: failureCount > 0 ? `${failureCount} violation(s)` : passDetail,
     messages: errors,
   };
 }

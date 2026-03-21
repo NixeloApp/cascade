@@ -175,10 +175,8 @@ export class ProjectsPage extends BasePage {
     });
     this.cancelButton = this.createProjectForm.getByRole("button", { name: /cancel/i });
 
-    // Project board - look for Kanban Board heading or board container
-    this.projectBoard = page
-      .getByTestId(TEST_IDS.BOARD.ROOT)
-      .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
+    // Project board container
+    this.projectBoard = page.getByTestId(TEST_IDS.BOARD.ROOT);
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - prefer the stable first-column trigger used by the tour,
@@ -234,7 +232,7 @@ export class ProjectsPage extends BasePage {
     this.activityEntries = this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.ENTRY);
 
     // Analytics
-    this.analyticsPageHeader = page.getByRole("heading", { name: /analytics dashboard/i });
+    this.analyticsPageHeader = page.getByTestId(TEST_IDS.ANALYTICS.PAGE_HEADER);
     this.analyticsPageDescription = page.getByText(/project insights.*velocity.*metrics/i);
     this.analyticsTotalIssuesMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES);
     this.analyticsUnassignedMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_UNASSIGNED);
@@ -242,10 +240,10 @@ export class ProjectsPage extends BasePage {
     this.analyticsCompletedSprintsMetric = page.getByTestId(
       TEST_IDS.ANALYTICS.METRIC_COMPLETED_SPRINTS,
     );
-    this.analyticsIssuesByStatusChart = page.getByText("Issues by Status");
-    this.analyticsIssuesByTypeChart = page.getByText("Issues by Type");
-    this.analyticsIssuesByPriorityChart = page.getByText("Issues by Priority");
-    this.analyticsTeamVelocityChart = page.getByText("Team Velocity (Last 10 Sprints)");
+    this.analyticsIssuesByStatusChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_STATUS);
+    this.analyticsIssuesByTypeChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_TYPE);
+    this.analyticsIssuesByPriorityChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_PRIORITY);
+    this.analyticsTeamVelocityChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_VELOCITY);
     this.analyticsNoCompletedSprintsMessage = page.getByText("No completed sprints yet");
     this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
     this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });

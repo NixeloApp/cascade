@@ -7,7 +7,7 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { Stack } from "@/components/ui/Stack";
@@ -45,14 +45,24 @@ export function ImportExportModal({
 }: ImportExportModalProps) {
   const [mode, setMode] = useState<Mode>("export");
 
+  useEffect(() => {
+    if (!open) {
+      setMode("export");
+    }
+  }, [open]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange(nextOpen);
+  };
+
   const handleImportComplete = () => {
-    onOpenChange(false);
+    handleOpenChange(false);
   };
 
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title="Import / Export Issues"
       description="Manage issue import and export"
       size="xl"

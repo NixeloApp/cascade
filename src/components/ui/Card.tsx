@@ -99,6 +99,11 @@ const cardRecipeVariants = cva("", {
       dashboardPanel: "border-ui-border-secondary/70 bg-ui-bg/75 shadow-soft",
       dashboardPanelInset:
         "overflow-hidden border-ui-border/50 bg-ui-bg/70 shadow-soft backdrop-blur-sm",
+      dashboardPanelHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border/50 bg-transparent shadow-none",
+      dashboardPanelBody: "rounded-none border-transparent bg-transparent shadow-none",
+      dashboardPanelFooter:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border/50 bg-transparent shadow-none",
       filterBar:
         "rounded-md border-ui-border-secondary/75 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/92 shadow-card sm:rounded-2xl",
       timelineItem:
@@ -195,17 +200,13 @@ const cardRecipeVariants = cva("", {
       onboardingChecklistSuccessIcon:
         "rounded-full border-transparent bg-status-success/20 text-status-success shadow-none",
       authShowcasePanel:
-        "rounded-3xl border-ui-border-secondary/60 bg-linear-to-b from-ui-bg-elevated/74 via-ui-bg-elevated/58 to-ui-bg-soft/56 shadow-soft backdrop-blur-sm",
-      authFeatureTile: "rounded-2xl border-ui-border-secondary/55 bg-ui-bg-elevated/72 shadow-soft",
-      authMobileBrandChip:
-        "rounded-full border-ui-border/70 bg-linear-to-r from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-soft/88 shadow-soft",
+        "rounded-3xl border-ui-border/55 bg-linear-to-b from-ui-bg-elevated/82 to-ui-bg-soft/58 shadow-soft backdrop-blur-sm",
       authFormShell:
-        "relative rounded-3xl border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/76 shadow-card",
+        "relative rounded-3xl border-ui-border/65 bg-ui-bg-elevated/96 shadow-soft backdrop-blur-sm",
       authStepIndicator:
         "h-1.5 w-4 rounded-full border-transparent bg-ui-border shadow-none transition-all duration-medium",
       authStepIndicatorActive:
-        "h-1.5 w-8 rounded-full border-transparent bg-brand shadow-none transition-all duration-medium",
-      authVerificationIcon: "rounded-2xl border-transparent bg-brand-subtle text-brand shadow-none",
+        "h-1.5 w-6 rounded-full border-transparent bg-brand shadow-none transition-all duration-medium",
       authStrengthSegment:
         "h-1 rounded-full border-transparent bg-ui-border shadow-none transition-colors",
       authStrengthSegmentError:
@@ -256,12 +257,6 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-transparent bg-brand-ring px-2 text-xs font-medium text-brand-foreground shadow-none",
       roadmapMonthHeaderCell:
         "rounded-none border-y-0 border-r-0 border-l border-ui-border bg-transparent px-2 py-0 shadow-none",
-      notificationPanelHeader:
-        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none",
-      notificationPanelSectionHeader:
-        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none",
-      notificationPanelFooter:
-        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-ui-bg shadow-none",
       notificationRow:
         "rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
       notificationRowUnread:
@@ -431,8 +426,6 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary bg-transparent shadow-none hover:bg-ui-bg-secondary",
       sprintWorkloadRowBordered:
         "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent shadow-none hover:bg-ui-bg-secondary",
-      issueDetailSheetHeader:
-        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       issueDetailLayoutShell: "rounded-lg border-ui-border bg-ui-bg-elevated shadow-card",
       issueMetadataRow: "rounded-none border-transparent bg-transparent px-0 py-1 shadow-none",
       eventDetailSection:

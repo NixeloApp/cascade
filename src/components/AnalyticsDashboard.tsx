@@ -1,30 +1,25 @@
-/**
- * Analytics Dashboard
- *
- * Project-level analytics page with charts and metrics.
- * Shows velocity trends, burndown charts, and team performance.
- * Provides visual insights into project health and progress.
- */
-
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { PageHeader, PageLayout } from "@/components/layout";
+import { AnalyticsInsightCard } from "@/components/Analytics/AnalyticsInsightCard";
+import { BarChart } from "@/components/Analytics/BarChart";
+import { ChartCard } from "@/components/Analytics/ChartCard";
+import { MetricCard } from "@/components/Analytics/MetricCard";
+import { RecentActivity } from "@/components/Analytics/RecentActivity";
+import { PageHeader, PageLayout, PageStack } from "@/components/layout";
 import { Card } from "@/components/ui/Card";
-import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { CheckCircle, MapPin, TrendingUp, Zap } from "@/lib/icons";
+import { formatDate } from "@/lib/formatting";
+import { CheckCircle, FolderKanban, MapPin, TrendingUp, Users, Zap } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
-import { BarChart } from "./Analytics/BarChart";
-import { ChartCard } from "./Analytics/ChartCard";
-import { MetricCard } from "./Analytics/MetricCard";
-import { RecentActivity } from "./Analytics/RecentActivity";
 import { Skeleton, SkeletonStatCard } from "./ui/Skeleton";
-import { Typography } from "./ui/Typography";
 
 interface Props {
   projectId: Id<"projects">;
+  projectName: string;
+  projectKey: string;
 }
 
 interface AnalyticsData {
@@ -46,10 +41,85 @@ interface VelocityData {
   averageVelocity: number;
 }
 
-/**
- * Project analytics dashboard with metrics, velocity charts, and activity feed.
- */
-export function AnalyticsDashboard({ projectId }: Props) {
+type BreakdownEntry = {
+  label: string;
+  value: number;
+};
+
+function buildBreakdownEntries(
+  breakdown: Record<string, number>,
+  labelMap?: Record<string, string>,
+) {
+  return Object.entries(breakdown).map(([label, value]) => ({
+    label: labelMap?.[label] ?? label,
+    value,
+  }));
+}
+
+function getTopBreakdownEntry(entries: BreakdownEntry[]) {
+  return entries.reduce<BreakdownEntry | null>((topEntry, currentEntry) => {
+    if (!topEntry || currentEntry.value > topEntry.value) {
+      return currentEntry;
+    }
+
+    return topEntry;
+  }, null);
+}
+
+function getLatestActivityTimestamp(
+  activities: { _creationTime: number }[] | undefined,
+): number | undefined {
+  return activities?.[0]?._creationTime;
+}
+
+function formatPercentage(value: number, total: number) {
+  if (total <= 0) {
+    return "0%";
+  }
+
+  return `${Math.round((value / total) * 100)}%`;
+}
+
+function formatSnapshotValue(value: number, noun: string) {
+  return `${value} ${noun}${value === 1 ? "" : "s"}`;
+}
+
+function formatSprintSummary(velocity: VelocityData) {
+  if (velocity.velocityData.length === 0) {
+    return {
+      value: "No sprint history",
+      description: "Velocity will settle in once this project completes its first sprint.",
+      meta: ["No completed sprints yet"],
+    };
+  }
+
+  const latestSprint = velocity.velocityData[velocity.velocityData.length - 1];
+
+  return {
+    value: `${velocity.averageVelocity} pts/sprint`,
+    description: `Average throughput across ${formatSnapshotValue(velocity.velocityData.length, "completed sprint")}.`,
+    meta: latestSprint
+      ? [
+          `${latestSprint.sprintName}: ${latestSprint.points} pts`,
+          `${latestSprint.issuesCompleted} completed`,
+        ]
+      : undefined,
+  };
+}
+
+function AnalyticsChartSkeletonCard() {
+  return (
+    <Card variant="elevated" padding="lg">
+      <Stack gap="md">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-64 w-full" />
+      </Stack>
+    </Card>
+  );
+}
+
+/** Project analytics dashboard with shared shell discipline and explicit empty states. */
+export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props) {
   const analytics = useAuthenticatedQuery(api.analytics.getProjectAnalytics, { projectId }) as
     | AnalyticsData
     | undefined;
@@ -61,99 +131,128 @@ export function AnalyticsDashboard({ projectId }: Props) {
     limit: 10,
   });
 
-  const statusChartData = analytics
-    ? Object.entries(analytics.issuesByStatus).map(([status, count]) => ({
-        label: status,
-        value: count,
-      }))
-    : [];
-
-  const typeChartData = analytics
-    ? [
-        { label: "Task", value: analytics.issuesByType.task },
-        { label: "Bug", value: analytics.issuesByType.bug },
-        { label: "Story", value: analytics.issuesByType.story },
-        { label: "Epic", value: analytics.issuesByType.epic },
-      ]
-    : [];
-
-  const priorityChartData = analytics
-    ? [
-        { label: "Highest", value: analytics.issuesByPriority.highest },
-        { label: "High", value: analytics.issuesByPriority.high },
-        { label: "Medium", value: analytics.issuesByPriority.medium },
-        { label: "Low", value: analytics.issuesByPriority.low },
-        { label: "Lowest", value: analytics.issuesByPriority.lowest },
-      ]
-    : [];
-
-  const velocityChartData = velocity
-    ? velocity.velocityData.map((v) => ({
-        label: v.sprintName,
-        value: v.points,
-      }))
-    : [];
-
-  const assigneeChartData = analytics
-    ? Object.values(analytics.issuesByAssignee).map((a) => ({
-        label: a.name,
-        value: a.count,
-      }))
-    : [];
-
   if (!(analytics && velocity)) {
     return (
-      <PageLayout fullHeight className="bg-ui-bg-secondary">
-        <Stack gap="lg" className="max-w-7xl mx-auto">
-          {/* Header Skeleton */}
+      <PageLayout maxWidth="xl">
+        <PageStack>
           <Stack gap="xs">
-            <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
-            <Skeleton className="h-3 sm:h-4 w-64 sm:w-96" />
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-96" />
           </Stack>
-
-          {/* Metric Cards Skeleton */}
+          <Grid cols={1} colsMd={3} gap="md">
+            <Card variant="elevated" padding="lg">
+              <Skeleton className="h-5 w-20 mb-4" />
+              <Skeleton className="h-7 w-28 mb-3" />
+              <Skeleton className="h-4 w-full" />
+            </Card>
+            <Card variant="elevated" padding="lg">
+              <Skeleton className="h-5 w-20 mb-4" />
+              <Skeleton className="h-7 w-32 mb-3" />
+              <Skeleton className="h-4 w-full" />
+            </Card>
+            <Card variant="elevated" padding="lg">
+              <Skeleton className="h-5 w-20 mb-4" />
+              <Skeleton className="h-7 w-24 mb-3" />
+              <Skeleton className="h-4 w-full" />
+            </Card>
+          </Grid>
           <Grid cols={2} colsMd={4} gap="md">
             <SkeletonStatCard />
             <SkeletonStatCard />
             <SkeletonStatCard />
             <SkeletonStatCard />
           </Grid>
-
-          {/* Charts Skeleton */}
           <Grid cols={1} colsLg={2} gap="lg">
-            <Card variant="elevated" padding="lg">
-              <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
-              <Skeleton className="h-48 sm:h-64 w-full" />
-            </Card>
-            <Card variant="elevated" padding="lg">
-              <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
-              <Skeleton className="h-48 sm:h-64 w-full" />
-            </Card>
-            <Card variant="elevated" padding="lg">
-              <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
-              <Skeleton className="h-48 sm:h-64 w-full" />
-            </Card>
-            <Card variant="elevated" padding="lg">
-              <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
-              <Skeleton className="h-48 sm:h-64 w-full" />
-            </Card>
+            <AnalyticsChartSkeletonCard />
+            <AnalyticsChartSkeletonCard />
           </Grid>
-        </Stack>
+        </PageStack>
       </PageLayout>
     );
   }
 
-  return (
-    <PageLayout fullHeight className="bg-ui-bg-secondary">
-      <Stack gap="lg" className="max-w-7xl mx-auto">
-        {/* Header */}
-        <PageHeader
-          title="Analytics Dashboard"
-          description="Project insights, team velocity, and progress metrics"
-          className="mb-0"
-        />
+  const statusChartData = buildBreakdownEntries(analytics.issuesByStatus);
+  const typeChartData = buildBreakdownEntries(analytics.issuesByType, {
+    task: "Task",
+    bug: "Bug",
+    story: "Story",
+    epic: "Epic",
+  });
+  const priorityChartData = buildBreakdownEntries(analytics.issuesByPriority, {
+    highest: "Highest",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
+    lowest: "Lowest",
+  });
+  const velocityChartData = velocity.velocityData.map((entry) => ({
+    label: entry.sprintName,
+    value: entry.points,
+  }));
+  const assigneeChartData = Object.values(analytics.issuesByAssignee).map((assignee) => ({
+    label: assignee.name,
+    value: assignee.count,
+  }));
 
-        {/* Key Metrics */}
+  const completedIssues = analytics.issuesByStatus.done ?? 0;
+  const openIssues = Math.max(analytics.totalIssues - completedIssues, 0);
+  const assignedIssues = Math.max(analytics.totalIssues - analytics.unassignedCount, 0);
+  const activeContributors = assigneeChartData.filter((entry) => entry.value > 0).length;
+  const topStatus = getTopBreakdownEntry(statusChartData);
+  const topType = getTopBreakdownEntry(typeChartData);
+  const topAssignee = getTopBreakdownEntry(assigneeChartData);
+  const latestActivity = getLatestActivityTimestamp(recentActivity);
+  const sprintSummary = formatSprintSummary(velocity);
+
+  return (
+    <PageLayout maxWidth="xl">
+      <PageStack>
+        <div data-testid={TEST_IDS.ANALYTICS.PAGE_HEADER}>
+          <PageHeader
+            title={`${projectName} analytics`}
+            description={`Delivery, workload, and ownership signals for ${projectKey}.`}
+            spacing="stack"
+          />
+        </div>
+
+        <Grid cols={1} colsMd={3} gap="md">
+          <AnalyticsInsightCard
+            title="Flow Snapshot"
+            value={formatSnapshotValue(openIssues, "open issue")}
+            description={
+              topStatus
+                ? `${topStatus.label} is the biggest queue right now.`
+                : "Issue flow will appear here once work lands in the project."
+            }
+            icon={FolderKanban}
+            meta={[
+              `${completedIssues} done`,
+              topType ? `Top work type: ${topType.label}` : "No typed issue mix yet",
+            ]}
+          />
+          <AnalyticsInsightCard
+            title="Ownership"
+            value={`${formatPercentage(assignedIssues, analytics.totalIssues)} assigned`}
+            description={
+              activeContributors > 0
+                ? `${formatSnapshotValue(activeContributors, "active contributor")} currently own work in this project.`
+                : "No active assignees yet."
+            }
+            icon={Users}
+            meta={[
+              `${analytics.unassignedCount} unassigned`,
+              topAssignee ? `Top owner: ${topAssignee.label}` : "No ownership leader yet",
+            ]}
+          />
+          <AnalyticsInsightCard
+            title="Sprint Signal"
+            value={sprintSummary.value}
+            description={sprintSummary.description}
+            icon={Zap}
+            meta={sprintSummary.meta}
+          />
+        </Grid>
+
         <Grid cols={2} colsMd={4} gap="md">
           <MetricCard
             title="Total Issues"
@@ -183,45 +282,97 @@ export function AnalyticsDashboard({ projectId }: Props) {
           />
         </Grid>
 
-        {/* Charts Grid */}
         <Grid cols={1} colsLg={2} gap="lg">
-          {/* Issues by Status */}
-          <ChartCard title="Issues by Status">
+          <ChartCard
+            title="Issues by Status"
+            description="Where work is currently pooling across the workflow."
+            testId={TEST_IDS.ANALYTICS.CHART_STATUS}
+            emptyState={
+              statusChartData.length === 0
+                ? {
+                    title: "No workflow data yet",
+                    description:
+                      "Status distribution will appear once issues move through the board.",
+                  }
+                : undefined
+            }
+          >
             <BarChart data={statusChartData} color="bg-status-info" />
           </ChartCard>
 
-          {/* Issues by Type */}
-          <ChartCard title="Issues by Type">
+          <ChartCard
+            title="Issues by Type"
+            description="The current mix of tasks, bugs, stories, and epics."
+            testId={TEST_IDS.ANALYTICS.CHART_TYPE}
+            emptyState={
+              typeChartData.length === 0
+                ? {
+                    title: "No work-type data yet",
+                    description:
+                      "Issue type breakdown will appear once this project has issue volume.",
+                  }
+                : undefined
+            }
+          >
             <BarChart data={typeChartData} color="bg-status-success" />
           </ChartCard>
 
-          {/* Issues by Priority */}
-          <ChartCard title="Issues by Priority">
+          <ChartCard
+            title="Issues by Priority"
+            description="Whether urgency is clustering in one part of the backlog."
+            testId={TEST_IDS.ANALYTICS.CHART_PRIORITY}
+            emptyState={
+              priorityChartData.length === 0
+                ? {
+                    title: "No priority data yet",
+                    description: "Priority distribution will appear as work gets triaged.",
+                  }
+                : undefined
+            }
+          >
             <BarChart data={priorityChartData} color="bg-status-warning" />
           </ChartCard>
 
-          {/* Team Velocity */}
-          <ChartCard title="Team Velocity (Last 10 Sprints)">
-            {velocityChartData.length > 0 ? (
-              <BarChart data={velocityChartData} color="bg-accent" />
-            ) : (
-              <Flex align="center" justify="center" className="h-full text-ui-text-secondary">
-                <Typography variant="p">No completed sprints yet</Typography>
-              </Flex>
-            )}
+          <ChartCard
+            title="Team Velocity"
+            description="Completed sprint throughput over the last 10 sprints."
+            testId={TEST_IDS.ANALYTICS.CHART_VELOCITY}
+            emptyState={
+              velocityChartData.length === 0
+                ? {
+                    title: "No sprint history yet",
+                    description: "Finish a sprint to start building a usable velocity trend.",
+                  }
+                : undefined
+            }
+          >
+            <BarChart data={velocityChartData} color="bg-accent" />
           </ChartCard>
         </Grid>
 
-        {/* Issues by Assignee */}
-        {assigneeChartData.length > 0 && (
-          <ChartCard title="Issues by Assignee">
-            <BarChart data={assigneeChartData} color="bg-brand" />
-          </ChartCard>
-        )}
+        <ChartCard
+          title="Issues by Assignee"
+          description="How currently assigned work is distributed across the team."
+          emptyState={
+            assigneeChartData.length === 0
+              ? {
+                  title: "No assigned work yet",
+                  description: "Assign issues to teammates to see ownership distribution here.",
+                }
+              : undefined
+          }
+        >
+          <BarChart data={assigneeChartData} color="bg-brand" />
+        </ChartCard>
 
-        {/* Recent Activity */}
         <RecentActivity activities={recentActivity} />
-      </Stack>
+
+        <Typography variant="small" color="tertiary">
+          {latestActivity
+            ? `Latest visible activity recorded ${formatDate(latestActivity)}.`
+            : "No activity has been recorded for this project yet."}
+        </Typography>
+      </PageStack>
     </PageLayout>
   );
 }

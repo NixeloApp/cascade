@@ -9,10 +9,16 @@
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
-import type * as React from "react";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
+import {
+  overlayDescriptionVariants,
+  overlayDismissButtonClassName,
+  overlaySectionVariants,
+  overlayTitleVariants,
+} from "./OverlayChrome";
 
 // =============================================================================
 // Sheet Variants
@@ -58,12 +64,46 @@ interface SheetProps extends VariantProps<typeof sheetVariants> {
   className?: string;
   /** Footer content (buttons, etc.) */
   footer?: React.ReactNode;
+  /** Additional class for the scrollable body region */
+  bodyClassName?: string;
+  /** Additional class for the header region */
+  headerClassName?: string;
+  /** Additional class for the footer region */
+  footerClassName?: string;
   /** Whether to show the close button. Default: true */
   showCloseButton?: boolean;
   /** Custom header content (replaces default title/description) */
   header?: React.ReactNode;
   /** Test ID for the sheet */
   "data-testid"?: string;
+}
+
+function containsSheetPrimitiveNode(
+  node: React.ReactNode,
+  target: typeof SheetPrimitive.Title | typeof SheetPrimitive.Description,
+): boolean {
+  let found = false;
+
+  React.Children.forEach(node, (child) => {
+    if (found || !React.isValidElement<{ children?: React.ReactNode }>(child)) return;
+
+    const childType = child.type;
+    if (
+      childType === target ||
+      ((typeof childType === "object" || typeof childType === "function") &&
+        "displayName" in childType &&
+        childType.displayName === target.displayName)
+    ) {
+      found = true;
+      return;
+    }
+
+    if (child.props.children) {
+      found = containsSheetPrimitiveNode(child.props.children, target);
+    }
+  });
+
+  return found;
 }
 
 /**
@@ -92,10 +132,20 @@ function Sheet({
   side = "right",
   layout = "default",
   footer,
+  bodyClassName,
+  headerClassName,
+  footerClassName,
   showCloseButton = true,
   header,
   "data-testid": testId,
 }: SheetProps) {
+  const headerProvidesTitle = header
+    ? containsSheetPrimitiveNode(header, SheetPrimitive.Title)
+    : false;
+  const headerProvidesDescription = header
+    ? containsSheetPrimitiveNode(header, SheetPrimitive.Description)
+    : false;
+
   return (
     <SheetPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <SheetPrimitive.Portal>
@@ -105,32 +155,67 @@ function Sheet({
           className={cn(sheetVariants({ side, layout }), className)}
         >
           {/* Custom header or default */}
-          {header ?? (
-            <Flex direction="column" gap="sm" className="p-6 text-left border-b border-ui-border">
-              <SheetPrimitive.Title className="text-lg font-semibold text-ui-text">
-                {title}
-              </SheetPrimitive.Title>
-              <SheetPrimitive.Description
-                className={cn("text-sm", description ? "text-ui-text-secondary" : "sr-only")}
-              >
-                {description || title}
-              </SheetPrimitive.Description>
-            </Flex>
-          )}
+          <div
+            className={cn(
+              overlaySectionVariants({ surface: "modal", slot: "header" }),
+              "text-left",
+              headerClassName,
+            )}
+          >
+            {header ? (
+              <>
+                {!headerProvidesTitle && (
+                  <SheetPrimitive.Title className="sr-only">{title}</SheetPrimitive.Title>
+                )}
+                {!headerProvidesDescription && (
+                  <SheetPrimitive.Description className="sr-only">
+                    {description || title}
+                  </SheetPrimitive.Description>
+                )}
+                {header}
+              </>
+            ) : (
+              <Flex direction="column" gap="xs">
+                <SheetPrimitive.Title className={overlayTitleVariants({ surface: "modal" })}>
+                  {title}
+                </SheetPrimitive.Title>
+                <SheetPrimitive.Description
+                  className={cn(
+                    overlayDescriptionVariants({ surface: "modal" }),
+                    description ? "text-ui-text-secondary" : "sr-only",
+                  )}
+                >
+                  {description || title}
+                </SheetPrimitive.Description>
+              </Flex>
+            )}
+          </div>
 
           {/* Content */}
-          {children}
+          <div
+            className={cn(
+              overlaySectionVariants({ surface: "modal", slot: "body" }),
+              bodyClassName,
+            )}
+          >
+            {children}
+          </div>
 
           {/* Footer */}
           {footer && (
-            <Flex className="flex-col-reverse sm:flex-row sm:justify-end gap-2 p-6 border-t border-ui-border">
+            <Flex
+              className={cn(
+                overlaySectionVariants({ surface: "modal", slot: "footer" }),
+                footerClassName,
+              )}
+            >
               {footer}
             </Flex>
           )}
 
           {/* Close button */}
           {showCloseButton && (
-            <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm text-ui-text-secondary opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 disabled:pointer-events-none">
+            <SheetPrimitive.Close className={overlayDismissButtonClassName}>
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </SheetPrimitive.Close>

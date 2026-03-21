@@ -1,12 +1,15 @@
 # Backlog Page - Current State
 
 > **Route**: `/:slug/projects/:key/backlog`
-> **Status**: 🟢 Good
-> **Last Updated**: 2026-03-12
+> **Status**: REVIEWED, stable baseline
+> **Last Updated**: 2026-03-21
+
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Screenshot Matrix
 
 | Viewport | Theme | Preview |
 |----------|-------|---------|
@@ -22,6 +25,7 @@
 - Backlog now benefits from the same compact shared project shell used by board, calendar, and project settings.
 - Seeded sprint and backlog content is trustworthy again in screenshots, so the page no longer reads like a fake empty state.
 - The current mobile layout reads as a compact kanban-style backlog view with tighter workflow columns and lighter chrome.
+- The screenshot folder is still canonical-route focused, which is appropriate here because backlog does not currently branch into as many first-class reviewed modal states as board.
 
 ---
 

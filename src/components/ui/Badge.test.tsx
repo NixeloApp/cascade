@@ -39,6 +39,28 @@ describe("Badge", () => {
       expect(badge.className).toContain("bg-brand-subtle");
     });
 
+    it("applies priority tone overrides", () => {
+      render(
+        <Badge priorityTone="high" data-testid="badge">
+          High
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-status-warning-bg");
+      expect(badge.className).toContain("text-priority-high");
+    });
+
+    it("applies status tone overrides", () => {
+      render(
+        <Badge statusTone="success" data-testid="badge">
+          Success
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-status-success-bg");
+      expect(badge.className).toContain("border-transparent");
+    });
+
     it("applies success variant", () => {
       render(
         <Badge variant="success" data-testid="badge">

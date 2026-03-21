@@ -17,6 +17,7 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate, formatTime } from "@/lib/formatting";
 import { Calendar, Check, Clock, LinkIcon, MapPin, Trash2, X } from "@/lib/icons";
+import { getStatusBadgeTone } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -107,19 +108,6 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
     return getEventBadgeClass(eventType, event.color);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return "bg-status-success-bg text-status-success";
-      case "tentative":
-        return "bg-status-warning-bg text-status-warning";
-      case "cancelled":
-        return "bg-status-error-bg text-status-error";
-      default:
-        return "bg-ui-bg-tertiary text-ui-text-secondary";
-    }
-  };
-
   return (
     <Dialog
       open={open}
@@ -148,14 +136,14 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
           <Badge size="md" className={cn("capitalize", getEventTypeColor(event.eventType))}>
             {event.eventType}
           </Badge>
-          <Badge size="md" className={cn("capitalize", getStatusColor(event.status))}>
+          <Badge size="md" statusTone={getStatusBadgeTone(event.status)} className="capitalize">
             {event.status}
           </Badge>
         </Flex>
 
         <Stack gap="lg">
           <Flex gap="md" align="start">
-            <Icon icon={Calendar} size="md" className="mt-0.5 text-ui-text-tertiary" />
+            <Icon icon={Calendar} size="md" tone="tertiary" className="mt-0.5" />
             <Stack gap="xs">
               <Typography variant="label">
                 {formatDate(event.startTime, {
@@ -209,7 +197,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
           {event.location && (
             <Card recipe="eventDetailSection">
               <Flex gap="md" align="start">
-                <Icon icon={MapPin} size="md" className="mt-0.5 text-ui-text-tertiary" />
+                <Icon icon={MapPin} size="md" tone="tertiary" className="mt-0.5" />
                 <Stack gap="xs">
                   <Typography variant="caption">Location</Typography>
                   <Typography variant="label">{event.location}</Typography>
@@ -221,7 +209,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
           {event.meetingUrl && (
             <Card recipe="eventDetailSection">
               <Flex gap="md" align="start">
-                <Icon icon={LinkIcon} size="md" className="mt-0.5 text-ui-text-tertiary" />
+                <Icon icon={LinkIcon} size="md" tone="tertiary" className="mt-0.5" />
                 <Stack gap="xs" align="start">
                   <Typography variant="caption">Meeting Link</Typography>
                   <Button asChild variant="link" size="none">
@@ -278,14 +266,12 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                       <Flex justify="between" align="center" gap="sm">
                         <Flex gap="sm" align="center" flex="1">
                           {attendee.status === "present" && (
-                            <Icon icon={Check} size="sm" className="text-status-success" />
+                            <Icon icon={Check} size="sm" tone="success" />
                           )}
                           {attendee.status === "tardy" && (
-                            <Icon icon={Clock} size="sm" className="text-status-warning" />
+                            <Icon icon={Clock} size="sm" tone="warning" />
                           )}
-                          {attendee.status === "absent" && (
-                            <Icon icon={X} size="sm" className="text-status-error" />
-                          )}
+                          {attendee.status === "absent" && <Icon icon={X} size="sm" tone="error" />}
                           {!attendee.status && (
                             <Icon icon={Clock} size="sm" className="opacity-0" aria-hidden="true" />
                           )}

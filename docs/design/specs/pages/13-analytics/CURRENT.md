@@ -1,162 +1,177 @@
 # Analytics Page - Current State
 
-> **Route**: `/:slug/projects/:key/analytics` and `/:slug/analytics`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Route**: `/:slug/projects/:key/analytics`
+> **Status**: REVIEWED, with routine follow-up polish only
+> **Last Updated**: 2026-03-21
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Scope
 
-| Viewport | Preview |
-|----------|---------|
-| Desktop | ![](screenshots/desktop-dark.png) |
+This page spec covers the **project analytics** route. Organization analytics now has its own
+separate screenshot route and should be reviewed through the org analytics spec folder, not folded
+into this one.
+
+The project analytics route is supposed to do three things:
+
+1. summarize current delivery flow
+2. expose ownership and sprint signal without leaving the project shell
+3. keep charts and recent activity inside one contextual project workspace
 
 ---
 
-## Structure
+## Screenshot Matrix
 
-Analytics dashboard with metric cards and charts:
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
 
-```
-+-------------------------------------------------------------------------------------------+
-| [=] Nixelo E2E                      [Commands Cmd+K] [?] [> Timer] [Search Cmd+K] [N] [AV]|
-+-------------------------------------------------------------------------------------------+
-|                                                                                           |
-|  Analytics Dashboard                                                                      |
-|  Project insights, team velocity, and progress metrics                                    |
-|                                                                                           |
-|  +----------------+ +----------------+ +----------------+ +----------------+               |
-|  |  Total Issues  | |  Unassigned    | |  Avg Velocity  | | Completed      |               |
-|  |  [icon]        | |  [icon]        | |  [icon]        | | Sprints [icon] |               |
-|  |                | |                | |                | |                |               |
-|  |      42        | |       8        | |     12.5       | |      6         |               |
-|  |                | |                | | points/sprint  | |                |               |
-|  +----------------+ +----------------+ +----------------+ +----------------+               |
-|                                                                                           |
-|  +------------------------------------+ +------------------------------------+             |
-|  | Issues by Status                   | | Issues by Type                     |             |
-|  +------------------------------------+ +------------------------------------+             |
-|  |                                    | |                                    |             |
-|  | Backlog    ████████████████  24    | | Task   ████████████████████  28    |             |
-|  | In Progress █████████  12          | | Bug    ████████████  16            |             |
-|  | Review     ████  4                 | | Story  ██████  8                   |             |
-|  | Done       ██  2                   | | Epic   ██  4                       |             |
-|  |                                    | |                                    |             |
-|  +------------------------------------+ +------------------------------------+             |
-|                                                                                           |
-|  +------------------------------------+ +------------------------------------+             |
-|  | Issues by Priority                 | | Team Velocity (Last 10 Sprints)    |             |
-|  +------------------------------------+ +------------------------------------+             |
-|  |                                    | |                                    |             |
-|  | Highest    ████████  10            | | Sprint 1  ████████  8              |             |
-|  | High       ██████████████  18      | | Sprint 2  ████████████  12         |             |
-|  | Medium     ████████████  14        | | Sprint 3  ██████████  10           |             |
-|  | Low        ████  4                 | | Sprint 4  ██████████████  14       |             |
-|  | Lowest     ██  2                   | | Sprint 5  ████████████  12         |             |
-|  |                                    | |                                    |             |
-|  +------------------------------------+ +------------------------------------+             |
-|                                                                                           |
-|  +--------------------------------------------------------------------------+             |
-|  | Issues by Assignee                                                        |             |
-|  +--------------------------------------------------------------------------+             |
-|  | Alice    ████████████████████  20                                         |             |
-|  | Bob      ████████████████  16                                             |             |
-|  | Charlie  ████████████  12                                                 |             |
-|  | Diana    ████████  8                                                      |             |
-|  +--------------------------------------------------------------------------+             |
-|                                                                                           |
-|  +--------------------------------------------------------------------------+             |
-|  | Recent Activity                                                           |             |
-|  +--------------------------------------------------------------------------+             |
-|  | [AV] John moved PROJ-123 to Done                           2 hours ago    |             |
-|  | [AV] Sarah created PROJ-124                                3 hours ago    |             |
-|  | [AV] Mike commented on PROJ-100                            5 hours ago    |             |
-|  +--------------------------------------------------------------------------+             |
-|                                                                                           |
-+-------------------------------------------------------------------------------------------+
+The current spec folder only tracks the canonical project analytics route across the standard
+viewport matrix. Org analytics is reviewed separately.
+
+---
+
+## Route Anatomy
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Shared project shell                                                                        │
+│ compact project header + section nav                                                        │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Project analytics route                                                                     │
+│                                                                                             │
+│  PageHeader                                                                                 │
+│  "{projectName} analytics"                                                                  │
+│  Delivery, workload, and ownership signals for {projectKey}                                 │
+│                                                                                             │
+│  Insight band                                                                               │
+│  [Flow Snapshot] [Ownership] [Sprint Signal]                                                │
+│                                                                                             │
+│  Metric band                                                                                │
+│  [Total Issues] [Unassigned] [Avg Velocity] [Completed Sprints]                             │
+│                                                                                             │
+│  Chart grid                                                                                 │
+│  [Issues by Status] [Issues by Type]                                                        │
+│  [Issues by Priority] [Team Velocity]                                                       │
+│                                                                                             │
+│  Lower row                                                                                  │
+│  [Issues by Assignee] [Recent Activity]                                                     │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Current Elements
+## Current Composition
 
-### Header
-- **Title**: "Analytics Dashboard"
-- **Description**: "Project insights, team velocity, and progress metrics"
+### 1. Contextual project framing
 
-### Metric Cards (4-column grid)
-- **Total Issues**: Count with TrendingUp icon
-- **Unassigned**: Count with MapPin icon, warning ring if > 0
-- **Avg Velocity**: Points/sprint with Zap icon
-- **Completed Sprints**: Count with CheckCircle icon
+- The route receives real `projectId`, `projectName`, and `projectKey` context from the project
+  route instead of pretending analytics is route-agnostic.
+- The header copy names the actual project and keeps the page inside the shared project shell.
 
-### Charts (2-column grid)
-- **Issues by Status**: Horizontal bar chart, blue bars
-- **Issues by Type**: Horizontal bar chart, green bars
-- **Issues by Priority**: Horizontal bar chart, yellow bars
-- **Team Velocity**: Horizontal bar chart, accent color
+### 2. Insight band
 
-### Assignee Chart
-- **Full-width**: Horizontal bar chart, brand color
+- `AnalyticsInsightCard` provides the top interpretation layer:
+  - `Flow Snapshot`
+  - `Ownership`
+  - `Sprint Signal`
+- This is the "what should I conclude from the charts?" layer that the older generic dashboard
+  lacked.
 
-### Recent Activity
-- **Activity list**: Avatar, description, relative time
+### 3. Metrics band
 
----
+- Standard stat cards still exist, but they are now secondary to the contextual insight band.
+- The route is no longer "four metrics, then charts"; it is "context first, metrics second."
 
-## Files
+### 4. Breakdown charts
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/_auth/_app/$orgSlug/projects/$key/analytics.tsx` | Route definition | ~35 |
-| `src/routes/_auth/_app/$orgSlug/analytics.tsx` | Org-level placeholder | ~20 |
-| `src/components/AnalyticsDashboard.tsx` | Main dashboard | ~240 |
-| `src/components/Analytics/MetricCard.tsx` | Stat card | ~50 |
-| `src/components/Analytics/BarChart.tsx` | Horizontal bar chart | ~50 |
-| `src/components/Analytics/ChartCard.tsx` | Chart wrapper | ~30 |
-| `src/components/Analytics/RecentActivity.tsx` | Activity list | ~80 |
+- Status
+- Type
+- Priority
+- Velocity
+- Assignee
 
----
+Each chart now has explicit empty-state handling instead of silently disappearing when data is
+thin.
 
-## Problems
+### 5. Recent activity
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | No date range picker | AnalyticsDashboard.tsx | MEDIUM |
-| 2 | Charts lack interactivity | BarChart.tsx | MEDIUM |
-| 3 | No trend indicators on metrics | MetricCard.tsx | MEDIUM |
-| 4 | Missing export functionality | AnalyticsDashboard.tsx | LOW |
-| 5 | No chart tooltips | BarChart.tsx | LOW |
-| 6 | Org-level analytics placeholder only | analytics.tsx | LOW |
-| 7 | No comparison period | AnalyticsDashboard.tsx | LOW |
-| 8 | Activity list needs pagination | RecentActivity.tsx | LOW |
-| 9 | Bar chart animation basic | BarChart.tsx | LOW |
-| 10 | No pie/donut chart options | N/A | LOW |
+- The route keeps recent project activity inside the same analytics shell rather than bolting on a
+  generic feed card.
 
 ---
 
-## Current Chart Colors
+## State Coverage
 
-| Chart | Color Token |
-|-------|-------------|
-| Status | `bg-status-info` (blue) |
-| Type | `bg-status-success` (green) |
-| Priority | `bg-status-warning` (yellow) |
-| Velocity | `bg-accent` (accent) |
-| Assignee | `bg-brand` (brand) |
+### Route states currently covered
+
+- Filled project analytics route across desktop/tablet/mobile
+- Loading skeleton state in code
+- Explicit empty-state paths inside charts and recent activity
+
+### Route states not yet called out by dedicated screenshots
+
+- sparse-data project with minimal assignee/velocity information
+- truly no-activity project
+- project shell navigation interactions beyond the canonical route capture
+
+Those are not broken, but they are not yet separate reviewed screenshot artifacts.
+
+---
+
+## Current Strengths
+
+| Area | Current Read |
+|------|--------------|
+| Project context | Strong. The route now feels tied to the active project instead of being a generic analytics demo. |
+| Section rhythm | Good. Insight cards, metrics, charts, and activity now read as one workspace. |
+| Empty-state honesty | Better than the earlier route because missing data produces explicit sections instead of silently dropped panels. |
+| Screenshot trust | High for the canonical route. The reviewed captures match the current contextual layout. |
+
+---
+
+## Current Problems
+
+| # | Problem | Area | Severity |
+|---|---------|------|----------|
+| 1 | The canonical screenshot matrix is current, but it still only covers the main route; sparse-data or low-history states remain implicit | screenshot coverage | MEDIUM |
+| 2 | Desktop light mode is valid, but the chart grid still reads a bit flatter than the top insight band | surface hierarchy | LOW |
+| 3 | The route is contextual now, but there is still no explicit date-range or comparison control when the user wants analysis beyond the default view | product depth | LOW |
+
+---
+
+## Source Files
+
+| File | Purpose |
+|------|---------|
+| `src/routes/_auth/_app/$orgSlug/projects/$key/analytics.tsx` | Project analytics route and project context wiring |
+| `src/components/AnalyticsDashboard.tsx` | Main project analytics composition |
+| `src/components/Analytics/AnalyticsInsightCard.tsx` | Top-level insight band |
+| `src/components/Analytics/ChartCard.tsx` | Shared chart section shell |
+| `src/components/Analytics/MetricCard.tsx` | Metric cards |
+| `src/components/Analytics/RecentActivity.tsx` | Activity section |
+| `e2e/screenshot-pages.ts` | Project analytics screenshot capture |
+
+---
+
+## Review Guidance
+
+- Keep project analytics contextual. Do not regress it into a generic stats wall.
+- If screenshot coverage grows, prioritize:
+  - sparse-history project
+  - no recent activity
+  - low-assignment / high-unassigned project
+- Org analytics belongs in the org analytics spec, not blended back into this page doc.
 
 ---
 
 ## Summary
 
-Analytics dashboard is functional with basic charts:
-- Metric cards display key stats
-- Horizontal bar charts for all breakdowns
-- Recent activity list working
-- Skeleton loading states
-- Needs date range picker for filtering
-- Charts lack tooltips and hover states
-- No trend indicators (up/down arrows)
-- No data export functionality
-- Org-level analytics not implemented
+Project analytics is current and materially better than the old generic dashboard version. The
+remaining work is about screenshot depth and low-data-state review, not route identity or major
+layout problems.

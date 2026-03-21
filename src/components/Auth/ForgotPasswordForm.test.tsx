@@ -28,7 +28,6 @@ describe("ForgotPasswordForm", () => {
   it("renders the form with email input and submit button", () => {
     render(<ForgotPasswordForm {...defaultProps} />);
 
-    expect(screen.getByText("Reset your password")).toBeInTheDocument();
     expect(screen.getByText(/send you a code/)).toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /send reset code/i })).toBeInTheDocument();
@@ -79,5 +78,11 @@ describe("ForgotPasswordForm", () => {
     fireEvent.click(backButton);
 
     expect(defaultProps.onBack).toHaveBeenCalled();
+  });
+
+  it("omits the back link when no back handler is provided", () => {
+    render(<ForgotPasswordForm onCodeSent={defaultProps.onCodeSent} />);
+
+    expect(screen.queryByRole("button", { name: /back to sign in/i })).not.toBeInTheDocument();
   });
 });

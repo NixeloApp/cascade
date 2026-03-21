@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
 import { Select } from "@/components/ui/form/Select";
+import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -87,8 +88,8 @@ export function MoveDocumentDialog({
             onClick={() => void handleMove()}
             disabled={!hasChanged}
             isLoading={isMoving}
+            leftIcon={<Icon icon={FolderInput} size="sm" />}
           >
-            <FolderInput className="h-4 w-4 mr-2" />
             Move
           </Button>
         </Flex>

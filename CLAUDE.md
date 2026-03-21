@@ -265,7 +265,7 @@ await new Promise(resolve => setTimeout(resolve, 500));
 
 If a test needs a timeout to pass, the underlying code likely has a performance or loading state issue that should be fixed.
 
-**Screenshot capture tooling** (`e2e/screenshot-pages.ts`) must also follow these rules. Use `animations: 'disabled'` on `page.screenshot()` calls for animation settling, and reuse shared helpers from `e2e/utils/wait-helpers.ts` (`waitForAnimation()`, `waitForModal()`, etc.) instead of hardcoded waits. See `todos/screenshot-tooling-cleanup.md` for the full cleanup plan.
+**Screenshot capture tooling** (`e2e/screenshot-pages.ts`) must also follow these rules. Use `animations: 'disabled'` on `page.screenshot()` calls for animation settling, and reuse shared helpers from `e2e/utils/wait-helpers.ts` (`waitForAnimation()`, `waitForModal()`, etc.) instead of hardcoded waits. Track any remaining screenshot-related backlog in `todos/README.md`.
 
 ## Resources
 
