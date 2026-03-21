@@ -36,9 +36,9 @@ export function OfflineTab() {
           <Flex gap="lg" align="center">
             <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
               {isOnline ? (
-                <Wifi className="h-6 w-6 text-brand-foreground" />
+                <Icon icon={Wifi} size="lg" className="text-brand-foreground" />
               ) : (
-                <WifiOff className="h-6 w-6 text-brand-foreground" />
+                <Icon icon={WifiOff} size="lg" className="text-brand-foreground" />
               )}
             </div>
             <Stack gap="xs">
@@ -142,7 +142,7 @@ export function OfflineTab() {
                 size="sm"
                 onClick={() => showInfo("Manual sync triggered")}
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <Icon icon={RefreshCw} size="sm" className="mr-2" />
                 Sync Now
               </Button>
             </Flex>
