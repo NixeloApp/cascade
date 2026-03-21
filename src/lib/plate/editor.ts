@@ -72,6 +72,8 @@ export function deserializeValue(json: string | null | undefined): Value {
 
 interface ProseMirrorMark {
   type?: string;
+  attrs?: Record<string, unknown>;
+  /** @deprecated Legacy field — prefer attrs.value. Kept for snapshot compat. */
   value?: string;
 }
 
@@ -121,8 +123,14 @@ function applyTextMarks(leaf: Record<string, unknown>, marks: ProseMirrorMark[] 
     if (mark.type === "strike") leaf.strikethrough = true;
     if (mark.type === "code") leaf.code = true;
     if (mark.type === "highlight") leaf.highlight = true;
-    if (mark.type === "fontColor" && mark.value) leaf.fontColor = mark.value;
-    if (mark.type === "backgroundColor" && mark.value) leaf.backgroundColor = mark.value;
+    if (mark.type === "fontColor") {
+      const v = (mark.attrs?.value as string) ?? mark.value;
+      if (v) leaf.fontColor = v;
+    }
+    if (mark.type === "backgroundColor") {
+      const v = (mark.attrs?.value as string) ?? mark.value;
+      if (v) leaf.backgroundColor = v;
+    }
   }
 }
 
@@ -331,8 +339,9 @@ function leafToMarks(leaf: PlateTextLeaf) {
   if (leaf.strikethrough) marks.push({ type: "strike" });
   if (leaf.code) marks.push({ type: "code" });
   if (leaf.highlight) marks.push({ type: "highlight" });
-  if (leaf.fontColor) marks.push({ type: "fontColor", value: leaf.fontColor });
-  if (leaf.backgroundColor) marks.push({ type: "backgroundColor", value: leaf.backgroundColor });
+  if (leaf.fontColor) marks.push({ type: "fontColor", attrs: { value: leaf.fontColor } });
+  if (leaf.backgroundColor)
+    marks.push({ type: "backgroundColor", attrs: { value: leaf.backgroundColor } });
 
   return marks.length > 0 ? marks : undefined;
 }
