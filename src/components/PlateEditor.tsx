@@ -505,7 +505,10 @@ function usePlateDocumentSync({
         setSyncState("error");
         showError(error, "Failed to save document");
         // Schedule a retry so unsaved content is not lost after a transient failure.
-        pendingContentRef.current = content;
+        // Only set the failed content for retry if the user hasn't queued newer edits.
+        if (!pendingContentRef.current) {
+          pendingContentRef.current = content;
+        }
         saveTimeoutRef.current = window.setTimeout(() => {
           saveTimeoutRef.current = null;
           const retryContent = pendingContentRef.current;
@@ -577,6 +580,21 @@ function usePlateDocumentSync({
       // and consume the version number we're about to use.
       clearTimeoutRef(saveTimeoutRef);
       pendingContentRef.current = null;
+
+      // Wait for any in-flight autosave to finish so its version increment
+      // is reflected in currentVersionRef before we compute the restore target.
+      if (isSavingRef.current) {
+        await new Promise<void>((resolve) => {
+          const check = () => {
+            if (!isSavingRef.current) {
+              resolve();
+            } else {
+              window.setTimeout(check, 50);
+            }
+          };
+          check();
+        });
+      }
 
       setSyncState("saving");
 
