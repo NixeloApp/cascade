@@ -173,7 +173,7 @@ describe("plateValueToProseMirrorSnapshot", () => {
   });
 
   it("preserves table elements through round-trip", () => {
-    const plateValue = [
+    const snapshot = plateValueToProseMirrorSnapshot([
       {
         type: "table",
         children: [
@@ -187,9 +187,7 @@ describe("plateValueToProseMirrorSnapshot", () => {
           },
         ],
       },
-    ] as const;
-
-    const snapshot = plateValueToProseMirrorSnapshot(plateValue);
+    ] as const);
     expect(snapshot.content?.[0].type).toBe("table");
 
     const restored = proseMirrorSnapshotToValue(snapshot);
@@ -198,16 +196,14 @@ describe("plateValueToProseMirrorSnapshot", () => {
   });
 
   it("preserves image elements through round-trip", () => {
-    const plateValue = [
+    const snapshot = plateValueToProseMirrorSnapshot([
       {
         type: "img",
         url: "https://example.com/photo.png",
         alt: "A photo",
         children: [{ text: "" }],
       },
-    ] as const;
-
-    const snapshot = plateValueToProseMirrorSnapshot(plateValue);
+    ] as const);
     expect(snapshot.content?.[0].type).toBe("image");
     expect(snapshot.content?.[0].attrs?.src).toBe("https://example.com/photo.png");
 
@@ -219,15 +215,13 @@ describe("plateValueToProseMirrorSnapshot", () => {
   });
 
   it("preserves unknown element types via passthrough instead of flattening", () => {
-    const plateValue = [
+    const snapshot = plateValueToProseMirrorSnapshot([
       {
         type: "mention",
         value: "user-123",
         children: [{ text: "@alice" }],
       },
-    ] as const;
-
-    const snapshot = plateValueToProseMirrorSnapshot(plateValue);
+    ] as const);
     expect(snapshot.content?.[0].type).toBe("mention");
 
     const restored = proseMirrorSnapshotToValue(snapshot);
