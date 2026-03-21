@@ -85,8 +85,8 @@ describe("OfflineTab", () => {
   it("renders the online summary and feature list without a sync queue", () => {
     render(<OfflineTab />);
 
-    expect(screen.getByText("Connection Status")).toBeInTheDocument();
-    expect(screen.getByText("You are online")).toBeInTheDocument();
+    expect(screen.getByText("Connection")).toBeInTheDocument();
+    expect(screen.getByText("Online")).toBeInTheDocument();
     expect(screen.getByText("Ready")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.getByText("IndexedDB")).toBeInTheDocument();
@@ -174,7 +174,7 @@ describe("OfflineTab", () => {
 
     render(<OfflineTab />);
 
-    expect(screen.getByText("You are offline")).toBeInTheDocument();
+    expect(screen.getByText("Offline")).toBeInTheDocument();
     expect(screen.getByText("Needs attention")).toBeInTheDocument();
     expect(screen.getByText("Local Offline Queue")).toBeInTheDocument();
     expect(screen.getByText(new Date(lastSuccessfulReplayAt).toLocaleString())).toBeInTheDocument();

@@ -49,7 +49,7 @@ test.describe("Offline Replay Preview", () => {
       await expect(page.getByRole("heading", { name: /you're offline/i })).toHaveCount(0);
       await settingsPage.offlineTab.click();
       await expect(settingsPage.offlineTab).toHaveAttribute("aria-selected", "true");
-      await expect(settingsPage.syncStatusIndicator).toContainText("You are offline");
+      await expect(settingsPage.syncStatusIndicator).toContainText("Offline");
     } finally {
       await page.context().setOffline(false);
       await dispatchConnectivityEvent(page, "online");
@@ -112,7 +112,7 @@ test.describe("Offline Replay Preview", () => {
 
       await settingsPage.offlineTab.click();
       await expect(settingsPage.offlineTab).toHaveAttribute("aria-selected", "true");
-      await expect(settingsPage.syncStatusIndicator).toContainText("You are offline");
+      await expect(settingsPage.syncStatusIndicator).toContainText("Offline");
       await settingsPage.expectOfflineQueueItemVisible(OFFLINE_USER_SETTINGS_MUTATION_TYPE);
       await expect(settingsPage.page.getByText(/^Never$/)).toBeVisible();
 

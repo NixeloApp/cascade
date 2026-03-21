@@ -7,6 +7,8 @@
  */
 
 import { DAY, WEEK } from "@convex/lib/timeUtils";
+import type { DBSchema, IDBPDatabase } from "idb";
+import { openDB } from "idb";
 
 const DB_NAME = "NixeloOfflineDB";
 const DB_VERSION = 1;
@@ -52,6 +54,24 @@ export interface CachedData {
   key: string;
   data: unknown;
   timestamp: number;
+}
+
+interface NixeloOfflineSchema extends DBSchema {
+  mutations: {
+    key: number;
+    value: OfflineMutation;
+    indexes: {
+      status: string;
+      timestamp: number;
+    };
+  };
+  cachedData: {
+    key: string;
+    value: CachedData;
+    indexes: {
+      timestamp: number;
+    };
+  };
 }
 
 export class UnsupportedOfflineMutationError extends Error {
@@ -130,127 +150,49 @@ function applyMutationStatusUpdate(
 }
 
 class OfflineDB {
-  private db: IDBDatabase | null = null;
+  private dbPromise: Promise<IDBPDatabase<NixeloOfflineSchema>> | null = null;
 
-  private async runStoreCleanup<T>(
-    storeName: "mutations" | "cachedData",
-    shouldDelete: (value: T) => boolean,
-  ): Promise<number> {
-    const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], "readwrite");
-      const store = transaction.objectStore(storeName);
-      const request = store.openCursor();
-      let deleted = 0;
+  private open(): Promise<IDBPDatabase<NixeloOfflineSchema>> {
+    if (!this.dbPromise) {
+      this.dbPromise = openDB<NixeloOfflineSchema>(DB_NAME, DB_VERSION, {
+        upgrade(db) {
+          if (!db.objectStoreNames.contains("mutations")) {
+            const mutationsStore = db.createObjectStore("mutations", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+            mutationsStore.createIndex("status", "status");
+            mutationsStore.createIndex("timestamp", "timestamp");
+          }
 
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-        if (!cursor) {
-          resolve(deleted);
-          return;
-        }
-
-        const value = cursor.value as T;
-        if (shouldDelete(value)) {
-          cursor.delete();
-          deleted++;
-        }
-        cursor.continue();
-      };
-
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  private async runCachedDataWrite<T>(
-    operation: (store: IDBObjectStore) => IDBRequest<T>,
-  ): Promise<void> {
-    const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["cachedData"], "readwrite");
-      const store = transaction.objectStore("cachedData");
-      const request = operation(store);
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  open(): Promise<IDBDatabase> {
-    if (this.db) return Promise.resolve(this.db);
-
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        this.db = request.result;
-        resolve(this.db);
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-
-        // Mutations store
-        if (!db.objectStoreNames.contains("mutations")) {
-          const mutationsStore = db.createObjectStore("mutations", {
-            keyPath: "id",
-            autoIncrement: true,
-          });
-          mutationsStore.createIndex("status", "status", { unique: false });
-          mutationsStore.createIndex("timestamp", "timestamp", { unique: false });
-        }
-
-        // Cached data store
-        if (!db.objectStoreNames.contains("cachedData")) {
-          const cachedStore = db.createObjectStore("cachedData", { keyPath: "key" });
-          cachedStore.createIndex("timestamp", "timestamp", { unique: false });
-        }
-      };
-    });
+          if (!db.objectStoreNames.contains("cachedData")) {
+            const cachedStore = db.createObjectStore("cachedData", { keyPath: "key" });
+            cachedStore.createIndex("timestamp", "timestamp");
+          }
+        },
+      });
+    }
+    return this.dbPromise;
   }
 
   // Mutation queue operations
+
   async addMutation(mutation: Omit<OfflineMutation, "id">): Promise<number> {
     const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["mutations"], "readwrite");
-      const store = transaction.objectStore("mutations");
-      const request = store.add(mutation);
-
-      request.onsuccess = () => resolve(request.result as number);
-      request.onerror = () => reject(request.error);
-    });
+    return (await db.add("mutations", mutation as OfflineMutation)) as number;
   }
 
   async getPendingMutations(): Promise<OfflineMutation[]> {
     const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["mutations"], "readonly");
-      const store = transaction.objectStore("mutations");
-      const index = store.index("status");
-      const request = index.getAll("pending");
-
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    return db.getAllFromIndex("mutations", "status", "pending");
   }
 
   async getQueuedMutations(): Promise<OfflineMutation[]> {
     const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["mutations"], "readonly");
-      const store = transaction.objectStore("mutations");
-      const request = store.getAll();
-
-      request.onsuccess = () => {
-        const mutations = (request.result as OfflineMutation[])
-          .filter((mutation) => mutation.status !== "synced")
-          .sort((left, right) => right.timestamp - left.timestamp);
-        resolve(mutations);
-      };
-      request.onerror = () => reject(request.error);
-    });
+    const all = await db.getAll("mutations");
+    return all
+      .filter((mutation) => mutation.status !== "synced")
+      .sort((left, right) => right.timestamp - left.timestamp);
   }
 
   async updateMutationStatus(
@@ -259,84 +201,75 @@ class OfflineDB {
     options: UpdateMutationStatusOptions = {},
   ): Promise<void> {
     const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["mutations"], "readwrite");
-      const store = transaction.objectStore("mutations");
-      const getRequest = store.get(id);
+    const mutation = await db.get("mutations", id);
+    if (!mutation) return;
 
-      getRequest.onsuccess = () => {
-        const mutation = getRequest.result as OfflineMutation;
-        if (!mutation) {
-          resolve();
-          return;
-        }
-
-        const updatedMutation = applyMutationStatusUpdate(mutation, status, options);
-        const putRequest = store.put(updatedMutation);
-        putRequest.onsuccess = () => resolve();
-        putRequest.onerror = () => reject(putRequest.error);
-      };
-
-      getRequest.onerror = () => reject(getRequest.error);
-    });
+    const updated = applyMutationStatusUpdate(mutation, status, options);
+    await db.put("mutations", updated);
   }
 
   async deleteMutation(id: number): Promise<void> {
     const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["mutations"], "readwrite");
-      const store = transaction.objectStore("mutations");
-      const request = store.delete(id);
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    await db.delete("mutations", id);
   }
 
   async clearSyncedMutations(olderThan?: number): Promise<number> {
     const cutoff = olderThan || Date.now() - DAY;
-    return this.runStoreCleanup<OfflineMutation>(
-      "mutations",
-      (mutation) =>
+    const db = await this.open();
+    const tx = db.transaction("mutations", "readwrite");
+    let deleted = 0;
+
+    let cursor = await tx.store.openCursor();
+    while (cursor) {
+      const mutation = cursor.value;
+      if (
         mutation.status === "synced" &&
         mutation.syncedAt !== undefined &&
-        mutation.syncedAt < cutoff,
-    );
+        mutation.syncedAt < cutoff
+      ) {
+        await cursor.delete();
+        deleted++;
+      }
+      cursor = await cursor.continue();
+    }
+
+    return deleted;
   }
 
   // Cache operations
+
   async setCachedData(key: string, data: unknown): Promise<void> {
-    return this.runCachedDataWrite((store) =>
-      store.put({
-        key,
-        data,
-        timestamp: Date.now(),
-      }),
-    );
+    const db = await this.open();
+    await db.put("cachedData", { key, data, timestamp: Date.now() });
   }
 
   async getCachedData(key: string): Promise<unknown | null> {
     const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["cachedData"], "readonly");
-      const store = transaction.objectStore("cachedData");
-      const request = store.get(key);
-
-      request.onsuccess = () => {
-        const result = request.result as CachedData | undefined;
-        resolve(result ? result.data : null);
-      };
-      request.onerror = () => reject(request.error);
-    });
+    const result = await db.get("cachedData", key);
+    return result ? result.data : null;
   }
 
   async deleteCachedData(key: string): Promise<void> {
-    return this.runCachedDataWrite((store) => store.delete(key));
+    const db = await this.open();
+    await db.delete("cachedData", key);
   }
 
   async clearOldCache(olderThan?: number): Promise<number> {
     const cutoff = olderThan || Date.now() - WEEK;
-    return this.runStoreCleanup<CachedData>("cachedData", (cached) => cached.timestamp < cutoff);
+    const db = await this.open();
+    const tx = db.transaction("cachedData", "readwrite");
+    let deleted = 0;
+
+    let cursor = await tx.store.openCursor();
+    while (cursor) {
+      if (cursor.value.timestamp < cutoff) {
+        await cursor.delete();
+        deleted++;
+      }
+      cursor = await cursor.continue();
+    }
+
+    return deleted;
   }
 }
 
