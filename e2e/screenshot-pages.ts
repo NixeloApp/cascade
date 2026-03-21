@@ -1699,20 +1699,17 @@ async function waitForDocumentsReady(page: Page): Promise<void> {
 }
 
 async function waitForDocumentEditorReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", {
-      name: /project requirements|sprint retrospective notes/i,
-    })
-    .waitFor({
-      state: "visible",
-      timeout: 12000,
-    });
+  await page.getByTestId(TEST_IDS.DOCUMENT.TITLE).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
   await page.waitForFunction(
     () => {
       const text = document.body.innerText || "";
       return (
         text.includes("The team closed the auth refresh") ||
         text.includes("Teams can move from specs to execution") ||
+        text.includes("Keep Tailwind for static layout") ||
         text.includes("Hydrate the editor from saved document versions") ||
         document.querySelector("[contenteditable='true']") !== null
       );
@@ -2314,9 +2311,26 @@ async function discoverDocumentId(page: Page, orgSlug: string): Promise<string |
   await waitForExpectedContent(page, ROUTES.documents.list.build(orgSlug), "documents");
   await waitForScreenshotReady(page);
 
+  const preferredTitles = [/sprint retrospective notes/i, /project requirements/i];
+  const mainContent = page.getByRole("main");
+
   try {
-    const links = page.locator("a");
+    const links = mainContent.locator("a");
     const count = await links.count();
+
+    for (const preferredTitle of preferredTitles) {
+      for (let i = 0; i < count; i++) {
+        const link = links.nth(i);
+        const href = await link.getAttribute("href");
+        const text = (await link.innerText().catch(() => "")).trim();
+        const match = href?.match(/\/documents\/([^/?#]+)/);
+        const candidate = match?.[1];
+        if (candidate && candidate !== "templates" && preferredTitle.test(text)) {
+          return candidate;
+        }
+      }
+    }
+
     for (let i = 0; i < count; i++) {
       const href = await links.nth(i).getAttribute("href");
       const match = href?.match(/\/documents\/([^/?#]+)/);
@@ -2336,6 +2350,82 @@ async function openDocumentEditorForCapture(page: Page, docUrl: string): Promise
   await waitForScreenshotReady(page);
 }
 
+async function queueMarkdownFileForImport(
+  page: Page,
+  markdown: string,
+  filename: string,
+): Promise<void> {
+  await page.evaluate(
+    ({ markdown, filename }) => {
+      const file = new File([markdown], filename, { type: "text/markdown" });
+      const originalClick = HTMLInputElement.prototype.click;
+      HTMLInputElement.prototype.click = function (this: HTMLInputElement) {
+        if (this.type === "file") {
+          HTMLInputElement.prototype.click = originalClick;
+          const transfer = new DataTransfer();
+          transfer.items.add(file);
+          Object.defineProperty(this, "files", {
+            configurable: true,
+            value: transfer.files,
+          });
+          this.dispatchEvent(new Event("change", { bubbles: true }));
+          return;
+        }
+
+        return originalClick.call(this);
+      };
+    },
+    { markdown, filename },
+  );
+}
+
+async function getDocumentEditorEditable(page: Page): Promise<Locator> {
+  const editable = page.locator("[contenteditable='true']").first();
+  await editable.waitFor({ state: "visible", timeout: 8000 });
+  return editable;
+}
+
+async function selectDocumentEditorText(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const editable = document.querySelector("[contenteditable='true']");
+    if (!(editable instanceof HTMLElement)) {
+      throw new Error("Document editor is not editable");
+    }
+
+    const block =
+      editable.querySelector("h1, h2, p, li") ??
+      editable.querySelector("[data-slate-node='element']");
+    if (!(block instanceof HTMLElement)) {
+      throw new Error("Unable to find a selectable editor block");
+    }
+
+    const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        return node.textContent?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      },
+    });
+    const firstTextNode = walker.nextNode();
+    if (!(firstTextNode instanceof Text)) {
+      throw new Error("Unable to find selectable editor text");
+    }
+
+    editable.focus();
+    const range = document.createRange();
+    range.selectNodeContents(firstTextNode);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
+  });
+}
+
+async function openDocumentActionsMenu(page: Page): Promise<void> {
+  const trigger = page.getByRole("button", { name: /more document actions/i }).first();
+  await trigger.waitFor({ state: "visible", timeout: 8000 });
+  await trigger.click();
+  await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
+}
+
 async function openMarkdownImportPreviewDialog(
   page: Page,
   markdown: string,
@@ -2344,18 +2434,11 @@ async function openMarkdownImportPreviewDialog(
   await dismissAllDialogs(page);
   const trigger = page.getByRole("button", { name: /import from markdown/i });
   await trigger.waitFor({ state: "visible", timeout: 8000 });
-  const fileChooserPromise = page.waitForEvent("filechooser");
+  await queueMarkdownFileForImport(page, markdown, filename);
   await trigger.click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles({
-    name: filename,
-    mimeType: "text/markdown",
-    buffer: Buffer.from(markdown, "utf8"),
-  });
-  const dialog = await waitForDialogOpen(page);
-  await page
-    .getByRole("dialog", { name: /preview markdown import/i })
-    .waitFor({ state: "visible", timeout: 5000 });
+  const dialog = page.getByRole("dialog", { name: /preview markdown import/i });
+  await dialog.waitFor({ state: "visible", timeout: 8000 });
+  await waitForAnimation(page);
   return dialog;
 }
 
@@ -3312,7 +3395,10 @@ async function screenshotFilledStates(
     "document-editor-mention-popover",
   ];
   if (shouldCaptureAny(p, editorTargets)) {
-    const docId = await discoverDocumentId(page, orgSlug);
+    const docId =
+      seed.documentIds?.sprintRetrospectiveNotes ??
+      seed.documentIds?.projectRequirements ??
+      (await discoverDocumentId(page, orgSlug));
     if (docId) {
       const docUrl = ROUTES.documents.detail.build(orgSlug, docId);
       await takeScreenshot(page, p, "document-editor", docUrl);
@@ -3321,9 +3407,8 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-move-dialog")) {
         await runCaptureStep("document move dialog", async () => {
           await openDocumentEditorForCapture(page, docUrl);
-          const trigger = page.getByRole("button", { name: /move to another project/i }).first();
-          await trigger.waitFor({ state: "visible", timeout: 8000 });
-          await trigger.click();
+          await openDocumentActionsMenu(page);
+          await page.getByRole("menuitem", { name: /move to another project/i }).click();
           await page
             .getByRole("dialog", { name: /move document/i })
             .waitFor({ state: "visible", timeout: 5000 });
@@ -3384,9 +3469,8 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-locked")) {
         await runCaptureStep("document locked state", async () => {
           await openDocumentEditorForCapture(page, docUrl);
-          const toggle = page.getByRole("button", { name: /^lock document$/i }).first();
-          await toggle.waitFor({ state: "visible", timeout: 8000 });
-          await toggle.click();
+          await openDocumentActionsMenu(page);
+          await page.getByRole("menuitem", { name: /^lock document$/i }).click();
           await page
             .getByRole("alert")
             .filter({ hasText: /document locked/i })
@@ -3394,9 +3478,8 @@ async function screenshotFilledStates(
             .waitFor({ state: "visible", timeout: 5000 });
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-locked");
-          const unlockToggle = page.getByRole("button", { name: /^unlock document$/i }).first();
-          await unlockToggle.waitFor({ state: "visible", timeout: 5000 });
-          await unlockToggle.click();
+          await openDocumentActionsMenu(page);
+          await page.getByRole("menuitem", { name: /^unlock document$/i }).click();
           await page
             .getByRole("alert")
             .filter({ hasText: /document locked/i })
@@ -3426,15 +3509,8 @@ async function screenshotFilledStates(
         await runCaptureStep("document color picker", async () => {
           await openDocumentEditorForCapture(page, docUrl);
           await importMarkdownIntoEditor(page, MARKDOWN_RICH_CONTENT, "release-readiness.md");
-          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
-          await editor.waitFor({ state: "visible", timeout: 8000 });
-          await editor.click();
-          await page.keyboard.press("Home");
-          await page.keyboard.down("Shift");
-          for (let step = 0; step < 10; step++) {
-            await page.keyboard.press("ArrowRight");
-          }
-          await page.keyboard.up("Shift");
+          await getDocumentEditorEditable(page);
+          await selectDocumentEditorText(page);
           const colorButton = page.getByRole("button", { name: /^text color$/i }).first();
           await colorButton.waitFor({ state: "visible", timeout: 5000 });
           await colorButton.click();
@@ -3449,10 +3525,12 @@ async function screenshotFilledStates(
       // Slash menu — type "/" at end of content
       if (shouldCapture(p, "document-editor-slash-menu")) {
         await runCaptureStep("document slash menu", async () => {
-          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
-          await editor.waitFor({ state: "visible", timeout: 8000 });
-          // Click at end of editor to place cursor, then press Enter for new line
-          await editor.click();
+          await openDocumentEditorForCapture(page, docUrl);
+          const anchor = page
+            .getByText(/turn the retrospective decisions into linked issue follow-ups/i)
+            .first();
+          await anchor.waitFor({ state: "visible", timeout: 8000 });
+          await anchor.click();
           await page.keyboard.press("End");
           await page.keyboard.press("Enter");
           await page.keyboard.type("/");
@@ -3480,10 +3558,9 @@ async function screenshotFilledStates(
           });
           await waitForExpectedContent(page, docUrl, "document-editor");
           await waitForScreenshotReady(page);
-          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
-          await editor.waitFor({ state: "visible", timeout: 8000 });
-          // Triple-click to select a line of text
-          await editor.click({ clickCount: 3 });
+          const anchor = page.getByText(/the team closed the auth refresh/i).first();
+          await anchor.waitFor({ state: "visible", timeout: 8000 });
+          await anchor.click({ clickCount: 3 });
           // Wait for floating toolbar
           await page
             .getByRole("button", { name: /bold/i })
@@ -3506,9 +3583,11 @@ async function screenshotFilledStates(
           });
           await waitForExpectedContent(page, docUrl, "document-editor");
           await waitForScreenshotReady(page);
-          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
-          await editor.waitFor({ state: "visible", timeout: 8000 });
-          await editor.click();
+          const anchor = page
+            .getByText(/turn the retrospective decisions into linked issue follow-ups/i)
+            .first();
+          await anchor.waitFor({ state: "visible", timeout: 8000 });
+          await anchor.click();
           await page.keyboard.press("End");
           await page.keyboard.press("Enter");
           await page.keyboard.type("@");

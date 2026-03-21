@@ -105,6 +105,52 @@ const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
         ],
       },
       {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Direct issue-detail captures are stable again, so screenshot regressions now point at real composition drift instead of route flakiness.",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Decisions" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Keep Tailwind for static layout and reserve cva() for shared primitive semantics only, and use screenshots as the review surface for weird UI before normalizing any new baseline.",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Risks to watch" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "The editor still feels thinner than the rest of the product if the seeded notes stop after one short paragraph or drift back into toolbar-heavy composition.",
+          },
+        ],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "We should keep making document states look like a real workspace instead of a barely-filled demo shell whenever screenshots expose empty or over-controlled compositions.",
+          },
+        ],
+      },
+      {
         type: "heading",
         attrs: { level: 2 },
         content: [{ type: "text", text: "Next steps" }],
@@ -115,6 +161,15 @@ const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
           {
             type: "text",
             text: "Hydrate the editor from saved document versions and keep pushing page-level polish where screenshots still feel thin.",
+          },
+        ],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Turn the retrospective decisions into linked issue follow-ups once the notes are reviewed with the team, and keep trimming document-header action sprawl so the route reads like writing software instead of a toolbar demo.",
           },
         ],
       },
@@ -3252,6 +3307,12 @@ export const seedScreenshotDataInternal = internalMutation({
     projectId: v.optional(v.string()),
     projectKey: v.optional(v.string()),
     issueKeys: v.optional(v.array(v.string())),
+    documentIds: v.optional(
+      v.object({
+        projectRequirements: v.optional(v.id("documents")),
+        sprintRetrospectiveNotes: v.optional(v.id("documents")),
+      }),
+    ),
     workspaceSlug: v.optional(v.string()),
     teamSlug: v.optional(v.string()),
     inviteToken: v.optional(v.string()),
@@ -4148,6 +4209,10 @@ export const seedScreenshotDataInternal = internalMutation({
     // 8. Create documents (idempotent by title + project)
     // Only look for documents in our screenshot project to avoid overwriting real docs
     const docTitles = ["Project Requirements", "Sprint Retrospective Notes"] as const;
+    const documentIds: {
+      projectRequirements?: Id<"documents">;
+      sprintRetrospectiveNotes?: Id<"documents">;
+    } = {};
     for (const title of docTitles) {
       let existingDoc = await ctx.db
         .query("documents")
@@ -4171,6 +4236,12 @@ export const seedScreenshotDataInternal = internalMutation({
 
       if (!existingDoc) {
         continue;
+      }
+
+      if (title === "Project Requirements") {
+        documentIds.projectRequirements = existingDoc._id;
+      } else if (title === "Sprint Retrospective Notes") {
+        documentIds.sprintRetrospectiveNotes = existingDoc._id;
       }
 
       const latestVersion = await ctx.db
@@ -4826,6 +4897,7 @@ export const seedScreenshotDataInternal = internalMutation({
       projectId,
       projectKey,
       issueKeys: createdIssueKeys,
+      documentIds,
       workspaceSlug: "product",
       teamSlug: "engineering",
       inviteToken,

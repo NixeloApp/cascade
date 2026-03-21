@@ -37,6 +37,10 @@ export interface SeedScreenshotResult {
   projectId?: string;
   projectKey?: string;
   issueKeys?: string[];
+  documentIds?: {
+    projectRequirements?: string;
+    sprintRetrospectiveNotes?: string;
+  };
   workspaceSlug?: string;
   teamSlug?: string;
   inviteToken?: string;
