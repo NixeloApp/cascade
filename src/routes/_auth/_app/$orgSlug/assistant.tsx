@@ -15,6 +15,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Input } from "@/components/ui/Input";
 import {
@@ -71,7 +72,7 @@ function AssistantStats() {
               <Typography variant="eyebrow" color="tertiary">
                 {stat.label}
               </Typography>
-              <stat.icon className="w-4 h-4 text-ui-text-tertiary" />
+              <Icon icon={stat.icon} size="sm" className="text-ui-text-tertiary" />
             </Flex>
             <Flex align="baseline" gap="xs">
               <Typography variant="dashboardStatValueStrong">{stat.value}</Typography>
@@ -120,7 +121,7 @@ function AssistantConfig() {
                       enabled ? "text-status-success" : "text-ui-text-tertiary",
                     )}
                   >
-                    <Bot className="w-5 h-5" />
+                    <Icon icon={Bot} size="md" />
                   </IconCircle>
                   <div>
                     <Typography variant="h5" className="mb-1">
@@ -224,7 +225,7 @@ function AssistantConfig() {
             <CardBody className="p-6">
               <Flex gap="md" align="start">
                 <IconCircle size="sm" variant="brand" className="text-brand">
-                  <Sparkles className="w-5 h-5" />
+                  <Icon icon={Sparkles} size="md" />
                 </IconCircle>
                 <div>
                   <Typography variant="h5" className="mb-1 text-brand-foreground">

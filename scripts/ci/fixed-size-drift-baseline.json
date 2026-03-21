@@ -45,7 +45,6 @@
     "src/components/VersionHistory.tsx": 3,
     "src/components/WebhooksManager.tsx": 1,
     "src/routes/__root.tsx": 1,
-    "src/routes/_auth/_app/$orgSlug/assistant.tsx": 3,
     "src/routes/_auth/_app/$orgSlug/documents/index.tsx": 1,
     "src/routes/_auth/_app/$orgSlug/documents/templates.tsx": 1,
     "src/routes/_auth/_app/$orgSlug/issues/index.tsx": 1,
