@@ -273,6 +273,8 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-settings-integrations$/, "12-settings", "-integrations"],
   [/^filled-settings-admin$/, "12-settings", "-admin"],
   [/^filled-settings-notifications$/, "12-settings", "-notifications"],
+  [/^filled-settings-security$/, "12-settings", "-security"],
+  [/^filled-settings-apikeys$/, "12-settings", "-api-keys"],
   [/^filled-settings-preferences$/, "12-settings", "-preferences"],
   [/^filled-settings-offline$/, "12-settings", "-offline"],
   [
@@ -1935,6 +1937,20 @@ async function waitForExpectedContent(
       });
     }
 
+    if (name === "settings-security") {
+      await page.getByRole("heading", { name: /^two-factor authentication$/i }).waitFor({
+        state: "visible",
+        timeout: 12000,
+      });
+    }
+
+    if (name === "settings-apikeys") {
+      await page.getByRole("heading", { name: /^api keys$/i }).waitFor({
+        state: "visible",
+        timeout: 12000,
+      });
+    }
+
     if (name === "settings-integrations") {
       await page.getByRole("heading", { name: /^github$/i }).waitFor({
         state: "visible",
@@ -2568,6 +2584,18 @@ async function screenshotFilledStates(
     p,
     "settings-notifications",
     `${ROUTES.settings.profile.build(orgSlug)}?tab=notifications`,
+  );
+  await takeScreenshot(
+    page,
+    p,
+    "settings-security",
+    `${ROUTES.settings.profile.build(orgSlug)}?tab=security`,
+  );
+  await takeScreenshot(
+    page,
+    p,
+    "settings-apikeys",
+    `${ROUTES.settings.profile.build(orgSlug)}?tab=apikeys`,
   );
   await takeScreenshot(
     page,
@@ -4815,6 +4843,8 @@ const DRY_RUN_PAGES = [
   "filled-settings-integrations",
   "filled-settings-admin",
   "filled-settings-notifications",
+  "filled-settings-security",
+  "filled-settings-apikeys",
   "filled-settings-preferences",
   "filled-settings-offline",
   "filled-authentication",

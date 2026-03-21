@@ -17,6 +17,8 @@
 | Desktop | Integrations Tab | ![](screenshots/desktop-light-integrations.png) |
 | Desktop | Admin Tab | ![](screenshots/desktop-light-admin.png) |
 | Desktop | Notifications Tab | ![](screenshots/desktop-light-notifications.png) |
+| Desktop | Security Tab | ![](screenshots/desktop-light-security.png) |
+| Desktop | API Keys Tab | ![](screenshots/desktop-light-api-keys.png) |
 | Desktop | Preferences Tab | ![](screenshots/desktop-light-preferences.png) |
 | Desktop | Offline Tab | ![](screenshots/desktop-light-offline.png) |
 | Desktop | Project Settings | ![](screenshots/desktop-light-project.png) |
@@ -47,10 +49,12 @@
 - Notifications now uses the same section anatomy for push, email, digest, and quiet-hours states instead of a bespoke internal card stack.
 - Integrations now uses one shared settings anatomy across GitHub, Slack, Google Calendar, and Pumble instead of four unrelated card/header treatments.
 - The lighter admin sections now use the same settings/admin anatomy instead of mixing bespoke card headers, bordered dividers, and one-off help blocks.
+- Security, API Keys, and DevTools now use the same settings-section anatomy, so the remaining low-level settings utilities no longer read like orphaned internal tools.
 - Screenshot coverage now includes first-class Preferences and Offline tab captures so these lighter settings states stop drifting outside review.
 - Screenshot coverage now includes the normal notifications tab in addition to the blocked-permission edge case.
 - Screenshot coverage now includes the integrations tab so the remaining multi-state settings shell no longer hides outside the spec.
 - Screenshot coverage now includes the admin tab, so the remaining settings review is no longer hiding behind the role-gated surface.
+- Screenshot coverage now includes the security and API keys tabs, so the settings suite no longer has uncaptured high-traffic residue outside review.
 
 ---
 
@@ -58,7 +62,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The settings shell now covers profile, admin, integrations, notifications, preferences, and offline more consistently; the remaining settings debt is lower-priority security / API keys / devtools state review | multi-tab state review | LOW |
+| The role-gated DevTools tab is intentionally excluded from seeded screenshots because screenshot accounts suppress developer-only surfaces; it still relies on test coverage instead of visual review | devtools screenshot coverage | LOW |
 
 ---
 
@@ -69,6 +73,9 @@
 - `src/components/Settings/settingsTabs.ts`
 - `src/components/Settings/ProfileContent.tsx`
 - `src/components/Settings/AdminTab.tsx`
+- `src/components/Settings/TwoFactorSettings.tsx`
+- `src/components/Settings/ApiKeysManager.tsx`
+- `src/components/Settings/DevToolsTab.tsx`
 - `src/components/Settings/NotificationsTab.tsx`
 - `src/components/Settings/SettingsSection.tsx`
 - `src/components/Admin/OrganizationSettings.tsx`

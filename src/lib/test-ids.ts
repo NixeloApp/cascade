@@ -365,6 +365,10 @@ export const TEST_IDS = {
     PUMBLE_INTEGRATION: "settings-pumble-integration",
     /** @see src/components/Settings/ApiKeysManager.tsx */
     API_KEYS_SECTION: "settings-api-keys-section",
+    /** @see src/components/Settings/TwoFactorSettings.tsx */
+    TWO_FACTOR_SECTION: "settings-two-factor-section",
+    /** @see src/components/Settings/DevToolsTab.tsx */
+    DEVTOOLS_SECTION: "settings-devtools-section",
     /** @see src/components/Settings/OfflineTab.tsx */
     OFFLINE_STATUS_CARD: "settings-offline-status-card",
     /** @see src/components/Settings/NotificationsTab.tsx */

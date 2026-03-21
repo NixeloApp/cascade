@@ -111,7 +111,7 @@ describe("ApiKeysManager", () => {
       render(<ApiKeysManager />);
 
       expect(
-        screen.getByText("Generate API keys for CLI tools, AI agents, and external integrations"),
+        screen.getByText("Generate API keys for CLI tools, AI agents, and external integrations."),
       ).toBeInTheDocument();
     });
 
@@ -367,6 +367,23 @@ describe("ApiKeysManager", () => {
       await user.click(screen.getByRole("button", { name: /Generate Key/i }));
 
       expect(screen.getByLabelText(/Rate Limit/i)).toBeInTheDocument();
+    });
+
+    it("resets modal input state after closing", async () => {
+      const user = userEvent.setup();
+      mockApiKeys = [];
+
+      render(<ApiKeysManager />);
+
+      await user.click(screen.getByRole("button", { name: /Generate Key/i }));
+      const keyNameInput = screen.getByLabelText(/Key Name/i);
+      await user.type(keyNameInput, "Temporary Key");
+      expect(keyNameInput).toHaveValue("Temporary Key");
+
+      await user.click(screen.getByRole("button", { name: /^Cancel$/i }));
+
+      await user.click(screen.getByRole("button", { name: /Generate Key/i }));
+      expect(screen.getByLabelText(/Key Name/i)).toHaveValue("");
     });
   });
 
