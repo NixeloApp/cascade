@@ -1,10 +1,14 @@
 /**
- * CHECK: Wrapper default drift audit
+ * CHECK: Primitive default ownership audit
  *
  * Blocking audit for shared UI wrappers that redundantly restate a primitive's
  * own default prop value instead of letting the primitive own that fallback.
  *
- * Initial narrow scope:
+ * This is intentionally narrow. We only flag redundant defaults when:
+ * - the default value matches a tracked primitive default
+ * - the local prop is only passed straight through to that primitive prop
+ *
+ * Initial scope:
  * - Typography color="auto"
  */
 
@@ -15,7 +19,7 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const UI_DIR = path.join(ROOT, "src/components/ui");
 
-const TARGET_RULES = [
+const PRIMITIVE_DEFAULT_RULES = [
   {
     componentName: "Typography",
     attributeName: "color",
@@ -82,7 +86,25 @@ function getMatchingRule(bindingElement) {
   }
 
   const defaultValue = bindingElement.initializer.text;
-  return TARGET_RULES.find((rule) => rule.defaultValue === defaultValue) ?? null;
+  return PRIMITIVE_DEFAULT_RULES.find((rule) => rule.defaultValue === defaultValue) ?? null;
+}
+
+function getLocalBindingName(bindingElement) {
+  return ts.isIdentifier(bindingElement.name) ? bindingElement.name.text : null;
+}
+
+function getSourcePropName(bindingElement) {
+  if (bindingElement.propertyName) {
+    if (
+      ts.isIdentifier(bindingElement.propertyName) ||
+      ts.isStringLiteral(bindingElement.propertyName)
+    ) {
+      return bindingElement.propertyName.text;
+    }
+    return null;
+  }
+
+  return getLocalBindingName(bindingElement);
 }
 
 export function run() {
@@ -109,13 +131,16 @@ export function run() {
           const functionName = getFunctionName(node) ?? "<anonymous>";
 
           for (const element of firstParam.name.elements) {
-            if (!ts.isBindingElement(element) || !ts.isIdentifier(element.name)) continue;
+            if (!ts.isBindingElement(element)) continue;
 
             const rule = getMatchingRule(element);
             if (!rule) continue;
 
-            const propName = element.name.text;
-            const usages = collectIdentifierUsages(node.body, propName);
+            const localBindingName = getLocalBindingName(element);
+            const sourcePropName = getSourcePropName(element);
+            if (!localBindingName || !sourcePropName) continue;
+
+            const usages = collectIdentifierUsages(node.body, localBindingName);
             if (usages.length === 0) continue;
 
             const isRedundantPassthrough = usages.every((usage) => {
@@ -132,7 +157,8 @@ export function run() {
                 file: rel,
                 line: pos.line + 1,
                 functionName,
-                propName,
+                sourcePropName,
+                localBindingName,
                 primitiveLabel: rule.primitiveLabel,
                 defaultValue: rule.defaultValue,
               });
@@ -150,11 +176,11 @@ export function run() {
   const messages = [];
   if (findings.length > 0) {
     messages.push(
-      `${c.yellow}Shared wrappers restating primitive defaults (${findings.length}):${c.reset}`,
+      `${c.yellow}Shared wrappers duplicating primitive-owned defaults (${findings.length}):${c.reset}`,
     );
     for (const finding of findings) {
       messages.push(
-        `  ${c.dim}${finding.file}:${finding.line}${c.reset} ${finding.functionName}() sets ${finding.propName}="${finding.defaultValue}" but only forwards it to ${finding.primitiveLabel}; let the primitive own that default`,
+        `  ${c.dim}${finding.file}:${finding.line}${c.reset} ${finding.functionName}() sets ${finding.sourcePropName}="${finding.defaultValue}"${finding.localBindingName === finding.sourcePropName ? "" : ` via local ${finding.localBindingName}`} but only forwards it to ${finding.primitiveLabel}; let the primitive own that default`,
       );
     }
   }
