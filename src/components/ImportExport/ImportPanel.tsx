@@ -10,48 +10,108 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
-import { FileCode, FileSpreadsheet } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form";
-import { Grid } from "../ui/Grid";
-import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
+import {
+  ImportExportFormatSelector,
+  ImportExportInfoAlert,
+  ImportExportPanelChrome,
+} from "./ImportExportPanelChrome";
+import {
+  fileMatchesImportExportFormat,
+  IMPORT_EXPORT_FORMATS,
+  type ImportExportFormat,
+} from "./importExportFormats";
 
 interface ImportPanelProps {
   projectId: Id<"projects">;
   onImportComplete?: () => void;
 }
 
-type ImportFormat = "csv" | "json";
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("The selected file could not be read as text."));
+    };
+
+    reader.onerror = () => {
+      reject(reader.error ?? new Error("The selected file could not be read."));
+    };
+
+    reader.readAsText(file);
+  });
+}
 
 /**
  * Extracted import panel from ImportExportModal
  * Handles all import logic and UI
  */
 export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
-  const [importFormat, setImportFormat] = useState<ImportFormat>("csv");
+  const [importFormat, setImportFormat] = useState<ImportExportFormat>("csv");
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importData, setImportData] = useState<string>("");
+  const [importFileError, setImportFileError] = useState<string | null>(null);
+  const [inputResetKey, setInputResetKey] = useState(0);
   const [isImporting, setIsImporting] = useState(false);
 
   const { mutate: importCSV } = useAuthenticatedMutation(api.export.importIssuesCSV);
   const { mutate: importJSON } = useAuthenticatedMutation(api.export.importIssuesJSON);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImportFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImportData(event.target?.result as string);
-      };
-      reader.readAsText(file);
+  const selectedFormat = IMPORT_EXPORT_FORMATS[importFormat];
+
+  const resetImportSelection = () => {
+    setImportFile(null);
+    setImportData("");
+    setImportFileError(null);
+    setInputResetKey((currentKey) => currentKey + 1);
+  };
+
+  const handleFormatChange = (nextFormat: ImportExportFormat) => {
+    if (nextFormat === importFormat) {
+      return;
+    }
+
+    resetImportSelection();
+    setImportFormat(nextFormat);
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      resetImportSelection();
+      return;
+    }
+
+    if (!fileMatchesImportExportFormat(file.name, importFormat)) {
+      resetImportSelection();
+      setImportFileError(
+        `Choose a .${selectedFormat.extension} file when importing ${selectedFormat.label}.`,
+      );
+      return;
+    }
+
+    setImportFile(file);
+    setImportData("");
+    setImportFileError(null);
+
+    try {
+      const fileContents = await readFileAsText(file);
+      setImportData(fileContents);
+    } catch (error) {
+      resetImportSelection();
+      setImportFileError("The selected file could not be read. Try another file.");
+      showError(error, "Failed to read import file");
     }
   };
 
@@ -83,8 +143,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
           }`,
         );
 
-        setImportFile(null);
-        setImportData("");
+        resetImportSelection();
         onImportComplete?.();
       } else {
         showError(new Error("No issues were imported"), "Import Failed");
@@ -97,60 +156,22 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
   };
 
   return (
-    <Flex direction="column" gap="lg">
-      <div>
-        <Typography variant="label" className="text-ui-text mb-3">
-          Select Import Format
-        </Typography>
-        <Grid cols={2} gap="md">
-          <Card
-            recipe={importFormat === "csv" ? "optionTileSelected" : "optionTile"}
-            padding="md"
-            onClick={() => setImportFormat("csv")}
-            className="cursor-pointer"
-            aria-pressed={importFormat === "csv"}
-          >
-            <Flex gap="md" align="center">
-              <Icon icon={FileSpreadsheet} size="lg" />
-              <div>
-                <Typography variant="label" className="text-ui-text">
-                  CSV
-                </Typography>
-                <Typography variant="caption" color="secondary">
-                  Spreadsheet format
-                </Typography>
-              </div>
-            </Flex>
-          </Card>
-
-          <Card
-            recipe={importFormat === "json" ? "optionTileSelected" : "optionTile"}
-            padding="md"
-            onClick={() => setImportFormat("json")}
-            className="cursor-pointer"
-            aria-pressed={importFormat === "json"}
-          >
-            <Flex gap="md" align="center">
-              <Icon icon={FileCode} size="lg" />
-              <div>
-                <Typography variant="label" className="text-ui-text">
-                  JSON
-                </Typography>
-                <Typography variant="caption" color="secondary">
-                  Data interchange format
-                </Typography>
-              </div>
-            </Flex>
-          </Card>
-        </Grid>
-      </div>
+    <ImportExportPanelChrome>
+      <ImportExportFormatSelector
+        label="Select Import Format"
+        value={importFormat}
+        onValueChange={handleFormatChange}
+      />
 
       <div>
         <Input
+          key={inputResetKey}
           label="Select File"
           type="file"
           variant="filePicker"
-          accept={importFormat === "csv" ? ".csv" : ".json"}
+          accept={selectedFormat.accept}
+          error={importFileError ?? undefined}
+          helperText={`Accepted file type: ${selectedFormat.accept}`}
           onChange={handleFileChange}
         />
         {importFile && (
@@ -160,38 +181,45 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
         )}
       </div>
 
-      <Alert variant="warning">
-        <AlertTitle>Import Requirements</AlertTitle>
-        <AlertDescription>
-          <Stack gap="sm">
-            <Typography variant="small">CSV must have a header row with column names.</Typography>
-            <Typography variant="small">
-              Required column:{" "}
-              <Typography as="code" variant="inlineCode">
-                title
-              </Typography>
-            </Typography>
-            <Typography variant="small">
-              Optional fields include type, priority, description, labels, estimated hours, and due
-              date.
-            </Typography>
-            <Typography variant="small">
-              All imported issues will be created in the first workflow state.
-            </Typography>
-          </Stack>
-        </AlertDescription>
-      </Alert>
+      <ImportExportInfoAlert
+        title="Import Requirements"
+        variant="warning"
+        items={selectedFormat.importRequirements.map((requirement, index) => {
+          if (importFormat === "csv" && index === 1) {
+            return {
+              id: `${importFormat}-required-title`,
+              content: (
+                <>
+                  Required column:{" "}
+                  <Typography as="code" variant="inlineCode">
+                    title
+                  </Typography>
+                </>
+              ),
+            };
+          }
 
-      <Button onClick={handleImport} disabled={!importData || isImporting} className="w-full">
+          return {
+            id: `${importFormat}-requirement-${index + 1}`,
+            content: requirement,
+          };
+        })}
+      />
+
+      <Button
+        onClick={handleImport}
+        disabled={!importData || Boolean(importFileError) || isImporting}
+        className="w-full"
+      >
         {isImporting ? (
           <Flex align="center" justify="center" gap="sm">
             <LoadingSpinner size="sm" variant="inherit" />
             Importing...
           </Flex>
         ) : (
-          `Import from ${importFormat.toUpperCase()}`
+          `Import from ${selectedFormat.label}`
         )}
       </Button>
-    </Flex>
+    </ImportExportPanelChrome>
   );
 }

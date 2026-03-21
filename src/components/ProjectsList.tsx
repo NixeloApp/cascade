@@ -10,23 +10,28 @@ import { api } from "@convex/_generated/api";
 import { Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
+import {
+  DashboardPanel,
+  DashboardPanelBody,
+  DashboardPanelHeader,
+} from "@/components/Dashboard/DashboardPanel";
+import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Icon } from "@/components/ui/Icon";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { Folder } from "@/lib/icons";
+import { Calendar, Folder, KanbanSquare, MapIcon, Plus } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
-// Type helper for paginated queries with custom return types
 type PaginatedQuery = FunctionReference<"query", "public">;
 
 interface ProjectsListProps {
@@ -60,6 +65,36 @@ const EMPTY_PROJECT_STATE_TIPS = [
   },
 ] as const;
 
+const SINGLE_PROJECT_SURFACES = [
+  {
+    description: "Move active issues, triage incoming work, and keep delivery flowing.",
+    icon: KanbanSquare,
+    id: "board",
+    label: "Board",
+    route: ROUTES.projects.board.path,
+  },
+  {
+    description: "Keep milestones, dependencies, and larger bets tied to the same project hub.",
+    icon: MapIcon,
+    id: "roadmap",
+    label: "Roadmap",
+    route: ROUTES.projects.roadmap.path,
+  },
+  {
+    description: "Track dates, due windows, and release timing without leaving the project.",
+    icon: Calendar,
+    id: "calendar",
+    label: "Calendar",
+    route: ROUTES.projects.calendar.path,
+  },
+] as const;
+
+const SINGLE_PROJECT_EXPANSION_SIGNALS = [
+  "Add a second project once a team needs its own backlog or release cycle.",
+  "Split projects by client or product area when ownership stops being shared.",
+  "Use a new project when reporting, planning, or delivery timing needs diverge.",
+] as const;
+
 function getSingleProjectHighlights(issueCount: number) {
   return [
     {
@@ -75,148 +110,294 @@ function getSingleProjectHighlights(issueCount: number) {
   ] as const;
 }
 
-function SingleProjectHighlights({ issueCount }: { issueCount: number }) {
+function ProjectCard({ project, orgSlug }: { project: ProjectListItem; orgSlug: string }) {
+  const projectParams = { key: project.key, orgSlug };
+
   return (
-    <Stack gap="md">
-      <Grid cols={1} colsSm={2} colsLg={1} gap="md">
-        {getSingleProjectHighlights(issueCount).map((item) => (
-          <Card key={item.title} variant="soft" padding="md" className="h-full">
-            <Flex direction="column" gap="xs">
-              <Typography variant="eyebrowWide">{item.title}</Typography>
-              <Typography variant="h4">{item.value}</Typography>
-              <Typography variant="small" color="secondary">
-                {item.description}
+    <Link to={ROUTES.projects.board.path} params={projectParams} className="group">
+      <Card hoverable padding="lg" variant="default" className="h-full overflow-hidden">
+        <Flex direction="column" gap="md">
+          <Flex justify="between" align="start" gap="md">
+            <Flex align="center" gap="md" className="min-w-0">
+              <div className={cn(getCardRecipeClassName("projectKeyTile"), "size-10 shrink-0")}>
+                <Flex align="center" justify="center" className="h-full">
+                  <Typography variant="label" className="text-brand">
+                    {project.key.substring(0, 2).toUpperCase()}
+                  </Typography>
+                </Flex>
+              </div>
+              <Typography variant="h3" className="truncate">
+                {project.name}
               </Typography>
             </Flex>
-          </Card>
-        ))}
-      </Grid>
-      <Card variant="default" padding="md">
-        <Flex direction="column" gap="sm">
-          <Typography variant="eyebrowWide">Workspace rhythm</Typography>
-          <Typography variant="h4">Keep planning and execution in one lane</Typography>
-          <Typography variant="small" color="secondary">
-            Use this project as the anchor for issue triage, document context, calendar planning,
-            and delivery updates instead of splitting those flows across separate tools.
-          </Typography>
+            <Typography variant="meta" className="shrink-0 font-mono text-ui-text-tertiary">
+              {project.key}
+            </Typography>
+          </Flex>
+
+          {project.description ? (
+            <Typography variant="p" color="secondary" className="line-clamp-2">
+              {project.description}
+            </Typography>
+          ) : null}
+
+          <Metadata size="sm">
+            <MetadataItem>{project.issueCount || 0} issues</MetadataItem>
+            <MetadataItem>{project.boardType === "kanban" ? "Kanban" : "Scrum"}</MetadataItem>
+          </Metadata>
         </Flex>
       </Card>
-    </Stack>
+    </Link>
   );
 }
 
-function ProjectCard({
-  project,
-  hasSingleProject,
+function SingleProjectWorkspacePanels({
+  issueCount,
+  onCreateClick,
   orgSlug,
+  projectKey,
 }: {
-  project: ProjectListItem;
-  hasSingleProject: boolean;
+  issueCount: number;
+  onCreateClick: () => void;
   orgSlug: string;
+  projectKey: string;
 }) {
-  const projectParams = { orgSlug, key: project.key };
+  const projectParams = { key: projectKey, orgSlug };
 
-  const cardContent = (
-    <Card
-      hoverable={!hasSingleProject}
-      padding="lg"
-      variant={hasSingleProject ? "elevated" : "default"}
-      className={hasSingleProject ? "self-start overflow-hidden" : "h-full overflow-hidden"}
-    >
-      <Flex direction="column" gap={hasSingleProject ? "lg" : "md"}>
-        {hasSingleProject && (
-          <div className={cn(getCardRecipeClassName("projectFeatureStrip"), "p-4")}>
-            <Flex align="center" justify="between" gap="sm" wrap>
+  return (
+    <Grid cols={1} colsLg={12} gap="lg">
+      <div className="lg:col-span-7">
+        <DashboardPanel surface="inset" className="h-full">
+          <DashboardPanelHeader
+            title="Connected surfaces"
+            description="Keep execution, planning, and timing on the same project instead of bouncing between separate tools."
+          />
+          <DashboardPanelBody>
+            <Grid cols={1} colsMd={3} gap="md">
+              {SINGLE_PROJECT_SURFACES.map((surface) => (
+                <Card
+                  key={surface.id}
+                  recipe="overlayInset"
+                  variant="section"
+                  padding="md"
+                  className="h-full"
+                >
+                  <Stack gap="md" className="h-full">
+                    <Stack gap="xs">
+                      <Flex align="center" gap="sm">
+                        <Icon icon={surface.icon} tone="brand" size="sm" />
+                        <Typography variant="label">{surface.label}</Typography>
+                      </Flex>
+                      <Typography variant="small" color="secondary">
+                        {surface.description}
+                      </Typography>
+                    </Stack>
+
+                    <Button asChild variant="outline" size="sm" className="mt-auto w-full">
+                      <Link to={surface.route} params={projectParams}>
+                        Open {surface.label}
+                      </Link>
+                    </Button>
+                  </Stack>
+                </Card>
+              ))}
+            </Grid>
+          </DashboardPanelBody>
+        </DashboardPanel>
+      </div>
+
+      <div className="lg:col-span-5">
+        <DashboardPanel surface="inset" className="h-full">
+          <DashboardPanelHeader
+            title="Workspace coverage"
+            description="The first project should already read like a real delivery hub, not an underfilled placeholder."
+            actions={
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onCreateClick}
+                leftIcon={<Icon icon={Plus} size="sm" />}
+              >
+                Add project
+              </Button>
+            }
+          />
+          <DashboardPanelBody>
+            <Stack gap="md">
+              <Grid cols={1} colsSm={2} gap="md">
+                {getSingleProjectHighlights(issueCount).map((item) => (
+                  <Card key={item.title} recipe="overlayInset" variant="section" padding="md">
+                    <Stack gap="xs">
+                      <Typography variant="eyebrowWide">{item.title}</Typography>
+                      <Typography variant="h4">{item.value}</Typography>
+                      <Typography variant="small" color="secondary">
+                        {item.description}
+                      </Typography>
+                    </Stack>
+                  </Card>
+                ))}
+              </Grid>
+
+              <Card recipe="overlayInset" variant="section" padding="md">
+                <Stack gap="sm">
+                  <Typography variant="label">When to add another project</Typography>
+                  <Stack as="ul" gap="xs" className="list-disc pl-5">
+                    {SINGLE_PROJECT_EXPANSION_SIGNALS.map((signal) => (
+                      <Typography key={signal} as="li" variant="small" color="secondary">
+                        {signal}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </Stack>
+              </Card>
+            </Stack>
+          </DashboardPanelBody>
+        </DashboardPanel>
+      </div>
+    </Grid>
+  );
+}
+
+function SingleProjectWorkspaceOverview({
+  onCreateClick,
+  orgSlug,
+  project,
+}: {
+  onCreateClick: () => void;
+  orgSlug: string;
+  project: ProjectListItem;
+}) {
+  const projectParams = { key: project.key, orgSlug };
+
+  return (
+    <Stack gap="lg">
+      <Card variant="elevated" padding="none" className="overflow-hidden">
+        <Flex direction="column" gap="none">
+          <div className={cn(getCardRecipeClassName("projectFeatureStrip"), "px-4 py-4 sm:px-6")}>
+            <Flex align="center" justify="between" gap="md" wrap>
               <Flex align="center" gap="sm" wrap>
                 <Badge variant="secondary" shape="pill">
                   Primary workspace project
                 </Badge>
                 <Typography variant="small" color="secondary">
-                  Board, roadmap, calendar, and delivery in one lane.
+                  One hub for backlog, roadmap, and delivery timing.
                 </Typography>
               </Flex>
-              <Typography variant="eyebrowWide">Active</Typography>
+              <Metadata size="sm">
+                <MetadataItem>{project.issueCount || 0} issues</MetadataItem>
+                <MetadataItem>
+                  {project.boardType === "kanban" ? "Kanban" : "Scrum"} workflow
+                </MetadataItem>
+                <MetadataItem>Active workspace anchor</MetadataItem>
+              </Metadata>
             </Flex>
           </div>
-        )}
 
-        <Flex justify="between" align="start" gap="md">
-          <Flex align="center" gap="md" className="min-w-0">
-            <div className={cn(getCardRecipeClassName("projectKeyTile"), "size-10 shrink-0")}>
-              <Flex align="center" justify="center" className="h-full">
-                <Typography variant="label" className="text-brand">
-                  {project.key.substring(0, 2).toUpperCase()}
-                </Typography>
-              </Flex>
-            </div>
-            <Typography variant="h3" className="truncate">
-              {project.name}
-            </Typography>
-          </Flex>
-          <Typography variant="meta" className="text-ui-text-tertiary font-mono shrink-0">
-            {project.key}
-          </Typography>
+          <div className="p-5 sm:p-6">
+            <Grid cols={1} colsLg={12} gap="lg" className="items-start">
+              <div className="lg:col-span-8">
+                <Stack gap="lg">
+                  <Flex justify="between" align="start" gap="md">
+                    <Flex align="center" gap="md">
+                      <div
+                        className={cn(getCardRecipeClassName("projectKeyTile"), "size-12 shrink-0")}
+                      >
+                        <Flex align="center" justify="center" className="h-full">
+                          <Typography variant="h4" className="text-brand">
+                            {project.key.substring(0, 2).toUpperCase()}
+                          </Typography>
+                        </Flex>
+                      </div>
+                      <FlexItem flex="1" className="overflow-hidden">
+                        <Stack gap="xs">
+                          <Typography variant="h2" className="truncate">
+                            {project.name}
+                          </Typography>
+                          <Typography variant="meta" className="font-mono text-ui-text-tertiary">
+                            {project.key}
+                          </Typography>
+                        </Stack>
+                      </FlexItem>
+                    </Flex>
+                  </Flex>
+
+                  <Typography variant="p" color="secondary">
+                    {project.description ||
+                      "Use this project as the single hub for issue triage, planning milestones, and delivery timing instead of splitting work across disconnected boards."}
+                  </Typography>
+
+                  <Flex gap="sm" wrap>
+                    <Button asChild variant="primary" size="sm">
+                      <Link to={ROUTES.projects.board.path} params={projectParams}>
+                        Open Board
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to={ROUTES.projects.roadmap.path} params={projectParams}>
+                        Open Roadmap
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to={ROUTES.projects.calendar.path} params={projectParams}>
+                        Open Calendar
+                      </Link>
+                    </Button>
+                  </Flex>
+                </Stack>
+              </div>
+
+              <div className="lg:col-span-4">
+                <Card recipe="overlayInset" variant="section" padding="md">
+                  <Stack gap="md">
+                    <Typography variant="label">Workspace snapshot</Typography>
+                    <Grid cols={2} gap="md">
+                      <Card recipe="overlayInset" variant="section" padding="sm">
+                        <Stack gap="xs">
+                          <Typography variant="eyebrowWide">Issues</Typography>
+                          <Typography variant="h4">{project.issueCount || 0}</Typography>
+                          <Typography variant="small" color="secondary">
+                            Active work tied to this project.
+                          </Typography>
+                        </Stack>
+                      </Card>
+                      <Card recipe="overlayInset" variant="section" padding="sm">
+                        <Stack gap="xs">
+                          <Typography variant="eyebrowWide">Workflow</Typography>
+                          <Typography variant="h4">
+                            {project.boardType === "kanban" ? "Kanban" : "Scrum"}
+                          </Typography>
+                          <Typography variant="small" color="secondary">
+                            Delivery model used across the hub.
+                          </Typography>
+                        </Stack>
+                      </Card>
+                    </Grid>
+                    <Typography variant="small" color="secondary">
+                      The first project should already feel like a complete workspace surface, not a
+                      sparse list page waiting for filler cards.
+                    </Typography>
+                  </Stack>
+                </Card>
+              </div>
+            </Grid>
+          </div>
         </Flex>
+      </Card>
 
-        {project.description && (
-          <Typography variant="p" color="secondary" className="line-clamp-2">
-            {project.description}
-          </Typography>
-        )}
-
-        <Metadata size="sm">
-          <MetadataItem>{project.issueCount || 0} issues</MetadataItem>
-          <MetadataItem>{project.boardType === "kanban" ? "Kanban" : "Scrum"}</MetadataItem>
-          {hasSingleProject && <MetadataItem>Delivery hub</MetadataItem>}
-        </Metadata>
-
-        {hasSingleProject && (
-          <Stack gap="sm">
-            <Typography variant="label">Jump into</Typography>
-            <Flex gap="sm" wrap>
-              <Button asChild variant="secondary" size="sm">
-                <Link to={ROUTES.projects.board.path} params={projectParams}>
-                  Board
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link to={ROUTES.projects.roadmap.path} params={projectParams}>
-                  Roadmap
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link to={ROUTES.projects.calendar.path} params={projectParams}>
-                  Calendar
-                </Link>
-              </Button>
-            </Flex>
-            <Typography variant="small" color="secondary" className="max-w-xl">
-              Use this project as the workspace anchor for active issues, planning milestones, and
-              delivery timing instead of splitting those flows across separate tools.
-            </Typography>
-          </Stack>
-        )}
-      </Flex>
-    </Card>
-  );
-
-  if (hasSingleProject) {
-    return cardContent;
-  }
-
-  return (
-    <Link to={ROUTES.projects.board.path} params={projectParams} className="group">
-      {cardContent}
-    </Link>
+      <SingleProjectWorkspacePanels
+        issueCount={project.issueCount || 0}
+        onCreateClick={onCreateClick}
+        orgSlug={orgSlug}
+        projectKey={project.key}
+      />
+    </Stack>
   );
 }
 
-/** Paginated list of projects with create button and navigation. */
 export function ProjectsList({ onCreateClick }: ProjectsListProps) {
   const { organizationId, orgSlug } = useOrganization();
   const { canAct } = useAuthReady();
 
-  // Paginated projects list
   const {
     results: projects,
     status,
@@ -228,11 +409,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
   );
 
   if (status === "LoadingFirstPage") {
-    return (
-      <Flex direction="column" align="center" justify="center" className="min-h-100">
-        <LoadingSpinner />
-      </Flex>
-    );
+    return <PageContent isLoading={true}>Loading projects</PageContent>;
   }
 
   const hasSingleProject = projects.length === 1;
@@ -240,7 +417,6 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
 
   return (
     <Flex direction="column" gap="lg">
-      {/* Projects Grid */}
       {projects.length === 0 ? (
         <Flex direction="column" gap="lg">
           <EmptyState
@@ -269,39 +445,26 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
           </Grid>
         </Flex>
       ) : hasSingleProject && featuredProject ? (
-        <Grid cols={1} colsLg={12} gap="lg" className="max-w-6xl items-start">
-          <div className="lg:col-span-7">
-            <ProjectCard
-              key={featuredProject._id}
-              project={featuredProject}
-              hasSingleProject
-              orgSlug={orgSlug}
-            />
-          </div>
-          <div className="lg:col-span-5">
-            <SingleProjectHighlights issueCount={featuredProject.issueCount || 0} />
-          </div>
-        </Grid>
+        <SingleProjectWorkspaceOverview
+          project={featuredProject}
+          orgSlug={orgSlug}
+          onCreateClick={onCreateClick}
+        />
       ) : (
         <Grid cols={1} colsLg={2} gap="xl">
           {projects.map((project) => (
-            <ProjectCard
-              key={project._id}
-              project={project}
-              hasSingleProject={hasSingleProject}
-              orgSlug={orgSlug}
-            />
+            <ProjectCard key={project._id} project={project} orgSlug={orgSlug} />
           ))}
         </Grid>
       )}
 
-      {status === "CanLoadMore" && (
+      {status === "CanLoadMore" ? (
         <Flex justify="center" className="mt-8">
           <Button variant="outline" onClick={() => loadMore(20)}>
             Load More Projects
           </Button>
         </Flex>
-      )}
+      ) : null}
     </Flex>
   );
 }

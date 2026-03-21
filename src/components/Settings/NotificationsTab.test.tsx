@@ -176,8 +176,8 @@ describe("NotificationsTab", () => {
 
     render(<NotificationsTab />);
 
-    expect(screen.getByText("Skeleton 2")).toBeInTheDocument();
-    expect(screen.getAllByText("Skeleton 1")).toHaveLength(3);
+    expect(screen.getAllByText("Skeleton 2")).toHaveLength(2);
+    expect(screen.getAllByText("Skeleton 1")).toHaveLength(5);
   });
 
   it("renders the push configuration warning when the VAPID key is missing", () => {

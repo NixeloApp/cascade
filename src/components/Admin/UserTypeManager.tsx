@@ -799,7 +799,7 @@ export function UserTypeManager() {
                 <Stack gap="sm">
                   <Flex justify="between" align="center">
                     <Flex align="center" gap="xs">
-                      <Icon icon={Gem} size="sm" className="text-brand-active" />
+                      <Icon icon={Gem} size="sm" tone="brandActive" />
                       <Typography variant="label" className="text-brand-active">
                         Equity Compensation
                       </Typography>

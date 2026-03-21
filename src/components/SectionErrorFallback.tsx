@@ -12,7 +12,6 @@ import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { AlertTriangle } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { Typography } from "./ui/Typography";
 
 interface Props {
@@ -28,7 +27,7 @@ export function SectionErrorFallback({ title, message, onRetry, children, iconCl
   return (
     <Flex align="center" justify="center" className="h-full">
       <Stack align="center" gap="md" className="max-w-md w-full text-center">
-        <Icon icon={AlertTriangle} size="xl" className={cn("text-status-error", iconClassName)} />
+        <Icon icon={AlertTriangle} size="xl" tone="error" className={iconClassName} />
         <Typography variant="h3">{title}</Typography>
         <Typography color="secondary">
           {message ||

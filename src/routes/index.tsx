@@ -29,8 +29,8 @@ function LandingPage() {
         <LogoBar />
         <FeaturesSection />
         <AIFeatureDemo />
-        <PricingSection />
         <WhyChooseSection />
+        <PricingSection />
         <FinalCTASection />
         <Footer />
       </div>

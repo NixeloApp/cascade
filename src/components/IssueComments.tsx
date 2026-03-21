@@ -15,6 +15,8 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { InsetPanel } from "@/components/ui/InsetPanel";
+import { Separator } from "@/components/ui/Separator";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatRelativeTime } from "@/lib/formatting";
@@ -187,7 +189,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
 
   if (status === "LoadingFirstPage") {
     return (
-      <Card padding="lg" className="text-center">
+      <Card padding="lg" variant="flat" className="text-center">
         <Typography color="secondary">Loading comments...</Typography>
       </Card>
     );
@@ -201,25 +203,26 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
           <Card variant="flat" padding="lg">
             <EmptyState
               icon={MessageCircle}
-              title="No comments yet"
-              description="Be the first to comment."
+              title="No conversation yet"
+              description="Use comments to capture decisions, blockers, and handoff notes."
               size="compact"
+              align="start"
               surface="bare"
             />
           </Card>
         ) : (
-          <>
+          <Stack gap="md">
             {comments?.map((comment) => (
-              <Card recipe="commentThreadItem" padding="md" key={comment._id} hoverable>
-                <Flex gap="md">
-                  {/* Avatar */}
+              <Flex key={comment._id} gap="md" align="stretch">
+                <Stack align="center" gap="sm">
                   <FlexItem shrink={false}>
                     <Avatar name={comment.author?.name} src={comment.author?.image} size="lg" />
                   </FlexItem>
+                  <Separator orientation="vertical" className="flex-1" />
+                </Stack>
 
-                  {/* Comment Content */}
+                <Card recipe="commentThreadItem" padding="md" hoverable>
                   <FlexItem flex="1" className="min-w-0">
-                    {/* Author and Date */}
                     <Flex align="center" gap="sm" className="mb-2">
                       <Typography variant="label">
                         {comment.author?.name || "Unknown User"}
@@ -234,7 +237,6 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                       )}
                     </Flex>
 
-                    {/* Comment Text with Mentions */}
                     <CommentRenderer content={comment.content} />
                     {(comment.attachments?.length || 0) > 0 && (
                       <Stack gap="xs" className="mt-3">
@@ -253,15 +255,14 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                       </Stack>
                     )}
 
-                    {/* Comment Reactions */}
                     <CommentReactions
                       commentId={comment._id}
                       reactions={comment.reactions || []}
                       currentUserId={currentUser?._id}
                     />
                   </FlexItem>
-                </Flex>
-              </Card>
+                </Card>
+              </Flex>
             ))}
 
             {status === "CanLoadMore" && (
@@ -276,73 +277,79 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                 Loading...
               </Typography>
             )}
-          </>
+          </Stack>
         )}
       </Stack>
 
-      {/* Add Comment */}
-      <Stack gap="sm">
-        <Typography variant="label">Add Comment</Typography>
-        <MentionInput
-          projectId={projectId}
-          value={newComment}
-          onChange={setNewComment}
-          onMentionsChange={setMentions}
-          placeholder="Add a comment... Type @ to mention someone"
-        />
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ALLOWED_TYPES.join(",")}
-          multiple
-          className="hidden"
-          onChange={(event) => handleAttachmentUpload(event.target.files)}
-          disabled={isUploadingAttachment}
-        />
-        {commentAttachments.length > 0 && (
+      <Card padding="md" variant="flat">
+        <Stack gap="md">
           <Stack gap="xs">
-            {commentAttachments.map((attachment) => (
-              <Card key={attachment.storageId} recipe="pendingAttachmentRow" padding="sm">
-                <Flex align="center" justify="between" gap="sm">
-                  <Flex align="center" gap="sm" className="min-w-0">
-                    <Icon icon={Paperclip} size="sm" className="text-ui-text-secondary shrink-0" />
-                    <Typography variant="small" className="truncate">
-                      {attachment.filename}
-                    </Typography>
-                  </Flex>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemovePendingAttachment(attachment.storageId)}
-                    aria-label={`Remove ${attachment.filename}`}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </Flex>
-              </Card>
-            ))}
+            <Typography variant="label">Add Comment</Typography>
+            <Typography variant="small" color="secondary">
+              Share context, decisions, or follow-up work without leaving the issue.
+            </Typography>
           </Stack>
-        )}
-        <Flex justify="between" align="center" gap="sm">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
+          <MentionInput
+            projectId={projectId}
+            value={newComment}
+            onChange={setNewComment}
+            onMentionsChange={setMentions}
+            placeholder="Add a comment... Type @ to mention someone"
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ALLOWED_TYPES.join(",")}
+            multiple
+            className="hidden"
+            onChange={(event) => handleAttachmentUpload(event.target.files)}
             disabled={isUploadingAttachment}
-            isLoading={isUploadingAttachment}
-            leftIcon={!isUploadingAttachment ? <Icon icon={Paperclip} size="sm" /> : undefined}
-          >
-            {isUploadingAttachment ? "Uploading..." : "Attach File"}
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            isLoading={isSubmitting}
-            disabled={!newComment.trim() || isUploadingAttachment}
-          >
-            Add Comment
-          </Button>
-        </Flex>
-      </Stack>
+          />
+          {commentAttachments.length > 0 && (
+            <Stack gap="xs">
+              {commentAttachments.map((attachment) => (
+                <InsetPanel key={attachment.storageId} size="compact">
+                  <Flex align="center" justify="between" gap="sm">
+                    <Flex align="center" gap="sm" className="min-w-0">
+                      <Icon icon={Paperclip} size="sm" tone="secondary" className="shrink-0" />
+                      <Typography variant="small" className="truncate">
+                        {attachment.filename}
+                      </Typography>
+                    </Flex>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemovePendingAttachment(attachment.storageId)}
+                      aria-label={`Remove ${attachment.filename}`}
+                    >
+                      <Icon icon={X} size="sm" />
+                    </Button>
+                  </Flex>
+                </InsetPanel>
+              ))}
+            </Stack>
+          )}
+          <Flex justify="between" align="center" gap="sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAttachment}
+              isLoading={isUploadingAttachment}
+              leftIcon={!isUploadingAttachment ? <Icon icon={Paperclip} size="sm" /> : undefined}
+            >
+              {isUploadingAttachment ? "Uploading..." : "Attach File"}
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              isLoading={isSubmitting}
+              disabled={!newComment.trim() || isUploadingAttachment}
+            >
+              Add Comment
+            </Button>
+          </Flex>
+        </Stack>
+      </Card>
     </Stack>
   );
 }

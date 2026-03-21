@@ -39,13 +39,14 @@ vi.mock("../ui/Button", () => ({
   ),
 }));
 
-vi.mock("../ui/Card", () => ({
-  Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CardHeader: ({
+vi.mock("../Settings/SettingsSection", () => ({
+  SettingsSection: ({
+    children,
     title,
     description,
     action,
   }: {
+    children: ReactNode;
     title: string;
     description?: string;
     action?: ReactNode;
@@ -54,9 +55,30 @@ vi.mock("../ui/Card", () => ({
       <div>{title}</div>
       <div>{description}</div>
       {action}
+      {children}
     </div>
   ),
-  CardBody: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SettingsSectionInset: ({ children, title }: { children: ReactNode; title?: ReactNode }) => (
+    <div>
+      {title}
+      {children}
+    </div>
+  ),
+  SettingsSectionRow: ({
+    title,
+    description,
+    action,
+  }: {
+    title: ReactNode;
+    description?: ReactNode;
+    action?: ReactNode;
+  }) => (
+    <div>
+      {title}
+      {description}
+      {action}
+    </div>
+  ),
 }));
 
 vi.mock("../ui/EmptyState", () => ({
@@ -73,6 +95,10 @@ vi.mock("../ui/EmptyState", () => ({
       <div>{description}</div>
     </div>
   ),
+}));
+
+vi.mock("../layout", () => ({
+  PageControlsGroup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock("../ui/Flex", () => ({

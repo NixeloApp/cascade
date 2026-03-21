@@ -1,67 +1,70 @@
 # Verify Email Page - Current State
 
-> **Route**: `/verify-email` (does not exist yet)
-> **Status**: 🔴 MISSING
-> **Last Updated**: 2026-02-13
+> **Route**: `/verify-email`
+> **Status**: REVIEWED, implemented, and part of the auth screenshot suite
+> **Last Updated**: 2026-03-21
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Screenshot Matrix
 
 | Viewport | Theme | Preview |
 |----------|-------|---------|
-| Desktop | Dark | (page does not exist) |
-| Desktop | Light | (page does not exist) |
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
 
 ---
 
-## Structure
+## Current Read
 
+- This route now exists and is part of the real auth flow.
+- It uses the shared auth shell rather than a bespoke verification card.
+- When an `email` search param is present, the page shows the code-verification form.
+- When no email is present, it falls back to a lighter explanatory state instead of failing or
+  redirecting into nowhere.
+- The route is wrapped in `AuthRedirect`, so successful verification continues into the app flow.
+
+---
+
+## Route Anatomy
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Shared auth shell                                                           │
+│                                                                              │
+│  title: Check your email                                                     │
+│  subtitle: sent code to {email} or fallback guidance                         │
+│                                                                              │
+│  EmailVerificationForm                                                       │
+│  - code entry                                                                │
+│  - resend hook                                                               │
+│  - verified redirect                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│                     PAGE DOES NOT EXIST                                     │
-│                                                                             │
-│  Currently: Email verification happens via magic link that logs user in    │
-│  directly. No intermediate "check your email" page exists.                 │
-│                                                                             │
-│  Flow today:                                                                │
-│  1. User enters email on signin page                                       │
-│  2. ... no visual feedback about what to do next                           │
-│  3. Magic link arrives in inbox                                            │
-│  4. User clicks link → logged in                                           │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
 
 ---
 
-## Files
+## Remaining Gaps
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| N/A | Page does not exist | - |
+| Problem | Area | Severity |
+|---------|------|----------|
+| The route is current, but it still only has canonical screenshots; error, resend, and no-email fallback states are not separately reviewed | screenshot depth | LOW |
 
 ---
 
-## Problems
+## Source Files
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | No "check your email" confirmation page | N/A | HIGH |
-| 2 | User has no feedback after submitting email | signin.tsx | HIGH |
-| 3 | No resend link functionality | N/A | MEDIUM |
-| 4 | No email change option | N/A | LOW |
+- `src/routes/verify-email.tsx`
+- `src/components/Auth/AuthPageLayout.tsx`
+- `src/components/Auth/EmailVerificationForm.tsx`
 
 ---
 
 ## Summary
 
-The verify-email page is completely missing. After a user submits their email for magic link authentication, there's no confirmation page telling them to check their inbox. This is a significant UX gap - users are left wondering if anything happened.
-
-**Required flow:**
-1. User enters email → submits
-2. Redirect to `/verify-email?email=user@example.com`
-3. Show "Check your inbox" message with email displayed
-4. Provide "Resend" button with rate limiting
-5. Provide "Use different email" link back to signin
+This page is no longer missing. It is a real part of the auth flow and should be treated as such in
+future auth reviews.

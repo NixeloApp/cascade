@@ -15,7 +15,6 @@
  * - Viewer: e2e-viewer@inbox.mailtrap.io
  */
 
-import { RBAC_TEST_CONFIG } from "./config";
 import { clientSideNavigate, expect, rbacTest } from "./fixtures";
 import { ROUTES, routePattern } from "./utils/routes";
 

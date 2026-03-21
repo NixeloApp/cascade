@@ -312,7 +312,7 @@ export function IssuesCalendarView({
                 variant="ghost"
                 size="sm"
                 onClick={() => navigateMonth(-1)}
-                className="min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
+                className="size-11 sm:size-8"
                 aria-label="Previous month"
               >
                 <Icon icon={ChevronLeft} size="md" />
@@ -328,7 +328,7 @@ export function IssuesCalendarView({
                 variant="ghost"
                 size="sm"
                 onClick={() => navigateMonth(1)}
-                className="min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
+                className="size-11 sm:size-8"
                 aria-label="Next month"
               >
                 <Icon icon={ChevronRight} size="md" />

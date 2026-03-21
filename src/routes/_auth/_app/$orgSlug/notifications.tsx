@@ -13,13 +13,22 @@ import { usePaginatedQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Archive, Bell, CheckCheck } from "lucide-react";
 import { useState } from "react";
-import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import {
+  PageContent,
+  PageControls,
+  PageControlsGroup,
+  PageControlsRow,
+  PageHeader,
+  PageLayout,
+  PageStack,
+} from "@/components/layout";
 import { NotificationItem, type NotificationWithActor } from "@/components/Notifications";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
@@ -31,7 +40,6 @@ import {
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/notifications")({
   component: NotificationsPage,
 });
@@ -260,110 +268,112 @@ export function NotificationsPage() {
 
   return (
     <PageLayout>
-      <PageHeader
-        title="Notifications"
-        description={
-          unreadCount != null && unreadCount > 0
-            ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
-            : "You're all caught up"
-        }
-        actions={
-          <Flex gap="sm">
-            {activeTab === "inbox" && unreadCount != null && unreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleMarkAllAsRead}
-                isLoading={bulkActionLoading === "markAll"}
-                disabled={bulkActionLoading !== null}
-                leftIcon={<CheckCheck className="h-4 w-4" />}
-              >
-                Mark all read
-              </Button>
-            )}
-            {activeTab === "inbox" && notifications.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleArchiveAll}
-                isLoading={bulkActionLoading === "archiveAll"}
-                disabled={bulkActionLoading !== null}
-                leftIcon={<Archive className="h-4 w-4" />}
-              >
-                Archive all
-              </Button>
-            )}
-          </Flex>
-        }
-      />
-
-      <PageContent>
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "inbox" | "archived")}>
-          <Flex justify="between" align="center" className="mb-4">
-            <TabsList>
-              <TabsTrigger value="inbox">
-                <Flex align="center" gap="xs">
-                  <Bell className="h-4 w-4" />
-                  Inbox
-                  {unreadCount != null && unreadCount > 0 && (
-                    <Badge variant="brand" size="sm" shape="pill">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </Badge>
-                  )}
-                </Flex>
-              </TabsTrigger>
-              <TabsTrigger value="archived">
-                <Flex align="center" gap="xs">
-                  <Archive className="h-4 w-4" />
-                  Archived
-                </Flex>
-              </TabsTrigger>
-            </TabsList>
-
-            {activeTab === "inbox" && (
-              <Flex gap="xs">
-                {(
-                  [
-                    { key: "all", label: "All" },
-                    { key: "mentions", label: "Mentions" },
-                    { key: "assigned", label: "Assigned" },
-                    { key: "comments", label: "Comments" },
-                    { key: "updates", label: "Updates" },
-                  ] as const
-                ).map(({ key, label }) => (
-                  <Button
-                    key={key}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFilter(key)}
-                    className={cn(
-                      "px-3 h-7",
-                      filter === key
-                        ? "bg-ui-bg-secondary text-ui-text"
-                        : "text-ui-text-secondary hover:text-ui-text",
-                    )}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </Flex>
-            )}
-          </Flex>
-
-          <Card padding="none">
-            <TabsContent value="inbox" className="mt-0">
-              {renderNotificationList(notifications)}
-            </TabsContent>
-
-            <TabsContent value="archived" className="mt-0">
-              {renderNotificationList(
-                (archivedNotifications as NotificationWithActor[]) || [],
-                true,
+      <PageStack>
+        <PageHeader
+          title="Notifications"
+          spacing="stack"
+          description={
+            unreadCount != null && unreadCount > 0
+              ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
+              : "You're all caught up"
+          }
+          actions={
+            <Flex gap="sm">
+              {activeTab === "inbox" && unreadCount != null && unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleMarkAllAsRead}
+                  isLoading={bulkActionLoading === "markAll"}
+                  disabled={bulkActionLoading !== null}
+                  leftIcon={<Icon icon={CheckCheck} size="sm" />}
+                >
+                  Mark all read
+                </Button>
               )}
-            </TabsContent>
-          </Card>
-        </Tabs>
-      </PageContent>
+              {activeTab === "inbox" && notifications.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleArchiveAll}
+                  isLoading={bulkActionLoading === "archiveAll"}
+                  disabled={bulkActionLoading !== null}
+                  leftIcon={<Icon icon={Archive} size="sm" />}
+                >
+                  Archive all
+                </Button>
+              )}
+            </Flex>
+          }
+        />
+
+        <PageContent>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "inbox" | "archived")}>
+            <PageStack>
+              <PageControls spacing="stack">
+                <PageControlsRow>
+                  <TabsList>
+                    <TabsTrigger value="inbox">
+                      <Flex align="center" gap="xs">
+                        <Icon icon={Bell} size="sm" />
+                        Inbox
+                        {unreadCount != null && unreadCount > 0 && (
+                          <Badge variant="brand" size="sm" shape="pill">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </Badge>
+                        )}
+                      </Flex>
+                    </TabsTrigger>
+                    <TabsTrigger value="archived">
+                      <Flex align="center" gap="xs">
+                        <Icon icon={Archive} size="sm" />
+                        Archived
+                      </Flex>
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {activeTab === "inbox" && (
+                    <PageControlsGroup className="sm:justify-end">
+                      {(
+                        [
+                          { key: "all", label: "All" },
+                          { key: "mentions", label: "Mentions" },
+                          { key: "assigned", label: "Assigned" },
+                          { key: "comments", label: "Comments" },
+                          { key: "updates", label: "Updates" },
+                        ] as const
+                      ).map(({ key, label }) => (
+                        <Button
+                          key={key}
+                          variant="unstyled"
+                          chrome={filter === key ? "filterActive" : "filter"}
+                          chromeSize="compactPillSm"
+                          onClick={() => setFilter(key)}
+                        >
+                          {label}
+                        </Button>
+                      ))}
+                    </PageControlsGroup>
+                  )}
+                </PageControlsRow>
+              </PageControls>
+
+              <Card padding="none">
+                <TabsContent value="inbox" className="mt-0">
+                  {renderNotificationList(notifications)}
+                </TabsContent>
+
+                <TabsContent value="archived" className="mt-0">
+                  {renderNotificationList(
+                    (archivedNotifications as NotificationWithActor[]) || [],
+                    true,
+                  )}
+                </TabsContent>
+              </Card>
+            </PageStack>
+          </Tabs>
+        </PageContent>
+      </PageStack>
     </PageLayout>
   );
 }

@@ -109,7 +109,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       {!executions || executions.length === 0 ? (
         <Card padding="xl" variant="ghost">
           <Stack align="center" gap="sm" className="text-center">
-            <Icon icon={BarChart3} size="xl" className="text-ui-text-tertiary" />
+            <Icon icon={BarChart3} size="xl" tone="tertiary" />
             <Typography variant="h5">No delivery logs yet</Typography>
             <Typography variant="caption">
               Webhook deliveries will appear here once triggered

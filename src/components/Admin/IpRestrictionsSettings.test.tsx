@@ -50,23 +50,58 @@ vi.mock("../ui/Button", () => ({
   ),
 }));
 
-vi.mock("../ui/Card", () => ({
-  Card: ({ children }: { children: ReactNode; padding?: string; className?: string }) => (
-    <div>{children}</div>
-  ),
-  CardBody: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CardHeader: ({
+vi.mock("../Settings/SettingsSection", () => ({
+  SettingsSection: ({
+    children,
     title,
     description,
     action,
+    titleAdornment,
   }: {
+    children: ReactNode;
     title: ReactNode;
-    description?: string;
+    description?: ReactNode;
     action?: ReactNode;
+    titleAdornment?: ReactNode;
   }) => (
     <div>
       <div>{title}</div>
       <div>{description}</div>
+      {titleAdornment}
+      {action}
+      {children}
+    </div>
+  ),
+  SettingsSectionInset: ({
+    children,
+    title,
+    description,
+  }: {
+    children: ReactNode;
+    title?: ReactNode;
+    description?: ReactNode;
+  }) => (
+    <div>
+      {title}
+      {description}
+      {children}
+    </div>
+  ),
+  SettingsSectionRow: ({
+    title,
+    description,
+    action,
+    icon,
+  }: {
+    title: ReactNode;
+    description?: ReactNode;
+    action?: ReactNode;
+    icon?: unknown;
+  }) => (
+    <div>
+      {icon ? <span data-testid="row-icon" /> : null}
+      {title}
+      {description}
       {action}
     </div>
   ),
@@ -328,7 +363,7 @@ describe("IpRestrictionsSettings", () => {
 
     render(<IpRestrictionsSettings />);
 
-    expect(screen.getByText("IP Restrictions Disabled")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enable IP restrictions" })).toBeInTheDocument();
     expect(screen.getByText("No IPs in allowlist")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Enable IP restrictions" }));
@@ -360,7 +395,7 @@ describe("IpRestrictionsSettings", () => {
 
     render(<IpRestrictionsSettings />);
 
-    expect(screen.getByText("IP Restrictions Active")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enable IP restrictions" })).toBeInTheDocument();
     expect(screen.getByText("203.0.113.10")).toBeInTheDocument();
     expect(screen.getByText(/Office VPN/)).toBeInTheDocument();
 

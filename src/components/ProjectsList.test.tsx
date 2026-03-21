@@ -118,6 +118,22 @@ describe("ProjectsList", () => {
     expect(screen.getByText(/Scrum/)).toBeInTheDocument();
   });
 
+  it("renders a workspace overview when only one project exists", () => {
+    mockUsePaginatedQuery.mockReturnValue({
+      results: [mockProjects[0]],
+      status: "Exhausted",
+      loadMore: mockLoadMore,
+    });
+
+    customRender(<ProjectsList onCreateClick={mockOnCreateClick} />);
+
+    expect(screen.getByText("Primary workspace project")).toBeInTheDocument();
+    expect(screen.getByText("Connected surfaces")).toBeInTheDocument();
+    expect(screen.getByText("Workspace coverage")).toBeInTheDocument();
+    expect(screen.getAllByTestId("project-link").length).toBeGreaterThan(0);
+    expect(screen.getByText("When to add another project")).toBeInTheDocument();
+  });
+
   it("calls onCreateClick when create button is clicked", () => {
     mockUsePaginatedQuery.mockReturnValue({
       results: [],

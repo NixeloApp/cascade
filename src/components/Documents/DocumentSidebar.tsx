@@ -9,7 +9,7 @@
  */
 
 import { DAY } from "@convex/lib/timeUtils";
-import { ChevronDown, FileText, Hash, Info, List, User } from "lucide-react";
+import { ChevronDown, FileText, Hash, Info, List, type LucideIcon, User } from "lucide-react";
 import type { Value } from "platejs";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -56,12 +57,12 @@ interface DocumentSidebarProps {
  */
 function SidebarSection({
   title,
-  icon: Icon,
+  icon: SectionIcon,
   children,
   defaultOpen = true,
 }: {
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   children: ReactNode;
   defaultOpen?: boolean;
 }) {
@@ -76,13 +77,15 @@ function SidebarSection({
         chromeSize="sectionToggle"
       >
         <Flex align="center" gap="sm">
-          <Icon className="h-4 w-4" />
+          <Icon icon={SectionIcon} size="sm" />
           <Typography variant="eyebrow" as="span" className="text-left">
             {title}
           </Typography>
         </Flex>
-        <ChevronDown
-          className={cn("h-3 w-3 transition-transform duration-default", !isOpen && "-rotate-90")}
+        <Icon
+          icon={ChevronDown}
+          size="xs"
+          className={cn("transition-transform duration-default", !isOpen && "-rotate-90")}
         />
       </Button>
       {isOpen && <div className="p-2 pt-0">{children}</div>}
@@ -175,7 +178,7 @@ function TableOfContents({
     return (
       <div className="p-1 text-ui-text-tertiary">
         <Flex align="center" gap="sm">
-          <FileText className="h-4 w-4" />
+          <Icon icon={FileText} size="sm" />
           <Typography variant="small">No headings found</Typography>
         </Flex>
       </div>
@@ -194,7 +197,7 @@ function TableOfContents({
           style={{ paddingLeft: `${(heading.level - 1) * 12 + 8}px` }}
           title={heading.text}
         >
-          <Hash className="h-3 w-3 shrink-0 opacity-50" />
+          <Icon icon={Hash} size="xs" className="shrink-0 opacity-50" />
           <span className="truncate">{heading.text}</span>
         </Button>
       ))}
@@ -260,7 +263,7 @@ export function DocumentSidebar({
         aria-label="Open document sidebar"
         title="Open sidebar"
       >
-        <List className="h-4 w-4" />
+        <Icon icon={List} size="sm" />
       </Button>
     );
   }
@@ -294,7 +297,7 @@ export function DocumentSidebar({
             label="Author"
             value={
               <Flex align="center" gap="xs">
-                <User className="h-3 w-3" />
+                <Icon icon={User} size="xs" />
                 <Typography variant="small" as="span">
                   {documentInfo.creatorName}
                 </Typography>

@@ -18,7 +18,12 @@ export function CalendarBodyDay(): React.ReactElement {
   useCalendarInitialScroll(scrollRef, events, date, "day");
 
   return (
-    <Flex flex="1" className="overflow-hidden bg-ui-bg" data-testid={TEST_IDS.CALENDAR.GRID}>
+    <Flex
+      flex="1"
+      className="overflow-hidden bg-ui-bg"
+      data-testid={TEST_IDS.CALENDAR.GRID}
+      data-calendar-view="day"
+    >
       <Card recipe="calendarDayMainPanel" className="overflow-hidden">
         <Flex direction="column" flex="1" className="overflow-hidden">
           <Flex ref={scrollRef} direction="column" flex="1" className="overflow-y-auto">

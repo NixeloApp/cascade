@@ -1,39 +1,33 @@
 # Visual Consistency Hardening
 
 > **Priority:** P1
-> **Status:** New
+> **Status:** In Progress
 > **Last Updated:** 2026-03-20
 
 ## Goal
 
 Make the product more visually cohesive and more enforceable in code, using the new consistency contract and validator output as the cleanup map.
 
-## New Guardrails Already Added
+### Screenshot-driven cleanup
 
-- [x] `docs/design/CONSISTENCY.md` defines the practical consistency contract
-- [x] `pnpm run validate` now includes advisory audits for typography drift, control chrome drift, shared shape drift, and richer screenshot/spec coverage
-- [x] Screenshot validation docs are linked to the design/testing review loop
-
-## Remaining Cleanup
-
-### Typography override drift
-
-- [x] Absorb the repeated landing-page hero/showcase/metric typography patterns into owned `Typography` variants
-- [x] Absorb the shared app/auth/error typography treatments into owned `Typography` variants
-- [x] Absorb the shared board/panel/secondary-surface heading and label treatments into owned `Typography` variants
-- [x] Remove or absorb the 43 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
-- [x] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
-
-### Owned-control drift
-
-- [x] Absorb the shared compact button sizing patterns into owned `Button` sizes / chrome sizes
-- [x] Remove or absorb the 17 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
-- [x] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
+- [ ] Review approved screenshots page by page and turn every visibly broken or weird state into an explicit todo item instead of leaving it as vague review debt
+- [ ] Fix screenshot-exposed broken states before approving new baselines -- missing content, bad shells, off spacing, broken empty states, and modal/popover layout failures should not be normalized
+- [ ] Use screenshot review to find and remove AI-slop patterns -- nested cards, redundant shells, accidental panel-in-panel layouts, and inconsistent control groupings
 
 ### Screenshot review residue
 
 - [ ] Keep screenshot coverage and screenshot drift approval in sync with visual changes
 - [ ] Do not let modal/interaction-state screenshot gaps hide consistency regressions
+- [ ] Backfill tablet and mobile screenshot coverage anywhere specs still effectively read as desktop-first even if the route is already visually reviewed
+- [ ] Do not stop at the canonical route screenshot when important reviewed states exist -- capture and approve the real surface variants:
+  - empty / loading / error
+  - modal / sheet / popover / dropdown open states
+  - create / edit / confirm / destructive flows
+  - permission-denied / blocked / no-access states
+  - filtered / search-active / alternate-view states
+  - selected / inline-edit / expanded-detail states
+- [ ] Audit existing screenshot folders for uneven matrices -- some pages already have desktop/tablet/mobile variants plus deep state captures, while others only have the canonical route and need explicit expansion
+- [ ] Treat "tablet/mobile missing from the reviewed matrix" as a real consistency gap, not just a documentation nicety
 
 ### Human-review blind spots
 
@@ -41,12 +35,17 @@ These are still only partially automated and need explicit cleanup/review:
 
 - [ ] motion / animation consistency
 - [ ] density and hierarchy consistency inside large complex surfaces
-- [ ] component-state cohesion across dialogs, sheets, popovers, tabs, and dashboard cards
+- [ ] component-state cohesion across remaining tabs and card-heavy product surfaces outside the standardized overlay/dashboard shells
 - [ ] icon sizing / stroke-weight rhythm across mixed surfaces
+- [ ] icon tone/color consistency -- shared semantic icon tones should read as one system, without one-off raw `text-*` icon overrides drifting across pages
 - [ ] remaining raw Tailwind baseline shrink as touched files are cleaned up
+- [ ] shared shell discipline -- stop panel/card nesting and other accidental composition patterns that make surfaces feel inconsistent
+- [ ] "looks polished but not like our product" review pass -- screenshots should catch when a surface is visually coherent but still too custom, decorative, or unlike the real app
+- [ ] spec-currentness drift -- CURRENT.md files must track the actual branch route and screenshot matrix instead of falling behind and becoming desktop-only summaries
 
 ## Done When
 
 - [ ] The visual-consistency validator runs with zero meaningful drift findings or an intentionally tiny known set
-- [ ] Repeated Typography styling hacks have been replaced by actual variant/component decisions
-- [ ] Screenshot review no longer has obvious uncaptured consistency holes for important surfaces
+- [ ] Screenshot review no longer has obvious uncaptured consistency holes for important surfaces, including tablet/mobile and major feature states
+- [ ] The remaining human-review blind spots are either covered by guardrails or tracked as explicit debt
+- [ ] Screenshot review no longer surfaces obvious "what is this layout doing?" moments on core routes and dialogs

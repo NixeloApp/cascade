@@ -7,9 +7,7 @@
  */
 
 import { api } from "@convex/_generated/api";
-
 import { useEffect, useState } from "react";
-import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -17,11 +15,11 @@ import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpda
 import { Monitor, Moon, Sun } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { useTheme } from "../../contexts/ThemeContext";
-import { Card } from "../ui/Card";
+import { Flex } from "../ui/Flex";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Switch } from "../ui/Switch";
-import { Typography } from "../ui/Typography";
+import { SettingsSection, SettingsSectionRow } from "./SettingsSection";
 /**
  * User preferences tab
  * Handles Theme, Timezone, and Browser Notifications (UI Settings)
@@ -99,84 +97,86 @@ export function PreferencesTab() {
 
   return (
     <Stack gap="lg">
-      <Card padding="lg">
-        <Stack gap="md">
-          <Typography variant="h5">Appearance</Typography>
-
-          <Flex align="center" justify="between">
-            <Stack gap="xs">
-              <Typography variant="label">Theme</Typography>
-              <Typography variant="small" color="secondary">
-                Select your preferred interface theme
-              </Typography>
-            </Stack>
-
+      <SettingsSection
+        title="Appearance"
+        description="Keep visual preferences in one predictable place across devices."
+      >
+        <SettingsSectionRow
+          title="Theme"
+          description="Choose the interface tone you want Nixelo to use by default."
+          action={
             <SegmentedControl
               value={theme}
+              layout="stackOnMobile"
+              iconSpacing
               onValueChange={(value: string) => {
-                if (value) handleThemeChange(value as "light" | "dark" | "system");
+                if (value) {
+                  void handleThemeChange(value as "light" | "dark" | "system");
+                }
               }}
             >
               <SegmentedControlItem value="light" aria-label="Light theme">
-                <Icon icon={Sun} size="sm" className="mr-2" /> Light
+                <Icon icon={Sun} size="sm" />
+                Light
               </SegmentedControlItem>
               <SegmentedControlItem value="dark" aria-label="Dark theme">
-                <Icon icon={Moon} size="sm" className="mr-2" /> Dark
+                <Icon icon={Moon} size="sm" />
+                Dark
               </SegmentedControlItem>
               <SegmentedControlItem value="system" aria-label="System theme">
-                <Icon icon={Monitor} size="sm" className="mr-2" /> System
+                <Icon icon={Monitor} size="sm" />
+                System
               </SegmentedControlItem>
             </SegmentedControl>
-          </Flex>
-        </Stack>
-      </Card>
+          }
+        />
+      </SettingsSection>
 
-      <Card padding="lg">
-        <Stack gap="md">
-          <Typography variant="h5">Regional</Typography>
-          <Flex align="center" justify="between">
-            <Stack gap="xs">
-              <Typography variant="label">Timezone</Typography>
-              <Typography variant="small" color="secondary">
-                Your timestamp display preference
-              </Typography>
-            </Stack>
-            <div className="w-60">
-              <Select value={selectedTimezone} onValueChange={handleTimezoneChange}>
-                <SelectTrigger id="timezone">
-                  <SelectValue placeholder="Select timezone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timezones.map((tz) => (
-                    <SelectItem key={tz} value={tz}>
-                      {tz}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </Flex>
-        </Stack>
-      </Card>
+      <SettingsSection
+        title="Regional"
+        description="Control how timestamps and local workspace context are presented."
+      >
+        <SettingsSectionRow
+          title="Timezone"
+          description="Use a specific timezone for issue, meeting, and audit timestamps."
+          action={
+            <Select
+              value={selectedTimezone}
+              onValueChange={(value) => void handleTimezoneChange(value)}
+            >
+              <SelectTrigger id="timezone" className="w-full sm:w-60">
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent>
+                {timezones.map((tz) => (
+                  <SelectItem key={tz} value={tz}>
+                    {tz}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          }
+        />
+      </SettingsSection>
 
-      <Card padding="lg">
-        <Stack gap="md">
-          <Typography variant="h5">Desktop Notifications</Typography>
-          <Flex align="center" justify="between">
-            <Stack gap="xs">
-              <Typography variant="label">Browser Push Notifications</Typography>
-              <Typography variant="small" color="secondary">
-                Receive pop-up notifications when you are active
-              </Typography>
-            </Stack>
-            <Switch
-              id="desktop-notifs"
-              checked={userSettings?.desktopNotifications ?? false}
-              onCheckedChange={handleDesktopNotificationsChange}
-            />
-          </Flex>
-        </Stack>
-      </Card>
+      <SettingsSection
+        title="Desktop Notifications"
+        description="Keep browser-level alerts aligned with the richer notification settings tab."
+      >
+        <SettingsSectionRow
+          title="Browser Push Notifications"
+          description="Allow pop-up notifications while Nixelo is open in this browser."
+          action={
+            <Flex align="center">
+              <Switch
+                id="desktop-notifs"
+                checked={userSettings?.desktopNotifications ?? false}
+                onCheckedChange={(checked) => void handleDesktopNotificationsChange(checked)}
+              />
+            </Flex>
+          }
+        />
+      </SettingsSection>
     </Stack>
   );
 }

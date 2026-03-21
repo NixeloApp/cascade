@@ -1,5 +1,6 @@
 import type { Doc } from "@convex/_generated/dataModel";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import { DocumentHeader } from "./DocumentHeader";
@@ -46,7 +47,43 @@ describe("DocumentHeader", () => {
     expect(screen.getByText("Test Document")).toBeInTheDocument();
   });
 
-  it("renders buttons with aria-labels", () => {
+  it("keeps primary buttons visible and low-frequency owner actions in the manage menu", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TooltipProvider>
+        <DocumentHeader
+          document={mockDocument}
+          userId="user123"
+          versionCount={5}
+          isFavorite={false}
+          isArchived={false}
+          onTitleEdit={vi.fn()}
+          onTogglePublic={vi.fn()}
+          onToggleFavorite={vi.fn()}
+          onToggleArchive={vi.fn()}
+          onToggleLock={vi.fn()}
+          onMoveToProject={vi.fn()}
+          onImportMarkdown={vi.fn()}
+          onExportMarkdown={vi.fn()}
+          onShowVersionHistory={vi.fn()}
+          editorReady={true}
+        />
+      </TooltipProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Add to favorites" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Version history" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Import from Markdown" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export as Markdown" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "More document actions" }));
+
+    expect(await screen.findByRole("menuitem", { name: "Lock document" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Move to another project" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Archive document" })).toBeInTheDocument();
+  });
+
+  it("surfaces explicit editor sync state in the header chrome", () => {
     render(
       <TooltipProvider>
         <DocumentHeader
@@ -62,14 +99,12 @@ describe("DocumentHeader", () => {
           onImportMarkdown={vi.fn()}
           onExportMarkdown={vi.fn()}
           onShowVersionHistory={vi.fn()}
-          editorReady={true}
+          editorReady={false}
+          syncState="saving"
         />
       </TooltipProvider>,
     );
-    expect(screen.getByRole("button", { name: "Add to favorites" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Archive document" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Version history" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Import from Markdown" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Export as Markdown" })).toBeInTheDocument();
+
+    expect(screen.getByText("Saving…")).toBeInTheDocument();
   });
 });

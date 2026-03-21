@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -26,19 +27,19 @@ export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelc
     <Stack gap="2xl" align="center" className="text-center">
       {/* Icon - Mintlify-inspired with subtle ring */}
       <Flex justify="center">
-        <Card recipe="onboardingInviteHero" padding="lg" className="relative h-28 w-28">
+        <Card recipe="onboardingInviteHero" padding="lg" className="relative size-28">
           <Flex align="center" justify="center" className="h-full w-full">
-            <PartyPopper className="w-16 h-16 text-brand" />
+            <Icon icon={PartyPopper} className="size-16" />
           </Flex>
           {/* Decorative dot */}
           <div
             className={cn(
               getCardRecipeClassName("onboardingInviteHeroBadge"),
-              "absolute -right-1 -top-1 h-5 w-5",
+              "absolute -right-1 -top-1 size-5",
             )}
           >
             <Flex align="center" justify="center" className="h-full w-full">
-              <Check className="w-3 h-3 text-brand-foreground" />
+              <Icon icon={Check} size="xs" />
             </Flex>
           </div>
         </Card>
@@ -71,11 +72,11 @@ export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelc
               <div
                 className={cn(
                   getCardRecipeClassName("onboardingInviteBullet"),
-                  "mt-0.5 h-5 w-5 shrink-0",
+                  "mt-0.5 size-5 shrink-0",
                 )}
               >
                 <Flex align="center" justify="center" className="h-full w-full">
-                  <Check className="w-3 h-3 text-brand" />
+                  <Icon icon={Check} size="xs" tone="brand" />
                 </Flex>
               </div>
               <Typography color="secondary" variant="small">

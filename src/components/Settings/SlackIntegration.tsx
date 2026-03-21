@@ -6,17 +6,17 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { Check } from "@/lib/icons";
+import { Check, MessageSquare } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
+import { SettingsIntegrationMeta, SettingsIntegrationSection } from "./SettingsIntegrationSection";
 
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL as string;
 const SLACK_AUTH_URL = `${CONVEX_URL?.replace(".cloud", ".site")}/slack/auth`;
@@ -170,48 +170,54 @@ export function SlackIntegration() {
   };
 
   return (
-    <Card padding="lg">
-      <Flex justify="between" align="start">
-        <Flex gap="lg" align="center">
-          <div className="rounded bg-ui-bg-tertiary p-2">
-            <MessageSquare className="h-6 w-6" />
-          </div>
-          <Stack gap="xs">
-            <Typography variant="h3">Slack</Typography>
+    <SettingsIntegrationSection
+      title="Slack"
+      description="Send issue activity into Slack and keep workspace alerts connected to the right team."
+      icon={MessageSquare}
+      iconTone="accent"
+      status={
+        slackConnection
+          ? { label: "Connected", variant: "success" }
+          : { label: "Not Connected", variant: "neutral" }
+      }
+      action={
+        slackConnection ? (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setDisconnectConfirmOpen(true)}
+            disabled={isDisconnecting}
+          >
+            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+          </Button>
+        ) : (
+          <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
+            {isConnecting ? "Connecting..." : "Connect Slack"}
+          </Button>
+        )
+      }
+      summary={
+        slackConnection ? (
+          <SettingsIntegrationMeta label="Workspace connection">
+            <Stack gap="xs">
+              <Flex align="center" gap="xs">
+                <Icon icon={Check} size="sm" tone="success" />
+                <Typography variant="small">{slackConnection.teamName}</Typography>
+              </Flex>
+              <Typography variant="caption" color="tertiary">
+                Incoming webhook: {slackConnection.hasIncomingWebhook ? "Enabled" : "Unavailable"}
+              </Typography>
+            </Stack>
+          </SettingsIntegrationMeta>
+        ) : (
+          <SettingsIntegrationMeta label="Connection status">
             <Typography variant="small" color="secondary">
-              Connect Slack to send issue notifications to your workspace
+              Connect Slack to route issue notifications into one workspace channel flow.
             </Typography>
-            {slackConnection && (
-              <Stack gap="xs">
-                <Flex align="center" gap="xs" className="text-status-success">
-                  <Check className="h-4 w-4" />
-                  <Typography variant="small">Connected to {slackConnection.teamName}</Typography>
-                </Flex>
-                <Typography variant="caption" color="tertiary">
-                  Incoming webhook: {slackConnection.hasIncomingWebhook ? "Enabled" : "Unavailable"}
-                </Typography>
-              </Stack>
-            )}
-          </Stack>
-        </Flex>
-        <div>
-          {slackConnection ? (
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setDisconnectConfirmOpen(true)}
-              disabled={isDisconnecting}
-            >
-              {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-            </Button>
-          ) : (
-            <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
-              {isConnecting ? "Connecting..." : "Connect Slack"}
-            </Button>
-          )}
-        </div>
-      </Flex>
-
+          </SettingsIntegrationMeta>
+        )
+      }
+    >
       <ConfirmDialog
         isOpen={disconnectConfirmOpen}
         onClose={() => setDisconnectConfirmOpen(false)}
@@ -221,6 +227,6 @@ export function SlackIntegration() {
         variant="danger"
         confirmLabel="Disconnect"
       />
-    </Card>
+    </SettingsIntegrationSection>
   );
 }

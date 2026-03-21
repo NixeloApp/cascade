@@ -3,10 +3,15 @@ import type { useQuery } from "convex/react";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { AlertTriangle, Clock } from "@/lib/icons";
+import { AlertTriangle, Clock, TrendingUp } from "@/lib/icons";
+import { PageControlsGroup } from "../layout";
+import {
+  SettingsSection,
+  SettingsSectionInset,
+  SettingsSectionRow,
+} from "../Settings/SettingsSection";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -49,48 +54,50 @@ export function OAuthHealthDashboard() {
   }
 
   return (
-    <Card>
-      <CardHeader
-        title="OAuth Health Monitoring"
-        description="Synthetic Google OAuth health checks and failure trends"
-        action={
-          <Flex gap="xs">
-            {ranges.map((range) => (
-              <Button
-                key={range}
-                size="sm"
-                variant={days === range ? "primary" : "secondary"}
-                onClick={() => setDays(range)}
-              >
-                {range}d
-              </Button>
-            ))}
-          </Flex>
-        }
-      />
-      <CardBody>
-        <OAuthHealthContent stats={stats} />
-      </CardBody>
-    </Card>
+    <SettingsSection
+      title="OAuth Health Monitoring"
+      description="Review synthetic Google OAuth health checks, latency trends, and recent failures."
+      icon={TrendingUp}
+      action={
+        <PageControlsGroup>
+          {ranges.map((range) => (
+            <Button
+              key={range}
+              size="sm"
+              variant={days === range ? "primary" : "secondary"}
+              onClick={() => setDays(range)}
+            >
+              {range}d
+            </Button>
+          ))}
+        </PageControlsGroup>
+      }
+    >
+      <OAuthHealthContent stats={stats} />
+    </SettingsSection>
   );
 }
 
 function OAuthHealthContent({ stats }: { stats: HealthStats | undefined }) {
   if (!stats) {
     return (
-      <Typography variant="small" color="secondary">
-        Loading OAuth health stats...
-      </Typography>
+      <SettingsSectionInset>
+        <Typography variant="small" color="secondary">
+          Loading OAuth health stats...
+        </Typography>
+      </SettingsSectionInset>
     );
   }
 
   if (stats.totalChecks === 0) {
     return (
-      <EmptyState
-        icon={Clock}
-        title="No health checks in selected range"
-        description="Synthetic OAuth monitoring has not produced data for this period."
-      />
+      <SettingsSectionInset>
+        <EmptyState
+          icon={Clock}
+          title="No health checks in selected range"
+          description="Synthetic OAuth monitoring has not produced data for this period."
+        />
+      </SettingsSectionInset>
     );
   }
 
@@ -107,10 +114,10 @@ function OAuthHealthContent({ stats }: { stats: HealthStats | undefined }) {
 function OAuthStatsGrid({ stats }: { stats: HealthStats }) {
   return (
     <Grid cols={2} colsMd={4} gap="md">
-      <StatCard label="Success Rate" value={`${stats.successRate}%`} />
-      <StatCard label="P95 Latency" value={`${stats.p95LatencyMs ?? 0}ms`} />
-      <StatCard label="Avg Latency" value={`${stats.avgLatencyMs ?? 0}ms`} />
-      <StatCard label="Consecutive Failures" value={String(stats.consecutiveFailures)} />
+      <OAuthStatTile label="Success Rate" value={`${stats.successRate}%`} />
+      <OAuthStatTile label="P95 Latency" value={`${stats.p95LatencyMs ?? 0}ms`} />
+      <OAuthStatTile label="Avg Latency" value={`${stats.avgLatencyMs ?? 0}ms`} />
+      <OAuthStatTile label="Consecutive Failures" value={String(stats.consecutiveFailures)} />
     </Grid>
   );
 }
@@ -120,29 +127,31 @@ function OAuthStatusHeader({ stats }: { stats: HealthStats }) {
   const healthLabel = stats.consecutiveFailures > 0 ? "Degraded" : "Healthy";
 
   return (
-    <Flex gap="sm" align="center" wrap>
-      <Badge variant={healthVariant}>{healthLabel}</Badge>
-      <Typography variant="small" color="secondary">
-        Last check: {formatTime(stats.lastCheckAt)}
-      </Typography>
-    </Flex>
+    <SettingsSectionInset title="Current health">
+      <SettingsSectionRow
+        title="Monitoring status"
+        description={`Last check: ${formatTime(stats.lastCheckAt)}`}
+        action={<Badge variant={healthVariant}>{healthLabel}</Badge>}
+      />
+    </SettingsSectionInset>
   );
 }
 
 function OAuthIncidentSummary({ stats }: { stats: HealthStats }) {
   return (
-    <Grid cols={1} colsMd={3} gap="md">
-      <IncidentField label="First Failure" value={formatTime(stats.firstFailAt)} />
-      <IncidentField label="Last Failure" value={formatTime(stats.lastFailAt)} />
-      <IncidentField label="Recovered At" value={formatTime(stats.recoveredAt)} />
-    </Grid>
+    <SettingsSectionInset title="Incident timeline">
+      <Grid cols={1} colsMd={3} gap="md">
+        <IncidentField label="First Failure" value={formatTime(stats.firstFailAt)} />
+        <IncidentField label="Last Failure" value={formatTime(stats.lastFailAt)} />
+        <IncidentField label="Recovered At" value={formatTime(stats.recoveredAt)} />
+      </Grid>
+    </SettingsSectionInset>
   );
 }
 
 function RecentFailures({ failures }: { failures: FailureEntry[] }) {
   return (
-    <Stack gap="sm">
-      <Typography variant="label">Recent Failures</Typography>
+    <SettingsSectionInset title="Recent Failures">
       {failures.length === 0 ? (
         <Typography variant="small" color="secondary">
           No failures in this range.
@@ -150,40 +159,38 @@ function RecentFailures({ failures }: { failures: FailureEntry[] }) {
       ) : (
         <Stack gap="xs">
           {failures.map((failure) => (
-            <Card key={`${failure.timestamp}-${failure.error}`} variant="flat" padding="sm">
+            <SettingsSectionInset key={`${failure.timestamp}-${failure.error}`} padding="sm">
               <Flex justify="between" align="start" gap="md">
                 <Stack gap="xs">
                   <Flex gap="xs" align="center">
-                    <Icon icon={AlertTriangle} size="sm" className="text-status-error" />
+                    <Icon icon={AlertTriangle} size="sm" tone="error" />
                     <Typography variant="small">{failure.error}</Typography>
                   </Flex>
                   <Typography variant="caption" color="secondary">
                     {formatTime(failure.timestamp)}
                   </Typography>
                 </Stack>
-                <Flex gap="xs" align="center">
+                <Flex gap="xs" align="center" wrap>
                   <Badge variant="neutral">{failure.latencyMs}ms</Badge>
                   {failure.errorCode ? <Badge variant="warning">{failure.errorCode}</Badge> : null}
                 </Flex>
               </Flex>
-            </Card>
+            </SettingsSectionInset>
           ))}
         </Stack>
       )}
-    </Stack>
+    </SettingsSectionInset>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function OAuthStatTile({ label, value }: { label: string; value: string }) {
   return (
-    <Card>
-      <CardBody>
-        <Stack align="center" gap="xs">
-          <Typography variant="h3">{value}</Typography>
-          <Typography variant="caption">{label}</Typography>
-        </Stack>
-      </CardBody>
-    </Card>
+    <SettingsSectionInset padding="md">
+      <Stack align="center" gap="xs">
+        <Typography variant="h3">{value}</Typography>
+        <Typography variant="caption">{label}</Typography>
+      </Stack>
+    </SettingsSectionInset>
   );
 }
 

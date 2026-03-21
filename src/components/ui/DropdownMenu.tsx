@@ -11,6 +11,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Check, ChevronRight, Circle } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { OverlayDescription, OverlayFooter, OverlayHeader, OverlayTitle } from "./OverlayChrome";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 
@@ -101,15 +102,33 @@ const DropdownMenuItem = React.forwardRef<
     icon?: React.ReactNode;
   } & VariantProps<typeof dropdownMenuItemVariants>
 >(({ className, inset, variant, icon, children, asChild, ...props }, ref) => {
-  const itemChildren =
-    icon && !asChild ? (
+  const iconSlot = icon ? (
+    <span className="mr-2 inline-flex shrink-0 items-center text-current">{icon}</span>
+  ) : null;
+
+  let itemChildren = children;
+
+  if (iconSlot && asChild) {
+    const onlyChild = React.Children.only(children);
+    if (React.isValidElement<{ className?: string; children?: React.ReactNode }>(onlyChild)) {
+      itemChildren = React.cloneElement(onlyChild, {
+        className: cn("flex items-center", onlyChild.props.className),
+        children: (
+          <>
+            {iconSlot}
+            {onlyChild.props.children}
+          </>
+        ),
+      });
+    }
+  } else if (iconSlot) {
+    itemChildren = (
       <>
-        <span className="mr-2 inline-flex shrink-0 items-center text-current">{icon}</span>
+        {iconSlot}
         {children}
       </>
-    ) : (
-      children
     );
+  }
 
   return (
     <DropdownMenuPrimitive.Item
@@ -189,6 +208,34 @@ const DropdownMenuLabel = React.forwardRef<
 ));
 DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
 
+function DropdownMenuHeader({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof OverlayHeader>) {
+  return <OverlayHeader surface="dropdown" className={className} {...props} />;
+}
+
+function DropdownMenuFooter({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof OverlayFooter>) {
+  return <OverlayFooter surface="dropdown" className={className} {...props} />;
+}
+
+function DropdownMenuDescription({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof OverlayDescription>) {
+  return <OverlayDescription surface="dropdown" className={className} {...props} />;
+}
+
+function DropdownMenuHeaderTitle({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof OverlayTitle>) {
+  return <OverlayTitle surface="dropdown" className={className} {...props} />;
+}
+
 const DropdownMenuSeparator = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
@@ -216,7 +263,11 @@ export {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuHeader,
+  DropdownMenuHeaderTitle,
   DropdownMenuCheckboxItem,
+  DropdownMenuDescription,
+  DropdownMenuFooter,
   DropdownMenuRadioItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,

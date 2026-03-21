@@ -10,10 +10,15 @@ import { api } from "@convex/_generated/api";
 import { useEffect, useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Building2 } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
+import {
+  SettingsSection,
+  SettingsSectionInset,
+  SettingsSectionRow,
+} from "../Settings/SettingsSection";
 import { Button } from "../ui/Button";
-import { Card, CardBody, CardHeader } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form";
 import { Label } from "../ui/Label";
@@ -101,57 +106,66 @@ export function OrganizationSettings() {
 
   if (!formData) {
     return (
-      <Card>
-        <CardBody>
-          <Flex justify="center" align="center" className="min-h-32">
-            <LoadingSpinner />
-          </Flex>
-        </CardBody>
-      </Card>
+      <SettingsSection
+        title="Organization Settings"
+        description="Configure organization identity, default time policy, and billing behavior."
+        icon={Building2}
+      >
+        <Flex justify="center" align="center" className="min-h-32">
+          <LoadingSpinner />
+        </Flex>
+      </SettingsSection>
     );
   }
 
   return (
-    <Flex direction="column" gap="xl">
-      {/* Header */}
-      <Stack gap="xs">
-        <Typography variant="h2">Organization Settings</Typography>
-        <Typography variant="small" color="secondary">
-          Configure settings for {organizationName}
-        </Typography>
-      </Stack>
-
-      {/* General Settings */}
-      <Card>
-        <CardHeader title="General" description="Basic information about your organization" />
-        <CardBody>
-          <Stack gap="lg">
-            <Stack gap="xs">
-              <Label htmlFor="orgName">Organization Name</Label>
-              <Input
-                id="orgName"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Acme Corp"
-                className="max-w-md"
-              />
-              <Typography variant="caption" color="secondary">
-                Changing your organization name will also update your URL slug
-              </Typography>
-            </Stack>
+    <SettingsSection
+      title="Organization Settings"
+      description={`Configure settings for ${organizationName}.`}
+      icon={Building2}
+      action={
+        <Flex gap="sm" wrap>
+          {hasChanges ? (
+            <Button variant="secondary" onClick={handleReset} disabled={isSubmitting}>
+              Reset
+            </Button>
+          ) : null}
+          <Button
+            onClick={handleSave}
+            isLoading={isSubmitting}
+            disabled={!hasChanges}
+            data-testid={TEST_IDS.SETTINGS.SAVE_BUTTON}
+          >
+            Save Changes
+          </Button>
+        </Flex>
+      }
+    >
+      <Stack gap="md">
+        <SettingsSectionInset
+          title="General"
+          description="Basic information about your organization."
+        >
+          <Stack gap="xs">
+            <Label htmlFor="orgName">Organization Name</Label>
+            <Input
+              id="orgName"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Acme Corp"
+              className="max-w-md"
+            />
+            <Typography variant="caption" color="secondary">
+              Changing your organization name will also update your URL slug.
+            </Typography>
           </Stack>
-        </CardBody>
-      </Card>
+        </SettingsSectionInset>
 
-      {/* Time Tracking Settings */}
-      <Card>
-        <CardHeader
+        <SettingsSectionInset
           title="Time Tracking"
-          description="Configure default time tracking settings for your organization"
-        />
-        <CardBody>
+          description="Default time-tracking policy for new members and projects."
+        >
           <Stack gap="lg">
-            {/* Default Max Hours Per Week */}
             <Stack gap="xs">
               <Label htmlFor="maxHoursPerWeek">Default Max Hours Per Week</Label>
               <Input
@@ -166,11 +180,10 @@ export function OrganizationSettings() {
                 className="max-w-30"
               />
               <Typography variant="caption" color="secondary">
-                Maximum hours a team member can log per week
+                Maximum hours a team member can log per week.
               </Typography>
             </Stack>
 
-            {/* Default Max Hours Per Day */}
             <Stack gap="xs">
               <Label htmlFor="maxHoursPerDay">Default Max Hours Per Day</Label>
               <Input
@@ -185,74 +198,44 @@ export function OrganizationSettings() {
                 className="max-w-30"
               />
               <Typography variant="caption" color="secondary">
-                Maximum hours a team member can log per day
+                Maximum hours a team member can log per day.
               </Typography>
             </Stack>
 
-            {/* Requires Time Approval */}
-            <Flex align="center" justify="between">
-              <Stack gap="none">
-                <Typography variant="label">Require Time Approval</Typography>
-                <Typography variant="small" color="secondary">
-                  Time entries must be approved by a manager before being finalized
-                </Typography>
-              </Stack>
-              <Switch
-                checked={formData.requiresTimeApproval}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, requiresTimeApproval: checked })
-                }
-                aria-label="Require time approval"
-                data-testid={TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH}
-              />
-            </Flex>
+            <SettingsSectionRow
+              title="Require Time Approval"
+              description="Time entries must be approved by a manager before being finalized."
+              action={
+                <Switch
+                  checked={formData.requiresTimeApproval}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, requiresTimeApproval: checked })
+                  }
+                  aria-label="Require time approval"
+                  data-testid={TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH}
+                />
+              }
+            />
           </Stack>
-        </CardBody>
-      </Card>
+        </SettingsSectionInset>
 
-      {/* Billing Settings */}
-      <Card>
-        <CardHeader
+        <SettingsSectionInset
           title="Billing & Invoicing"
-          description="Configure billing features for your organization"
-        />
-        <CardBody>
-          <Stack gap="lg">
-            {/* Billing Enabled */}
-            <Flex align="center" justify="between">
-              <Stack gap="none">
-                <Typography variant="label">Enable Billing Features</Typography>
-                <Typography variant="small" color="secondary">
-                  Allow team members to mark time entries as billable. When disabled, the billable
-                  checkbox will be hidden from time entry forms.
-                </Typography>
-              </Stack>
+          description="Organization-wide billing defaults."
+        >
+          <SettingsSectionRow
+            title="Enable Billing Features"
+            description="Allow team members to mark time entries as billable. When disabled, the billable checkbox will be hidden from time entry forms."
+            action={
               <Switch
                 checked={formData.billingEnabled}
                 onCheckedChange={(checked) => setFormData({ ...formData, billingEnabled: checked })}
                 aria-label="Enable billing features"
               />
-            </Flex>
-          </Stack>
-        </CardBody>
-      </Card>
-
-      {/* Save Button */}
-      <Flex gap="md">
-        <Button
-          onClick={handleSave}
-          isLoading={isSubmitting}
-          disabled={!hasChanges}
-          data-testid={TEST_IDS.SETTINGS.SAVE_BUTTON}
-        >
-          Save Changes
-        </Button>
-        {hasChanges && (
-          <Button variant="secondary" onClick={handleReset} disabled={isSubmitting}>
-            Reset
-          </Button>
-        )}
-      </Flex>
-    </Flex>
+            }
+          />
+        </SettingsSectionInset>
+      </Stack>
+    </SettingsSection>
   );
 }

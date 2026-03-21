@@ -17,14 +17,15 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card, CardHeader } from "../ui/Card";
+import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
-import { Flex, FlexItem } from "../ui/Flex";
+import { Flex } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -32,6 +33,7 @@ import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
 import { Stack } from "../ui/Stack";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
+import { SettingsSection, SettingsSectionInset, SettingsSectionRow } from "./SettingsSection";
 
 /**
  * API Key Type (inferred from backend)
@@ -54,49 +56,43 @@ export function ApiKeysManager() {
   const [selectedKeyId, setSelectedKeyId] = useState<Id<"apiKeys"> | null>(null);
 
   return (
-    <Card padding="lg" data-testid={TEST_IDS.SETTINGS.API_KEYS_SECTION}>
-      <Stack gap="lg">
-        <CardHeader
-          action={
-            <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
-              <Flex gap="sm" align="center">
-                <Plus className="h-4 w-4" />
-                Generate Key
-              </Flex>
-            </Button>
-          }
-          title={
-            <Flex gap="sm" align="center">
-              <Key className="h-5 w-5" />
-              <span>API Keys</span>
-            </Flex>
-          }
-          description="Generate API keys for CLI tools, AI agents, and external integrations"
+    <SettingsSection
+      title="API Keys"
+      description="Generate API keys for CLI tools, AI agents, and external integrations."
+      icon={Key}
+      action={
+        <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
+          <Icon icon={Plus} size="sm" />
+          Generate Key
+        </Button>
+      }
+      data-testid={TEST_IDS.SETTINGS.API_KEYS_SECTION}
+    >
+      {!apiKeys || apiKeys.length === 0 ? (
+        <EmptyState
+          icon={Key}
+          title="No API keys yet"
+          description="Generate your first API key to access Nixelo programmatically."
+          action={{
+            label: "Generate Your First Key",
+            onClick: () => setShowGenerateModal(true),
+          }}
+          variant="info"
         />
+      ) : (
+        <Stack gap="lg">
+          {apiKeys.map((key) => (
+            <ApiKeyCard key={key.id} apiKey={key} onViewStats={() => setSelectedKeyId(key.id)} />
+          ))}
+        </Stack>
+      )}
 
-        {/* API Keys List */}
-        {!apiKeys || apiKeys.length === 0 ? (
-          <EmptyState
-            icon={Key}
-            title="No API keys yet"
-            description="Generate your first API key to access Nixelo programmatically."
-            action={{
-              label: "Generate Your First Key",
-              onClick: () => setShowGenerateModal(true),
-            }}
-            variant="info"
-          />
-        ) : (
-          <Stack gap="lg">
-            {apiKeys.map((key) => (
-              <ApiKeyCard key={key.id} apiKey={key} onViewStats={() => setSelectedKeyId(key.id)} />
-            ))}
-          </Stack>
-        )}
-
-        {/* Documentation Link */}
+      <SettingsSectionInset
+        title="Need help?"
+        description="Review the API docs for auth, scopes, and integration examples."
+      >
         <Alert variant="info">
-          <AlertTitle>Need help?</AlertTitle>
+          <AlertTitle>API Documentation</AlertTitle>
           <AlertDescription>
             Check out the{" "}
             <Button asChild variant="link" size="none">
@@ -107,7 +103,7 @@ export function ApiKeysManager() {
             for usage examples and integration guides.
           </AlertDescription>
         </Alert>
-      </Stack>
+      </SettingsSectionInset>
 
       {/* Generate Key Modal */}
       <GenerateKeyModal open={showGenerateModal} onOpenChange={setShowGenerateModal} />
@@ -118,7 +114,7 @@ export function ApiKeysManager() {
         onOpenChange={(open) => !open && setSelectedKeyId(null)}
         keyId={selectedKeyId}
       />
-    </Card>
+    </SettingsSection>
   );
 }
 
@@ -163,76 +159,15 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
   };
 
   return (
-    <Card padding="md" variant="flat">
-      <Flex justify="between" align="start">
-        <FlexItem flex="1">
-          <Stack gap="sm">
-            {/* Name & Status */}
-            <Flex gap="sm" align="center">
-              <Typography variant="label">{apiKey.name}</Typography>
-              {apiKey.isActive ? (
-                <Badge variant="success">Active</Badge>
-              ) : (
-                <Badge variant="error">Revoked</Badge>
-              )}
-            </Flex>
-
-            {/* Key Prefix */}
-            <Flex gap="sm" align="center">
-              <Typography variant="inlineCode">{apiKey.keyPrefix}...</Typography>
-              <Tooltip content="Copy key prefix">
-                <IconButton
-                  onClick={copyKeyPrefix}
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Copy key prefix"
-                >
-                  <Copy className="h-4 w-4" />
-                </IconButton>
-              </Tooltip>
-            </Flex>
-
-            {/* Scopes */}
-            <Flex wrap gap="xs">
-              {apiKey.scopes.map((scope: string) => (
-                <Badge key={scope} variant="brand" size="sm">
-                  {scope}
-                </Badge>
-              ))}
-            </Flex>
-
-            {/* Stats */}
-            <Metadata size="xs" gap="md">
-              <MetadataItem>
-                <Typography as="strong" variant="strong">
-                  {apiKey.usageCount}
-                </Typography>{" "}
-                API calls
-              </MetadataItem>
-              <MetadataItem>
-                <Typography as="strong" variant="strong">
-                  {apiKey.rateLimit}
-                </Typography>{" "}
-                req/min
-              </MetadataItem>
-              {apiKey.lastUsedAt && (
-                <MetadataItem>
-                  Last used: <MetadataTimestamp date={apiKey.lastUsedAt} format="absolute" />
-                </MetadataItem>
-              )}
-              {apiKey.expiresAt && (
-                <MetadataItem
-                  className={apiKey.expiresAt < Date.now() ? "text-status-error" : undefined}
-                >
-                  Expires: <MetadataTimestamp date={apiKey.expiresAt} format="absolute" />
-                </MetadataItem>
-              )}
-            </Metadata>
-          </Stack>
-        </FlexItem>
-
-        {/* Actions */}
+    <SettingsSectionInset
+      title={apiKey.name}
+      action={
         <Flex gap="sm" align="center" className="ml-4">
+          {apiKey.isActive ? (
+            <Badge variant="success">Active</Badge>
+          ) : (
+            <Badge variant="error">Revoked</Badge>
+          )}
           <Tooltip content="View usage statistics">
             <IconButton
               onClick={onViewStats}
@@ -240,7 +175,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
               size="sm"
               aria-label="View usage statistics"
             >
-              <TrendingUp className="h-4 w-4" />
+              <Icon icon={TrendingUp} size="sm" />
             </IconButton>
           </Tooltip>
           {apiKey.isActive && (
@@ -261,12 +196,72 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
               size="sm"
               aria-label="Delete key"
             >
-              <Trash2 className="h-4 w-4" />
+              <Icon icon={Trash2} size="sm" />
             </IconButton>
           </Tooltip>
         </Flex>
-      </Flex>
+      }
+    >
+      <Stack gap="md">
+        <SettingsSectionRow
+          title="Key prefix"
+          description={
+            <Typography variant="inlineCode" className="break-all">
+              {apiKey.keyPrefix}...
+            </Typography>
+          }
+          action={
+            <Tooltip content="Copy key prefix">
+              <IconButton
+                onClick={copyKeyPrefix}
+                variant="ghost"
+                size="sm"
+                aria-label="Copy key prefix"
+              >
+                <Icon icon={Copy} size="sm" />
+              </IconButton>
+            </Tooltip>
+          }
+        />
 
+        <Stack gap="sm">
+          <Typography variant="label">Scopes</Typography>
+          <Flex wrap gap="xs">
+            {apiKey.scopes.map((scope: string) => (
+              <Badge key={scope} variant="brand" size="sm">
+                {scope}
+              </Badge>
+            ))}
+          </Flex>
+        </Stack>
+
+        <Metadata size="xs" gap="md">
+          <MetadataItem>
+            <Typography as="strong" variant="strong">
+              {apiKey.usageCount}
+            </Typography>{" "}
+            API calls
+          </MetadataItem>
+          <MetadataItem>
+            <Typography as="strong" variant="strong">
+              {apiKey.rateLimit}
+            </Typography>{" "}
+            req/min
+          </MetadataItem>
+          {apiKey.lastUsedAt && (
+            <MetadataItem>
+              Last used: <MetadataTimestamp date={apiKey.lastUsedAt} format="absolute" />
+            </MetadataItem>
+          )}
+          {apiKey.expiresAt && (
+            <MetadataItem
+              className={apiKey.expiresAt < Date.now() ? "text-status-error" : undefined}
+            >
+              Expires: <MetadataTimestamp date={apiKey.expiresAt} format="absolute" />
+            </MetadataItem>
+          )}
+        </Metadata>
+      </Stack>
       <ConfirmDialog
         isOpen={revokeConfirmOpen}
         onClose={() => setRevokeConfirmOpen(false)}
@@ -286,7 +281,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
         variant="danger"
         confirmLabel="Delete"
       />
-    </Card>
+    </SettingsSectionInset>
   );
 }
 
@@ -324,6 +319,21 @@ function GenerateKeyModal({
     );
   };
 
+  const resetGenerateState = () => {
+    setName("");
+    setSelectedScopes(["issues:read"]);
+    setRateLimit(100);
+    setGeneratedKey(null);
+    setIsGenerating(false);
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange(nextOpen);
+    if (!nextOpen) {
+      resetGenerateState();
+    }
+  };
+
   const handleGenerate = async () => {
     if (!name.trim()) {
       showError("Please enter a name for this API key");
@@ -356,16 +366,15 @@ function GenerateKeyModal({
     if (generatedKey) {
       navigator.clipboard.writeText(generatedKey);
       showSuccess("API key copied to clipboard!");
-      onOpenChange(false);
+      handleOpenChange(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Generate API Key" size="lg">
+    <Dialog open={open} onOpenChange={handleOpenChange} title="Generate API Key" size="lg">
       <Stack gap="lg">
         {!generatedKey ? (
           <>
-            {/* Key Name */}
             <Input
               label="Key Name *"
               type="text"
@@ -375,8 +384,10 @@ function GenerateKeyModal({
               helperText="A descriptive name to help you identify this key"
             />
 
-            {/* Scopes */}
-            <Stack gap="sm">
+            <SettingsSectionInset
+              title="Permissions (Scopes)"
+              description="Choose the minimum scopes needed for this client or automation."
+            >
               <Label required>Permissions (Scopes)</Label>
               <Stack gap="sm" className="max-h-64 overflow-y-auto">
                 {availableScopes.map((scope) => (
@@ -402,9 +413,8 @@ function GenerateKeyModal({
                   </label>
                 ))}
               </Stack>
-            </Stack>
+            </SettingsSectionInset>
 
-            {/* Rate Limit */}
             <Input
               label="Rate Limit (requests per minute)"
               type="number"
@@ -415,71 +425,64 @@ function GenerateKeyModal({
               helperText="Maximum number of API requests allowed per minute (default: 100)"
             />
 
-            {/* Actions */}
-            <Card padding="sm" variant="flat">
+            <SettingsSectionInset>
               <Flex justify="end" gap="sm">
-                <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                <Button variant="secondary" onClick={() => handleOpenChange(false)}>
                   Cancel
                 </Button>
                 <Button variant="primary" onClick={handleGenerate} disabled={isGenerating}>
                   {isGenerating ? "Generating..." : "Generate API Key"}
                 </Button>
               </Flex>
-            </Card>
+            </SettingsSectionInset>
           </>
         ) : (
-          <>
-            {/* Success - Show Generated Key */}
-            <Stack gap="lg" align="center" className="text-center">
-              <Badge variant="success" shape="pill">
-                API Key Ready
-              </Badge>
-              <Stack gap="sm" align="center">
-                <Typography variant="h3">API Key Generated!</Typography>
-                <Alert variant="warning" className="w-full text-left">
-                  <AlertTitle>Save this key now</AlertTitle>
-                  <AlertDescription>
-                    You won't be able to see it again after closing this dialog.
-                  </AlertDescription>
-                </Alert>
-              </Stack>
-
-              {/* Generated Key Display */}
-              <Card padding="md" variant="flat" className="w-full">
-                <Typography variant="inlineCode" color="success" className="break-all select-all">
-                  {generatedKey}
-                </Typography>
-              </Card>
-
-              {/* Copy Instructions */}
-              <Alert variant="info" className="w-full text-left">
-                <Stack gap="sm">
-                  <AlertTitle>Usage Example</AlertTitle>
-                  <Card padding="xs" radius="md" variant="ghost">
-                    <Typography variant="inlineCode" className="block">
-                      curl -H "Authorization: Bearer {generatedKey.substring(0, 20)}..."
-                      https://nixelo.app/api/issues
-                    </Typography>
-                  </Card>
-                </Stack>
+          <Stack gap="lg" align="center" className="text-center">
+            <Badge variant="success" shape="pill">
+              API Key Ready
+            </Badge>
+            <Stack gap="sm" align="center">
+              <Typography variant="h3">API Key Generated!</Typography>
+              <Alert variant="warning" className="w-full text-left">
+                <AlertTitle>Save this key now</AlertTitle>
+                <AlertDescription>
+                  You won't be able to see it again after closing this dialog.
+                </AlertDescription>
               </Alert>
-
-              {/* Actions */}
-              <Card padding="sm" variant="flat" className="w-full">
-                <Flex justify="end" gap="sm">
-                  <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                    I've Saved It
-                  </Button>
-                  <Button variant="primary" onClick={copyAndClose}>
-                    <Flex justify="center" gap="sm" align="center">
-                      <Copy className="h-4 w-4" />
-                      Copy & Close
-                    </Flex>
-                  </Button>
-                </Flex>
-              </Card>
             </Stack>
-          </>
+
+            <SettingsSectionInset title="Generated key" className="w-full">
+              <Typography variant="inlineCode" color="success" className="break-all select-all">
+                {generatedKey}
+              </Typography>
+            </SettingsSectionInset>
+
+            <Alert variant="info" className="w-full text-left">
+              <Stack gap="sm">
+                <AlertTitle>Usage Example</AlertTitle>
+                <Card padding="xs" radius="md" variant="ghost">
+                  <Typography variant="inlineCode" className="block">
+                    curl -H "Authorization: Bearer {generatedKey.substring(0, 20)}..."
+                    https://nixelo.app/api/issues
+                  </Typography>
+                </Card>
+              </Stack>
+            </Alert>
+
+            <SettingsSectionInset className="w-full">
+              <Flex justify="end" gap="sm">
+                <Button variant="secondary" onClick={() => handleOpenChange(false)}>
+                  I've Saved It
+                </Button>
+                <Button variant="primary" onClick={copyAndClose}>
+                  <Flex justify="center" gap="sm" align="center">
+                    <Icon icon={Copy} size="sm" />
+                    Copy & Close
+                  </Flex>
+                </Button>
+              </Flex>
+            </SettingsSectionInset>
+          </Stack>
         )}
       </Stack>
     </Dialog>
@@ -513,17 +516,16 @@ function UsageStatsModal({
       }
     >
       {!stats ? (
-        <Card padding="lg" variant="flat">
+        <SettingsSectionInset>
           <Flex direction="column" gap="sm" align="center" justify="center" className="min-h-32">
             <LoadingSpinner size="lg" />
             <Typography variant="small" color="tertiary">
               Loading statistics...
             </Typography>
           </Flex>
-        </Card>
+        </SettingsSectionInset>
       ) : (
         <Stack gap="lg">
-          {/* Overview Stats */}
           <Grid cols={2} colsSm={4} gap="lg">
             <Card padding="md" variant="flat">
               <Stack gap="xs">
@@ -556,9 +558,7 @@ function UsageStatsModal({
             </Card>
           </Grid>
 
-          {/* Recent Requests */}
-          <Stack gap="sm">
-            <Typography variant="label">Recent Requests</Typography>
+          <SettingsSectionInset title="Recent Requests">
             {stats.recentLogs.length === 0 ? (
               <Card padding="md" variant="flat">
                 <Flex justify="center">
@@ -595,7 +595,7 @@ function UsageStatsModal({
                 ))}
               </Stack>
             )}
-          </Stack>
+          </SettingsSectionInset>
         </Stack>
       )}
     </Dialog>

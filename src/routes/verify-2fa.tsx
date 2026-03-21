@@ -91,7 +91,7 @@ function Verify2FARoute() {
       <Card className="w-full max-w-md p-8">
         <Flex direction="column" align="center" gap="lg">
           <IconCircle size="lg" variant="brand">
-            <Icon icon={ShieldCheck} size="xl" className="text-brand" />
+            <Icon icon={ShieldCheck} size="xl" tone="brand" />
           </IconCircle>
 
           <div className="text-center">

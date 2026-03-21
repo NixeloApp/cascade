@@ -25,7 +25,6 @@ import {
 } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
@@ -37,93 +36,76 @@ import { SkeletonText } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
+import { SettingsSection, SettingsSectionRow } from "./SettingsSection";
 
-/** Reusable preference toggle row */
-interface PreferenceRowProps {
-  icon: LucideIcon;
-  label: string;
-  description: string;
-  checked: boolean;
-  isDisabled: boolean;
-  onChange: (value: boolean) => void;
-  isLast?: boolean;
+type EmailPreferenceField =
+  | "emailEnabled"
+  | "emailMentions"
+  | "emailAssignments"
+  | "emailComments"
+  | "emailStatusChanges"
+  | "quietHoursEnabled";
+
+type PushPreferenceField =
+  | "pushMentions"
+  | "pushAssignments"
+  | "pushComments"
+  | "pushStatusChanges";
+
+type DigestValue = "none" | "daily" | "weekly";
+
+function isDigestValue(value: string): value is DigestValue {
+  return value === "none" || value === "daily" || value === "weekly";
 }
 
-function PreferenceRow({
-  icon,
-  label,
-  description,
+interface NotificationToggleCardProps {
+  checked: boolean;
+  description: string;
+  icon: LucideIcon;
+  isDisabled: boolean;
+  label: string;
+  onChange: (value: boolean) => void;
+}
+
+function NotificationToggleCard({
   checked,
+  description,
+  icon,
   isDisabled,
+  label,
   onChange,
-  isLast = false,
-}: PreferenceRowProps) {
+}: NotificationToggleCardProps) {
   return (
-    <div className={cn("p-3", !isLast && "border-b border-ui-border-secondary")}>
-      <Flex align="start" justify="between">
-        <FlexItem flex="1">
-          <Flex align="center" gap="sm">
-            <Icon icon={icon} size="md" />
-            <Typography variant="label">{label}</Typography>
-          </Flex>
-          <Typography variant="caption" className="mt-1">
-            {description}
-          </Typography>
-        </FlexItem>
-        <Switch
-          checked={checked}
-          onCheckedChange={onChange}
-          disabled={isDisabled}
-          className="ml-4"
-        />
-      </Flex>
-    </div>
+    <Card variant="section" padding="sm">
+      <SettingsSectionRow
+        title={label}
+        description={description}
+        icon={icon}
+        action={<Switch checked={checked} onCheckedChange={onChange} disabled={isDisabled} />}
+      />
+    </Card>
   );
 }
 
-/** Push notification preference toggle (smaller) */
-interface PushPreferenceRowProps {
-  icon: LucideIcon;
-  label: string;
-  checked: boolean;
-  isDisabled: boolean;
-  onChange: (value: boolean) => void;
-}
-
-function PushPreferenceRow({ icon, label, checked, isDisabled, onChange }: PushPreferenceRowProps) {
-  return (
-    <div className="p-2">
-      <Flex align="center" justify="between">
-        <Flex align="center" gap="sm">
-          <Icon icon={icon} size="sm" />
-          <Typography variant="small">{label}</Typography>
-        </Flex>
-        <Switch checked={checked} onCheckedChange={onChange} disabled={isDisabled} />
-      </Flex>
-    </div>
-  );
-}
-
-/** Digest option card */
 interface DigestOptionCardProps {
-  value: "none" | "daily" | "weekly";
-  label: string;
-  description: string;
   checked: boolean;
+  description: string;
   isDisabled: boolean;
+  label: string;
   onChange: () => void;
+  value: DigestValue;
 }
 
 function DigestOptionCard({
-  value,
-  label,
-  description,
   checked,
+  description,
   isDisabled,
+  label,
   onChange,
+  value,
 }: DigestOptionCardProps) {
   return (
-    <Card padding="sm" hoverable variant={checked ? "outline" : "ghost"}>
+    <Card padding="sm" hoverable variant={checked ? "outline" : "section"}>
       <RadioGroupItem
         value={value}
         label={label}
@@ -135,23 +117,123 @@ function DigestOptionCard({
   );
 }
 
-/** Push notifications card with browser support detection */
-function PushNotificationsCard({
-  isSupported,
-  vapidKey,
+function PushNotificationsUnavailable({ icon, message }: { icon: LucideIcon; message: string }) {
+  return (
+    <Alert variant="info">
+      <AlertTitle>Push notifications unavailable</AlertTitle>
+      <AlertDescription>
+        <Flex align="start" gap="sm">
+          <Icon icon={icon} size="sm" tone="info" className="mt-0.5 shrink-0" />
+          <Typography variant="small">{message}</Typography>
+        </Flex>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function PushNotificationsBlocked() {
+  return (
+    <Alert variant="warning">
+      <AlertTitle>Browser notifications blocked</AlertTitle>
+      <AlertDescription>
+        <Typography variant="small">
+          Notification permission is denied for this site. Re-enable notifications in your browser
+          settings to receive push alerts.
+        </Typography>
+        <div className="mt-3">
+          <Button variant="secondary" size="sm" disabled>
+            Blocked
+          </Button>
+        </div>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function PushNotificationsPreferences({
+  isSaving,
   isSubscribed,
-  isPushLoading,
+  onPushToggle,
+  pushPreferences,
+}: {
+  isSaving: boolean;
+  isSubscribed: boolean;
+  onPushToggle: (field: PushPreferenceField, value: boolean) => void;
+  pushPreferences:
+    | {
+        pushMentions: boolean;
+        pushAssignments: boolean;
+        pushComments: boolean;
+        pushStatusChanges: boolean;
+      }
+    | undefined;
+}) {
+  if (!isSubscribed) {
+    return (
+      <Typography variant="small" color="secondary">
+        Enable browser notifications to manage device-specific alert types here.
+      </Typography>
+    );
+  }
+
+  if (!pushPreferences) {
+    return (
+      <Card variant="section" padding="sm">
+        <SkeletonText lines={2} />
+      </Card>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      <Typography variant="small" color="secondary">
+        Choose which notification types should interrupt this browser.
+      </Typography>
+      <NotificationToggleCard
+        icon={AtSign}
+        label="Mentions"
+        description="Receive push alerts when you are mentioned in issue or document activity."
+        checked={pushPreferences.pushMentions}
+        onChange={(value) => onPushToggle("pushMentions", value)}
+        isDisabled={isSaving}
+      />
+      <NotificationToggleCard
+        icon={User}
+        label="Assignments"
+        description="Receive push alerts when work is assigned directly to you."
+        checked={pushPreferences.pushAssignments}
+        onChange={(value) => onPushToggle("pushAssignments", value)}
+        isDisabled={isSaving}
+      />
+      <NotificationToggleCard
+        icon={MessageSquare}
+        label="Comments"
+        description="Receive push alerts when new comments land on work you are involved in."
+        checked={pushPreferences.pushComments}
+        onChange={(value) => onPushToggle("pushComments", value)}
+        isDisabled={isSaving}
+      />
+      <NotificationToggleCard
+        icon={RefreshCw}
+        label="Status Changes"
+        description="Receive push alerts when tracked issues move or change status."
+        checked={pushPreferences.pushStatusChanges}
+        onChange={(value) => onPushToggle("pushStatusChanges", value)}
+        isDisabled={isSaving}
+      />
+    </Stack>
+  );
+}
+
+function getPushNotificationsCardState({
+  isSubscribed,
+  isSupported,
   permission,
   pushPreferences,
-  isSaving,
-  onSubscribe,
-  onUnsubscribe,
-  onPushToggle,
+  vapidKey,
 }: {
-  isSupported: boolean;
-  vapidKey: string | undefined;
   isSubscribed: boolean;
-  isPushLoading: boolean;
+  isSupported: boolean;
   permission: NotificationPermission;
   pushPreferences:
     | {
@@ -161,133 +243,291 @@ function PushNotificationsCard({
         pushStatusChanges: boolean;
       }
     | undefined;
-  isSaving: boolean;
-  onSubscribe: () => void;
-  onUnsubscribe: () => void;
-  onPushToggle: (field: string, value: boolean) => void;
-}) {
-  const renderContent = () => {
-    if (!isSupported) {
-      return (
-        <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
-          <Flex align="center" gap="sm">
-            <Icon icon={BellOff} size="md" className="text-ui-text-tertiary" />
-            <Typography variant="caption">
-              Push notifications are not supported in this browser. Try using Chrome, Edge, or
-              Firefox.
-            </Typography>
-          </Flex>
-        </div>
-      );
-    }
-
-    if (!vapidKey) {
-      return (
-        <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
-          <Flex align="center" gap="sm">
-            <Icon icon={Info} size="md" className="text-ui-text-tertiary" />
-            <Typography variant="caption">
-              Push notifications require server configuration. Contact your administrator.
-            </Typography>
-          </Flex>
-        </div>
-      );
-    }
-
-    if (permission === "denied" && !isSubscribed) {
-      return (
-        <Alert variant="warning">
-          <AlertTitle>Browser notifications blocked</AlertTitle>
-          <AlertDescription>
-            <Typography variant="small">
-              Notification permission is denied for this site. Re-enable notifications in your
-              browser settings to receive push alerts.
-            </Typography>
-            <div className="mt-3">
-              <Button variant="secondary" size="sm" disabled>
-                Blocked
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      );
-    }
-
-    return (
-      <>
-        <Flex align="start" justify="between" className="mb-4">
-          <FlexItem flex="1">
-            <Typography variant="label">Browser Notifications</Typography>
-            <Typography variant="caption" className="mt-1">
-              Receive real-time notifications in your browser, even when Nixelo isn't open.
-            </Typography>
-          </FlexItem>
-          <Button
-            variant={isSubscribed ? "secondary" : "primary"}
-            size="sm"
-            onClick={isSubscribed ? onUnsubscribe : onSubscribe}
-            isLoading={isPushLoading}
-            className="ml-4"
-            leftIcon={
-              !isPushLoading ? <Icon icon={isSubscribed ? BellOff : Bell} size="sm" /> : undefined
+  vapidKey: string | undefined;
+}): {
+  content:
+    | { icon: LucideIcon; kind: "unavailable"; message: string }
+    | { kind: "blocked" }
+    | {
+        kind: "preferences";
+        pushPreferences:
+          | {
+              pushMentions: boolean;
+              pushAssignments: boolean;
+              pushComments: boolean;
+              pushStatusChanges: boolean;
             }
-          >
-            {isSubscribed ? "Disable" : "Enable"}
-          </Button>
-        </Flex>
+          | undefined;
+      };
+  showAction: boolean;
+} {
+  if (!isSupported) {
+    return {
+      content: {
+        kind: "unavailable",
+        icon: BellOff,
+        message:
+          "Push notifications are not supported in this browser. Try using Chrome, Edge, or Firefox.",
+      },
+      showAction: false,
+    };
+  }
 
-        {isSubscribed && pushPreferences && (
-          <Stack gap="sm" className="pt-4 border-t border-ui-border-secondary">
-            <Typography variant="small" color="secondary">
-              Choose which notifications you want to receive:
-            </Typography>
-            <PushPreferenceRow
-              icon={AtSign}
-              label="Mentions"
-              checked={pushPreferences.pushMentions}
-              onChange={(value) => onPushToggle("pushMentions", value)}
-              isDisabled={isSaving}
-            />
-            <PushPreferenceRow
-              icon={User}
-              label="Assignments"
-              checked={pushPreferences.pushAssignments}
-              onChange={(value) => onPushToggle("pushAssignments", value)}
-              isDisabled={isSaving}
-            />
-            <PushPreferenceRow
-              icon={MessageSquare}
-              label="Comments"
-              checked={pushPreferences.pushComments}
-              onChange={(value) => onPushToggle("pushComments", value)}
-              isDisabled={isSaving}
-            />
-            <PushPreferenceRow
-              icon={RefreshCw}
-              label="Status Changes"
-              checked={pushPreferences.pushStatusChanges}
-              onChange={(value) => onPushToggle("pushStatusChanges", value)}
-              isDisabled={isSaving}
-            />
-          </Stack>
-        )}
-      </>
-    );
+  if (!vapidKey) {
+    return {
+      content: {
+        kind: "unavailable",
+        icon: Info,
+        message: "Push notifications require server configuration. Contact your administrator.",
+      },
+      showAction: false,
+    };
+  }
+
+  if (permission === "denied" && !isSubscribed) {
+    return {
+      content: { kind: "blocked" },
+      showAction: false,
+    };
+  }
+
+  return {
+    content: {
+      kind: "preferences",
+      pushPreferences,
+    },
+    showAction: true,
   };
+}
+
+function PushNotificationsCardContent({
+  cardState,
+  isSaving,
+  isSubscribed,
+  onPushToggle,
+}: {
+  cardState: ReturnType<typeof getPushNotificationsCardState>;
+  isSaving: boolean;
+  isSubscribed: boolean;
+  onPushToggle: (field: PushPreferenceField, value: boolean) => void;
+}) {
+  if (cardState.content.kind === "unavailable") {
+    return (
+      <PushNotificationsUnavailable
+        icon={cardState.content.icon}
+        message={cardState.content.message}
+      />
+    );
+  }
+
+  if (cardState.content.kind === "blocked") {
+    return <PushNotificationsBlocked />;
+  }
 
   return (
-    <Card padding="lg">
-      <Stack gap="md">
-        <Flex align="center" gap="sm">
-          <Icon icon={Smartphone} size="lg" className="text-brand" />
-          <Typography variant="h5">Push Notifications</Typography>
-          <Badge variant="info" size="sm">
-            PWA
-          </Badge>
+    <PushNotificationsPreferences
+      isSaving={isSaving}
+      isSubscribed={isSubscribed}
+      onPushToggle={onPushToggle}
+      pushPreferences={cardState.content.pushPreferences}
+    />
+  );
+}
+
+function PushNotificationsActionButton({
+  cardState,
+  isActionLoading,
+  isSubscribed,
+  onSubscribe,
+  onUnsubscribe,
+}: {
+  cardState: ReturnType<typeof getPushNotificationsCardState>;
+  isActionLoading: boolean;
+  isSubscribed: boolean;
+  onSubscribe: () => void;
+  onUnsubscribe: () => void;
+}) {
+  if (!cardState.showAction) {
+    return undefined;
+  }
+
+  return (
+    <Button
+      variant={isSubscribed ? "secondary" : "primary"}
+      size="sm"
+      onClick={isSubscribed ? onUnsubscribe : onSubscribe}
+      isLoading={isActionLoading}
+      leftIcon={
+        !isActionLoading ? <Icon icon={isSubscribed ? BellOff : Bell} size="sm" /> : undefined
+      }
+    >
+      {isSubscribed ? "Disable" : "Enable"}
+    </Button>
+  );
+}
+
+function PushNotificationsCard({
+  isPushLoading,
+  isSaving,
+  isSubscribed,
+  isSupported,
+  onPushToggle,
+  onSubscribe,
+  onUnsubscribe,
+  permission,
+  pushPreferences,
+  vapidKey,
+}: {
+  isPushLoading: boolean;
+  isSaving: boolean;
+  isSubscribed: boolean;
+  isSupported: boolean;
+  onPushToggle: (field: PushPreferenceField, value: boolean) => void;
+  onSubscribe: () => void;
+  onUnsubscribe: () => void;
+  permission: NotificationPermission;
+  pushPreferences:
+    | {
+        pushMentions: boolean;
+        pushAssignments: boolean;
+        pushComments: boolean;
+        pushStatusChanges: boolean;
+      }
+    | undefined;
+  vapidKey: string | undefined;
+}) {
+  const cardState = getPushNotificationsCardState({
+    isSubscribed,
+    isSupported,
+    permission,
+    pushPreferences,
+    vapidKey,
+  });
+  const isActionLoading = isSaving || isPushLoading;
+
+  return (
+    <SettingsSection
+      title="Push Notifications"
+      description="Receive real-time browser alerts even when Nixelo is not focused."
+      icon={Smartphone}
+      titleAdornment={
+        <Badge variant="info" size="sm">
+          PWA
+        </Badge>
+      }
+      action={
+        <PushNotificationsActionButton
+          cardState={cardState}
+          isActionLoading={isActionLoading}
+          isSubscribed={isSubscribed}
+          onSubscribe={onSubscribe}
+          onUnsubscribe={onUnsubscribe}
+        />
+      }
+    >
+      <PushNotificationsCardContent
+        cardState={cardState}
+        isSaving={isSaving}
+        isSubscribed={isSubscribed}
+        onPushToggle={onPushToggle}
+      />
+    </SettingsSection>
+  );
+}
+
+function QuietHoursRange({
+  isSaving,
+  onTimeChange,
+  quietHoursEnd,
+  quietHoursStart,
+}: {
+  isSaving: boolean;
+  onTimeChange: (field: "quietHoursStart" | "quietHoursEnd", value: string) => void;
+  quietHoursEnd: string;
+  quietHoursStart: string;
+}) {
+  return (
+    <Card variant="section" padding="md">
+      <Stack gap="sm">
+        <Typography variant="label">Delivery window</Typography>
+        <Flex direction="column" gap="sm" directionSm="row" alignSm="end">
+          <FlexItem flex="1">
+            <Input
+              label="Start time"
+              type="time"
+              value={quietHoursStart}
+              onChange={(event) => onTimeChange("quietHoursStart", event.target.value)}
+              disabled={isSaving}
+            />
+          </FlexItem>
+          <Typography variant="small" color="secondary" className="pb-0 sm:pb-2">
+            to
+          </Typography>
+          <FlexItem flex="1">
+            <Input
+              label="End time"
+              type="time"
+              value={quietHoursEnd}
+              onChange={(event) => onTimeChange("quietHoursEnd", event.target.value)}
+              disabled={isSaving}
+            />
+          </FlexItem>
         </Flex>
-        {renderContent()}
+        <Typography variant="caption" color="secondary">
+          Default: 10:00 PM to 8:00 AM in your local timezone
+        </Typography>
       </Stack>
     </Card>
+  );
+}
+
+function NotificationsLoadingState() {
+  return (
+    <Stack gap="lg">
+      <Card padding="lg">
+        <Stack gap="md">
+          <SkeletonText lines={2} />
+          <Card variant="section" padding="sm">
+            <SkeletonText lines={1} />
+          </Card>
+          <Card variant="section" padding="sm">
+            <SkeletonText lines={1} />
+          </Card>
+        </Stack>
+      </Card>
+      <Card padding="lg">
+        <Stack gap="md">
+          <SkeletonText lines={2} />
+          <Card variant="section" padding="sm">
+            <SkeletonText lines={1} />
+          </Card>
+          <Card variant="section" padding="sm">
+            <SkeletonText lines={1} />
+          </Card>
+          <Card variant="section" padding="sm">
+            <SkeletonText lines={1} />
+          </Card>
+        </Stack>
+      </Card>
+    </Stack>
+  );
+}
+
+function NotificationDeliveryNote() {
+  return (
+    <SettingsSection
+      title="Delivery Requirements"
+      description="Email delivery depends on server-side provider configuration."
+      icon={Info}
+      iconTone="info"
+      variant="soft"
+      padding="md"
+    >
+      <Typography variant="small" color="secondary">
+        Email notifications require Resend API configuration. If messages are not arriving, ask your
+        administrator to finish the email delivery setup for this workspace.
+      </Typography>
+    </SettingsSection>
   );
 }
 
@@ -303,7 +543,6 @@ export function NotificationsTab() {
   );
   const [isSaving, setIsSaving] = useState(false);
 
-  // Web Push hook
   const vapidKey = getVapidPublicKey();
   const {
     isSupported,
@@ -315,27 +554,10 @@ export function NotificationsTab() {
   } = useWebPush();
 
   if (!preferences) {
-    return (
-      <Card padding="lg">
-        <Stack gap="md">
-          <SkeletonText lines={2} />
-          <Stack gap="sm">
-            <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-3">
-              <SkeletonText lines={1} />
-            </div>
-            <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-3">
-              <SkeletonText lines={1} />
-            </div>
-            <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-3">
-              <SkeletonText lines={1} />
-            </div>
-          </Stack>
-        </Stack>
-      </Card>
-    );
+    return <NotificationsLoadingState />;
   }
 
-  const handleToggle = async (field: string, value: boolean) => {
+  const handleToggle = async (field: EmailPreferenceField, value: boolean) => {
     setIsSaving(true);
     try {
       await updatePreferences({ [field]: value });
@@ -347,7 +569,7 @@ export function NotificationsTab() {
     }
   };
 
-  const handleDigestChange = async (digest: "none" | "daily" | "weekly") => {
+  const handleDigestChange = async (digest: DigestValue) => {
     setIsSaving(true);
     try {
       await updatePreferences({ emailDigest: digest });
@@ -374,7 +596,7 @@ export function NotificationsTab() {
     }
   };
 
-  const handlePushToggle = async (field: string, value: boolean) => {
+  const handlePushToggle = async (field: PushPreferenceField, value: boolean) => {
     setIsSaving(true);
     try {
       await updatePushPreferences({ [field]: value });
@@ -389,196 +611,141 @@ export function NotificationsTab() {
   return (
     <Stack gap="lg" data-testid={TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION}>
       <PushNotificationsCard
-        isSupported={isSupported}
-        vapidKey={vapidKey}
-        isSubscribed={isSubscribed}
         isPushLoading={isPushLoading}
+        isSaving={isSaving}
+        isSubscribed={isSubscribed}
+        isSupported={isSupported}
+        onPushToggle={handlePushToggle}
+        onSubscribe={() => void subscribe()}
+        onUnsubscribe={() => void unsubscribe()}
         permission={permission}
         pushPreferences={pushPreferences}
-        isSaving={isSaving}
-        onSubscribe={subscribe}
-        onUnsubscribe={unsubscribe}
-        onPushToggle={handlePushToggle}
+        vapidKey={vapidKey}
       />
 
-      {/* Master Toggle */}
-      <Card padding="lg">
-        <Flex align="start" justify="between">
-          <FlexItem flex="1">
-            <Typography variant="h5">Email Notifications</Typography>
-            <Typography variant="caption" className="mt-1">
-              Master switch for all email notifications. Turn this off to stop receiving all emails.
-            </Typography>
-          </FlexItem>
+      <SettingsSection
+        title="Email Notifications"
+        description="Control whether email delivery is active before tuning event types below."
+        icon={Bell}
+        action={
           <Switch
             checked={preferences.emailEnabled}
-            onCheckedChange={(value) => handleToggle("emailEnabled", value)}
+            onCheckedChange={(value) => void handleToggle("emailEnabled", value)}
             disabled={isSaving}
-            className="ml-4"
           />
-        </Flex>
-      </Card>
+        }
+      >
+        <Typography variant="small" color="secondary">
+          Turn this off to stop all individual email notifications and digests for this account.
+        </Typography>
+      </SettingsSection>
 
-      {/* Individual Notification Types */}
-      <Card padding="lg">
-        <Stack gap="md">
-          <Typography variant="h5">Notification Types</Typography>
-
-          <Stack gap="md">
-            <PreferenceRow
-              icon={AtSign}
-              label="Mentions"
-              description="When someone @mentions you in a comment or description"
-              checked={preferences.emailMentions}
-              onChange={(value) => handleToggle("emailMentions", value)}
-              isDisabled={isSaving || !preferences.emailEnabled}
-            />
-            <PreferenceRow
-              icon={User}
-              label="Assignments"
-              description="When you are assigned to an issue"
-              checked={preferences.emailAssignments}
-              onChange={(value) => handleToggle("emailAssignments", value)}
-              isDisabled={isSaving || !preferences.emailEnabled}
-            />
-            <PreferenceRow
-              icon={MessageSquare}
-              label="Comments"
-              description="When someone comments on your issues"
-              checked={preferences.emailComments}
-              onChange={(value) => handleToggle("emailComments", value)}
-              isDisabled={isSaving || !preferences.emailEnabled}
-            />
-            <PreferenceRow
-              icon={RefreshCw}
-              label="Status Changes"
-              description="When issue status changes on issues you're watching"
-              checked={preferences.emailStatusChanges}
-              onChange={(value) => handleToggle("emailStatusChanges", value)}
-              isDisabled={isSaving || !preferences.emailEnabled}
-              isLast
-            />
-          </Stack>
+      <SettingsSection
+        title="Notification Types"
+        description="Choose which events should send email when delivery is enabled."
+      >
+        <Stack gap="sm">
+          <NotificationToggleCard
+            icon={AtSign}
+            label="Mentions"
+            description="When someone @mentions you in a comment or description."
+            checked={preferences.emailMentions}
+            onChange={(value) => void handleToggle("emailMentions", value)}
+            isDisabled={isSaving || !preferences.emailEnabled}
+          />
+          <NotificationToggleCard
+            icon={User}
+            label="Assignments"
+            description="When work is assigned directly to you."
+            checked={preferences.emailAssignments}
+            onChange={(value) => void handleToggle("emailAssignments", value)}
+            isDisabled={isSaving || !preferences.emailEnabled}
+          />
+          <NotificationToggleCard
+            icon={MessageSquare}
+            label="Comments"
+            description="When someone comments on issues you are participating in."
+            checked={preferences.emailComments}
+            onChange={(value) => void handleToggle("emailComments", value)}
+            isDisabled={isSaving || !preferences.emailEnabled}
+          />
+          <NotificationToggleCard
+            icon={RefreshCw}
+            label="Status Changes"
+            description="When watched issues move or change workflow state."
+            checked={preferences.emailStatusChanges}
+            onChange={(value) => void handleToggle("emailStatusChanges", value)}
+            isDisabled={isSaving || !preferences.emailEnabled}
+          />
         </Stack>
-      </Card>
+      </SettingsSection>
 
-      {/* Digest Emails */}
-      <Card padding="lg">
-        <Stack gap="md">
-          <Stack gap="xs">
-            <Typography variant="h5">Email Digests</Typography>
-            <Typography variant="caption">
-              Receive a summary of activity instead of individual emails
-            </Typography>
-          </Stack>
+      <SettingsSection
+        title="Email Digests"
+        description="Bundle updates into a recap instead of sending each event separately."
+      >
+        <RadioGroup
+          value={preferences.emailDigest}
+          onValueChange={(value) => {
+            if (isDigestValue(value)) {
+              void handleDigestChange(value);
+            }
+          }}
+          disabled={isSaving || !preferences.emailEnabled}
+        >
+          <DigestOptionCard
+            value="none"
+            label="No digest"
+            description="Receive emails as events happen."
+            checked={preferences.emailDigest === "none"}
+            onChange={() => void handleDigestChange("none")}
+            isDisabled={isSaving || !preferences.emailEnabled}
+          />
+          <DigestOptionCard
+            value="daily"
+            label="Daily digest"
+            description="One recap per day with recent activity."
+            checked={preferences.emailDigest === "daily"}
+            onChange={() => void handleDigestChange("daily")}
+            isDisabled={isSaving || !preferences.emailEnabled}
+          />
+          <DigestOptionCard
+            value="weekly"
+            label="Weekly digest"
+            description="One recap per week with recent activity."
+            checked={preferences.emailDigest === "weekly"}
+            onChange={() => void handleDigestChange("weekly")}
+            isDisabled={isSaving || !preferences.emailEnabled}
+          />
+        </RadioGroup>
+      </SettingsSection>
 
-          <Stack gap="sm">
-            <RadioGroup
-              value={preferences.emailDigest}
-              onValueChange={(value) => handleDigestChange(value as "none" | "daily" | "weekly")}
-              disabled={isSaving || !preferences.emailEnabled}
-            >
-              <DigestOptionCard
-                value="none"
-                label="No digest"
-                description="Receive emails as events happen"
-                checked={preferences.emailDigest === "none"}
-                onChange={() => handleDigestChange("none")}
-                isDisabled={isSaving || !preferences.emailEnabled}
-              />
-              <DigestOptionCard
-                value="daily"
-                label="Daily digest"
-                description="One email per day with all activity (coming soon)"
-                checked={preferences.emailDigest === "daily"}
-                onChange={() => handleDigestChange("daily")}
-                isDisabled={isSaving || !preferences.emailEnabled}
-              />
-              <DigestOptionCard
-                value="weekly"
-                label="Weekly digest"
-                description="One email per week with all activity (coming soon)"
-                checked={preferences.emailDigest === "weekly"}
-                onChange={() => handleDigestChange("weekly")}
-                isDisabled={isSaving || !preferences.emailEnabled}
-              />
-            </RadioGroup>
-          </Stack>
-        </Stack>
-      </Card>
+      <SettingsSection
+        title="Quiet Hours"
+        description="Pause email delivery during a predictable time window."
+        icon={Moon}
+        action={
+          <Switch
+            checked={preferences.quietHoursEnabled ?? false}
+            onCheckedChange={(value) => void handleToggle("quietHoursEnabled", value)}
+            disabled={isSaving}
+          />
+        }
+      >
+        <Typography variant="small" color="secondary">
+          Notifications that arrive during quiet hours are delivered once the window ends.
+        </Typography>
+        {preferences.quietHoursEnabled ? (
+          <QuietHoursRange
+            isSaving={isSaving}
+            onTimeChange={(field, value) => void handleQuietHoursTimeChange(field, value)}
+            quietHoursEnd={preferences.quietHoursEnd ?? "08:00"}
+            quietHoursStart={preferences.quietHoursStart ?? "22:00"}
+          />
+        ) : null}
+      </SettingsSection>
 
-      {/* Quiet Hours */}
-      <Card padding="lg">
-        <Stack gap="md">
-          <Flex align="start" justify="between">
-            <FlexItem flex="1">
-              <Flex align="center" gap="sm">
-                <Icon icon={Moon} size="lg" className="text-brand" />
-                <Typography variant="h5">Quiet Hours</Typography>
-              </Flex>
-              <Typography variant="caption" className="mt-1">
-                Pause notifications during specific hours. Notifications will be delivered when
-                quiet hours end.
-              </Typography>
-            </FlexItem>
-            <Switch
-              checked={preferences.quietHoursEnabled ?? false}
-              onCheckedChange={(value) => handleToggle("quietHoursEnabled", value)}
-              disabled={isSaving}
-              className="ml-4"
-            />
-          </Flex>
-
-          {preferences.quietHoursEnabled && (
-            <Stack gap="sm" className="pt-4 border-t border-ui-border-secondary">
-              <Flex gap="md" align="end">
-                <FlexItem flex="1">
-                  <Input
-                    label="Start time"
-                    type="time"
-                    value={preferences.quietHoursStart ?? "22:00"}
-                    onChange={(e) => handleQuietHoursTimeChange("quietHoursStart", e.target.value)}
-                    disabled={isSaving}
-                  />
-                </FlexItem>
-                <Typography variant="small" color="secondary" className="pb-2">
-                  to
-                </Typography>
-                <FlexItem flex="1">
-                  <Input
-                    label="End time"
-                    type="time"
-                    value={preferences.quietHoursEnd ?? "08:00"}
-                    onChange={(e) => handleQuietHoursTimeChange("quietHoursEnd", e.target.value)}
-                    disabled={isSaving}
-                  />
-                </FlexItem>
-              </Flex>
-              <Typography variant="caption" color="secondary">
-                Default: 10:00 PM to 8:00 AM in your local timezone
-              </Typography>
-            </Stack>
-          )}
-        </Stack>
-      </Card>
-
-      {/* Help Text */}
-      <Card padding="md" className="bg-brand-subtle border-brand-border">
-        <Flex gap="md">
-          <Icon icon={Info} size="md" className="text-brand" />
-          <FlexItem flex="1">
-            <Stack gap="xs">
-              <Typography variant="label" className="text-brand-active">
-                Email Configuration
-              </Typography>
-              <Typography variant="caption" className="text-brand-active">
-                Email notifications require Resend API configuration. If you're not receiving
-                emails, contact your administrator to set up email notifications.
-              </Typography>
-            </Stack>
-          </FlexItem>
-        </Flex>
-      </Card>
+      <NotificationDeliveryNote />
     </Stack>
   );
 }

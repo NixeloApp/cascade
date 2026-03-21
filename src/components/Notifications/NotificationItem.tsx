@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Dot";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon as AppIcon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
@@ -57,22 +58,22 @@ interface NotificationItemProps {
 function getNotificationIcon(type: string) {
   switch (type) {
     case "issue_assigned":
-      return <User className="w-5 h-5 text-brand" />;
+      return <AppIcon icon={User} size="md" tone="brand" />;
     case "issue_mentioned":
-      return <MessageCircle className="w-5 h-5 text-accent" />;
+      return <AppIcon icon={MessageCircle} size="md" tone="accent" />;
     case "issue_commented":
-      return <MessageSquare className="w-5 h-5 text-accent" />;
+      return <AppIcon icon={MessageSquare} size="md" tone="accent" />;
     case "issue_status_changed":
-      return <RefreshCw className="w-5 h-5 text-status-info" />;
+      return <AppIcon icon={RefreshCw} size="md" tone="info" />;
     case "sprint_started":
-      return <Rocket className="w-5 h-5 text-status-success" />;
+      return <AppIcon icon={Rocket} size="md" tone="success" />;
     case "sprint_ended":
-      return <Flag className="w-5 h-5 text-status-warning" />;
+      return <AppIcon icon={Flag} size="md" tone="warning" />;
     case "document_shared":
     case "document_mentioned":
-      return <FileText className="w-5 h-5 text-brand" />;
+      return <AppIcon icon={FileText} size="md" tone="brand" />;
     default:
-      return <Bell className="w-5 h-5 text-ui-text-tertiary" />;
+      return <AppIcon icon={Bell} size="md" tone="tertiary" />;
   }
 }
 
@@ -198,7 +199,7 @@ export function NotificationItem({
                 }}
                 aria-label="Mark as read"
               >
-                <Check className="h-3.5 w-3.5" />
+                <AppIcon icon={Check} size="xsPlus" />
               </IconButton>
             </Tooltip>
           )}
@@ -213,7 +214,7 @@ export function NotificationItem({
                     onClick={(e) => e.stopPropagation()}
                     aria-label="Snooze notification"
                   >
-                    <Clock className="h-3.5 w-3.5" />
+                    <AppIcon icon={Clock} size="xsPlus" />
                   </IconButton>
                 </PopoverTrigger>
               </Tooltip>
@@ -254,7 +255,7 @@ export function NotificationItem({
               }}
               aria-label="Archive notification"
             >
-              <Archive className="h-3.5 w-3.5" />
+              <AppIcon icon={Archive} size="xsPlus" />
             </IconButton>
           </Tooltip>
           <Tooltip content="Delete">
@@ -268,7 +269,7 @@ export function NotificationItem({
               }}
               aria-label="Delete notification"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <AppIcon icon={Trash2} size="xsPlus" />
             </IconButton>
           </Tooltip>
         </Flex>

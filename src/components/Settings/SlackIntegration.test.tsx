@@ -1,22 +1,24 @@
 import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useMutation, useQuery } from "convex/react";
+import type { ReactMutation } from "convex/react";
+import type { FunctionReference } from "convex/server";
+import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { render, screen, waitFor } from "@/test/custom-render";
 
 const mockConnectSlack = Object.assign(vi.fn(), {
-  withOptimisticUpdate: vi.fn(),
-});
+  withOptimisticUpdate: vi.fn().mockReturnThis(),
+}) as Mock & ReactMutation<FunctionReference<"mutation">>;
 const mockDisconnectSlack = Object.assign(vi.fn(), {
-  withOptimisticUpdate: vi.fn(),
-});
-const mockUseMutation = vi.mocked(useMutation);
-const mockUseQuery = vi.mocked(useQuery);
+  withOptimisticUpdate: vi.fn().mockReturnThis(),
+}) as Mock & ReactMutation<FunctionReference<"mutation">>;
+const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
+const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 
-vi.mock("convex/react", () => ({
-  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
-  useMutation: vi.fn(),
-  useQuery: vi.fn(),
+vi.mock("@/hooks/useConvexHelpers", () => ({
+  useAuthenticatedMutation: vi.fn(),
+  useAuthenticatedQuery: vi.fn(),
 }));
 
 vi.mock("@/lib/toast", () => ({
@@ -29,10 +31,19 @@ import { SlackIntegration } from "./SlackIntegration";
 describe("SlackIntegration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseQuery.mockReturnValue(null);
-    mockUseMutation.mockReturnValueOnce(mockConnectSlack).mockReturnValueOnce(mockDisconnectSlack);
-    mockConnectSlack.mockResolvedValue({ success: true });
-    mockDisconnectSlack.mockResolvedValue({ success: true });
+    let mutationCall = 0;
+    const mutationResults = [
+      { mutate: mockConnectSlack, canAct: true, isAuthLoading: false },
+      { mutate: mockDisconnectSlack, canAct: true, isAuthLoading: false },
+    ];
+    mockUseAuthenticatedMutation.mockImplementation(() => {
+      const result = mutationResults[mutationCall % mutationResults.length];
+      mutationCall += 1;
+      return result;
+    });
+    mockUseAuthenticatedQuery.mockReturnValue(null);
+    mockConnectSlack.mockResolvedValue(undefined);
+    mockDisconnectSlack.mockResolvedValue(undefined);
     vi.spyOn(window, "open").mockReturnValue(null);
   });
 
@@ -97,6 +108,19 @@ describe("SlackIntegration", () => {
     });
 
     await waitFor(() => expect(mockConnectSlack).not.toHaveBeenCalled());
+  });
+
+  it("renders the connected state summary", () => {
+    mockUseAuthenticatedQuery.mockReturnValue({
+      teamName: "Nixelo Team",
+      hasIncomingWebhook: true,
+    });
+
+    render(<SlackIntegration />);
+
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.getByText("Nixelo Team")).toBeInTheDocument();
+    expect(screen.getByText("Incoming webhook: Enabled")).toBeInTheDocument();
   });
 
   it("ignores malformed slack-connected payload from allowed origin", async () => {

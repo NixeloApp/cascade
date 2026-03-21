@@ -51,14 +51,19 @@ describe("FocusZone", () => {
 
     render(<FocusZone task={task} />);
 
-    expect(screen.getByText("Focus Item")).toBeInTheDocument();
+    expect(screen.getByText("Focus item")).toBeInTheDocument();
     expect(screen.getByText("Highest-impact next step")).toBeInTheDocument();
     expect(screen.getByText("HIGH")).toBeInTheDocument();
     expect(screen.getByText("Ship focused onboarding improvements")).toBeInTheDocument();
     expect(screen.getByText("APP-42")).toBeInTheDocument();
     expect(screen.getByText("In Progress")).toBeInTheDocument();
     expect(screen.getByText("App Shell")).toBeInTheDocument();
-    expect(screen.getByText("View task")).toBeInTheDocument();
+    expect(screen.getByText("Open board")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Keep the highest-impact task moving before lower-priority work dilutes the week.",
+      ),
+    ).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: "Focus task: Ship focused onboarding improvements" }),

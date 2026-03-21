@@ -20,6 +20,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { ResponsiveText } from "../ui/ResponsiveText";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
@@ -186,7 +187,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                 onClick={handlePrevious}
                 aria-label={`Previous ${getTimeScaleLabel()}`}
               >
-                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Icon icon={ChevronLeft} size="sm" className="sm:size-5" />
               </IconButton>
               <IconButton
                 variant="ghost"
@@ -194,7 +195,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                 onClick={handleNext}
                 aria-label={`Next ${getTimeScaleLabel()}`}
               >
-                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Icon icon={ChevronRight} size="sm" className="sm:size-5" />
               </IconButton>
             </Flex>
             <Typography variant="h2" className="truncate">

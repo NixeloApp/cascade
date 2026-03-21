@@ -8,12 +8,15 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRef, useState } from "react";
+import { Lock } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
+import { AuthFlowIntro } from "./AuthFlowIntro";
 import { AuthLinkButton } from "./AuthLink";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
@@ -66,17 +69,20 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
   };
 
   return (
-    <div className="w-full">
-      <Typography variant="authTitle" className="mb-4">
-        Enter reset code
-      </Typography>
-      <Typography variant="authBody" className="mb-4">
-        We sent a code to{" "}
-        <Typography as="strong" variant="strong">
-          {email}
-        </Typography>
-        . Enter it below with your new password.
-      </Typography>
+    <Stack gap="lg">
+      <AuthFlowIntro
+        icon={Lock}
+        title="Enter reset code"
+        description={
+          <>
+            We sent a code to{" "}
+            <Typography as="strong" variant="strong">
+              {email}
+            </Typography>
+            . Enter it below with your new password.
+          </>
+        }
+      />
       <form ref={formRef} onSubmit={handleSubmit}>
         <Flex direction="column" gap="md">
           <Input
@@ -99,19 +105,20 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
             onChange={(e) => setNewPassword(e.target.value)}
             data-testid={TEST_IDS.AUTH.RESET_PASSWORD_INPUT}
           />
-          <PasswordStrengthIndicator password={newPassword} className="-mt-2" />
+          <PasswordStrengthIndicator password={newPassword} />
           <Button
             type="submit"
             size="lg"
             className="w-full"
             disabled={submitting}
+            isLoading={submitting}
             data-testid={TEST_IDS.AUTH.RESET_SUBMIT_BUTTON}
           >
-            {submitting ? "Resetting..." : "Reset password"}
+            Reset password
           </Button>
           <AuthLinkButton onClick={onRetry}>Didn't receive a code? Try again</AuthLinkButton>
         </Flex>
       </form>
-    </div>
+    </Stack>
   );
 }

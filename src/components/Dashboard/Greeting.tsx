@@ -1,5 +1,4 @@
 import { Badge } from "../ui/Badge";
-import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -19,17 +18,21 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
   const firstName = userName?.split(" ")[0] || "there";
 
   return (
-    <Stack gap="sm" className="mb-8">
-      <Badge variant="commandCenter" size="md" shape="pill" className="w-fit">
-        <Flex align="center" gap="sm">
-          <Dot />
-          <Typography variant="eyebrowWide">Command Center</Typography>
-        </Flex>
-      </Badge>
-      <Typography variant="dashboardHeroTitle" className="max-w-4xl">
+    <Stack gap="sm" className="max-w-4xl">
+      <Flex align="center" gap="sm" wrap>
+        <Badge variant="neutral" size="sm" shape="pill">
+          Today
+        </Badge>
+        <Typography variant="small" color="secondary">
+          {completedCount > 0
+            ? `${completedCount} ${completedCount === 1 ? "task" : "tasks"} completed this week`
+            : "Command overview"}
+        </Typography>
+      </Flex>
+      <Typography variant="h2" className="max-w-3xl text-balance">
         {greeting}, <span className="text-brand">{firstName}</span>.
       </Typography>
-      <Typography variant="lead" color="secondary" className="max-w-3xl text-balance">
+      <Typography variant="small" color="secondary" className="max-w-2xl text-balance">
         {completedCount > 0 ? (
           <>
             You closed{" "}

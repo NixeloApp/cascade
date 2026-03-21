@@ -1,16 +1,6 @@
 # Nixelo Todo — MVP
 
-> **Last Updated:** 2026-03-19
-
-## Health
-
-| Metric | Value |
-|--------|-------|
-| Validators | 38/47 pass (9 failing, all from MeetingsWorkspace + minor) |
-| Bundle | 337KB gzip |
-| Screenshots | 226 in manifest, 37 are loading spinners (16.4% broken) |
-| Raw TW baseline | 148 files with violations |
-| CVA definitions | 48 files (38 in ui/, 10 in features) |
+> **Last Updated:** 2026-03-20
 
 ---
 
@@ -18,49 +8,45 @@
 
 Work is ordered as a pipeline -- each phase unblocks the next. AI will fix these in order.
 
-### Phase 1: Fix Current Failures
+### Phase 1: Tighten Styling Rules
 
-Get validators back to green. Fix the code, not the validators.
-
-| Order | File | What |
-|-------|------|------|
-| 1.1 | [meeting-intelligence.md](./meeting-intelligence.md) | Fix 55 validator violations in MeetingsWorkspace.tsx, add screenshots/spec folder, add E2E tests |
-| 1.2 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Absorb 43 Typography drift + 17 control-chrome drift points |
-
-### Phase 2: Strengthen Validators
-
-Make it impossible to ship slop. Advisory validators become blocking. New validators catch patterns we missed.
+Make CVA usage and raw Tailwind rules stricter first, so the next cleanup passes do not reintroduce slop.
+Default to Tailwind for static feature/page layout, reserve `cva()` for shared primitive semantics, and keep `index.css` for tokens/global utilities/shared effects instead of section-specific dumping grounds.
 
 | Order | File | What |
 |-------|------|------|
-| 2.1 | [validator-strengthening.md](./validator-strengthening.md) | Promote 3 advisory validators to blocking/ratchet, add manifest integrity + catch-swallow + timeout validators |
+| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | Tighten CVA boundaries, tighten raw Tailwind rules, and reduce remaining styling escape hatches |
+| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | Make the stricter styling rules enforceable so new slop cannot land, and keep the validator suite itself maintainable as it grows |
 
-### Phase 3: Fix Screenshot Tooling
+### Phase 2: Screenshot-Driven Cleanup
 
-Fix the capture infra so screenshots are real content, not loading spinners.
-
-| Order | File | What |
-|-------|------|------|
-| 3.1 | [screenshot-tooling-cleanup.md](./screenshot-tooling-cleanup.md) | Kill 198 `.catch(() => {})`, fix 37 spinner captures, replace hardcoded timeouts, use TEST_IDS |
-
-### Phase 4: Tailwind / CVA Consolidation
-
-Reduce raw Tailwind, consolidate CVA sprawl, add validators to prevent regression.
+Use screenshots as the review surface, fix obviously broken states, and turn visual weirdness into explicit cleanup items.
+Main-page/landing cleanup belongs here too: if the marketing surface is inconsistent or looks unlike the actual product, treat that as product-quality debt, not decoration.
+This phase also owns screenshot-matrix completeness: page specs should not silently stay desktop-first, and important feature states should not be left uncaptured just because the canonical route screenshot looks acceptable.
 
 | Order | File | What |
 |-------|------|------|
-| 4.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | Reduce 148 raw TW files, consolidate 48 CVA files, merge overlapping variants, add validators for CVA sprawl and class cluster repetition |
+| 2.1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Fix screenshot-exposed inconsistencies, broken states, cross-surface visual drift, and missing tablet/mobile + feature-state screenshot coverage |
+| 2.2 | [meeting-intelligence.md](./meeting-intelligence.md) | Finish meetings visual QA and build meeting-to-doc now that editor persistence/save wiring is closed |
 
-### Phase 5: Feature & Docs Expansion
+### Phase 3: Finish Validator Paydown
+
+Keep the stricter validator regime, but pay off the remaining debt so ratchets and baselines can be removed.
+
+| Order | File | What |
+|-------|------|------|
+| 3.1 | [validator-strengthening.md](./validator-strengthening.md) | Retire temporary ratchets as debt hits zero and close the remaining standards/query-filter cleanup |
+
+### Phase 4: Feature & Docs Expansion
 
 Lower priority -- features and documentation that don't block quality.
 
 | Order | File | What |
 |-------|------|------|
-| 5.1 | [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page spec folders missing CURRENT / IMPLEMENTATION / TARGET docs |
-| 5.2 | [plane-features.md](./plane-features.md) | Gantt polish, intake/triage, deploy boards, stickies, analytics, automation, multi-provider AI, page versions |
-| 5.3 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation reasons (backend done, no UI), workflow translation, custom domain/SMTP, branding |
-| 5.4 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
+| 4.1 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Missing page-spec doc triplets plus missing current-feature coverage/state docs for shipped surfaces |
+| 4.2 | [plane-features.md](./plane-features.md) | Gantt polish, intake/triage, deploy boards, stickies, analytics, automation, multi-provider AI, page versions |
+| 4.3 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation reasons (backend done, no UI), workflow translation, custom domain/SMTP, branding |
+| 4.4 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
 
 ### Meeting Intelligence (parallel track)
 
@@ -68,7 +54,7 @@ Non-code-quality items from meetings that run alongside the pipeline.
 
 | File | What |
 |------|------|
-| [meeting-intelligence.md](./meeting-intelligence.md) | Editor persistence (blocks meeting-to-doc), capture strategy decisions, platform breadth, OSS evaluation, agent layer |
+| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc, capture strategy, platform breadth, OSS evaluation, agent layer |
 
 ---
 

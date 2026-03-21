@@ -9,9 +9,10 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Eye } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
@@ -68,15 +69,15 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
       {/* Watchers List */}
       {watchers && watchers.length > 0 && (
         <Stack gap="sm">
-          <Typography variant="label">Watchers ({watchers.length})</Typography>
+          <Typography variant="meta" color="secondary">
+            {watchers.length} watcher{watchers.length === 1 ? "" : "s"}
+          </Typography>
           <Stack gap="sm">
             {watchers.map((watcher: Watcher) => (
-              <Card padding="sm" key={watcher._id} className="bg-ui-bg-secondary">
+              <InsetPanel key={watcher._id} size="compact">
                 <Flex align="center" gap="md">
-                  {/* Avatar */}
                   <Avatar name={watcher.userName} size="md" />
 
-                  {/* User Info */}
                   <FlexItem flex="1" className="min-w-0">
                     <Typography variant="label" className="truncate">
                       {watcher.userName}
@@ -88,7 +89,7 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
                     )}
                   </FlexItem>
                 </Flex>
-              </Card>
+              </InsetPanel>
             ))}
           </Stack>
         </Stack>
@@ -96,9 +97,14 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
 
       {/* Empty State */}
       {watchers && watchers.length === 0 && (
-        <Typography variant="small" color="secondary" className="text-center">
-          No watchers yet. Be the first to watch this issue!
-        </Typography>
+        <EmptyState
+          icon={Eye}
+          title="No watchers yet"
+          description="Followers will appear here when people subscribe to this issue."
+          size="compact"
+          align="start"
+          surface="bare"
+        />
       )}
     </Stack>
   );

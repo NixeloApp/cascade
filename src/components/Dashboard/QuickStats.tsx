@@ -6,8 +6,8 @@
  * Includes progress indicators and loading skeletons.
  */
 
-import { cn } from "@/lib/utils";
-import { Card } from "../ui/Card";
+import { useId } from "react";
+import { Card, type CardProps } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Progress } from "../ui/Progress";
@@ -30,49 +30,82 @@ interface StatCardProps {
   title: string;
   value: number;
   subtitle: string;
-  variant: "brand" | "success" | "accent";
+  recipe: NonNullable<CardProps["recipe"]>;
+  valueClassName?: string;
+  titleClassName?: string;
+  progressIndicatorClassName?: string;
   progressValue?: number;
+  valueVariant?: "dashboardStatValue" | "dashboardStatValueStrong";
+}
+interface StatCardConfig {
+  title: string;
+  statKey: keyof Stats;
+  subtitle: string;
+  recipe: NonNullable<CardProps["recipe"]>;
+  valueClassName?: string;
+  titleClassName?: string;
+  progressIndicatorClassName?: string;
+  valueVariant?: "dashboardStatValue" | "dashboardStatValueStrong";
 }
 
-const variantStyles = {
-  brand: {
-    text: "text-brand",
-    bg: "bg-brand",
-    glow: "from-brand-subtle/35",
+const STAT_CARD_CONFIGS: readonly StatCardConfig[] = [
+  {
+    title: "Active Load",
+    statKey: "assignedToMe",
+    subtitle: "Assigned tasks",
+    recipe: "metricTile",
+    valueClassName: "text-brand",
   },
-  success: {
-    text: "text-status-success",
-    bg: "bg-status-success",
-    glow: "from-status-success/15",
+  {
+    title: "Velocity",
+    statKey: "completedThisWeek",
+    subtitle: "Done this week",
+    recipe: "metricTileSuccess",
+    valueClassName: "text-status-success",
+    progressIndicatorClassName: "bg-status-success",
   },
-  accent: {
-    text: "text-accent",
-    bg: "bg-accent",
-    glow: "from-accent/15",
+  {
+    title: "Attention Needed",
+    statKey: "highPriority",
+    subtitle: "High Priority",
+    recipe: "metricTileWarning",
+    valueClassName: "text-status-warning",
+    titleClassName: "text-status-warning",
+    valueVariant: "dashboardStatValueStrong",
   },
-} as const;
+  {
+    title: "Contribution",
+    statKey: "createdByMe",
+    subtitle: "Reported issues",
+    recipe: "metricTileAccent",
+    valueClassName: "text-accent",
+  },
+] as const;
 
 /**
  * Individual stat card component
  */
-function StatCard({ title, value, subtitle, variant, progressValue }: StatCardProps) {
-  const styles = variantStyles[variant];
+function StatCard({
+  title,
+  value,
+  subtitle,
+  recipe,
+  titleClassName,
+  valueClassName,
+  progressIndicatorClassName,
+  progressValue,
+  valueVariant = "dashboardStatValue",
+}: StatCardProps) {
+  const progressId = useId();
 
   return (
-    <Card
-      hoverable
-      variant="outline"
-      padding="lg"
-      className="group relative overflow-hidden border-ui-border/50 bg-ui-bg-soft/70 shadow-soft backdrop-blur-sm"
-    >
-      <div
-        className={cn("absolute inset-x-0 top-0 h-16 bg-linear-to-b to-transparent", styles.glow)}
-      />
-      <div className={cn("absolute inset-x-4 top-0 h-0.5 rounded-full", styles.bg)} />
-      <Stack gap="md" className="relative">
-        <Typography variant="eyebrowWide">{title}</Typography>
+    <Card recipe={recipe} padding="md" className="h-full">
+      <Stack gap="sm">
+        <Typography variant="eyebrowWide" className={titleClassName}>
+          {title}
+        </Typography>
         <Flex align="baseline" gap="sm" wrap>
-          <Typography variant="dashboardStatValue" className={styles.text}>
+          <Typography variant={valueVariant} className={valueClassName}>
             {value || 0}
           </Typography>
           <Typography variant="small" color="secondary">
@@ -83,8 +116,8 @@ function StatCard({ title, value, subtitle, variant, progressValue }: StatCardPr
           <Progress
             value={progressValue}
             className="h-1.5 bg-ui-bg-secondary/70"
-            id="stat-progress"
-            indicatorClassName={styles.bg}
+            id={progressId}
+            indicatorClassName={progressIndicatorClassName}
           />
         )}
       </Stack>
@@ -92,51 +125,20 @@ function StatCard({ title, value, subtitle, variant, progressValue }: StatCardPr
   );
 }
 
-/**
- * High priority stat card
- */
-function HighPriorityCard({ count }: { count: number }) {
-  const hasHighPriority = count > 0;
-  return (
-    <Card
-      variant="outline"
-      padding="lg"
-      className={cn(
-        "relative overflow-hidden border-ui-border/50 bg-ui-bg-soft/70 shadow-soft backdrop-blur-sm",
-        hasHighPriority && "border-status-warning/30",
-      )}
-    >
-      <div
-        className={cn(
-          "absolute inset-x-0 top-0 h-16 bg-linear-to-b to-transparent",
-          hasHighPriority ? "from-status-warning/15" : "from-ui-bg-soft/20",
-        )}
-      />
-      <Stack gap="md" className="relative">
-        <Typography
-          variant="eyebrowWide"
-          className={hasHighPriority ? "text-status-warning" : undefined}
-        >
-          Attention Needed
-        </Typography>
-        <Flex align="baseline" gap="sm" wrap>
-          <Typography
-            variant="dashboardStatValueStrong"
-            className={hasHighPriority ? "text-status-warning" : undefined}
-          >
-            {count || 0}
-          </Typography>
-          <Typography variant="caption" color="secondary">
-            High Priority
-          </Typography>
-        </Flex>
-      </Stack>
+function getStatAccentClasses(stats: Stats, config: StatCardConfig) {
+  if (config.statKey !== "highPriority" || stats.highPriority > 0) {
+    return {
+      recipe: config.recipe,
+      titleClassName: config.titleClassName,
+      valueClassName: config.valueClassName,
+    };
+  }
 
-      {hasHighPriority && (
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-status-warning" />
-      )}
-    </Card>
-  );
+  return {
+    recipe: "metricTile" as const,
+    titleClassName: undefined,
+    valueClassName: undefined,
+  };
 }
 
 /**
@@ -145,7 +147,7 @@ function HighPriorityCard({ count }: { count: number }) {
 export function QuickStats({ stats }: QuickStatsProps) {
   if (!stats) {
     return (
-      <Grid cols={1} colsSm={2} colsLg={2} gap="md">
+      <Grid cols={1} colsSm={2} colsLg={2} gap="sm">
         <SkeletonStatCard />
         <SkeletonStatCard />
         <SkeletonStatCard />
@@ -160,27 +162,27 @@ export function QuickStats({ stats }: QuickStatsProps) {
     totalAssigned > 0 ? (stats.completedThisWeek / totalAssigned) * 100 : 0;
 
   return (
-    <Grid cols={1} colsSm={2} colsLg={2} gap="md">
-      <StatCard
-        title="Active Load"
-        value={stats.assignedToMe}
-        subtitle="Assigned tasks"
-        variant="brand"
-      />
-      <StatCard
-        title="Velocity"
-        value={stats.completedThisWeek}
-        subtitle="Done this week"
-        variant="success"
-        progressValue={completionPercentage}
-      />
-      <HighPriorityCard count={stats.highPriority} />
-      <StatCard
-        title="Contribution"
-        value={stats.createdByMe}
-        subtitle="Reported issues"
-        variant="accent"
-      />
+    <Grid cols={1} colsSm={2} colsLg={2} gap="sm">
+      {STAT_CARD_CONFIGS.map((config) => {
+        const accentClasses = getStatAccentClasses(stats, config);
+
+        return (
+          <StatCard
+            key={config.title}
+            title={config.title}
+            subtitle={config.subtitle}
+            recipe={accentClasses.recipe}
+            titleClassName={accentClasses.titleClassName}
+            valueClassName={accentClasses.valueClassName}
+            valueVariant={config.valueVariant}
+            progressIndicatorClassName={config.progressIndicatorClassName}
+            progressValue={
+              config.statKey === "completedThisWeek" ? completionPercentage : undefined
+            }
+            value={stats[config.statKey]}
+          />
+        );
+      })}
     </Grid>
   );
 }

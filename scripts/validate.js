@@ -24,7 +24,7 @@
  *  20. Component naming        — PascalCase components, {Component}Props interfaces
  *  21. Component props         — consistent prop naming across component definitions
  *  22. Duplicate components    — detect components with same name in different directories
- *  23. CVA boundaries          — ban importing exported CVA recipes outside shared ui primitives
+ *  23. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva(), feature-local style bundles, weighted class-string style bundles, degenerate single-use helpers, and oversized shared CVA variant axes
  *  24. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
  *  25. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
  *  26. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
@@ -46,11 +46,15 @@
  *  42. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
  *  43. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
  *  44. Typography drift        — blocks Typography/style drift outside owned primitives
- *  45. Control chrome drift    — blocks owned controls restyled in feature code
+ *  45. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
  *  46. Shared shape drift      — blocks repeated inline entity summary shapes
- *  47. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
- *  48. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
- *  49. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
+ *  47. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
+ *  48. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
+ *  49. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
+ *  50. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  51. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
+ *  52. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
+ *  53. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -293,6 +297,14 @@ const checks = [
     modulePath: new URL("./validate/check-shared-shape-drift.js", import.meta.url).href,
   },
   {
+    name: "Global CSS drift",
+    modulePath: new URL("./validate/check-global-css-drift.js", import.meta.url).href,
+  },
+  {
+    name: "Fixed size drift",
+    modulePath: new URL("./validate/check-fixed-size-drift.js", import.meta.url).href,
+  },
+  {
     name: "Page layout",
     modulePath: new URL("./validate/check-page-layout.js", import.meta.url).href,
   },
@@ -303,6 +315,14 @@ const checks = [
   {
     name: "E2E catch swallows",
     modulePath: new URL("./validate/check-e2e-catch-swallows.js", import.meta.url).href,
+  },
+  {
+    name: "Primitive default ownership",
+    modulePath: new URL("./validate/check-primitive-default-ownership.js", import.meta.url).href,
+  },
+  {
+    name: "Icon tone drift",
+    modulePath: new URL("./validate/check-icon-tone-drift.js", import.meta.url).href,
   },
 ];
 

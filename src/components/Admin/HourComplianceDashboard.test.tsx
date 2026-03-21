@@ -386,6 +386,12 @@ describe("HourComplianceDashboard", () => {
   it("renders summary stats, empty-state records, and forwards filter args to the queries", async () => {
     render(<HourComplianceDashboard />);
 
+    expect(screen.getByText("Hour Compliance")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Track employee, contractor, and equity hour compliance from one review surface.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("87.5%")).toBeInTheDocument();
     expect(screen.getAllByText("Compliant").length).toBeGreaterThan(0);
     expect(screen.getByText("No compliance records")).toBeInTheDocument();
@@ -405,6 +411,15 @@ describe("HourComplianceDashboard", () => {
       status: "under_hours",
       startDate: new Date("2026-03-01").getTime(),
       endDate: new Date("2026-03-14").getTime(),
+      limit: 100,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear Filters" }));
+
+    expect(mockUseAuthenticatedQuery).toHaveBeenLastCalledWith(expect.anything(), {
+      status: undefined,
+      startDate: undefined,
+      endDate: undefined,
       limit: 100,
     });
   });

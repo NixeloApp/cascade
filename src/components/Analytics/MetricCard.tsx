@@ -45,7 +45,7 @@ export function MetricCard({
               {icon}
             </Typography>
           ) : (
-            <Icon icon={icon} size="xl" color="secondary" />
+            <Icon icon={icon} size="xl" tone="secondary" />
           )}
         </span>
       </Flex>

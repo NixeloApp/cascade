@@ -514,6 +514,7 @@ const applicationTables = {
   issues: defineTable(issuesFields)
     .index("by_project", ["projectId"])
     .index("by_organization", ["organizationId"])
+    .index("by_organization_key", ["organizationId", "key"])
     .index("by_organization_deleted", ["organizationId", "isDeleted"])
     .index("by_workspace", ["workspaceId"])
     .index("by_team", ["teamId"])

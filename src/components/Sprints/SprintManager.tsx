@@ -37,7 +37,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { formatDate } from "@/lib/dates";
 import { Trophy } from "@/lib/icons";
-import { getStatusColor } from "@/lib/issue-utils";
+import { getStatusBadgeTone } from "@/lib/issue-utils";
 import {
   calculateEndDate,
   DEFAULT_SPRINT_PRESET,
@@ -155,7 +155,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
           <Stack gap="xs">
             <Flex wrap align="center" gap="sm" className="mb-2">
               <Typography variant="h5">{sprint.name}</Typography>
-              <Badge size="md" className={getStatusColor(sprint.status)}>
+              <Badge size="md" statusTone={getStatusBadgeTone(sprint.status)}>
                 {sprint.status}
               </Badge>
               <Badge variant="neutral" size="sm">
@@ -659,7 +659,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                                 <SelectItem key={sprint._id} value={sprint._id}>
                                   <Flex align="center" gap="sm">
                                     <Typography variant="small">{sprint.name}</Typography>
-                                    <Badge size="sm" className={getStatusColor(sprint.status)}>
+                                    <Badge size="sm" statusTone={getStatusBadgeTone(sprint.status)}>
                                       {sprint.status}
                                     </Badge>
                                   </Flex>

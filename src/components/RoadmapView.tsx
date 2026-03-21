@@ -27,7 +27,12 @@ import {
   Plus,
   X,
 } from "@/lib/icons";
-import { getPriorityColor, getStatusColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import {
+  getPriorityBadgeTone,
+  getPriorityColor,
+  getStatusBadgeTone,
+  ISSUE_TYPE_ICONS,
+} from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -869,16 +874,16 @@ function getTimelineGroupLabel(group: TimelineGroup) {
   }
 }
 
-function getTimelineGroupBadgeClassName(group: TimelineGroup) {
+function getTimelineGroupBadgeTone(group: TimelineGroup) {
   if (group.kind === "priority") {
-    return getPriorityColor(group.value, "badge");
+    return { priorityTone: getPriorityBadgeTone(group.value) } as const;
   }
 
   if (group.kind === "status") {
-    return getStatusColor(group.value);
+    return { statusTone: getStatusBadgeTone(group.value) } as const;
   }
 
-  return "bg-ui-bg-tertiary text-ui-text-secondary";
+  return { statusTone: "neutral" } as const;
 }
 
 function getStickyIssueColumnClassName(selected: boolean) {
@@ -1091,7 +1096,7 @@ function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: Road
                 variant="roadmapGroup"
                 size="md"
                 shape="pill"
-                className={getTimelineGroupBadgeClassName(group)}
+                {...getTimelineGroupBadgeTone(group)}
               >
                 {group.label}
               </Badge>
@@ -1297,14 +1302,10 @@ function RoadmapIssueIdentity({
           {issue.title}
         </Typography>
         <Flex align="center" gap="xs" wrap className="mt-2">
-          <Badge variant="neutral" shape="pill" className={getStatusColor(issue.status)}>
+          <Badge shape="pill" statusTone={getStatusBadgeTone(issue.status)}>
             {statusLabel}
           </Badge>
-          <Badge
-            variant="neutral"
-            shape="pill"
-            className={getPriorityColor(issue.priority, "badge")}
-          >
+          <Badge shape="pill" priorityTone={getPriorityBadgeTone(issue.priority)}>
             {priorityLabel}
           </Badge>
           <Badge variant="secondary" shape="pill">

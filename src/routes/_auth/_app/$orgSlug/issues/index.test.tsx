@@ -27,6 +27,10 @@ vi.mock("@/hooks/useOrgContext", () => ({
 
 vi.mock("@/components/layout", () => ({
   PageLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PageStack: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PageControls: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PageControlsRow: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PageControlsGroup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PageHeader: ({
     title,
     description,

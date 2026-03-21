@@ -84,6 +84,7 @@ describe("EventDetailsModal", () => {
       title: "Sprint Planning",
       startTime: Date.now(),
       endTime: Date.now() + HOUR,
+      status: "confirmed",
       isRequired: false,
       createdBy: "user_1",
       organizerName: "John Doe",

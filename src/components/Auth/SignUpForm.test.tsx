@@ -136,4 +136,11 @@ describe("SignUpForm", () => {
       expect(showError).toHaveBeenCalledWith(error, "Could not create account");
     });
   });
+
+  it("can start directly in the verification state for route-driven captures", () => {
+    render(<SignUpForm initialVerificationEmail="screenshots@inbox.mailtrap.io" />);
+
+    expect(screen.getByTestId("verification-form")).toBeInTheDocument();
+    expect(screen.getByText("Verifying screenshots@inbox.mailtrap.io")).toBeInTheDocument();
+  });
 });

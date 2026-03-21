@@ -1,16 +1,19 @@
-import { useAuthActions } from "@convex-dev/auth/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/Auth";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/form/Input";
+import { useEffect, useState } from "react";
+import {
+  AuthLink,
+  AuthPageLayout,
+  AuthRedirect,
+  ForgotPasswordForm,
+  ResetPasswordForm,
+} from "@/components/Auth";
+import { getOptionalAuthFlowEmail } from "@/components/Auth/authFlowSearch";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
-import { TEST_IDS } from "@/lib/test-ids";
-import { showError } from "@/lib/toast";
 
 interface ForgotPasswordSearch {
   step?: "reset";
+  email?: string;
 }
 
 const RESET_EMAIL_STORAGE_KEY = "auth:forgot-password-email";
@@ -57,10 +60,14 @@ export const Route = createFileRoute("/forgot-password")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>): ForgotPasswordSearch => ({
     step: search.step === "reset" ? "reset" : undefined,
+    email: search.step === "reset" ? getOptionalAuthFlowEmail(search.email) : undefined,
   }),
 });
 
-function ForgotPasswordRoute() {
+/**
+ * Public forgot-password route with optional search-driven reset state for screenshot coverage.
+ */
+export function ForgotPasswordRoute() {
   return (
     <AuthRedirect>
       <ForgotPasswordPage />
@@ -69,76 +76,23 @@ function ForgotPasswordRoute() {
 }
 
 function ForgotPasswordPage() {
-  const { signIn } = useAuthActions();
-  const [submitting, setSubmitting] = useState(false);
-  const [email, setEmail] = useState<string | null>(() => getStoredResetEmail());
-  const navigate = Route.useNavigate();
   const search = Route.useSearch();
-  const formRef = useRef<HTMLFormElement>(null);
+  const [email, setEmail] = useState<string | null>(() => search.email ?? getStoredResetEmail());
+  const navigate = Route.useNavigate();
 
   useEffect(() => {
     if (search.step === "reset") {
-      // Only update from storage if we get a value - preserve in-memory email
-      // when sessionStorage is unavailable (returns null)
-      const storedEmail = getStoredResetEmail();
-      if (storedEmail !== null) {
-        setEmail(storedEmail);
+      const activeEmail = search.email ?? getStoredResetEmail();
+      if (activeEmail !== null) {
+        setEmail(activeEmail);
+        setStoredResetEmail(activeEmail);
       }
       return;
     }
 
     clearStoredResetEmail();
     setEmail(null);
-  }, [search.step]);
-
-  const submitResetRequest = async () => {
-    const form = formRef.current;
-    if (!form || submitting) {
-      return;
-    }
-
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
-
-    setSubmitting(true);
-
-    const formData = new FormData(form);
-    const formEmail = formData.get("email");
-    if (typeof formEmail !== "string" || !formEmail) {
-      setSubmitting(false);
-      return;
-    }
-
-    const normalizedEmail = formEmail.trim().toLowerCase();
-
-    try {
-      const formData = new FormData();
-      formData.set("email", normalizedEmail);
-      formData.set("flow", "reset");
-
-      await signIn("password", formData);
-
-      setEmail(normalizedEmail);
-      setStoredResetEmail(normalizedEmail);
-      navigate({
-        replace: true,
-        search: {
-          step: "reset",
-        },
-      });
-    } catch (error) {
-      showError(error, "Password reset request");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    void submitResetRequest();
-  };
+  }, [search.email, search.step]);
 
   if (search.step === "reset" && email) {
     return (
@@ -181,18 +135,19 @@ function ForgotPasswordPage() {
         </>
       }
     >
-      <form ref={formRef} className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <Input
-          type="email"
-          name="email"
-          placeholder="Email"
-          required
-          data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
-        />
-        <Button className="w-full" type="submit" disabled={submitting}>
-          {submitting ? "Sending..." : "Send reset code"}
-        </Button>
-      </form>
+      <ForgotPasswordForm
+        onCodeSent={(requestedEmail) => {
+          const normalizedEmail = requestedEmail.trim().toLowerCase();
+          setEmail(normalizedEmail);
+          setStoredResetEmail(normalizedEmail);
+          navigate({
+            replace: true,
+            search: {
+              step: "reset",
+            },
+          });
+        }}
+      />
     </AuthPageLayout>
   );
 }

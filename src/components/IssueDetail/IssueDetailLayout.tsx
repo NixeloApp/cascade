@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card } from "@/components/ui/Card";
+import { Container } from "@/components/ui/Container";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IssueDetailContent } from "./IssueDetailContent";
 import { IssueDetailSidebar } from "./IssueDetailSidebar";
@@ -29,8 +29,8 @@ export function IssueDetailLayout({
       {header}
 
       <FlexItem flex="1" className="overflow-auto">
-        <Card recipe="issueDetailLayoutShell" className="mx-auto my-4 max-w-400">
-          <Flex direction="column" directionMd="row">
+        <Container size="2xl" padding="page">
+          <Flex direction="column" directionMd="row" gap="xl" align="start">
             <IssueDetailContent
               issueId={issue._id}
               projectId={issue.projectId}
@@ -62,7 +62,7 @@ export function IssueDetailLayout({
               canEdit={canEdit}
             />
           </Flex>
-        </Card>
+        </Container>
       </FlexItem>
     </Flex>
   );

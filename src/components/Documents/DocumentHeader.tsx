@@ -12,14 +12,32 @@ import { PresenceIndicator } from "@/components/PresenceIndicator";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
+import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
-import { Archive, Download, FolderInput, History, Lock, LockOpen, Star, Upload } from "@/lib/icons";
+import {
+  Archive,
+  Download,
+  FolderInput,
+  History,
+  Lock,
+  LockOpen,
+  Menu,
+  Star,
+  Upload,
+} from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +67,7 @@ interface DocumentHeaderProps {
   onExportMarkdown: () => Promise<void>;
   onShowVersionHistory: () => void;
   editorReady: boolean;
+  syncState?: "ready" | "saving" | "saved" | "error";
 }
 
 interface DocumentHeaderActionsProps {
@@ -62,6 +81,7 @@ interface DocumentHeaderActionsProps {
   onExportMarkdown: () => Promise<void>;
   onShowVersionHistory: () => void;
   editorReady: boolean;
+  syncState?: DocumentHeaderProps["syncState"];
   ownerActions: {
     lockStatus?: LockStatus;
     onTogglePublic: () => Promise<void>;
@@ -69,6 +89,22 @@ interface DocumentHeaderActionsProps {
     onToggleLock?: () => Promise<void>;
     onMoveToProject?: () => void;
   };
+}
+
+function DocumentSyncStatusBadge({ syncState }: { syncState?: DocumentHeaderProps["syncState"] }) {
+  if (syncState === "saving") {
+    return <Badge variant="secondary">Saving…</Badge>;
+  }
+
+  if (syncState === "saved") {
+    return <Badge variant="success">Saved</Badge>;
+  }
+
+  if (syncState === "error") {
+    return <Badge variant="error">Save failed</Badge>;
+  }
+
+  return null;
 }
 
 interface OwnerDocumentActionsProps {
@@ -83,36 +119,24 @@ interface OwnerDocumentActionsProps {
 
 interface DocumentLockActionProps {
   lockStatus?: LockStatus;
-  onToggleLock: () => Promise<void>;
+  onToggleLock?: () => Promise<void>;
 }
 
 function DocumentLockAction({ lockStatus, onToggleLock }: DocumentLockActionProps) {
+  if (!onToggleLock) {
+    return null;
+  }
+
   return (
-    <Tooltip
-      content={
-        lockStatus?.isLocked
-          ? lockStatus.canUnlock
-            ? "Unlock document (currently locked)"
-            : `Locked by ${lockStatus.lockedByName || "another user"}`
-          : "Lock document to prevent editing"
-      }
+    <DropdownMenuItem
+      disabled={lockStatus?.isLocked && !lockStatus.canUnlock}
+      icon={<Icon icon={lockStatus?.isLocked ? Lock : LockOpen} size="sm" aria-hidden="true" />}
+      onSelect={() => {
+        void onToggleLock();
+      }}
     >
-      <IconButton
-        variant={lockStatus?.isLocked ? "subtle" : "ghost"}
-        size="sm"
-        onClick={() => void onToggleLock()}
-        disabled={lockStatus?.isLocked && !lockStatus.canUnlock}
-        aria-label={lockStatus?.isLocked ? "Unlock document" : "Lock document"}
-        aria-pressed={lockStatus?.isLocked}
-        className={cn(lockStatus?.isLocked && "text-status-warning")}
-      >
-        {lockStatus?.isLocked ? (
-          <Lock className="w-4 h-4" aria-hidden="true" />
-        ) : (
-          <LockOpen className="w-4 h-4" aria-hidden="true" />
-        )}
-      </IconButton>
-    </Tooltip>
+      {lockStatus?.isLocked ? "Unlock document" : "Lock document"}
+    </DropdownMenuItem>
   );
 }
 
@@ -130,35 +154,7 @@ function OwnerDocumentActions({
   }
 
   return (
-    <>
-      <Tooltip content={isArchived ? "Unarchive document" : "Archive document"}>
-        <IconButton
-          variant={isArchived ? "subtle" : "ghost"}
-          size="sm"
-          onClick={() => void onToggleArchive()}
-          aria-label={isArchived ? "Unarchive document" : "Archive document"}
-          aria-pressed={isArchived}
-          className={cn(isArchived && "text-ui-text-secondary")}
-        >
-          <Archive className="w-4 h-4" aria-hidden="true" />
-        </IconButton>
-      </Tooltip>
-
-      {onToggleLock && <DocumentLockAction lockStatus={lockStatus} onToggleLock={onToggleLock} />}
-
-      {onMoveToProject && (
-        <Tooltip content="Move to another project">
-          <IconButton
-            variant="ghost"
-            size="sm"
-            onClick={onMoveToProject}
-            aria-label="Move to another project"
-          >
-            <FolderInput className="w-4 h-4" aria-hidden="true" />
-          </IconButton>
-        </Tooltip>
-      )}
-
+    <Flex wrap align="center" gap="xs">
       <Button
         variant="unstyled"
         chrome={document.isPublic ? "documentHeaderPublicActive" : "documentHeaderNeutral"}
@@ -167,7 +163,45 @@ function OwnerDocumentActions({
       >
         {document.isPublic ? "Public" : "Private"}
       </Button>
-    </>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            aria-label="More document actions"
+            tooltip="More document actions"
+          >
+            <Icon icon={Menu} size="sm" aria-hidden="true" />
+          </IconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DocumentLockAction lockStatus={lockStatus} onToggleLock={onToggleLock} />
+
+          {onMoveToProject && (
+            <DropdownMenuItem
+              icon={<Icon icon={FolderInput} size="sm" aria-hidden="true" />}
+              onSelect={() => {
+                onMoveToProject();
+              }}
+            >
+              Move to another project
+            </DropdownMenuItem>
+          )}
+
+          {(onToggleLock || onMoveToProject) && <DropdownMenuSeparator />}
+
+          <DropdownMenuItem
+            icon={<Icon icon={Archive} size="sm" aria-hidden="true" />}
+            onSelect={() => {
+              void onToggleArchive();
+            }}
+          >
+            {isArchived ? "Unarchive document" : "Archive document"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </Flex>
   );
 }
 
@@ -182,11 +216,14 @@ function DocumentHeaderActions({
   onExportMarkdown,
   onShowVersionHistory,
   editorReady,
+  syncState,
   ownerActions,
 }: DocumentHeaderActionsProps) {
   return (
     <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
       <PresenceIndicator roomId={document._id} userId={userId} />
+
+      <DocumentSyncStatusBadge syncState={syncState} />
 
       <Tooltip content={isFavorite ? "Remove from favorites" : "Add to favorites"}>
         <IconButton
@@ -197,7 +234,12 @@ function DocumentHeaderActions({
           aria-pressed={isFavorite}
           className={cn(isFavorite && "text-status-warning")}
         >
-          <Star className={cn("w-4 h-4", isFavorite && "fill-current")} aria-hidden="true" />
+          <Icon
+            icon={Star}
+            size="sm"
+            className={cn(isFavorite && "fill-current")}
+            aria-hidden="true"
+          />
         </IconButton>
       </Tooltip>
 
@@ -207,7 +249,7 @@ function DocumentHeaderActions({
           chrome="documentHeaderNeutral"
           chromeSize="documentHeaderAction"
           onClick={onShowVersionHistory}
-          leftIcon={<History className="w-4 h-4" aria-hidden="true" />}
+          leftIcon={<Icon icon={History} size="sm" aria-hidden="true" />}
           aria-label="Version history"
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
@@ -228,7 +270,7 @@ function DocumentHeaderActions({
           chromeSize="documentHeaderAction"
           onClick={() => void onImportMarkdown()}
           disabled={!editorReady}
-          leftIcon={<Upload className="w-4 h-4" aria-hidden="true" />}
+          leftIcon={<Icon icon={Upload} size="sm" aria-hidden="true" />}
           aria-label="Import from Markdown"
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
@@ -244,7 +286,7 @@ function DocumentHeaderActions({
           chromeSize="documentHeaderAction"
           onClick={() => void onExportMarkdown()}
           disabled={!editorReady}
-          leftIcon={<Download className="w-4 h-4" aria-hidden="true" />}
+          leftIcon={<Icon icon={Download} size="sm" aria-hidden="true" />}
           aria-label="Export as Markdown"
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
@@ -284,6 +326,7 @@ export function DocumentHeader({
   onExportMarkdown,
   onShowVersionHistory,
   editorReady,
+  syncState,
 }: DocumentHeaderProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(document.title);
@@ -371,6 +414,7 @@ export function DocumentHeader({
               onExportMarkdown={onExportMarkdown}
               onShowVersionHistory={onShowVersionHistory}
               editorReady={editorReady}
+              syncState={syncState}
               ownerActions={{
                 lockStatus,
                 onTogglePublic,

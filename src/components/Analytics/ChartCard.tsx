@@ -1,28 +1,45 @@
-/**
- * Chart Card
- *
- * Wrapper card component for chart visualizations.
- * Provides consistent styling with title and padding.
- * Used for analytics dashboard chart sections.
- */
-
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { Card } from "@/components/ui/Card";
-import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { BarChart3 } from "@/lib/icons";
+import { AnalyticsSection } from "./AnalyticsSection";
+
+/** Shared analytics chart shell with optional section description and no-data state. */
 export function ChartCard({
   title,
+  description,
+  emptyState,
+  testId,
   children,
 }: {
   title: string | ReactNode;
+  description?: ReactNode;
+  emptyState?: {
+    title: string;
+    description: string;
+    icon?: string | LucideIcon;
+  };
+  testId?: string;
   children: React.ReactNode;
 }) {
   return (
-    <Card padding="lg">
-      <Stack gap="md">
-        {typeof title === "string" ? <Typography variant="large">{title}</Typography> : title}
-        <div className="h-64">{children}</div>
-      </Stack>
-    </Card>
+    <AnalyticsSection
+      title={title}
+      description={description}
+      contentClassName="h-64"
+      data-testid={testId}
+    >
+      {emptyState ? (
+        <EmptyState
+          icon={emptyState.icon ?? BarChart3}
+          title={emptyState.title}
+          description={emptyState.description}
+          size="compact"
+          surface="bare"
+        />
+      ) : (
+        children
+      )}
+    </AnalyticsSection>
   );
 }

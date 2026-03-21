@@ -176,7 +176,7 @@ export class SettingsPage extends BasePage {
     this.inviteUserButton = page.getByRole("button", { name: /invite.*user/i });
     this.userTypeManager = page.getByTestId(TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION);
     this.hourComplianceDashboard = page.getByTestId(TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION);
-    this.adminUsersTab = page.getByRole("tab", { name: /^Users$/ });
+    this.adminUsersTab = page.getByTestId(TEST_IDS.SETTINGS.ADMIN_USERS_TAB);
     this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
     this.inviteEmptyState = page.getByText(/^No invitations$/);
 
@@ -595,7 +595,7 @@ export class SettingsPage extends BasePage {
     await expect(this.userManagementHeading).toBeVisible();
     await expect(this.adminUsersTab).toBeVisible();
     await this.adminUsersTab.click();
-    await expect(this.adminUsersTab).toHaveAttribute("aria-selected", "true");
+    await expect(this.adminUsersTab).toHaveAttribute("data-state", "on");
     await expect(this.platformUsersTable).toBeVisible();
   }
 

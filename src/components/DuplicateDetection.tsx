@@ -48,7 +48,7 @@ export function DuplicateDetection({ title, projectId, onIssueClick }: Duplicate
     <Card padding="md" className="bg-status-warning-bg/30 border-status-warning-border/30">
       <Stack gap="sm">
         <Flex align="center" gap="xs">
-          <Icon icon={AlertTriangle} size="sm" className="text-status-warning-text" />
+          <Icon icon={AlertTriangle} size="sm" tone="warningText" />
           <Typography variant="small" color="secondary">
             Potential duplicates found
           </Typography>
@@ -66,7 +66,8 @@ export function DuplicateDetection({ title, projectId, onIssueClick }: Duplicate
                 <Icon
                   icon={ISSUE_TYPE_ICONS[issue.type as IssueType]}
                   size="sm"
-                  className="text-ui-text-secondary shrink-0"
+                  tone="secondary"
+                  className="shrink-0"
                 />
                 <Typography variant="small" className="font-mono text-ui-text-secondary shrink-0">
                   {issue.key}

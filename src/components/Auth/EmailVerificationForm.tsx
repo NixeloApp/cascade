@@ -8,14 +8,14 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
+import { Mail } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
-import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
+import { AuthFlowIntro } from "./AuthFlowIntro";
 import { AuthLinkButton } from "./AuthLink";
 
 interface EmailVerificationFormProps {
@@ -71,35 +71,19 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
   };
 
   return (
-    <div className="w-full text-center">
-      <Flex justify="center" className="mb-4">
-        <Card recipe="authVerificationIcon" className="h-16 w-16">
-          <Flex align="center" justify="center" className="h-full w-full">
-            <svg
-              className="h-8 w-8"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect width="20" height="16" x="2" y="4" rx="2" />
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-            </svg>
-          </Flex>
-        </Card>
-      </Flex>
-      <Typography variant="authTitle" className="mb-2">
-        Verify your email
-      </Typography>
-      <Typography variant="authBody" className="mb-6">
-        We sent a verification code to{" "}
-        <Typography variant="label" as="span" className="text-ui-text">
-          {email}
-        </Typography>
-      </Typography>
+    <Stack gap="lg">
+      <AuthFlowIntro
+        icon={Mail}
+        title="Verify your email"
+        description={
+          <>
+            We sent a verification code to{" "}
+            <Typography variant="label" as="span">
+              {email}
+            </Typography>
+          </>
+        }
+      />
       <form onSubmit={handleSubmit}>
         <Stack gap="md">
           <Input
@@ -123,13 +107,11 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
           >
             Verify email
           </Button>
-          <div className="text-center mt-2">
-            <AuthLinkButton onClick={handleResend} disabled={resending}>
-              {resending ? "Sending..." : "Didn't receive a code? Resend"}
-            </AuthLinkButton>
-          </div>
+          <AuthLinkButton onClick={handleResend} disabled={resending}>
+            {resending ? "Sending..." : "Didn't receive a code? Resend"}
+          </AuthLinkButton>
         </Stack>
       </form>
-    </div>
+    </Stack>
   );
 }

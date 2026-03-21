@@ -704,7 +704,7 @@ export const listComments = query({
 });
 
 export const getByKey = query({
-  args: { key: v.string() },
+  args: { key: v.string(), organizationId: v.id("organizations") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
 
@@ -712,12 +712,11 @@ export const getByKey = query({
       return null;
     }
 
-    // Issue keys are unique within a project but NOT globally unique —
-    // multiple orgs can have "DEMO-1". Scan candidates and find one
-    // the user can access, rather than blindly taking .first().
     const candidates = await ctx.db
       .query("issues")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .withIndex("by_organization_key", (q) =>
+        q.eq("organizationId", args.organizationId).eq("key", args.key),
+      )
       .filter(notDeleted)
       .take(BOUNDED_LIST_LIMIT);
 

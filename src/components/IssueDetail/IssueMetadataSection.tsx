@@ -9,10 +9,10 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
+import { InsetPanel } from "@/components/ui/InsetPanel";
 import type { UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
 import { Badge } from "../ui/Badge";
-import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -173,9 +173,8 @@ export function IssueMetadataSection({
 
   return (
     <Stack gap="md">
-      {/* Metadata with inline editing */}
-      <Card padding="md" variant="flat" className="border-ui-border/30">
-        <Stack gap="xs">
+      <InsetPanel>
+        <Stack gap="sm">
           <PropertyRow label="Status">
             {renderStatusContent(
               status,
@@ -212,25 +211,27 @@ export function IssueMetadataSection({
             )}
           </PropertyRow>
         </Stack>
-      </Card>
+      </InsetPanel>
 
       {labels.length > 0 && (
         <Stack gap="sm">
           <Typography variant="meta" color="secondary">
             Labels
           </Typography>
-          <Flex wrap gap="sm">
-            {labels.map((label) => (
-              <Badge
-                key={label.name}
-                size="sm"
-                className="text-brand-foreground"
-                style={{ backgroundColor: label.color }}
-              >
-                {label.name}
-              </Badge>
-            ))}
-          </Flex>
+          <InsetPanel size="compact">
+            <Flex wrap gap="sm">
+              {labels.map((label) => (
+                <Badge
+                  key={label.name}
+                  size="sm"
+                  className="text-brand-foreground"
+                  style={{ backgroundColor: label.color }}
+                >
+                  {label.name}
+                </Badge>
+              ))}
+            </Flex>
+          </InsetPanel>
         </Stack>
       )}
     </Stack>

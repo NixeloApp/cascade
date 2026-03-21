@@ -93,16 +93,16 @@ export function MemberOnboarding({
           size="sm"
           onClick={onBack}
           className="self-start"
-          leftIcon={<ArrowLeft className="h-4 w-4" />}
+          leftIcon={<Icon icon={ArrowLeft} size="sm" />}
         >
           Back
         </Button>
 
         {/* Header */}
         <Stack gap="md" className="text-center">
-          <Card recipe="onboardingHeroCircle" className="mx-auto h-16 w-16">
+          <Card recipe="onboardingHeroCircle" className="mx-auto size-16">
             <Flex align="center" justify="center" className="h-full w-full">
-              <Icon icon={Building2} size="xl" className="text-brand" />
+              <Icon icon={Building2} size="xl" tone="brand" />
             </Flex>
           </Card>
           <Stack gap="sm">
@@ -161,7 +161,7 @@ export function MemberOnboarding({
         size="sm"
         onClick={() => setStep("project")}
         className="self-start"
-        leftIcon={<ArrowLeft className="h-4 w-4" />}
+        leftIcon={<Icon icon={ArrowLeft} size="sm" />}
       >
         Back
       </Button>
@@ -181,11 +181,11 @@ export function MemberOnboarding({
             <div
               className={cn(
                 getCardRecipeClassName("onboardingMemberFeatureIconBlue"),
-                "h-9 w-9 shrink-0",
+                "size-9 shrink-0",
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
-                <Icon icon={Kanban} size="md" className="text-palette-blue" />
+                <Icon icon={Kanban} size="md" />
               </Flex>
             </div>
             <Stack gap="none">
@@ -200,11 +200,11 @@ export function MemberOnboarding({
             <div
               className={cn(
                 getCardRecipeClassName("onboardingMemberFeatureIconSuccess"),
-                "h-9 w-9 shrink-0",
+                "size-9 shrink-0",
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
-                <Icon icon={FileText} size="md" className="text-status-success" />
+                <Icon icon={FileText} size="md" tone="success" />
               </Flex>
             </div>
             <Stack gap="none">
@@ -219,11 +219,11 @@ export function MemberOnboarding({
             <div
               className={cn(
                 getCardRecipeClassName("onboardingMemberFeatureIconWarning"),
-                "h-9 w-9 shrink-0",
+                "size-9 shrink-0",
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
-                <Icon icon={Clock} size="md" className="text-status-warning" />
+                <Icon icon={Clock} size="md" tone="warning" />
               </Flex>
             </div>
             <Stack gap="none">
@@ -238,11 +238,11 @@ export function MemberOnboarding({
             <div
               className={cn(
                 getCardRecipeClassName("onboardingMemberFeatureIconPurple"),
-                "h-9 w-9 shrink-0",
+                "size-9 shrink-0",
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
-                <Icon icon={Bell} size="md" className="text-palette-purple" />
+                <Icon icon={Bell} size="md" />
               </Flex>
             </div>
             <Stack gap="none">

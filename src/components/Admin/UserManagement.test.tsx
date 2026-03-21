@@ -3,7 +3,7 @@ import { DAY } from "@convex/lib/timeUtils";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -41,18 +41,29 @@ vi.mock("../ui/Button", () => ({
     onClick,
     disabled,
     type = "button",
+    form,
+    "aria-label": ariaLabel,
+    "data-testid": dataTestId,
   }: {
     children: ReactNode;
     onClick?: () => void;
     disabled?: boolean;
     type?: "button" | "submit";
+    form?: string;
     variant?: string;
     size?: string;
     isLoading?: boolean;
     "aria-label"?: string;
     "data-testid"?: string;
   }) => (
-    <button disabled={disabled} onClick={onClick} type={type}>
+    <button
+      aria-label={ariaLabel}
+      data-testid={dataTestId}
+      disabled={disabled}
+      form={form}
+      onClick={onClick}
+      type={type}
+    >
       {children}
     </button>
   ),
@@ -94,6 +105,31 @@ vi.mock("../ui/ConfirmDialog", () => ({
         <button data-testid="confirm-dialog-cancel" onClick={onClose} type="button">
           Cancel
         </button>
+      </div>
+    ) : null,
+}));
+
+vi.mock("../ui/Dialog", () => ({
+  Dialog: ({
+    open,
+    children,
+    footer,
+    title,
+    description,
+  }: {
+    open: boolean;
+    children: ReactNode;
+    footer?: ReactNode;
+    title: string;
+    description?: string;
+    onOpenChange: (open: boolean) => void;
+  }) =>
+    open ? (
+      <div>
+        <div>{title}</div>
+        {description ? <div>{description}</div> : null}
+        {children}
+        {footer}
       </div>
     ) : null,
 }));
@@ -162,6 +198,35 @@ vi.mock("../ui/LoadingSpinner", () => ({
   LoadingSpinner: () => <div data-testid="loading-spinner">Loading...</div>,
 }));
 
+const SegmentedControlContext = createContext<{
+  onValueChange?: (value: string) => void;
+} | null>(null);
+
+vi.mock("../ui/SegmentedControl", () => ({
+  SegmentedControl: ({
+    children,
+    onValueChange,
+  }: {
+    children: ReactNode;
+    value: string;
+    onValueChange?: (value: string) => void;
+    size?: string;
+    "aria-label"?: string;
+  }) => (
+    <SegmentedControlContext.Provider value={{ onValueChange }}>
+      <div>{children}</div>
+    </SegmentedControlContext.Provider>
+  ),
+  SegmentedControlItem: ({ children, value }: { children: ReactNode; value: string }) => {
+    const context = useContext(SegmentedControlContext);
+    return (
+      <button onClick={() => context?.onValueChange?.(value)} type="button">
+        {children}
+      </button>
+    );
+  },
+}));
+
 vi.mock("../ui/Select", () => ({
   Select: ({
     value,
@@ -189,26 +254,24 @@ vi.mock("../ui/Stack", () => ({
 }));
 
 vi.mock("../ui/Table", () => ({
-  Table: ({ children }: { children: ReactNode; "aria-label"?: string; "data-testid"?: string }) => (
-    <table>{children}</table>
+  Table: ({
+    children,
+    "aria-label": ariaLabel,
+    "data-testid": dataTestId,
+  }: {
+    children: ReactNode;
+    "aria-label"?: string;
+    "data-testid"?: string;
+  }) => (
+    <table aria-label={ariaLabel} data-testid={dataTestId}>
+      {children}
+    </table>
   ),
   TableBody: ({ children }: { children: ReactNode }) => <tbody>{children}</tbody>,
   TableCell: ({ children }: { children: ReactNode; className?: string }) => <td>{children}</td>,
   TableHead: ({ children }: { children: ReactNode; className?: string }) => <th>{children}</th>,
   TableHeader: ({ children }: { children: ReactNode }) => <thead>{children}</thead>,
   TableRow: ({ children }: { children: ReactNode; "data-testid"?: string }) => <tr>{children}</tr>,
-}));
-
-vi.mock("../ui/Tabs", () => ({
-  Tabs: ({ children }: { children: ReactNode; value: string; onValueChange: () => void }) => (
-    <div>{children}</div>
-  ),
-  TabsList: ({ children }: { children: ReactNode; variant?: string }) => <div>{children}</div>,
-  TabsTrigger: ({ children, value }: { children: ReactNode; value: string; variant?: string }) => (
-    <button data-value={value} type="button">
-      {children}
-    </button>
-  ),
 }));
 
 vi.mock("../ui/Typography", () => ({
@@ -298,6 +361,8 @@ describe("UserManagement", () => {
 
     expect(screen.getByText("User Management")).toBeInTheDocument();
     expect(screen.getByText("Manage user invitations and platform access")).toBeInTheDocument();
+    expect(screen.getByText("Invitations")).toBeInTheDocument();
+    expect(screen.getByText("Users")).toBeInTheDocument();
   });
 
   it("shows loading spinner when invites are loading", () => {
@@ -328,11 +393,10 @@ describe("UserManagement", () => {
   it("opens invite form when Invite User button is clicked", () => {
     render(<UserManagement />);
 
-    // Click the first "Invite User" button (in header)
-    const inviteButtons = screen.getAllByRole("button", { name: "Invite User" });
-    fireEvent.click(inviteButtons[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Invite User" }));
 
     expect(screen.getByRole("button", { name: "Send Invitation" })).toBeInTheDocument();
+    expect(screen.getByText("Invite a new user to join the platform.")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("user@example.com")).toBeInTheDocument();
   });
 
@@ -355,6 +419,16 @@ describe("UserManagement", () => {
       organizationId: "org_123",
     });
     expect(mockShowSuccess).toHaveBeenCalledWith("Invitation sent to new@example.com");
+  });
+
+  it("switches to the users view and hides the invite action", () => {
+    render(<UserManagement />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Users" }));
+
+    expect(screen.getByLabelText("Platform users")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Invite User" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Jane Doe")).toHaveLength(2);
   });
 
   it("shows error toast when sending invite fails", async () => {
@@ -380,7 +454,7 @@ describe("UserManagement", () => {
     render(<UserManagement />);
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Resend" }));
+      fireEvent.click(screen.getByRole("button", { name: "Resend invitation" }));
     });
 
     expect(resendInvite).toHaveBeenCalledWith({ inviteId: "invite_1" });
@@ -390,7 +464,7 @@ describe("UserManagement", () => {
   it("opens confirm dialog when revoke is clicked", () => {
     render(<UserManagement />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
+    fireEvent.click(screen.getByRole("button", { name: "Revoke invitation" }));
 
     expect(screen.getByText("Revoke Invitation")).toBeInTheDocument();
   });
@@ -398,7 +472,7 @@ describe("UserManagement", () => {
   it("revokes invite when confirmed", async () => {
     render(<UserManagement />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
+    fireEvent.click(screen.getByRole("button", { name: "Revoke invitation" }));
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));

@@ -1,117 +1,172 @@
 # Documents Page - Current State
 
 > **Route**: `/:slug/documents`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Status**: REVIEWED, with follow-up polish only
+> **Last Updated**: 2026-03-21
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Purpose
 
-| Viewport | State | Preview |
+The documents route is no longer just a tree browser. It is now a real documents workspace:
+
+- create a blank document quickly
+- search recent docs by title or owner
+- understand library scale at a glance
+- jump into templates when the goal is repeatable structure
+- keep the full hierarchical library visible in a side rail
+
+---
+
+## Screenshot Matrix
+
+| Viewport | Theme | Preview |
 |----------|-------|---------|
-| Desktop | Filled | ![](screenshots/desktop-dark-filled.png) |
-| Desktop | Empty | ![](screenshots/desktop-dark-empty.png) |
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
+
+There are no extra reviewed modal or branch-state screenshots in this spec folder yet; the
+canonical review is the route itself across the standard viewport matrix.
 
 ---
 
-## Structure
+## Route Anatomy
 
-Document tree with folders and files:
-
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ PageHeader                                                                                  │
+│ Documents                                                                 [New] [Templates] │
+│ Search recent specs, browse the library tree, and keep handoffs in one workspace            │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Summary / entry band                                                                        │
+│                                                                                             │
+│  left: workspace intro + counts                                                             │
+│  right: templates + latest activity card                                                    │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Main workspace grid                                                                         │
+│                                                                                             │
+│  left / primary: recent documents                                                           │
+│    - search field                                                                           │
+│    - filtered results                                                                       │
+│    - metadata rows                                                                          │
+│                                                                                             │
+│  right / secondary: library                                                                 │
+│    - shared `DocumentTree`                                                                  │
+│    - nested folders                                                                         │
+│    - create child document                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-+-------------------------------------------------------------------------------------------+
-| [=] Nixelo E2E                      [Commands Cmd+K] [?] [> Timer] [Search Cmd+K] [N] [AV]|
-+-------------------------------------------------------------------------------------------+
-| [Sidebar] |                                                                               |
-|           |  Documents                                                    [+ New Document] |
-| Dashboard |  Organize your team's knowledge                                               |
-| Issues    |                                                                               |
-| Calendar  |  +--------------------------------------------------------------------------+ |
-| Documents |  |                                                                          | |
-|  > Guides |  |  > Getting Started                                                       | |
-|           |  |    ├─ Welcome                                               2 days ago  | |
-|           |  |    └─ Quick Start Guide                                     1 week ago  | |
-| Workspaces|  |                                                                          | |
-|  > Demo   |  |  > Product Specs                                                         | |
-|           |  |    └─ Feature Requirements                                  3 hours ago | |
-| Time Track|  |                                                                          | |
-|           |  |  + Team Notes                                                (empty)    | |
-|           |  |                                                                          | |
-|           |  +--------------------------------------------------------------------------+ |
-| Settings  |                                                                               |
-+-------------------------------------------------------------------------------------------+
-```
 
 ---
 
-## Current Elements
+## Current Composition
 
-### Page Header
-- **Title**: "Documents" (24px, bold)
-- **Description**: "Organize your team's knowledge"
-- **Action**: "+ New Document" button
+### 1. Page header
 
-### Document Tree
-- **Folder rows**: Expandable with chevron icon
-- **Document rows**: Icon + name + last updated
-- **Nested levels**: Indentation for hierarchy
-- **Empty folders**: "(empty)" indicator
+- Title: `Documents`
+- Description makes the route's job explicit: search recent specs, browse the tree, and keep
+  handoffs in one workspace.
+- Primary actions:
+  - `New Document`
+  - `Browse Templates`
 
-### Tree Item States
-- Default: Normal text
-- Hover: Subtle background
-- Selected: Brand highlight
-- Dragging: (not implemented)
+### 2. Workspace summary band
 
----
+- Left side uses a shared surface to explain the route and show document-library counts:
+  - total documents
+  - private vs shared
+  - active contributors
+- Right side is a narrower `Templates and latest activity` card.
+- This gives the route an immediate "workspace overview" read instead of dropping the user into
+  a tree with no context.
 
-## Files
+### 3. Recent documents surface
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/_auth/_app/$orgSlug/documents/index.tsx` | Route definition | ~80 |
-| `src/components/documents/DocumentTree.tsx` | Tree container | ~150 |
-| `src/components/documents/DocumentRow.tsx` | Single row | ~80 |
-| `src/components/documents/FolderRow.tsx` | Folder with expand | ~100 |
-| `src/components/documents/CreateDocument.tsx` | Create modal | ~120 |
+- Search box filters by document title or creator.
+- Result count is explicit.
+- Document rows are the fast path into current work rather than a deep-library exploration tool.
 
----
+### 4. Library side rail
 
-## Problems
+- Uses the shared `DocumentTree`.
+- Supports nested structure, document selection, and child-document creation.
+- Functions as the longer-lived library view while recent documents handles the immediate workflow.
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Tree indentation inconsistent | DocumentTree | MEDIUM |
-| 2 | Expand/collapse no animation | FolderRow | MEDIUM |
-| 3 | Document rows lack hover actions | DocumentRow | MEDIUM |
-| 4 | No drag-and-drop reordering | DocumentTree | LOW |
-| 5 | Empty state needs illustration | DocumentTree | LOW |
-| 6 | No document preview/thumbnail | DocumentRow | LOW |
-| 7 | No quick search/filter | Page header | LOW |
-| 8 | Last updated format inconsistent | DocumentRow | LOW |
+### 5. Empty state
+
+- Uses shared `EmptyState`.
+- Keeps the route actionable with:
+  - create blank document
+  - browse templates
 
 ---
 
-## Tree Item Detail
+## State Coverage
 
-```
-+--------------------------------------------------------------------------------+
-| [▶] Getting Started                                                            |
-|     ├─ [📄] Welcome                                               2 days ago   |
-|     └─ [📄] Quick Start Guide                                     1 week ago   |
-+--------------------------------------------------------------------------------+
-    ^     ^         ^                                                ^
-  expand  icon    name                                           timestamp
-```
+### Canonical route states covered by the current implementation
+
+- Filled workspace with overview, recent docs, and tree
+- Search-filtered recent-doc list
+- Empty library state
+- Blank-document creation success path
+- Blank-document creation failure path
+
+The screenshot spec currently only captures the canonical route layout, but the route tests cover
+the filtered, success, and failure behaviors directly.
+
+---
+
+## Current Strengths
+
+| Area | Current Read |
+|------|--------------|
+| Route purpose | Clear. The page now reads as a documents workspace rather than a generic file tree. |
+| Actionability | Strong. Blank document creation and templates are obvious on first scan. |
+| Shared-shell discipline | Good. The route uses shared page/header/layout primitives instead of one-off chrome. |
+| Responsive behavior | Tablet/mobile continue to preserve the primary/secondary distinction without inventing extra route-only UI. |
+
+---
+
+## Current Problems
+
+| # | Problem | Area | Severity |
+|---|---------|------|----------|
+| 1 | The route still only has canonical route screenshots; there is no reviewed capture for filtered search, blank library, or template-heavy states | screenshot coverage | MEDIUM |
+| 2 | The summary band is useful, but in light mode the top workspace card can still feel a touch broader and flatter than the denser recent-doc list beneath it | route composition | LOW |
+| 3 | The library side rail is operationally correct, but the visual difference between "recent docs" and "library" could be stronger in first-glance screenshots | hierarchy | LOW |
+
+---
+
+## Source Files
+
+| File | Purpose |
+|------|---------|
+| `src/routes/_auth/_app/$orgSlug/documents/index.tsx` | Documents workspace route |
+| `src/components/Documents/DocumentTree.tsx` | Hierarchical library tree |
+| `src/routes/_auth/_app/$orgSlug/documents/$id.tsx` | Downstream document detail route |
+| `src/routes/_auth/_app/$orgSlug/documents/templates.tsx` | Templates route entry point |
+| `e2e/screenshot-pages.ts` | Canonical route screenshot capture |
+
+---
+
+## Review Guidance
+
+- Keep this route as a workspace, not a tree page with extra cards glued on.
+- If more screenshot states are added, the next worthwhile captures are:
+  - filtered recent-doc search
+  - true empty state
+  - template jump-off emphasis
+- Do not collapse recent-doc search and library tree into the same surface; they solve different
+  navigation problems.
 
 ---
 
 ## Summary
 
-The documents page is functional but needs polish:
-- Tree expand/collapse needs smooth animation
-- Document rows need hover actions (edit, delete, move)
-- Consider adding document preview/thumbnail
-- Add quick search/filter capability
-- Empty state should have illustration
+The documents page is current and materially better than the old tree-only route. The remaining
+gap is mostly review depth: the workspace anatomy is right, but the screenshot spec should grow to
+cover more than the single canonical filled state.

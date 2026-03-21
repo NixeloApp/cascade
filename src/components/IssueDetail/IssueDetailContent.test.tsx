@@ -88,7 +88,7 @@ describe("IssueDetailContent", () => {
       />,
     );
 
-    expect(screen.getByText("No description provided")).toBeInTheDocument();
+    expect(screen.getByText("No description yet")).toBeInTheDocument();
     expect(screen.queryByText(/^subtasks:/)).not.toBeInTheDocument();
     expect(screen.getByText("comments:issue_1:project_1")).toBeInTheDocument();
   });

@@ -9,7 +9,7 @@ import { Typography } from "@/components/ui/Typography";
 import { CalendarDays } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
-import { DOT_COLOR_CLASSES, type EventColor } from "../../../calendar-colors";
+import { getDotColorClass } from "../../../calendar-colors";
 
 import { useCalendarContext } from "../../calendar-context";
 
@@ -47,9 +47,7 @@ export function CalendarBodyDayEvents(): React.ReactElement {
             onClick={() => onEventClick(event)}
           >
             <Flex as="span" align="center" gap="sm">
-              <Dot
-                className={DOT_COLOR_CLASSES[event.color as EventColor] || DOT_COLOR_CLASSES.blue}
-              />
+              <Dot className={getDotColorClass(event.color)} />
               <Typography as="span" variant="small" className="truncate">
                 {event.title}
               </Typography>

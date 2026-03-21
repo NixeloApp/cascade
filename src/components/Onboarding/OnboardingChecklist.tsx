@@ -91,7 +91,7 @@ export function OnboardingChecklist() {
       <div className={cn(getCardRecipeClassName("onboardingChecklistHeader"), "p-4")}>
         <Flex justify="between" align="center">
           <Flex gap="md" align="center">
-            <div className={cn(getCardRecipeClassName("onboardingChecklistHero"), "h-9 w-9")}>
+            <div className={cn(getCardRecipeClassName("onboardingChecklistHero"), "size-9")}>
               <Flex align="center" justify="center" className="h-full w-full">
                 <Icon icon={Rocket} size="md" />
               </Flex>
@@ -112,7 +112,11 @@ export function OnboardingChecklist() {
               aria-expanded={isExpanded}
               aria-controls="onboarding-checklist-items"
             >
-              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              {isExpanded ? (
+                <Icon icon={ChevronDown} size="sm" />
+              ) : (
+                <Icon icon={ChevronUp} size="sm" />
+              )}
             </IconButton>
             <IconButton
               variant="ghost"
@@ -120,7 +124,7 @@ export function OnboardingChecklist() {
               onClick={handleDismiss}
               aria-label="Dismiss checklist"
             >
-              <X className="h-4 w-4" />
+              <Icon icon={X} size="sm" />
             </IconButton>
           </Flex>
         </Flex>
@@ -156,12 +160,12 @@ export function OnboardingChecklist() {
                           ? "onboardingChecklistStepComplete"
                           : "onboardingChecklistStep",
                       ),
-                      "h-6 w-6 shrink-0",
+                      "size-6 shrink-0",
                     )}
                   >
                     <Flex align="center" justify="center" className="h-full w-full">
                       {item.completed ? (
-                        <Check className="h-3.5 w-3.5" />
+                        <Icon icon={Check} size="xsPlus" />
                       ) : (
                         <Typography as="span" variant="caption">
                           {index + 1}
@@ -191,11 +195,11 @@ export function OnboardingChecklist() {
                   <div
                     className={cn(
                       getCardRecipeClassName("onboardingChecklistSuccessIcon"),
-                      "h-8 w-8 shrink-0",
+                      "size-8 shrink-0",
                     )}
                   >
                     <Flex align="center" justify="center" className="h-full w-full">
-                      <Check className="h-4 w-4 text-status-success" />
+                      <Icon icon={Check} size="sm" />
                     </Flex>
                   </div>
                   <Stack gap="xs">
