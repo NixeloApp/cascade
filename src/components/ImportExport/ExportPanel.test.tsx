@@ -39,8 +39,29 @@ describe("ExportPanel", () => {
     );
 
     expect(screen.getByText("Select Export Format")).toBeInTheDocument();
-    expect(screen.getByText("Filtered issues will be exported.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Only issues matching the active filters will be exported."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Export as CSV/i })).toBeInTheDocument();
+  });
+
+  it("updates the export guidance when switching formats", async () => {
+    const user = userEvent.setup();
+    mockUseAuthenticatedQuery.mockReturnValue(undefined);
+
+    render(<ExportPanel projectId={"project_1" as Id<"projects">} />);
+
+    await user.click(screen.getByText("JSON"));
+
+    expect(
+      screen.getByText(
+        "JSON exports preserve the full issue structure for migrations and tooling.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Exports include metadata that spreadsheet formats do not keep intact."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Export as JSON/i })).toBeInTheDocument();
   });
 
   it("exports CSV data successfully", async () => {

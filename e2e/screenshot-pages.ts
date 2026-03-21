@@ -314,6 +314,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
     "-detail-modal-inline-editing",
   ],
   [/^filled-project-.+-import-export-modal$/, "06-board", "-import-export-modal"],
+  [/^filled-project-.+-import-export-modal-import$/, "06-board", "-import-export-modal-import"],
   // Board interactive states
   [/^filled-project-.+-board-swimlane-(\w+)$/, "06-board", "-swimlane-$1"],
   [/^filled-project-.+-board-column-collapsed$/, "06-board", "-column-collapsed"],
@@ -3550,11 +3551,51 @@ async function screenshotFilledStates(
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByRole("button", { name: /import \/ export/i }).first();
-      await trigger.waitFor({ state: "visible", timeout: 5000 });
-      await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await openStableDialog(
+        page,
+        trigger,
+        page.getByRole("dialog", { name: /^import \/ export issues$/i }),
+        page.getByText("Select Export Format", { exact: true }),
+        "import/export",
+      );
       await captureCurrentView(page, p, `project-${normalizedProjectKey}-import-export-modal`);
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  if (
+    projectKey &&
+    shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal-import`)
+  ) {
+    await runCaptureStep("import/export modal import state", async () => {
+      const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+      await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
+      await waitForExpectedContent(page, boardUrl, "board");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /import \/ export/i }).first();
+      const dialog = await openStableDialog(
+        page,
+        trigger,
+        page.getByRole("dialog", { name: /^import \/ export issues$/i }),
+        page.getByText("Select Export Format", { exact: true }),
+        "import/export",
+      );
+      await dialog.getByRole("radio", { name: /import issues/i }).click();
+      await dialog.getByText("JSON", { exact: true }).click();
+      await dialog
+        .getByText("JSON files must contain an issues array at the top level.", { exact: true })
+        .waitFor({
+          state: "visible",
+          timeout: 5000,
+        });
+      await waitForAnimation(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        p,
+        `project-${normalizedProjectKey}-import-export-modal-import`,
+      );
       await dismissIfOpen(page, dialog);
     });
   }
@@ -4629,7 +4670,7 @@ async function screenshotIssueInteractiveStates(
     await captureCurrentView(page, prefix, "issues-side-panel");
 
     await dismissIfOpen(page, issueDetailPanel);
-    const resetBtn = page.getByRole("button", { name: /switch to modal view/i }).first();
+    const resetBtn = page.getByRole("button", { name: /switch to modal view/i });
     if (await isLocatorVisible(resetBtn)) {
       await resetBtn.click();
     }
@@ -4800,6 +4841,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-issue-detail-modal",
   "filled-project-PROJ-issue-detail-modal-inline-editing",
   "filled-project-PROJ-import-export-modal",
+  "filled-project-PROJ-import-export-modal-import",
   // Filled states — board interactive states
   "filled-project-PROJ-board-swimlane-priority",
   "filled-project-PROJ-board-swimlane-assignee",
