@@ -265,8 +265,8 @@ export function OfflineTab() {
     <Flex direction="column" gap="xl">
       {/* Connection Status */}
       <Card padding="lg" data-testid={TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD}>
-        <Stack gap="lg">
-          <Flex gap="lg" align="center">
+        <Grid cols={1} colsLg={5} gap="lg" className="items-stretch">
+          <Flex gap="md" align="center" className="p-4 bg-ui-bg-secondary">
             <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
               {isOnline ? (
                 <Wifi className="size-6 text-brand-foreground" />
@@ -275,7 +275,7 @@ export function OfflineTab() {
               )}
             </div>
             <Stack gap="xs">
-              <Typography variant="h3">Connection Status</Typography>
+              <Typography variant="label">Connection</Typography>
               <Typography
                 variant="small"
                 as="span"
@@ -283,53 +283,48 @@ export function OfflineTab() {
               >
                 <Flex as="span" align="center" gap="xs">
                   {isOnline ? <Icon icon={Check} size="sm" /> : <Icon icon={X} size="sm" />}
-                  {isOnline ? "You are online" : "You are offline"}
+                  {isOnline ? "Online" : "Offline"}
                 </Flex>
               </Typography>
             </Stack>
           </Flex>
-
-          <div className="pt-6 border-t border-ui-border">
-            <Grid cols={1} colsSm={2} colsLg={4} gap="lg">
-              <div className="p-4 bg-ui-bg-secondary">
-                <Stack gap="xs">
-                  <Typography variant="small" color="secondary">
-                    Queued Items
-                  </Typography>
-                  <Typography variant="h2">{isLoading ? "..." : count}</Typography>
-                </Stack>
-              </div>
-              <div className="p-4 bg-ui-bg-secondary">
-                <Stack gap="xs">
-                  <Typography variant="small" color="secondary">
-                    Sync Status
-                  </Typography>
-                  <Typography variant="h2">
-                    {getQueueStatusSummary(isOnline, syncingCount, failedCount, pendingCount)}
-                  </Typography>
-                </Stack>
-              </div>
-              <div className="p-4 bg-ui-bg-secondary">
-                <Stack gap="xs">
-                  <Typography variant="small" color="secondary">
-                    Last Successful Replay
-                  </Typography>
-                  <Typography variant="label">
-                    {formatLastSuccessfulReplay(lastSuccessfulReplayAt)}
-                  </Typography>
-                </Stack>
-              </div>
-              <div className="p-4 bg-ui-bg-secondary">
-                <Stack gap="xs">
-                  <Typography variant="small" color="secondary">
-                    Storage
-                  </Typography>
-                  <Typography variant="h2">IndexedDB</Typography>
-                </Stack>
-              </div>
-            </Grid>
+          <div className="p-4 bg-ui-bg-secondary">
+            <Stack gap="xs">
+              <Typography variant="small" color="secondary">
+                Queued Items
+              </Typography>
+              <Typography variant="h2">{isLoading ? "..." : count}</Typography>
+            </Stack>
           </div>
-        </Stack>
+          <div className="p-4 bg-ui-bg-secondary">
+            <Stack gap="xs">
+              <Typography variant="small" color="secondary">
+                Sync Status
+              </Typography>
+              <Typography variant="h2">
+                {getQueueStatusSummary(isOnline, syncingCount, failedCount, pendingCount)}
+              </Typography>
+            </Stack>
+          </div>
+          <div className="p-4 bg-ui-bg-secondary">
+            <Stack gap="xs">
+              <Typography variant="small" color="secondary">
+                Last Successful Replay
+              </Typography>
+              <Typography variant="label">
+                {formatLastSuccessfulReplay(lastSuccessfulReplayAt)}
+              </Typography>
+            </Stack>
+          </div>
+          <div className="p-4 bg-ui-bg-secondary">
+            <Stack gap="xs">
+              <Typography variant="small" color="secondary">
+                Storage
+              </Typography>
+              <Typography variant="h2">IndexedDB</Typography>
+            </Stack>
+          </div>
+        </Grid>
       </Card>
 
       <Card padding="lg">
