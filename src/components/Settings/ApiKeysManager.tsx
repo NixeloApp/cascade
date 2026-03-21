@@ -25,6 +25,7 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -60,14 +61,14 @@ export function ApiKeysManager() {
           action={
             <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
               <Flex gap="sm" align="center">
-                <Plus className="h-4 w-4" />
+                <Icon icon={Plus} size="sm" />
                 Generate Key
               </Flex>
             </Button>
           }
           title={
             <Flex gap="sm" align="center">
-              <Key className="h-5 w-5" />
+              <Icon icon={Key} />
               <span>API Keys</span>
             </Flex>
           }
@@ -187,7 +188,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
                   size="sm"
                   aria-label="Copy key prefix"
                 >
-                  <Copy className="h-4 w-4" />
+                  <Icon icon={Copy} size="sm" />
                 </IconButton>
               </Tooltip>
             </Flex>
@@ -240,7 +241,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
               size="sm"
               aria-label="View usage statistics"
             >
-              <TrendingUp className="h-4 w-4" />
+              <Icon icon={TrendingUp} size="sm" />
             </IconButton>
           </Tooltip>
           {apiKey.isActive && (
@@ -261,7 +262,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
               size="sm"
               aria-label="Delete key"
             >
-              <Trash2 className="h-4 w-4" />
+              <Icon icon={Trash2} size="sm" />
             </IconButton>
           </Tooltip>
         </Flex>
@@ -472,7 +473,7 @@ function GenerateKeyModal({
                   </Button>
                   <Button variant="primary" onClick={copyAndClose}>
                     <Flex justify="center" gap="sm" align="center">
-                      <Copy className="h-4 w-4" />
+                      <Icon icon={Copy} size="sm" />
                       Copy & Close
                     </Flex>
                   </Button>
