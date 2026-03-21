@@ -63,6 +63,8 @@ export function SettingsSection({
 interface SettingsSectionRowProps {
   action?: ReactNode;
   description?: ReactNode;
+  icon?: LucideIcon;
+  iconTone?: "brand" | "success" | "warning" | "error" | "secondary" | "tertiary" | "info";
   title: string;
 }
 
@@ -70,7 +72,13 @@ interface SettingsSectionRowProps {
  * Shared card shell for settings-tab sections with one consistent heading,
  * description, and optional action slot.
  */
-export function SettingsSectionRow({ action, description, title }: SettingsSectionRowProps) {
+export function SettingsSectionRow({
+  action,
+  description,
+  icon,
+  iconTone = "secondary",
+  title,
+}: SettingsSectionRowProps) {
   return (
     <Flex
       direction="column"
@@ -80,14 +88,17 @@ export function SettingsSectionRow({ action, description, title }: SettingsSecti
       className="md:justify-between"
     >
       <FlexItem flex="1">
-        <Stack gap="xs">
-          <Typography variant="label">{title}</Typography>
-          {description ? (
-            <Typography variant="small" color="secondary">
-              {description}
-            </Typography>
-          ) : null}
-        </Stack>
+        <Flex gap="sm" align="start">
+          {icon ? <Icon icon={icon} size="sm" tone={iconTone} /> : null}
+          <Stack gap="xs">
+            <Typography variant="label">{title}</Typography>
+            {description ? (
+              <Typography variant="small" color="secondary">
+                {description}
+              </Typography>
+            ) : null}
+          </Stack>
+        </Flex>
       </FlexItem>
       {action ? <FlexItem align="start">{action}</FlexItem> : null}
     </Flex>

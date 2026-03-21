@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Bell } from "@/lib/icons";
+import { AtSign, Bell } from "@/lib/icons";
 import { render, screen } from "@/test/custom-render";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -40,5 +40,19 @@ describe("SettingsSectionRow", () => {
     expect(screen.getByText("Timezone")).toBeInTheDocument();
     expect(screen.getByText("Use a specific timezone for timestamps.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Change" })).toBeInTheDocument();
+  });
+
+  it("renders an optional leading icon", () => {
+    const { container } = render(
+      <SettingsSectionRow
+        title="Mentions"
+        description="Get notified when someone mentions you."
+        icon={AtSign}
+      />,
+    );
+
+    expect(screen.getByText("Mentions")).toBeInTheDocument();
+    expect(screen.getByText("Get notified when someone mentions you.")).toBeInTheDocument();
+    expect(container.querySelector("svg")).not.toBeNull();
   });
 });

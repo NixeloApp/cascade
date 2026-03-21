@@ -270,6 +270,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-time-tracking-manual-entry-modal$/, "22-time-tracking", "-manual-entry-modal"],
   [/^filled-settings-profile-avatar-upload-modal$/, "12-settings", "-profile-avatar-upload-modal"],
   [/^filled-settings-profile-cover-upload-modal$/, "12-settings", "-profile-cover-upload-modal"],
+  [/^filled-settings-notifications$/, "12-settings", "-notifications"],
   [/^filled-settings-preferences$/, "12-settings", "-preferences"],
   [/^filled-settings-offline$/, "12-settings", "-offline"],
   [
@@ -1924,6 +1925,13 @@ async function waitForExpectedContent(
       });
     }
 
+    if (name === "settings-notifications") {
+      await page.getByRole("heading", { name: /^push notifications$/i }).waitFor({
+        state: "visible",
+        timeout: 12000,
+      });
+    }
+
     if (name === "settings-offline") {
       await page.getByRole("heading", { name: /^connection status$/i }).waitFor({
         state: "visible",
@@ -2526,6 +2534,12 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
+  await takeScreenshot(
+    page,
+    p,
+    "settings-notifications",
+    `${ROUTES.settings.profile.build(orgSlug)}?tab=notifications`,
+  );
   await takeScreenshot(
     page,
     p,
@@ -4729,6 +4743,7 @@ const DRY_RUN_PAGES = [
   "filled-meetings-memory-lens",
   "filled-settings",
   "filled-settings-profile",
+  "filled-settings-notifications",
   "filled-settings-preferences",
   "filled-settings-offline",
   "filled-authentication",

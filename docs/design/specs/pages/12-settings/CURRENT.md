@@ -14,6 +14,7 @@
 | Desktop | Light | ![](screenshots/desktop-light.png) |
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
+| Desktop | Notifications Tab | ![](screenshots/desktop-light-notifications.png) |
 | Desktop | Preferences Tab | ![](screenshots/desktop-light-preferences.png) |
 | Desktop | Offline Tab | ![](screenshots/desktop-light-offline.png) |
 | Desktop | Project Settings | ![](screenshots/desktop-light-project.png) |
@@ -41,7 +42,9 @@
 - The profile header is now mobile-first: the avatar actions stay attached to the avatar, the name/actions collapse cleanly, and the account metadata no longer feels like a second competing card stack.
 - Account metadata now uses compact inset rows, so the profile surface reads as one system from mobile through desktop.
 - Preferences and offline now share the same settings-section anatomy instead of reading like unrelated internal tools.
+- Notifications now uses the same section anatomy for push, email, digest, and quiet-hours states instead of a bespoke internal card stack.
 - Screenshot coverage now includes first-class Preferences and Offline tab captures so these lighter settings states stop drifting outside review.
+- Screenshot coverage now includes the normal notifications tab in addition to the blocked-permission edge case.
 
 ---
 
@@ -49,7 +52,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The settings shell now covers profile, preferences, and offline more consistently; the remaining settings debt is the heavier multi-state tabs and adjacent admin flows | multi-tab state review | LOW |
+| The settings shell now covers profile, notifications, preferences, and offline more consistently; the remaining settings debt is the heavier integration tabs and adjacent admin flows | multi-tab state review | LOW |
 
 ---
 
@@ -59,5 +62,6 @@
 - `src/components/Settings.tsx`
 - `src/components/Settings/settingsTabs.ts`
 - `src/components/Settings/ProfileContent.tsx`
+- `src/components/Settings/NotificationsTab.tsx`
 - `src/components/Settings/SettingsSection.tsx`
 - `src/components/ui/Tabs.tsx`
