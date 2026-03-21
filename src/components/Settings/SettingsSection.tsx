@@ -61,6 +61,50 @@ export function SettingsSection({
   );
 }
 
+interface SettingsSectionInsetProps extends Omit<CardProps, "children" | "title"> {
+  action?: ReactNode;
+  children: ReactNode;
+  description?: ReactNode;
+  title?: ReactNode;
+}
+
+/**
+ * Shared inset block inside settings/admin surfaces so secondary groups use one
+ * consistent inner shell instead of ad hoc nested cards and bordered divs.
+ */
+export function SettingsSectionInset({
+  action,
+  children,
+  description,
+  padding = "md",
+  title,
+  variant = "section",
+  ...props
+}: SettingsSectionInsetProps) {
+  return (
+    <Card padding={padding} variant={variant} {...props}>
+      <Stack gap="md">
+        {title || description || action ? (
+          <Flex direction="column" gap="md" directionMd="row" className="md:justify-between">
+            <FlexItem flex="1">
+              <Stack gap="xs">
+                {title ? <Typography variant="label">{title}</Typography> : null}
+                {description ? (
+                  <Typography variant="small" color="secondary">
+                    {description}
+                  </Typography>
+                ) : null}
+              </Stack>
+            </FlexItem>
+            {action ? <FlexItem align="start">{action}</FlexItem> : null}
+          </Flex>
+        ) : null}
+        {children}
+      </Stack>
+    </Card>
+  );
+}
+
 interface SettingsSectionRowProps {
   action?: ReactNode;
   description?: ReactNode;

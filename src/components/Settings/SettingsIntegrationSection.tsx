@@ -1,11 +1,10 @@
 import type { LucideIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { Badge, type BadgeProps } from "../ui/Badge";
-import { Card } from "../ui/Card";
 import type { IconTone } from "../ui/icon-tones";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
-import { SettingsSection } from "./SettingsSection";
+import { SettingsSection, SettingsSectionInset } from "./SettingsSection";
 
 interface SettingsIntegrationSectionProps
   extends Omit<
@@ -70,11 +69,7 @@ interface SettingsIntegrationInsetProps {
  * connected resources, or secondary action groups.
  */
 export function SettingsIntegrationInset({ children }: SettingsIntegrationInsetProps) {
-  return (
-    <Card variant="section" padding="md">
-      {children}
-    </Card>
-  );
+  return <SettingsSectionInset>{children}</SettingsSectionInset>;
 }
 
 interface SettingsIntegrationMetaProps {

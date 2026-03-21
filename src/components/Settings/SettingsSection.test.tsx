@@ -3,7 +3,7 @@ import { AtSign, Bell } from "@/lib/icons";
 import { render, screen } from "@/test/custom-render";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { SettingsSection, SettingsSectionRow } from "./SettingsSection";
+import { SettingsSection, SettingsSectionInset, SettingsSectionRow } from "./SettingsSection";
 
 describe("SettingsSection", () => {
   it("renders the shared section header with icon, description, and action", () => {
@@ -54,5 +54,24 @@ describe("SettingsSectionRow", () => {
     expect(screen.getByText("Mentions")).toBeInTheDocument();
     expect(screen.getByText("Get notified when someone mentions you.")).toBeInTheDocument();
     expect(container.querySelector("svg")).not.toBeNull();
+  });
+});
+
+describe("SettingsSectionInset", () => {
+  it("renders the shared inset title, description, and action slot", () => {
+    render(
+      <SettingsSectionInset
+        title="Review filters"
+        description="Focus the list before taking action."
+        action={<Button>Clear</Button>}
+      >
+        <div>Inset body</div>
+      </SettingsSectionInset>,
+    );
+
+    expect(screen.getByText("Review filters")).toBeInTheDocument();
+    expect(screen.getByText("Focus the list before taking action.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear" })).toBeInTheDocument();
+    expect(screen.getByText("Inset body")).toBeInTheDocument();
   });
 });

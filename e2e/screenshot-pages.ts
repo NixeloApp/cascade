@@ -271,6 +271,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-settings-profile-avatar-upload-modal$/, "12-settings", "-profile-avatar-upload-modal"],
   [/^filled-settings-profile-cover-upload-modal$/, "12-settings", "-profile-cover-upload-modal"],
   [/^filled-settings-integrations$/, "12-settings", "-integrations"],
+  [/^filled-settings-admin$/, "12-settings", "-admin"],
   [/^filled-settings-notifications$/, "12-settings", "-notifications"],
   [/^filled-settings-preferences$/, "12-settings", "-preferences"],
   [/^filled-settings-offline$/, "12-settings", "-offline"],
@@ -1941,6 +1942,13 @@ async function waitForExpectedContent(
       });
     }
 
+    if (name === "settings-admin") {
+      await page.getByRole("heading", { name: /^organization settings$/i }).waitFor({
+        state: "visible",
+        timeout: 12000,
+      });
+    }
+
     if (name === "settings-offline") {
       await page.getByRole("heading", { name: /^connection status$/i }).waitFor({
         state: "visible",
@@ -2548,6 +2556,12 @@ async function screenshotFilledStates(
     p,
     "settings-integrations",
     `${ROUTES.settings.profile.build(orgSlug)}?tab=integrations`,
+  );
+  await takeScreenshot(
+    page,
+    p,
+    "settings-admin",
+    `${ROUTES.settings.profile.build(orgSlug)}?tab=admin`,
   );
   await takeScreenshot(
     page,
@@ -4799,6 +4813,7 @@ const DRY_RUN_PAGES = [
   "filled-settings",
   "filled-settings-profile",
   "filled-settings-integrations",
+  "filled-settings-admin",
   "filled-settings-notifications",
   "filled-settings-preferences",
   "filled-settings-offline",

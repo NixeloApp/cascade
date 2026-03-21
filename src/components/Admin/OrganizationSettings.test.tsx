@@ -42,15 +42,55 @@ vi.mock("../ui/Button", () => ({
   ),
 }));
 
-vi.mock("../ui/Card", () => ({
-  Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CardHeader: ({ title, description }: { title: string; description?: string }) => (
+vi.mock("../Settings/SettingsSection", () => ({
+  SettingsSection: ({
+    children,
+    title,
+    description,
+    action,
+  }: {
+    children: ReactNode;
+    title: string;
+    description?: string;
+    action?: ReactNode;
+  }) => (
     <div>
       <div>{title}</div>
       <div>{description}</div>
+      {action}
+      {children}
     </div>
   ),
-  CardBody: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SettingsSectionInset: ({
+    children,
+    title,
+    description,
+  }: {
+    children: ReactNode;
+    title?: ReactNode;
+    description?: ReactNode;
+  }) => (
+    <div>
+      {title}
+      {description}
+      {children}
+    </div>
+  ),
+  SettingsSectionRow: ({
+    title,
+    description,
+    action,
+  }: {
+    title: ReactNode;
+    description?: ReactNode;
+    action?: ReactNode;
+  }) => (
+    <div>
+      {title}
+      {description}
+      {action}
+    </div>
+  ),
 }));
 
 vi.mock("../ui/Flex", () => ({
@@ -191,9 +231,9 @@ describe("OrganizationSettings", () => {
     render(<OrganizationSettings />);
 
     expect(screen.getByText("Organization Settings")).toBeInTheDocument();
-    expect(screen.getByText("General")).toBeInTheDocument();
-    expect(screen.getByText("Time Tracking")).toBeInTheDocument();
-    expect(screen.getByText("Billing & Invoicing")).toBeInTheDocument();
+    expect(screen.getByLabelText("orgName")).toBeInTheDocument();
+    expect(screen.getByLabelText("maxHoursPerWeek")).toBeInTheDocument();
+    expect(screen.getByLabelText("Enable billing features")).toBeInTheDocument();
 
     // Check input values - uses the id as aria-label
     const nameInput = screen.getByRole("textbox", { name: "orgName" });

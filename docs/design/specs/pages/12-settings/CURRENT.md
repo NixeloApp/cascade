@@ -1,7 +1,7 @@
 # Settings Page - Current State
 
 > **Route**: `/:slug/settings/profile`
-> **Status**: 🟢 Profile surface now scales cleanly across viewports
+> **Status**: 🟢 Settings tabs now share a consistent shell, including admin
 > **Last Updated**: 2026-03-21
 
 ---
@@ -15,6 +15,7 @@
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 | Desktop | Integrations Tab | ![](screenshots/desktop-light-integrations.png) |
+| Desktop | Admin Tab | ![](screenshots/desktop-light-admin.png) |
 | Desktop | Notifications Tab | ![](screenshots/desktop-light-notifications.png) |
 | Desktop | Preferences Tab | ![](screenshots/desktop-light-preferences.png) |
 | Desktop | Offline Tab | ![](screenshots/desktop-light-offline.png) |
@@ -45,9 +46,11 @@
 - Preferences and offline now share the same settings-section anatomy instead of reading like unrelated internal tools.
 - Notifications now uses the same section anatomy for push, email, digest, and quiet-hours states instead of a bespoke internal card stack.
 - Integrations now uses one shared settings anatomy across GitHub, Slack, Google Calendar, and Pumble instead of four unrelated card/header treatments.
+- The lighter admin sections now use the same settings/admin anatomy instead of mixing bespoke card headers, bordered dividers, and one-off help blocks.
 - Screenshot coverage now includes first-class Preferences and Offline tab captures so these lighter settings states stop drifting outside review.
 - Screenshot coverage now includes the normal notifications tab in addition to the blocked-permission edge case.
 - Screenshot coverage now includes the integrations tab so the remaining multi-state settings shell no longer hides outside the spec.
+- Screenshot coverage now includes the admin tab, so the remaining settings review is no longer hiding behind the role-gated surface.
 
 ---
 
@@ -55,7 +58,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The settings shell now covers profile, integrations, notifications, preferences, and offline more consistently; the remaining settings debt is adjacent admin/import-export state review | multi-tab state review | LOW |
+| The settings shell now covers profile, admin, integrations, notifications, preferences, and offline more consistently; the remaining settings debt is lower-priority security / API keys / devtools state review | multi-tab state review | LOW |
 
 ---
 
@@ -65,6 +68,11 @@
 - `src/components/Settings.tsx`
 - `src/components/Settings/settingsTabs.ts`
 - `src/components/Settings/ProfileContent.tsx`
+- `src/components/Settings/AdminTab.tsx`
 - `src/components/Settings/NotificationsTab.tsx`
 - `src/components/Settings/SettingsSection.tsx`
+- `src/components/Admin/OrganizationSettings.tsx`
+- `src/components/Admin/OAuthHealthDashboard.tsx`
+- `src/components/Admin/OAuthFeatureFlagSettings.tsx`
+- `src/components/Admin/IpRestrictionsSettings.tsx`
 - `src/components/ui/Tabs.tsx`
