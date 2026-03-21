@@ -46,9 +46,10 @@ It is also structurally isolated:
 ### Registration and runtime
 
 - Service worker registration happens in `src/routes/__root.tsx`, not `src/main.tsx`.
-- Registration is gated to production and skipped for E2E when `window.__convex_test_client` exists.
+- Registration is gated to production and skipped entirely for `import.meta.env.MODE === "e2e"`.
 - The app uses `vite-plugin-pwa` in `vite.config.ts`.
 - The app also manually registers `/service-worker.js` in `src/lib/serviceWorker.ts`.
+- `src/lib/serviceWorker.ts` now registers immediately if the page is already loaded, instead of waiting forever on a missed `load` event.
 - `vite.config.ts` now sets `injectRegister: false`, so the current production build no longer injects `registerSW.js`.
 - The production build still ships `/service-worker.js` from `public/service-worker.js`.
 - The production build still emits `sw.js` from `vite-plugin-pwa`, but it is not auto-registered by built HTML.
@@ -92,6 +93,7 @@ It is also structurally isolated:
 ### Docs
 
 - `docs/setup/PWA.md` and `docs/README.md` have been updated to reflect the current worker/manifest ownership.
+- `src/lib/serviceWorker.test.ts` now covers registration, update banner behavior, install prompt behavior, and cache-clearing behavior.
 - Remaining doc work is about keeping future replay/install behavior aligned as implementation changes continue.
 
 ## Phase 0 Findings Verified
@@ -113,7 +115,7 @@ It is also structurally isolated:
 - there is no longer a second custom worker source file in `src/` competing for ownership.
 - Auto-registration conflict is reduced because built HTML no longer auto-registers `/sw.js`.
 - Manifest ownership is mostly aligned on `manifest.webmanifest`, though `public/manifest.json` is still emitted as an unused artifact.
-- `promptInstall()` and `clearCache()` currently have no active call sites outside their defining module.
+- `promptInstall()` is now invoked from the root app shell for production, non-E2E builds.
 
 ### Build verification note
 
@@ -178,10 +180,14 @@ So the queue shape exists, the failure semantics are truthful, and one real prod
 - `isStandalone()`
 
 Current repo scan suggests:
-- these helpers are defined
-- but they do not appear to have active call sites beyond `register()`
+- `promptInstall()` is now called from the root app shell in production, non-E2E builds
+- registration no longer depends on catching a late `window.load` event
+- update and install banners now guard against duplicate DOM insertion
 
-That needs verification and likely cleanup.
+What is still missing:
+- product-level confirmation that the install prompt actually appears under real browser installability conditions
+- iOS fallback guidance
+- analytics or durable logging for update/install interactions
 
 ### 5. Offline settings copy may overstate reality
 
@@ -223,7 +229,8 @@ Non-goals for this lane:
 - [x] Verify whether `vite-plugin-pwa` is generating the worker, augmenting it, or being bypassed. It is generating a separate `/sw.js`; source config now disables its auto-registration.
 - [x] Document the real build/runtime flow in this file once confirmed.
 - [x] Confirm whether `public/manifest.json` or the Vite PWA manifest is the source of truth at build time. Current answer: built HTML now links only `manifest.webmanifest`, and the manual worker caches that same path.
-- [ ] Confirm whether install prompts are ever shown in production.
+- [x] Wire install prompt handling into the production app shell.
+- [ ] Confirm whether install prompts are actually shown in production under browser installability rules.
 - [x] Confirm code-path ownership for push readiness. `src/lib/webPush.tsx` waits on `navigator.serviceWorker.ready`, which currently resolves against the manually registered `/service-worker.js` path.
 
 ## Phase 1: Queue Architecture
@@ -291,10 +298,11 @@ Current direction:
 ## Phase 5: Install And Update Experience
 
 - [ ] Verify whether `promptInstall()` should be invoked somewhere real.
-- [ ] Decide whether install prompting should be automatic, manual, or settings-driven.
+- [x] Invoke `promptInstall()` from the production app shell.
+- [ ] Decide whether install prompting should remain automatic or move to a manual/settings-driven entry point.
 - [ ] Ensure iOS fallback instructions exist if install prompt cannot be triggered.
 - [ ] Make the update banner accessible and consistent with app conventions.
-- [ ] Prevent duplicate install/update banners.
+- [x] Prevent duplicate install/update banners.
 - [ ] Add explicit analytics or logging for:
   - service worker registered
   - update found
@@ -315,7 +323,7 @@ Current direction:
 
 ### Unit / component
 
-- [ ] Add `src/lib/serviceWorker.test.ts` for registration/update/install helpers.
+- [x] Add `src/lib/serviceWorker.test.ts` for registration/update/install helpers.
 - [x] Add `src/lib/offline.test.ts` for queue replay guardrails and failure classification.
 - [ ] Extend `src/hooks/useOffline.test.ts` for real replay-trigger conditions.
 - [ ] Extend `src/components/Settings/OfflineTab.test.tsx` so the UI contract matches real queue states and manual sync behavior.

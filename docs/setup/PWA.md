@@ -16,8 +16,9 @@ What is true right now:
 - `vite.config.ts` sets `injectRegister: false` to keep registration owned by `src/lib/serviceWorker.ts`.
 - Built HTML now links only `/manifest.webmanifest`, and the manual service worker caches that same manifest path.
 - `window.__convex_test_client` is now exposed only in `--mode e2e`, so normal production builds no longer suppress service-worker registration by mistake.
+- `src/lib/serviceWorker.ts` now registers immediately if the document is already loaded, so app-shell startup no longer depends on catching a late `window.load` event.
 - The dead `src/service-worker.ts` worker candidate has been removed from source because it was not part of the shipped build pipeline.
-- `promptInstall()` exists in `src/lib/serviceWorker.ts`, but is not currently wired to an active call site.
+- `promptInstall()` is now wired from the root app shell for production, non-E2E builds.
 - `processOfflineQueue()` in `src/lib/offline.ts` now rejects unsupported replay types explicitly instead of marking them synced without contacting a backend.
 - The first live replay path now exists for `userSettings.update`; queued preference changes flush from the authenticated app shell on startup and reconnect.
 
@@ -164,7 +165,7 @@ When you deploy a new version:
 
 ### Desktop (Chrome, Edge)
 
-The app will show an install prompt banner automatically when:
+The app now binds `beforeinstallprompt` from the root app shell in production, and will show a custom install banner when:
 - User hasn't previously dismissed it
 - App is not already installed
 - `beforeinstallprompt` event fires

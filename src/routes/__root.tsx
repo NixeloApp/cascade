@@ -19,7 +19,7 @@ import { NotFoundPage } from "../components/NotFoundPage";
 import { TooltipProvider } from "../components/ui/Tooltip";
 import { Typography } from "../components/ui/Typography";
 import { ThemeProvider } from "../contexts/ThemeContext";
-import { register as registerServiceWorker } from "../lib/serviceWorker";
+import { promptInstall, register as registerServiceWorker } from "../lib/serviceWorker";
 
 declare global {
   interface Window {
@@ -65,6 +65,7 @@ function RootComponent() {
     // DO NOT register service worker in E2E tests as it can interfere with LocalStorage/Auth
     if (import.meta.env.PROD && import.meta.env.MODE !== "e2e") {
       registerServiceWorker();
+      promptInstall();
     }
   }, []);
 

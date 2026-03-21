@@ -19,45 +19,76 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+let hasRegisteredServiceWorker = false;
+let hasBoundInstallPrompt = false;
+let hasBoundControllerChange = false;
+
+function getExistingElement(id: string): HTMLElement | null {
+  return document.getElementById(id);
+}
+
+function reloadOnControllerChange() {
+  window.location.reload();
+}
+
+function bindControllerChangeReload() {
+  if (hasBoundControllerChange || !("serviceWorker" in navigator)) {
+    return;
+  }
+
+  navigator.serviceWorker.addEventListener("controllerchange", reloadOnControllerChange);
+  hasBoundControllerChange = true;
+}
+
+function startServiceWorkerRegistration() {
+  if (!("serviceWorker" in navigator) || hasRegisteredServiceWorker) {
+    return;
+  }
+
+  hasRegisteredServiceWorker = true;
+
+  navigator.serviceWorker
+    .register("/service-worker.js")
+    .then((registration) => {
+      // Check for updates every hour
+      setInterval(() => {
+        registration.update();
+      }, HOUR);
+
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              showUpdateNotification();
+            }
+          });
+        }
+      });
+    })
+    .catch(() => {
+      hasRegisteredServiceWorker = false;
+      // Service worker registration errors are non-critical
+    });
+}
+
 /**
  * Registers the service worker for PWA functionality.
  * Sets up periodic update checks and handles SW lifecycle events.
  */
 export function register() {
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/service-worker.js")
-        .then((registration) => {
-          // Check for updates periodically
-          // Check for updates every hour
-          setInterval(() => {
-            registration.update();
-          }, HOUR);
-
-          // Handle updates
-          registration.addEventListener("updatefound", () => {
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener("statechange", () => {
-                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                  // New service worker available
-                  showUpdateNotification();
-                }
-              });
-            }
-          });
-        })
-        .catch(() => {
-          // Service worker registration errors are non-critical
-        });
-
-      // Handle controller change (new SW activated)
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        window.location.reload();
-      });
-    });
+  if (!("serviceWorker" in navigator)) {
+    return;
   }
+
+  bindControllerChangeReload();
+
+  if (document.readyState === "complete") {
+    startServiceWorkerRegistration();
+    return;
+  }
+
+  window.addEventListener("load", startServiceWorkerRegistration, { once: true });
 }
 
 /**
@@ -87,6 +118,10 @@ export function clearCache() {
 }
 
 function showUpdateNotification() {
+  if (getExistingElement("sw-update-banner")) {
+    return;
+  }
+
   // Create a simple banner to notify users of an update
   const banner = document.createElement("div");
   banner.id = "sw-update-banner";
@@ -129,6 +164,11 @@ export function isStandalone(): boolean {
  * Listens for beforeinstallprompt event and shows custom install UI.
  */
 export function promptInstall() {
+  if (hasBoundInstallPrompt) {
+    return;
+  }
+
+  hasBoundInstallPrompt = true;
   let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
   window.addEventListener("beforeinstallprompt", (e) => {
@@ -162,6 +202,7 @@ function showInstallPrompt(onInstall: () => void) {
 
   // Check if user has previously dismissed
   if (localStorage.getItem("pwa-install-dismissed") === "true") return;
+  if (getExistingElement("pwa-install-banner")) return;
 
   const banner = document.createElement("div");
   banner.id = "pwa-install-banner";
