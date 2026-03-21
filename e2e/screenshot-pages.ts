@@ -270,6 +270,8 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-time-tracking-manual-entry-modal$/, "22-time-tracking", "-manual-entry-modal"],
   [/^filled-settings-profile-avatar-upload-modal$/, "12-settings", "-profile-avatar-upload-modal"],
   [/^filled-settings-profile-cover-upload-modal$/, "12-settings", "-profile-cover-upload-modal"],
+  [/^filled-settings-preferences$/, "12-settings", "-preferences"],
+  [/^filled-settings-offline$/, "12-settings", "-offline"],
   [
     /^filled-settings-notifications-permission-denied$/,
     "12-settings",
@@ -1914,6 +1916,21 @@ async function waitForExpectedContent(
     await page
       .getByText(/manage your account, integrations, and preferences/i)
       .waitFor({ state: "visible", timeout: 12000 });
+
+    if (name === "settings-preferences") {
+      await page.getByRole("heading", { name: /^appearance$/i }).waitFor({
+        state: "visible",
+        timeout: 12000,
+      });
+    }
+
+    if (name === "settings-offline") {
+      await page.getByRole("heading", { name: /^connection status$/i }).waitFor({
+        state: "visible",
+        timeout: 12000,
+      });
+    }
+
     await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
@@ -2509,6 +2526,18 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
+  await takeScreenshot(
+    page,
+    p,
+    "settings-preferences",
+    `${ROUTES.settings.profile.build(orgSlug)}?tab=preferences`,
+  );
+  await takeScreenshot(
+    page,
+    p,
+    "settings-offline",
+    `${ROUTES.settings.profile.build(orgSlug)}?tab=offline`,
+  );
   await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
   await takeScreenshot(page, p, "add-ons", ROUTES.addOns.build(orgSlug));
   await takeScreenshot(page, p, "assistant", ROUTES.assistant.build(orgSlug));
@@ -4700,6 +4729,8 @@ const DRY_RUN_PAGES = [
   "filled-meetings-memory-lens",
   "filled-settings",
   "filled-settings-profile",
+  "filled-settings-preferences",
+  "filled-settings-offline",
   "filled-authentication",
   "filled-add-ons",
   "filled-assistant",
