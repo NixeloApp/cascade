@@ -596,6 +596,11 @@ function usePlateDocumentSync({
         });
       }
 
+      // Clear again after the wait — a failed in-flight autosave may have
+      // repopulated pendingContentRef and scheduled a retry during the wait.
+      clearTimeoutRef(saveTimeoutRef);
+      pendingContentRef.current = null;
+
       setSyncState("saving");
 
       // Compute the target version right before submit to avoid races
