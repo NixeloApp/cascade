@@ -263,7 +263,7 @@ Current direction:
 - [x] Run replay on app startup for the current authenticated client path.
 - [x] Run replay on `online` for the current authenticated client path.
 - [ ] Decide whether replay should also run via background sync.
-- [ ] Decide whether replay should also run manually from Settings.
+- [x] Add a manual queue-processing path from Settings.
 
 ## Phase 3: Tighten Read Caching And Offline Navigation
 

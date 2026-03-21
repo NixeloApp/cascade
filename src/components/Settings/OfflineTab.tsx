@@ -63,10 +63,12 @@ export function OfflineTab() {
     failedCount,
     isLoading,
     refresh,
+    processNow,
     retryMutation,
     deleteMutation,
   } = useOfflineQueue();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
   const [activeMutationId, setActiveMutationId] = useState<number | null>(null);
   const hasServiceWorkerSupport = typeof navigator !== "undefined" && "serviceWorker" in navigator;
   const hasBackgroundSyncSupport =
@@ -105,6 +107,16 @@ export function OfflineTab() {
       showError(error, "Failed to remove queued item");
     } finally {
       setActiveMutationId(null);
+    }
+  };
+
+  const handleProcessQueue = async () => {
+    setIsProcessingQueue(true);
+    try {
+      await processNow();
+      showInfo("Queued items processed");
+    } finally {
+      setIsProcessingQueue(false);
     }
   };
 
@@ -269,6 +281,19 @@ export function OfflineTab() {
                 Refresh Queue
               </Button>
             </Flex>
+            {pendingCount > 0 && (
+              <Flex justify="end">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleProcessQueue}
+                  isLoading={isProcessingQueue}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Process Queue
+                </Button>
+              </Flex>
+            )}
             <Grid cols={1} colsSm={3} gap="md">
               <div className="p-3 bg-ui-bg-secondary">
                 <Stack gap="xs">

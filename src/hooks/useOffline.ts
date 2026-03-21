@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { type OfflineMutation, offlineDB, offlineStatus } from "../lib/offline";
+import {
+  type OfflineMutation,
+  offlineDB,
+  offlineStatus,
+  processOfflineQueue,
+} from "../lib/offline";
 
 function logOfflineError(operation: string, error: unknown) {
   console.info(`[offline] ${operation}`, { error });
@@ -101,6 +106,19 @@ export function useOfflineQueue() {
     await refresh();
   };
 
+  const processNow = async () => {
+    setIsLoading(true);
+    try {
+      await processOfflineQueue();
+      const mutations = await offlineDB.getQueuedMutations();
+      setQueue(mutations);
+    } catch (error) {
+      logOfflineError("process queue failed", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -140,6 +158,7 @@ export function useOfflineQueue() {
     failedCount: counts.failedCount,
     isLoading,
     refresh,
+    processNow,
     retryMutation,
     deleteMutation,
     clearSynced,

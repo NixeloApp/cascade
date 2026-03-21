@@ -50,6 +50,7 @@ describe("OfflineTab", () => {
       failedCount: 0,
       isLoading: false,
       refresh: vi.fn(),
+      processNow: vi.fn(),
       retryMutation: vi.fn(),
       deleteMutation: vi.fn(),
       clearSynced: vi.fn(),
@@ -80,6 +81,7 @@ describe("OfflineTab", () => {
       failedCount: 0,
       isLoading: true,
       refresh: vi.fn(),
+      processNow: vi.fn(),
       retryMutation: vi.fn(),
       deleteMutation: vi.fn(),
       clearSynced: vi.fn(),
@@ -102,6 +104,7 @@ describe("OfflineTab", () => {
       createQueueItem(6, "pending"),
     ];
     const refresh = vi.fn().mockResolvedValue(undefined);
+    const processNow = vi.fn().mockResolvedValue(undefined);
     const retryMutation = vi.fn().mockResolvedValue(undefined);
     const deleteMutation = vi.fn().mockResolvedValue(undefined);
 
@@ -114,6 +117,7 @@ describe("OfflineTab", () => {
       failedCount: 1,
       isLoading: false,
       refresh,
+      processNow,
       retryMutation,
       deleteMutation,
       clearSynced: vi.fn(),
@@ -142,6 +146,12 @@ describe("OfflineTab", () => {
 
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(mockToastInfo).toHaveBeenCalledWith("Local offline queue refreshed", {
+      testId: TEST_IDS.TOAST.INFO,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Process Queue" }));
+    expect(processNow).toHaveBeenCalledTimes(1);
+    expect(mockToastInfo).toHaveBeenCalledWith("Queued items processed", {
       testId: TEST_IDS.TOAST.INFO,
     });
 

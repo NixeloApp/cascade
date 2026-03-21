@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderHook, waitFor } from "@/test/custom-render";
+import { act, renderHook, waitFor } from "@/test/custom-render";
 import { useOfflineQueue, useOfflineSyncStatus } from "./useOffline";
 
-const { mockGetQueuedMutations } = vi.hoisted(() => ({
+const { mockGetQueuedMutations, mockProcessOfflineQueue } = vi.hoisted(() => ({
   mockGetQueuedMutations: vi.fn(),
+  mockProcessOfflineQueue: vi.fn(),
 }));
 
 vi.mock("../lib/offline", () => ({
@@ -17,6 +18,7 @@ vi.mock("../lib/offline", () => ({
     isOnline: true,
     subscribe: vi.fn(() => () => {}),
   },
+  processOfflineQueue: mockProcessOfflineQueue,
 }));
 
 /** Expected count when offline queue is empty or fetch fails */
@@ -60,6 +62,27 @@ describe("useOffline reliability", () => {
     expect(result.current.count).toBe(EMPTY_QUEUE_COUNT);
     expect(warnSpy).toHaveBeenCalledWith("[offline] refresh queue failed", {
       error: expect.any(Error),
+    });
+  });
+
+  it("processes the queue and refreshes queued mutations", async () => {
+    mockGetQueuedMutations.mockResolvedValueOnce([{ id: 1, status: "pending" }]);
+    mockGetQueuedMutations.mockResolvedValueOnce([]);
+    mockProcessOfflineQueue.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useOfflineQueue());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.processNow();
+    });
+
+    expect(mockProcessOfflineQueue).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(result.current.queue).toEqual([]);
     });
   });
 });
