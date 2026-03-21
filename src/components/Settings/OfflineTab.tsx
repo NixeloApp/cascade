@@ -40,12 +40,15 @@ function getQueueStatusSummary(
   return isOnline ? "Ready" : "Offline";
 }
 
-function getQueueBadgeVariant(status: "pending" | "syncing" | "failed") {
+function getQueueBadgeVariant(status: "pending" | "syncing" | "synced" | "failed") {
   if (status === "failed") {
     return "error";
   }
   if (status === "syncing") {
     return "info";
+  }
+  if (status === "synced") {
+    return "success";
   }
   return "warning";
 }

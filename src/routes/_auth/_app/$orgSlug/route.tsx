@@ -34,11 +34,26 @@ import {
   useOrganizationOptional,
 } from "@/hooks/useOrgContext";
 import { SidebarProvider } from "@/hooks/useSidebarState";
+import {
+  clearAuthenticatedSessionMarker,
+  hasRecoverableAuthenticatedSession,
+  markAuthenticatedSession,
+  readLocalStorageJson,
+  removeLocalStorageValue,
+  writeLocalStorageJson,
+} from "@/lib/authRecovery";
 import { showError, showSuccess } from "@/lib/toast";
 // Re-export hooks for backwards compatibility with existing imports
 export { useOrganization, useOrganizationOptional };
 
 type UserOrganization = FunctionReturnType<typeof api.organizations.getUserOrganizations>[number];
+type PersistedOrganization = FunctionReturnType<typeof api.organizations.getOrganizationBySlug>;
+const ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY = "nixelo-organization-layout-cache";
+
+interface PersistedOrganizationLayoutState {
+  userOrganizations?: UserOrganization[];
+  organizationsBySlug?: Record<string, PersistedOrganization>;
+}
 
 let cachedOrgUserOrganizations: UserOrganization[] | undefined;
 const cachedOrganizationsBySlug = new Map<
@@ -76,6 +91,9 @@ function OrgError({ title, message }: { title: string; message: string }) {
 }
 
 function useStableOrgData(orgSlug: string) {
+  const persistedState = readLocalStorageJson<PersistedOrganizationLayoutState>(
+    ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY,
+  );
   const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {}) as
     | UserOrganization[]
     | undefined;
@@ -84,43 +102,74 @@ function useStableOrgData(orgSlug: string) {
     slug: orgSlug,
   });
 
-  if (userOrganizations !== undefined) {
-    cachedOrgUserOrganizations = userOrganizations;
-  }
+  useEffect(() => {
+    if (userOrganizations === undefined) {
+      return;
+    }
 
-  if (organization !== undefined) {
+    cachedOrgUserOrganizations = userOrganizations;
+    writeLocalStorageJson(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY, {
+      ...persistedState,
+      userOrganizations,
+      organizationsBySlug: persistedState?.organizationsBySlug ?? {},
+    });
+  }, [persistedState, userOrganizations]);
+
+  useEffect(() => {
+    if (organization === undefined) {
+      return;
+    }
+
     cachedOrganizationsBySlug.set(orgSlug, organization);
-  }
+    writeLocalStorageJson(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY, {
+      ...persistedState,
+      userOrganizations: userOrganizations ?? persistedState?.userOrganizations,
+      organizationsBySlug: {
+        ...(persistedState?.organizationsBySlug ?? {}),
+        [orgSlug]: organization,
+      },
+    });
+  }, [orgSlug, organization, persistedState, userOrganizations]);
 
   return {
-    organization: organization ?? cachedOrganizationsBySlug.get(orgSlug),
-    userOrgs: userOrganizations ?? cachedOrgUserOrganizations,
+    organization:
+      organization ??
+      cachedOrganizationsBySlug.get(orgSlug) ??
+      persistedState?.organizationsBySlug?.[orgSlug],
+    userOrgs: userOrganizations ?? cachedOrgUserOrganizations ?? persistedState?.userOrganizations,
   };
 }
 
 function OrganizationLayout() {
   const { orgSlug } = Route.useParams();
   const { isAuthLoading, isAuthenticated } = useAuthReady();
+  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
 
   if (isAuthenticated) {
     hasAuthenticatedOrgSession = true;
+    markAuthenticatedSession();
   } else if (!isAuthLoading) {
     hasAuthenticatedOrgSession = false;
     cachedOrgUserOrganizations = undefined;
     cachedOrganizationsBySlug.clear();
+    clearAuthenticatedSessionMarker();
+    removeLocalStorageValue(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY);
   }
 
   const { organization, userOrgs } = useStableOrgData(orgSlug);
 
   if (
-    (isAuthLoading && !hasAuthenticatedOrgSession && !organization) ||
+    (isAuthLoading &&
+      !hasAuthenticatedOrgSession &&
+      !canRecoverAuthenticatedSession &&
+      !organization) ||
     organization === undefined ||
     userOrgs === undefined
   ) {
     return <OrgLoading />;
   }
 
-  if (!(isAuthenticated || organization)) {
+  if (!(isAuthenticated || organization || canRecoverAuthenticatedSession)) {
     return <OrgLoading />;
   }
 

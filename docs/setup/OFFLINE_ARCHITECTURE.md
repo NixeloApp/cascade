@@ -214,7 +214,7 @@ The current architecture still lacks:
 - explicit conflict-resolution policy
 - idempotency guarantees for every future replayable mutation
 - durable server-side auditing for failed offline actions
-- end-to-end browser verification for installability, offline navigation fallback, and push across worker updates
+- end-to-end browser verification for installability and push across worker updates
 - a single unambiguous worker ownership path at build time
 
 ## Extension Rules
@@ -273,7 +273,6 @@ What those tests currently prove:
 What they do not prove:
 
 - real installability in a browser
-- authenticated offline route reload/navigation, which currently stalls on the splash/loading surface in preview
 - push subscription survival across worker replacement
 
 Production-preview browser automation that now exists:
@@ -288,6 +287,7 @@ What that preview spec currently proves:
 - the runtime links `/manifest.webmanifest` and caches `/`, `/offline.html`, and `/manifest.webmanifest`
 - uncached offline navigation falls back to `offline.html`
 - an authenticated Settings session remains usable offline once loaded
+- previously visited authenticated Settings and dashboard routes recover offline in production preview
 - queued `userSettings.update` replay works in production preview
 - manual `Process Queue` works in production preview
 - `Last Successful Replay` updates in production preview

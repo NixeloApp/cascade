@@ -345,16 +345,16 @@ export const offlineDB = new OfflineDB();
 // Online/offline status tracking
 export class OfflineStatusManager {
   private listeners: Set<(isOnline: boolean) => void> = new Set();
-  private _isOnline = true;
+  private _isOnline = !(typeof navigator !== "undefined" && navigator.onLine === false);
 
   constructor() {
     if (typeof window !== "undefined") {
       window.addEventListener("online", this.handleOnline);
       window.addEventListener("offline", this.handleOffline);
 
-      // Initialize with current state if available, but fallback to true to prevent blocking
-      // We found that navigator.onLine can be unreliable in some environments (e.g. headless tests),
-      // reporting false when online. We rely on window events to update status.
+      // Treat an explicit offline signal as authoritative at startup so hard reloads while offline
+      // can recover from persisted local state instead of blocking on network-only bootstrap.
+      // We still fall back to true otherwise because navigator.onLine is not perfectly reliable.
     }
   }
 

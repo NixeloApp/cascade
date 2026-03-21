@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, authenticatedTest as test } from "../fixtures";
+import { escapeRegExp, ROUTES } from "../utils/routes";
 
 const OFFLINE_TIMEZONE_CHOICES = ["America/Chicago", "America/Denver"] as const;
 const OFFLINE_USER_SETTINGS_MUTATION_TYPE = "userSettings.update";
@@ -22,6 +23,69 @@ async function waitForControllingWorker(page: Page) {
 
 test.describe("Offline Replay Preview", () => {
   test.describe.configure({ mode: "serial" });
+
+  test("reloads a visited authenticated settings route while offline in preview", async ({
+    page,
+    orgSlug,
+    settingsPage,
+  }) => {
+    test.slow();
+    const settingsUrl = ROUTES.settings.profile.build(orgSlug);
+
+    await settingsPage.goto();
+    await page.reload({ waitUntil: "load" });
+    await waitForControllingWorker(page);
+    await settingsPage.switchToTab("preferences");
+
+    try {
+      await page.context().setOffline(true);
+      await dispatchConnectivityEvent(page, "offline");
+      await page.reload({ waitUntil: "load" });
+      await dispatchConnectivityEvent(page, "offline");
+
+      await expect(page).toHaveURL(new RegExp(`${escapeRegExp(settingsUrl)}(?:\\?.*)?$`));
+      await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible();
+      await expect(settingsPage.preferencesTab).toHaveAttribute("aria-selected", "true");
+      await expect(page.getByRole("heading", { name: /you're offline/i })).toHaveCount(0);
+      await settingsPage.offlineTab.click();
+      await expect(settingsPage.offlineTab).toHaveAttribute("aria-selected", "true");
+      await expect(settingsPage.syncStatusIndicator).toContainText("You are offline");
+    } finally {
+      await page.context().setOffline(false);
+      await dispatchConnectivityEvent(page, "online");
+    }
+  });
+
+  test("navigates back to a previously visited authenticated dashboard route while offline in preview", async ({
+    page,
+    dashboardPage,
+    settingsPage,
+    orgSlug,
+  }) => {
+    test.slow();
+
+    const dashboardUrl = ROUTES.dashboard.build(orgSlug);
+
+    await dashboardPage.goto();
+    await page.reload({ waitUntil: "load" });
+    await waitForControllingWorker(page);
+    await settingsPage.goto();
+    await settingsPage.switchToTab("preferences");
+
+    try {
+      await page.context().setOffline(true);
+      await dispatchConnectivityEvent(page, "offline");
+      await page.goto(dashboardUrl, { waitUntil: "load" });
+
+      await expect(page).toHaveURL(new RegExp(`${escapeRegExp(dashboardUrl)}$`));
+      await expect(dashboardPage.dashboardTab).toBeVisible();
+      await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /you're offline/i })).toHaveCount(0);
+    } finally {
+      await page.context().setOffline(false);
+      await dispatchConnectivityEvent(page, "online");
+    }
+  });
 
   test("queues a timezone update offline and replays it after reconnect in preview", async ({
     page,

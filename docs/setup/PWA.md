@@ -48,12 +48,12 @@ Verified now:
 - one real replayable mutation family: `userSettings.update`
 - install/update helper wiring in the app shell
 - production-preview browser automation confirms an authenticated Settings session stays usable offline once loaded
+- production-preview browser automation confirms previously visited authenticated Settings and dashboard routes restore offline in preview
 - production-preview browser automation confirms queued `userSettings.update` changes replay in preview and update `Last Successful Replay`
 
 Not yet verified end to end:
 
 - actual install-prompt display under browser installability rules
-- authenticated offline route reload/navigation currently stalls on the splash/loading surface in preview and needs a product fix before it can be treated as supported
 - push behavior across worker replacement
 
 ## Setup Requirements
@@ -150,6 +150,7 @@ Those checks currently cover:
 - preview-runtime manifest ownership and core shell cache contents
 - uncached offline navigation fallback in a real production preview
 - authenticated Settings-session offline queueing and replay in a real production preview
+- previously visited authenticated Settings and dashboard route recovery in a real production preview
 - `Last Successful Replay` updates after real preview replay
 
 ### Manual browser checks still required
@@ -157,8 +158,7 @@ Those checks currently cover:
 These are still runtime-verification tasks, not solved by unit tests:
 
 1. Confirm install prompt actually appears in a production browser session when installability criteria are met.
-2. Fix and then confirm fresh offline reload or second-route navigation of authenticated app routes; current preview probes stall on the splash/loading surface.
-3. Confirm push subscriptions still work after worker updates or cache clears.
+2. Confirm push subscriptions still work after worker updates or cache clears.
 
 ## Build Pipeline
 
@@ -404,4 +404,4 @@ For issues or questions about the PWA implementation, check:
 
 ---
 
-*Last Updated: 2026-03-20*
+*Last Updated: 2026-03-21*

@@ -3,6 +3,11 @@ import { useEffect, useRef } from "react";
 import { AppSplashScreen } from "@/components/Auth";
 import { ROUTES } from "@/config/routes";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
+import {
+  clearAuthenticatedSessionMarker,
+  hasRecoverableAuthenticatedSession,
+  markAuthenticatedSession,
+} from "@/lib/authRecovery";
 
 export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
@@ -19,20 +24,27 @@ export const Route = createFileRoute("/_auth")({
 function AuthLayout() {
   const { isAuthLoading, isAuthenticated } = useAuthReady();
   const hasAuthenticatedSession = useRef(false);
+  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
 
   useEffect(() => {
     if (isAuthenticated) {
       hasAuthenticatedSession.current = true;
+      markAuthenticatedSession();
     } else if (!isAuthLoading) {
       hasAuthenticatedSession.current = false;
+      clearAuthenticatedSessionMarker();
     }
   }, [isAuthenticated, isAuthLoading]);
 
-  if (isAuthLoading && !hasAuthenticatedSession.current) {
+  if (isAuthLoading && !hasAuthenticatedSession.current && !canRecoverAuthenticatedSession) {
     return <AppSplashScreen />;
   }
 
-  if (isAuthenticated || (isAuthLoading && hasAuthenticatedSession.current)) {
+  if (
+    isAuthenticated ||
+    (isAuthLoading && (hasAuthenticatedSession.current || canRecoverAuthenticatedSession)) ||
+    canRecoverAuthenticatedSession
+  ) {
     return <Outlet />;
   }
 

@@ -19,6 +19,7 @@ What is already true in the repo:
 - production-preview browser automation now confirms `/service-worker.js` controls runtime and `/sw.js` does not take control unexpectedly
 - production-preview browser automation now confirms the runtime links `/manifest.webmanifest` and caches `/`, `/offline.html`, and `/manifest.webmanifest`
 - production-preview browser automation now confirms uncached offline navigation falls back to `offline.html`
+- production-preview browser automation now confirms previously visited authenticated routes reload and navigate offline in preview
 - local IndexedDB is the only offline mutation queue source of truth
 - `userSettings.update` is the first real replayable offline mutation family
 - replay runs on authenticated startup, reconnect, and manual `Process Queue`
@@ -34,19 +35,18 @@ What is already true in the repo:
 
 Highest-value next move:
 
-- fix authenticated offline route restore behavior, then verify installability and push behavior after worker updates
+- verify installability and push behavior after worker updates, then decide whether to keep manual worker ownership or fully collapse onto one generated/runtime path
 
 Why:
 
 - the remaining uncertainty is no longer basic implementation truthfulness
-- the main open risk is runtime behavior that is now partly confirmed broken: authenticated offline route reload/navigation, plus installability and push after worker changes
+- the main open risk is runtime behavior that still lacks proof in browser conditions: installability and push after worker changes
 
 ## Remaining Work
 
 ## 1. Runtime Verification
 
 - [ ] Verify install prompt behavior in Chromium when browser installability criteria are actually met.
-- [ ] Fix authenticated offline route reload/navigation in preview; current probes stall on the splash/loading surface instead of restoring the route.
 
 ## 2. Push And Worker Update Safety
 
@@ -79,7 +79,6 @@ Why:
 ## 6. Tests Still Missing
 
 - [ ] Cover installability in browser automation if the environment can satisfy install criteria.
-- [ ] Re-introduce authenticated offline reload/navigation coverage after the splash-screen stall bug is fixed.
 - [ ] Cover push after worker update only if the test harness can do it reliably.
 
 ## 7. Docs To Revisit After Runtime Proof
@@ -99,7 +98,7 @@ Why:
 
 - [ ] One worker path clearly owns runtime behavior.
 - [ ] One manifest path clearly owns install metadata.
-- [ ] Real browser verification confirms install, offline fallback, and replay behavior.
+- [ ] Real browser verification confirms install behavior, offline fallback, and replay behavior.
 - [ ] Push behavior is verified after worker changes.
 - [ ] At least one additional mutation family is replayable, or the team explicitly decides to stop at `userSettings.update`.
 - [ ] Docs match the verified runtime.

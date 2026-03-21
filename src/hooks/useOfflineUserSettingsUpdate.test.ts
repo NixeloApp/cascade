@@ -1,3 +1,5 @@
+import type { ReactMutation } from "convex/react";
+import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { queueUserSettingsUpdate } from "@/lib/offlineUserSettings";
 import { showInfo } from "@/lib/toast";
@@ -26,13 +28,25 @@ const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseOnlineStatus = vi.mocked(useOnlineStatus);
 const mockQueueUserSettingsUpdate = vi.mocked(queueUserSettingsUpdate);
 const mockShowInfo = vi.mocked(showInfo);
-const mockMutate = vi.fn();
+let mockMutation: ReactMutation<FunctionReference<"mutation">>;
+
+function createMutationMock(): ReactMutation<FunctionReference<"mutation">> {
+  const mutation = Object.assign(
+    vi.fn((..._args: unknown[]) => Promise.resolve(undefined)),
+    {
+      withOptimisticUpdate: () => mutation,
+    },
+  ) as ReactMutation<FunctionReference<"mutation">>;
+
+  return mutation;
+}
 
 describe("useOfflineUserSettingsUpdate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMutation = createMutationMock();
     mockUseAuthenticatedMutation.mockReturnValue({
-      mutate: mockMutate,
+      mutate: mockMutation,
       canAct: true,
       isAuthLoading: false,
     });
@@ -40,13 +54,13 @@ describe("useOfflineUserSettingsUpdate", () => {
   });
 
   it("runs the live mutation when online", async () => {
-    mockMutate.mockResolvedValue({ success: true });
+    vi.mocked(mockMutation).mockResolvedValue({ success: true });
 
     const { result } = renderHook(() => useOfflineUserSettingsUpdate());
     const response = await result.current.update({ theme: "dark" });
 
     expect(response).toEqual({ queued: false });
-    expect(mockMutate).toHaveBeenCalledWith({ theme: "dark" });
+    expect(mockMutation).toHaveBeenCalledWith({ theme: "dark" });
     expect(mockQueueUserSettingsUpdate).not.toHaveBeenCalled();
   });
 
@@ -64,7 +78,7 @@ describe("useOfflineUserSettingsUpdate", () => {
     expect(mockQueueUserSettingsUpdate).toHaveBeenCalledWith({
       timezone: "America/Chicago",
     });
-    expect(mockMutate).not.toHaveBeenCalled();
+    expect(mockMutation).not.toHaveBeenCalled();
     expect(mockShowInfo).toHaveBeenCalledWith(
       "Timezone change queued for sync when you are back online",
     );
