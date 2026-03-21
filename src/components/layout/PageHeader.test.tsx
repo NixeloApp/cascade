@@ -38,6 +38,16 @@ describe("PageHeader", () => {
     expect(container.firstChild).toHaveClass("mb-4", "sm:mb-5", "custom-shell");
   });
 
+  it("drops standalone margin when the header is inside a shared page stack", () => {
+    const { container } = render(<PageHeader title="Workspace overview" spacing="stack" />);
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Workspace overview" }),
+    ).toBeInTheDocument();
+    expect(container.firstChild).not.toHaveClass("mb-4");
+    expect(container.firstChild).not.toHaveClass("sm:mb-5");
+  });
+
   it("renders breadcrumbs and actions when provided", () => {
     render(
       <PageHeader

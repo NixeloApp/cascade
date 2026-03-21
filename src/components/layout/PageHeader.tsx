@@ -26,6 +26,7 @@ interface PageHeaderProps {
   actions?: ReactNode;
   breadcrumbs?: BreadcrumbData[];
   className?: string;
+  spacing?: "standalone" | "stack";
 }
 
 /** Page header with title, breadcrumbs, and action buttons. */
@@ -35,9 +36,14 @@ export function PageHeader({
   actions,
   breadcrumbs,
   className,
+  spacing = "standalone",
 }: PageHeaderProps): ReactNode {
   return (
-    <Card recipe="pageHeader" padding="md" className={cn("mb-4 sm:mb-5", className)}>
+    <Card
+      recipe="pageHeader"
+      padding="md"
+      className={cn(spacing === "standalone" && "mb-4 sm:mb-5", className)}
+    >
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb className="mb-2">
           <BreadcrumbList>

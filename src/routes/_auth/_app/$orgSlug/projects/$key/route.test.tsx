@@ -96,7 +96,7 @@ describe("ProjectLayout", () => {
 
     const projectNavs = screen.getAllByRole("navigation", { name: "Project sections" });
     expect(projectNavs).toHaveLength(2);
-    expect(projectNavs[0]?.closest(".mb-6")).not.toBeNull();
+    expect(projectNavs[0]?.closest(".gap-6")).not.toBeNull();
   });
 
   it("omits scrum and admin-only tabs when the viewer is not an admin on a kanban project", () => {

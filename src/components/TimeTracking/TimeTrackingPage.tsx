@@ -14,9 +14,8 @@ import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDurationHuman } from "@/lib/formatting";
-import { PageControls, PageControlsGroup, PageControlsRow } from "../layout";
+import { PageControls, PageControlsGroup, PageControlsRow, PageStack } from "../layout";
 import { Card } from "../ui/Card";
-import { Flex } from "../ui/Flex";
 import { Label } from "../ui/Label";
 import { OverviewBand } from "../ui/OverviewBand";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
@@ -196,7 +195,7 @@ function TimeTrackingControls({
   onProjectChange,
 }: TimeTrackingControlsProps) {
   return (
-    <PageControls className="border-ui-border-secondary/80">
+    <PageControls className="border-ui-border-secondary/80" spacing="stack">
       <PageControlsRow>
         <Tabs
           value={activeTab}
@@ -386,7 +385,7 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   });
 
   return (
-    <Flex direction="column" gap="xl">
+    <PageStack>
       {summary !== undefined && (
         <TimeTrackingOverview
           billingEnabled={billingEnabled}
@@ -418,6 +417,6 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
         selectedProject={selectedProject}
         startDate={startDate}
       />
-    </Flex>
+    </PageStack>
   );
 }

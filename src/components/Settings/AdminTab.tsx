@@ -6,7 +6,7 @@ import { OAuthHealthDashboard } from "../Admin/OAuthHealthDashboard";
 import { OrganizationSettings } from "../Admin/OrganizationSettings";
 import { UserManagement } from "../Admin/UserManagement";
 import { UserTypeManager } from "../Admin/UserTypeManager";
-import { PageControls } from "../layout";
+import { PageControls, PageStack } from "../layout";
 import { RouteNav, RouteNavItem } from "../ui/RouteNav";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -78,8 +78,8 @@ export function AdminTab() {
   }, []);
 
   return (
-    <Stack gap="xl">
-      <PageControls padding="sm" gap="sm">
+    <PageStack>
+      <PageControls padding="sm" gap="sm" spacing="stack">
         <Stack gap="xs">
           <Typography variant="label">Admin controls</Typography>
           <Typography variant="small" color="secondary">
@@ -116,7 +116,7 @@ export function AdminTab() {
           </section>
         ))}
       </Stack>
-    </Stack>
+    </PageStack>
   );
 }
 

@@ -132,7 +132,7 @@ describe("Settings", () => {
     expect(screen.getByText("Profile Content")).toBeInTheDocument();
 
     const tablist = screen.getByRole("tablist", { name: "Settings sections" });
-    expect(tablist.closest(".mb-6")).not.toBeNull();
+    expect(tablist.closest(".gap-6")).not.toBeNull();
     expect(container.firstChild).toHaveClass("w-full");
     expect(tablist).toHaveClass("bg-transparent");
   });

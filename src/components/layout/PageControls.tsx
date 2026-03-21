@@ -9,6 +9,7 @@ type PageControlsGap = ComponentProps<typeof Stack>["gap"];
 interface PageControlsProps extends Omit<CardProps, "recipe"> {
   children: ReactNode;
   gap?: PageControlsGap;
+  spacing?: "standalone" | "stack";
 }
 
 interface SectionControlsProps extends CardProps {
@@ -25,10 +26,16 @@ export function PageControls({
   className,
   gap = "md",
   padding = "md",
+  spacing = "standalone",
   ...props
 }: PageControlsProps) {
   return (
-    <Card recipe="filterBar" padding={padding} className={cn("mb-6", className)} {...props}>
+    <Card
+      recipe="filterBar"
+      padding={padding}
+      className={cn(spacing === "standalone" && "mb-6", className)}
+      {...props}
+    >
       <Stack gap={gap}>{children}</Stack>
     </Card>
   );

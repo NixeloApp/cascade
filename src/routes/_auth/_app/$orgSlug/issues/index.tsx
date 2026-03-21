@@ -13,6 +13,7 @@ import {
   PageControlsRow,
   PageHeader,
   PageLayout,
+  PageStack,
 } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -77,84 +78,86 @@ export function AllIssuesPage() {
 
   return (
     <PageLayout>
-      <PageHeader
-        title="Issues"
-        description="All issues across your organization"
-        actions={
-          <Flex align="center" gap="sm">
-            <ViewModeToggle />
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              leftIcon={<Icon icon={Plus} size="sm" />}
-            >
-              Create Issue
+      <PageStack>
+        <PageHeader
+          title="Issues"
+          description="All issues across your organization"
+          spacing="stack"
+          actions={
+            <Flex align="center" gap="sm">
+              <ViewModeToggle />
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                leftIcon={<Icon icon={Plus} size="sm" />}
+              >
+                Create Issue
+              </Button>
+            </Flex>
+          }
+        />
+
+        <PageControls spacing="stack">
+          <PageControlsRow>
+            <FlexItem flex="1">
+              <Input
+                placeholder="Search issues..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                variant="search"
+                aria-label="Search issues"
+              />
+            </FlexItem>
+            <PageControlsGroup className="sm:justify-end">
+              <Select
+                value={statusFilter || "all"}
+                onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {(statusOptions ?? []).map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PageControlsGroup>
+          </PageControlsRow>
+        </PageControls>
+
+        <PageContent
+          isLoading={isLoading}
+          isEmpty={filteredIssues.length === 0}
+          emptyState={{
+            icon: SearchX,
+            title: "No issues found",
+            description: "Try adjusting your filters or create a new issue.",
+          }}
+        >
+          <Grid cols={1} colsMd={2} colsLg={3} colsXl={4} gap="lg">
+            {filteredIssues.map((issue) => (
+              <IssueCard
+                key={issue._id}
+                issue={issue as Parameters<typeof IssueCard>[0]["issue"]}
+                status={issue.status}
+                onClick={handleIssueClick}
+                canEdit={false} // Disable dragging in global view
+              />
+            ))}
+          </Grid>
+        </PageContent>
+
+        {status === "CanLoadMore" && (
+          <Flex justify="center">
+            <Button variant="secondary" onClick={() => loadMore(20)}>
+              Load More
             </Button>
           </Flex>
-        }
-      />
-
-      <PageControls>
-        <PageControlsRow>
-          <FlexItem flex="1">
-            <Input
-              placeholder="Search issues..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              variant="search"
-              aria-label="Search issues"
-            />
-          </FlexItem>
-          <PageControlsGroup className="sm:justify-end">
-            <Select
-              value={statusFilter || "all"}
-              onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {(statusOptions ?? []).map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    {opt.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </PageControlsGroup>
-        </PageControlsRow>
-      </PageControls>
-
-      <PageContent
-        isLoading={isLoading}
-        isEmpty={filteredIssues.length === 0}
-        emptyState={{
-          icon: SearchX,
-          title: "No issues found",
-          description: "Try adjusting your filters or create a new issue.",
-        }}
-      >
-        <Grid cols={1} colsMd={2} colsLg={3} colsXl={4} gap="lg">
-          {filteredIssues.map((issue) => (
-            <IssueCard
-              key={issue._id}
-              issue={issue as Parameters<typeof IssueCard>[0]["issue"]}
-              status={issue.status}
-              onClick={handleIssueClick}
-              canEdit={false} // Disable dragging in global view
-            />
-          ))}
-        </Grid>
-      </PageContent>
-
-      {/* Load More */}
-      {status === "CanLoadMore" && (
-        <Flex justify="center" className="mt-8">
-          <Button variant="secondary" onClick={() => loadMore(20)}>
-            Load More
-          </Button>
-        </Flex>
-      )}
+        )}
+      </PageStack>
 
       <CreateIssueModal open={showCreateModal} onOpenChange={setShowCreateModal} />
 

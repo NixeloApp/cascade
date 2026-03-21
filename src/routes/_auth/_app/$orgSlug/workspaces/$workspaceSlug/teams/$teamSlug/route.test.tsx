@@ -82,6 +82,6 @@ describe("TeamLayout", () => {
     expect(screen.getByText("Team content")).toBeInTheDocument();
 
     const nav = screen.getByRole("navigation", { name: "Team sections" });
-    expect(nav.closest(".mb-6")).not.toBeNull();
+    expect(nav.closest(".gap-6")).not.toBeNull();
   });
 });

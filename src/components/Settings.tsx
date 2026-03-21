@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { ComponentType } from "react";
 import { useEffect } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { PageControls } from "./layout";
+import { PageControls, PageStack } from "./layout";
 import { AdminTab } from "./Settings/AdminTab";
 import { ApiKeysManager } from "./Settings/ApiKeysManager";
 import { DevToolsTab } from "./Settings/DevToolsTab";
@@ -89,26 +89,28 @@ export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps
       }}
       className="w-full"
     >
-      <PageControls padding="sm" gap="sm">
-        <TabsList size="compact" layout="settings" aria-label="Settings sections">
-          {visibleTabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
-              <span className="lg:hidden">{tab.shortLabel ?? tab.label}</span>
-              <span className="hidden lg:inline">{tab.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </PageControls>
+      <PageStack>
+        <PageControls padding="sm" gap="sm" spacing="stack">
+          <TabsList size="compact" layout="settings" aria-label="Settings sections">
+            {visibleTabs.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
+                <span className="lg:hidden">{tab.shortLabel ?? tab.label}</span>
+                <span className="hidden lg:inline">{tab.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </PageControls>
 
-      {visibleTabs.map((tab) => {
-        const Content = SETTINGS_TAB_CONTENT[tab.value];
+        {visibleTabs.map((tab) => {
+          const Content = SETTINGS_TAB_CONTENT[tab.value];
 
-        return (
-          <TabsContent key={tab.value} value={tab.value} className="mt-0">
-            <Content />
-          </TabsContent>
-        );
-      })}
+          return (
+            <TabsContent key={tab.value} value={tab.value} className="mt-0">
+              <Content />
+            </TabsContent>
+          );
+        })}
+      </PageStack>
     </Tabs>
   );
 }

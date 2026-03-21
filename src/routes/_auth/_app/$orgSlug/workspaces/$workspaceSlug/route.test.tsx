@@ -73,6 +73,6 @@ describe("WorkspaceLayout", () => {
     expect(screen.getByText("Workspace content")).toBeInTheDocument();
 
     const nav = screen.getByRole("navigation", { name: "Workspace sections" });
-    expect(nav.closest(".mb-6")).not.toBeNull();
+    expect(nav.closest(".gap-6")).not.toBeNull();
   });
 });

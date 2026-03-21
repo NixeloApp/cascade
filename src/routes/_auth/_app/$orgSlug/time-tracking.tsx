@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect } from "react";
-import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import { PageContent, PageHeader, PageLayout, PageStack } from "@/components/layout";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 
@@ -44,13 +44,16 @@ function TimeTrackingPageRoute() {
   // Platform admin - show all tabs
   return (
     <PageLayout maxWidth="lg">
-      <PageHeader
-        title="Time Tracking"
-        description="Track time, analyze costs, and monitor burn rate"
-      />
-      <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
-        <TimeTrackingPage isGlobalAdmin />
-      </Suspense>
+      <PageStack>
+        <PageHeader
+          title="Time Tracking"
+          description="Track time, analyze costs, and monitor burn rate"
+          spacing="stack"
+        />
+        <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
+          <TimeTrackingPage isGlobalAdmin />
+        </Suspense>
+      </PageStack>
     </PageLayout>
   );
 }

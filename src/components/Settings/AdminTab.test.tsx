@@ -39,7 +39,7 @@ describe("AdminTab", () => {
     render(<AdminTab />);
 
     const adminNav = screen.getByRole("navigation", { name: "Admin sections" });
-    expect(adminNav.closest(".mb-6")).not.toBeNull();
+    expect(adminNav.closest(".gap-6")).not.toBeNull();
     expect(screen.getByText("Admin controls")).toBeInTheDocument();
 
     expect(screen.getByRole("button", { name: "Organization" })).toBeInTheDocument();

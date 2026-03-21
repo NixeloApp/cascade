@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { PageContent, PageControls, PageError } from "@/components/layout";
+import { PageContent, PageControls, PageError, PageStack } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -151,7 +151,7 @@ function ProjectSectionNav({
   const activeSecondaryTab = mobileSecondaryTabs.find((tab) => tab.segment === currentSegment);
 
   return (
-    <PageControls padding="sm" gap="sm">
+    <PageControls padding="sm" gap="sm" spacing="stack">
       <RouteNav variant="pill" size="sm" className="sm:hidden" aria-label="Project sections">
         {mobilePrimaryTabs.map((tab) => (
           <RouteNavItem key={tab.name} asChild variant="pill" size="sm">
@@ -241,40 +241,42 @@ export function ProjectLayout() {
   return (
     <Flex direction="column" className="h-full min-h-0">
       <div className="px-1 pt-1 sm:px-4 sm:pt-4">
-        <Card recipe="pageHeader" padding="md" className="mb-4 sm:mb-5">
-          <Flex
-            align="start"
-            alignSm="center"
-            justify="between"
-            gap="xs"
-            direction="column"
-            directionSm="row"
-          >
-            <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
-              <IconCircle size="sm" variant="brand" className="ring-1 ring-brand/18">
-                <Typography variant="sidebarOrgInitial">
-                  {project.key.slice(0, 2).toUpperCase()}
-                </Typography>
-              </IconCircle>
-              <div className="min-w-0">
-                <Flex align="center" gap="xs" wrap className="min-w-0">
-                  <Typography variant="projectHeaderTitle">{project.name}</Typography>
-                  <Badge variant="projectHeaderKey" shape="pill" className="sm:hidden">
-                    {project.key}
-                  </Badge>
-                </Flex>
-                <Typography variant="pageHeaderEyebrow" className="mt-0.5">
-                  {isScrum ? "Scrum project" : "Kanban project"}
-                </Typography>
-              </div>
+        <PageStack>
+          <Card recipe="pageHeader" padding="md">
+            <Flex
+              align="start"
+              alignSm="center"
+              justify="between"
+              gap="xs"
+              direction="column"
+              directionSm="row"
+            >
+              <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
+                <IconCircle size="sm" variant="brand" className="ring-1 ring-brand/18">
+                  <Typography variant="sidebarOrgInitial">
+                    {project.key.slice(0, 2).toUpperCase()}
+                  </Typography>
+                </IconCircle>
+                <div className="min-w-0">
+                  <Flex align="center" gap="xs" wrap className="min-w-0">
+                    <Typography variant="projectHeaderTitle">{project.name}</Typography>
+                    <Badge variant="projectHeaderKey" shape="pill" className="sm:hidden">
+                      {project.key}
+                    </Badge>
+                  </Flex>
+                  <Typography variant="pageHeaderEyebrow" className="mt-0.5">
+                    {isScrum ? "Scrum project" : "Kanban project"}
+                  </Typography>
+                </div>
+              </Flex>
+              <Badge variant="projectHeaderKey" shape="pill" className="hidden sm:inline-flex">
+                {project.key}
+              </Badge>
             </Flex>
-            <Badge variant="projectHeaderKey" shape="pill" className="hidden sm:inline-flex">
-              {project.key}
-            </Badge>
-          </Flex>
-        </Card>
+          </Card>
 
-        <ProjectSectionNav currentSegment={currentSegment} tabs={tabs} />
+          <ProjectSectionNav currentSegment={currentSegment} tabs={tabs} />
+        </PageStack>
       </div>
 
       <FlexItem flex="1" className="min-h-0 overflow-hidden">

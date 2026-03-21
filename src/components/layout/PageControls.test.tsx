@@ -54,4 +54,15 @@ describe("PageControls", () => {
       "border-ui-border-secondary/80",
     );
   });
+
+  it("drops standalone margin when the controls live inside a shared page stack", () => {
+    const { container } = render(
+      <PageControls spacing="stack">
+        <div>Stacked controls</div>
+      </PageControls>,
+    );
+
+    expect(screen.getByText("Stacked controls")).toBeInTheDocument();
+    expect(container.firstChild).not.toHaveClass("mb-6");
+  });
 });
