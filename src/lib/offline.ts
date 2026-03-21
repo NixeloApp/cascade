@@ -462,9 +462,10 @@ export async function processOfflineQueue(userId?: string) {
   isProcessingQueue = true;
   try {
     const pending = await offlineDB.getPendingMutations();
-    // Strict scoping: only process items owned by the current user.
-    // Items without a userId (legacy) are only processed when no userId filter is given.
-    const scoped = userId ? pending.filter((m) => m.userId === userId) : pending;
+    // Scoped replay: process items owned by the current user, plus legacy items
+    // without a userId (created before user-scoping was added). Legacy items are
+    // adopted by the current user rather than being permanently stuck as pending.
+    const scoped = userId ? pending.filter((m) => !m.userId || m.userId === userId) : pending;
 
     for (const mutation of scoped) {
       await processQueuedMutation(mutation);

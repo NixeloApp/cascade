@@ -175,7 +175,9 @@ function shouldShowOrgLoading(
   const canRenderOffline = isOffline && canRecover && organization && userOrgs;
 
   if (organization === undefined || userOrgs === undefined) {
-    if (isAuthLoading && (hasAuthenticatedOrgSession || canRecover || organization)) {
+    // Only bypass loading if we have a confirmed session OR actual cached data to render.
+    // canRecover alone (localStorage marker) is not enough — we need real org data.
+    if (isAuthLoading && (hasAuthenticatedOrgSession || (canRecover && organization))) {
       return false;
     }
     return !canRenderOffline;
