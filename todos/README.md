@@ -16,7 +16,7 @@ Default to Tailwind for static feature/page layout, reserve `cva()` for shared p
 | Order | File | What |
 |-------|------|------|
 | 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | Tighten CVA boundaries, tighten raw Tailwind rules, and reduce remaining styling escape hatches |
-| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | Make the stricter styling rules enforceable so new slop cannot land |
+| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | Make the stricter styling rules enforceable so new slop cannot land, and keep the validator suite itself maintainable as it grows |
 
 ### Phase 2: Screenshot-Driven Cleanup
 
