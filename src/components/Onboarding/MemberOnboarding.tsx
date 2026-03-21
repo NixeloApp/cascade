@@ -93,14 +93,14 @@ export function MemberOnboarding({
           size="sm"
           onClick={onBack}
           className="self-start"
-          leftIcon={<ArrowLeft className="h-4 w-4" />}
+          leftIcon={<Icon icon={ArrowLeft} size="sm" />}
         >
           Back
         </Button>
 
         {/* Header */}
         <Stack gap="md" className="text-center">
-          <Card recipe="onboardingHeroCircle" className="mx-auto h-16 w-16">
+          <Card recipe="onboardingHeroCircle" className="mx-auto size-16">
             <Flex align="center" justify="center" className="h-full w-full">
               <Icon icon={Building2} size="xl" className="text-brand" />
             </Flex>
@@ -161,7 +161,7 @@ export function MemberOnboarding({
         size="sm"
         onClick={() => setStep("project")}
         className="self-start"
-        leftIcon={<ArrowLeft className="h-4 w-4" />}
+        leftIcon={<Icon icon={ArrowLeft} size="sm" />}
       >
         Back
       </Button>
@@ -181,7 +181,7 @@ export function MemberOnboarding({
             <div
               className={cn(
                 getCardRecipeClassName("onboardingMemberFeatureIconBlue"),
-                "h-9 w-9 shrink-0",
+                "size-9 shrink-0",
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
@@ -200,7 +200,7 @@ export function MemberOnboarding({
             <div
               className={cn(
                 getCardRecipeClassName("onboardingMemberFeatureIconSuccess"),
-                "h-9 w-9 shrink-0",
+                "size-9 shrink-0",
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
@@ -219,7 +219,7 @@ export function MemberOnboarding({
             <div
               className={cn(
                 getCardRecipeClassName("onboardingMemberFeatureIconWarning"),
-                "h-9 w-9 shrink-0",
+                "size-9 shrink-0",
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
@@ -238,7 +238,7 @@ export function MemberOnboarding({
             <div
               className={cn(
                 getCardRecipeClassName("onboardingMemberFeatureIconPurple"),
-                "h-9 w-9 shrink-0",
+                "size-9 shrink-0",
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
