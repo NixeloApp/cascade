@@ -145,6 +145,8 @@ describe("Settings", () => {
 
     expect(screen.getByRole("tab", { name: /Admin/ })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Dev Tools/ })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Admin sections" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Organization" })).toBeInTheDocument();
     expect(screen.getByText("Organization Settings")).toBeInTheDocument();
     expect(screen.getByText("Hour Compliance")).toBeInTheDocument();
   });
