@@ -28,6 +28,7 @@ import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { Input, Select } from "./ui/form";
+import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
@@ -248,11 +249,11 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
               <Button
                 variant="secondary"
                 onClick={handleCreateGroup}
-                leftIcon={<FolderPlus className="w-4 h-4" />}
+                leftIcon={<Icon icon={FolderPlus} size="sm" />}
               >
                 New Group
               </Button>
-              <Button onClick={() => handleCreateLabel()} leftIcon={<Plus className="w-4 h-4" />}>
+              <Button onClick={() => handleCreateLabel()} leftIcon={<Icon icon={Plus} size="sm" />}>
                 New Label
               </Button>
             </Flex>
@@ -303,9 +304,13 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                       <Flex justify="between" align="center">
                         <Flex gap="sm" align="center">
                           {isCollapsed ? (
-                            <ChevronRight className="w-4 h-4 text-ui-text-secondary" />
+                            <Icon
+                              icon={ChevronRight}
+                              size="sm"
+                              className="text-ui-text-secondary"
+                            />
                           ) : (
-                            <ChevronDown className="w-4 h-4 text-ui-text-secondary" />
+                            <Icon icon={ChevronDown} size="sm" className="text-ui-text-secondary" />
                           )}
                           <Typography variant="label">{group.name}</Typography>
                           <Typography variant="caption" color="tertiary">
@@ -327,7 +332,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCreateLabel(group._id)}
-                            leftIcon={<Plus className="w-3 h-3" />}
+                            leftIcon={<Icon icon={Plus} size="xs" />}
                           >
                             Add
                           </Button>
@@ -337,7 +342,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleEditGroup(group)}
-                                leftIcon={<Pencil className="w-3 h-3" />}
+                                leftIcon={<Icon icon={Pencil} size="xs" />}
                               >
                                 Edit
                               </Button>
@@ -345,7 +350,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => groupDeleteConfirm.confirmDelete(group._id)}
-                                leftIcon={<Trash className="w-3 h-3" />}
+                                leftIcon={<Icon icon={Trash} size="xs" />}
                               >
                                 Delete
                               </Button>
@@ -386,7 +391,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleEditLabel(label)}
-                                  leftIcon={<Pencil className="w-4 h-4" />}
+                                  leftIcon={<Icon icon={Pencil} size="sm" />}
                                 >
                                   Edit
                                 </Button>
@@ -394,7 +399,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => labelDeleteConfirm.confirmDelete(label._id)}
-                                  leftIcon={<Trash className="w-4 h-4" />}
+                                  leftIcon={<Icon icon={Trash} size="sm" />}
                                 >
                                   Delete
                                 </Button>
