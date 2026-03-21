@@ -113,14 +113,15 @@ export function useOfflineQueue() {
     await refresh();
   };
 
-  const processNow = async (userId?: string) => {
-    if (isLoading) return;
+  const processNow = async (userId?: string): Promise<{ processed: boolean }> => {
+    if (isLoading) return { processed: false };
     setIsLoading(true);
     try {
       await processOfflineQueue(userId);
       const mutations = await offlineDB.getQueuedMutations();
       setQueue(mutations);
       setLastSuccessfulReplayAt(getLastSuccessfulOfflineReplayAt());
+      return { processed: true };
     } catch (error) {
       logOfflineError("process queue failed", error);
       throw error;

@@ -21,9 +21,12 @@ function shouldQueueOfflineUpdate(allowOfflineQueue: boolean, isOnline: boolean)
 
 async function queueUpdateAndNotify(
   args: UserSettingsUpdateArgs,
-  userId?: string,
+  userId: string | undefined,
   queuedMessage?: string,
 ): Promise<OfflineUserSettingsUpdateResult> {
+  if (!userId) {
+    throw new Error("Cannot queue offline mutation without an authenticated user");
+  }
   await queueUserSettingsUpdate(args, userId);
   if (queuedMessage) {
     showInfo(queuedMessage);

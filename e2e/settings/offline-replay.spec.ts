@@ -43,11 +43,11 @@ test.describe("Offline Replay", () => {
       await expect(settingsPage.offlineTab).toHaveAttribute("aria-selected", "true");
       await expect(settingsPage.syncStatusIndicator).toContainText("You are offline");
       await settingsPage.expectOfflineQueueItemVisible(OFFLINE_USER_SETTINGS_MUTATION_TYPE);
-      await expect(settingsPage.processQueueButton).toBeVisible();
 
-      // Restore network without dispatching "online" to avoid auto-replay
-      // racing with the manual Process Queue click below.
+      // Process Queue is hidden while offline — restore network first
       await page.context().setOffline(false);
+      await dispatchConnectivityEvent(page, "online");
+      await expect(settingsPage.processQueueButton).toBeVisible();
 
       await settingsPage.processOfflineQueue();
       await settingsPage.expectToast("Queued items processed");

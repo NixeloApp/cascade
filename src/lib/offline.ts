@@ -453,12 +453,24 @@ export async function queueOfflineMutation(
  * Processes pending offline mutations. Attempts to sync each mutation,
  * marking as synced on success or failed after 3 retries.
  */
-export async function processOfflineQueue(userId?: string) {
-  const pending = await offlineDB.getPendingMutations();
-  const scoped = userId ? pending.filter((m) => !m.userId || m.userId === userId) : pending;
+let isProcessingQueue = false;
 
-  for (const mutation of scoped) {
-    await processQueuedMutation(mutation);
+export async function processOfflineQueue(userId?: string) {
+  if (isProcessingQueue) {
+    return;
+  }
+  isProcessingQueue = true;
+  try {
+    const pending = await offlineDB.getPendingMutations();
+    // Strict scoping: only process items owned by the current user.
+    // Items without a userId (legacy) are only processed when no userId filter is given.
+    const scoped = userId ? pending.filter((m) => m.userId === userId) : pending;
+
+    for (const mutation of scoped) {
+      await processQueuedMutation(mutation);
+    }
+  } finally {
+    isProcessingQueue = false;
   }
 }
 

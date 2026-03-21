@@ -250,8 +250,10 @@ export function OfflineTab() {
   const handleProcessQueue = async () => {
     setIsProcessingQueue(true);
     try {
-      await processNow(user?._id);
-      showInfo("Queued items processed");
+      const { processed } = await processNow(user?._id);
+      if (processed) {
+        showInfo("Queued items processed");
+      }
     } catch (error) {
       showError(error, "Failed to process offline queue");
     } finally {
