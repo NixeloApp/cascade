@@ -152,7 +152,7 @@ const { page, continueCursor } = await ctx.db
 - IndexedDB for local storage
 - Offline mutation queue with auto-sync
 - Installable as native app
-- Functions: `convex/offlineSync.ts`, `src/lib/offline.ts`
+- Functions: `public/service-worker.js`, `src/lib/offline.ts`
 
 ---
 

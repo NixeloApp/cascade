@@ -18,8 +18,6 @@ Primary ownership for this lane:
 - `src/lib/webPush.tsx`
 - `public/offline.html`
 - `public/manifest.json`
-- `convex/offlineSync.ts`
-- `convex/offlineSync.test.ts`
 - `convex/pushNotifications.ts`
 - `convex/pushNotifications.test.ts`
 - `convex/crons.ts`
@@ -84,22 +82,14 @@ It is also structurally isolated:
   - queue count
   - local queue management
 
-### Server-side offline queue
-
-- `convex/offlineSync.ts` defines a second queue model in Convex.
-- `convex/schema.ts` contains `offlineSyncQueue`.
-- `convex/crons.ts` retries failed items and cleans up old completed items.
-- `convex/offlineSync.test.ts` already covers the backend queue behavior well.
-
 ### UI surface
 
 - `src/components/Settings/OfflineTab.tsx` exposes an Offline settings tab.
-- The current UI claims:
-  - cached content
-  - offline edits
-  - background sync
-  - install as app
-- The tab currently reads only from the client IndexedDB queue.
+- The tab currently reports:
+  - browser connectivity
+  - local IndexedDB queue state
+  - detected service worker/background sync capability
+- The tab intentionally avoids claiming verified end-to-end offline replay.
 
 ### Push notifications
 
@@ -109,8 +99,8 @@ It is also structurally isolated:
 
 ### Docs
 
-- `docs/setup/PWA.md` exists, but parts of it are stale.
-- It still references `/public/service-worker.js` and `src/main.tsx`, which do not match the current implementation.
+- `docs/setup/PWA.md` and `docs/README.md` have been updated to reflect the current worker/manifest ownership.
+- Remaining doc work is about keeping future replay/install behavior aligned as implementation changes continue.
 
 ## Phase 0 Findings Verified
 
@@ -170,22 +160,7 @@ Current repo scan found:
 
 That means the service worker replay path is likely incomplete or dead.
 
-### 3. There are two queue systems with no obvious bridge
-
-Client queue:
-- IndexedDB in `src/lib/offline.ts`
-
-Server queue:
-- Convex table and mutations in `convex/offlineSync.ts`
-
-What is not obvious from current code:
-- how a local queued mutation becomes a server queue item
-- whether both systems are meant to exist long-term
-- which one is the source of truth
-
-This is the core architectural gap in the lane.
-
-### 4. Client offline replay is not executing real mutations
+### 3. Client offline replay is not executing real mutations
 
 `processOfflineQueue()` currently:
 - marks local items as `syncing`
@@ -200,7 +175,7 @@ What it does not do:
 
 So the queue shape exists, but the end-to-end replay path does not appear fully shipped.
 
-### 5. Install/update UX is only partially wired
+### 4. Install/update UX is only partially wired
 
 `src/lib/serviceWorker.ts` exposes:
 - `promptInstall()`
@@ -213,7 +188,7 @@ Current repo scan suggests:
 
 That needs verification and likely cleanup.
 
-### 6. Offline settings copy may overstate reality
+### 5. Offline settings copy may overstate reality
 
 The Offline settings tab says:
 - cached content is available
@@ -224,7 +199,7 @@ Those claims may be ahead of the verified implementation.
 
 The UI should match actual behavior, not intended behavior.
 
-### 7. Documentation drift is real
+### 6. Documentation drift is real
 
 `docs/setup/PWA.md` appears older than the current implementation and should not be treated as authoritative until corrected.
 
@@ -256,24 +231,20 @@ Non-goals for this lane:
 - [ ] Confirm whether install prompts are ever shown in production.
 - [ ] Confirm whether push subscription depends on the same service worker that handles offline caching.
 
-## Phase 1: Pick One Queue Architecture
+## Phase 1: Queue Architecture
 
-Decision required:
-- option A: local IndexedDB queue is the source of truth and replays directly to Convex
-- option B: local IndexedDB queue is a short-lived client buffer that flushes into `offlineSyncQueue`
-- option C: remove one of the two queue models entirely
-
+- [x] Remove the unused Convex `offlineSync` queue path so the app no longer carries two offline queue models.
 - [ ] Write the intended queue architecture in plain language.
-- [ ] Define source of truth for mutation status.
+- [x] Define source of truth for mutation status.
+- [x] Define whether queue visibility in Settings reflects local queue, server queue, or both.
 - [ ] Define where retry/backoff lives.
 - [ ] Define where conflict resolution lives.
-- [ ] Define whether queue visibility in Settings reflects local queue, server queue, or both.
 - [ ] Define whether background sync is best-effort only or required behavior.
 
-Preferred default unless code proves otherwise:
-- use IndexedDB as the client buffer
-- replay directly to real Convex mutations
-- keep the Convex queue only if there is a concrete product or audit need for server-side persistence
+Current direction:
+- IndexedDB is the only offline queue source of truth in the app
+- replay should target real backend mutations directly
+- reintroduce a server-side queue only if there is a concrete product or audit need
 
 ## Phase 2: Make Replay Real
 
@@ -355,7 +326,6 @@ Preferred default unless code proves otherwise:
 
 ### Backend
 
-- [ ] Keep `convex/offlineSync.test.ts` green while architecture changes land.
 - [ ] Add tests for whichever replay bridge becomes canonical.
 - [ ] Add tests for failure classification and retry behavior.
 

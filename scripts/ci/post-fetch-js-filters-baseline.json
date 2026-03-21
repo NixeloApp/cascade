@@ -13,7 +13,6 @@
     "convex/invoices.ts": 1,
     "convex/issues/queries.ts": 7,
     "convex/oauthHealthCheck.ts": 1,
-    "convex/offlineSync.ts": 1,
     "convex/softDeleteCleanup.ts": 1,
     "convex/sprints.ts": 1,
     "convex/timeTracking.ts": 1,
