@@ -1,15 +1,28 @@
 # Document Editor Page - Current State
 
 > **Route**: `/:slug/documents/:id`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-12
-
+> **Status**: REVIEWED, with follow-up surface polish only
+> **Last Updated**: 2026-03-21
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Purpose
+
+The editor route is the document workspace. The current branch fixed two important regressions:
+
+1. screenshot coverage now targets the real editor interactions deterministically
+2. editor persistence now round-trips through explicit snapshot sync instead of living as local-only
+   temporary state
+
+This route is no longer just visually reviewed; it is operationally closer to the real product.
+
+---
+
+## Screenshot Matrix
+
+### Canonical route captures
 
 | Viewport | Theme | Preview |
 |----------|-------|---------|
@@ -18,39 +31,101 @@
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 
----
+### Additional interaction captures
 
-## Current UI
-
-- The screenshot baseline now targets the actual editor route again instead of the templates page.
-- The page uses the Plate editor stack with a document header, optional sidebar, floating toolbar, and slash menu.
-- The current empty or near-empty document state is less dead than before, but the document body still reads sparse in the screenshots because the seeded content is minimal.
-
----
-
-## Recent Improvements
-
-- Editor route discovery was fixed in `e2e/screenshot-pages.ts`.
-- The editor empty state was reworked in `src/components/PlateEditor.tsx` so the page no longer reads like a blank broken canvas.
-- Light and dark screenshots now reflect the real document editor surface.
-- Desktop light mode now frames the editor body and header more intentionally instead of letting them dissolve into one pale slab.
+| State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
+|------|---------------|---------------|--------------|--------------|
+| Slash menu | `desktop-dark-slash-menu.png` | `desktop-light-slash-menu.png` | `tablet-light-slash-menu.png` | `mobile-light-slash-menu.png` |
+| Floating toolbar | `desktop-dark-floating-toolbar.png` | `desktop-light-floating-toolbar.png` | `tablet-light-floating-toolbar.png` | `mobile-light-floating-toolbar.png` |
+| Mention popover | `desktop-dark-mention-popover.png` | `desktop-light-mention-popover.png` | `tablet-light-mention-popover.png` | `mobile-light-mention-popover.png` |
+| Color picker | `desktop-dark-color-picker.png` | `desktop-light-color-picker.png` | `tablet-light-color-picker.png` | `mobile-light-color-picker.png` |
+| Markdown preview modal | `desktop-dark-markdown-preview-modal.png` | `desktop-light-markdown-preview-modal.png` | `tablet-light-markdown-preview-modal.png` | `mobile-light-markdown-preview-modal.png` |
+| Move dialog | `desktop-dark-move-dialog.png` | `desktop-light-move-dialog.png` | `tablet-light-move-dialog.png` | `mobile-light-move-dialog.png` |
+| Locked state | `desktop-dark-locked.png` | `desktop-light-locked.png` | `tablet-light-locked.png` | `mobile-light-locked.png` |
+| Favorites sidebar | `desktop-dark-sidebar-favorites.png` | `desktop-light-sidebar-favorites.png` | `tablet-light-sidebar-favorites.png` | `mobile-light-sidebar-favorites.png` |
+| Rich blocks | `desktop-dark-rich-blocks.png` | `desktop-light-rich-blocks.png` | `tablet-light-rich-blocks.png` | `mobile-light-rich-blocks.png` |
+| Favorite state | `desktop-dark-favorite.png` | `desktop-light-favorite.png` | `tablet-light-favorite.png` | `mobile-light-favorite.png` |
 
 ---
 
-## Remaining Gaps
+## Route Anatomy
 
-| Problem | Area | Severity |
-|---------|------|----------|
-| The document header still carries too many actions for the amount of visible content | `DocumentHeader` / `PlateEditor` | MEDIUM |
-| Desktop light mode still feels sparse because the seeded document body is thin | Editor composition + seed content | MEDIUM |
-| The editor still needs stronger typography and body rhythm once the seed content grows beyond the first paragraph | Editor surface system | LOW |
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Document header                                                                             │
+│ title + save/sync state + primary actions + overflow actions                                │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Editor workspace                                                                            │
+│                                                                                             │
+│  optional sidebar / favorites                                                               │
+│  main Plate editor body                                                                     │
+│  richer prose rhythm                                                                        │
+│                                                                                             │
+│  interaction overlays                                                                       │
+│  - slash menu                                                                               │
+│  - floating toolbar                                                                         │
+│  - mention popover                                                                          │
+│  - color picker                                                                             │
+│  - markdown preview                                                                         │
+│  - move dialog                                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Current Composition
+
+### 1. Header
+
+- Core actions stay visible.
+- Owner-only lock/move/archive behavior is pushed into a clearer overflow path.
+- Save state is explicit: saving, saved, and error chrome now reflect the real snapshot pipeline.
+
+### 2. Editor body
+
+- The route uses the Plate editor stack.
+- Rich text typography and block rhythm are stronger than before.
+- Blank or lightly seeded states use a shared starter panel instead of a dead canvas.
+
+### 3. Interaction layers
+
+- Screenshot capture for slash menu, floating toolbar, mention popover, and color picker is now
+  deterministic.
+- The screenshot harness no longer depends on brittle incidental selection state.
+
+### 4. Persistence behavior
+
+- The editor now hydrates from the current snapshot.
+- Debounced writes submit through the explicit snapshot path.
+- Version restore flows round-trip through the same persistence contract.
+
+---
+
+## Current Problems
+
+| # | Problem | Area | Severity |
+|---|---------|------|----------|
+| 1 | The route is functionally sound now, but the editor body can still look visually sparse when seeded content is short | seeded content / screenshot composition | MEDIUM |
+| 2 | Some overlay states are stable and current, but still visually denser than the calmest page shells elsewhere in the app | overlay polish | LOW |
 
 ---
 
 ## Source Files
 
-- `src/routes/_auth/_app/$orgSlug/documents/$id.tsx`
-- `src/components/PlateEditor.tsx`
-- `src/components/Documents/DocumentHeader.tsx`
-- `src/components/Plate/FloatingToolbar.tsx`
-- `e2e/screenshot-pages.ts`
+| File | Purpose |
+|------|---------|
+| `src/routes/_auth/_app/$orgSlug/documents/$id.tsx` | Editor route |
+| `src/components/PlateEditor.tsx` | Main editor workspace |
+| `src/components/Documents/DocumentHeader.tsx` | Header and save-state chrome |
+| `src/components/Plate/SlashMenu.tsx` | Slash menu |
+| `src/components/Plate/FloatingToolbar.tsx` | Floating toolbar |
+| `src/components/ui/PlateRichTextContent.tsx` | Rich prose rhythm |
+| `src/lib/plate/editor.ts` | Snapshot serialization bridge |
+| `e2e/screenshot-pages.ts` | Canonical and interaction screenshot capture |
+
+---
+
+## Summary
+
+The editor spec is current again. It now reflects the real route, the real interaction matrix, and
+the real save/restore path. Remaining work is mostly visual density and seed-content richness.

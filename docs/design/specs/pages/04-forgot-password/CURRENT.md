@@ -1,22 +1,22 @@
 # Forgot Password Page - Current State
 
 > **Route**: `/forgot-password`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-12
+> **Status**: REVIEWED, with reset-step sparsity still worth one more pass
+> **Last Updated**: 2026-03-21
 
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Screenshot Matrix
 
-| Viewport | Theme | Preview |
-|----------|-------|---------|
-| Desktop | Dark | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | ![](screenshots/desktop-light.png) |
-| Tablet | Light | ![](screenshots/tablet-light.png) |
-| Mobile | Light | ![](screenshots/mobile-light.png) |
+| Viewport | Base Flow | Reset Step |
+|----------|-----------|------------|
+| Desktop Dark | ![](screenshots/desktop-dark.png) | ![](screenshots/desktop-dark-reset.png) |
+| Desktop Light | ![](screenshots/desktop-light.png) | ![](screenshots/desktop-light-reset.png) |
+| Tablet Light | ![](screenshots/tablet-light.png) | ![](screenshots/tablet-light-reset.png) |
+| Mobile Light | ![](screenshots/mobile-light.png) | ![](screenshots/mobile-light-reset.png) |
 
 ---
 
@@ -26,6 +26,7 @@
 - Step 1 uses `Reset your password` with the sign-in link in the subtitle row.
 - Step 2 switches to `Check your email` and preserves the requested email address through session storage.
 - The reset flow sits inside the same elevated auth panel with compact legal links at the bottom.
+- The reset-step screenshot is now deterministic instead of depending on session-storage-only local flow.
 
 ---
 

@@ -1,60 +1,73 @@
 # Landing Page - Current State
 
 > **Route**: `/`
-> **Status**: 🟡 Stronger structure, but still needs showcase discipline
-> **Last Updated**: 2026-03-12
-
+> **Status**: REVIEWED, with only routine follow-up polish left
+> **Last Updated**: 2026-03-21
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Purpose
+
+The landing page is supposed to prove three things quickly:
+
+1. Nixelo is a unified operating workspace, not a loose tool bundle.
+2. The product surface looks like a real application, not a brochure mock.
+3. The page can hold up across desktop, tablet, and mobile without turning into generic SaaS
+   filler.
+
+This branch already corrected the biggest earlier failures:
+
+- fake logo-strip proof
+- generic pricing and CTA sections
+- unconvincing product showcase
+- weak mobile/tablet hierarchy
+
+---
+
+## Screenshot Matrix
 
 | Viewport | Theme | Preview |
 |----------|-------|---------|
 | Desktop | Dark | ![](screenshots/desktop-dark.png) |
 | Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
+
+The landing spec is now based on the canonical viewport matrix, not desktop-only review.
 
 ---
 
-## Structure
+## Page Anatomy
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ NavHeader                                                                                    │
-│ [Nixelo] [Features] [Pricing] [Docs]                                  [Theme] [Sign in] [CTA]│
+│ NavHeader                                                                                   │
+│ brand | section links | auth/actions | responsive compact nav                              │
 ├──────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Hero                                                                                         │
-│                                                                                              │
-│   [Docs, delivery, and time tracking in one operating system]                                │
-│                                                                                              │
-│   Replace scattered project tools                                                            │
-│   with one sharper workspace.                                                                │
-│                                                                                              │
-│   Supporting copy                                                                            │
-│   [Get Started Free] [See workflow tour]                                                     │
-│   product / ops / client delivery     AI-native search     fewer tools                       │
-│                                                                                              │
-│   ┌──────────────────────────────── ProductShowcase ───────────────────────────────────────┐ │
-│   │ macOS chrome                                                                            │ │
-│   │                                                                                         │ │
-│   │  Product control tower                                     [Open board]               │ │
-│   │  ^ squeezed heading block: the title, copy, CTA, and 3-column board fight for width   │ │
-│   │                                                                                         │ │
-│   │  [In review] [Shipping next] [Done]                                                     │ │
-│   │                                                                                         │ │
-│   │  metrics cards                 AI assistant card                 connected surfaces      │ │
-│   │  ^ mixed density: some panels feel dense/product-like, others feel brochure-like       │ │
-│   └─────────────────────────────────────────────────────────────────────────────────────────┘ │
+│ Hero                                                                                        │
+│ product-first copy + CTA + proof pills + integrated ProductShowcase                         │
 ├──────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Logo/proof strip                                                                             │
-│ Features                                                                                     │
-│ AI demo                                                                                      │
-│ Story/proof section                                                                          │
-│ Pricing                                                                                      │
-│ Final CTA                                                                                    │
-│ Footer                                                                                       │
+│ Workflow proof strip                                                                        │
+│ real product/workflow evidence instead of fake logos                                        │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Features                                                                                    │
+│ grounded feature cards                                                                      │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ AI demo                                                                                     │
+│ product-like assistant/workflow surface                                                     │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Why choose / proof                                                                          │
+│ operating evidence and audience-specific outcomes                                           │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Pricing                                                                                     │
+│ rollout-grounded plan framing                                                               │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Final CTA                                                                                   │
+│ product handoff, not generic marketing CTA cards                                            │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Footer                                                                                      │
 └──────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -62,79 +75,70 @@
 
 ## Current Composition
 
-1. Sticky nav header
-2. Hero with stronger product copy and integrated product showcase
-3. Logo/proof strip
-4. Feature grid
-5. AI assistance demo section
-6. Outcome/story section
-7. Pricing
-8. Final CTA
-9. Footer
+### 1. Navigation and above-the-fold control
 
-The structure is no longer generic. The remaining problem is that the hero and showcase still do
-not feel compositionally disciplined enough to carry the page.
+- Desktop keeps the broader nav treatment.
+- Tablet/mobile now collapse earlier so the header no longer burns too much vertical space before
+  the product surface begins.
 
----
+### 2. Hero + product showcase
 
-## Files
+- The hero is now product-first instead of copy-only.
+- `ProductShowcase` was rebuilt into a more believable workspace shell, not a generic browser
+  mock.
+- Supporting proof pills stay compact on smaller screens so the showcase remains visible earlier.
 
-| File | Purpose |
-|------|---------|
-| `src/routes/index.tsx` | Landing page composition |
-| `src/components/Landing/NavHeader.tsx` | Navigation header |
-| `src/components/Landing/HeroSection.tsx` | Hero copy and CTA layout |
-| `src/components/Landing/ProductShowcase.tsx` | Product preview mockup |
-| `src/components/Landing/LogoBar.tsx` | Social-proof strip |
-| `src/components/Landing/FeaturesSection.tsx` | Feature grid |
-| `src/components/Landing/AIFeatureDemo.tsx` | AI workflow demo |
-| `src/components/Landing/WhyChooseSection.tsx` | Proof/story cards |
-| `src/components/Landing/PricingSection.tsx` | Pricing |
-| `src/components/Landing/FinalCTASection.tsx` | Closing CTA |
-| `src/components/Landing/Footer.tsx` | Footer |
+### 3. Proof surfaces
+
+- The old fake logo strip was replaced with workflow proof.
+- `WhyChooseSection` now speaks in workflow evidence rather than generic marketing claims.
+
+### 4. Lower-page commerce / conversion surfaces
+
+- Pricing now maps to real rollout stages rather than generic pricing-card language.
+- Final CTA is framed as product handoff / next-step continuity, not abstract conversion copy.
 
 ---
 
-## What Improved
+## Current Strengths
 
-| # | Improvement | Status |
-|---|-------------|--------|
-| 1 | Hero is no longer text-only | Fixed |
-| 2 | Product showcase exists in the hero | Fixed |
-| 3 | Social proof strip exists below the hero | Fixed |
-| 4 | AI workflow/demo content exists | Fixed |
-| 5 | Story/proof sections are more concrete than before | Improved |
-| 6 | Final CTA section exists | Fixed |
-| 7 | Footer has more trust/depth than the earlier minimal version | Improved |
-| 8 | Light mode now uses a deliberate airy palette instead of washed-out dark-mode atmospherics | Fixed |
-| 9 | Landing capture now waits for the hero/showcase entrance state instead of grabbing a half-faded frame | Fixed |
+| Area | Current Read |
+|------|--------------|
+| Product credibility | Much stronger than the earlier branch state. The page now points back to real workflow surfaces instead of decorative placeholders. |
+| Responsive hierarchy | Better. Tablet/mobile no longer carry desktop nav/hero density too far down the page. |
+| Section order | Coherent. Proof now supports pricing and CTA rather than arriving after them. |
 
 ---
 
-## Problems
+## Current Problems
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | `Product control tower` is visibly squeezed because the showcase tries to be a board preview, a metrics deck, and a marketing card stack at the same time | `ProductShowcase.tsx` | HIGH |
-| 2 | The showcase uses mixed visual grammar: some cards feel app-real, others feel decorative brochure filler | `ProductShowcase.tsx` | HIGH |
-| 3 | The hero is closer to target, but the page still relies on a crafted mockup instead of a truly convincing product artifact | showcase strategy | MEDIUM |
-| 4 | Logo strip still uses placeholder brand text instead of real proof | `LogoBar.tsx` | LOW |
+| 1 | A few landing surfaces still carry more bespoke visual treatment than the underlying product claim needs | shared landing sections | LOW |
+| 2 | The page is now product-grounded, but some screenshot states still read like polished composites rather than direct product captures | overall landing strategy | LOW |
 
 ---
 
-## Review Notes
+## Source Files
 
-- The screenshot run may be valid technically while the composition is still wrong visually.
-- The next pass should not be another copy tweak.
-- Fix the showcase layout first:
-  - give the title/copy block real breathing room
-  - stop mixing three different card densities in the same frame
-  - decide whether this surface is a product screenshot surrogate or a marketing explainer panel
+| File | Purpose |
+|------|---------|
+| `src/routes/index.tsx` | Landing composition |
+| `src/components/Landing/NavHeader.tsx` | Navigation |
+| `src/components/Landing/HeroSection.tsx` | Hero layout |
+| `src/components/Landing/ProductShowcase.tsx` | Main product evidence surface |
+| `src/components/Landing/LogoBar.tsx` | Workflow proof strip |
+| `src/components/Landing/FeaturesSection.tsx` | Feature cards |
+| `src/components/Landing/AIFeatureDemo.tsx` | AI workflow section |
+| `src/components/Landing/WhyChooseSection.tsx` | Evidence/proof section |
+| `src/components/Landing/PricingSection.tsx` | Rollout-grounded pricing |
+| `src/components/Landing/FinalCTASection.tsx` | Closing handoff CTA |
+| `src/components/Landing/Footer.tsx` | Footer |
 
 ---
 
 ## Summary
 
-The landing page now has the right sections, but the hero still lacks visual authority. The main
-failure is not missing structure. It is that the hero/showcase composition has too many competing
-ideas and not enough hierarchy.
+The landing page is current and substantially better than the earlier branch state. The main
+structural problems were already fixed. Remaining work is minor visual discipline, not missing
+sections or broken product proof.

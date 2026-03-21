@@ -1,15 +1,15 @@
 # Board Page - Current State
 
 > **Route**: `/:slug/projects/:key/board`
-> **Status**: 🟢 Trustworthy baseline
-> **Last Updated**: 2026-03-12
+> **Status**: REVIEWED, trustworthy baseline
+> **Last Updated**: 2026-03-21
 
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Screenshot Matrix
 
 | Viewport | State | Preview |
 |----------|-------|---------|
@@ -35,6 +35,7 @@
 - Mobile export and sprint controls now share that same floating cluster as selection, which removes the last detached board-only toolbar row before the lanes begin.
 - The export action still uses compact mobile treatment, but it now rides inside the floating cluster instead of a separate strip.
 - The board baseline is now operationally trustworthy, so the remaining issues are visual rather than harness-related.
+- The screenshot matrix also includes create-issue validation/success/draft-restore, filter-active, swimlane, import/export, collapsed-column, and WIP warning states in the spec folder beyond the single modal preview shown above.
 
 ---
 

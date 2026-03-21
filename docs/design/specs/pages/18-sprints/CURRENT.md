@@ -1,152 +1,73 @@
 # Sprints Page - Current State
 
 > **Route**: `/:slug/projects/:key/sprints`
-> **Status**: 🟡 Functional baseline, now tracked by the screenshot harness
-> **Last Updated**: 2026-03-12
-
+> **Status**: REVIEWED baseline with multi-state screenshot coverage
+> **Last Updated**: 2026-03-21
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Screenshot Matrix
 
-| Viewport | Theme | Preview |
-|----------|-------|---------|
-| Desktop | Dark | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | ![](screenshots/desktop-light.png) |
-| Mobile | Light | ![](screenshots/mobile-light.png) |
-
----
-
-## Current UI
-
-- The sprints route now participates in the promoted screenshot baseline instead of only landing in `e2e/screenshots`.
-- Desktop and mobile captures are both valid and show the real sprint-management state rather than a partial shell.
-- The page still reads as a straightforward management surface, not a polished planning workspace.
+| Viewport | Base Route | Burndown | Completion Modal | Date Overlap Warning |
+|----------|------------|----------|------------------|----------------------|
+| Desktop Dark | ![](screenshots/desktop-dark.png) | ![](screenshots/desktop-dark-burndown.png) | ![](screenshots/desktop-dark-completion-modal.png) | ![](screenshots/desktop-dark-date-overlap-warning.png) |
+| Desktop Light | ![](screenshots/desktop-light.png) | ![](screenshots/desktop-light-burndown.png) | ![](screenshots/desktop-light-completion-modal.png) | ![](screenshots/desktop-light-date-overlap-warning.png) |
+| Tablet Light | ![](screenshots/tablet-light.png) | ![](screenshots/tablet-light-burndown.png) | ![](screenshots/tablet-light-completion-modal.png) | ![](screenshots/tablet-light-date-overlap-warning.png) |
+| Mobile Light | ![](screenshots/mobile-light.png) | ![](screenshots/mobile-light-burndown.png) | ![](screenshots/mobile-light-completion-modal.png) | ![](screenshots/mobile-light-date-overlap-warning.png) |
 
 ---
 
-## Structure
+## Current Read
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│  [Sidebar]  │  Sprint Management                         [Create Sprint]   │
-│             │  ───────────────────────────────────────────────────────     │
-│             │                                                               │
-│             │  ┌─ Sprint Card ─────────────────────────────────────────┐   │
-│             │  │                                                       │   │
-│             │  │  Sprint 1              [active]  [12 issues]          │   │
-│             │  │  ─────────────────────────────────                    │   │
-│             │  │  Ship the new dashboard                               │   │
-│             │  │                                                       │   │
-│             │  │  Sprint progress                             45%      │   │
-│             │  │  [████████████░░░░░░░░░░░░░░░]                        │   │
-│             │  │                                                       │   │
-│             │  │  Jan 15, 2026 - Jan 29, 2026                          │   │
-│             │  │                                                       │   │
-│             │  │                                   [Complete Sprint]   │   │
-│             │  │                                                       │   │
-│             │  └───────────────────────────────────────────────────────┘   │
-│             │                                                               │
-│             │  ┌─ Sprint Card ─────────────────────────────────────────┐   │
-│             │  │                                                       │   │
-│             │  │  Sprint 2              [future]  [5 issues]           │   │
-│             │  │                                                       │   │
-│             │  │  Plan the API redesign                                │   │
-│             │  │                                                       │   │
-│             │  │                                     [Start Sprint]    │   │
-│             │  │                                                       │   │
-│             │  └───────────────────────────────────────────────────────┘   │
-│             │                                                               │
-│             │  [Empty State if no sprints]                                 │
-│             │  🏆 No sprints yet                                           │
-│             │  Create a sprint to start planning work                      │
-│             │  [Create Sprint]                                             │
-│             │                                                               │
-└─────────────────────────────────────────────────────────────────────────────┘
+- The sprints route now participates in the promoted reviewed screenshot baseline.
+- It covers more than the happy path:
+  - burndown view
+  - completion flow
+  - overlap warning flow
+- The route is still a pragmatic sprint management surface, not an overdesigned planning cockpit.
+
+---
+
+## Route Anatomy
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Shared project shell                                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Sprint manager                                                              │
+│                                                                              │
+│  sprint cards                                                                │
+│  create sprint                                                               │
+│  start sprint                                                                │
+│  complete sprint                                                             │
+│  optional burndown                                                           │
+│  overlap warnings                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Files
+## Remaining Gaps
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/_auth/_app/$orgSlug/projects/$key/sprints.tsx` | Route definition | 35 |
-| `src/components/SprintManager.tsx` | All sprint UI logic | 267 |
-| `convex/sprints.ts` | Sprint CRUD + queries | ~200 |
-
----
-
-## Current Features
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| List sprints | ✅ | Cards with status badges |
-| Create sprint | ✅ | Name + optional goal |
-| Start sprint | ✅ | Sets 2-week duration |
-| Complete sprint | ✅ | Changes status to completed |
-| Progress bar | ✅ | Time-based (not issue-based) |
-| Issue count | ✅ | Badge showing total issues |
-| Empty state | ✅ | Trophy icon + CTA |
-| Loading state | ✅ | Skeleton cards |
+| Problem | Area | Severity |
+|---------|------|----------|
+| Progress semantics are still simpler than a full planning tool and remain partly issue-count focused | product depth | MEDIUM |
+| Editing and archive/history flows are still lighter than the main create/start/complete paths | product breadth | LOW |
 
 ---
 
-## Problems
+## Source Files
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | `card-subtle` wrapper | SprintManager.tsx:43 | LOW |
-| 2 | Progress is time-based, not work-based | SprintManager.tsx:32-38 | MEDIUM |
-| 3 | No sprint editing (name/goal/dates) | N/A | MEDIUM |
-| 4 | No drag-and-drop between sprints | N/A | LOW |
-| 5 | 2-week duration hardcoded | SprintManager.tsx:146 | LOW |
-| 6 | No completed sprints archive | N/A | LOW |
-| 7 | Badge using `getStatusColor` (issue util) | SprintManager.tsx:54 | LOW |
-
----
-
-## Sprint States
-
-| State | Value | Actions Available |
-|-------|-------|-------------------|
-| Future | `status: "future"` | Start Sprint |
-| Active | `status: "active"` | Complete Sprint |
-| Completed | `status: "completed"` | None |
-
----
-
-## Data Model
-
-```typescript
-interface Sprint {
-  _id: Id<"sprints">;
-  name: string;
-  goal?: string;
-  projectId: Id<"projects">;
-  status: "future" | "active" | "completed";
-  startDate?: number;
-  endDate?: number;
-  createdAt: number;
-  createdBy: Id<"users">;
-}
-```
+- `src/routes/_auth/_app/$orgSlug/projects/$key/sprints.tsx`
+- `src/components/Sprints/SprintManager.tsx`
+- `convex/sprints.ts`
+- `e2e/screenshot-pages.ts`
 
 ---
 
 ## Summary
 
-The sprints page is now part of the trustworthy screenshot baseline. Functionally it still covers
-the basic lifecycle only:
-- Create → Start → Complete
-
-The remaining product gap is not harness-related anymore. It is the feature depth of the sprint
-surface itself: editing, issue-based progress, planning, history, and richer analytics.
-
-Current implementation is a good MVP. Main UX issues:
-- Time-based progress bar is misleading (shows time elapsed, not work done)
-- Can't edit sprint once created
-- 2-week duration is fixed
+Sprints is no longer just "functional baseline". It has real reviewed state coverage and is current
+to the branch. The remaining work is product-depth expansion, not screenshot or route credibility.

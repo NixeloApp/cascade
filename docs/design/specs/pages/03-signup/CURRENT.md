@@ -1,22 +1,22 @@
 # Sign Up Page - Current State
 
 > **Route**: `/signup`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-12
+> **Status**: REVIEWED, with verification-state density follow-up only
+> **Last Updated**: 2026-03-21
 
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Screenshot Matrix
 
-| Viewport | Theme | Preview |
-|----------|-------|---------|
-| Desktop | Dark | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | ![](screenshots/desktop-light.png) |
-| Tablet | Light | ![](screenshots/tablet-light.png) |
-| Mobile | Light | ![](screenshots/mobile-light.png) |
+| Viewport | Base Signup | Verify State |
+|----------|-------------|--------------|
+| Desktop Dark | ![](screenshots/desktop-dark.png) | ![](screenshots/desktop-dark-verify.png) |
+| Desktop Light | ![](screenshots/desktop-light.png) | ![](screenshots/desktop-light-verify.png) |
+| Tablet Light | ![](screenshots/tablet-light.png) | ![](screenshots/tablet-light-verify.png) |
+| Mobile Light | ![](screenshots/mobile-light.png) | ![](screenshots/mobile-light-verify.png) |
 
 ---
 
@@ -26,6 +26,7 @@
 - The page title is `Create your account`, with the sign-in switch link in the subtitle line.
 - Desktop keeps the marketing rail on the left; mobile collapses to a single stacked auth flow.
 - The main panel still needs to handle the email expansion and verification states without losing hierarchy.
+- Verification is now a first-class reviewed screenshot state instead of an untracked internal flow.
 
 ---
 

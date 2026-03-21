@@ -1,60 +1,72 @@
 # Calendar Page - Current State
 
 > **Route**: `/:slug/projects/:key/calendar` and `/:slug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-12
-
+> **Status**: REVIEWED, with routine light-mode refinement still open
+> **Last Updated**: 2026-03-21
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
-## Screenshots
+## Screenshot Matrix
 
-| Viewport | State | Preview |
+### Canonical route captures
+
+| Viewport | Theme | Preview |
 |----------|-------|---------|
 | Desktop | Dark | ![](screenshots/desktop-dark.png) |
 | Desktop | Light | ![](screenshots/desktop-light.png) |
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
-| Desktop | Event Modal | ![](screenshots/desktop-light-event-modal.png) |
+
+### Additional state captures
+
+| State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
+|------|---------------|---------------|--------------|--------------|
+| Day view | `desktop-dark-day.png` | `desktop-light-day.png` | `tablet-light-day.png` | `mobile-light-day.png` |
+| Week view | `desktop-dark-week.png` | `desktop-light-week.png` | `tablet-light-week.png` | `mobile-light-week.png` |
+| Month view | `desktop-dark-month.png` | `desktop-light-month.png` | `tablet-light-month.png` | `mobile-light-month.png` |
+| Quick add | `desktop-dark-quick-add.png` | `desktop-light-quick-add.png` | `tablet-light-quick-add.png` | `mobile-light-quick-add.png` |
+| Create event modal | `desktop-dark-create-event-modal.png` | `desktop-light-create-event-modal.png` | `tablet-light-create-event-modal.png` | `mobile-light-create-event-modal.png` |
+| Event modal | `desktop-dark-event-modal.png` | `desktop-light-event-modal.png` | `tablet-light-event-modal.png` | `mobile-light-event-modal.png` |
+| Drag and drop | `desktop-dark-drag-and-drop.png` | `desktop-light-drag-and-drop.png` | `tablet-light-drag-and-drop.png` | n/a |
 
 ---
 
-## Current UI
+## Current Read
 
-- Calendar now sits under the same compact shared project shell as board and backlog when viewed in project context.
-- The screenshot matrix captures the main calendar plus day/week/month and event-modal variants.
-- The core calendar surface is now both functional and reviewable across day, week, and month, including mobile month/week states that previously failed to show useful event content.
-
----
-
-## Recent Improvements
-
-- Screenshot readiness around the project shell and modal states is materially more reliable than the earlier baseline.
-- Project-level calendar screenshots now align with the current project header/navigation treatment.
-- Mobile week/day now anchor onto the active event column instead of rendering events offscreen.
-- Month view now stays a real month grid at mobile sizes and uses compact event indicators instead of reading as an empty list.
-- The shared calendar header is lighter on small screens, so the grid starts earlier in the viewport.
+- The screenshot harness now lands on real timed content for day/week views instead of visually
+  empty slots.
+- Week-mode centering no longer destroys vertical scroll position.
+- View switching is verified against explicit calendar-view markers.
+- Create-event modal capture is deterministic.
+- Mobile month/week states now show useful event content rather than offscreen or collapsed noise.
 
 ---
 
-## Remaining Gaps
+## Current Problems
 
-| Problem | Area | Severity |
-|---------|------|----------|
-| Mobile project chrome is improved but still uses more height than ideal before the calendar work surface begins | Shared project shell | MEDIUM |
-| Day cells and event cards still need stronger light-mode refinement to feel intentional rather than merely valid | Calendar internals | MEDIUM |
-| Desktop light-mode month view still wants a little more depth and contrast in the surrounding shell | Calendar composition | LOW |
+| # | Problem | Area | Severity |
+|---|---------|------|----------|
+| 1 | The route is reliable now, but desktop light mode still wants slightly more surface depth around the month grid | composition | LOW |
+| 2 | Small-screen project/team chrome is improved, but still uses a bit more height than ideal before the work surface begins | shared shell | LOW |
 
 ---
 
 ## Source Files
 
-- `src/routes/_auth/_app/$orgSlug/projects/$key/calendar.tsx`
-- `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`
-- `src/components/Calendar/CalendarView.tsx`
-- `src/components/Calendar/shadcn-calendar/header/calendar-header.tsx`
-- `src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx`
-- `src/components/Calendar/shadcn-calendar/body/week/calendar-body-week.tsx`
-- `src/components/Calendar/shadcn-calendar/body/use-calendar-initial-scroll.ts`
+| File | Purpose |
+|------|---------|
+| `src/routes/_auth/_app/$orgSlug/projects/$key/calendar.tsx` | Project calendar route |
+| `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar.tsx` | Team calendar route |
+| `src/components/Calendar/CalendarView.tsx` | Calendar composition |
+| `src/components/Calendar/shadcn-calendar/body/use-calendar-initial-scroll.ts` | Initial scroll / view landing |
+| `src/components/Calendar/shadcn-calendar/body/week/calendar-body-week.tsx` | Week-view body |
+| `e2e/screenshot-pages.ts` | Calendar screenshot capture and readiness |
+
+---
+
+## Summary
+
+Calendar is current and screenshot-stable. The meaningful work left is visual refinement, not
+route correctness or harness repair.
