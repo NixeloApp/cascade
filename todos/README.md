@@ -11,6 +11,7 @@ Work is ordered as a pipeline -- each phase unblocks the next. AI will fix these
 ### Phase 1: Tighten Styling Rules
 
 Make CVA usage and raw Tailwind rules stricter first, so the next cleanup passes do not reintroduce slop.
+Default to Tailwind for static feature/page layout, reserve `cva()` for shared primitive semantics, and keep `index.css` for tokens/global utilities/shared effects instead of section-specific dumping grounds.
 
 | Order | File | What |
 |-------|------|------|
@@ -20,6 +21,7 @@ Make CVA usage and raw Tailwind rules stricter first, so the next cleanup passes
 ### Phase 2: Screenshot-Driven Cleanup
 
 Use screenshots as the review surface, fix obviously broken states, and turn visual weirdness into explicit cleanup items.
+Main-page/landing cleanup belongs here too: if the marketing surface is inconsistent or looks unlike the actual product, treat that as product-quality debt, not decoration.
 
 | Order | File | What |
 |-------|------|------|

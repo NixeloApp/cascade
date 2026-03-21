@@ -13,6 +13,8 @@ Make the product more visually cohesive and more enforceable in code, using the 
 - [ ] Review approved screenshots page by page and turn every visibly broken or weird state into an explicit todo item instead of leaving it as vague review debt
 - [ ] Fix screenshot-exposed broken states before approving new baselines -- missing content, bad shells, off spacing, broken empty states, and modal/popover layout failures should not be normalized
 - [ ] Use screenshot review to find and remove AI-slop patterns -- nested cards, redundant shells, accidental panel-in-panel layouts, and inconsistent control groupings
+- [ ] Main page / landing: make the marketing surface read like the actual product we sell, not a parallel mock design system with bespoke section styling
+- [ ] Main page / landing: reduce bespoke hero/showcase/footer/nav treatments so the page reuses the same visual language and primitive semantics as the app
 
 ### Screenshot review residue
 
@@ -31,6 +33,8 @@ These are still only partially automated and need explicit cleanup/review:
 - [ ] shared shell discipline -- stop panel/card nesting and other accidental composition patterns that make surfaces feel inconsistent
 - [ ] modal, drawer, popover, and dropdown content rhythm -- spacing, heading treatment, action rows, and empty/error states should read as one system
 - [ ] page-to-page layout rhythm -- headers, filters, secondary actions, and content gutters should feel aligned across the app
+- [ ] landing/mobile-tablet rhythm -- nav density, hero height, and "show the actual product above the fold" discipline still need explicit review
+- [ ] "looks polished but not like our product" review pass -- screenshots should catch when a surface is visually coherent but still too custom, decorative, or unlike the real app
 
 ## Done When
 

@@ -40,6 +40,10 @@ Fetches all data then filters in the component when the filter could be a backen
 - [ ] Add validator coverage for primitive restyling drift -- repeated size/radius/chrome/color overrides on owned controls should be treated as missing variants or misuse
 - [ ] Add validator coverage for degenerate CVAs -- base-only CVAs, single-use feature CVAs, and local variant wrappers that should be plain components or shared primitives
 - [ ] Ratchet raw Tailwind downward, not just flat -- the baseline should shrink as cleanup lands instead of only blocking regressions
+- [ ] Add validator coverage for primitive-default ownership drift -- shared wrappers should not restate defaults already owned by the primitive they wrap
+- [ ] Add validator coverage for global CSS/page CSS drift -- section-specific named classes in `index.css` or similar global stylesheets should be treated as debt unless explicitly shared/global
+- [ ] Tighten raw Tailwind checks around fixed size utilities and icon sizing when owned tokens/components already exist
+- [ ] Add validator coverage that distinguishes real Tailwind-first layout from hidden local style systems (`SECTION_CLASSES`, class-string maps, helper bags) and penalizes the hidden style-system path harder
 
 ## Ratchet Strategy
 
@@ -52,3 +56,4 @@ For advisory validators, keep the ratchet only as long as cleanup is still in fl
 - [ ] Baselined query/filter debt is removed from product code so the ratchets can be deleted
 - [ ] No validator skips without explicit TODO references
 - [ ] Styling/CVA validators are strict enough that screenshot-driven cleanup does not regress on the next pass
+- [ ] Validator rules make the intended contract obvious: Tailwind for static layout, shared primitives for semantics, global CSS only for truly global/shared concerns
