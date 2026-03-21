@@ -71,16 +71,20 @@ describe("RecentActivity", () => {
   });
 
   describe("Empty State", () => {
-    it("should return null when activities is undefined", () => {
-      const { container } = render(<RecentActivity activities={undefined} />);
+    it("should render an explicit empty state when activities is undefined", () => {
+      render(<RecentActivity activities={undefined} />);
 
-      expect(container.firstChild).toBeNull();
+      expect(screen.getByText("No recent activity yet")).toBeInTheDocument();
     });
 
-    it("should return null when activities is empty array", () => {
-      const { container } = render(<RecentActivity activities={[]} />);
+    it("should render an explicit empty state when activities is empty array", () => {
+      render(<RecentActivity activities={[]} />);
 
-      expect(container.firstChild).toBeNull();
+      expect(
+        screen.getByText(
+          "New issue movement, status changes, and collaboration updates will land here.",
+        ),
+      ).toBeInTheDocument();
     });
   });
 

@@ -1841,7 +1841,7 @@ async function waitForActivityReady(page: Page): Promise<void> {
 
 async function waitForAnalyticsReady(
   page: Page,
-  titlePattern: RegExp = /analytics dashboard/i,
+  titlePattern: RegExp = /analytics/i,
 ): Promise<void> {
   await page.getByRole("heading", { name: titlePattern }).waitFor({
     state: "visible",

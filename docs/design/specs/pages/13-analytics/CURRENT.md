@@ -1,164 +1,81 @@
 # Analytics Page - Current State
 
-> **Route**: `/:slug/projects/:key/analytics` and `/:slug/analytics`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Route**: `/:slug/projects/:key/analytics`
+> **Status**: 🟢 REVIEWED
+> **Last Updated**: 2026-03-21
 
 ---
 
 ## Screenshots
 
-| Viewport | Preview |
-|----------|---------|
-| Desktop | ![](screenshots/desktop-dark.png) |
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
 
 ---
 
-## Structure
+## Current UI
 
-Analytics dashboard with metric cards and charts:
-
-```
-+-------------------------------------------------------------------------------------------+
-| [=] Nixelo E2E                      [Commands Cmd+K] [?] [> Timer] [Search Cmd+K] [N] [AV]|
-+-------------------------------------------------------------------------------------------+
-|                                                                                           |
-|  Analytics Dashboard                                                                      |
-|  Project insights, team velocity, and progress metrics                                    |
-|                                                                                           |
-|  +----------------+ +----------------+ +----------------+ +----------------+               |
-|  |  Total Issues  | |  Unassigned    | |  Avg Velocity  | | Completed      |               |
-|  |  [icon]        | |  [icon]        | |  [icon]        | | Sprints [icon] |               |
-|  |                | |                | |                | |                |               |
-|  |      42        | |       8        | |     12.5       | |      6         |               |
-|  |                | |                | | points/sprint  | |                |               |
-|  +----------------+ +----------------+ +----------------+ +----------------+               |
-|                                                                                           |
-|  +------------------------------------+ +------------------------------------+             |
-|  | Issues by Status                   | | Issues by Type                     |             |
-|  +------------------------------------+ +------------------------------------+             |
-|  |                                    | |                                    |             |
-|  | Backlog    ████████████████  24    | | Task   ████████████████████  28    |             |
-|  | In Progress █████████  12          | | Bug    ████████████  16            |             |
-|  | Review     ████  4                 | | Story  ██████  8                   |             |
-|  | Done       ██  2                   | | Epic   ██  4                       |             |
-|  |                                    | |                                    |             |
-|  +------------------------------------+ +------------------------------------+             |
-|                                                                                           |
-|  +------------------------------------+ +------------------------------------+             |
-|  | Issues by Priority                 | | Team Velocity (Last 10 Sprints)    |             |
-|  +------------------------------------+ +------------------------------------+             |
-|  |                                    | |                                    |             |
-|  | Highest    ████████  10            | | Sprint 1  ████████  8              |             |
-|  | High       ██████████████  18      | | Sprint 2  ████████████  12         |             |
-|  | Medium     ████████████  14        | | Sprint 3  ██████████  10           |             |
-|  | Low        ████  4                 | | Sprint 4  ██████████████  14       |             |
-|  | Lowest     ██  2                   | | Sprint 5  ████████████  12         |             |
-|  |                                    | |                                    |             |
-|  +------------------------------------+ +------------------------------------+             |
-|                                                                                           |
-|  +--------------------------------------------------------------------------+             |
-|  | Issues by Assignee                                                        |             |
-|  +--------------------------------------------------------------------------+             |
-|  | Alice    ████████████████████  20                                         |             |
-|  | Bob      ████████████████  16                                             |             |
-|  | Charlie  ████████████  12                                                 |             |
-|  | Diana    ████████  8                                                      |             |
-|  +--------------------------------------------------------------------------+             |
-|                                                                                           |
-|  +--------------------------------------------------------------------------+             |
-|  | Recent Activity                                                           |             |
-|  +--------------------------------------------------------------------------+             |
-|  | [AV] John moved PROJ-123 to Done                           2 hours ago    |             |
-|  | [AV] Sarah created PROJ-124                                3 hours ago    |             |
-|  | [AV] Mike commented on PROJ-100                            5 hours ago    |             |
-|  +--------------------------------------------------------------------------+             |
-|                                                                                           |
-+-------------------------------------------------------------------------------------------+
-```
+- The project analytics route now reads like a real project workspace instead of a generic chart page.
+- The header is project-specific and frames the route around delivery, workload, and ownership signals for the active project key.
+- A top snapshot band summarizes flow, assignment coverage, and sprint signal before the metric cards and chart grid.
+- Every major analytics block now uses the shared analytics shell or an explicit shared empty state instead of silently disappearing when data is missing.
 
 ---
 
-## Current Elements
+## Current Structure
 
-### Header
-- **Title**: "Analytics Dashboard"
-- **Description**: "Project insights, team velocity, and progress metrics"
-
-### Metric Cards (4-column grid)
-- **Total Issues**: Count with TrendingUp icon
-- **Unassigned**: Count with MapPin icon, warning ring if > 0
-- **Avg Velocity**: Points/sprint with Zap icon
-- **Completed Sprints**: Count with CheckCircle icon
-
-### Charts (2-column grid)
-- **Issues by Status**: Horizontal bar chart, blue bars
-- **Issues by Type**: Horizontal bar chart, green bars
-- **Issues by Priority**: Horizontal bar chart, yellow bars
-- **Team Velocity**: Horizontal bar chart, accent color
-
-### Assignee Chart
-- **Full-width**: Horizontal bar chart, brand color
-
-### Recent Activity
-- **Activity list**: Avatar, description, relative time
-
----
-
-## Files
-
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/_auth/_app/$orgSlug/projects/$key/analytics.tsx` | Route definition | ~35 |
-| `src/routes/_auth/_app/$orgSlug/analytics.tsx` | Org-level route | ~20 |
-| `src/components/AnalyticsDashboard.tsx` | Main dashboard | ~240 |
-| `src/components/Analytics/OrganizationAnalyticsDashboard.tsx` | Org-level analytics dashboard | ~160 |
-| `src/components/Analytics/MetricCard.tsx` | Stat card | ~50 |
-| `src/components/Analytics/BarChart.tsx` | Horizontal bar chart | ~50 |
-| `src/components/Analytics/ChartCard.tsx` | Chart wrapper | ~30 |
-| `src/components/Analytics/AnalyticsSection.tsx` | Shared analytics section shell | ~40 |
-| `src/components/Analytics/RecentActivity.tsx` | Activity list | ~80 |
+- **Project header**
+  - Project-specific title and description
+- **Snapshot band**
+  - Flow snapshot
+  - Ownership snapshot
+  - Sprint signal snapshot
+- **Metrics row**
+  - Total issues
+  - Unassigned
+  - Average velocity
+  - Completed sprints
+- **Chart grid**
+  - Issues by status
+  - Issues by type
+  - Issues by priority
+  - Team velocity
+- **Ownership distribution**
+  - Issues by assignee
+- **Recent activity**
+  - Timeline of issue changes with explicit empty state
 
 ---
 
-## Problems
+## Recent Improvements
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | No date range picker | AnalyticsDashboard.tsx | MEDIUM |
-| 2 | Charts lack interactivity | BarChart.tsx | MEDIUM |
-| 3 | No trend indicators on metrics | MetricCard.tsx | MEDIUM |
-| 4 | Missing export functionality | AnalyticsDashboard.tsx | LOW |
-| 5 | No chart tooltips | BarChart.tsx | LOW |
-| 6 | No org-level date filter / comparison controls | analytics.tsx | LOW |
-| 7 | No comparison period | AnalyticsDashboard.tsx | LOW |
-| 8 | Activity list needs pagination | RecentActivity.tsx | LOW |
-| 9 | Bar chart animation basic | BarChart.tsx | LOW |
-| 10 | No pie/donut chart options | N/A | LOW |
+- The project route now passes project name and key into the dashboard so the page is contextual instead of generic.
+- Added shared summary tiles via `AnalyticsInsightCard` for the top-of-page workspace snapshot.
+- `ChartCard` now supports shared empty-state handling, so empty analytics sections stay visually consistent with populated ones.
+- `RecentActivity` now uses the same analytics section anatomy and shows an explicit empty state instead of dropping the entire section.
+- The analytics screenshot harness now waits on a broader analytics heading pattern, so project-specific header copy does not break the spec.
 
 ---
 
-## Current Chart Colors
+## Remaining Gaps
 
-| Chart | Color Token |
-|-------|-------------|
-| Status | `bg-status-info` (blue) |
-| Type | `bg-status-success` (green) |
-| Priority | `bg-status-warning` (yellow) |
-| Velocity | `bg-accent` (accent) |
-| Assignee | `bg-brand` (brand) |
+| Problem | Area | Severity |
+|---------|------|----------|
+| No date-range or comparison controls yet | Analytics functionality | MEDIUM |
+| Charts are still static bars without tooltips, drill-in, or export affordances | Analytics interaction depth | LOW |
+| Organization analytics and project analytics now share shell discipline, but any future analytics surfaces should keep using the shared section/empty-state contract instead of reintroducing custom panels | Shared analytics system | LOW |
 
 ---
 
-## Summary
+## Source Files
 
-Analytics dashboard is functional with basic charts:
-- Metric cards display key stats
-- Horizontal bar charts for all breakdowns
-- Recent activity list working
-- Org-level analytics now uses the same shared section shell as the project dashboard
-- Skeleton loading states
-- Needs date range picker for filtering
-- Charts lack tooltips and hover states
-- No trend indicators (up/down arrows)
-- No data export functionality
+- `src/routes/_auth/_app/$orgSlug/projects/$key/analytics.tsx`
+- `src/components/AnalyticsDashboard.tsx`
+- `src/components/Analytics/AnalyticsInsightCard.tsx`
+- `src/components/Analytics/ChartCard.tsx`
+- `src/components/Analytics/RecentActivity.tsx`
+- `e2e/screenshot-pages.ts`

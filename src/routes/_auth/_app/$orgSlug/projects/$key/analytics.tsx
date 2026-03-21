@@ -34,7 +34,11 @@ function AnalyticsPage() {
   return (
     <ErrorBoundary fallback={<SectionErrorFallback title="Analytics Error" />}>
       <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
-        <AnalyticsDashboard projectId={project._id} />
+        <AnalyticsDashboard
+          projectId={project._id}
+          projectName={project.name}
+          projectKey={project.key}
+        />
       </Suspense>
     </ErrorBoundary>
   );

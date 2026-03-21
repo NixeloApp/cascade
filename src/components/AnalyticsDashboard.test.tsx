@@ -5,8 +5,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 
+type MockAnalytics = {
+  totalIssues: number;
+  unassignedCount: number;
+  issuesByStatus: Record<string, number>;
+  issuesByType: Record<string, number>;
+  issuesByPriority: Record<string, number>;
+  issuesByAssignee: Record<string, { count: number; name: string }>;
+};
+
 // Mock Convex hooks
-const mockAnalytics = {
+const mockAnalytics: MockAnalytics = {
   totalIssues: 25,
   unassignedCount: 5,
   issuesByStatus: {
@@ -101,7 +110,7 @@ function isQuery(queryArg: any, path: string) {
 
 // Extracted handler to reduce complexity
 const createQueryHandler = (
-  analyticsData: typeof mockAnalytics = mockAnalytics,
+  analyticsData: MockAnalytics = mockAnalytics,
   velocityData: any = mockVelocity,
   activityData: typeof mockActivity = mockActivity,
 ) => {
@@ -134,6 +143,16 @@ const createQueryHandler = (
 };
 
 describe("AnalyticsDashboard", () => {
+  function renderDashboard() {
+    return render(
+      <AnalyticsDashboard
+        projectId={"test" as Id<"projects">}
+        projectName="Project Atlas"
+        projectKey="PROJ"
+      />,
+    );
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseQuery.mockImplementation(createQueryHandler());
@@ -143,7 +162,7 @@ describe("AnalyticsDashboard", () => {
     vi.clearAllMocks();
     mockUseQuery.mockReturnValue(undefined);
 
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     // Check for skeleton loading states (uses animate-shimmer class)
     const skeletons = document.querySelectorAll(".animate-shimmer");
@@ -151,14 +170,23 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should render dashboard header", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
-    expect(screen.getByText("Analytics Dashboard")).toBeInTheDocument();
-    expect(screen.getByText(/Project insights, team velocity/i)).toBeInTheDocument();
+    expect(screen.getByText("Project Atlas analytics")).toBeInTheDocument();
+    expect(
+      screen.getByText(/delivery, workload, and ownership signals for proj/i),
+    ).toBeInTheDocument();
   });
 
-  it("should display key metrics cards", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+  it("should display snapshot and key metrics cards", () => {
+    renderDashboard();
+
+    expect(screen.getByText("Flow Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("22 open issues")).toBeInTheDocument();
+    expect(screen.getByText("Ownership")).toBeInTheDocument();
+    expect(screen.getByText("80% assigned")).toBeInTheDocument();
+    expect(screen.getByText("Sprint Signal")).toBeInTheDocument();
+    expect(screen.getByText("22 pts/sprint")).toBeInTheDocument();
 
     expect(screen.getByText("Total Issues")).toBeInTheDocument();
     expect(screen.getAllByText("25").length).toBeGreaterThan(0);
@@ -174,7 +202,7 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should display chart sections", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     expect(screen.getByText("Issues by Status")).toBeInTheDocument();
     expect(screen.getByText("Issues by Type")).toBeInTheDocument();
@@ -183,7 +211,7 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should display issues by status chart data", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     // Check that status labels are rendered
     expect(screen.getByText("todo")).toBeInTheDocument();
@@ -197,7 +225,7 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should display issues by type chart data", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     expect(screen.getByText("Task")).toBeInTheDocument();
     expect(screen.getByText("Bug")).toBeInTheDocument();
@@ -206,7 +234,7 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should display issues by priority chart data", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     expect(screen.getByText("Highest")).toBeInTheDocument();
     expect(screen.getByText("High")).toBeInTheDocument();
@@ -216,7 +244,7 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should display team velocity chart with sprint names", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     expect(screen.getByText("Sprint 1")).toBeInTheDocument();
     expect(screen.getByText("Sprint 2")).toBeInTheDocument();
@@ -227,7 +255,7 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should display issues by assignee when data is available", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     expect(screen.getByText("Issues by Assignee")).toBeInTheDocument();
     expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
@@ -236,7 +264,7 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should display recent activity feed", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     expect(screen.getByText("Recent Activity")).toBeInTheDocument();
     expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
@@ -246,7 +274,7 @@ describe("AnalyticsDashboard", () => {
   });
 
   it("should highlight unassigned count when greater than 0", () => {
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
     // Find the unassigned metric card
     const unassignedCard = screen.getByText("Unassigned").closest("div.ring-2");
@@ -260,8 +288,27 @@ describe("AnalyticsDashboard", () => {
       createQueryHandler(mockAnalytics, { velocityData: [], averageVelocity: 0 }, mockActivity),
     );
 
-    render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
+    renderDashboard();
 
-    expect(screen.getByText("No completed sprints yet")).toBeInTheDocument();
+    expect(screen.getByText("No sprint history yet")).toBeInTheDocument();
+  });
+
+  it("should render explicit empty states when ownership and activity data are absent", () => {
+    vi.clearAllMocks();
+    mockUseQuery.mockImplementation(
+      createQueryHandler(
+        {
+          ...mockAnalytics,
+          issuesByAssignee: {},
+        },
+        mockVelocity,
+        [],
+      ),
+    );
+
+    renderDashboard();
+
+    expect(screen.getByText("No assigned work yet")).toBeInTheDocument();
+    expect(screen.getByText("No recent activity yet")).toBeInTheDocument();
   });
 });
