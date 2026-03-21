@@ -24,6 +24,7 @@ What is already true in the repo:
 - Settings shows truthful local queue diagnostics, last successful local replay time, and capability-limit warnings
 - browser automation now covers queued timezone replay for `userSettings.update` in `e2e/settings/offline-replay.spec.ts`
 - browser automation now covers preview-runtime worker ownership and uncached offline fallback in `e2e/preview/pwa-runtime.spec.ts`
+- browser automation now covers authenticated preview replay, manual `Process Queue`, and `Last Successful Replay` updates in `e2e/preview/offline-replay-preview.spec.ts`
 - offline architecture and verification docs now exist:
   - `docs/setup/PWA.md`
   - `docs/setup/OFFLINE_ARCHITECTURE.md`
@@ -32,22 +33,19 @@ What is already true in the repo:
 
 Highest-value next move:
 
-- extend production-preview verification to authenticated replay and installability, then decide whether worker generation cleanup is worth the churn
+- focus the remaining browser proof on installability, broader authenticated offline navigation, and push behavior after worker updates
 
 Why:
 
 - the remaining uncertainty is no longer basic implementation truthfulness
-- the main open risk is runtime behavior that still needs browser proof: installability, authenticated offline behavior, replay in preview, and push after worker changes
+- the main open risk is runtime behavior that still needs browser proof: installability, broader authenticated offline navigation, and push after worker changes
 
 ## Remaining Work
 
 ## 1. Runtime Verification
 
 - [ ] Verify install prompt behavior in Chromium when browser installability criteria are actually met.
-- [ ] Verify at least one previously visited authenticated route works as expected offline.
-- [ ] Verify a queued `userSettings.update` change replays successfully after reconnect in a production-preview runtime, not only the current E2E/dev harness.
-- [ ] Verify manual `Process Queue` works in a real browser session, not just tests.
-- [ ] Verify `Last Successful Replay` updates correctly after a real replay.
+- [ ] Verify a fresh offline reload or second-route navigation of an authenticated app route behaves correctly in preview, not just an already-open Settings session.
 
 ## 2. Push And Worker Update Safety
 
@@ -80,7 +78,7 @@ Why:
 ## 6. Tests Still Missing
 
 - [ ] Cover installability in browser automation if the environment can satisfy install criteria.
-- [ ] Cover queued replay after reconnect against the production-preview runtime path, not just the current E2E harness.
+- [ ] Cover authenticated offline reload or second-route navigation in preview, not just the already-open Settings session.
 - [ ] Cover push after worker update only if the test harness can do it reliably.
 
 ## 7. Docs To Revisit After Runtime Proof

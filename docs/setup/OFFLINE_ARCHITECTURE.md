@@ -273,16 +273,20 @@ What those tests currently prove:
 What they do not prove:
 
 - real installability in a browser
-- offline behavior for authenticated app routes
+- fresh offline reload or second-route navigation for authenticated app routes
 - push subscription survival across worker replacement
-- queued replay in a production-preview authenticated runtime
 
 Production-preview browser automation that now exists:
 
 - `e2e/preview/pwa-runtime.spec.ts`
+- `e2e/preview/offline-replay-preview.spec.ts`
 
 What that preview spec currently proves:
 
 - `/service-worker.js` becomes the controlling worker in production preview
 - the generated `/sw.js` does not take control unexpectedly
 - uncached offline navigation falls back to `offline.html`
+- an authenticated Settings session remains usable offline once loaded
+- queued `userSettings.update` replay works in production preview
+- manual `Process Queue` works in production preview
+- `Last Successful Replay` updates in production preview

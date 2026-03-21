@@ -46,12 +46,13 @@ Verified now:
 - manual queue processing from Settings
 - one real replayable mutation family: `userSettings.update`
 - install/update helper wiring in the app shell
+- production-preview browser automation confirms an authenticated Settings session stays usable offline once loaded
+- production-preview browser automation confirms queued `userSettings.update` changes replay in preview and update `Last Successful Replay`
 
 Not yet verified end to end:
 
 - actual install-prompt display under browser installability rules
-- offline behavior for real authenticated app routes in a production browser session
-- `userSettings.update` replay in a production-preview authenticated browser session
+- fresh offline reload or second-route navigation for authenticated app routes in a production browser session
 - push behavior across worker replacement
 
 ## Setup Requirements
@@ -133,6 +134,7 @@ Useful current commands:
 ```bash
 pnpm test --run src/lib/offline.test.ts src/hooks/useOffline.test.ts src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/serviceWorker.test.ts
 pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/pwa-runtime.spec.ts --workers=1
+pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/offline-replay-preview.spec.ts --workers=1
 pnpm build
 ```
 
@@ -145,15 +147,16 @@ Those checks currently cover:
 - install/update helper behavior
 - preview-runtime worker ownership (`/service-worker.js` yes, `/sw.js` no)
 - uncached offline navigation fallback in a real production preview
+- authenticated Settings-session offline queueing and replay in a real production preview
+- `Last Successful Replay` updates after real preview replay
 
 ### Manual browser checks still required
 
 These are still runtime-verification tasks, not solved by unit tests:
 
 1. Confirm install prompt actually appears in a production browser session when installability criteria are met.
-2. Confirm authenticated app routes behave correctly when offline.
-3. Confirm queued replay drains correctly in a production-preview authenticated session.
-4. Confirm push subscriptions still work after worker updates or cache clears.
+2. Confirm a fresh offline reload or second-route navigation of an authenticated app route behaves correctly, not just an already-open Settings session.
+3. Confirm push subscriptions still work after worker updates or cache clears.
 
 ## Build Pipeline
 
@@ -287,14 +290,15 @@ For a realistic local browser check:
 
 1. Run `pnpm build`.
 2. Run `pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/pwa-runtime.spec.ts --workers=1` to prove runtime worker ownership and uncached offline fallback.
-3. Run `pnpm preview` if you want to inspect the same behavior manually in Chromium.
-4. In DevTools → Application → Service Workers, confirm `/service-worker.js` is registered.
-5. In DevTools → Application → Manifest, confirm `/manifest.webmanifest` is loaded.
-6. Go offline in DevTools and verify the settings screen still shows local queue state.
-7. Change a replayable preference while offline.
-8. Reconnect, or use `Process Queue`, and confirm the queue drains.
-9. Confirm `Last Successful Replay` updates.
-10. If testing push, subscribe again after any worker clear or replacement and verify delivery.
+3. Run `pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/offline-replay-preview.spec.ts --workers=1` to prove authenticated preview replay, manual processing, and `Last Successful Replay`.
+4. Run `pnpm preview` if you want to inspect the same behavior manually in Chromium.
+5. In DevTools → Application → Service Workers, confirm `/service-worker.js` is registered.
+6. In DevTools → Application → Manifest, confirm `/manifest.webmanifest` is loaded.
+7. Go offline in DevTools and verify the settings screen still shows local queue state.
+8. Change a replayable preference while offline.
+9. Reconnect, or use `Process Queue`, and confirm the queue drains.
+10. Confirm `Last Successful Replay` updates.
+11. If testing push, subscribe again after any worker clear or replacement and verify delivery.
 
 ## Browser Support And Known Limits
 
