@@ -1,19 +1,21 @@
-import { cva } from "class-variance-authority";
 import { Check } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { SectionIntro } from "../ui/SectionIntro";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface PlanCard {
-  name: string;
-  price: string;
-  description: string;
   cta: string;
+  description: string;
   featured?: boolean;
   features: string[];
+  name: string;
+  price: string;
 }
 
 const plans: PlanCard[] = [
@@ -41,13 +43,6 @@ const plans: PlanCard[] = [
   },
 ];
 
-const pricingVariants = {
-  section: cva("px-6 py-24 transition-colors"),
-  intro: cva("text-center mb-14"),
-  lead: cva("text-ui-text-secondary max-w-2xl mx-auto"),
-  featureList: cva("space-y-2 mb-6"),
-};
-
 function getPricingCardRecipe(featured: boolean) {
   return featured ? ("landingPricingCardFeatured" as const) : ("landingPricingCard" as const);
 }
@@ -55,54 +50,64 @@ function getPricingCardRecipe(featured: boolean) {
 /** Landing pricing section with plan tiers and enterprise-oriented feature matrix. */
 export function PricingSection() {
   return (
-    <section id="pricing" className={pricingVariants.section()}>
-      <div className="max-w-6xl mx-auto">
-        <div className={pricingVariants.intro()}>
-          <Typography variant="landingSectionTitle" className="mb-4">
-            Pricing that scales with your team
-          </Typography>
-          <Typography variant="lead" className={pricingVariants.lead()}>
-            Start self-hosted for free, then add enterprise controls as your org grows.
-          </Typography>
-        </div>
+    <section id="pricing">
+      <Container
+        size="lg"
+        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}
+      >
+        <Stack gap="2xl">
+          <SectionIntro
+            align="center"
+            title="Pricing that scales with your team"
+            description="Start self-hosted for free, then add enterprise controls as your org grows."
+          />
 
-        <Grid cols={1} colsMd={3} gap="lg">
-          {plans.map((plan) => (
-            <Card key={plan.name} recipe={getPricingCardRecipe(!!plan.featured)} padding="none">
-              <div className="mb-4">
-                <Typography variant="h4">{plan.name}</Typography>
-                <Typography as="h2" variant="landingPriceValue" className="mt-2">
-                  {plan.price}
-                </Typography>
-                <Typography variant="small" color="secondary" className="mt-2">
-                  {plan.description}
-                </Typography>
-              </div>
-
-              {plan.featured ? (
-                <Badge variant="brand" size="sm" className="mb-4">
-                  Most Popular
-                </Badge>
-              ) : null}
-
-              <ul className={pricingVariants.featureList()}>
-                {plan.features.map((feature) => (
-                  <Flex key={feature} as="li" align="center" gap="sm">
-                    <Check className="w-4 h-4 text-status-success-text shrink-0" />
-                    <Typography variant="small" color="secondary">
-                      {feature}
-                    </Typography>
-                  </Flex>
-                ))}
-              </ul>
-
-              <Button variant={plan.featured ? "primary" : "secondary"} className="w-full">
-                {plan.cta}
-              </Button>
-            </Card>
-          ))}
-        </Grid>
-      </div>
+          <Grid cols={1} colsMd={3} gap="lg">
+            {plans.map((plan) => (
+              <PlanPricingCard key={plan.name} {...plan} />
+            ))}
+          </Grid>
+        </Stack>
+      </Container>
     </section>
+  );
+}
+
+function PlanPricingCard({ cta, description, featured = false, features, name, price }: PlanCard) {
+  return (
+    <Card recipe={getPricingCardRecipe(featured)} padding="none">
+      <Stack gap="lg">
+        <Stack gap="sm">
+          <Typography variant="h4">{name}</Typography>
+          <Typography as="h2" variant="landingPriceValue">
+            {price}
+          </Typography>
+          <Typography variant="small" color="secondary">
+            {description}
+          </Typography>
+        </Stack>
+
+        {featured ? (
+          <Badge variant="brand" size="sm">
+            Most Popular
+          </Badge>
+        ) : null}
+
+        <Stack as="ul" gap="sm">
+          {features.map((feature) => (
+            <Flex key={feature} as="li" align="center" gap="sm">
+              <Check size={16} className="shrink-0 text-status-success-text" />
+              <Typography variant="small" color="secondary">
+                {feature}
+              </Typography>
+            </Flex>
+          ))}
+        </Stack>
+
+        <Button variant={featured ? "primary" : "secondary"} className="w-full">
+          {cta}
+        </Button>
+      </Stack>
+    </Card>
   );
 }
