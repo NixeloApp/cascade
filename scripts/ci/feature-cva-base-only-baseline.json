@@ -1,5 +1,3 @@
 {
-  "baseOnlyCvaDefinitionsByFile": {
-    "src/components/Landing/LogoBar.tsx": 3
-  }
+  "baseOnlyCvaDefinitionsByFile": {}
 }
