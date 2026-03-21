@@ -1,0 +1,6 @@
+{
+  "classStringStyleBundlePenaltyByFile": {
+    "src/components/Calendar/calendar-colors.ts": 60,
+    "src/lib/swimlane-utils.ts": 15
+  }
+}
