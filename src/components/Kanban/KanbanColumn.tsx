@@ -15,6 +15,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -172,7 +173,7 @@ function CollapsedColumn({
               size="xs"
               aria-label={`Expand ${state.name} column`}
             >
-              <Maximize2 className="h-4 w-4" />
+              <Icon icon={Maximize2} size="sm" />
             </IconButton>
           </Tooltip>
           <Flex flex="1" align="center" justify="center" style={{ writingMode: "vertical-lr" }}>
@@ -252,7 +253,7 @@ function ColumnHeader({
                 aria-label={`Collapse ${state.name} column`}
                 size="xs"
               >
-                <Minimize2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <Icon icon={Minimize2} size="xsPlus" />
               </IconButton>
             </Tooltip>
           )}
@@ -264,7 +265,7 @@ function ColumnHeader({
                 size="xs"
                 data-testid={columnIndex === 0 ? TEST_IDS.ISSUE.CREATE_TRIGGER : undefined}
               >
-                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <Icon icon={Plus} size="sm" />
               </IconButton>
             </Tooltip>
           )}
