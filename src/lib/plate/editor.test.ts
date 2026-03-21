@@ -188,11 +188,11 @@ describe("plateValueToProseMirrorSnapshot", () => {
     // Inline elements should be preserved, not flattened to plain text
     const paragraphContent = snapshot.content?.[0].content ?? [];
     const linkNode = paragraphContent.find((n) => n.type === "a");
-    expect(linkNode).toBeDefined();
+    expect(linkNode?.type).toBe("a");
     expect(linkNode?.attrs?.url).toBe("https://example.com");
 
     const mentionNode = paragraphContent.find((n) => n.type === "mention");
-    expect(mentionNode).toBeDefined();
+    expect(mentionNode?.type).toBe("mention");
 
     // Round-trip back to Plate
     const restored = proseMirrorSnapshotToValue(snapshot);
@@ -201,10 +201,10 @@ describe("plateValueToProseMirrorSnapshot", () => {
     expect(p.type).toBe("p");
     const children = p.children as Array<Record<string, unknown>>;
     const restoredLink = children.find((c) => c.type === "a");
-    expect(restoredLink).toBeDefined();
+    expect(restoredLink?.type).toBe("a");
     expect(restoredLink?.url).toBe("https://example.com");
     const restoredMention = children.find((c) => c.type === "mention");
-    expect(restoredMention).toBeDefined();
+    expect(restoredMention?.type).toBe("mention");
     expect(restoredMention?.value).toBe("user-1");
   });
 
