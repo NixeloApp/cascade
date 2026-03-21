@@ -1,8 +1,11 @@
 # Sign Up Page - Current State
 
 > **Route**: `/signup`
-> **Status**: 🟢 Shared shell and signup flow now feel aligned
-> **Last Updated**: 2026-03-21
+> **Status**: 🟡 NEEDS POLISH
+> **Last Updated**: 2026-03-12
+
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
@@ -15,36 +18,23 @@
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 
-## Verification State Coverage
-
-| Viewport | Theme | Preview |
-|----------|-------|---------|
-| Desktop | Dark | ![](screenshots/desktop-dark-verify.png) |
-| Desktop | Light | ![](screenshots/desktop-light-verify.png) |
-| Tablet | Light | ![](screenshots/tablet-light-verify.png) |
-| Mobile | Light | ![](screenshots/mobile-light-verify.png) |
-
 ---
 
 ## Current UI
 
-- Signup now shares the lighter task-first auth shell used by sign-in.
+- Signup now shares the same split auth shell as sign-in instead of the older isolated card treatment.
 - The page title is `Create your account`, with the sign-in switch link in the subtitle line.
-- Desktop keeps the supporting proof rail on the left; mobile collapses to a minimal brand row and
-  focused form panel.
-- The email expansion and verification flow now use the same divider, step, and intro vocabulary
-  instead of each state inventing its own shell.
+- Desktop keeps the marketing rail on the left; mobile collapses to a single stacked auth flow.
+- The main panel still needs to handle the email expansion and verification states without losing hierarchy.
 
 ---
 
 ## Recent Improvements
 
-- The shared auth shell is now lighter and more utility-driven than the previous version.
-- Legal copy stays reduced to a compact footer line.
-- The page-level account-switching copy remains in the right place.
-- Theme parity is stable across dark, light, tablet, and mobile captures.
-- The verification state now shares the same auth intro/step treatment as the main signup flow.
-- The verification state now has dedicated screenshot coverage across all standard viewports/themes.
+- The shared auth shell is materially cleaner and more product-like than the previous version.
+- Legal copy is reduced to a compact footer line.
+- The page-level account-switching copy is now in the right place.
+- Theme parity is much better across dark, light, tablet, and mobile captures.
 
 ---
 
@@ -52,7 +42,9 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| Filled auth interaction states now have coverage; remaining auth review is broader interaction-state consistency, not missing signup verification captures | review residue | LOW |
+| The expanded signup and verification states still make the panel feel busier and taller than the rest of the auth suite | `SignUpForm` / `EmailVerificationForm` | MEDIUM |
+| Desktop light mode still lets the left marketing rail compete a bit too much with the form | Shared auth shell | MEDIUM |
+| The signup surface is improved, but the panel still has more shell than necessary for a simple auth action | Shared auth shell | LOW |
 
 ---
 
@@ -62,6 +54,3 @@
 - `src/components/Auth/AuthPageLayout.tsx`
 - `src/components/Auth/SignUpForm.tsx`
 - `src/components/Auth/EmailVerificationForm.tsx`
-- `src/components/Auth/AuthMethodDivider.tsx`
-- `src/components/Auth/AuthStepIndicator.tsx`
-- `src/components/Auth/AuthFlowIntro.tsx`

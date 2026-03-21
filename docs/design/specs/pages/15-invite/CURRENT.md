@@ -4,6 +4,9 @@
 > **Status**: 🟡 FUNCTIONAL but NEEDS POLISH
 > **Last Updated**: 2026-02-13
 
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
+
 ---
 
 ## Screenshots

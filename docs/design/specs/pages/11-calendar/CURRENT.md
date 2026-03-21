@@ -2,7 +2,10 @@
 
 > **Route**: `/:slug/projects/:key/calendar` and `/:slug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 > **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-21
+> **Last Updated**: 2026-03-12
+
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
@@ -22,8 +25,7 @@
 
 - Calendar now sits under the same compact shared project shell as board and backlog when viewed in project context.
 - The screenshot matrix captures the main calendar plus day/week/month and event-modal variants.
-- The core calendar surface is now both functional and reviewable across day, week, and month, with timed day/week captures anchored onto actual event content instead of empty early-hours whitespace.
-- Calendar interaction captures now deterministically cover quick add, create-event, event detail, and desktop/tablet drag state without the earlier flaky modal-open path.
+- The core calendar surface is now both functional and reviewable across day, week, and month, including mobile month/week states that previously failed to show useful event content.
 
 ---
 
@@ -31,10 +33,9 @@
 
 - Screenshot readiness around the project shell and modal states is materially more reliable than the earlier baseline.
 - Project-level calendar screenshots now align with the current project header/navigation treatment.
-- Day and week screenshots now center real timed events instead of approving blank early-hours columns as if they were valid content.
+- Mobile week/day now anchor onto the active event column instead of rendering events offscreen.
 - Month view now stays a real month grid at mobile sizes and uses compact event indicators instead of reading as an empty list.
 - The shared calendar header is lighter on small screens, so the grid starts earlier in the viewport.
-- Create-event coverage is now first-class across desktop, tablet, and mobile instead of being a flaky soft-skipped modal state.
 
 ---
 
@@ -43,8 +44,8 @@
 | Problem | Area | Severity |
 |---------|------|----------|
 | Mobile project chrome is improved but still uses more height than ideal before the calendar work surface begins | Shared project shell | MEDIUM |
-| Day/week event blocks and header pills still need stronger light-mode refinement to feel intentional rather than merely valid | Calendar internals | MEDIUM |
-| Mobile month uses compact dot indicators, so drag state is intentionally not part of the mobile screenshot matrix | Interaction coverage contract | LOW |
+| Day cells and event cards still need stronger light-mode refinement to feel intentional rather than merely valid | Calendar internals | MEDIUM |
+| Desktop light-mode month view still wants a little more depth and contrast in the surrounding shell | Calendar composition | LOW |
 
 ---
 

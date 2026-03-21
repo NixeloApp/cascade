@@ -4,6 +4,9 @@
 > **Status**: 🟡 Functional baseline with route and deep-state screenshot coverage
 > **Last Updated**: 2026-03-20
 
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
+
 ---
 
 ## Current UI

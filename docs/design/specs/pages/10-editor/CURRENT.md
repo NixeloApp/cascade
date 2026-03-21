@@ -1,8 +1,11 @@
 # Document Editor Page - Current State
 
 > **Route**: `/:slug/documents/:id`
-> **Status**: 🟢 REVIEWED
-> **Last Updated**: 2026-03-21
+> **Status**: 🟡 NEEDS POLISH
+> **Last Updated**: 2026-03-12
+
+
+> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
@@ -20,30 +23,27 @@
 ## Current UI
 
 - The screenshot baseline now targets the actual editor route again instead of the templates page.
-- The page uses the Plate editor stack with a document header, optional sidebar, floating toolbar, slash menu, mention popover, and markdown import preview.
-- The default seeded document now reads like a real workspace note instead of a sparse demo shell, so the base route shows the same document rhythm the richer interaction captures already depended on.
-- The interaction captures now exercise the actual editor UI instead of soft-skipping when those states drift.
+- The page uses the Plate editor stack with a document header, optional sidebar, floating toolbar, and slash menu.
+- The current empty or near-empty document state is less dead than before, but the document body still reads sparse in the screenshots because the seeded content is minimal.
 
 ---
 
 ## Recent Improvements
 
-- Editor route discovery and seeded document selection were fixed in `e2e/screenshot-pages.ts`.
-- The document header now keeps core actions visible and pushes lower-frequency owner actions into overflow.
-- Rich-block, color-picker, slash-menu, floating-toolbar, mention-popover, move-dialog, markdown-preview, favorite, sidebar-favorite, and locked-state screenshots now capture deterministically across every viewport/theme config.
-- The screenshot harness now uses explicit editor e2e hooks for rich-content, slash-menu, floating-toolbar, and mention-popover state instead of relying on brittle seeded prose or silent soft-skips.
-- The seeded document snapshots in `convex/e2e.ts` now carry enough real structure to exercise headings, lists, and callout-style body rhythm in the base editor screenshots.
-- The editor surface now uses tighter empty/error/default anatomy in `src/components/PlateEditor.tsx` and stronger prose spacing in `src/components/ui/PlateRichTextContent.tsx`.
+- Editor route discovery was fixed in `e2e/screenshot-pages.ts`.
+- The editor empty state was reworked in `src/components/PlateEditor.tsx` so the page no longer reads like a blank broken canvas.
+- Light and dark screenshots now reflect the real document editor surface.
+- Desktop light mode now frames the editor body and header more intentionally instead of letting them dissolve into one pale slab.
 
 ---
 
-## Review Notes
+## Remaining Gaps
 
-| Focus | Result | Severity |
-|-------|--------|----------|
-| Base document density | Fixed by seeding richer workspace-note content instead of a barely filled demo paragraph | RESOLVED |
-| Editor body rhythm | Fixed for the current route baseline with stronger heading/list/blockquote spacing in the shared editor prose surface | RESOLVED |
-| Screenshot harness discipline | Stable again, including color-picker capture through the deterministic floating-toolbar path | RESOLVED |
+| Problem | Area | Severity |
+|---------|------|----------|
+| The document header still carries too many actions for the amount of visible content | `DocumentHeader` / `PlateEditor` | MEDIUM |
+| Desktop light mode still feels sparse because the seeded document body is thin | Editor composition + seed content | MEDIUM |
+| The editor still needs stronger typography and body rhythm once the seed content grows beyond the first paragraph | Editor surface system | LOW |
 
 ---
 
