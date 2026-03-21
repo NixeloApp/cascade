@@ -37,7 +37,7 @@ test.describe("Offline Replay", () => {
       await dispatchConnectivityEvent(page, "offline");
 
       await settingsPage.selectTimezone(queuedTimezone);
-      await settingsPage.expectToast("Timezone queued for sync");
+      await settingsPage.expectToast("Timezone change queued for sync when you are back online");
 
       await settingsPage.offlineTab.click();
       await expect(settingsPage.offlineTab).toHaveAttribute("aria-selected", "true");
