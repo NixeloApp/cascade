@@ -37,7 +37,6 @@
     "src/components/Onboarding/FeatureHighlights.tsx": 4,
     "src/components/Onboarding/InvitedWelcome.tsx": 6,
     "src/components/Onboarding/LeadOnboarding.tsx": 2,
-    "src/components/Onboarding/OnboardingChecklist.tsx": 7,
     "src/components/Onboarding/ProjectWizard.tsx": 2,
     "src/components/Onboarding/RoleSelector.tsx": 4,
     "src/components/PlateEditor.tsx": 1,
