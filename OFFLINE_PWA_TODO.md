@@ -20,6 +20,7 @@ What is already true in the repo:
 - `userSettings.update` is the first real replayable offline mutation family
 - replay runs on authenticated startup, reconnect, and manual `Process Queue`
 - Settings shows truthful local queue diagnostics, last successful local replay time, and capability-limit warnings
+- browser automation now covers queued timezone replay for `userSettings.update` in `e2e/settings/offline-replay.spec.ts`
 - offline architecture and verification docs now exist:
   - `docs/setup/PWA.md`
   - `docs/setup/OFFLINE_ARCHITECTURE.md`
@@ -44,7 +45,7 @@ Why:
 - [ ] Verify install prompt behavior in Chromium when browser installability criteria are actually met.
 - [ ] Verify offline navigation fallback works for uncached routes.
 - [ ] Verify at least one previously visited authenticated route works as expected offline.
-- [ ] Verify a queued `userSettings.update` change replays successfully after reconnect.
+- [ ] Verify a queued `userSettings.update` change replays successfully after reconnect in a production-preview runtime, not only the current E2E/dev harness.
 - [ ] Verify manual `Process Queue` works in a real browser session, not just tests.
 - [ ] Verify `Last Successful Replay` updates correctly after a real replay.
 
@@ -78,10 +79,9 @@ Why:
 
 ## 6. Tests Still Missing
 
-- [ ] Add a focused end-to-end offline/PWA spec once runtime behavior is trustworthy.
 - [ ] Cover installability in browser automation if the environment can satisfy install criteria.
 - [ ] Cover offline route fallback in browser automation.
-- [ ] Cover queued replay after reconnect in browser automation.
+- [ ] Cover queued replay after reconnect against the production-preview runtime path, not just the current E2E harness.
 - [ ] Cover push after worker update only if the test harness can do it reliably.
 
 ## 7. Docs To Revisit After Runtime Proof
