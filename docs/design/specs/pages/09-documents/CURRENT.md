@@ -1,117 +1,53 @@
 # Documents Page - Current State
 
 > **Route**: `/:slug/documents`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Status**: 🟢 REVIEWED
+> **Last Updated**: 2026-03-21
 
 ---
 
 ## Screenshots
 
-| Viewport | State | Preview |
+| Viewport | Theme | Preview |
 |----------|-------|---------|
-| Desktop | Filled | ![](screenshots/desktop-dark-filled.png) |
-| Desktop | Empty | ![](screenshots/desktop-dark-empty.png) |
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
 
 ---
 
-## Structure
+## Current UI
 
-Document tree with folders and files:
-
-```
-+-------------------------------------------------------------------------------------------+
-| [=] Nixelo E2E                      [Commands Cmd+K] [?] [> Timer] [Search Cmd+K] [N] [AV]|
-+-------------------------------------------------------------------------------------------+
-| [Sidebar] |                                                                               |
-|           |  Documents                                                    [+ New Document] |
-| Dashboard |  Organize your team's knowledge                                               |
-| Issues    |                                                                               |
-| Calendar  |  +--------------------------------------------------------------------------+ |
-| Documents |  |                                                                          | |
-|  > Guides |  |  > Getting Started                                                       | |
-|           |  |    ├─ Welcome                                               2 days ago  | |
-|           |  |    └─ Quick Start Guide                                     1 week ago  | |
-| Workspaces|  |                                                                          | |
-|  > Demo   |  |  > Product Specs                                                         | |
-|           |  |    └─ Feature Requirements                                  3 hours ago | |
-| Time Track|  |                                                                          | |
-|           |  |  + Team Notes                                                (empty)    | |
-|           |  |                                                                          | |
-|           |  +--------------------------------------------------------------------------+ |
-| Settings  |                                                                               |
-+-------------------------------------------------------------------------------------------+
-```
+- The route now reads as a document workspace instead of a sparse header plus floating cards.
+- The primary surface is a searchable recent-documents list, so users can jump straight into the latest spec or handoff without digging through the sidebar first.
+- The secondary rail now uses the real document tree as a library index, which keeps folders/favorites/archived pages visible without turning the page into another fake dashboard.
+- The route owns real blank-document creation from the page header, not just template browsing.
 
 ---
 
-## Current Elements
+## Recent Improvements
 
-### Page Header
-- **Title**: "Documents" (24px, bold)
-- **Description**: "Organize your team's knowledge"
-- **Action**: "+ New Document" button
-
-### Document Tree
-- **Folder rows**: Expandable with chevron icon
-- **Document rows**: Icon + name + last updated
-- **Nested levels**: Indentation for hierarchy
-- **Empty folders**: "(empty)" indicator
-
-### Tree Item States
-- Default: Normal text
-- Hover: Subtle background
-- Selected: Brand highlight
-- Dragging: (not implemented)
+- Increased the route width and rebuilt the page into a two-part workspace: searchable recent list plus tree-based library index.
+- Added route-owned blank-document creation with direct navigation into the editor after creation.
+- Added workspace summary metrics and a latest-updated signal so the page explains the state of the library at a glance instead of leaving most of the viewport empty.
+- Added focused route tests for search filtering, document creation, and the shared library-index rail.
+- Refreshed the reviewed screenshots so desktop/tablet/mobile now capture the actual route composition instead of the old placeholder summary.
 
 ---
 
-## Files
+## Remaining Gaps
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/_auth/_app/$orgSlug/documents/index.tsx` | Route definition | ~80 |
-| `src/components/documents/DocumentTree.tsx` | Tree container | ~150 |
-| `src/components/documents/DocumentRow.tsx` | Single row | ~80 |
-| `src/components/documents/FolderRow.tsx` | Folder with expand | ~100 |
-| `src/components/documents/CreateDocument.tsx` | Create modal | ~120 |
+| Problem | Area | Severity |
+|---------|------|----------|
+| Search only filters the recent-documents list, not the nested tree itself | Library index | LOW |
+| Tree rows still use the existing lightweight action model rather than richer rename/move/drag interactions | Shared document tree | LOW |
 
 ---
 
-## Problems
+## Source Files
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Tree indentation inconsistent | DocumentTree | MEDIUM |
-| 2 | Expand/collapse no animation | FolderRow | MEDIUM |
-| 3 | Document rows lack hover actions | DocumentRow | MEDIUM |
-| 4 | No drag-and-drop reordering | DocumentTree | LOW |
-| 5 | Empty state needs illustration | DocumentTree | LOW |
-| 6 | No document preview/thumbnail | DocumentRow | LOW |
-| 7 | No quick search/filter | Page header | LOW |
-| 8 | Last updated format inconsistent | DocumentRow | LOW |
-
----
-
-## Tree Item Detail
-
-```
-+--------------------------------------------------------------------------------+
-| [▶] Getting Started                                                            |
-|     ├─ [📄] Welcome                                               2 days ago   |
-|     └─ [📄] Quick Start Guide                                     1 week ago   |
-+--------------------------------------------------------------------------------+
-    ^     ^         ^                                                ^
-  expand  icon    name                                           timestamp
-```
-
----
-
-## Summary
-
-The documents page is functional but needs polish:
-- Tree expand/collapse needs smooth animation
-- Document rows need hover actions (edit, delete, move)
-- Consider adding document preview/thumbnail
-- Add quick search/filter capability
-- Empty state should have illustration
+- `src/routes/_auth/_app/$orgSlug/documents/index.tsx`
+- `src/routes/_auth/_app/$orgSlug/documents/index.test.tsx`
+- `src/components/Documents/DocumentTree.tsx`
+- `docs/design/specs/pages/09-documents/screenshots/*`
