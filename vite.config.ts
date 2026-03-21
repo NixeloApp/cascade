@@ -7,6 +7,64 @@ import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 import { VitePWA } from "vite-plugin-pwa";
 
+const MANUAL_CHUNK_RULES = [
+  {
+    chunk: "react",
+    matches: (id: string) =>
+      id.includes("node_modules/react/") || id.includes("node_modules/react-dom/"),
+  },
+  {
+    chunk: "convex",
+    matches: (id: string) =>
+      id.includes("node_modules/convex/") || id.includes("node_modules/@convex-dev/"),
+  },
+  {
+    chunk: "editor",
+    matches: (id: string) =>
+      id.includes("node_modules/@blocknote/") ||
+      id.includes("node_modules/prosemirror") ||
+      id.includes("node_modules/@tiptap/") ||
+      id.includes("node_modules/platejs") ||
+      id.includes("node_modules/@udecode/"),
+  },
+  {
+    chunk: "radix",
+    matches: (id: string) => id.includes("node_modules/@radix-ui/"),
+  },
+  {
+    chunk: "date-fns",
+    matches: (id: string) => id.includes("node_modules/date-fns/"),
+  },
+  {
+    chunk: "icons",
+    matches: (id: string) => id.includes("node_modules/lucide-react/"),
+  },
+  {
+    chunk: "router",
+    matches: (id: string) => id.includes("node_modules/@tanstack/"),
+  },
+  {
+    chunk: "dnd",
+    matches: (id: string) => id.includes("node_modules/@atlaskit/"),
+  },
+  {
+    chunk: "collab",
+    matches: (id: string) =>
+      id.includes("node_modules/yjs/") ||
+      id.includes("node_modules/y-") ||
+      id.includes("node_modules/lib0/") ||
+      id.includes("node_modules/@slate-yjs/"),
+  },
+  {
+    chunk: "motion",
+    matches: (id: string) => id.includes("node_modules/framer-motion/"),
+  },
+] as const;
+
+function getManualChunk(id: string) {
+  return MANUAL_CHUNK_RULES.find((rule) => rule.matches(id))?.chunk;
+}
+
 export default defineConfig(({ mode }) => ({
   plugins: [
     TanStackRouterVite({
@@ -153,59 +211,7 @@ window.addEventListener('message', async (message) => {
     reportCompressedSize: true,
     rollupOptions: {
       output: {
-        manualChunks(id: string) {
-          // React core (changes rarely, cache forever)
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
-            return "react";
-          }
-          // Convex (real-time backend SDK)
-          if (id.includes("node_modules/convex/") || id.includes("node_modules/@convex-dev/")) {
-            return "convex";
-          }
-          // Rich text editor (heavy, only used on doc pages)
-          if (
-            id.includes("node_modules/@blocknote/") ||
-            id.includes("node_modules/prosemirror") ||
-            id.includes("node_modules/@tiptap/") ||
-            id.includes("node_modules/platejs") ||
-            id.includes("node_modules/@udecode/")
-          ) {
-            return "editor";
-          }
-          // Radix UI primitives
-          if (id.includes("node_modules/@radix-ui/")) {
-            return "radix";
-          }
-          // Date utilities
-          if (id.includes("node_modules/date-fns/")) {
-            return "date-fns";
-          }
-          // Icons
-          if (id.includes("node_modules/lucide-react/")) {
-            return "icons";
-          }
-          // Router
-          if (id.includes("node_modules/@tanstack/")) {
-            return "router";
-          }
-          // Drag and drop
-          if (id.includes("node_modules/@atlaskit/")) {
-            return "dnd";
-          }
-          // Collaboration (Yjs)
-          if (
-            id.includes("node_modules/yjs/") ||
-            id.includes("node_modules/y-") ||
-            id.includes("node_modules/lib0/") ||
-            id.includes("node_modules/@slate-yjs/")
-          ) {
-            return "collab";
-          }
-          // Animation
-          if (id.includes("node_modules/framer-motion/")) {
-            return "motion";
-          }
-        },
+        manualChunks: getManualChunk,
       },
     },
   },

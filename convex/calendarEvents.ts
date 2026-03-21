@@ -248,6 +248,66 @@ async function ensureEventDoesNotOverlapOutOfOffice(
   }
 }
 
+async function assertCanManageEvent(
+  ctx: QueryCtx,
+  event: {
+    organizerId: Id<"users">;
+    workspaceId?: Id<"workspaces">;
+    organizationId?: Id<"organizations">;
+  },
+  userId: Id<"users">,
+  action: "update" | "delete",
+) {
+  if (event.organizerId !== userId) {
+    throw forbidden("organizer", `Only the event organizer can ${action} this event`);
+  }
+
+  if (!event.workspaceId || !event.organizationId) {
+    return;
+  }
+
+  const [workspaceMember, orgAdmin] = await Promise.all([
+    isWorkspaceMember(ctx, event.workspaceId, userId),
+    isOrganizationAdmin(ctx, event.organizationId, userId),
+  ]);
+
+  if (!(workspaceMember || orgAdmin)) {
+    throw forbidden("member", `You must be a workspace member to ${action} this event`);
+  }
+}
+
+function resolveUpdatedEventTimes(
+  args: { startTime?: number; endTime?: number },
+  event: { startTime: number; endTime: number },
+) {
+  const startTime = args.startTime ?? event.startTime;
+  const endTime = args.endTime ?? event.endTime;
+
+  if (endTime <= startTime) {
+    throw validation("endTime", "End time must be after start time");
+  }
+
+  return { startTime, endTime };
+}
+
+async function resolveUpdatedEventScope(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  args: { projectId?: Id<"projects">; issueId?: Id<"issues"> },
+  event: { projectId?: Id<"projects">; issueId?: Id<"issues"> },
+) {
+  if (args.projectId === undefined && args.issueId === undefined) {
+    return undefined;
+  }
+
+  return resolveEventScope(
+    ctx,
+    userId,
+    args.projectId ?? event.projectId,
+    args.issueId ?? event.issueId,
+  );
+}
+
 // Create a new calendar event
 export const create = authenticatedMutation({
   args: {
@@ -555,50 +615,24 @@ export const update = authenticatedMutation({
     const event = await ctx.db.get(args.id);
     if (!event) throw notFound("calendarEvent", args.id);
 
-    // Only organizer can update event
-    if (event.organizerId !== ctx.userId) {
-      throw forbidden("organizer", "Only the event organizer can update this event");
-    }
-
-    // For workspace-scoped events, verify membership
-    if (event.workspaceId && event.organizationId) {
-      const [workspaceMember, orgAdmin] = await Promise.all([
-        isWorkspaceMember(ctx, event.workspaceId, ctx.userId),
-        isOrganizationAdmin(ctx, event.organizationId, ctx.userId),
-      ]);
-      if (!(workspaceMember || orgAdmin)) {
-        throw forbidden("member", "You must be a workspace member to update this event");
-      }
-    }
-
-    // Validate times if provided
-    const startTime = args.startTime ?? event.startTime;
-    const endTime = args.endTime ?? event.endTime;
-    if (endTime <= startTime) {
-      throw validation("endTime", "End time must be after start time");
-    }
+    await assertCanManageEvent(ctx, event, ctx.userId, "update");
+    const { startTime, endTime } = resolveUpdatedEventTimes(args, event);
 
     // Only check OOO overlap when time fields are actually changing
     if (args.startTime !== undefined || args.endTime !== undefined) {
       await ensureEventDoesNotOverlapOutOfOffice(ctx, ctx.userId, startTime, endTime);
     }
 
-    // Build update object using helper
     let updates = buildEventUpdateObject(args);
-    if (args.projectId !== undefined || args.issueId !== undefined) {
-      const scope = await resolveEventScope(
-        ctx,
-        ctx.userId,
-        args.projectId ?? event.projectId,
-        args.issueId ?? event.issueId,
-      );
+    const resolvedScope = await resolveUpdatedEventScope(ctx, ctx.userId, args, event);
+    if (resolvedScope) {
       updates = {
         ...updates,
-        organizationId: scope.organizationId,
-        workspaceId: scope.workspaceId,
-        teamId: scope.teamId,
-        projectId: scope.projectId,
-        issueId: scope.issueId,
+        organizationId: resolvedScope.organizationId,
+        workspaceId: resolvedScope.workspaceId,
+        teamId: resolvedScope.teamId,
+        projectId: resolvedScope.projectId,
+        issueId: resolvedScope.issueId,
       };
     }
     await ctx.db.patch(args.id, updates);
@@ -615,21 +649,7 @@ export const remove = authenticatedMutation({
     const event = await ctx.db.get(args.id);
     if (!event) throw notFound("calendarEvent", args.id);
 
-    // Only organizer can delete event
-    if (event.organizerId !== ctx.userId) {
-      throw forbidden("organizer", "Only the event organizer can delete this event");
-    }
-
-    // For workspace-scoped events, verify membership
-    if (event.workspaceId && event.organizationId) {
-      const [workspaceMember, orgAdmin] = await Promise.all([
-        isWorkspaceMember(ctx, event.workspaceId, ctx.userId),
-        isOrganizationAdmin(ctx, event.organizationId, ctx.userId),
-      ]);
-      if (!(workspaceMember || orgAdmin)) {
-        throw forbidden("member", "You must be a workspace member to delete this event");
-      }
-    }
+    await assertCanManageEvent(ctx, event, ctx.userId, "delete");
 
     await ctx.db.delete(args.id);
 

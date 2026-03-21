@@ -46,6 +46,7 @@ export function OfflineTab() {
               <Typography variant="h3">Connection Status</Typography>
               <Typography
                 variant="small"
+                as="div"
                 className={isOnline ? "text-status-success" : "text-status-error"}
               >
                 <Flex align="center" gap="xs">

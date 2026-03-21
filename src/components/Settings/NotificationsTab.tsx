@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -135,6 +135,122 @@ function DigestOptionCard({
   );
 }
 
+function PushNotificationsUnavailable({ icon, message }: { icon: LucideIcon; message: string }) {
+  return (
+    <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
+      <Flex align="center" gap="sm">
+        <Icon icon={icon} size="md" tone="tertiary" />
+        <Typography variant="caption">{message}</Typography>
+      </Flex>
+    </div>
+  );
+}
+
+function PushNotificationsBlocked() {
+  return (
+    <Alert variant="warning">
+      <AlertTitle>Browser notifications blocked</AlertTitle>
+      <AlertDescription>
+        <Typography variant="small">
+          Notification permission is denied for this site. Re-enable notifications in your browser
+          settings to receive push alerts.
+        </Typography>
+        <div className="mt-3">
+          <Button variant="secondary" size="sm" disabled>
+            Blocked
+          </Button>
+        </div>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function PushNotificationsPreferences({
+  isPushLoading,
+  isSaving,
+  isSubscribed,
+  onPushToggle,
+  onSubscribe,
+  onUnsubscribe,
+  pushPreferences,
+}: {
+  isPushLoading: boolean;
+  isSaving: boolean;
+  isSubscribed: boolean;
+  onPushToggle: (field: string, value: boolean) => void;
+  onSubscribe: () => void;
+  onUnsubscribe: () => void;
+  pushPreferences:
+    | {
+        pushMentions: boolean;
+        pushAssignments: boolean;
+        pushComments: boolean;
+        pushStatusChanges: boolean;
+      }
+    | undefined;
+}) {
+  return (
+    <>
+      <Flex align="start" justify="between" className="mb-4">
+        <FlexItem flex="1">
+          <Typography variant="label">Browser Notifications</Typography>
+          <Typography variant="caption" className="mt-1">
+            Receive real-time notifications in your browser, even when Nixelo isn't open.
+          </Typography>
+        </FlexItem>
+        <Button
+          variant={isSubscribed ? "secondary" : "primary"}
+          size="sm"
+          onClick={isSubscribed ? onUnsubscribe : onSubscribe}
+          isLoading={isPushLoading}
+          className="ml-4"
+          leftIcon={
+            !isPushLoading ? <Icon icon={isSubscribed ? BellOff : Bell} size="sm" /> : undefined
+          }
+        >
+          {isSubscribed ? "Disable" : "Enable"}
+        </Button>
+      </Flex>
+
+      {isSubscribed && pushPreferences && (
+        <Stack gap="sm" className="pt-4 border-t border-ui-border-secondary">
+          <Typography variant="small" color="secondary">
+            Choose which notifications you want to receive:
+          </Typography>
+          <PushPreferenceRow
+            icon={AtSign}
+            label="Mentions"
+            checked={pushPreferences.pushMentions}
+            onChange={(value) => onPushToggle("pushMentions", value)}
+            isDisabled={isSaving}
+          />
+          <PushPreferenceRow
+            icon={User}
+            label="Assignments"
+            checked={pushPreferences.pushAssignments}
+            onChange={(value) => onPushToggle("pushAssignments", value)}
+            isDisabled={isSaving}
+          />
+          <PushPreferenceRow
+            icon={MessageSquare}
+            label="Comments"
+            checked={pushPreferences.pushComments}
+            onChange={(value) => onPushToggle("pushComments", value)}
+            isDisabled={isSaving}
+          />
+          <PushPreferenceRow
+            icon={RefreshCw}
+            label="Status Changes"
+            checked={pushPreferences.pushStatusChanges}
+            onChange={(value) => onPushToggle("pushStatusChanges", value)}
+            isDisabled={isSaving}
+          />
+        </Stack>
+      )}
+    </>
+  );
+}
+
 /** Push notifications card with browser support detection */
 function PushNotificationsCard({
   isSupported,
@@ -166,114 +282,37 @@ function PushNotificationsCard({
   onUnsubscribe: () => void;
   onPushToggle: (field: string, value: boolean) => void;
 }) {
-  const renderContent = () => {
-    if (!isSupported) {
-      return (
-        <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
-          <Flex align="center" gap="sm">
-            <Icon icon={BellOff} size="md" tone="tertiary" />
-            <Typography variant="caption">
-              Push notifications are not supported in this browser. Try using Chrome, Edge, or
-              Firefox.
-            </Typography>
-          </Flex>
-        </div>
-      );
-    }
+  let content: ReactNode;
 
-    if (!vapidKey) {
-      return (
-        <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
-          <Flex align="center" gap="sm">
-            <Icon icon={Info} size="md" tone="tertiary" />
-            <Typography variant="caption">
-              Push notifications require server configuration. Contact your administrator.
-            </Typography>
-          </Flex>
-        </div>
-      );
-    }
-
-    if (permission === "denied" && !isSubscribed) {
-      return (
-        <Alert variant="warning">
-          <AlertTitle>Browser notifications blocked</AlertTitle>
-          <AlertDescription>
-            <Typography variant="small">
-              Notification permission is denied for this site. Re-enable notifications in your
-              browser settings to receive push alerts.
-            </Typography>
-            <div className="mt-3">
-              <Button variant="secondary" size="sm" disabled>
-                Blocked
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      );
-    }
-
-    return (
-      <>
-        <Flex align="start" justify="between" className="mb-4">
-          <FlexItem flex="1">
-            <Typography variant="label">Browser Notifications</Typography>
-            <Typography variant="caption" className="mt-1">
-              Receive real-time notifications in your browser, even when Nixelo isn't open.
-            </Typography>
-          </FlexItem>
-          <Button
-            variant={isSubscribed ? "secondary" : "primary"}
-            size="sm"
-            onClick={isSubscribed ? onUnsubscribe : onSubscribe}
-            isLoading={isPushLoading}
-            className="ml-4"
-            leftIcon={
-              !isPushLoading ? <Icon icon={isSubscribed ? BellOff : Bell} size="sm" /> : undefined
-            }
-          >
-            {isSubscribed ? "Disable" : "Enable"}
-          </Button>
-        </Flex>
-
-        {isSubscribed && pushPreferences && (
-          <Stack gap="sm" className="pt-4 border-t border-ui-border-secondary">
-            <Typography variant="small" color="secondary">
-              Choose which notifications you want to receive:
-            </Typography>
-            <PushPreferenceRow
-              icon={AtSign}
-              label="Mentions"
-              checked={pushPreferences.pushMentions}
-              onChange={(value) => onPushToggle("pushMentions", value)}
-              isDisabled={isSaving}
-            />
-            <PushPreferenceRow
-              icon={User}
-              label="Assignments"
-              checked={pushPreferences.pushAssignments}
-              onChange={(value) => onPushToggle("pushAssignments", value)}
-              isDisabled={isSaving}
-            />
-            <PushPreferenceRow
-              icon={MessageSquare}
-              label="Comments"
-              checked={pushPreferences.pushComments}
-              onChange={(value) => onPushToggle("pushComments", value)}
-              isDisabled={isSaving}
-            />
-            <PushPreferenceRow
-              icon={RefreshCw}
-              label="Status Changes"
-              checked={pushPreferences.pushStatusChanges}
-              onChange={(value) => onPushToggle("pushStatusChanges", value)}
-              isDisabled={isSaving}
-            />
-          </Stack>
-        )}
-      </>
+  if (!isSupported) {
+    content = (
+      <PushNotificationsUnavailable
+        icon={BellOff}
+        message="Push notifications are not supported in this browser. Try using Chrome, Edge, or Firefox."
+      />
     );
-  };
+  } else if (!vapidKey) {
+    content = (
+      <PushNotificationsUnavailable
+        icon={Info}
+        message="Push notifications require server configuration. Contact your administrator."
+      />
+    );
+  } else if (permission === "denied" && !isSubscribed) {
+    content = <PushNotificationsBlocked />;
+  } else {
+    content = (
+      <PushNotificationsPreferences
+        isPushLoading={isPushLoading}
+        isSaving={isSaving}
+        isSubscribed={isSubscribed}
+        onPushToggle={onPushToggle}
+        onSubscribe={onSubscribe}
+        onUnsubscribe={onUnsubscribe}
+        pushPreferences={pushPreferences}
+      />
+    );
+  }
 
   return (
     <Card padding="lg">
@@ -285,7 +324,7 @@ function PushNotificationsCard({
             PWA
           </Badge>
         </Flex>
-        {renderContent()}
+        {content}
       </Stack>
     </Card>
   );

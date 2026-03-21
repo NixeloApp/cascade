@@ -34,6 +34,134 @@ function formatLocalDateForInput(timestamp: number): string {
   return `${year}-${month}-${day}`;
 }
 
+function resetOutOfOfficeForm(setters: {
+  setDelegateUserId: (value: Id<"users"> | "") => void;
+  setEndDate: (value: string) => void;
+  setNote: (value: string) => void;
+  setReason: (value: keyof typeof OUT_OF_OFFICE_REASON_LABELS) => void;
+  setStartDate: (value: string) => void;
+}) {
+  setters.setStartDate("");
+  setters.setEndDate("");
+  setters.setReason("vacation");
+  setters.setNote("");
+  setters.setDelegateUserId("");
+}
+
+function syncOutOfOfficeForm(
+  status: ReturnType<typeof useAuthenticatedQuery<typeof api.outOfOffice.getCurrent>>,
+  setters: {
+    setDelegateUserId: (value: Id<"users"> | "") => void;
+    setEndDate: (value: string) => void;
+    setNote: (value: string) => void;
+    setReason: (value: keyof typeof OUT_OF_OFFICE_REASON_LABELS) => void;
+    setStartDate: (value: string) => void;
+  },
+) {
+  if (!status) {
+    resetOutOfOfficeForm(setters);
+    return;
+  }
+
+  setters.setStartDate(formatLocalDateForInput(status.startsAt));
+  setters.setEndDate(formatLocalDateForInput(status.endsAt));
+  setters.setReason(status.reason);
+  setters.setNote(status.note ?? "");
+  setters.setDelegateUserId(status.delegate?._id ?? status.delegateUserId ?? "");
+}
+
+function buildDelegateOptions({
+  currentUserId,
+  searchableUsers,
+  status,
+}: {
+  currentUserId: Id<"users"> | undefined;
+  searchableUsers:
+    | Array<{
+        _id: Id<"users">;
+        name?: string | undefined;
+        email?: string | undefined;
+        image?: string | undefined;
+      }>
+    | undefined;
+  status: ReturnType<typeof useAuthenticatedQuery<typeof api.outOfOffice.getCurrent>>;
+}) {
+  const delegateOptions =
+    searchableUsers
+      ?.filter((user) => user._id !== currentUserId)
+      .map((user) => ({
+        _id: user._id,
+        name: user.name ?? user.email ?? "Unknown",
+        image: user.image,
+      })) ?? [];
+
+  const delegateId = status?.delegate?._id ?? status?.delegateUserId;
+  const shouldIncludeDelegate = delegateId && delegateId !== currentUserId;
+  if (!shouldIncludeDelegate || delegateOptions.some((user) => user._id === delegateId)) {
+    return delegateOptions;
+  }
+
+  if (status?.delegate && status.delegate._id === delegateId) {
+    delegateOptions.unshift(status.delegate);
+    return delegateOptions;
+  }
+
+  const matchingUser = searchableUsers?.find((user) => user._id === delegateId);
+  if (matchingUser) {
+    delegateOptions.unshift({
+      _id: matchingUser._id,
+      name: matchingUser.name ?? matchingUser.email ?? "Unknown",
+      image: matchingUser.image,
+    });
+  }
+
+  return delegateOptions;
+}
+
+async function saveOutOfOfficeStatus({
+  delegateUserId,
+  endDate,
+  note,
+  reason,
+  saveOutOfOffice,
+  startDate,
+}: {
+  delegateUserId: Id<"users"> | "";
+  endDate: string;
+  note: string;
+  reason: keyof typeof OUT_OF_OFFICE_REASON_LABELS;
+  saveOutOfOffice: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.outOfOffice.upsert>
+  >["mutate"];
+  startDate: string;
+}) {
+  if (!startDate || !endDate) {
+    showError("Start and end dates are required");
+    return;
+  }
+
+  const startsAt = parseStartDate(startDate);
+  const endsAt = parseEndDate(endDate);
+
+  if (endsAt < startsAt) {
+    showError("End date must be on or after start date");
+    return;
+  }
+
+  try {
+    await saveOutOfOffice({
+      startsAt,
+      endsAt,
+      reason,
+      note: note.trim() || undefined,
+      delegateUserId: delegateUserId || undefined,
+    });
+    showSuccess("Out-of-office status saved");
+  } catch (error) {
+    showError(error, "Failed to save out-of-office status");
+  }
+}
+
 /** Settings card for creating, updating, and clearing the current user's out-of-office window. */
 export function OutOfOfficeSettings() {
   const status = useAuthenticatedQuery(api.outOfOffice.getCurrent, {});
@@ -49,76 +177,30 @@ export function OutOfOfficeSettings() {
   const [delegateUserId, setDelegateUserId] = useState<Id<"users"> | "">("");
 
   useEffect(() => {
-    if (!status) {
-      setStartDate("");
-      setEndDate("");
-      setReason("vacation");
-      setNote("");
-      setDelegateUserId("");
-      return;
-    }
-
-    setStartDate(formatLocalDateForInput(status.startsAt));
-    setEndDate(formatLocalDateForInput(status.endsAt));
-    setReason(status.reason);
-    setNote(status.note ?? "");
-    setDelegateUserId(status.delegate?._id ?? status.delegateUserId ?? "");
+    syncOutOfOfficeForm(status, {
+      setStartDate,
+      setEndDate,
+      setReason,
+      setNote,
+      setDelegateUserId,
+    });
   }, [status]);
 
-  const delegateOptions =
-    searchableUsers
-      ?.filter((user) => user._id !== currentUser?._id)
-      .map((user) => ({
-        _id: user._id,
-        name: user.name ?? user.email ?? "Unknown",
-        image: user.image,
-      })) ?? [];
-
-  if (status?.delegate && status.delegate._id !== currentUser?._id) {
-    if (!delegateOptions.some((user) => user._id === status.delegate?._id)) {
-      delegateOptions.unshift(status.delegate);
-    }
-  } else if (
-    status?.delegateUserId &&
-    status.delegateUserId !== currentUser?._id &&
-    !delegateOptions.some((user) => user._id === status.delegateUserId)
-  ) {
-    const match = searchableUsers?.find((u) => u._id === status.delegateUserId);
-    if (match) {
-      delegateOptions.unshift({
-        _id: match._id,
-        name: match.name ?? match.email ?? "Unknown",
-        image: match.image,
-      });
-    }
-  }
+  const delegateOptions = buildDelegateOptions({
+    currentUserId: currentUser?._id,
+    searchableUsers,
+    status,
+  });
 
   const handleSave = async () => {
-    if (!startDate || !endDate) {
-      showError("Start and end dates are required");
-      return;
-    }
-
-    const startsAt = parseStartDate(startDate);
-    const endsAt = parseEndDate(endDate);
-
-    if (endsAt < startsAt) {
-      showError("End date must be on or after start date");
-      return;
-    }
-
-    try {
-      await saveOutOfOffice({
-        startsAt,
-        endsAt,
-        reason,
-        note: note.trim() || undefined,
-        delegateUserId: delegateUserId || undefined,
-      });
-      showSuccess("Out-of-office status saved");
-    } catch (error) {
-      showError(error, "Failed to save out-of-office status");
-    }
+    await saveOutOfOfficeStatus({
+      delegateUserId,
+      endDate,
+      note,
+      reason,
+      saveOutOfOffice,
+      startDate,
+    });
   };
 
   const handleClear = async () => {

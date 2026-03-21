@@ -9,7 +9,7 @@
 import { v } from "convex/values";
 import { components } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { type MutationCtx, mutation, query } from "./_generated/server";
+import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchBookingPages } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
@@ -148,6 +148,196 @@ async function validateAvailability(
   }
 }
 
+function collectRelevantHostIds({
+  dayEnd,
+  dayStart,
+  resolveHostForSlot,
+}: {
+  dayEnd: number;
+  dayStart: number;
+  resolveHostForSlot: (slotTime: number) => Id<"users">;
+}) {
+  const hostIds = new Set<string>();
+
+  for (let timestamp = dayStart; timestamp < dayEnd; timestamp += HOUR) {
+    hostIds.add(resolveHostForSlot(timestamp));
+  }
+
+  hostIds.add(resolveHostForSlot(dayEnd - 1));
+  return [...hostIds];
+}
+
+function getDayOfWeekLabel(timestamp: number) {
+  const dayNames = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ] as const;
+
+  return dayNames[new Date(timestamp).getDay()];
+}
+
+async function loadHostDayData(
+  ctx: QueryCtx,
+  hostIds: string[],
+  dayOfWeek: ReturnType<typeof getDayOfWeekLabel>,
+  dayStart: number,
+  dayEnd: number,
+) {
+  const availabilityByHost = new Map<
+    string,
+    { startTime: string; endTime: string; isActive: boolean }
+  >();
+  const bookingsByHost = new Map<string, Array<{ startTime: number; endTime: number }>>();
+
+  await Promise.all(
+    hostIds.map(async (hostId) => {
+      const [availability, bookings] = await Promise.all([
+        ctx.db
+          .query("availabilitySlots")
+          .withIndex("by_user_day", (q) =>
+            q.eq("userId", hostId as Id<"users">).eq("dayOfWeek", dayOfWeek),
+          )
+          .first(),
+        ctx.db
+          .query("bookings")
+          .withIndex("by_host", (q) => q.eq("hostId", hostId as Id<"users">))
+          .filter((q) =>
+            q.and(
+              q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),
+              q.gte(q.field("startTime"), dayStart),
+              q.lt(q.field("startTime"), dayEnd),
+            ),
+          )
+          .take(BOUNDED_LIST_LIMIT),
+      ]);
+
+      if (availability?.isActive) {
+        availabilityByHost.set(hostId, availability);
+      }
+
+      bookingsByHost.set(hostId, bookings);
+    }),
+  );
+
+  return { availabilityByHost, bookingsByHost };
+}
+
+function getAvailabilityWindow(
+  availabilityByHost: Map<string, { startTime: string; endTime: string; isActive: boolean }>,
+) {
+  if (availabilityByHost.size === 0) return null;
+
+  let earliestStart = 24 * 60;
+  let latestEnd = 0;
+
+  for (const availability of availabilityByHost.values()) {
+    const [startHours, startMinutes] = availability.startTime.split(":").map(Number);
+    const [endHours, endMinutes] = availability.endTime.split(":").map(Number);
+    earliestStart = Math.min(earliestStart, startHours * 60 + startMinutes);
+    latestEnd = Math.max(latestEnd, endHours * 60 + endMinutes);
+  }
+
+  return { earliestStart, latestEnd };
+}
+
+function buildDayTime(date: number, minutes: number) {
+  const result = new Date(date);
+  result.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+  return result;
+}
+
+function slotHasConflict({
+  bufferTimeAfter,
+  bufferTimeBefore,
+  hostBookings,
+  slotEnd,
+  slotStart,
+}: {
+  bufferTimeAfter: number;
+  bufferTimeBefore: number;
+  hostBookings: Array<{ startTime: number; endTime: number }>;
+  slotEnd: number;
+  slotStart: number;
+}) {
+  return hostBookings.some((booking) => {
+    const bufferedStart = booking.startTime - bufferTimeBefore * MINUTE;
+    const bufferedEnd = booking.endTime + bufferTimeAfter * MINUTE;
+    return slotStart < bufferedEnd && slotEnd > bufferedStart;
+  });
+}
+
+function generateAvailableSlotStarts({
+  availabilityByHost,
+  bookingsByHost,
+  date,
+  minimumNotice,
+  pageDuration,
+  resolveHostForSlot,
+  bufferTimeAfter,
+  bufferTimeBefore,
+}: {
+  availabilityByHost: Map<string, { startTime: string; endTime: string; isActive: boolean }>;
+  bookingsByHost: Map<string, Array<{ startTime: number; endTime: number }>>;
+  date: number;
+  minimumNotice: number;
+  pageDuration: number;
+  resolveHostForSlot: (slotTime: number) => Id<"users">;
+  bufferTimeAfter: number;
+  bufferTimeBefore: number;
+}) {
+  const availabilityWindow = getAvailabilityWindow(availabilityByHost);
+  if (!availabilityWindow) return [];
+
+  const slots: number[] = [];
+  const currentTime = buildDayTime(date, availabilityWindow.earliestStart);
+  const endTime = buildDayTime(date, availabilityWindow.latestEnd);
+
+  while (currentTime.getTime() + pageDuration * MINUTE <= endTime.getTime()) {
+    const slotStart = currentTime.getTime();
+    const slotEnd = slotStart + pageDuration * MINUTE;
+    const effectiveHostId = resolveHostForSlot(slotStart);
+    const hostAvailability = availabilityByHost.get(effectiveHostId);
+
+    if (!hostAvailability) {
+      currentTime.setMinutes(currentTime.getMinutes() + 15);
+      continue;
+    }
+
+    const [startHours, startMinutes] = hostAvailability.startTime.split(":").map(Number);
+    const [endHours, endMinutes] = hostAvailability.endTime.split(":").map(Number);
+    const availabilityStart = buildDayTime(date, startHours * 60 + startMinutes).getTime();
+    const availabilityEnd = buildDayTime(date, endHours * 60 + endMinutes).getTime();
+
+    if (slotStart < availabilityStart || slotEnd > availabilityEnd) {
+      currentTime.setMinutes(currentTime.getMinutes() + 15);
+      continue;
+    }
+
+    const hostBookings = bookingsByHost.get(effectiveHostId) ?? [];
+    const hasConflict = slotHasConflict({
+      bufferTimeAfter,
+      bufferTimeBefore,
+      hostBookings,
+      slotEnd,
+      slotStart,
+    });
+    const hoursUntilSlot = (slotStart - Date.now()) / HOUR;
+
+    if (!hasConflict && hoursUntilSlot >= minimumNotice) {
+      slots.push(slotStart);
+    }
+
+    currentTime.setMinutes(currentTime.getMinutes() + 15);
+  }
+
+  return slots;
+}
+
 /** Creates a new booking for a booking page with rate limiting, conflict detection, and optional auto-confirmation. */
 export const createBooking = mutation({
   args: {
@@ -281,135 +471,27 @@ export const getAvailableSlots = query({
       return pageUserId;
     }
 
-    // Determine which hosts are relevant for the day (host, delegate, or both)
     const dayStart = args.date;
     const dayEnd = dayStart + DAY;
-    const hostIds = new Set<string>();
-    // Check a few sample points across the day to find which hosts appear
-    for (let t = dayStart; t < dayEnd; t += HOUR) {
-      hostIds.add(resolveHostForSlot(t));
-    }
-    hostIds.add(resolveHostForSlot(dayEnd - 1));
-
-    // Pre-fetch availability and bookings for all relevant hosts
-    const date = new Date(args.date);
-    const dayNames = [
-      "sunday",
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-    ] as const;
-    const dayOfWeek = dayNames[date.getDay()];
-
-    const availabilityByHost = new Map<
-      string,
-      { startTime: string; endTime: string; isActive: boolean }
-    >();
-    const bookingsByHost = new Map<string, Array<{ startTime: number; endTime: number }>>();
-
-    await Promise.all(
-      [...hostIds].map(async (hostId) => {
-        const [availability, bookings] = await Promise.all([
-          ctx.db
-            .query("availabilitySlots")
-            .withIndex("by_user_day", (q) =>
-              q.eq("userId", hostId as Id<"users">).eq("dayOfWeek", dayOfWeek),
-            )
-            .first(),
-          ctx.db
-            .query("bookings")
-            .withIndex("by_host", (q) => q.eq("hostId", hostId as Id<"users">))
-            .filter((q) =>
-              q.and(
-                q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),
-                q.gte(q.field("startTime"), dayStart),
-                q.lt(q.field("startTime"), dayEnd),
-              ),
-            )
-            .take(BOUNDED_LIST_LIMIT),
-        ]);
-
-        if (availability?.isActive) {
-          availabilityByHost.set(hostId, availability);
-        }
-        bookingsByHost.set(hostId, bookings);
-      }),
+    const hostIds = collectRelevantHostIds({ dayStart, dayEnd, resolveHostForSlot });
+    const { availabilityByHost, bookingsByHost } = await loadHostDayData(
+      ctx,
+      hostIds,
+      getDayOfWeekLabel(args.date),
+      dayStart,
+      dayEnd,
     );
 
-    // If the primary host (non-OOO case) has no availability at all, bail early
-    // unless a delegate covers part of the day
-    if (availabilityByHost.size === 0) return [];
-
-    // Find the widest availability window across all hosts to iterate slots
-    let earliestStart = 24 * 60;
-    let latestEnd = 0;
-    for (const avail of availabilityByHost.values()) {
-      const [sh, sm] = avail.startTime.split(":").map(Number);
-      const [eh, em] = avail.endTime.split(":").map(Number);
-      earliestStart = Math.min(earliestStart, sh * 60 + sm);
-      latestEnd = Math.max(latestEnd, eh * 60 + em);
-    }
-
-    // Generate available slots
-    const slots: number[] = [];
-    const slotDuration = page.duration; // minutes
-
-    const currentTime = new Date(args.date);
-    currentTime.setHours(Math.floor(earliestStart / 60), earliestStart % 60, 0, 0);
-
-    const endTime = new Date(args.date);
-    endTime.setHours(Math.floor(latestEnd / 60), latestEnd % 60, 0, 0);
-
-    while (currentTime.getTime() + slotDuration * MINUTE <= endTime.getTime()) {
-      const slotStart = currentTime.getTime();
-      const slotEnd = slotStart + slotDuration * MINUTE;
-
-      // Resolve which host owns this slot based on OOO status at slot time
-      const effectiveHostId = resolveHostForSlot(slotStart);
-      const hostAvailability = availabilityByHost.get(effectiveHostId);
-
-      // Skip if this host has no availability on this day
-      if (!hostAvailability) {
-        currentTime.setMinutes(currentTime.getMinutes() + 15);
-        continue;
-      }
-
-      // Check slot is within this host's availability window
-      const [aStartH, aStartM] = hostAvailability.startTime.split(":").map(Number);
-      const [aEndH, aEndM] = hostAvailability.endTime.split(":").map(Number);
-      const availStart = new Date(args.date);
-      availStart.setHours(aStartH, aStartM, 0, 0);
-      const availEnd = new Date(args.date);
-      availEnd.setHours(aEndH, aEndM, 0, 0);
-
-      if (slotStart < availStart.getTime() || slotEnd > availEnd.getTime()) {
-        currentTime.setMinutes(currentTime.getMinutes() + 15);
-        continue;
-      }
-
-      // Check if slot conflicts with existing bookings for the effective host
-      const hostBookings = bookingsByHost.get(effectiveHostId) ?? [];
-      const hasConflict = hostBookings.some((booking) => {
-        const bufferedStart = booking.startTime - page.bufferTimeBefore * MINUTE;
-        const bufferedEnd = booking.endTime + page.bufferTimeAfter * MINUTE;
-        return slotStart < bufferedEnd && slotEnd > bufferedStart;
-      });
-
-      // Check minimum notice
-      const hoursUntilSlot = (slotStart - Date.now()) / HOUR;
-
-      if (!hasConflict && hoursUntilSlot >= page.minimumNotice) {
-        slots.push(slotStart);
-      }
-
-      // Move to next slot (15-minute increments)
-      currentTime.setMinutes(currentTime.getMinutes() + 15);
-    }
-
-    return slots;
+    return generateAvailableSlotStarts({
+      availabilityByHost,
+      bookingsByHost,
+      date: args.date,
+      minimumNotice: page.minimumNotice,
+      pageDuration: page.duration,
+      resolveHostForSlot,
+      bufferTimeAfter: page.bufferTimeAfter,
+      bufferTimeBefore: page.bufferTimeBefore,
+    });
   },
 });
 
