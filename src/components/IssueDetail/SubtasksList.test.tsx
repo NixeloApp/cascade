@@ -166,7 +166,7 @@ describe("SubtasksList", () => {
 
     render(<SubtasksList {...defaultProps} subtasks={[]} />);
 
-    expect(screen.getByText("No sub-tasks yet")).toBeInTheDocument();
+    expect(screen.getByText("No subtasks yet")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "+ Add Sub-task" }));
     expect(screen.getByPlaceholderText("Sub-task title...")).toBeInTheDocument();

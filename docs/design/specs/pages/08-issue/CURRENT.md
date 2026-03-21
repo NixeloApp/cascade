@@ -1,8 +1,8 @@
 # Issue Detail Page - Current State
 
 > **Route**: `/:slug/issues/:key`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-09
+> **Status**: 🟢 REVIEWED
+> **Last Updated**: 2026-03-21
 
 ---
 
@@ -19,17 +19,19 @@
 
 ## Current UI
 
-- The screenshot baseline now captures the real issue detail route again instead of the `Issue not found` error state.
-- The page uses the expected split layout: main issue content on the left and detail fields in the right sidebar.
-- Modal variants for issue detail overlays are also capturing correctly again.
+- The standalone issue route now resolves seeded demo issues reliably again, even when issue keys collide across organizations.
+- The page reads as one issue workspace instead of a header plus a pile of unrelated cards.
+- Main content is grouped into `Overview`, `Subtasks`, and `Discussion`, with the sidebar using the same section anatomy for properties, tracking, attachments, watchers, and dependencies.
+- Screenshot capture now waits for the discussion area to settle instead of freezing the page mid-loading.
 
 ---
 
 ## Recent Improvements
 
-- Route discovery and seeded issue linkage were fixed in the screenshot harness.
-- The issue page is reviewable again across desktop, tablet, and mobile screenshots.
-- The current screenshots now reflect real issue content rather than harness failure.
+- Added a shared issue-detail section shell and moved the route onto clearer main/sidebar surfaces.
+- Reworked metadata rows, watchers, and comments so empty states and supporting copy feel intentional instead of generic filler.
+- Fixed the direct-route lookup path by scoping issue-key resolution to the current organization.
+- Hardened screenshot discovery so the issue page uses a live visible issue key from the seeded product state instead of trusting stale seeded keys.
 
 ---
 
@@ -37,16 +39,17 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| Sidebar controls still need more consistent field treatment and hover behavior | `IssueSidebar` | MEDIUM |
-| Activity feed still lacks a stronger timeline treatment | `ActivityFeed` | MEDIUM |
-| Comment entry and description surfaces are serviceable but not yet polished | Main content sections | LOW |
+| Sidebar metadata rows are cleaner but still denser than the main content on narrower viewports | Right rail | LOW |
+| Attachments and dependency sections still need a broader product-wide pass for empty-state consistency | Shared issue side modules | LOW |
 
 ---
 
 ## Source Files
 
 - `src/routes/_auth/_app/$orgSlug/issues/$key.tsx`
-- `src/components/issues/IssueDetail.tsx`
-- `src/components/issues/IssueSidebar.tsx`
-- `src/components/issues/ActivityFeed.tsx`
+- `src/components/IssueDetail/IssueDetailLayout.tsx`
+- `src/components/IssueDetail/IssueDetailContent.tsx`
+- `src/components/IssueDetail/IssueDetailSidebar.tsx`
+- `src/components/IssueComments.tsx`
+- `convex/issues/queries.ts`
 - `e2e/screenshot-pages.ts`

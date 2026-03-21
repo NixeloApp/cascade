@@ -1667,10 +1667,15 @@ async function waitForTeamSettingsReady(page: Page): Promise<void> {
 }
 
 async function waitForIssueDetailReady(page: Page): Promise<void> {
+  await page.locator("code").first().waitFor({ state: "visible", timeout: 12000 });
   await page
-    .getByTestId(TEST_IDS.ISSUE.DESCRIPTION_CONTENT)
-    .or(page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_EDITOR))
+    .getByRole("button", { name: /edit issue|save changes/i })
     .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByText("Loading comments...").waitFor({ state: "hidden", timeout: 12000 });
+  await page.getByRole("button", { name: /add comment/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
   await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
@@ -2283,6 +2288,14 @@ async function discoverIssueKey(
     await page.goto(`${BASE_URL}${pathName}`, { waitUntil: "domcontentloaded", timeout: 15000 });
     await waitForExpectedContent(page, pathName, "issues");
     await waitForScreenshotReady(page);
+
+    const issueKeyElement = page.getByTestId(TEST_IDS.ISSUE.KEY).first();
+    if ((await issueKeyElement.count()) > 0) {
+      const issueKeyText = (await issueKeyElement.textContent())?.trim();
+      if (issueKeyText) {
+        return issueKeyText;
+      }
+    }
 
     const issueKey = await discoverFirstHref(page, /\/issues\/([^/?#]+)/);
     if (issueKey) {
@@ -4711,7 +4724,10 @@ async function screenshotIssueInteractiveStates(
     await toggleBtn.click();
     await waitForScreenshotReady(page);
 
-    const issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
+    const issueCard = page
+      .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
+      .getByTestId(TEST_IDS.ISSUE.CARD)
+      .first();
     await issueCard.waitFor({ state: "visible", timeout: 5000 });
     await issueCard.click();
 

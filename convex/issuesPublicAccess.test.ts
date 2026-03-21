@@ -39,7 +39,10 @@ describe("Public Issue Access Vulnerability", () => {
 
     // Simulate an unauthenticated request to getByKey
     // Note: convex-test t.query() runs without authentication by default unless asUser is used
-    const publicIssue = await t.query(api.issues.queries.getByKey, { key: issueKey });
+    const publicIssue = await t.query(api.issues.queries.getByKey, {
+      key: issueKey,
+      organizationId: issue.organizationId,
+    });
 
     // Assert that the issue is NOT accessible
     expect(publicIssue).toBeNull();

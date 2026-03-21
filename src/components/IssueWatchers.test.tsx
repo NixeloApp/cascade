@@ -107,7 +107,7 @@ describe("IssueWatchers", () => {
     render(<IssueWatchers issueId={"issue_1" as Id<"issues">} />);
 
     expect(screen.getByRole("button", { name: /watch/i })).toBeInTheDocument();
-    expect(screen.getByText("Watchers (2)")).toBeInTheDocument();
+    expect(screen.getByText("2 watchers")).toBeInTheDocument();
     expect(screen.getByText("avatar:Alex")).toBeInTheDocument();
     expect(screen.getByText("alex@example.com")).toBeInTheDocument();
     expect(screen.getByText("avatar:Morgan")).toBeInTheDocument();
@@ -126,8 +126,9 @@ describe("IssueWatchers", () => {
     render(<IssueWatchers issueId={"issue_2" as Id<"issues">} />);
 
     expect(screen.getByRole("button", { name: /watching/i })).toBeInTheDocument();
+    expect(screen.getByText("No watchers yet")).toBeInTheDocument();
     expect(
-      screen.getByText("No watchers yet. Be the first to watch this issue!"),
+      screen.getByText("Followers will appear here when people subscribe to this issue."),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /watching/i }));

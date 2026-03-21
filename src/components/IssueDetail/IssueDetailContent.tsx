@@ -8,11 +8,14 @@ import {
 import { SubtasksList } from "@/components/IssueDetail/SubtasksList";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { FileText } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import { IssueDetailSection } from "./IssueDetailSection";
 
 interface IssueDetailContentProps {
   issueId: Id<"issues">;
@@ -47,11 +50,18 @@ export function IssueDetailContent({
   onCancel,
 }: IssueDetailContentProps): ReactNode {
   return (
-    <FlexItem flex="1" className="min-w-0 max-w-4xl border-r border-ui-border/50">
-      <Card padding="lg" radius="none" variant="ghost">
-        <Stack gap="xl">
-          {/* Title & Description */}
-          <Stack gap="md">
+    <FlexItem flex="1" className="min-w-0">
+      <Card padding="lg">
+        <Stack gap="2xl">
+          <IssueDetailSection
+            eyebrow="Issue workspace"
+            title="Overview"
+            description={
+              isEditing
+                ? "Refine the issue title and description before saving changes."
+                : "Keep the problem, context, and acceptance criteria together."
+            }
+          >
             {isEditing ? (
               <Stack gap="md">
                 <Input
@@ -85,31 +95,39 @@ export function IssueDetailContent({
                     testId={TEST_IDS.ISSUE.DESCRIPTION_CONTENT}
                   />
                 ) : (
-                  <Typography variant="p" color="tertiary" className="italic">
-                    No description provided
-                  </Typography>
+                  <EmptyState
+                    icon={FileText}
+                    title="No description yet"
+                    description="Add context, constraints, or handoff notes so the issue stays actionable."
+                    size="compact"
+                    align="start"
+                    surface="bare"
+                  />
                 )}
               </Stack>
             )}
-          </Stack>
+          </IssueDetailSection>
 
-          {/* Sub-tasks Section */}
           {issueType !== "subtask" && (
-            <Stack gap="md">
-              <Typography variant="label" color="tertiary">
-                Sub-tasks
-              </Typography>
-              <SubtasksList issueId={issueId} projectId={projectId} subtasks={subtasks} />
-            </Stack>
+            <IssueDetailSection
+              title="Subtasks"
+              description="Break the work into smaller trackable steps without leaving the issue."
+            >
+              <SubtasksList
+                issueId={issueId}
+                projectId={projectId}
+                subtasks={subtasks}
+                showHeading={false}
+              />
+            </IssueDetailSection>
           )}
 
-          {/* Comments Section */}
-          <Stack gap="lg" className="pt-8 border-t border-ui-border/50">
-            <Typography variant="label" color="tertiary">
-              Comments
-            </Typography>
+          <IssueDetailSection
+            title="Discussion"
+            description="Capture decisions, blockers, and follow-up context directly on the issue."
+          >
             <IssueComments issueId={issueId} projectId={projectId} />
-          </Stack>
+          </IssueDetailSection>
         </Stack>
       </Card>
     </FlexItem>

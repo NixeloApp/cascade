@@ -17,11 +17,12 @@ import { IssueMetadataSection } from "@/components/IssueDetail/IssueMetadataSect
 import { IssueWatchers } from "@/components/IssueWatchers";
 import { TimeTracker } from "@/components/TimeTracker";
 import { Card } from "@/components/ui/Card";
+import { FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import type { UserSummary, UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { showError } from "@/lib/toast";
+import { IssueDetailSection } from "./IssueDetailSection";
 
 interface IssueDetailSidebarProps {
   issueId: Id<"issues">;
@@ -39,14 +40,19 @@ interface IssueDetailSidebarProps {
   canEdit?: boolean;
 }
 
-function SidebarSection({ title, children }: { title: string; children: ReactNode }): ReactNode {
+function SidebarSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}): ReactNode {
   return (
-    <section className="pb-6 border-b border-ui-border/30 last:border-b-0 last:pb-0">
-      <Stack gap="md">
-        <Typography variant="eyebrowWide">{title}</Typography>
-        {children}
-      </Stack>
-    </section>
+    <IssueDetailSection title={title} description={description} compact>
+      {children}
+    </IssueDetailSection>
   );
 }
 
@@ -119,53 +125,65 @@ export function IssueDetailSidebar({
   };
 
   return (
-    <Card
-      padding="lg"
-      radius="none"
-      variant="ghost"
-      className="w-full md:w-80 lg:w-96 bg-ui-bg-soft"
-    >
-      <Stack gap="xl">
-        <SidebarSection title="Properties">
-          <IssueMetadataSection
-            status={status}
-            type={type}
-            priority={priority}
-            assignee={assignee}
-            reporter={reporter}
-            storyPoints={storyPoints}
-            labels={labels}
-            editable={canEdit && !!project}
-            members={members}
-            workflowStates={workflowStates}
-            onStatusChange={handleStatusChange}
-            onTypeChange={handleTypeChange}
-            onPriorityChange={handlePriorityChange}
-            onAssigneeChange={handleAssigneeChange}
-            onStoryPointsChange={handleStoryPointsChange}
-          />
-        </SidebarSection>
+    <FlexItem shrink={false} className="w-full md:w-80 lg:w-96">
+      <Card padding="lg">
+        <Stack gap="xl">
+          <SidebarSection
+            title="Properties"
+            description="Status, ownership, and planning fields stay together here."
+          >
+            <IssueMetadataSection
+              status={status}
+              type={type}
+              priority={priority}
+              assignee={assignee}
+              reporter={reporter}
+              storyPoints={storyPoints}
+              labels={labels}
+              editable={canEdit && !!project}
+              members={members}
+              workflowStates={workflowStates}
+              onStatusChange={handleStatusChange}
+              onTypeChange={handleTypeChange}
+              onPriorityChange={handlePriorityChange}
+              onAssigneeChange={handleAssigneeChange}
+              onStoryPointsChange={handleStoryPointsChange}
+            />
+          </SidebarSection>
 
-        <SidebarSection title="Time Tracking">
-          <TimeTracker
-            issueId={issueId}
-            projectId={projectId}
-            estimatedHours={estimatedHours}
-            billingEnabled={billingEnabled}
-          />
-        </SidebarSection>
+          <SidebarSection
+            title="Time Tracking"
+            description="Log work against the issue and compare it with the estimate."
+          >
+            <TimeTracker
+              issueId={issueId}
+              projectId={projectId}
+              estimatedHours={estimatedHours}
+              billingEnabled={billingEnabled}
+            />
+          </SidebarSection>
 
-        <SidebarSection title="Attachments">
-          <FileAttachments issueId={issueId} />
-        </SidebarSection>
+          <SidebarSection
+            title="Attachments"
+            description="Keep reference files and supporting material with the work item."
+          >
+            <FileAttachments issueId={issueId} />
+          </SidebarSection>
 
-        <SidebarSection title="Watchers">
-          <IssueWatchers issueId={issueId} />
-        </SidebarSection>
-        <SidebarSection title="Dependencies">
-          <IssueDependencies issueId={issueId} />
-        </SidebarSection>
-      </Stack>
-    </Card>
+          <SidebarSection
+            title="Watchers"
+            description="Followers will be notified as the issue changes."
+          >
+            <IssueWatchers issueId={issueId} />
+          </SidebarSection>
+          <SidebarSection
+            title="Dependencies"
+            description="Track the linked issues that block or depend on this work."
+          >
+            <IssueDependencies issueId={issueId} />
+          </SidebarSection>
+        </Stack>
+      </Card>
+    </FlexItem>
   );
 }

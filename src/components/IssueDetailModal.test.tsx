@@ -385,13 +385,13 @@ describe("IssueDetailModal", () => {
     });
   });
 
-  it("should show No description provided when description is empty", () => {
+  it("should show the empty description state when description is empty", () => {
     const issueWithoutDescription = { ...mockIssue, description: "" };
     setupMockQuery(issueWithoutDescription);
 
     renderModal();
 
-    expect(screen.getByText(/No description provided/i)).toBeInTheDocument();
+    expect(screen.getByText(/No description yet/i)).toBeInTheDocument();
   });
 
   it("should show Unassigned when no assignee", () => {
