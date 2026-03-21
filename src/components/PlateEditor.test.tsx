@@ -149,6 +149,23 @@ describe("PlateEditor", () => {
     expect(screen.queryByText("Document Not Found")).not.toBeInTheDocument();
   });
 
+  it("renders the blank-document starter panel when the editor value is empty", () => {
+    mockIsEmptyValue.mockReturnValue(true);
+    mockQueryResults([loadedDocument, false, false, undefined, "user-1", 0, []]);
+
+    render(<PlateEditor documentId={documentId} />);
+
+    expect(screen.getByText("Blank document")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Start with the handoff context, then turn the note into operational follow-up.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Capture the context")).toBeInTheDocument();
+    expect(screen.getByText("Turn notes into action")).toBeInTheDocument();
+    expect(screen.getByText("Keep the trail visible")).toBeInTheDocument();
+  });
+
   it("renders an empty state when the user session cannot be loaded", () => {
     mockQueryResults([{ _id: documentId, title: "Spec" }, false, false, undefined, null, 0, []]);
 

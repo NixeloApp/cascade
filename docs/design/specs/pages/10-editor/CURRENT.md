@@ -1,7 +1,7 @@
 # Document Editor Page - Current State
 
 > **Route**: `/:slug/documents/:id`
-> **Status**: 🟡 NEEDS POLISH
+> **Status**: 🟢 REVIEWED
 > **Last Updated**: 2026-03-21
 
 ---
@@ -21,7 +21,8 @@
 
 - The screenshot baseline now targets the actual editor route again instead of the templates page.
 - The page uses the Plate editor stack with a document header, optional sidebar, floating toolbar, slash menu, mention popover, and markdown import preview.
-- The default seeded document state is stable again across desktop, tablet, and mobile, and the interaction captures now exercise the actual editor UI instead of soft-skipping when those states drift.
+- The default seeded document now reads like a real workspace note instead of a sparse demo shell, so the base route shows the same document rhythm the richer interaction captures already depended on.
+- The interaction captures now exercise the actual editor UI instead of soft-skipping when those states drift.
 
 ---
 
@@ -31,16 +32,18 @@
 - The document header now keeps core actions visible and pushes lower-frequency owner actions into overflow.
 - Rich-block, color-picker, slash-menu, floating-toolbar, mention-popover, move-dialog, markdown-preview, favorite, sidebar-favorite, and locked-state screenshots now capture deterministically across every viewport/theme config.
 - The screenshot harness now uses explicit editor e2e hooks for rich-content, slash-menu, floating-toolbar, and mention-popover state instead of relying on brittle seeded prose or silent soft-skips.
+- The seeded document snapshots in `convex/e2e.ts` now carry enough real structure to exercise headings, lists, and callout-style body rhythm in the base editor screenshots.
+- The editor surface now uses tighter empty/error/default anatomy in `src/components/PlateEditor.tsx` and stronger prose spacing in `src/components/ui/PlateRichTextContent.tsx`.
 
 ---
 
-## Remaining Gaps
+## Review Notes
 
-| Problem | Area | Severity |
-|---------|------|----------|
-| The base document screenshot still reads slightly sparse compared with the richer interaction states because the default seeded note body is intentionally light | Editor composition + seed content | MEDIUM |
-| The editor still needs stronger typography and body rhythm once the default seeded content grows beyond a few paragraphs | Editor surface system | LOW |
-| The screenshot spec is now interaction-complete, but future editor UI changes should keep the new deterministic hooks and captures in sync instead of reintroducing silent skips | Screenshot harness discipline | LOW |
+| Focus | Result | Severity |
+|-------|--------|----------|
+| Base document density | Fixed by seeding richer workspace-note content instead of a barely filled demo paragraph | RESOLVED |
+| Editor body rhythm | Fixed for the current route baseline with stronger heading/list/blockquote spacing in the shared editor prose surface | RESOLVED |
+| Screenshot harness discipline | Stable again, including color-picker capture through the deterministic floating-toolbar path | RESOLVED |
 
 ---
 

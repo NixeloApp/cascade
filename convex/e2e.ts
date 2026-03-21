@@ -36,143 +36,127 @@ const TEST_USER_EXPIRATION_MS = HOUR;
 
 import { api } from "./_generated/api";
 
+type ScreenshotDocumentNode = Record<string, unknown>;
+
+function screenshotText(text: string): ScreenshotDocumentNode {
+  return { type: "text", text };
+}
+
+function screenshotHeading(level: 1 | 2 | 3, text: string): ScreenshotDocumentNode {
+  return {
+    type: "heading",
+    attrs: { level },
+    content: [screenshotText(text)],
+  };
+}
+
+function screenshotParagraph(text: string): ScreenshotDocumentNode {
+  return {
+    type: "paragraph",
+    content: [screenshotText(text)],
+  };
+}
+
+function screenshotList(
+  type: "bulletList" | "orderedList",
+  items: string[],
+): ScreenshotDocumentNode {
+  return {
+    type,
+    content: items.map((item) => ({
+      type: "listItem",
+      content: [screenshotParagraph(item)],
+    })),
+  };
+}
+
+function screenshotBulletList(items: string[]): ScreenshotDocumentNode {
+  return screenshotList("bulletList", items);
+}
+
+function screenshotOrderedList(items: string[]): ScreenshotDocumentNode {
+  return screenshotList("orderedList", items);
+}
+
+function screenshotBlockquote(text: string): ScreenshotDocumentNode {
+  return {
+    type: "blockquote",
+    content: [screenshotText(text)],
+  };
+}
+
 const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
   "Project Requirements" | "Sprint Retrospective Notes",
-  { type: "doc"; content: Array<Record<string, unknown>> }
+  { type: "doc"; content: ScreenshotDocumentNode[] }
 > = {
   "Project Requirements": {
     type: "doc",
     content: [
-      {
-        type: "heading",
-        attrs: { level: 1 },
-        content: [{ type: "text", text: "Project Requirements" }],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "Cascade should unify board planning, client delivery, and documentation in one calmer workspace.",
-          },
-        ],
-      },
-      {
-        type: "heading",
-        attrs: { level: 2 },
-        content: [{ type: "text", text: "Success criteria" }],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "Teams can move from specs to execution without losing linked context, approvals, or delivery timing.",
-          },
-        ],
-      },
+      screenshotHeading(1, "Project Requirements"),
+      screenshotParagraph(
+        "Cascade should unify board planning, client delivery, and documentation in one calmer workspace.",
+      ),
+      screenshotHeading(2, "Success criteria"),
+      screenshotBulletList([
+        "Teams can move from specs to execution without losing linked context, approvals, or delivery timing.",
+        "Project, board, calendar, and document surfaces should read like one product instead of stitched demos.",
+        "Leads should be able to review readiness in one pass without chasing status across tabs and chats.",
+      ]),
+      screenshotHeading(2, "Working agreement"),
+      screenshotOrderedList([
+        "Capture the handoff summary first, then turn decisions into linked follow-up items.",
+        "Keep launch blockers, owners, and review dates in the document while the board tracks execution state.",
+        "Avoid separate side docs unless they introduce a genuinely different workflow or audience.",
+      ]),
+      screenshotBlockquote(
+        "The document should behave like the narrative layer for the workspace, not a detached notes island.",
+      ),
+      screenshotHeading(2, "Launch checklist"),
+      screenshotBulletList([
+        "Review the final delivery scope with the project lead and client contact.",
+        "Confirm linked issues, roadmap milestones, and calendar events still reflect the agreed timeline.",
+        "Publish the summary once risks and owners are visible without opening extra panels.",
+      ]),
     ],
   },
   "Sprint Retrospective Notes": {
     type: "doc",
     content: [
-      {
-        type: "heading",
-        attrs: { level: 1 },
-        content: [{ type: "text", text: "Sprint Retrospective" }],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "The team closed the auth refresh, improved mobile board density, and stabilized screenshot capture across configs.",
-          },
-        ],
-      },
-      {
-        type: "heading",
-        attrs: { level: 2 },
-        content: [{ type: "text", text: "Wins" }],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "Landing light mode feels more intentional, settings tabs compress cleanly on mobile, and project screenshots now use trustworthy seeded data.",
-          },
-        ],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "Direct issue-detail captures are stable again, so screenshot regressions now point at real composition drift instead of route flakiness.",
-          },
-        ],
-      },
-      {
-        type: "heading",
-        attrs: { level: 2 },
-        content: [{ type: "text", text: "Decisions" }],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "Keep Tailwind for static layout and reserve cva() for shared primitive semantics only, and use screenshots as the review surface for weird UI before normalizing any new baseline.",
-          },
-        ],
-      },
-      {
-        type: "heading",
-        attrs: { level: 2 },
-        content: [{ type: "text", text: "Risks to watch" }],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "The editor still feels thinner than the rest of the product if the seeded notes stop after one short paragraph or drift back into toolbar-heavy composition.",
-          },
-        ],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "We should keep making document states look like a real workspace instead of a barely-filled demo shell whenever screenshots expose empty or over-controlled compositions.",
-          },
-        ],
-      },
-      {
-        type: "heading",
-        attrs: { level: 2 },
-        content: [{ type: "text", text: "Next steps" }],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "Hydrate the editor from saved document versions and keep pushing page-level polish where screenshots still feel thin.",
-          },
-        ],
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "Turn the retrospective decisions into linked issue follow-ups once the notes are reviewed with the team, and keep trimming document-header action sprawl so the route reads like writing software instead of a toolbar demo.",
-          },
-        ],
-      },
+      screenshotHeading(1, "Sprint Retrospective"),
+      screenshotParagraph(
+        "The team closed the auth refresh, improved mobile board density, and stabilized screenshot capture across configs without losing seeded-product credibility.",
+      ),
+      screenshotHeading(2, "Sprint health"),
+      screenshotParagraph(
+        "Delivery felt calmer because documents, issues, and rollout notes finally lined up around one clear operating story instead of three parallel status surfaces.",
+      ),
+      screenshotHeading(2, "Wins"),
+      screenshotBulletList([
+        "Landing light mode feels more intentional and the settings suite now compresses cleanly on mobile.",
+        "Project and analytics screenshots use deterministic product data, so visual regressions point at real composition drift instead of flaky routes.",
+        "Issue detail, dashboard, and admin surfaces now share stronger section anatomy instead of nested-card sprawl.",
+      ]),
+      screenshotHeading(2, "Decisions"),
+      screenshotOrderedList([
+        "Keep Tailwind for static layout and reserve cva() for shared primitive semantics only.",
+        "Use screenshots as the review surface for weird UI before accepting any new baseline.",
+        "Treat documents as workspace evidence, not a toolbar demo or a thin placeholder note.",
+      ]),
+      screenshotHeading(2, "Risks to watch"),
+      screenshotBulletList([
+        "The editor still feels thinner than the rest of the product if seeded notes collapse back to one short paragraph.",
+        "Header actions can still regain noise if owner-only affordances leak back into the always-visible row.",
+        "Docs lose authority quickly when follow-ups move to side channels instead of staying linked in the note.",
+      ]),
+      screenshotBlockquote(
+        "We should keep making document states look like a real workspace instead of a barely-filled demo shell whenever screenshots expose empty or over-controlled compositions.",
+      ),
+      screenshotHeading(2, "Next steps"),
+      screenshotBulletList([
+        "Hydrate the editor from saved document versions and keep pushing page-level polish where screenshots still feel thin.",
+        "Turn the retrospective decisions into linked issue follow-ups once the notes are reviewed with the team.",
+        "Keep trimming document-header action sprawl so the route reads like writing software instead of a toolbar demo.",
+      ]),
     ],
   },
 };

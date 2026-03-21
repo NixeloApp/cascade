@@ -17,16 +17,17 @@ import { Plate, usePlateEditor } from "platejs/react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { PlateRichTextContent } from "@/components/ui/PlateRichTextContent";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { Lock } from "@/lib/icons";
+import { FileText, ListTodo, Lock, Sparkles } from "@/lib/icons";
 import {
   getEditorPlugins,
   getInitialValue,
@@ -41,6 +42,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { MoveDocumentDialog } from "./MoveDocumentDialog";
 import { FloatingToolbar } from "./Plate/FloatingToolbar";
 import { SlashMenu } from "./Plate/SlashMenu";
+import { SectionErrorFallback } from "./SectionErrorFallback";
 import { MarkdownPreviewModal } from "./ui/MarkdownPreviewModal";
 import { VersionHistory } from "./VersionHistory";
 
@@ -75,7 +77,6 @@ interface PlateEditorEmptyStateProps {
   action?: {
     label: string;
     onClick: () => void;
-    variant?: React.ComponentProps<typeof Button>["variant"];
   };
 }
 
@@ -155,6 +156,27 @@ interface E2EEditorValueEventDetail {
   value: Value;
 }
 
+const DOCUMENT_STARTER_SECTIONS = [
+  {
+    title: "Capture the context",
+    description:
+      "Open with the situation, the decision that needs to land, and the constraint the team should keep in mind.",
+    icon: FileText,
+  },
+  {
+    title: "Turn notes into action",
+    description:
+      "Use checklists and linked issues while the discussion is still fresh so the document stays operational.",
+    icon: ListTodo,
+  },
+  {
+    title: "Keep the trail visible",
+    description:
+      "Summaries, owners, and follow-ups belong in the doc so launch reviews do not depend on chat archaeology.",
+    icon: Sparkles,
+  },
+] as const;
+
 function PlateEditorLoadingState({ versionsLoaded }: PlateEditorLoadingStateProps) {
   return (
     <Flex direction="column" className="h-full bg-ui-bg">
@@ -184,16 +206,21 @@ function PlateEditorLoadingState({ versionsLoaded }: PlateEditorLoadingStateProp
 
 function PlateEditorEmptyState({ title, description, action }: PlateEditorEmptyStateProps) {
   return (
-    <Flex align="center" justify="center" className="h-full">
-      <Stack gap="md" align="center" className="text-center">
-        <Typography variant="h3">{title}</Typography>
-        <Typography color="secondary">{description}</Typography>
-        {action && (
-          <Button variant={action.variant ?? "outline"} onClick={action.onClick}>
-            {action.label}
-          </Button>
-        )}
-      </Stack>
+    <Flex align="center" justify="center" className="h-full px-4 py-8">
+      <EmptyState
+        icon={FileText}
+        title={title}
+        description={description}
+        surface="bare"
+        action={
+          action
+            ? {
+                label: action.label,
+                onClick: action.onClick,
+              }
+            : undefined
+        }
+      />
     </Flex>
   );
 }
@@ -392,70 +419,66 @@ function EditorCanvas({
       {!isLocked && <FloatingToolbar />}
       {isEmptyEditor && (
         <Card
-          padding="lg"
+          padding="md"
           variant="soft"
-          className="mb-4 border-ui-border-secondary/85 bg-linear-to-br from-ui-bg via-ui-bg-elevated/96 to-ui-bg-secondary/78"
+          className="mb-5 border-ui-border-secondary/85 bg-linear-to-br from-ui-bg via-ui-bg-elevated/96 to-ui-bg-secondary/78"
         >
-          <Grid cols={1} colsLg={5} gap="md">
-            <Stack gap="sm" className="lg:col-span-3">
-              <Stack gap="xs">
-                <Typography variant="label">Blank document</Typography>
+          <Stack gap="md">
+            <Flex align="start" justify="between" gap="md" wrap>
+              <Stack gap="xs" className="max-w-2xl">
+                <Badge variant="secondary" shape="pill">
+                  Blank document
+                </Badge>
+                <Typography variant="h5">
+                  Start with the handoff context, then turn the note into operational follow-up.
+                </Typography>
                 <Typography variant="small" color="secondary">
-                  Start with a short overview, key decisions, and next steps. Use `/` for blocks,
-                  headings, and lists once you begin writing.
+                  Use `/` for headings, lists, quotes, and code blocks once you begin writing. The
+                  strongest docs keep the summary, decisions, owners, and next steps in one place.
                 </Typography>
               </Stack>
 
-              <Flex wrap gap="sm">
-                <Badge variant="secondary" shape="pill">
-                  Overview
-                </Badge>
-                <Badge variant="secondary" shape="pill">
-                  Decisions
-                </Badge>
-                <Badge variant="secondary" shape="pill">
-                  Risks
-                </Badge>
-                <Badge variant="secondary" shape="pill">
-                  Next steps
-                </Badge>
-              </Flex>
+              <Badge variant="outline" shape="pill">
+                / for blocks
+              </Badge>
+            </Flex>
 
-              <Grid cols={1} colsSm={2} gap="md">
-                <Stack gap="xs">
-                  <Typography variant="eyebrowWide">Suggested outline</Typography>
-                  <Typography variant="small" color="secondary">
-                    Summary, decisions, follow-ups, owners, and review date.
-                  </Typography>
-                </Stack>
-                <Stack gap="xs">
-                  <Typography variant="eyebrowWide">Quick actions</Typography>
-                  <Typography variant="small" color="secondary">
-                    Turn decisions into checklists, link risks to issues, and assign owners while
-                    the discussion is still fresh.
-                  </Typography>
-                </Stack>
-              </Grid>
-            </Stack>
+            <Flex wrap gap="sm">
+              <Badge variant="secondary" shape="pill">
+                Summary
+              </Badge>
+              <Badge variant="secondary" shape="pill">
+                Decisions
+              </Badge>
+              <Badge variant="secondary" shape="pill">
+                Risks
+              </Badge>
+              <Badge variant="secondary" shape="pill">
+                Owners
+              </Badge>
+              <Badge variant="secondary" shape="pill">
+                Next steps
+              </Badge>
+            </Flex>
 
-            <div className="h-full p-4 bg-ui-bg/88 lg:col-span-2">
-              <Stack gap="sm">
-                <Stack gap="xs">
-                  <Typography variant="eyebrowWide">Starter flow</Typography>
-                  <Typography variant="small" color="secondary">
-                    Capture the summary first, then turn action items into tasks or linked issues.
-                  </Typography>
-                </Stack>
-                <Stack gap="xs">
-                  <Typography variant="eyebrowWide">Suggested first section</Typography>
-                  <Typography variant="small" color="secondary">
-                    Add a short context paragraph, then break out the decisions, open risks, and
-                    next steps before expanding into full notes.
-                  </Typography>
-                </Stack>
-              </Stack>
-            </div>
-          </Grid>
+            <Grid cols={1} colsMd={3} gap="md">
+              {DOCUMENT_STARTER_SECTIONS.map((section) => (
+                <Card key={section.title} variant="section" padding="md" className="h-full">
+                  <Stack gap="sm">
+                    <Badge variant="outline" shape="pill" className="w-fit">
+                      <Flex as="span" align="center" gap="xs">
+                        <Icon icon={section.icon} size="sm" />
+                        <span>{section.title}</span>
+                      </Flex>
+                    </Badge>
+                    <Typography variant="small" color="secondary">
+                      {section.description}
+                    </Typography>
+                  </Stack>
+                </Card>
+              ))}
+            </Grid>
+          </Stack>
         </Card>
       )}
       <PlateRichTextContent
@@ -670,14 +693,10 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
           <Card padding="md" variant="ghost" className="mx-auto w-full max-w-5xl">
             <ErrorBoundary
               fallback={
-                <div className="p-6 border border-status-error/20 bg-status-error-bg text-status-error text-center">
-                  <Stack gap="sm">
-                    <Typography variant="label">Editor failed to load</Typography>
-                    <Typography variant="muted" className="opacity-80">
-                      There was an issue initializing the rich text editor.
-                    </Typography>
-                  </Stack>
-                </div>
+                <SectionErrorFallback
+                  title="Editor failed to load"
+                  message="There was an issue initializing the rich text editor."
+                />
               }
             >
               <EditorCanvas

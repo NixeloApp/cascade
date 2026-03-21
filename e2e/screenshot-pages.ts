@@ -2434,46 +2434,6 @@ async function openDocumentEditorForCapture(page: Page, docUrl: string): Promise
   await waitForScreenshotReady(page);
 }
 
-async function getDocumentEditorEditable(page: Page): Promise<Locator> {
-  const editable = page.locator("[contenteditable='true']").first();
-  await editable.waitFor({ state: "visible", timeout: 8000 });
-  return editable;
-}
-
-async function selectDocumentEditorText(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const editable = document.querySelector("[contenteditable='true']");
-    if (!(editable instanceof HTMLElement)) {
-      throw new Error("Document editor is not editable");
-    }
-
-    const block =
-      editable.querySelector("h1, h2, p, li") ??
-      editable.querySelector("[data-slate-node='element']");
-    if (!(block instanceof HTMLElement)) {
-      throw new Error("Unable to find a selectable editor block");
-    }
-
-    const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, {
-      acceptNode(node) {
-        return node.textContent?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-      },
-    });
-    const firstTextNode = walker.nextNode();
-    if (!(firstTextNode instanceof Text)) {
-      throw new Error("Unable to find selectable editor text");
-    }
-
-    editable.focus();
-    const range = document.createRange();
-    range.selectNodeContents(firstTextNode);
-    const selection = window.getSelection();
-    selection?.removeAllRanges();
-    selection?.addRange(range);
-    document.dispatchEvent(new Event("selectionchange"));
-  });
-}
-
 async function openDocumentActionsMenu(page: Page): Promise<void> {
   const trigger = page.getByRole("button", { name: /more document actions/i }).first();
   await trigger.waitFor({ state: "visible", timeout: 8000 });
@@ -3609,10 +3569,7 @@ async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-color-picker")) {
         await runRequiredCaptureStep("document color picker", async () => {
-          await primeDocumentEditorRichContent(page, baseDocUrl);
-          await getDocumentEditorEditable(page);
-          await selectDocumentEditorText(page);
-          await waitForAnimation(page);
+          await openDocumentEditorFloatingToolbarForCapture(page, baseDocUrl);
           const colorButton = page.getByRole("button", { name: /^text color$/i }).first();
           await colorButton.waitFor({ state: "visible", timeout: 5000 });
           await colorButton.evaluate((button: HTMLElement) => {
