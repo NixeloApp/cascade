@@ -310,6 +310,8 @@ export const TEST_IDS = {
     CARD: "analytics-card",
     /** @see src/routes/_app.$orgSlug.projects.$projectKey.analytics.tsx */
     PAGE: "analytics-page",
+    /** @see src/components/AnalyticsDashboard.tsx - page header */
+    PAGE_HEADER: "analytics-page-header",
     /** Metric card labels */
     METRIC_TOTAL_ISSUES: "analytics-metric-total-issues",
     METRIC_UNASSIGNED: "analytics-metric-unassigned",
@@ -375,6 +377,8 @@ export const TEST_IDS = {
     NOTIFICATION_PREFERENCES_SECTION: "settings-notification-preferences-section",
     /** @see src/components/Admin/UserManagement.tsx */
     USER_MANAGEMENT_SECTION: "settings-user-management-section",
+    /** @see src/components/Admin/UserManagement.tsx - Users tab in admin section */
+    ADMIN_USERS_TAB: "settings-admin-users-tab",
     /** @see src/components/Admin/UserTypeManager.tsx */
     USER_TYPE_MANAGER_SECTION: "settings-user-type-manager-section",
     /** @see src/components/Admin/HourComplianceDashboard.tsx */
@@ -396,6 +400,17 @@ export const TEST_IDS = {
     TABLE: "invite-table",
     /** @see src/components/Admin/UserManagement.tsx - Invite row in table */
     ROW: "invite-row",
+  },
+
+  // ============================================================
+  // Landing Page
+  // ============================================================
+
+  LANDING: {
+    /** @see src/components/Landing/WhyChooseSection.tsx */
+    PROOF_SECTION: "landing-proof-section",
+    /** @see src/components/Landing/PricingSection.tsx */
+    PRICING_SECTION: "landing-pricing-section",
   },
 
   // ============================================================

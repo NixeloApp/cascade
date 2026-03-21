@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import { ArrowRight, Check, Rocket, ShieldCheck, Users } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -134,7 +135,7 @@ const pricingSignals = [
 /** Landing pricing section showing rollout stages without implying a workflow reset. */
 export function PricingSection() {
   return (
-    <section id="pricing">
+    <section id="pricing" data-testid={TEST_IDS.LANDING.PRICING_SECTION}>
       <Container
         size="lg"
         style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}

@@ -170,7 +170,7 @@ export class SettingsPage extends BasePage {
     this.inviteUserButton = page.getByRole("button", { name: /invite.*user/i });
     this.userTypeManager = page.getByTestId(TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION);
     this.hourComplianceDashboard = page.getByTestId(TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION);
-    this.adminUsersTab = page.getByRole("radio", { name: /^Users$/ });
+    this.adminUsersTab = page.getByTestId(TEST_IDS.SETTINGS.ADMIN_USERS_TAB);
     this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
     this.inviteEmptyState = page.getByText(/^No invitations$/);
 

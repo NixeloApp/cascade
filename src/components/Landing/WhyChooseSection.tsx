@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Building2, KanbanSquare, MessageSquare } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -91,7 +92,7 @@ const stories: Story[] = [
 /** Product-grounded proof section showing how work stays attached across surfaces. */
 export function WhyChooseSection() {
   return (
-    <section>
+    <section data-testid={TEST_IDS.LANDING.PROOF_SECTION}>
       <Container
         size="lg"
         style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}

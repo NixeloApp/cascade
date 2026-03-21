@@ -207,11 +207,13 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
   return (
     <PageLayout maxWidth="xl">
       <PageStack>
-        <PageHeader
-          title={`${projectName} analytics`}
-          description={`Delivery, workload, and ownership signals for ${projectKey}.`}
-          spacing="stack"
-        />
+        <div data-testid={TEST_IDS.ANALYTICS.PAGE_HEADER}>
+          <PageHeader
+            title={`${projectName} analytics`}
+            description={`Delivery, workload, and ownership signals for ${projectKey}.`}
+            spacing="stack"
+          />
+        </div>
 
         <Grid cols={1} colsMd={3} gap="md">
           <AnalyticsInsightCard

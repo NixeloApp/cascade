@@ -193,7 +193,9 @@ function UserManagementControls({
           aria-label="User management sections"
         >
           <SegmentedControlItem value="invites">Invitations</SegmentedControlItem>
-          <SegmentedControlItem value="users">Users</SegmentedControlItem>
+          <SegmentedControlItem value="users" data-testid={TEST_IDS.SETTINGS.ADMIN_USERS_TAB}>
+            Users
+          </SegmentedControlItem>
         </SegmentedControl>
 
         {activeTab === "invites" ? (

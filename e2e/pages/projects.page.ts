@@ -232,7 +232,7 @@ export class ProjectsPage extends BasePage {
     this.activityEntries = this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.ENTRY);
 
     // Analytics
-    this.analyticsPageHeader = page.getByRole("heading", { name: /analytics/i });
+    this.analyticsPageHeader = page.getByTestId(TEST_IDS.ANALYTICS.PAGE_HEADER);
     this.analyticsPageDescription = page.getByText(/project insights.*velocity.*metrics/i);
     this.analyticsTotalIssuesMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES);
     this.analyticsUnassignedMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_UNASSIGNED);
