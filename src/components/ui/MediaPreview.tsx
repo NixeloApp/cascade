@@ -8,7 +8,7 @@ import { Typography } from "./Typography";
 const mediaPreviewFrameVariants = cva("", {
   variants: {
     surface: {
-      avatar: "relative",
+      avatar: "relative inline-flex w-fit",
       cover: "relative h-32 overflow-hidden border-dashed",
       profileCover:
         "relative h-8 w-full overflow-hidden border-b border-ui-border-secondary/60 sm:h-12",

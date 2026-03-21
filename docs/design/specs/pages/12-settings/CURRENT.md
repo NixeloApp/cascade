@@ -1,8 +1,8 @@
 # Settings Page - Current State
 
 > **Route**: `/:slug/settings/profile`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-12
+> **Status**: 🟢 Profile surface now scales cleanly across viewports
+> **Last Updated**: 2026-03-21
 
 ---
 
@@ -23,6 +23,7 @@
 - The route now owns settings tab state through the `tab` search param instead of copying it into local component state.
 - Visible tabs come from the canonical `SETTINGS_TABS` model in `settingsTabs.ts`, which removes the old duplicated tab definitions.
 - The top-level page remains a header plus horizontal tabs, with the profile tab showing the heaviest composition.
+- The profile tab now behaves like one responsive workspace surface instead of a desktop-first card stack squeezed into smaller screens.
 - Project settings screenshots in the same spec folder now reflect the slimmer shared project shell.
 
 ---
@@ -35,6 +36,8 @@
 - Shared tab primitives now support the denser settings layout.
 - Desktop light mode is less over-shelled now that the profile surface uses lighter shared card depth and a smaller outer shell.
 - Tablet and mobile now keep the settings tabs readable by using shorter labels until larger viewports.
+- The profile header is now mobile-first: the avatar actions stay attached to the avatar, the name/actions collapse cleanly, and the account metadata no longer feels like a second competing card stack.
+- Account metadata now uses compact inset rows, so the profile surface reads as one system from mobile through desktop.
 
 ---
 
@@ -42,7 +45,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| Profile cards and stats are cleaner, but the settings surface still wants one more pass on smaller screens | `ProfileContent` | MEDIUM |
+| The profile surface is now stable; remaining settings review is broader interaction-state consistency across the other tabs, not a layout rescue for the profile tab | multi-tab state review | LOW |
 
 ---
 
