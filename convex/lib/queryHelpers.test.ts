@@ -1,9 +1,10 @@
+import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createTestIssue, createTestProject, createTestUser } from "../testUtils";
-import { fetchPaginatedQuery } from "./queryHelpers";
+import { fetchPaginatedQuery, isInvalidCursorError } from "./queryHelpers";
 
 describe("queryHelpers", () => {
   describe("fetchPaginatedQuery", () => {
@@ -96,6 +97,27 @@ describe("queryHelpers", () => {
 
       expect(page3.page).toHaveLength(1);
       expect(page3.isDone).toBe(true);
+    });
+  });
+
+  describe("isInvalidCursorError", () => {
+    it("should detect ConvexError with InvalidCursor data string", () => {
+      const error = new ConvexError(
+        "InvalidCursor: Tried to run a query starting from a cursor, but it looks like this cursor is from a different query.",
+      );
+      expect(isInvalidCursorError(error)).toBe(true);
+    });
+
+    it("should detect plain Error with InvalidCursor message", () => {
+      const error = new Error("InvalidCursor: cursor from a different query");
+      expect(isInvalidCursorError(error)).toBe(true);
+    });
+
+    it("should not match unrelated errors", () => {
+      expect(isInvalidCursorError(new Error("Not found"))).toBe(false);
+      expect(isInvalidCursorError(new ConvexError("Unauthorized"))).toBe(false);
+      expect(isInvalidCursorError("string error")).toBe(false);
+      expect(isInvalidCursorError(null)).toBe(false);
     });
   });
 });
