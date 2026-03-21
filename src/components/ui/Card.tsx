@@ -99,6 +99,11 @@ const cardRecipeVariants = cva("", {
       dashboardPanel: "border-ui-border-secondary/70 bg-ui-bg/75 shadow-soft",
       dashboardPanelInset:
         "overflow-hidden border-ui-border/50 bg-ui-bg/70 shadow-soft backdrop-blur-sm",
+      dashboardPanelHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border/50 bg-transparent shadow-none",
+      dashboardPanelBody: "rounded-none border-transparent bg-transparent shadow-none",
+      dashboardPanelFooter:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border/50 bg-transparent shadow-none",
       filterBar:
         "rounded-md border-ui-border-secondary/75 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/92 shadow-card sm:rounded-2xl",
       timelineItem:

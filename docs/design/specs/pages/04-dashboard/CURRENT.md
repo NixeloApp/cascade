@@ -1,7 +1,7 @@
 # Dashboard Page - Current State
 
 > **Route**: `/:slug/dashboard`
-> **Status**: 🟡 NEEDS POLISH
+> **Status**: 🟡 Improved, with smaller remaining weighting issues
 > **Last Updated**: Run `pnpm screenshots` to regenerate
 
 ---
@@ -155,13 +155,12 @@ Three-column layout:
 
 | # | Problem | Location | Severity |
 |---|---------|----------|----------|
-| 1 | Card borders too visible | All cards | HIGH |
-| 2 | Background not dark enough | Page bg in dark mode | HIGH |
-| 3 | Stats cards lack visual depth | `OverviewStats.tsx` | MEDIUM |
-| 4 | Empty states not delightful | Various | MEDIUM |
-| 5 | Right sidebar cards blend together | Right sidebar | MEDIUM |
-| 6 | Tab styling could be more refined | `DashboardFeed.tsx` | MEDIUM |
-| 7 | Greeting typography could use more hierarchy | `DashboardGreeting.tsx` | LOW |
+| 1 | Background still reads a little flatter than the rest of the authenticated product in dark mode | Page bg in dark mode | HIGH |
+| 2 | Focus card still carries slightly more shell and glow than the rest of the dashboard earns | `FocusZone.tsx` | MEDIUM |
+| 3 | Greeting + focus block still pulls a little too much emphasis versus the working lists beside it | `DashboardGreeting.tsx` / `FocusZone.tsx` | MEDIUM |
+| 4 | Right sidebar panels are cleaner, but still want slightly stronger separation in light mode | `WorkspacesList.tsx` / `RecentActivity.tsx` | MEDIUM |
+| 5 | Empty states now share the panel rhythm, but can still be more product-specific | Various dashboard panels | LOW |
+| 6 | Metric tiles are cleaner, but still want a little more light-mode refinement | `QuickStats.tsx` | LOW |
 
 ---
 
@@ -244,8 +243,6 @@ Three-column layout:
 ## Summary
 
 The dashboard is functional but needs polish:
-- Card borders are too prominent (should be nearly invisible in dark mode)
-- Background uses gray-900 instead of near-black (#08090a)
-- Stats cards lack visual depth
-- Empty states are functional but not delightful
-- Tab indicator could be smoother
+- Feed, stats, workspaces, and recent activity now share one section-shell contract instead of mixing header cards, inset wrappers, and ad hoc tab bars.
+- The active feed rows now read as one queue instead of stacked mini-cards, which makes the dashboard feel more like the rest of the product.
+- Remaining work is now mostly visual weighting: darker page grounding, a slightly calmer hero/focus balance, and lighter-mode refinement in the right rail and metric tiles.

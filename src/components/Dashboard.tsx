@@ -10,22 +10,25 @@ import { api } from "@convex/_generated/api";
 import { useNavigate } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
-import { Card, getCardRecipeClassName } from "@/components/ui/Card";
-import { Flex } from "@/components/ui/Flex";
+import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { Grid, GridItem } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery, useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { cn } from "@/lib/utils";
 import { useListNavigation } from "../hooks/useListNavigation";
+import {
+  DashboardPanel,
+  DashboardPanelBody,
+  DashboardPanelHeader,
+} from "./Dashboard/DashboardPanel";
 import { FocusZone } from "./Dashboard/FocusZone";
 import { Greeting } from "./Dashboard/Greeting";
 import { MyIssuesList } from "./Dashboard/MyIssuesList";
 import { QuickStats } from "./Dashboard/QuickStats";
 import { RecentActivity } from "./Dashboard/RecentActivity";
 import { WorkspacesList } from "./Dashboard/WorkspacesList";
-import { Typography } from "./ui/Typography";
 
 type IssueFilter = "assigned" | "created" | "all";
 type DashboardIssueListItem = { projectKey: string };
@@ -58,14 +61,20 @@ function DashboardOverview({
 
       {showStats && (
         <GridItem colSpanLg={5}>
-          <Flex direction="column" justify="end" gap="sm">
-            <Typography variant="eyebrow" color="tertiary">
-              Overview
-            </Typography>
-            <div className={getCardRecipeClassName("dashboardPanel")}>
+          <DashboardPanel className="h-full">
+            <DashboardPanelHeader
+              title="Overview"
+              description="Weekly capacity, throughput, and pressure stay visible without leaving the command surface."
+              badge={
+                <Badge variant="neutral" shape="pill">
+                  Weekly pulse
+                </Badge>
+              }
+            />
+            <DashboardPanelBody>
               <QuickStats stats={stats} />
-            </div>
-          </Flex>
+            </DashboardPanelBody>
+          </DashboardPanel>
         </GridItem>
       )}
     </Grid>
@@ -106,20 +115,16 @@ function DashboardMainContent({
   return (
     <Grid cols={1} colsLg={12} gap="lg">
       <GridItem colSpanLg={sidebarVisible ? 8 : 12}>
-        <div
-          className={cn(getCardRecipeClassName("dashboardPanelInset"), "h-full w-full rounded-2xl")}
-        >
-          <MyIssuesList
-            myIssues={myIssues}
-            myCreatedIssues={myCreatedIssues}
-            displayIssues={displayIssues}
-            issueFilter={issueFilter}
-            onFilterChange={setIssueFilter}
-            issueNavigation={issueNavigation}
-            loadMore={loadMoreMyIssues}
-            status={myIssuesStatus}
-          />
-        </div>
+        <MyIssuesList
+          myIssues={myIssues}
+          myCreatedIssues={myCreatedIssues}
+          displayIssues={displayIssues}
+          issueFilter={issueFilter}
+          onFilterChange={setIssueFilter}
+          issueNavigation={issueNavigation}
+          loadMore={loadMoreMyIssues}
+          status={myIssuesStatus}
+        />
       </GridItem>
 
       {sidebarVisible && (

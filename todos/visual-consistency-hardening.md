@@ -25,7 +25,7 @@ These are still only partially automated and need explicit cleanup/review:
 
 - [ ] motion / animation consistency
 - [ ] density and hierarchy consistency inside large complex surfaces
-- [ ] component-state cohesion across dialogs, sheets, popovers, tabs, and dashboard cards
+- [ ] component-state cohesion across remaining tabs and card-heavy product surfaces outside the standardized overlay/dashboard shells
 - [ ] icon sizing / stroke-weight rhythm across mixed surfaces
 - [ ] icon tone/color consistency -- shared semantic icon tones should read as one system, without one-off raw `text-*` icon overrides drifting across pages
 - [ ] remaining raw Tailwind baseline shrink as touched files are cleaned up

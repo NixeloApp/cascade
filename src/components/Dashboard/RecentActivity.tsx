@@ -1,7 +1,6 @@
 import { TrendingUp } from "@/lib/icons";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
-import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { IconCircle } from "../ui/IconCircle";
@@ -9,6 +8,7 @@ import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
 import { SkeletonText } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
+import { DashboardPanel, DashboardPanelBody, DashboardPanelHeader } from "./DashboardPanel";
 
 interface Activity {
   _id: string;
@@ -28,19 +28,13 @@ interface RecentActivityProps {
  */
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <Card
-      hoverable
-      variant="outline"
-      className="border-ui-border/50 bg-ui-bg/70 shadow-soft backdrop-blur-sm"
-    >
-      <CardHeader
+    <DashboardPanel>
+      <DashboardPanelHeader
         title="Recent activity"
         description="Latest updates across projects and teammates"
-        className="border-ui-border/50"
       />
-      <CardBody>
+      <DashboardPanelBody>
         {!activities ? (
-          /* Loading skeleton */
           <Flex direction="column" gap="md">
             <SkeletonText lines={2} />
             <SkeletonText lines={2} />
@@ -52,6 +46,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             title="No activity"
             description="Fresh updates from your team will appear here."
             size="compact"
+            surface="bare"
           />
         ) : (
           <div className="relative max-h-96 overflow-y-auto pr-2 scrollbar-subtle">
@@ -92,7 +87,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             </Flex>
           </div>
         )}
-      </CardBody>
-    </Card>
+      </DashboardPanelBody>
+    </DashboardPanel>
   );
 }
