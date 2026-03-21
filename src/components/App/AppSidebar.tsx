@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
+import type { LucideIcon } from "lucide-react";
 
 import { useEffect, useRef, useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
@@ -111,7 +112,7 @@ function groupTeamsByWorkspace(
 }
 
 interface SidebarIconShellProps {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   recipe:
     | "sidebarNavIcon"
     | "sidebarPrimaryNavIcon"
@@ -144,7 +145,7 @@ type NavSubItemProps = Omit<LinkProps, "to"> & {
   to: LinkProps["to"];
   label: string;
   isActive: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: LucideIcon;
   onClick?: (event: React.MouseEvent) => void;
 };
 
@@ -940,7 +941,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
 // Nav Item Component
 type NavItemProps = Omit<LinkProps, "to"> & {
   to: LinkProps["to"];
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   label: string;
   isActive: boolean;
   isCollapsed: boolean;
@@ -1004,7 +1005,7 @@ function NavItem({
 // We use a union validation here: either it acts as a link (with valid to/params) or it doesn't.
 // CollapsibleSection Component
 type CollapsibleSectionProps = {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   label: string;
   isExpanded: boolean;
   onToggle: () => void;
