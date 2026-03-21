@@ -305,7 +305,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
               <Card key={attachment.storageId} recipe="pendingAttachmentRow" padding="sm">
                 <Flex align="center" justify="between" gap="sm">
                   <Flex align="center" gap="sm" className="min-w-0">
-                    <Icon icon={Paperclip} size="sm" className="text-ui-text-secondary shrink-0" />
+                    <Icon icon={Paperclip} size="sm" tone="secondary" className="shrink-0" />
                     <Typography variant="small" className="truncate">
                       {attachment.filename}
                     </Typography>

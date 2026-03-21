@@ -22,6 +22,14 @@ describe("Icon", () => {
     expect(screen.getByTestId("icon")).toHaveClass("text-status-success");
   });
 
+  it("lets semantic tone own color while className handles layout-only details", () => {
+    render(
+      <Icon icon={CheckCircle} tone="tertiary" className="shrink-0 mt-1" data-testid="icon" />,
+    );
+
+    expect(screen.getByTestId("icon")).toHaveClass("text-ui-text-tertiary", "shrink-0", "mt-1");
+  });
+
   it("applies the configured animation class", () => {
     render(<Icon icon={CheckCircle} animation="pulse" data-testid="icon" />);
 

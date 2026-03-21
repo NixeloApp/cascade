@@ -58,22 +58,22 @@ interface NotificationItemProps {
 function getNotificationIcon(type: string) {
   switch (type) {
     case "issue_assigned":
-      return <AppIcon icon={User} size="md" className="text-brand" />;
+      return <AppIcon icon={User} size="md" tone="brand" />;
     case "issue_mentioned":
-      return <AppIcon icon={MessageCircle} size="md" className="text-accent" />;
+      return <AppIcon icon={MessageCircle} size="md" tone="accent" />;
     case "issue_commented":
-      return <AppIcon icon={MessageSquare} size="md" className="text-accent" />;
+      return <AppIcon icon={MessageSquare} size="md" tone="accent" />;
     case "issue_status_changed":
-      return <AppIcon icon={RefreshCw} size="md" className="text-status-info" />;
+      return <AppIcon icon={RefreshCw} size="md" tone="info" />;
     case "sprint_started":
-      return <AppIcon icon={Rocket} size="md" className="text-status-success" />;
+      return <AppIcon icon={Rocket} size="md" tone="success" />;
     case "sprint_ended":
-      return <AppIcon icon={Flag} size="md" className="text-status-warning" />;
+      return <AppIcon icon={Flag} size="md" tone="warning" />;
     case "document_shared":
     case "document_mentioned":
-      return <AppIcon icon={FileText} size="md" className="text-brand" />;
+      return <AppIcon icon={FileText} size="md" tone="brand" />;
     default:
-      return <AppIcon icon={Bell} size="md" className="text-ui-text-tertiary" />;
+      return <AppIcon icon={Bell} size="md" tone="tertiary" />;
   }
 }
 

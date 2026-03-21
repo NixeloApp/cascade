@@ -42,7 +42,7 @@ function BackupCodesView({
     <Card padding="lg">
       <Stack gap="lg">
         <Flex align="center" gap="sm">
-          <Icon icon={Key} size="lg" className="text-status-warning" />
+          <Icon icon={Key} size="lg" tone="warning" />
           <Typography variant="h4">Save Your Backup Codes</Typography>
         </Flex>
 
@@ -111,7 +111,7 @@ function SetupWizardView({
     <Card padding="lg">
       <Stack gap="lg">
         <Flex align="center" gap="sm">
-          <Icon icon={ShieldCheck} size="lg" className="text-brand" />
+          <Icon icon={ShieldCheck} size="lg" tone="brand" />
           <Typography variant="h4">Set Up Two-Factor Authentication</Typography>
         </Flex>
 
@@ -358,7 +358,7 @@ export function TwoFactorSettings() {
       <Stack gap="lg">
         <Flex align="center" justify="between">
           <Flex align="center" gap="sm">
-            <Icon icon={ShieldCheck} size="lg" className="text-brand" />
+            <Icon icon={ShieldCheck} size="lg" tone="brand" />
             <Stack gap="none">
               <Typography variant="h5">Two-Factor Authentication</Typography>
               <Typography variant="caption">

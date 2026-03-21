@@ -102,7 +102,7 @@ export function MemberOnboarding({
         <Stack gap="md" className="text-center">
           <Card recipe="onboardingHeroCircle" className="mx-auto size-16">
             <Flex align="center" justify="center" className="h-full w-full">
-              <Icon icon={Building2} size="xl" className="text-brand" />
+              <Icon icon={Building2} size="xl" tone="brand" />
             </Flex>
           </Card>
           <Stack gap="sm">
@@ -204,7 +204,7 @@ export function MemberOnboarding({
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
-                <Icon icon={FileText} size="md" className="text-status-success" />
+                <Icon icon={FileText} size="md" tone="success" />
               </Flex>
             </div>
             <Stack gap="none">
@@ -223,7 +223,7 @@ export function MemberOnboarding({
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
-                <Icon icon={Clock} size="md" className="text-status-warning" />
+                <Icon icon={Clock} size="md" tone="warning" />
               </Flex>
             </div>
             <Stack gap="none">

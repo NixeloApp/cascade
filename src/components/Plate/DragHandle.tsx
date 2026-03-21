@@ -125,7 +125,7 @@ export function DragHandle({ className, visible = false }: DragHandleProps) {
             onDragEnd={handleDragEnd}
             style={{ opacity: isDragging || visible ? 1 : 0 }}
           >
-            <Icon icon={GripVertical} size="sm" className="text-ui-text-tertiary" />
+            <Icon icon={GripVertical} size="sm" tone="tertiary" />
           </IconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" side="left">

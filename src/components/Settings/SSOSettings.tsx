@@ -137,7 +137,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
         <Card>
           <CardBody>
             <Flex direction="column" align="center" justify="center" gap="md" className="min-h-32">
-              <Icon icon={Key} size="xl" className="text-ui-text-tertiary" />
+              <Icon icon={Key} size="xl" tone="tertiary" />
               <Typography variant="small" color="secondary" className="text-center">
                 No SSO connections configured.
                 <br />
@@ -153,7 +153,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
               <CardBody>
                 <Flex align="center" justify="between">
                   <Flex align="center" gap="md">
-                    <Icon icon={Key} size="lg" className="text-brand" />
+                    <Icon icon={Key} size="lg" tone="brand" />
                     <Stack gap="xs">
                       <Flex align="center" gap="sm">
                         <Typography variant="label">{connection.name}</Typography>
@@ -198,7 +198,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
                       onClick={() => handleDeleteClick(connection._id)}
                       disabled={isLoading}
                     >
-                      <Icon icon={Trash2} size="sm" className="text-status-error" />
+                      <Icon icon={Trash2} size="sm" tone="error" />
                     </Button>
                   </Flex>
                 </Flex>

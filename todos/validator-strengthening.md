@@ -38,11 +38,11 @@ Fetches all data then filters in the component when the filter could be a backen
 
 - [ ] Ensure the standards validator keeps catching new page-level violations early, without relying on follow-up todo cleanup
 - [ ] Add validator coverage for primitive restyling drift -- repeated size/radius/chrome/color overrides on owned controls should be treated as missing variants or misuse
-- [ ] Add validator coverage for icon semantics -- prefer `Icon.tone` over raw icon `text-*` overrides, keep the allowed icon-color palette intentionally small, and catch repeated icon-leading menu/button patterns that still rely on local spacing classes
 - [ ] Add validator coverage for degenerate CVAs -- base-only CVAs, single-use feature CVAs, and local variant wrappers that should be plain components or shared primitives
 - [ ] Ratchet raw Tailwind downward, not just flat -- the baseline should shrink as cleanup lands instead of only blocking regressions
 - [ ] Add validator coverage for primitive-default ownership drift -- shared wrappers should not restate defaults already owned by the primitive they wrap
 - [ ] Add validator coverage that distinguishes real Tailwind-first layout from hidden local style systems (`SECTION_CLASSES`, class-string maps, helper bags) and penalizes the hidden style-system path harder
+- [ ] Decide how strict icon color ownership should become beyond the current semantic-tone validator -- either add owned `Icon` tones for the remaining legitimate exceptions or add follow-up checks that block repeated raw palette/text token overrides outside explicitly allowed surfaces
 
 ## Ratchet Strategy
 

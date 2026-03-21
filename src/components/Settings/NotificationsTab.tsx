@@ -171,7 +171,7 @@ function PushNotificationsCard({
       return (
         <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
           <Flex align="center" gap="sm">
-            <Icon icon={BellOff} size="md" className="text-ui-text-tertiary" />
+            <Icon icon={BellOff} size="md" tone="tertiary" />
             <Typography variant="caption">
               Push notifications are not supported in this browser. Try using Chrome, Edge, or
               Firefox.
@@ -185,7 +185,7 @@ function PushNotificationsCard({
       return (
         <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
           <Flex align="center" gap="sm">
-            <Icon icon={Info} size="md" className="text-ui-text-tertiary" />
+            <Icon icon={Info} size="md" tone="tertiary" />
             <Typography variant="caption">
               Push notifications require server configuration. Contact your administrator.
             </Typography>
@@ -279,7 +279,7 @@ function PushNotificationsCard({
     <Card padding="lg">
       <Stack gap="md">
         <Flex align="center" gap="sm">
-          <Icon icon={Smartphone} size="lg" className="text-brand" />
+          <Icon icon={Smartphone} size="lg" tone="brand" />
           <Typography variant="h5">Push Notifications</Typography>
           <Badge variant="info" size="sm">
             PWA
@@ -513,7 +513,7 @@ export function NotificationsTab() {
           <Flex align="start" justify="between">
             <FlexItem flex="1">
               <Flex align="center" gap="sm">
-                <Icon icon={Moon} size="lg" className="text-brand" />
+                <Icon icon={Moon} size="lg" tone="brand" />
                 <Typography variant="h5">Quiet Hours</Typography>
               </Flex>
               <Typography variant="caption" className="mt-1">
@@ -565,7 +565,7 @@ export function NotificationsTab() {
       {/* Help Text */}
       <Card padding="md" className="bg-brand-subtle border-brand-border">
         <Flex gap="md">
-          <Icon icon={Info} size="md" className="text-brand" />
+          <Icon icon={Info} size="md" tone="brand" />
           <FlexItem flex="1">
             <Stack gap="xs">
               <Typography variant="label" className="text-brand-active">

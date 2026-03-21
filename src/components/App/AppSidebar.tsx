@@ -335,11 +335,7 @@ function DocumentsSectionContent({
         <>
           <li className="list-none px-3 pt-1">
             <Flex align="center" gap="xs" className="text-ui-text-tertiary">
-              <AppIcon
-                icon={Star}
-                size="xsPlus"
-                className="fill-status-warning text-status-warning"
-              />
+              <AppIcon icon={Star} size="xsPlus" tone="warning" className="fill-status-warning" />
               <Typography variant="caption">Favorites</Typography>
             </Flex>
           </li>

@@ -171,7 +171,7 @@ export function DocumentTree({
                     className={cn("ml-6", selectedId !== doc._id && "text-ui-text-secondary")}
                   >
                     <Flex align="center" gap="xs">
-                      <Icon icon={File} size="sm" className="shrink-0 text-ui-text-tertiary" />
+                      <Icon icon={File} size="sm" tone="tertiary" className="shrink-0" />
                       <Typography
                         variant={selectedId === doc._id ? "label" : "small"}
                         className="truncate"
@@ -239,7 +239,7 @@ export function DocumentTree({
                     className={cn("ml-6", selectedId !== doc._id && "text-ui-text-tertiary")}
                   >
                     <Flex align="center" gap="xs">
-                      <Icon icon={File} size="sm" className="shrink-0 text-ui-text-tertiary" />
+                      <Icon icon={File} size="sm" tone="tertiary" className="shrink-0" />
                       <Typography
                         variant={selectedId === doc._id ? "label" : "small"}
                         className="truncate"

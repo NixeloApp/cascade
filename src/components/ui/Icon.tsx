@@ -52,7 +52,7 @@ interface IconProps
     VariantProps<typeof iconVariants> {
   /** The Lucide icon component to render */
   icon: LucideIcon;
-  /** Additional className for the icon */
+  /** Additional className for layout/animation details not owned by size/tone */
   className?: string;
 }
 
@@ -64,7 +64,7 @@ interface IconProps
  * import { Bug, Calendar } from "@/lib/icons";
  *
  * <Icon icon={Bug} size="lg" />
- * <Icon icon={Calendar} size="sm" className="text-brand" />
+ * <Icon icon={Calendar} size="sm" tone="brand" />
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(

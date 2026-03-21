@@ -175,7 +175,7 @@ function CommandActionItem({ command, onClose }: { command: CommandAction; onClo
             </Typography>
           ) : null}
         </FlexItem>
-        <Icon icon={ArrowRight} size="sm" className="mt-1 shrink-0 text-ui-text-tertiary" />
+        <Icon icon={ArrowRight} size="sm" tone="tertiary" className="mt-1 shrink-0" />
       </Flex>
     </CommandItem>
   );

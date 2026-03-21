@@ -274,7 +274,7 @@ function LeadProjectSetupStep({
       <Stack gap="md" className="text-center">
         <Card recipe="onboardingHeroCircle" className="mx-auto h-16 w-16">
           <Flex align="center" justify="center" className="h-full w-full">
-            <Icon icon={Building2} size="xl" className="text-brand" />
+            <Icon icon={Building2} size="xl" tone="brand" />
           </Flex>
         </Card>
         <Stack gap="sm">
@@ -348,7 +348,7 @@ function LeadProjectChoiceStep({
             <Flex align="center" justify="between">
               <div className={cn(getCardRecipeClassName("onboardingActionIconBrand"), "p-4")}>
                 <Flex align="center" justify="center">
-                  <Icon icon={Sparkles} size="lg" className="text-brand" />
+                  <Icon icon={Sparkles} size="lg" tone="brand" />
                 </Flex>
               </div>
               <Badge variant="brand" shape="pill" size="md">
@@ -376,7 +376,7 @@ function LeadProjectChoiceStep({
           <Stack gap="lg">
             <div className={cn(getCardRecipeClassName("onboardingActionIconNeutral"), "p-4 w-fit")}>
               <Flex align="center" justify="center">
-                <Icon icon={FolderPlus} size="lg" className="text-ui-text-secondary" />
+                <Icon icon={FolderPlus} size="lg" tone="secondary" />
               </Flex>
             </div>
             <Stack gap="xs">

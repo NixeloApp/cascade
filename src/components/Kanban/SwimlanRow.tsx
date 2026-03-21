@@ -88,9 +88,9 @@ export function SwimlanRow({
         aria-controls={`swimlane-${config.id}`}
       >
         {isCollapsed ? (
-          <Icon icon={ChevronRight} size="sm" className="text-ui-text-tertiary" />
+          <Icon icon={ChevronRight} size="sm" tone="tertiary" />
         ) : (
-          <Icon icon={ChevronDown} size="sm" className="text-ui-text-tertiary" />
+          <Icon icon={ChevronDown} size="sm" tone="tertiary" />
         )}
         <Typography
           variant="label"

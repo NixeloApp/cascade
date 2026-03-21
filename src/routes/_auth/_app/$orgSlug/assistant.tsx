@@ -72,7 +72,7 @@ function AssistantStats() {
               <Typography variant="eyebrow" color="tertiary">
                 {stat.label}
               </Typography>
-              <Icon icon={stat.icon} size="sm" className="text-ui-text-tertiary" />
+              <Icon icon={stat.icon} size="sm" tone="tertiary" />
             </Flex>
             <Flex align="baseline" gap="xs">
               <Typography variant="dashboardStatValueStrong">{stat.value}</Typography>

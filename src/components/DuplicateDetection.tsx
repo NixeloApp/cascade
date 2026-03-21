@@ -66,7 +66,8 @@ export function DuplicateDetection({ title, projectId, onIssueClick }: Duplicate
                 <Icon
                   icon={ISSUE_TYPE_ICONS[issue.type as IssueType]}
                   size="sm"
-                  className="text-ui-text-secondary shrink-0"
+                  tone="secondary"
+                  className="shrink-0"
                 />
                 <Typography variant="small" className="font-mono text-ui-text-secondary shrink-0">
                   {issue.key}

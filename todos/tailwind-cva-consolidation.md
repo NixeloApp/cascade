@@ -33,6 +33,7 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Tighten raw Tailwind rules on app surfaces -- colors, radius, spacing, and shell treatments should come from owned primitives or explicit variants, not feature-local class clusters
 - [ ] Audit `className` escape-hatch usage on owned primitives -- recurring size/chrome/spacing overrides should become variants instead of one-off patches
 - [ ] Audit icon usage specifically -- repeated icon spacing, icon color overrides, and menu/button leading-icon patterns should move onto owned `Icon`, `Button`, `DropdownMenuItem`, and related primitive APIs
+- [ ] Pay down the remaining non-semantic icon colors that still bypass `Icon.tone` (`brand-foreground`, `status-*-text`, palette-specific colors, etc.) -- either shrink them into the shared palette or keep them explicitly component-owned where they are truly exceptional
 - [ ] Audit landing/main-page files specifically for static layout that should just be Tailwind, not local CVAs or section-specific CSS
 
 ## Phase 2: Consolidate CVA Sprawl
@@ -54,7 +55,6 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Add a validator that flags raw Tailwind class clusters appearing 3+ times across files (should be a component)
 - [ ] Tighten the raw TW validator from advisory to blocking with a ratchet (current baseline: 148 files, fail on increase)
 - [ ] Add a validator that flags repeated primitive `className` overrides for size/chrome/radius/color when an owned variant should exist
-- [ ] Add validator coverage for `Icon` misuse -- icon color should prefer semantic `tone` over raw `className="text-..."`, and repeated icon-leading menu/button patterns should not require local spacing utilities
 - [ ] Add a validator that flags feature-local CVAs with only base styles or a single live call site
 - [ ] Tighten validator coverage for hidden feature-local style systems: local class maps/constants that try to replace CVA should be penalized harder than explicit feature-local `cva()`
 

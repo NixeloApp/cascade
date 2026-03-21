@@ -54,6 +54,7 @@
  *  50. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
  *  51. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
  *  52. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
+ *  53. Icon tone drift            — ratchets raw Icon text-* color overrides when a shared semantic tone already exists
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -318,6 +319,10 @@ const checks = [
   {
     name: "Primitive default ownership",
     modulePath: new URL("./validate/check-primitive-default-ownership.js", import.meta.url).href,
+  },
+  {
+    name: "Icon tone drift",
+    modulePath: new URL("./validate/check-icon-tone-drift.js", import.meta.url).href,
   },
 ];
 
