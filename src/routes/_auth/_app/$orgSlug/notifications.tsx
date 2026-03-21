@@ -13,7 +13,14 @@ import { usePaginatedQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Archive, Bell, CheckCheck } from "lucide-react";
 import { useState } from "react";
-import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import {
+  PageContent,
+  PageControls,
+  PageControlsGroup,
+  PageControlsRow,
+  PageHeader,
+  PageLayout,
+} from "@/components/layout";
 import { NotificationItem, type NotificationWithActor } from "@/components/Notifications";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -299,51 +306,53 @@ export function NotificationsPage() {
 
       <PageContent>
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "inbox" | "archived")}>
-          <Flex justify="between" align="center" className="mb-4">
-            <TabsList>
-              <TabsTrigger value="inbox">
-                <Flex align="center" gap="xs">
-                  <Icon icon={Bell} size="sm" />
-                  Inbox
-                  {unreadCount != null && unreadCount > 0 && (
-                    <Badge variant="brand" size="sm" shape="pill">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </Badge>
-                  )}
-                </Flex>
-              </TabsTrigger>
-              <TabsTrigger value="archived">
-                <Flex align="center" gap="xs">
-                  <Icon icon={Archive} size="sm" />
-                  Archived
-                </Flex>
-              </TabsTrigger>
-            </TabsList>
+          <PageControls>
+            <PageControlsRow>
+              <TabsList>
+                <TabsTrigger value="inbox">
+                  <Flex align="center" gap="xs">
+                    <Icon icon={Bell} size="sm" />
+                    Inbox
+                    {unreadCount != null && unreadCount > 0 && (
+                      <Badge variant="brand" size="sm" shape="pill">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </Badge>
+                    )}
+                  </Flex>
+                </TabsTrigger>
+                <TabsTrigger value="archived">
+                  <Flex align="center" gap="xs">
+                    <Icon icon={Archive} size="sm" />
+                    Archived
+                  </Flex>
+                </TabsTrigger>
+              </TabsList>
 
-            {activeTab === "inbox" && (
-              <Flex gap="xs">
-                {(
-                  [
-                    { key: "all", label: "All" },
-                    { key: "mentions", label: "Mentions" },
-                    { key: "assigned", label: "Assigned" },
-                    { key: "comments", label: "Comments" },
-                    { key: "updates", label: "Updates" },
-                  ] as const
-                ).map(({ key, label }) => (
-                  <Button
-                    key={key}
-                    variant="unstyled"
-                    chrome={filter === key ? "filterActive" : "filter"}
-                    chromeSize="compactPillSm"
-                    onClick={() => setFilter(key)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </Flex>
-            )}
-          </Flex>
+              {activeTab === "inbox" && (
+                <PageControlsGroup className="sm:justify-end">
+                  {(
+                    [
+                      { key: "all", label: "All" },
+                      { key: "mentions", label: "Mentions" },
+                      { key: "assigned", label: "Assigned" },
+                      { key: "comments", label: "Comments" },
+                      { key: "updates", label: "Updates" },
+                    ] as const
+                  ).map(({ key, label }) => (
+                    <Button
+                      key={key}
+                      variant="unstyled"
+                      chrome={filter === key ? "filterActive" : "filter"}
+                      chromeSize="compactPillSm"
+                      onClick={() => setFilter(key)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </PageControlsGroup>
+              )}
+            </PageControlsRow>
+          </PageControls>
 
           <Card padding="none">
             <TabsContent value="inbox" className="mt-0">

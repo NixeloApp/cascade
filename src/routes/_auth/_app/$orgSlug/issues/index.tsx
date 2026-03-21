@@ -6,11 +6,18 @@ import { useState } from "react";
 import { CreateIssueModal, IssueCard } from "@/components/IssueDetail";
 import { IssueDetailViewer } from "@/components/IssueDetailViewer";
 import { ViewModeToggle } from "@/components/Kanban/ViewModeToggle";
-import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import {
+  PageContent,
+  PageControls,
+  PageControlsGroup,
+  PageControlsRow,
+  PageHeader,
+  PageLayout,
+} from "@/components/layout";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import {
   Select,
@@ -78,7 +85,7 @@ export function AllIssuesPage() {
             <ViewModeToggle />
             <Button
               onClick={() => setShowCreateModal(true)}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Icon icon={Plus} size="sm" />}
             >
               Create Issue
             </Button>
@@ -86,9 +93,8 @@ export function AllIssuesPage() {
         }
       />
 
-      {/* Filters & Search */}
-      <Card recipe="filterBar" padding="md" className="mb-6">
-        <Flex gap="md">
+      <PageControls>
+        <PageControlsRow>
           <FlexItem flex="1">
             <Input
               placeholder="Search issues..."
@@ -98,7 +104,7 @@ export function AllIssuesPage() {
               aria-label="Search issues"
             />
           </FlexItem>
-          <Flex gap="sm" align="center">
+          <PageControlsGroup className="sm:justify-end">
             <Select
               value={statusFilter || "all"}
               onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
@@ -115,11 +121,10 @@ export function AllIssuesPage() {
                 ))}
               </SelectContent>
             </Select>
-          </Flex>
-        </Flex>
-      </Card>
+          </PageControlsGroup>
+        </PageControlsRow>
+      </PageControls>
 
-      {/* Content */}
       <PageContent
         isLoading={isLoading}
         isEmpty={filteredIssues.length === 0}

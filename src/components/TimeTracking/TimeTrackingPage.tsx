@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDurationHuman } from "@/lib/formatting";
+import { PageControls, PageControlsGroup, PageControlsRow } from "../layout";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Label } from "../ui/Label";
@@ -195,8 +196,8 @@ function TimeTrackingControls({
   onProjectChange,
 }: TimeTrackingControlsProps) {
   return (
-    <Card variant="default" padding="md" className="border-ui-border-secondary/80">
-      <Stack gap="md">
+    <PageControls className="border-ui-border-secondary/80">
+      <PageControlsRow>
         <Tabs
           value={activeTab}
           onValueChange={(value) => onActiveTabChange(value as TimeTrackingTab)}
@@ -228,53 +229,53 @@ function TimeTrackingControls({
             )}
           </TabsList>
         </Tabs>
+      </PageControlsRow>
 
-        <Flex align="center" gap="lg" wrap>
-          {!projectId && (
-            <Stack gap="xs">
-              <Label htmlFor="tracking-project-filter">Project</Label>
-              <Select
-                value={selectedProject}
-                onValueChange={(value) =>
-                  onProjectChange(value === "all" ? "all" : (value as Id<"projects">))
-                }
-              >
-                <SelectTrigger id="tracking-project-filter">
-                  <SelectValue placeholder="Select project..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
-                  {projects?.map((project) => (
-                    <SelectItem key={project._id} value={project._id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Stack>
-          )}
+      <PageControlsGroup gap="lg">
+        {!projectId && (
+          <Stack gap="xs">
+            <Label htmlFor="tracking-project-filter">Project</Label>
+            <Select
+              value={selectedProject}
+              onValueChange={(value) =>
+                onProjectChange(value === "all" ? "all" : (value as Id<"projects">))
+              }
+            >
+              <SelectTrigger id="tracking-project-filter">
+                <SelectValue placeholder="Select project..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Projects</SelectItem>
+                {projects?.map((project) => (
+                  <SelectItem key={project._id} value={project._id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Stack>
+        )}
 
-          {activeTab === "entries" && (
-            <Stack gap="xs">
-              <Label htmlFor="tracking-date-range">Date Range</Label>
-              <Select
-                value={dateRange}
-                onValueChange={(value) => onDateRangeChange(value as TimeTrackingDateRange)}
-              >
-                <SelectTrigger id="tracking-date-range">
-                  <SelectValue placeholder="Select range..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="week">Last 7 Days</SelectItem>
-                  <SelectItem value="month">Last 30 Days</SelectItem>
-                  <SelectItem value="all">All Time</SelectItem>
-                </SelectContent>
-              </Select>
-            </Stack>
-          )}
-        </Flex>
-      </Stack>
-    </Card>
+        {activeTab === "entries" && (
+          <Stack gap="xs">
+            <Label htmlFor="tracking-date-range">Date Range</Label>
+            <Select
+              value={dateRange}
+              onValueChange={(value) => onDateRangeChange(value as TimeTrackingDateRange)}
+            >
+              <SelectTrigger id="tracking-date-range">
+                <SelectValue placeholder="Select range..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">Last 7 Days</SelectItem>
+                <SelectItem value="month">Last 30 Days</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
+          </Stack>
+        )}
+      </PageControlsGroup>
+    </PageControls>
   );
 }
 
