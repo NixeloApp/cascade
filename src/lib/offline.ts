@@ -195,14 +195,6 @@ class OfflineDB {
       .sort((left, right) => right.timestamp - left.timestamp);
   }
 
-  async claimMutation(id: number, userId: string): Promise<void> {
-    const db = await this.open();
-    const mutation = await db.get("mutations", id);
-    if (!mutation || mutation.userId) return;
-    mutation.userId = userId;
-    await db.put("mutations", mutation);
-  }
-
   async updateMutationStatus(
     id: number,
     status: OfflineMutation["status"],
@@ -403,14 +395,9 @@ export async function processOfflineQueue(userId?: string) {
   isProcessingQueue = true;
   try {
     const pending = await offlineDB.getPendingMutations();
-    const scoped = userId ? pending.filter((m) => !m.userId || m.userId === userId) : pending;
+    const scoped = userId ? pending.filter((m) => m.userId === userId) : pending;
 
     for (const mutation of scoped) {
-      // Claim unowned legacy items so ownership persists across retries
-      if (userId && !mutation.userId && mutation.id) {
-        await offlineDB.claimMutation(mutation.id, userId);
-        mutation.userId = userId;
-      }
       await processQueuedMutation(mutation);
     }
   } finally {
