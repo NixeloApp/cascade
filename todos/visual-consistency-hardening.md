@@ -31,7 +31,7 @@ These are still only partially automated and need explicit cleanup/review:
 - [ ] remaining raw Tailwind baseline shrink as touched files are cleaned up
 - [ ] shared shell discipline -- stop panel/card nesting and other accidental composition patterns that make surfaces feel inconsistent
 - [ ] modal, drawer, popover, and dropdown content rhythm -- spacing, heading treatment, action rows, and empty/error states should read as one system
-- [ ] roll the shared page-controls rhythm across remaining project, workspace, settings, and admin surfaces that still hand-roll header-following tabs, filters, or secondary actions
+- [ ] roll the shared page-controls rhythm across the remaining project, settings, and admin surfaces that still hand-roll header-following tabs, filters, or secondary actions
 - [ ] review header-to-controls-to-content spacing on authenticated pages after the controls-band rollout so content gutters and first-section rhythm stay aligned
 - [ ] "looks polished but not like our product" review pass -- screenshots should catch when a surface is visually coherent but still too custom, decorative, or unlike the real app
 
