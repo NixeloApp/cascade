@@ -37,7 +37,7 @@ describe("HeroSection", () => {
   it("renders the product showcase preview", () => {
     render(<HeroSection />);
 
-    expect(screen.getByText("Live workspace preview")).toBeInTheDocument();
+    expect(screen.getByText("Workspace cockpit")).toBeInTheDocument();
     expect(screen.getByText("Product control tower")).toBeInTheDocument();
     expect(screen.getByText("AI workspace assistant")).toBeInTheDocument();
   });

@@ -1,8 +1,8 @@
 # Landing Page - Current State
 
 > **Route**: `/`
-> **Status**: 🟡 Stronger structure, but still needs showcase discipline
-> **Last Updated**: 2026-03-12
+> **Status**: 🟡 Showcase shell is more disciplined, proof still needs polish
+> **Last Updated**: 2026-03-20
 
 ---
 
@@ -34,15 +34,13 @@
 │   product / ops / client delivery     AI-native search     fewer tools                       │
 │                                                                                              │
 │   ┌──────────────────────────────── ProductShowcase ───────────────────────────────────────┐ │
-│   │ macOS chrome                                                                            │ │
+│   │ app/workspace header                                                                    │ │
 │   │                                                                                         │ │
-│   │  Product control tower                                     [Open board]               │ │
-│   │  ^ squeezed heading block: the title, copy, CTA, and 3-column board fight for width   │ │
+│   │  Delivery board                                  [client-ready] [docs stay linked]     │ │
 │   │                                                                                         │ │
-│   │  [In review] [Shipping next] [Done]                                                     │ │
+│   │  [In review] [Shipping next] [Done]             workspace pulse + AI assistant rail     │ │
 │   │                                                                                         │ │
-│   │  metrics cards                 AI assistant card                 connected surfaces      │ │
-│   │  ^ mixed density: some panels feel dense/product-like, others feel brochure-like       │ │
+│   │  ^ board density and side-rail density now read like one product surface               │ │
 │   └─────────────────────────────────────────────────────────────────────────────────────────┘ │
 ├──────────────────────────────────────────────────────────────────────────────────────────────┤
 │ Logo/proof strip                                                                             │
@@ -69,8 +67,9 @@
 8. Final CTA
 9. Footer
 
-The structure is no longer generic. The remaining problem is that the hero and showcase still do
-not feel compositionally disciplined enough to carry the page.
+The structure is no longer generic, and the hero showcase now reads more like a workspace shell.
+The remaining problem is not the showcase layout anymore. It is that the proof/marketing surfaces
+around it still need stronger product realism and consistency.
 
 ---
 
@@ -112,26 +111,25 @@ not feel compositionally disciplined enough to carry the page.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | `Product control tower` is visibly squeezed because the showcase tries to be a board preview, a metrics deck, and a marketing card stack at the same time | `ProductShowcase.tsx` | HIGH |
-| 2 | The showcase uses mixed visual grammar: some cards feel app-real, others feel decorative brochure filler | `ProductShowcase.tsx` | HIGH |
-| 3 | The hero is closer to target, but the page still relies on a crafted mockup instead of a truly convincing product artifact | showcase strategy | MEDIUM |
-| 4 | Logo strip still uses placeholder brand text instead of real proof | `LogoBar.tsx` | LOW |
+| 1 | Logo strip still uses placeholder brand text instead of real proof | `LogoBar.tsx` | MEDIUM |
+| 2 | The page is more cohesive, but lower sections still rely on copy-first proof instead of clearly product-grounded evidence | landing proof surfaces | MEDIUM |
+| 3 | Tablet/mobile rhythm still needs explicit review so the product preview stays authoritative above the fold | hero / landing responsive rhythm | MEDIUM |
 
 ---
 
 ## Review Notes
 
 - The screenshot run may be valid technically while the composition is still wrong visually.
-- The next pass should not be another copy tweak.
-- Fix the showcase layout first:
-  - give the title/copy block real breathing room
-  - stop mixing three different card densities in the same frame
-  - decide whether this surface is a product screenshot surrogate or a marketing explainer panel
+- The main showcase is no longer the first place to spend effort.
+- The next pass should focus on proof realism:
+  - replace placeholder social proof with stronger signals
+  - keep lower landing sections grounded in app-like surfaces instead of decorative marketing grammar
+  - review mobile/tablet rhythm so the product preview keeps authority above the fold
 
 ---
 
 ## Summary
 
-The landing page now has the right sections, but the hero still lacks visual authority. The main
-failure is not missing structure. It is that the hero/showcase composition has too many competing
-ideas and not enough hierarchy.
+The landing page now has the right sections and a more convincing product showcase. The remaining
+work is broader consistency: make the proof sections feel less like polished marketing filler and
+more like extensions of the product we actually ship.
