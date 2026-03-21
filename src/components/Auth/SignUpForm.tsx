@@ -10,57 +10,20 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
+import { Mail } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
+import { AuthMethodDivider } from "./AuthMethodDivider";
+import { AuthStepIndicator } from "./AuthStepIndicator";
 import { EmailVerificationForm } from "./EmailVerificationForm";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
-
-function SignUpInitialAction() {
-  return (
-    <Flex align="center" gap="md">
-      <svg
-        className="w-5 h-5"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect width="20" height="16" x="2" y="4" rx="2" />
-        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-      </svg>
-      <span>Continue with email</span>
-    </Flex>
-  );
-}
-
-function SignUpSubmittingState() {
-  return (
-    <Flex align="center" gap="sm">
-      <svg
-        className="w-4 h-4 animate-spin"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-        <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-      </svg>
-      <span>Creating account...</span>
-    </Flex>
-  );
-}
 
 async function submitPasswordSignUp({
   event,
@@ -92,19 +55,6 @@ async function submitPasswordSignUp({
   }
 }
 
-function AuthStepIndicator({ currentStep }: { currentStep: number }) {
-  return (
-    <Flex justify="center" gap="sm" className="mb-6">
-      {[0, 1, 2].map((step) => (
-        <Card
-          key={step}
-          recipe={step <= currentStep ? "authStepIndicatorActive" : "authStepIndicator"}
-        />
-      ))}
-    </Flex>
-  );
-}
-
 function SignUpVerificationStep({
   email,
   navigate,
@@ -114,18 +64,20 @@ function SignUpVerificationStep({
 }) {
   return (
     <div className="w-full">
-      <AuthStepIndicator currentStep={2} />
-      <div className="animate-fade-in">
-        <EmailVerificationForm
-          email={email}
-          onVerified={() => {
-            navigate({ to: ROUTES.app.path });
-          }}
-          onResend={() => {
-            // Stay on verification view
-          }}
-        />
-      </div>
+      <Flex direction="column" gap="lg">
+        <AuthStepIndicator currentStep={2} />
+        <div className="animate-fade-in">
+          <EmailVerificationForm
+            email={email}
+            onVerified={() => {
+              navigate({ to: ROUTES.app.path });
+            }}
+            onResend={() => {
+              // Stay on verification view
+            }}
+          />
+        </div>
+      </Flex>
     </div>
   );
 }
@@ -153,7 +105,7 @@ function SignUpEmailButton({
         data-testid={showEmailForm ? TEST_IDS.AUTH.EMAIL_FORM : undefined}
         className={cn(
           "overflow-hidden transition-all duration-medium ease-out",
-          showEmailForm ? "mb-3 max-h-64 opacity-100" : "max-h-0 opacity-0",
+          showEmailForm ? "mb-4 max-h-64 opacity-100" : "max-h-0 opacity-0",
         )}
       >
         <Flex direction="column" className="overflow-hidden gap-form-field">
@@ -177,9 +129,9 @@ function SignUpEmailButton({
             onChange={(e) => setPassword(e.target.value)}
           />
           {password ? (
-            <PasswordStrengthIndicator password={password} className="-mt-1" />
+            <PasswordStrengthIndicator password={password} />
           ) : (
-            <Typography variant="caption" color="tertiary" className="-mt-2">
+            <Typography variant="caption" color="tertiary">
               Must be at least 8 characters
             </Typography>
           )}
@@ -191,16 +143,12 @@ function SignUpEmailButton({
         variant={showEmailForm ? "primary" : "secondary"}
         size="lg"
         className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
-        disabled={submitting || !hydrated}
+        disabled={!hydrated}
+        isLoading={showEmailForm && submitting}
+        leftIcon={!showEmailForm ? <Icon icon={Mail} size="md" /> : undefined}
         data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
       >
-        {!showEmailForm ? (
-          <SignUpInitialAction />
-        ) : submitting ? (
-          <SignUpSubmittingState />
-        ) : (
-          "Create account"
-        )}
+        {showEmailForm ? "Create account" : "Continue with email"}
       </Button>
     </Flex>
   );
@@ -263,13 +211,7 @@ export function SignUpForm() {
       {currentStep > 0 && <AuthStepIndicator currentStep={currentStep} />}
 
       <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign up with Google" />
-      <Flex align="center" justify="center" className="my-4">
-        <hr className="grow border-ui-border" />
-        <Typography variant="small" color="tertiary" as="span" className="mx-4">
-          or
-        </Typography>
-        <hr className="grow border-ui-border" />
-      </Flex>
+      <AuthMethodDivider />
       <form onSubmit={handleSubmit} data-testid={TEST_IDS.AUTH.FORM}>
         {hydrated ? (
           <span data-testid={TEST_IDS.AUTH.FORM_HYDRATED} hidden aria-hidden="true" />

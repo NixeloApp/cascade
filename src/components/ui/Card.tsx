@@ -200,17 +200,13 @@ const cardRecipeVariants = cva("", {
       onboardingChecklistSuccessIcon:
         "rounded-full border-transparent bg-status-success/20 text-status-success shadow-none",
       authShowcasePanel:
-        "rounded-3xl border-ui-border-secondary/60 bg-linear-to-b from-ui-bg-elevated/74 via-ui-bg-elevated/58 to-ui-bg-soft/56 shadow-soft backdrop-blur-sm",
-      authFeatureTile: "rounded-2xl border-ui-border-secondary/55 bg-ui-bg-elevated/72 shadow-soft",
-      authMobileBrandChip:
-        "rounded-full border-ui-border/70 bg-linear-to-r from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-soft/88 shadow-soft",
+        "rounded-3xl border-ui-border/55 bg-linear-to-b from-ui-bg-elevated/82 to-ui-bg-soft/58 shadow-soft backdrop-blur-sm",
       authFormShell:
-        "relative rounded-3xl border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/76 shadow-card",
+        "relative rounded-3xl border-ui-border/65 bg-ui-bg-elevated/96 shadow-soft backdrop-blur-sm",
       authStepIndicator:
         "h-1.5 w-4 rounded-full border-transparent bg-ui-border shadow-none transition-all duration-medium",
       authStepIndicatorActive:
-        "h-1.5 w-8 rounded-full border-transparent bg-brand shadow-none transition-all duration-medium",
-      authVerificationIcon: "rounded-2xl border-transparent bg-brand-subtle text-brand shadow-none",
+        "h-1.5 w-6 rounded-full border-transparent bg-brand shadow-none transition-all duration-medium",
       authStrengthSegment:
         "h-1 rounded-full border-transparent bg-ui-border shadow-none transition-colors",
       authStrengthSegmentError:

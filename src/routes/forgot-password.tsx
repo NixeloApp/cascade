@@ -1,13 +1,14 @@
-import { useAuthActions } from "@convex-dev/auth/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/Auth";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/form/Input";
+import { useEffect, useState } from "react";
+import {
+  AuthLink,
+  AuthPageLayout,
+  AuthRedirect,
+  ForgotPasswordForm,
+  ResetPasswordForm,
+} from "@/components/Auth";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
-import { TEST_IDS } from "@/lib/test-ids";
-import { showError } from "@/lib/toast";
 
 interface ForgotPasswordSearch {
   step?: "reset";
@@ -69,12 +70,9 @@ function ForgotPasswordRoute() {
 }
 
 function ForgotPasswordPage() {
-  const { signIn } = useAuthActions();
-  const [submitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState<string | null>(() => getStoredResetEmail());
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
-  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (search.step === "reset") {
@@ -90,55 +88,6 @@ function ForgotPasswordPage() {
     clearStoredResetEmail();
     setEmail(null);
   }, [search.step]);
-
-  const submitResetRequest = async () => {
-    const form = formRef.current;
-    if (!form || submitting) {
-      return;
-    }
-
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
-
-    setSubmitting(true);
-
-    const formData = new FormData(form);
-    const formEmail = formData.get("email");
-    if (typeof formEmail !== "string" || !formEmail) {
-      setSubmitting(false);
-      return;
-    }
-
-    const normalizedEmail = formEmail.trim().toLowerCase();
-
-    try {
-      const formData = new FormData();
-      formData.set("email", normalizedEmail);
-      formData.set("flow", "reset");
-
-      await signIn("password", formData);
-
-      setEmail(normalizedEmail);
-      setStoredResetEmail(normalizedEmail);
-      navigate({
-        replace: true,
-        search: {
-          step: "reset",
-        },
-      });
-    } catch (error) {
-      showError(error, "Password reset request");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    void submitResetRequest();
-  };
 
   if (search.step === "reset" && email) {
     return (
@@ -181,18 +130,19 @@ function ForgotPasswordPage() {
         </>
       }
     >
-      <form ref={formRef} className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <Input
-          type="email"
-          name="email"
-          placeholder="Email"
-          required
-          data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
-        />
-        <Button className="w-full" type="submit" disabled={submitting}>
-          {submitting ? "Sending..." : "Send reset code"}
-        </Button>
-      </form>
+      <ForgotPasswordForm
+        onCodeSent={(requestedEmail) => {
+          const normalizedEmail = requestedEmail.trim().toLowerCase();
+          setEmail(normalizedEmail);
+          setStoredResetEmail(normalizedEmail);
+          navigate({
+            replace: true,
+            search: {
+              step: "reset",
+            },
+          });
+        }}
+      />
     </AuthPageLayout>
   );
 }

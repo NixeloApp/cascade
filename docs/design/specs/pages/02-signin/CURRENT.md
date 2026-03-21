@@ -1,8 +1,8 @@
 # Sign In Page - Current State
 
 > **Route**: `/signin`
-> **Status**: 🟡 Cleaner and visually coherent, with smaller remaining weighting issues
-> **Last Updated**: 2026-03-12
+> **Status**: 🟢 Auth shell now feels task-first and balanced
+> **Last Updated**: 2026-03-21
 
 ---
 
@@ -41,12 +41,12 @@
 
 ## Current UI
 
-- Shared auth shell now uses a split layout on desktop with a marketing rail on the left and the
-  form panel on the right.
-- Mobile collapses into a single-column stack with a compact logo pill and shortened strapline.
-- The page title is explicit: `Sign in to Nixelo`.
-- The account-switch link sits in the subtitle row instead of being buried below the form.
-- Legal copy is reduced to a compact footer line.
+- Shared auth shell now keeps the task dominant: the form panel is calmer, the left rail is
+  narrower, and the proof content reads like workspace support instead of a second landing hero.
+- Mobile collapses to a minimal brand row above the form instead of repeating the shell headline.
+- The page title stays explicit: `Sign in to Nixelo`.
+- The account-switch link remains in the subtitle row instead of being buried below the form.
+- Legal copy stays reduced to a compact footer line.
 
 ---
 
@@ -77,9 +77,7 @@
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Desktop light mode still gives the left rail slightly too much attention versus the actual sign-in task | layout weighting | MEDIUM |
-| 2 | The auth panel is calmer, but it still carries more shell than the interaction earns | auth shell / panel recipe | MEDIUM |
-| 3 | CTA weighting between Google and collapsed email state could still be tighter | `SignInForm` | LOW |
+| 1 | Expanded/authenticated interaction states still need dedicated screenshot coverage so the suite doesn't regress outside the public default state | screenshot coverage | LOW |
 
 ---
 
@@ -87,12 +85,13 @@
 
 - Keep this doc diagram-first. The auth pages are simple enough that the structural mistakes should
   be obvious in one screen.
-- The next pass should focus on task weighting, not light-mode rescue.
-- If the left rail stays, it needs to support the form, not compete with it.
+- The next auth review should focus on filled states, not shell rescue.
+- The sign-in task now wins immediately, which is the right default for utility auth.
 
 ---
 
 ## Summary
 
-The auth shell is now visually coherent in light mode. The remaining issue is simpler: the left
-rail still needs slightly less emphasis so the sign-in task wins immediately.
+The auth shell now behaves like a doorway back into the product instead of a mini marketing page.
+The remaining review work is coverage-oriented: keep the expanded states captured so the cleaner
+shell doesn't quietly drift again.

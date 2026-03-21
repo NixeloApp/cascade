@@ -1,8 +1,8 @@
 # Forgot Password Page - Current State
 
 > **Route**: `/forgot-password`
-> **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-12
+> **Status**: 🟢 Reset request flow is now appropriately minimal
+> **Last Updated**: 2026-03-21
 
 ---
 
@@ -19,10 +19,11 @@
 
 ## Current UI
 
-- Forgot-password now shares the cleaner auth shell used by sign-in and signup.
-- Step 1 uses `Reset your password` with the sign-in link in the subtitle row.
+- Forgot-password now shares the lighter auth shell used by sign-in and signup.
+- Step 1 uses `Reset your password` with the sign-in link in the subtitle row, and the form body no
+  longer repeats that headline inside the panel.
 - Step 2 switches to `Check your email` and preserves the requested email address through session storage.
-- The reset flow sits inside the same elevated auth panel with compact legal links at the bottom.
+- The reset flow stays inside the same calmer auth panel with compact legal links at the bottom.
 
 ---
 
@@ -30,7 +31,8 @@
 
 - Removed the old back-link pattern and the busier card stack.
 - The reset request and reset-code views now inherit the same calmer auth shell.
-- Subtitle links are in the right place instead of floating below the form.
+- Subtitle links stay in the right place instead of floating below the form.
+- The reset request view no longer burns vertical space on duplicate heading chrome.
 - Theme parity is much closer to the rest of the auth suite.
 
 ---
@@ -39,9 +41,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The reset-code step is still visually sparse once the user reaches the second state | `ResetPasswordForm` | MEDIUM |
-| Desktop light mode still over-emphasizes the marketing rail for a utility flow | Shared auth shell | MEDIUM |
-| This page does not need much shell, so the panel can still be simplified further | Shared auth shell | LOW |
+| The reset-code step still needs dedicated screenshot coverage so the shared intro/strength treatment cannot regress quietly | screenshot coverage | LOW |
 
 ---
 
@@ -50,3 +50,5 @@
 - `src/routes/forgot-password.tsx`
 - `src/components/Auth/AuthPageLayout.tsx`
 - `src/components/Auth/ResetPasswordForm.tsx`
+- `src/components/Auth/ForgotPasswordForm.tsx`
+- `src/components/Auth/AuthFlowIntro.tsx`

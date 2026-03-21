@@ -11,16 +11,18 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
 import { usePublicQuery } from "@/hooks/useConvexHelpers";
+import { Mail } from "@/lib/icons";
 import { getEmailDomain, isGoogleWorkspaceSsoConnection } from "@/lib/sso-discovery";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
-import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
+import { AuthMethodDivider } from "./AuthMethodDivider";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 
 function getSignInButtonText(hasGoogleWorkspaceSso: boolean, emailDomain: string | null): string {
@@ -33,46 +35,6 @@ function getSignInErrorMessage(error: Error): string {
   return error.message.includes("Invalid password")
     ? "Invalid password. Please try again."
     : "Could not sign in. Please check your credentials.";
-}
-
-function SignInInitialAction() {
-  return (
-    <Flex align="center" gap="md">
-      <svg
-        className="w-5 h-5"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect width="20" height="16" x="2" y="4" rx="2" />
-        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-      </svg>
-      <span>Continue with email</span>
-    </Flex>
-  );
-}
-
-function SignInSubmittingState() {
-  return (
-    <Flex align="center" gap="sm">
-      <svg
-        className="w-4 h-4 animate-spin"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-        <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-      </svg>
-      <span>Signing in...</span>
-    </Flex>
-  );
 }
 
 async function submitPasswordSignIn({
@@ -166,13 +128,7 @@ export function SignInForm() {
         redirectTo={ROUTES.app.path}
         text={getSignInButtonText(hasGoogleWorkspaceSso, emailDomain)}
       />
-      <Flex align="center" justify="center" className="my-4">
-        <hr className="grow border-ui-border" />
-        <Typography variant="small" color="tertiary" as="span" className="mx-4">
-          or
-        </Typography>
-        <hr className="grow border-ui-border" />
-      </Flex>
+      <AuthMethodDivider />
       <form onSubmit={handleSubmit} data-testid={TEST_IDS.AUTH.FORM}>
         {hydrated ? (
           <span data-testid={TEST_IDS.AUTH.FORM_HYDRATED} hidden aria-hidden="true" />
@@ -222,16 +178,12 @@ export function SignInForm() {
             variant={showEmailForm ? "primary" : "secondary"}
             size="lg"
             className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
-            disabled={submitting || !hydrated}
+            disabled={!hydrated}
+            isLoading={showEmailForm && submitting}
+            leftIcon={!showEmailForm ? <Icon icon={Mail} size="md" /> : undefined}
             data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
           >
-            {!showEmailForm ? (
-              <SignInInitialAction />
-            ) : submitting ? (
-              <SignInSubmittingState />
-            ) : (
-              "Sign in"
-            )}
+            {showEmailForm ? "Sign in" : "Continue with email"}
           </Button>
         </Flex>
       </form>
