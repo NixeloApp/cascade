@@ -96,6 +96,7 @@ export function register() {
  */
 export function unregister() {
   if ("serviceWorker" in navigator) {
+    hasRegisteredServiceWorker = false;
     navigator.serviceWorker.ready
       .then((registration) => {
         registration.unregister();

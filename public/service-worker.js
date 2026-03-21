@@ -13,12 +13,18 @@ const STATIC_ASSETS = [
   "/badge-72.png",
 ];
 
-// Install event - cache static assets
+// Install event - cache static assets individually so a single 404 doesn't block install
 self.addEventListener("install", (event) => {
   console.log("Nixelo Service Worker installing...");
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return Promise.allSettled(
+        STATIC_ASSETS.map((asset) =>
+          cache.add(asset).catch((err) => {
+            console.warn(`Failed to cache ${asset}:`, err);
+          }),
+        ),
+      );
     }),
   );
   self.skipWaiting();

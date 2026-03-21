@@ -45,8 +45,9 @@ test.describe("Offline Replay", () => {
       await settingsPage.expectOfflineQueueItemVisible(OFFLINE_USER_SETTINGS_MUTATION_TYPE);
       await expect(settingsPage.processQueueButton).toBeVisible();
 
+      // Restore network without dispatching "online" to avoid auto-replay
+      // racing with the manual Process Queue click below.
       await page.context().setOffline(false);
-      await dispatchConnectivityEvent(page, "online");
 
       await settingsPage.processOfflineQueue();
       await settingsPage.expectToast("Queued items processed");

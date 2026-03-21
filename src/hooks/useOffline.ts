@@ -90,6 +90,7 @@ export function useOfflineQueue() {
       setLastSuccessfulReplayAt(getLastSuccessfulOfflineReplayAt());
     } catch (error) {
       logOfflineError("refresh queue failed", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -113,6 +114,7 @@ export function useOfflineQueue() {
   };
 
   const processNow = async () => {
+    if (isLoading) return;
     setIsLoading(true);
     try {
       await processOfflineQueue();
@@ -121,6 +123,7 @@ export function useOfflineQueue() {
       setLastSuccessfulReplayAt(getLastSuccessfulOfflineReplayAt());
     } catch (error) {
       logOfflineError("process queue failed", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }

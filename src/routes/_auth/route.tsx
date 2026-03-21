@@ -42,8 +42,7 @@ function AuthLayout() {
 
   if (
     isAuthenticated ||
-    (isAuthLoading && (hasAuthenticatedSession.current || canRecoverAuthenticatedSession)) ||
-    canRecoverAuthenticatedSession
+    (isAuthLoading && (hasAuthenticatedSession.current || canRecoverAuthenticatedSession))
   ) {
     return <Outlet />;
   }

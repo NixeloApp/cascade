@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppHeader, AppSidebar } from "@/components/App";
 import { useCommands } from "@/components/CommandPalette";
 import { CreateProjectFromTemplate } from "@/components/CreateProjectFromTemplate";
@@ -91,8 +91,8 @@ function OrgError({ title, message }: { title: string; message: string }) {
 }
 
 function useStableOrgData(orgSlug: string) {
-  const persistedState = readLocalStorageJson<PersistedOrganizationLayoutState>(
-    ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY,
+  const persistedStateRef = useRef(
+    readLocalStorageJson<PersistedOrganizationLayoutState>(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY),
   );
   const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {}) as
     | UserOrganization[]
@@ -108,12 +108,15 @@ function useStableOrgData(orgSlug: string) {
     }
 
     cachedOrgUserOrganizations = userOrganizations;
-    writeLocalStorageJson(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY, {
-      ...persistedState,
+    const current = persistedStateRef.current;
+    const next = {
+      ...current,
       userOrganizations,
-      organizationsBySlug: persistedState?.organizationsBySlug ?? {},
-    });
-  }, [persistedState, userOrganizations]);
+      organizationsBySlug: current?.organizationsBySlug ?? {},
+    };
+    persistedStateRef.current = next;
+    writeLocalStorageJson(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY, next);
+  }, [userOrganizations]);
 
   useEffect(() => {
     if (organization === undefined) {
@@ -121,16 +124,20 @@ function useStableOrgData(orgSlug: string) {
     }
 
     cachedOrganizationsBySlug.set(orgSlug, organization);
-    writeLocalStorageJson(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY, {
-      ...persistedState,
-      userOrganizations: userOrganizations ?? persistedState?.userOrganizations,
+    const current = persistedStateRef.current;
+    const next = {
+      ...current,
+      userOrganizations: userOrganizations ?? current?.userOrganizations,
       organizationsBySlug: {
-        ...(persistedState?.organizationsBySlug ?? {}),
+        ...(current?.organizationsBySlug ?? {}),
         [orgSlug]: organization,
       },
-    });
-  }, [orgSlug, organization, persistedState, userOrganizations]);
+    };
+    persistedStateRef.current = next;
+    writeLocalStorageJson(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY, next);
+  }, [orgSlug, organization, userOrganizations]);
 
+  const persistedState = persistedStateRef.current;
   return {
     organization:
       organization ??
@@ -169,7 +176,7 @@ function OrganizationLayout() {
     return <OrgLoading />;
   }
 
-  if (!(isAuthenticated || organization || canRecoverAuthenticatedSession)) {
+  if (!(isAuthenticated || organization)) {
     return <OrgLoading />;
   }
 

@@ -528,7 +528,6 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
   const nextAttemptCount = mutation.attempts + 1;
 
   try {
-    const completedAt = Date.now();
     await offlineDB.updateMutationStatus(mutation.id, "syncing", {
       incrementAttempts: true,
       clearError: true,
@@ -536,6 +535,7 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
     const args = validateQueuedMutationArgs(mutation.mutationArgs);
     const handler = getOfflineReplayHandler(mutation.mutationType);
     await handler(args);
+    const completedAt = Date.now();
     await offlineDB.updateMutationStatus(mutation.id, "synced", {
       clearError: true,
     });

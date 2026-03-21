@@ -48,11 +48,17 @@ export function PreferencesTab() {
   }, [userSettings, theme]);
 
   const handleThemeChange = async (value: "light" | "dark" | "system") => {
-    setTheme(value); // Update local context
-    await updateSettings(
-      { theme: value },
-      { queuedMessage: "Theme preference saved for sync when you are back online" },
-    );
+    const previousTheme = theme;
+    setTheme(value); // Update local context optimistically
+    try {
+      await updateSettings(
+        { theme: value },
+        { queuedMessage: "Theme preference saved for sync when you are back online" },
+      );
+    } catch (error) {
+      setTheme(previousTheme); // Rollback on failure
+      showError(error, "Failed to update theme");
+    }
   };
 
   const handleTimezoneChange = async (value: string) => {
@@ -78,8 +84,12 @@ export function PreferencesTab() {
       }
     }
 
-    await updateSettings({ desktopNotifications: enabled }, { allowOfflineQueue: false });
-    showSuccess(`Desktop notifications ${enabled ? "enabled" : "disabled"}`);
+    try {
+      await updateSettings({ desktopNotifications: enabled }, { allowOfflineQueue: false });
+      showSuccess(`Desktop notifications ${enabled ? "enabled" : "disabled"}`);
+    } catch (error) {
+      showError(error, "Failed to update desktop notification setting");
+    }
   };
 
   // Common timezones list (simplified)

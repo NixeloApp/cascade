@@ -178,7 +178,7 @@ describe("OfflineTab", () => {
       expect(screen.getByText(`mutation-${index}`)).toBeInTheDocument();
     }
     expect(screen.queryByText("mutation-6")).not.toBeInTheDocument();
-    expect(screen.getByText("+1 more items")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show all (6 items)" })).toBeInTheDocument();
     expect(screen.getAllByText("Pending")).toHaveLength(4);
     expect(screen.getAllByText("Syncing")).toHaveLength(2);
     expect(screen.getAllByText("Failed")).toHaveLength(2);

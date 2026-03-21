@@ -61,33 +61,14 @@ Not yet verified end to end:
 
 ### 1. App Icons
 
-You need to create two icon files and place them in the `public/` directory:
+The following icon files are already committed in `public/`:
 
 - `public/icon-192.png` - 192x192px PNG icon
 - `public/icon-512.png` - 512x512px PNG icon
+- `public/apple-touch-icon.png` - Apple touch icon
+- `public/badge-72.png` - Push notification badge
 
-**Icon Requirements:**
-- Format: PNG with transparency
-- Background: Should work on both light and dark backgrounds
-- Style: Simple, recognizable, branded
-- Safe zone: Keep important content within center 80% to avoid mask cropping
-
-**Recommended Tools:**
-- [Real Favicon Generator](https://realfavicongenerator.net/) - Generate all icon sizes
-- [Figma](https://figma.com) or [Canva](https://canva.com) - Design icons
-- [Squoosh](https://squoosh.app/) - Optimize PNG files
-
-**Quick Icon Creation:**
-```bash
-# Using ImageMagick to create placeholder icons (replace with your logo)
-convert -size 192x192 xc:#3b82f6 -font Arial -pointsize 72 \
-  -fill white -gravity center -annotate +0+0 "C" \
-  public/icon-192.png
-
-convert -size 512x512 xc:#3b82f6 -font Arial -pointsize 192 \
-  -fill white -gravity center -annotate +0+0 "C" \
-  public/icon-512.png
-```
+To replace them with your own branding, overwrite those files with PNGs of the same dimensions. Keep important content within the center 80% to avoid mask cropping.
 
 ### 2. Service Worker Configuration
 

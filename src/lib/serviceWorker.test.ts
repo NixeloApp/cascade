@@ -8,8 +8,10 @@ const serviceWorkerController = {
   postMessage: vi.fn(),
 };
 
+const ONE_HOUR_MS = 3_600_000;
+
 vi.mock("@convex/lib/timeUtils", () => ({
-  HOUR: 3_600_000,
+  HOUR: ONE_HOUR_MS,
 }));
 
 describe("serviceWorker helpers", () => {

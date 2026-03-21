@@ -12,6 +12,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showInfo } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useOfflineQueue, useOnlineStatus } from "../../hooks/useOffline";
+import type { OfflineMutation } from "../../lib/offline";
 import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -80,6 +81,101 @@ function getCapabilityLimitCopy(
   return null;
 }
 
+const QUEUE_PREVIEW_LIMIT = 5;
+
+function getVisibleQueueItems(queue: OfflineMutation[], showAll: boolean): OfflineMutation[] {
+  if (showAll) {
+    return queue;
+  }
+  // Always show all failed items, then fill remaining slots with non-failed items
+  const failed = queue.filter((item) => item.status === "failed");
+  const nonFailed = queue.filter((item) => item.status !== "failed");
+  const remainingSlots = Math.max(0, QUEUE_PREVIEW_LIMIT - failed.length);
+  return [...failed, ...nonFailed.slice(0, remainingSlots)];
+}
+
+function QueueItemList({
+  queue,
+  showAll,
+  onToggleShowAll,
+  activeMutationId,
+  onRetry,
+  onDelete,
+}: {
+  queue: OfflineMutation[];
+  showAll: boolean;
+  onToggleShowAll: () => void;
+  activeMutationId: number | null;
+  onRetry: (id: number) => void;
+  onDelete: (id: number) => void;
+}) {
+  const visible = getVisibleQueueItems(queue, showAll);
+  const hiddenCount = queue.length - visible.length;
+
+  return (
+    <Stack gap="sm">
+      {visible.map((item) => (
+        <Card key={item.id} variant="section" padding="sm">
+          <Stack gap="sm">
+            <Flex justify="between" align="center">
+              <Stack gap="none">
+                <Typography variant="label">{item.mutationType}</Typography>
+                <Typography variant="caption">
+                  {new Date(item.timestamp).toLocaleString()}
+                </Typography>
+              </Stack>
+              <Badge variant={getQueueBadgeVariant(item.status)} size="md">
+                {item.status === "syncing"
+                  ? "Syncing"
+                  : item.status === "failed"
+                    ? "Failed"
+                    : "Pending"}
+              </Badge>
+            </Flex>
+            {item.error && (
+              <Typography variant="caption" color="secondary">
+                {item.error}
+              </Typography>
+            )}
+            {item.status === "failed" && item.id !== undefined && (
+              <Flex gap="sm" justify="end">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onRetry(item.id ?? 0)}
+                  isLoading={activeMutationId === item.id}
+                >
+                  <Icon icon={RotateCcw} size="sm" />
+                  Retry
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(item.id ?? 0)}
+                  isLoading={activeMutationId === item.id}
+                >
+                  <Icon icon={Trash2} size="sm" />
+                  Remove
+                </Button>
+              </Flex>
+            )}
+          </Stack>
+        </Card>
+      ))}
+      {hiddenCount > 0 && (
+        <Button variant="ghost" size="sm" onClick={onToggleShowAll} className="mx-auto">
+          Show all ({queue.length} items)
+        </Button>
+      )}
+      {showAll && queue.length > QUEUE_PREVIEW_LIMIT && (
+        <Button variant="ghost" size="sm" onClick={onToggleShowAll} className="mx-auto">
+          Show less
+        </Button>
+      )}
+    </Stack>
+  );
+}
+
 /**
  * Offline mode settings tab
  * Extracted from Settings for better organization
@@ -102,6 +198,7 @@ export function OfflineTab() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isProcessingQueue, setIsProcessingQueue] = useState(false);
   const [activeMutationId, setActiveMutationId] = useState<number | null>(null);
+  const [showAllQueueItems, setShowAllQueueItems] = useState(false);
   const hasServiceWorkerSupport = typeof navigator !== "undefined" && "serviceWorker" in navigator;
   const hasBackgroundSyncSupport =
     typeof ServiceWorkerRegistration !== "undefined" &&
@@ -117,6 +214,8 @@ export function OfflineTab() {
     try {
       await refresh();
       showInfo("Local offline queue refreshed");
+    } catch (error) {
+      showError(error, "Failed to refresh offline queue");
     } finally {
       setIsRefreshing(false);
     }
@@ -151,6 +250,8 @@ export function OfflineTab() {
     try {
       await processNow();
       showInfo("Queued items processed");
+    } catch (error) {
+      showError(error, "Failed to process offline queue");
     } finally {
       setIsProcessingQueue(false);
     }
@@ -372,61 +473,14 @@ export function OfflineTab() {
                 </Stack>
               </Card>
             </Grid>
-            <Stack gap="sm">
-              {queue.slice(0, 5).map((item) => (
-                <Card key={item.id} variant="section" padding="sm">
-                  <Stack gap="sm">
-                    <Flex justify="between" align="center">
-                      <Stack gap="none">
-                        <Typography variant="label">{item.mutationType}</Typography>
-                        <Typography variant="caption">
-                          {new Date(item.timestamp).toLocaleString()}
-                        </Typography>
-                      </Stack>
-                      <Badge variant={getQueueBadgeVariant(item.status)} size="md">
-                        {item.status === "syncing"
-                          ? "Syncing"
-                          : item.status === "failed"
-                            ? "Failed"
-                            : "Pending"}
-                      </Badge>
-                    </Flex>
-                    {item.error && (
-                      <Typography variant="caption" color="secondary">
-                        {item.error}
-                      </Typography>
-                    )}
-                    {item.status === "failed" && item.id !== undefined && (
-                      <Flex gap="sm" justify="end">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleRetryMutation(item.id ?? 0)}
-                          isLoading={activeMutationId === item.id}
-                        >
-                          <Icon icon={RotateCcw} size="sm" />
-                          Retry
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteMutation(item.id ?? 0)}
-                          isLoading={activeMutationId === item.id}
-                        >
-                          <Icon icon={Trash2} size="sm" />
-                          Remove
-                        </Button>
-                      </Flex>
-                    )}
-                  </Stack>
-                </Card>
-              ))}
-              {queue.length > 5 && (
-                <Typography variant="small" color="tertiary" className="text-center pt-2">
-                  +{queue.length - 5} more items
-                </Typography>
-              )}
-            </Stack>
+            <QueueItemList
+              queue={queue}
+              showAll={showAllQueueItems}
+              onToggleShowAll={() => setShowAllQueueItems((prev) => !prev)}
+              activeMutationId={activeMutationId}
+              onRetry={handleRetryMutation}
+              onDelete={handleDeleteMutation}
+            />
           </Stack>
         </Card>
       )}
