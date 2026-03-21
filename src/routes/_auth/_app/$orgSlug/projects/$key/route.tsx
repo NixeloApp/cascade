@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { PageContent, PageError } from "@/components/layout";
+import { PageContent, PageControls, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
 import { Typography } from "@/components/ui/Typography";
@@ -23,42 +24,31 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
   component: ProjectLayout,
 });
 
-function ProjectLayout() {
-  const { key, orgSlug } = Route.useParams();
-  const location = useLocation();
-  const { user } = useCurrentUser();
-  const project = useProjectByKey(key);
-  const userRole = useAuthenticatedQuery(
-    api.projects.getProjectUserRole,
-    project ? { projectId: project._id } : "skip",
-  );
+interface ProjectTab {
+  name: string;
+  mobileName: string;
+  segment: string;
+  to: string;
+  params: {
+    key: string;
+    orgSlug: string;
+  };
+}
 
-  // Still loading initial data
-  if (project === undefined || user === undefined) {
-    return <PageContent isLoading>{null}</PageContent>;
-  }
+const PROJECT_MOBILE_PRIMARY_SEGMENTS = new Set(["board", "backlog", "calendar"]);
 
-  // Project not found - check before userRole since userRole query is skipped when project is null
-  if (project === null) {
-    return (
-      <PageError
-        title="Project Not Found"
-        message={`The project "${key}" doesn't exist or you don't have access to it.`}
-      />
-    );
-  }
-
-  // Wait for user role (only runs after project is confirmed to exist)
-  if (userRole === undefined) {
-    return <PageContent isLoading>{null}</PageContent>;
-  }
-
-  // Check if user is admin (via role OR ownership)
-  const isAdmin = userRole === "admin" || project.ownerId === user?._id;
-
-  const isScrum = project.boardType === "scrum";
-
-  const tabs = [
+function buildProjectTabs({
+  isAdmin,
+  isScrum,
+  key,
+  orgSlug,
+}: {
+  isAdmin: boolean;
+  isScrum: boolean;
+  key: string;
+  orgSlug: string;
+}): ProjectTab[] {
+  return [
     {
       name: "Board",
       mobileName: "Board",
@@ -145,22 +135,113 @@ function ProjectLayout() {
         ]
       : []),
   ];
-  const currentSegment = location.pathname.split("/").pop() ?? "board";
-  const mobilePrimaryTabs = tabs.filter((tab) =>
-    ["board", "backlog", "calendar"].includes(tab.segment),
-  );
+}
+
+function ProjectSectionNav({
+  currentSegment,
+  tabs,
+}: {
+  currentSegment: string;
+  tabs: ProjectTab[];
+}) {
+  const mobilePrimaryTabs = tabs.filter((tab) => PROJECT_MOBILE_PRIMARY_SEGMENTS.has(tab.segment));
   const mobileSecondaryTabs = tabs.filter(
-    (tab) => !["board", "backlog", "calendar"].includes(tab.segment),
+    (tab) => !PROJECT_MOBILE_PRIMARY_SEGMENTS.has(tab.segment),
   );
   const activeSecondaryTab = mobileSecondaryTabs.find((tab) => tab.segment === currentSegment);
 
   return (
-    <Flex direction="column" className="h-full">
-      <div className="border-b border-ui-border/70 bg-ui-bg/84 px-1 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
-        <Card
-          recipe="pageHeader"
-          className="border-transparent bg-transparent px-0 py-0 shadow-none sm:px-4 sm:py-3"
-        >
+    <PageControls padding="sm" gap="sm">
+      <RouteNav variant="pill" size="sm" className="sm:hidden" aria-label="Project sections">
+        {mobilePrimaryTabs.map((tab) => (
+          <RouteNavItem key={tab.name} asChild variant="pill" size="sm">
+            <Link to={tab.to} params={tab.params} activeProps={{ "aria-current": "page" }}>
+              {tab.mobileName}
+            </Link>
+          </RouteNavItem>
+        ))}
+        {mobileSecondaryTabs.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <RouteNavItem asChild variant="pill" size="sm" active={!!activeSecondaryTab}>
+                <Button
+                  variant="unstyled"
+                  size={undefined}
+                  className="gap-1"
+                  aria-label="More project sections"
+                >
+                  <span>More</span>
+                  <Icon icon={ChevronDown} size="xs" tone="tertiary" />
+                </Button>
+              </RouteNavItem>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-40">
+              {mobileSecondaryTabs.map((tab) => (
+                <DropdownMenuItem key={tab.name} asChild>
+                  <Link to={tab.to} params={tab.params} className="w-full">
+                    {tab.name}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </RouteNav>
+
+      <RouteNav variant="pill" className="hidden sm:flex" aria-label="Project sections">
+        {tabs.map((tab) => (
+          <RouteNavItem key={tab.name} asChild variant="pill">
+            <Link to={tab.to} params={tab.params} activeProps={{ "aria-current": "page" }}>
+              {tab.name}
+            </Link>
+          </RouteNavItem>
+        ))}
+      </RouteNav>
+    </PageControls>
+  );
+}
+
+/** Project detail shell with a project-owned header and shared section-controls rhythm. */
+export function ProjectLayout() {
+  const { key, orgSlug } = Route.useParams();
+  const location = useLocation();
+  const { user } = useCurrentUser();
+  const project = useProjectByKey(key);
+  const userRole = useAuthenticatedQuery(
+    api.projects.getProjectUserRole,
+    project ? { projectId: project._id } : "skip",
+  );
+
+  // Still loading initial data
+  if (project === undefined || user === undefined) {
+    return <PageContent isLoading>{null}</PageContent>;
+  }
+
+  // Project not found - check before userRole since userRole query is skipped when project is null
+  if (project === null) {
+    return (
+      <PageError
+        title="Project Not Found"
+        message={`The project "${key}" doesn't exist or you don't have access to it.`}
+      />
+    );
+  }
+
+  // Wait for user role (only runs after project is confirmed to exist)
+  if (userRole === undefined) {
+    return <PageContent isLoading>{null}</PageContent>;
+  }
+
+  // Check if user is admin (via role OR ownership)
+  const isAdmin = userRole === "admin" || project.ownerId === user?._id;
+  const isScrum = project.boardType === "scrum";
+  const tabs = buildProjectTabs({ isAdmin, isScrum, key, orgSlug });
+  const currentSegment = location.pathname.split("/").pop() ?? "board";
+
+  return (
+    <Flex direction="column" className="h-full min-h-0">
+      <div className="px-1 pt-1 sm:px-4 sm:pt-4">
+        <Card recipe="pageHeader" padding="md" className="mb-4 sm:mb-5">
           <Flex
             align="start"
             alignSm="center"
@@ -170,20 +251,19 @@ function ProjectLayout() {
             directionSm="row"
           >
             <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
-              <IconCircle
-                size="sm"
-                variant="brand"
-                className="h-6 w-6 ring-1 ring-brand/18 sm:h-10 sm:w-10"
-              >
+              <IconCircle size="sm" variant="brand" className="ring-1 ring-brand/18">
                 <Typography variant="sidebarOrgInitial">
                   {project.key.slice(0, 2).toUpperCase()}
                 </Typography>
               </IconCircle>
               <div className="min-w-0">
-                <Flex align="center" gap="xs" className="min-w-0">
+                <Flex align="center" gap="xs" wrap className="min-w-0">
                   <Typography variant="projectHeaderTitle">{project.name}</Typography>
+                  <Badge variant="projectHeaderKey" shape="pill" className="sm:hidden">
+                    {project.key}
+                  </Badge>
                 </Flex>
-                <Typography variant="pageHeaderEyebrow" className="mt-0.5 hidden sm:block">
+                <Typography variant="pageHeaderEyebrow" className="mt-0.5">
                   {isScrum ? "Scrum project" : "Kanban project"}
                 </Typography>
               </div>
@@ -192,66 +272,12 @@ function ProjectLayout() {
               {project.key}
             </Badge>
           </Flex>
-
-          <RouteNav
-            variant="pill"
-            size="sm"
-            className="mt-0.5 flex items-center overflow-x-auto pb-0 pr-0 sm:hidden"
-            aria-label="Project sections"
-          >
-            {mobilePrimaryTabs.map((tab) => (
-              <RouteNavItem key={tab.name} asChild variant="pill" size="sm">
-                <Link to={tab.to} params={tab.params} activeProps={{ "aria-current": "page" }}>
-                  {tab.mobileName ?? tab.name}
-                </Link>
-              </RouteNavItem>
-            ))}
-            {mobileSecondaryTabs.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <RouteNavItem asChild variant="pill" size="sm" active={!!activeSecondaryTab}>
-                    <Button
-                      variant="unstyled"
-                      size={undefined}
-                      className="gap-0.5"
-                      aria-label="More project sections"
-                    >
-                      <span>More</span>
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </RouteNavItem>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-40">
-                  {mobileSecondaryTabs.map((tab) => (
-                    <DropdownMenuItem key={tab.name} asChild>
-                      <Link to={tab.to} params={tab.params} className="w-full">
-                        {tab.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </RouteNav>
-
-          <RouteNav
-            variant="pill"
-            className="mt-1 hidden gap-1 overflow-x-auto pb-0.5 pr-1 scrollbar-subtle sm:mt-3 sm:flex sm:pb-1"
-            aria-label="Project sections"
-          >
-            {tabs.map((tab) => (
-              <RouteNavItem key={tab.name} asChild variant="pill">
-                <Link to={tab.to} params={tab.params} activeProps={{ "aria-current": "page" }}>
-                  {tab.name}
-                </Link>
-              </RouteNavItem>
-            ))}
-          </RouteNav>
         </Card>
+
+        <ProjectSectionNav currentSegment={currentSegment} tabs={tabs} />
       </div>
 
-      {/* Tab Content */}
-      <FlexItem flex="1" className="overflow-hidden">
+      <FlexItem flex="1" className="min-h-0 overflow-hidden">
         <Outlet />
       </FlexItem>
     </Flex>
