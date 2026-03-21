@@ -1701,8 +1701,11 @@ async function waitForActivityReady(page: Page): Promise<void> {
   await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
-async function waitForAnalyticsReady(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: /analytics dashboard/i }).waitFor({
+async function waitForAnalyticsReady(
+  page: Page,
+  titlePattern: RegExp = /analytics dashboard/i,
+): Promise<void> {
+  await page.getByRole("heading", { name: titlePattern }).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -2110,7 +2113,7 @@ async function waitForExpectedContent(
   }
 
   if (name === "org-analytics") {
-    await waitForAnalyticsReady(page);
+    await waitForAnalyticsReady(page, /^analytics$/i);
     return;
   }
 

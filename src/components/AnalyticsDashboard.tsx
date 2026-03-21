@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { PageHeader, PageLayout } from "@/components/layout";
+import { PageHeader, PageLayout, PageStack } from "@/components/layout";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -104,7 +104,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
   if (!(analytics && velocity)) {
     return (
       <PageLayout fullHeight className="bg-ui-bg-secondary">
-        <Stack gap="lg" className="max-w-7xl mx-auto">
+        <PageStack className="mx-auto max-w-7xl">
           {/* Header Skeleton */}
           <Stack gap="xs">
             <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
@@ -138,19 +138,19 @@ export function AnalyticsDashboard({ projectId }: Props) {
               <Skeleton className="h-48 sm:h-64 w-full" />
             </Card>
           </Grid>
-        </Stack>
+        </PageStack>
       </PageLayout>
     );
   }
 
   return (
     <PageLayout fullHeight className="bg-ui-bg-secondary">
-      <Stack gap="lg" className="max-w-7xl mx-auto">
+      <PageStack className="mx-auto max-w-7xl">
         {/* Header */}
         <PageHeader
           title="Analytics Dashboard"
           description="Project insights, team velocity, and progress metrics"
-          className="mb-0"
+          spacing="stack"
         />
 
         {/* Key Metrics */}
@@ -221,7 +221,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
 
         {/* Recent Activity */}
         <RecentActivity activities={recentActivity} />
-      </Stack>
+      </PageStack>
     </PageLayout>
   );
 }

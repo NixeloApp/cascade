@@ -7,9 +7,7 @@
  */
 
 import type { ReactNode } from "react";
-import { Card } from "@/components/ui/Card";
-import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { AnalyticsSection } from "./AnalyticsSection";
 export function ChartCard({
   title,
   children,
@@ -18,11 +16,8 @@ export function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card padding="lg">
-      <Stack gap="md">
-        {typeof title === "string" ? <Typography variant="large">{title}</Typography> : title}
-        <div className="h-64">{children}</div>
-      </Stack>
-    </Card>
+    <AnalyticsSection title={title} contentClassName="h-64">
+      {children}
+    </AnalyticsSection>
   );
 }

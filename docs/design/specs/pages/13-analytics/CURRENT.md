@@ -110,11 +110,13 @@ Analytics dashboard with metric cards and charts:
 | File | Purpose | Lines |
 |------|---------|-------|
 | `src/routes/_auth/_app/$orgSlug/projects/$key/analytics.tsx` | Route definition | ~35 |
-| `src/routes/_auth/_app/$orgSlug/analytics.tsx` | Org-level placeholder | ~20 |
+| `src/routes/_auth/_app/$orgSlug/analytics.tsx` | Org-level route | ~20 |
 | `src/components/AnalyticsDashboard.tsx` | Main dashboard | ~240 |
+| `src/components/Analytics/OrganizationAnalyticsDashboard.tsx` | Org-level analytics dashboard | ~160 |
 | `src/components/Analytics/MetricCard.tsx` | Stat card | ~50 |
 | `src/components/Analytics/BarChart.tsx` | Horizontal bar chart | ~50 |
 | `src/components/Analytics/ChartCard.tsx` | Chart wrapper | ~30 |
+| `src/components/Analytics/AnalyticsSection.tsx` | Shared analytics section shell | ~40 |
 | `src/components/Analytics/RecentActivity.tsx` | Activity list | ~80 |
 
 ---
@@ -128,7 +130,7 @@ Analytics dashboard with metric cards and charts:
 | 3 | No trend indicators on metrics | MetricCard.tsx | MEDIUM |
 | 4 | Missing export functionality | AnalyticsDashboard.tsx | LOW |
 | 5 | No chart tooltips | BarChart.tsx | LOW |
-| 6 | Org-level analytics placeholder only | analytics.tsx | LOW |
+| 6 | No org-level date filter / comparison controls | analytics.tsx | LOW |
 | 7 | No comparison period | AnalyticsDashboard.tsx | LOW |
 | 8 | Activity list needs pagination | RecentActivity.tsx | LOW |
 | 9 | Bar chart animation basic | BarChart.tsx | LOW |
@@ -154,9 +156,9 @@ Analytics dashboard is functional with basic charts:
 - Metric cards display key stats
 - Horizontal bar charts for all breakdowns
 - Recent activity list working
+- Org-level analytics now uses the same shared section shell as the project dashboard
 - Skeleton loading states
 - Needs date range picker for filtering
 - Charts lack tooltips and hover states
 - No trend indicators (up/down arrows)
 - No data export functionality
-- Org-level analytics not implemented
