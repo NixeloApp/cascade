@@ -38,6 +38,7 @@ Fetches all data then filters in the component when the filter could be a backen
 
 - [ ] Ensure the standards validator keeps catching new page-level violations early, without relying on follow-up todo cleanup
 - [ ] Add validator coverage for primitive restyling drift -- repeated size/radius/chrome/color overrides on owned controls should be treated as missing variants or misuse
+- [ ] Add validator coverage for icon semantics -- prefer `Icon.tone` over raw icon `text-*` overrides, keep the allowed icon-color palette intentionally small, and catch repeated icon-leading menu/button patterns that still rely on local spacing classes
 - [ ] Add validator coverage for degenerate CVAs -- base-only CVAs, single-use feature CVAs, and local variant wrappers that should be plain components or shared primitives
 - [ ] Ratchet raw Tailwind downward, not just flat -- the baseline should shrink as cleanup lands instead of only blocking regressions
 - [ ] Add validator coverage for primitive-default ownership drift -- shared wrappers should not restate defaults already owned by the primitive they wrap
@@ -55,3 +56,4 @@ For advisory validators, keep the ratchet only as long as cleanup is still in fl
 - [ ] No validator skips without explicit TODO references
 - [ ] Styling/CVA validators are strict enough that screenshot-driven cleanup does not regress on the next pass
 - [ ] Validator rules make the intended contract obvious: Tailwind for static layout, shared primitives for semantics, global CSS only for truly global/shared concerns
+- [ ] Validator rules also make icon ownership obvious: semantic size/tone through shared primitives, not ad hoc raw color and spacing classes

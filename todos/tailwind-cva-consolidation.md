@@ -21,6 +21,7 @@ The pipeline is: **less raw Tailwind -> promote repeated semantics into owned pr
 - [ ] `index.css` is for tokens, global utilities, and truly shared decorative effects -- not single-page named style buckets that should have stayed in Tailwind
 - [ ] If a pattern repeats, extract a real component or add an owned primitive variant; if it does not repeat, keep it simple and local
 - [ ] Do not replace bad local `cva()` with bad local class-string objects; hidden style systems are worse, not better
+- [ ] `Icon` usage should be semantic too -- prefer owned `size`/`tone` props, keep the allowed color palette intentionally small, and use `className` mostly for layout-only concerns rather than ad hoc `text-*` color overrides
 
 ## Phase 1: Reduce Raw Tailwind
 
@@ -31,6 +32,7 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant
 - [ ] Tighten raw Tailwind rules on app surfaces -- colors, radius, spacing, and shell treatments should come from owned primitives or explicit variants, not feature-local class clusters
 - [ ] Audit `className` escape-hatch usage on owned primitives -- recurring size/chrome/spacing overrides should become variants instead of one-off patches
+- [ ] Audit icon usage specifically -- repeated icon spacing, icon color overrides, and menu/button leading-icon patterns should move onto owned `Icon`, `Button`, `DropdownMenuItem`, and related primitive APIs
 - [ ] Audit landing/main-page files specifically for static layout that should just be Tailwind, not local CVAs or section-specific CSS
 
 ## Phase 2: Consolidate CVA Sprawl
@@ -52,6 +54,7 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Add a validator that flags raw Tailwind class clusters appearing 3+ times across files (should be a component)
 - [ ] Tighten the raw TW validator from advisory to blocking with a ratchet (current baseline: 148 files, fail on increase)
 - [ ] Add a validator that flags repeated primitive `className` overrides for size/chrome/radius/color when an owned variant should exist
+- [ ] Add validator coverage for `Icon` misuse -- icon color should prefer semantic `tone` over raw `className="text-..."`, and repeated icon-leading menu/button patterns should not require local spacing utilities
 - [ ] Add a validator that flags feature-local CVAs with only base styles or a single live call site
 - [ ] Tighten validator coverage for hidden feature-local style systems: local class maps/constants that try to replace CVA should be penalized harder than explicit feature-local `cva()`
 
@@ -63,6 +66,7 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 | One-off CVA with 2 variants used in 1 file | Just use a component with props, CVA overhead isn't worth it |
 | CVA in a feature component that duplicates a `ui/` primitive's variant | Add the variant to the primitive, delete the feature CVA |
 | Typography variant for a single use case | Use `className` override on an existing variant, or merge with a similar variant |
+| `<Icon className="text-foo h-4 w-4" />` for product semantics | Use owned `size`/`tone` props and keep icon color choices inside the shared palette |
 | `cva()` with no variants (just a base) | Use `cn()` directly or a simple component |
 | Replacing local `cva()` with `const SECTION_CLASSES = { ... }` | Keep one-off layout as plain Tailwind or extract a real component; do not create hidden local style APIs |
 | Adding page/section-specific named classes to `index.css` | Keep it in Tailwind unless the style is truly global/shared or a decorative effect used across sections |
@@ -75,4 +79,5 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Validator blocks new raw TW cluster repetition and unjustified feature CVAs
 - [ ] Typography/Badge/Card variant counts reviewed and consolidated where overlapping
 - [ ] Owned primitives cover the common styling needs without widespread `className` restyling escape hatches
+- [ ] Icon usage is mostly semantic and consistent -- shared `size`/`tone` ownership, limited color palette, and no widespread raw icon spacing/color utilities in product code
 - [ ] Static layout on landing/main-page surfaces is mostly plain Tailwind plus shared primitives, not feature-local CVAs, hidden style maps, or `index.css` escape hatches

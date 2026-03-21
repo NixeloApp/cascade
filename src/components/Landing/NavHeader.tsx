@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -76,16 +77,22 @@ export function NavHeader() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setTheme("light")}>
-                    <Sun className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem
+                    onClick={() => setTheme("light")}
+                    icon={<Icon icon={Sun} size="sm" />}
+                  >
                     Light
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    <Moon className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem
+                    onClick={() => setTheme("dark")}
+                    icon={<Icon icon={Moon} size="sm" />}
+                  >
                     Dark
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme("system")}>
-                    <Laptop className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem
+                    onClick={() => setTheme("system")}
+                    icon={<Icon icon={Laptop} size="sm" />}
+                  >
                     System
                   </DropdownMenuItem>
                 </DropdownMenuContent>

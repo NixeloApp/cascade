@@ -101,15 +101,33 @@ const DropdownMenuItem = React.forwardRef<
     icon?: React.ReactNode;
   } & VariantProps<typeof dropdownMenuItemVariants>
 >(({ className, inset, variant, icon, children, asChild, ...props }, ref) => {
-  const itemChildren =
-    icon && !asChild ? (
+  const iconSlot = icon ? (
+    <span className="mr-2 inline-flex shrink-0 items-center text-current">{icon}</span>
+  ) : null;
+
+  let itemChildren = children;
+
+  if (iconSlot && asChild) {
+    const onlyChild = React.Children.only(children);
+    if (React.isValidElement<{ className?: string; children?: React.ReactNode }>(onlyChild)) {
+      itemChildren = React.cloneElement(onlyChild, {
+        className: cn("flex items-center", onlyChild.props.className),
+        children: (
+          <>
+            {iconSlot}
+            {onlyChild.props.children}
+          </>
+        ),
+      });
+    }
+  } else if (iconSlot) {
+    itemChildren = (
       <>
-        <span className="mr-2 inline-flex shrink-0 items-center text-current">{icon}</span>
+        {iconSlot}
         {children}
       </>
-    ) : (
-      children
     );
+  }
 
   return (
     <DropdownMenuPrimitive.Item
