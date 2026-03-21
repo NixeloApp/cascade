@@ -35,10 +35,9 @@ if (typeof window !== "undefined") {
     const convexUrl = import.meta.env.VITE_CONVEX_URL as string;
     if (convexUrl) {
       convex = new ConvexReactClient(convexUrl);
-      if (import.meta.env.MODE === "e2e") {
-        // Expose convex client globally for Playwright-only helpers.
-        window.__convex_test_client = convex;
-      }
+      // Expose for E2E helpers (waitForConvexConnectionReady, etc.).
+      // Harmless in production — just a reference on window.
+      window.__convex_test_client = convex;
     }
   } catch (error) {
     console.info("[app] Failed to initialize Convex client", { error });
