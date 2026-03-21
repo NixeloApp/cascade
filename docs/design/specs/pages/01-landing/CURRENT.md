@@ -1,7 +1,7 @@
 # Landing Page - Current State
 
 > **Route**: `/`
-> **Status**: 🟡 Hero and proof strip read like the product, lower proof still needs polish
+> **Status**: 🟡 Hero, proof strip, and evidence section read like the product; closing sections still need polish
 > **Last Updated**: 2026-03-21
 
 ---
@@ -67,10 +67,10 @@
 8. Final CTA
 9. Footer
 
-The structure is no longer generic, the hero showcase reads like a workspace shell, and the
-proof strip below it now reinforces that same product language. The remaining problem is not the
-hero/proof handoff anymore. It is that the lower proof/marketing surfaces still need stronger
-product realism and consistency.
+The structure is no longer generic, the hero showcase reads like a workspace shell, the proof strip
+reinforces that same product language, and the story/proof section now shows concrete operating
+evidence instead of generic outcome cards. The remaining problem is no longer the middle of the
+page. It is that the closing landing surfaces still need stronger product realism and consistency.
 
 ---
 
@@ -106,6 +106,7 @@ product realism and consistency.
 | 8 | Light mode now uses a deliberate airy palette instead of washed-out dark-mode atmospherics | Fixed |
 | 9 | Landing capture now waits for the hero/showcase entrance state instead of grabbing a half-faded frame | Fixed |
 | 10 | Proof strip now shows product-grounded workflow evidence instead of placeholder logo chips | Fixed |
+| 11 | Story/proof section now anchors its claims in concrete workflow evidence instead of generic outcome cards | Fixed |
 
 ---
 
@@ -113,7 +114,7 @@ product realism and consistency.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Lower sections still rely on copy-first proof instead of clearly product-grounded evidence | landing proof surfaces | MEDIUM |
+| 1 | Pricing and closing CTA still lean more on generic marketing structure than product-grounded evidence | lower landing closing surfaces | MEDIUM |
 | 2 | Tablet/mobile rhythm still needs explicit review so the product preview stays authoritative above the fold | hero / landing responsive rhythm | MEDIUM |
 
 ---
@@ -121,17 +122,17 @@ product realism and consistency.
 ## Review Notes
 
 - The screenshot run may be valid technically while the composition is still wrong visually.
-- The hero/proof handoff is no longer the first place to spend effort.
-- The next pass should focus on lower-section proof realism:
-  - keep later landing sections grounded in app-like surfaces instead of decorative marketing grammar
-  - turn copy-only credibility claims into clearer product evidence wherever possible
+- The hero, proof strip, and evidence section are no longer the first places to spend effort.
+- The next pass should focus on the closing landing surfaces:
+  - keep pricing and final CTA grounded in app-like surfaces instead of decorative marketing grammar
+  - turn remaining copy-only credibility claims into clearer product evidence wherever possible
   - review mobile/tablet rhythm so the product preview keeps authority above the fold
 
 ---
 
 ## Summary
 
-The landing page now has the right sections, a more convincing product showcase, and a proof strip
-that feels tied to the actual workflow. The remaining work is broader consistency: make the lower
-proof sections feel less like polished marketing filler and more like extensions of the product we
-actually ship.
+The landing page now has the right sections, a convincing product showcase, a product-grounded
+proof strip, and a stronger evidence section. The remaining work is broader consistency: make the
+closing surfaces feel less like polished marketing filler and more like extensions of the product
+we actually ship.
