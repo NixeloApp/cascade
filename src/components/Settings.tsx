@@ -17,6 +17,7 @@ import { OAuthHealthDashboard } from "./Admin/OAuthHealthDashboard";
 import { OrganizationSettings } from "./Admin/OrganizationSettings";
 import { UserManagement } from "./Admin/UserManagement";
 import { UserTypeManager } from "./Admin/UserTypeManager";
+import { PageControls } from "./layout";
 import { ApiKeysManager } from "./Settings/ApiKeysManager";
 import { DevToolsTab } from "./Settings/DevToolsTab";
 import { GitHubIntegration } from "./Settings/GitHubIntegration";
@@ -103,14 +104,16 @@ export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps
       }}
       className="w-full"
     >
-      <TabsList size="compact" layout="settings">
-        {visibleTabs.map((tab) => (
-          <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
-            <span className="lg:hidden">{tab.shortLabel ?? tab.label}</span>
-            <span className="hidden lg:inline">{tab.label}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <PageControls padding="sm" gap="sm">
+        <TabsList size="compact" layout="settings" aria-label="Settings sections">
+          {visibleTabs.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
+              <span className="lg:hidden">{tab.shortLabel ?? tab.label}</span>
+              <span className="hidden lg:inline">{tab.label}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </PageControls>
 
       {visibleTabs.map((tab) => {
         const Content = SETTINGS_TAB_CONTENT[tab.value];

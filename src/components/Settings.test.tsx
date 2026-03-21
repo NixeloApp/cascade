@@ -118,7 +118,7 @@ describe("Settings", () => {
     const onTabChange = vi.fn();
     mockQueries({ currentUserEmail: "person@example.com", isAdmin: false });
 
-    render(<Settings activeTab="profile" onTabChange={onTabChange} />);
+    const { container } = render(<Settings activeTab="profile" onTabChange={onTabChange} />);
 
     expect(screen.getByRole("tab", { name: /Profile/ })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Security/ })).toBeInTheDocument();
@@ -130,6 +130,11 @@ describe("Settings", () => {
     expect(screen.queryByRole("tab", { name: /Admin/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: /Dev Tools/ })).not.toBeInTheDocument();
     expect(screen.getByText("Profile Content")).toBeInTheDocument();
+
+    const tablist = screen.getByRole("tablist", { name: "Settings sections" });
+    expect(tablist.closest(".mb-6")).not.toBeNull();
+    expect(container.firstChild).toHaveClass("w-full");
+    expect(tablist).toHaveClass("bg-transparent");
   });
 
   it("shows admin and developer tabs when the user is an admin on a test inbox account", () => {
