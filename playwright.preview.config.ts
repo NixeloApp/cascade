@@ -40,7 +40,7 @@ export default defineConfig({
       "corepack pnpm run build && corepack pnpm exec vite preview --host 127.0.0.1 --port 5555",
     url: "http://127.0.0.1:5555",
     reuseExistingServer: false,
-    timeout: 240 * 1000,
+    timeout: 420 * 1000,
     stdout: "ignore",
     stderr: "pipe",
   },

@@ -17,6 +17,7 @@ What is already true in the repo:
 - `vite-plugin-pwa` still emits `/sw.js`
 - built HTML links `/manifest.webmanifest`
 - production-preview browser automation now confirms `/service-worker.js` controls runtime and `/sw.js` does not take control unexpectedly
+- production-preview browser automation now confirms the runtime links `/manifest.webmanifest` and caches `/`, `/offline.html`, and `/manifest.webmanifest`
 - production-preview browser automation now confirms uncached offline navigation falls back to `offline.html`
 - local IndexedDB is the only offline mutation queue source of truth
 - `userSettings.update` is the first real replayable offline mutation family
@@ -33,19 +34,19 @@ What is already true in the repo:
 
 Highest-value next move:
 
-- focus the remaining browser proof on installability, broader authenticated offline navigation, and push behavior after worker updates
+- fix authenticated offline route restore behavior, then verify installability and push behavior after worker updates
 
 Why:
 
 - the remaining uncertainty is no longer basic implementation truthfulness
-- the main open risk is runtime behavior that still needs browser proof: installability, broader authenticated offline navigation, and push after worker changes
+- the main open risk is runtime behavior that is now partly confirmed broken: authenticated offline route reload/navigation, plus installability and push after worker changes
 
 ## Remaining Work
 
 ## 1. Runtime Verification
 
 - [ ] Verify install prompt behavior in Chromium when browser installability criteria are actually met.
-- [ ] Verify a fresh offline reload or second-route navigation of an authenticated app route behaves correctly in preview, not just an already-open Settings session.
+- [ ] Fix authenticated offline route reload/navigation in preview; current probes stall on the splash/loading surface instead of restoring the route.
 
 ## 2. Push And Worker Update Safety
 
@@ -78,7 +79,7 @@ Why:
 ## 6. Tests Still Missing
 
 - [ ] Cover installability in browser automation if the environment can satisfy install criteria.
-- [ ] Cover authenticated offline reload or second-route navigation in preview, not just the already-open Settings session.
+- [ ] Re-introduce authenticated offline reload/navigation coverage after the splash-screen stall bug is fixed.
 - [ ] Cover push after worker update only if the test harness can do it reliably.
 
 ## 7. Docs To Revisit After Runtime Proof

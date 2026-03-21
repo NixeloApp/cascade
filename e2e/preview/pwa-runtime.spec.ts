@@ -42,6 +42,26 @@ async function getServiceWorkerState(page: Page) {
   });
 }
 
+async function getPreviewRuntimeState(page: Page) {
+  return page.evaluate(async () => {
+    const manifestHref =
+      document.querySelector('link[rel="manifest"]')?.getAttribute("href") ?? null;
+    const cacheNames = await caches.keys();
+    const cacheEntries = await Promise.all(
+      cacheNames.map(async (cacheName) => {
+        const requests = await (await caches.open(cacheName)).keys();
+        return requests.map((request) => new URL(request.url).pathname);
+      }),
+    );
+
+    return {
+      cacheEntries: cacheEntries.flat(),
+      cacheNames,
+      manifestHref,
+    };
+  });
+}
+
 test.describe("PWA Preview Runtime", () => {
   test("registers the app-owned service worker in preview", async ({ page, baseURL }) => {
     await page.goto(baseURL ?? "/");
@@ -62,6 +82,38 @@ test.describe("PWA Preview Runtime", () => {
     expect(
       state.registrations.some((registration) => registration.scriptUrl?.endsWith("/sw.js")),
     ).toBe(false);
+  });
+
+  test("links the production manifest and caches core shell assets", async ({ page, baseURL }) => {
+    await page.goto(baseURL ?? "/");
+    await waitForRegisteredWorker(page);
+
+    await page.reload({ waitUntil: "load" });
+    await waitForControllingWorker(page);
+
+    await page.waitForFunction(async () => {
+      const cacheNames = await caches.keys();
+      const cacheEntries = await Promise.all(
+        cacheNames.map(async (cacheName) => {
+          const requests = await (await caches.open(cacheName)).keys();
+          return requests.map((request) => new URL(request.url).pathname);
+        }),
+      );
+      const paths = cacheEntries.flat();
+
+      return (
+        paths.includes("/") &&
+        paths.includes("/offline.html") &&
+        paths.includes("/manifest.webmanifest")
+      );
+    });
+
+    const runtimeState = await getPreviewRuntimeState(page);
+
+    expect(runtimeState.manifestHref).toBe("/manifest.webmanifest");
+    expect(runtimeState.cacheEntries).toContain("/");
+    expect(runtimeState.cacheEntries).toContain("/offline.html");
+    expect(runtimeState.cacheEntries).toContain("/manifest.webmanifest");
   });
 
   test("serves the offline fallback page for an uncached navigation while offline", async ({

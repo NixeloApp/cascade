@@ -39,6 +39,7 @@ Verified now:
 - service worker registration from the app shell in production
 - production-preview browser automation confirms `/service-worker.js` is the controlling runtime worker
 - production-preview browser automation confirms the generated `/sw.js` is not taking control unexpectedly
+- production-preview browser automation confirms the runtime links `/manifest.webmanifest` and caches `/`, `/offline.html`, and `/manifest.webmanifest`
 - offline fallback page shipping with the worker
 - production-preview browser automation confirms uncached offline navigation falls back to `offline.html`
 - local IndexedDB mutation queue
@@ -52,7 +53,7 @@ Verified now:
 Not yet verified end to end:
 
 - actual install-prompt display under browser installability rules
-- fresh offline reload or second-route navigation for authenticated app routes in a production browser session
+- authenticated offline route reload/navigation currently stalls on the splash/loading surface in preview and needs a product fix before it can be treated as supported
 - push behavior across worker replacement
 
 ## Setup Requirements
@@ -146,6 +147,7 @@ Those checks currently cover:
 - last successful replay metadata
 - install/update helper behavior
 - preview-runtime worker ownership (`/service-worker.js` yes, `/sw.js` no)
+- preview-runtime manifest ownership and core shell cache contents
 - uncached offline navigation fallback in a real production preview
 - authenticated Settings-session offline queueing and replay in a real production preview
 - `Last Successful Replay` updates after real preview replay
@@ -155,7 +157,7 @@ Those checks currently cover:
 These are still runtime-verification tasks, not solved by unit tests:
 
 1. Confirm install prompt actually appears in a production browser session when installability criteria are met.
-2. Confirm a fresh offline reload or second-route navigation of an authenticated app route behaves correctly, not just an already-open Settings session.
+2. Fix and then confirm fresh offline reload or second-route navigation of authenticated app routes; current preview probes stall on the splash/loading surface.
 3. Confirm push subscriptions still work after worker updates or cache clears.
 
 ## Build Pipeline

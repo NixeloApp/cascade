@@ -273,7 +273,7 @@ What those tests currently prove:
 What they do not prove:
 
 - real installability in a browser
-- fresh offline reload or second-route navigation for authenticated app routes
+- authenticated offline route reload/navigation, which currently stalls on the splash/loading surface in preview
 - push subscription survival across worker replacement
 
 Production-preview browser automation that now exists:
@@ -285,6 +285,7 @@ What that preview spec currently proves:
 
 - `/service-worker.js` becomes the controlling worker in production preview
 - the generated `/sw.js` does not take control unexpectedly
+- the runtime links `/manifest.webmanifest` and caches `/`, `/offline.html`, and `/manifest.webmanifest`
 - uncached offline navigation falls back to `offline.html`
 - an authenticated Settings session remains usable offline once loaded
 - queued `userSettings.update` replay works in production preview
