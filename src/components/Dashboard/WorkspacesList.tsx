@@ -62,7 +62,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
   const workspacesLabel = count === 1 ? "project" : "projects";
 
   return (
-    <DashboardPanel>
+    <DashboardPanel surface="inset">
       <DashboardPanelHeader title="Workspaces" description={`${count} active ${workspacesLabel}`} />
       <DashboardPanelBody>
         {!projects ? (
@@ -75,7 +75,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
           <EmptyState
             icon={Folder}
             title="No projects"
-            description="You're not a member of any projects yet"
+            description="Projects you belong to will show their board, docs, and tracked work here."
             size="compact"
             surface="bare"
             action={{

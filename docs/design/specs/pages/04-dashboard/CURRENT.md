@@ -1,248 +1,74 @@
 # Dashboard Page - Current State
 
 > **Route**: `/:slug/dashboard`
-> **Status**: 🟡 Improved, with smaller remaining weighting issues
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Status**: 🟢 REVIEWED
+> **Last Updated**: 2026-03-21
 
 ---
 
 ## Screenshots
 
-| Viewport | State | Preview |
+| Viewport | Theme | Preview |
 |----------|-------|---------|
-| Desktop | Filled | ![](screenshots/desktop-dark-filled.png) |
-| Desktop | Empty | ![](screenshots/desktop-dark-empty.png) |
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
 
 ---
 
-## Structure
+## Current UI
 
-Three-column layout:
-
-```
-+------------------+----------------------------------------+------------------+
-|    SIDEBAR       |           MAIN CONTENT                 |  RIGHT SIDEBAR   |
-|    (200px)       |           (flexible)                   |    (320px)       |
-+------------------+----------------------------------------+------------------+
-```
-
-### Full Layout
-
-```
-+================================================================================+
-|  HEADER BAR (64px)                                                             |
-|  +--logo--+                      [Commands] [Timer] [Search] [Bell] [Avatar]   |
-+================================================================================+
-|          |                                                        |            |
-| SIDEBAR  |  MAIN CONTENT                                          | RIGHT      |
-| (200px)  |                                                        | SIDEBAR    |
-|          |  Dashboard                                  [Customize]| (320px)    |
-| +------+ |                                                        |            |
-| |[Home]| |  +----------------------------------------------------+| +--------+ |
-| |Dashbd| |  |                                                    || |Workspcs| |
-| +------+ |  |  Good evening, Emily.                              || |1 active| |
-| |Issues | |  |  1 task completed this week.                       || |        | |
-| |Calend | |  |                                                    || |+------+| |
-| |Docs  v| |  +----------------------------------------------------+| ||Demo  || |
-| | Templ | |                                                        | ||Proj  || |
-| |Worksp v| |  FOCUS ITEM                           OVERVIEW        | ||ADMIN || |
-| | Produc| |  +------------------------+  +------------------------+| |+------+| |
-| |Time Tk| |  | [HIGHEST]    DEMO-2    |  | ACTIVE     | VELOCITY  || +--------+ |
-| |       | |  |                        |  | LOAD       |           || |        | |
-| |       | |  | Fix login timeout on   |  | 4 Assigned | 1 Done    || | Feed   | |
-| |       | |  | mobile                 |  | tasks      | this week || | Latest | |
-| |       | |  |                        |  +------------+-----------+| |        | |
-| |       | |  | In project: Demo Proj  |  | ATTENTION  | CONTRI-   || |+------+| |
-| |       | |  |                        |  | NEEDED     | BUTION    || ||      || |
-| |       | |  | View Task ->           |  | 3 High     | 6 Reported|| ||NoActy|| |
-| |       | |  +------------------------+  | Priority   | issues    || ||      || |
-| |       | |                              +------------+-----------+| |+------+| |
-| |       | |                                                        | |        | |
-| |       | |  Feed                                                  | |        | |
-| |       | |  Track your active contributions                       | |        | |
-| |       | |  +----------------------------------------------------+| |        | |
-| |       | |  | [ASSIGNED (4)]  CREATED (6)                        || |        | |
-| |       | |  +----------------------------------------------------+| |        | |
-| |       | |  | DEMO-5  [HIGH]                                     || |        | |
-| |       | |  | Database query optimization                        || |        | |
-| |       | |  | DEMO PROJECT - IN-PROGRESS                         || |        | |
-| |       | |  +----------------------------------------------------+| |        | |
-| +------+ |  | ...                                                 || |        | |
-| [Settngs]|  +----------------------------------------------------+| |        | |
-+----------+--------------------------------------------------------+-+--------+-+
-```
+- The dashboard now reads like a calmer authenticated workspace instead of a hero card surrounded by secondary panels.
+- The greeting, focus item, and overview band still lead the page, but the emphasis is tighter and the work lists feel like peers rather than afterthoughts.
+- The right-rail workspace and activity panels now use the same inset shell discipline as the rest of the dashboard, so light mode no longer collapses into one flat sheet.
+- Empty states are more product-specific and the dashboard screenshot suite now captures the real responsive states, including loading, customize, collapsed desktop sidebar, and mobile sidebar states.
 
 ---
 
-## Current Elements
+## Current Structure
 
-### Header Area
-- **Logo**: "Nixelo E2E" with sidebar toggle icon
-- **Top Bar**: Commands (Cmd+K), Start Timer button, Search (Cmd+K), Notifications bell, User avatar
-
-### Left Sidebar Navigation
-- Dashboard (active - highlighted with indigo background)
-- Issues
-- Calendar
-- Documents (expandable)
-  - Templates
-- Workspaces (expandable)
-  - Product
-- Time Tracking
-- Settings (bottom)
-
-### Main Content Area
-
-**Greeting Section**:
-- Large italic heading: "Good evening, **Emily**." (or "there" for anonymous)
-- Subtext: "1 task completed this week." (or "Here's your overview for today.")
-- Top right: "Customize" button with settings icon
-
-**Focus Item Card** (when data exists):
-- Section label: "FOCUS ITEM"
-- Card with:
-  - Priority badge (e.g., "HIGHEST" in orange)
-  - Issue key (e.g., "DEMO-2")
-  - Issue title: "Fix login timeout on mobile"
-  - Project reference: "In project: Demo Project"
-  - "View Task ->" link
-
-**Overview Stats** (4-card grid):
-- Section label: "OVERVIEW"
-- **Active Load**: "4 Assigned tasks"
-- **Velocity**: "1 Done this week" (with progress bar)
-- **Attention Needed**: "3 High Priority" (orange text)
-- **Contribution**: "6 Reported issues"
-
-**Feed Section**:
-- Title: "Feed"
-- Subtitle: "Track your active contributions"
-- Tab navigation: ASSIGNED (4) | CREATED (6)
-- Issue list with:
-  - Issue key + Priority badge
-  - Issue title
-  - Project name + Status badge
-
-### Right Sidebar
-
-**Workspaces Panel**:
-- Title: "Workspaces"
-- Subtitle: "1 active project"
-- Project card: "Demo Project" with ADMIN badge, "4 ASSIGNED ISSUES"
-
-**Feed Panel** (secondary):
-- Title: "Feed"
-- Subtitle: "Latest updates across all projects"
-- Empty state: Chart icon, "No activity" message
+- **Page header**
+  - Shared authenticated page header with workspace eyebrow and customize action
+- **Command summary**
+  - Greeting with a compact day/status pill and weekly completion summary
+- **Top workspace band**
+  - Focus item panel
+  - Overview metrics panel
+- **Main work area**
+  - My issues list with assigned/created filtering
+  - Workspaces panel
+  - Recent activity panel
 
 ---
 
-## Files
+## Recent Improvements
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/$slug/dashboard.tsx` | Route definition | ~150 |
-| `src/components/dashboard/DashboardGreeting.tsx` | Greeting section | ~50 |
-| `src/components/dashboard/FocusItem.tsx` | Focus item card | ~80 |
-| `src/components/dashboard/OverviewStats.tsx` | Stats grid | ~120 |
-| `src/components/dashboard/DashboardFeed.tsx` | Feed section | ~150 |
-| `src/components/layout/AppLayout.tsx` | Three-column layout | ~200 |
-| `src/components/layout/Sidebar.tsx` | Left navigation | ~180 |
+- The greeting and focus zone were rebuilt to reduce top-of-page visual overreach and match the shared dashboard panel anatomy.
+- Quick stats spacing was tightened so the overview tiles feel denser and less like a second hero.
+- Workspace and activity panels now use inset surfaces and more product-grounded empty-state copy.
+- The dashboard shell background now carries the page weight, which lets the focus panel stop doing that job with extra glow and chrome.
+- `e2e/screenshot-pages.ts` now treats dashboard loading, customize, collapsed-sidebar, and mobile-sidebar states as first-class captures instead of relying on brittle skip behavior.
 
 ---
 
-## Problems
+## Review Notes
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Background still reads a little flatter than the rest of the authenticated product in dark mode | Page bg in dark mode | HIGH |
-| 2 | Focus card still carries slightly more shell and glow than the rest of the dashboard earns | `FocusZone.tsx` | MEDIUM |
-| 3 | Greeting + focus block still pulls a little too much emphasis versus the working lists beside it | `DashboardGreeting.tsx` / `FocusZone.tsx` | MEDIUM |
-| 4 | Right sidebar panels are cleaner, but still want slightly stronger separation in light mode | `WorkspacesList.tsx` / `RecentActivity.tsx` | MEDIUM |
-| 5 | Empty states now share the panel rhythm, but can still be more product-specific | Various dashboard panels | LOW |
-| 6 | Metric tiles are cleaner, but still want a little more light-mode refinement | `QuickStats.tsx` | LOW |
+| Focus | Result | Severity |
+|-------|--------|----------|
+| Top-of-page weighting | Fixed by calming the greeting/focus treatment and moving more weight into the shared shell | RESOLVED |
+| Light-mode panel separation | Fixed for the dashboard side panels with inset surfaces and cleaner panel boundaries | RESOLVED |
+| Screenshot harness discipline | Fixed for loading/customize/mobile sidebar captures, with deterministic responsive-state coverage | RESOLVED |
 
 ---
 
-## Component Details
+## Source Files
 
-### Focus Item Card
-
-```
-+----------------------------------------------------------+
-|  FOCUS ITEM                                               |
-+----------------------------------------------------------+
-|                                                           |
-|  +-----------------------------------------------------+ |
-|  |  +----------+                          DEMO-2       | |
-|  |  | HIGHEST  |                                       | |
-|  |  +----------+                                       | |
-|  |                                                     | |
-|  |  Fix login timeout on mobile                        | |
-|  |                                                     | |
-|  |  In project: Demo Project                           | |
-|  |                                                     | |
-|  |                              View Task ->           | |
-|  +-----------------------------------------------------+ |
-|                                                           |
-+----------------------------------------------------------+
-```
-
-### Overview Stats Grid
-
-```
-+----------------------------------------------------------+
-|  OVERVIEW                                                 |
-+----------------------------------------------------------+
-|                                                           |
-|  +-------------+  +-------------+  +-------------+  +---+ |
-|  | ACTIVE LOAD |  | VELOCITY    |  | ATTENTION   |  |CON| |
-|  |             |  |             |  | NEEDED      |  |TRI| |
-|  |    4        |  |    1        |  |    3        |  | 6 | |
-|  | Assigned    |  | Done this   |  | High        |  |Rep| |
-|  | tasks       |  | week        |  | Priority    |  |ort| |
-|  |             |  | [===-----]  |  |             |  |ed | |
-|  +-------------+  +-------------+  +-------------+  +---+ |
-|                                                           |
-+----------------------------------------------------------+
-```
-
-### Feed List Item
-
-```
-+----------------------------------------------------------+
-|  DEMO-5   [HIGH]                                          |
-|  Database query optimization                              |
-|  DEMO PROJECT - IN-PROGRESS                               |
-+----------------------------------------------------------+
-     ^         ^              ^              ^
-     |         |              |              |
- Issue Key  Priority       Title         Project + Status
-            Badge
-```
-
-### Empty State (No Projects)
-
-```
-+----------------------------------------------------------+
-|                                                           |
-|                      +--------+                           |
-|                      |  [?]   |                           |
-|                      +--------+                           |
-|                                                           |
-|                    No projects                            |
-|          You're not a member of any projects yet          |
-|                                                           |
-|                  [Go to Workspaces]                       |
-|                                                           |
-+----------------------------------------------------------+
-```
-
----
-
-## Summary
-
-The dashboard is functional but needs polish:
-- Feed, stats, workspaces, and recent activity now share one section-shell contract instead of mixing header cards, inset wrappers, and ad hoc tab bars.
-- The active feed rows now read as one queue instead of stacked mini-cards, which makes the dashboard feel more like the rest of the product.
-- Remaining work is now mostly visual weighting: darker page grounding, a slightly calmer hero/focus balance, and lighter-mode refinement in the right rail and metric tiles.
+- `src/routes/_auth/_app/$orgSlug/dashboard.tsx`
+- `src/components/Dashboard.tsx`
+- `src/components/Dashboard/Greeting.tsx`
+- `src/components/Dashboard/FocusZone.tsx`
+- `src/components/Dashboard/QuickStats.tsx`
+- `src/components/Dashboard/WorkspacesList.tsx`
+- `src/components/Dashboard/RecentActivity.tsx`
+- `e2e/screenshot-pages.ts`

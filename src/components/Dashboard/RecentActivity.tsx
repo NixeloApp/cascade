@@ -28,7 +28,7 @@ interface RecentActivityProps {
  */
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <DashboardPanel>
+    <DashboardPanel surface="inset">
       <DashboardPanelHeader
         title="Recent activity"
         description="Latest updates across projects and teammates"
@@ -44,7 +44,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
           <EmptyState
             icon={TrendingUp}
             title="No activity"
-            description="Fresh updates from your team will appear here."
+            description="Issue movement, comments, and status changes will show up here once work starts moving."
             size="compact"
             surface="bare"
           />

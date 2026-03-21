@@ -99,8 +99,8 @@ function StatCard({
   const progressId = useId();
 
   return (
-    <Card recipe={recipe} padding="lg" className="h-full">
-      <Stack gap="md">
+    <Card recipe={recipe} padding="md" className="h-full">
+      <Stack gap="sm">
         <Typography variant="eyebrowWide" className={titleClassName}>
           {title}
         </Typography>
@@ -147,7 +147,7 @@ function getStatAccentClasses(stats: Stats, config: StatCardConfig) {
 export function QuickStats({ stats }: QuickStatsProps) {
   if (!stats) {
     return (
-      <Grid cols={1} colsSm={2} colsLg={2} gap="md">
+      <Grid cols={1} colsSm={2} colsLg={2} gap="sm">
         <SkeletonStatCard />
         <SkeletonStatCard />
         <SkeletonStatCard />
@@ -162,7 +162,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
     totalAssigned > 0 ? (stats.completedThisWeek / totalAssigned) * 100 : 0;
 
   return (
-    <Grid cols={1} colsSm={2} colsLg={2} gap="md">
+    <Grid cols={1} colsSm={2} colsLg={2} gap="sm">
       {STAT_CARD_CONFIGS.map((config) => {
         const accentClasses = getStatAccentClasses(stats, config);
 

@@ -767,7 +767,12 @@ async function takeScreenshot(
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}  (${elapsed}ms)`);
 }
 
-async function captureCurrentView(page: Page, prefix: string, name: string): Promise<void> {
+async function captureCurrentView(
+  page: Page,
+  prefix: string,
+  name: string,
+  options?: { skipReadyCheck?: boolean },
+): Promise<void> {
   if (!shouldCapture(prefix, name)) {
     return;
   }
@@ -786,7 +791,9 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
 
   const startTime = performance.now();
 
-  await waitForScreenshotReady(page);
+  if (!options?.skipReadyCheck) {
+    await waitForScreenshotReady(page);
+  }
   const screenshot = await captureScreenshotBuffer(page);
   const screenshotHash = getScreenshotHash(screenshot);
   assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
@@ -962,6 +969,23 @@ async function waitForDashboardCustomizeDialogReady(page: Page): Promise<Locator
   await waitForAnimation(page);
   await waitForScreenshotReady(page);
   return dialog;
+}
+
+async function openMobileSidebarMenu(page: Page): Promise<void> {
+  const trigger = page.getByRole("button", { name: /toggle sidebar menu/i });
+  const sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR);
+  const closeButton = sidebar.getByLabel("Close sidebar");
+
+  await trigger.waitFor({ state: "visible", timeout: 5000 });
+  await trigger.click();
+  await closeButton.waitFor({ state: "visible", timeout: 5000 });
+  await expect
+    .poll(async () => (await getLocatorAttribute(sidebar, "class")) ?? "", {
+      timeout: 5000,
+      intervals: [100, 200, 500],
+    })
+    .toContain("translate-x-0");
+  await waitForAnimation(page);
 }
 
 async function waitForCreateIssueModalScreenshotReady(
@@ -3649,9 +3673,14 @@ async function screenshotFilledStates(
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByRole("button", { name: /^customize$/i }).first();
-      await trigger.waitFor({ state: "visible", timeout: 10000 });
-      await trigger.click();
-      const dialog = await waitForDashboardCustomizeDialogReady(page);
+      const dialog = await openStableDialog(
+        page,
+        trigger,
+        page.getByRole("dialog", { name: /dashboard customization/i }),
+        page.getByText("Quick Stats", { exact: true }),
+        "dashboard customize",
+      );
+      await waitForDashboardCustomizeDialogReady(page);
       await captureCurrentView(page, p, "dashboard-customize-modal");
       await dismissIfOpen(page, dialog);
     });
@@ -3804,7 +3833,10 @@ async function screenshotFilledStates(
   // ── Navigation / Shell states ──
 
   // Sidebar collapsed
-  if (shouldCapture(p, "sidebar-collapsed")) {
+  if (
+    shouldCapture(p, "sidebar-collapsed") &&
+    (currentConfigPrefix === "desktop-dark" || currentConfigPrefix === "desktop-light")
+  ) {
     await runCaptureStep("sidebar collapsed", async () => {
       await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
         waitUntil: "domcontentloaded",
@@ -3839,25 +3871,9 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, dashboardUrl, "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /toggle sidebar menu/i });
-      await trigger.waitFor({ state: "visible", timeout: 5000 });
-      await trigger.click();
-      await page.waitForFunction(() => {
-        return (
-          document.querySelectorAll('button[aria-label="Close sidebar"]').length >= 2 &&
-          document.querySelector("aside")?.className.includes("translate-x-0") === true
-        );
-      });
+      await openMobileSidebarMenu(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "mobile-hamburger");
-      const closeButton = page
-        .locator('button[aria-label="Close sidebar"]')
-        .filter({ has: page.locator("svg") })
-        .last();
-      if (await isLocatorVisible(closeButton)) {
-        await closeButton.click();
-        await waitForScreenshotReady(page);
-      }
     });
   }
 
@@ -3877,15 +3893,7 @@ async function screenshotFilledStates(
       await dismissAllDialogs(page);
 
       if (currentConfigPrefix === "tablet-light" || currentConfigPrefix === "mobile-light") {
-        const trigger = page.getByRole("button", { name: /toggle sidebar menu/i });
-        await trigger.waitFor({ state: "visible", timeout: 5000 });
-        await trigger.click();
-        await page.waitForFunction(() => {
-          return (
-            document.querySelectorAll('button[aria-label="Close sidebar"]').length >= 2 &&
-            document.querySelector("aside")?.className.includes("translate-x-0") === true
-          );
-        });
+        await openMobileSidebarMenu(page);
       }
 
       await page
@@ -4164,7 +4172,7 @@ async function screenshotDashboardModals(
   }
 
   const shortcutsTrigger = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
-  if ((await shortcutsTrigger.count()) > 0) {
+  if (currentConfigPrefix !== "mobile-light" && (await shortcutsTrigger.count()) > 0) {
     await runCaptureStep("dashboard shortcuts modal", async () => {
       await dismissAllDialogs(page);
       const shortcutsDialog = await openStableDialog(
@@ -4237,8 +4245,18 @@ async function screenshotDashboardLoadingState(
           timeout: 12000,
         })
         .toBeGreaterThanOrEqual(6);
-      await waitForScreenshotReady(loadingPage);
-      await captureCurrentView(loadingPage, prefix, "dashboard-loading-skeletons");
+      await waitForAnimation(loadingPage);
+      await loadingPage.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => resolve());
+            });
+          }),
+      );
+      await captureCurrentView(loadingPage, prefix, "dashboard-loading-skeletons", {
+        skipReadyCheck: true,
+      });
     } finally {
       if (!loadingPage.isClosed()) {
         await loadingPage.close();

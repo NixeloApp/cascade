@@ -293,10 +293,15 @@ export function Dashboard() {
   } = useDashboardData(issueFilter);
 
   return (
-    <Card recipe="dashboardShell" padding="lg" className="px-4 py-5 sm:px-6 sm:py-6">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-linear-to-b from-brand-subtle/40 to-transparent" />
-      <div className="pointer-events-none absolute -left-16 top-16 h-48 w-48 rounded-full bg-brand-subtle/20 blur-glow" />
-      <div className="pointer-events-none absolute right-0 top-24 h-56 w-56 rounded-full bg-accent/10 blur-glow" />
+    <Card
+      recipe="dashboardShell"
+      padding="lg"
+      className="overflow-hidden border-ui-border/55 bg-linear-to-b from-ui-bg via-ui-bg-secondary/65 to-ui-bg-soft/55 px-4 py-5 shadow-elevated sm:px-6 sm:py-6"
+    >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-brand-subtle/24 via-ui-bg-secondary/12 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-8 top-20 h-px bg-ui-border/35" />
+      <div className="pointer-events-none absolute left-8 top-10 h-28 w-28 rounded-full bg-ui-bg-elevated/80 blur-3xl" />
+      <div className="pointer-events-none absolute right-0 top-8 h-36 w-36 rounded-full bg-brand-subtle/12 blur-3xl" />
 
       <div className="relative">
         <Stack gap="2xl">
