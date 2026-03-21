@@ -42,6 +42,7 @@
     "check": "run-s typecheck biome:check validate test:all",
     "fixme": "run-s biome typecheck",
     "e2e": "playwright test",
+    "e2e:preview": "playwright test -c playwright.preview.config.ts",
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
     "e2e:debug": "playwright test --debug",

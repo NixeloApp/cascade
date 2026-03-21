@@ -1,6 +1,6 @@
 # PWA (Progressive Web App) Setup
 
-Nixelo has partial PWA infrastructure. This guide reflects the current shipped code paths as of 2026-03-20, but some runtime verification work is still outstanding.
+Nixelo has partial PWA infrastructure. This guide reflects the current shipped code paths as of 2026-03-20, and the runtime findings currently proven in local production-preview browser automation.
 
 Related doc:
 
@@ -37,7 +37,10 @@ Operational implication:
 Verified now:
 
 - service worker registration from the app shell in production
+- production-preview browser automation confirms `/service-worker.js` is the controlling runtime worker
+- production-preview browser automation confirms the generated `/sw.js` is not taking control unexpectedly
 - offline fallback page shipping with the worker
+- production-preview browser automation confirms uncached offline navigation falls back to `offline.html`
 - local IndexedDB mutation queue
 - truthful queue diagnostics in Settings
 - manual queue processing from Settings
@@ -47,7 +50,8 @@ Verified now:
 Not yet verified end to end:
 
 - actual install-prompt display under browser installability rules
-- offline route fallback for real app routes in a production browser session
+- offline behavior for real authenticated app routes in a production browser session
+- `userSettings.update` replay in a production-preview authenticated browser session
 - push behavior across worker replacement
 
 ## Setup Requirements
@@ -128,6 +132,7 @@ Useful current commands:
 
 ```bash
 pnpm test --run src/lib/offline.test.ts src/hooks/useOffline.test.ts src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/serviceWorker.test.ts
+pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/pwa-runtime.spec.ts --workers=1
 pnpm build
 ```
 
@@ -138,6 +143,8 @@ Those checks currently cover:
 - manual queue processing from Settings
 - last successful replay metadata
 - install/update helper behavior
+- preview-runtime worker ownership (`/service-worker.js` yes, `/sw.js` no)
+- uncached offline navigation fallback in a real production preview
 
 ### Manual browser checks still required
 
@@ -145,8 +152,8 @@ These are still runtime-verification tasks, not solved by unit tests:
 
 1. Confirm install prompt actually appears in a production browser session when installability criteria are met.
 2. Confirm authenticated app routes behave correctly when offline.
-3. Confirm push subscriptions still work after worker updates or cache clears.
-4. Confirm the manually registered `/service-worker.js` is the only worker path affecting runtime behavior.
+3. Confirm queued replay drains correctly in a production-preview authenticated session.
+4. Confirm push subscriptions still work after worker updates or cache clears.
 
 ## Build Pipeline
 
@@ -279,8 +286,8 @@ Background Sync is not guaranteed across browsers.
 For a realistic local browser check:
 
 1. Run `pnpm build`.
-2. Run `pnpm preview`.
-3. Open the app in Chromium.
+2. Run `pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/pwa-runtime.spec.ts --workers=1` to prove runtime worker ownership and uncached offline fallback.
+3. Run `pnpm preview` if you want to inspect the same behavior manually in Chromium.
 4. In DevTools → Application → Service Workers, confirm `/service-worker.js` is registered.
 5. In DevTools → Application → Manifest, confirm `/manifest.webmanifest` is loaded.
 6. Go offline in DevTools and verify the settings screen still shows local queue state.

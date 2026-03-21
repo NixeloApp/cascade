@@ -273,6 +273,16 @@ What those tests currently prove:
 What they do not prove:
 
 - real installability in a browser
-- real offline route fallback for authenticated app routes
+- offline behavior for authenticated app routes
 - push subscription survival across worker replacement
-- how the generated `/sw.js` interacts with the manually registered worker in an actual browser runtime
+- queued replay in a production-preview authenticated runtime
+
+Production-preview browser automation that now exists:
+
+- `e2e/preview/pwa-runtime.spec.ts`
+
+What that preview spec currently proves:
+
+- `/service-worker.js` becomes the controlling worker in production preview
+- the generated `/sw.js` does not take control unexpectedly
+- uncached offline navigation falls back to `offline.html`

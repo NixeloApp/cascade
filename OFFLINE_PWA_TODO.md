@@ -16,11 +16,14 @@ What is already true in the repo:
 - built HTML no longer auto-registers the generated `vite-plugin-pwa` worker
 - `vite-plugin-pwa` still emits `/sw.js`
 - built HTML links `/manifest.webmanifest`
+- production-preview browser automation now confirms `/service-worker.js` controls runtime and `/sw.js` does not take control unexpectedly
+- production-preview browser automation now confirms uncached offline navigation falls back to `offline.html`
 - local IndexedDB is the only offline mutation queue source of truth
 - `userSettings.update` is the first real replayable offline mutation family
 - replay runs on authenticated startup, reconnect, and manual `Process Queue`
 - Settings shows truthful local queue diagnostics, last successful local replay time, and capability-limit warnings
 - browser automation now covers queued timezone replay for `userSettings.update` in `e2e/settings/offline-replay.spec.ts`
+- browser automation now covers preview-runtime worker ownership and uncached offline fallback in `e2e/preview/pwa-runtime.spec.ts`
 - offline architecture and verification docs now exist:
   - `docs/setup/PWA.md`
   - `docs/setup/OFFLINE_ARCHITECTURE.md`
@@ -29,21 +32,18 @@ What is already true in the repo:
 
 Highest-value next move:
 
-- do real browser/runtime verification in production preview instead of more unit-level polish
+- extend production-preview verification to authenticated replay and installability, then decide whether worker generation cleanup is worth the churn
 
 Why:
 
 - the remaining uncertainty is no longer basic implementation truthfulness
-- the main open risk is runtime behavior: worker ownership, installability, offline navigation fallback, and push after worker changes
+- the main open risk is runtime behavior that still needs browser proof: installability, authenticated offline behavior, replay in preview, and push after worker changes
 
 ## Remaining Work
 
 ## 1. Runtime Verification
 
-- [ ] Confirm `/service-worker.js` is the only worker affecting runtime behavior in a real production browser session.
-- [ ] Confirm the generated `/sw.js` is not taking control unexpectedly.
 - [ ] Verify install prompt behavior in Chromium when browser installability criteria are actually met.
-- [ ] Verify offline navigation fallback works for uncached routes.
 - [ ] Verify at least one previously visited authenticated route works as expected offline.
 - [ ] Verify a queued `userSettings.update` change replays successfully after reconnect in a production-preview runtime, not only the current E2E/dev harness.
 - [ ] Verify manual `Process Queue` works in a real browser session, not just tests.
@@ -80,7 +80,6 @@ Why:
 ## 6. Tests Still Missing
 
 - [ ] Cover installability in browser automation if the environment can satisfy install criteria.
-- [ ] Cover offline route fallback in browser automation.
 - [ ] Cover queued replay after reconnect against the production-preview runtime path, not just the current E2E harness.
 - [ ] Cover push after worker update only if the test harness can do it reliably.
 
