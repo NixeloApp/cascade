@@ -147,47 +147,65 @@ function useStableOrgData(orgSlug: string) {
   };
 }
 
-function OrganizationLayout() {
-  const { orgSlug } = Route.useParams();
-  const { isAuthLoading, isAuthenticated } = useAuthReady();
-  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
+function isNavigatorOffline(): boolean {
+  return typeof navigator !== "undefined" && !navigator.onLine;
+}
 
-  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
-
+function updateOrgSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
   if (isAuthenticated) {
     hasAuthenticatedOrgSession = true;
     markAuthenticatedSession();
-  } else if (!isAuthLoading && !isOffline) {
-    // Only clear recovery data when online — when offline, auth can't resolve
-    // but the user may still be legitimately authenticated with a cached page.
+  } else if (!isAuthLoading && !isNavigatorOffline()) {
     hasAuthenticatedOrgSession = false;
     cachedOrgUserOrganizations = undefined;
     cachedOrganizationsBySlug.clear();
     clearAuthenticatedSessionMarker();
     removeLocalStorageValue(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY);
   }
+}
 
-  const { organization, userOrgs } = useStableOrgData(orgSlug);
-  const canRenderOffline = isOffline && canRecoverAuthenticatedSession && organization && userOrgs;
+function shouldShowOrgLoading(
+  isAuthenticated: boolean,
+  isAuthLoading: boolean,
+  canRecover: boolean,
+  organization: unknown,
+  userOrgs: unknown,
+): boolean {
+  const isOffline = isNavigatorOffline();
+  const canRenderOffline = isOffline && canRecover && organization && userOrgs;
 
-  if (
-    (isAuthLoading &&
-      !hasAuthenticatedOrgSession &&
-      !canRecoverAuthenticatedSession &&
-      !organization) ||
-    organization === undefined ||
-    userOrgs === undefined
-  ) {
-    if (!canRenderOffline) {
-      return <OrgLoading />;
+  if (organization === undefined || userOrgs === undefined) {
+    if (isAuthLoading && (hasAuthenticatedOrgSession || canRecover || organization)) {
+      return false;
     }
+    return !canRenderOffline;
   }
 
-  if (!(isAuthenticated || (isAuthLoading && organization) || canRenderOffline)) {
+  return !(isAuthenticated || (isAuthLoading && organization) || canRenderOffline);
+}
+
+function OrganizationLayout() {
+  const { orgSlug } = Route.useParams();
+  const { isAuthLoading, isAuthenticated } = useAuthReady();
+  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
+
+  updateOrgSessionState(isAuthenticated, isAuthLoading);
+
+  const { organization, userOrgs } = useStableOrgData(orgSlug);
+
+  if (
+    shouldShowOrgLoading(
+      isAuthenticated,
+      isAuthLoading,
+      canRecoverAuthenticatedSession,
+      organization,
+      userOrgs,
+    )
+  ) {
     return <OrgLoading />;
   }
 
-  if (organization === null) {
+  if (organization === null || organization === undefined) {
     return (
       <OrgError
         title="organization not found"
