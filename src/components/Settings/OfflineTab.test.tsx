@@ -18,6 +18,14 @@ vi.mock("../../hooks/useOffline", () => ({
   useOfflineQueue: vi.fn(),
 }));
 
+vi.mock("../../hooks/useCurrentUser", () => ({
+  useCurrentUser: vi.fn(() => ({
+    user: { _id: "test-user-id" },
+    isLoading: false,
+    isAuthenticated: true,
+  })),
+}));
+
 const mockUseOnlineStatus = vi.mocked(useOnlineStatus);
 const mockUseOfflineQueue = vi.mocked(useOfflineQueue);
 const mockToastInfo = vi.mocked(toast.info);
@@ -191,11 +199,8 @@ describe("OfflineTab", () => {
       testId: TEST_IDS.TOAST.INFO,
     });
 
-    await user.click(screen.getByRole("button", { name: "Process Queue" }));
-    expect(processNow).toHaveBeenCalledTimes(1);
-    expect(mockToastInfo).toHaveBeenCalledWith("Queued items processed", {
-      testId: TEST_IDS.TOAST.INFO,
-    });
+    // Process Queue is hidden while offline to prevent exhausting retries
+    expect(screen.queryByRole("button", { name: "Process Queue" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(retryMutation).toHaveBeenCalledWith(3);

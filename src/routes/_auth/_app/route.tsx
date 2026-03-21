@@ -163,11 +163,13 @@ function AppLayout() {
     fallbackOrganization
       ? ROUTES.dashboard.build(fallbackOrganization.slug)
       : undefined;
+  // redirectPath is string | null | undefined:
+  //   undefined = still loading, null = backend says "stay here", string = redirect target.
+  // Only fall through to cache/persisted when the query hasn't loaded yet (undefined).
   const stableRedirectPath =
-    redirectPath ??
-    cachedRedirectPath ??
-    persistedAppLayoutState?.redirectPath ??
-    fallbackRedirectPath;
+    redirectPath !== undefined
+      ? redirectPath
+      : (cachedRedirectPath ?? persistedAppLayoutState?.redirectPath ?? fallbackRedirectPath);
   const redirectState = getAppRedirectState(pathname, stableRedirectPath ?? null);
   const needsOrganizationBootstrap = (stableUserOrganizations ?? []).length === 0;
 

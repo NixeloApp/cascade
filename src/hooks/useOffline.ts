@@ -113,11 +113,11 @@ export function useOfflineQueue() {
     await refresh();
   };
 
-  const processNow = async () => {
+  const processNow = async (userId?: string) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await processOfflineQueue();
+      await processOfflineQueue(userId);
       const mutations = await offlineDB.getQueuedMutations();
       setQueue(mutations);
       setLastSuccessfulReplayAt(getLastSuccessfulOfflineReplayAt());

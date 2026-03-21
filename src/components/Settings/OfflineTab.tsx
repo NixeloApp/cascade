@@ -11,6 +11,7 @@ import { Check, RefreshCw, RotateCcw, Trash2, Wifi, WifiOff, X } from "@/lib/ico
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showInfo } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useOfflineQueue, useOnlineStatus } from "../../hooks/useOffline";
 import type { OfflineMutation } from "../../lib/offline";
 import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
@@ -182,6 +183,7 @@ function QueueItemList({
  */
 export function OfflineTab() {
   const isOnline = useOnlineStatus();
+  const { user } = useCurrentUser();
   const {
     queue,
     count,
@@ -248,7 +250,7 @@ export function OfflineTab() {
   const handleProcessQueue = async () => {
     setIsProcessingQueue(true);
     try {
-      await processNow();
+      await processNow(user?._id);
       showInfo("Queued items processed");
     } catch (error) {
       showError(error, "Failed to process offline queue");
@@ -434,7 +436,7 @@ export function OfflineTab() {
                 Refresh Queue
               </Button>
             </Flex>
-            {pendingCount > 0 && (
+            {pendingCount > 0 && isOnline && (
               <Flex justify="end">
                 <Button
                   variant="primary"
