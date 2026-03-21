@@ -5,9 +5,16 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { ProductShowcase } from "./ProductShowcase";
+
+const heroSignals = [
+  "Built for product, ops, and client delivery",
+  "AI-native search and action layer",
+  "Less context duplicated across tools",
+] as const;
 
 /** Landing page hero section with headline, CTA buttons, and product preview. */
 export function HeroSection() {
@@ -21,48 +28,49 @@ export function HeroSection() {
       <Container
         size="lg"
         className="relative text-center"
-        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "2rem" }}
+        style={{ paddingInline: "1.5rem", paddingTop: "5rem", paddingBottom: "1rem" }}
       >
-        <Stack gap="xl">
+        <Stack gap="lg">
+          <Container size="md">
+            <Stack gap="md">
+              <Flex
+                justify="center"
+                style={{ animation: "var(--animation-fade-in)", animationFillMode: "backwards" }}
+              >
+                <Badge variant="landingHero" shape="pill">
+                  Docs, delivery, and time tracking in one operating system
+                </Badge>
+              </Flex>
+
+              <Typography
+                variant="h1"
+                style={{
+                  animation: "var(--animation-slide-up)",
+                  animationDelay: "0.1s",
+                  animationFillMode: "backwards",
+                }}
+              >
+                Replace scattered project tools{" "}
+                <span className="bg-linear-to-r from-landing-accent via-landing-accent-teal to-status-success-text bg-clip-text text-transparent">
+                  with one sharper workspace.
+                </span>
+              </Typography>
+
+              <Typography
+                variant="lead"
+                style={{
+                  animation: "var(--animation-slide-up)",
+                  animationDelay: "0.2s",
+                  animationFillMode: "backwards",
+                }}
+              >
+                Nixelo keeps specs, tasks, client updates, and AI assistance in the same flow so
+                teams can search faster, act faster, and stop duplicating context.
+              </Typography>
+            </Stack>
+          </Container>
+
           <Stack gap="md">
-            <Flex
-              justify="center"
-              style={{ animation: "var(--animation-fade-in)", animationFillMode: "backwards" }}
-            >
-              <Badge variant="landingHero" shape="pill">
-                Docs, delivery, and time tracking in one operating system
-              </Badge>
-            </Flex>
-
-            <Typography
-              variant="h1"
-              style={{
-                animation: "var(--animation-slide-up)",
-                animationDelay: "0.1s",
-                animationFillMode: "backwards",
-              }}
-            >
-              Replace scattered project tools
-              <br />
-              <span className="bg-linear-to-r from-landing-accent via-landing-accent-teal to-status-success-text bg-clip-text text-transparent">
-                with one sharper workspace.
-              </span>
-            </Typography>
-
-            <Typography
-              variant="lead"
-              style={{
-                animation: "var(--animation-slide-up)",
-                animationDelay: "0.2s",
-                animationFillMode: "backwards",
-              }}
-            >
-              Nixelo keeps specs, tasks, client updates, and AI assistance in the same flow so teams
-              can search faster, act faster, and stop duplicating context.
-            </Typography>
-          </Stack>
-
-          <Stack gap="lg">
             <Flex
               direction="column"
               directionSm="row"
@@ -81,14 +89,14 @@ export function HeroSection() {
               <Button asChild variant="secondary" size="lg">
                 <a href="#product-showcase">
                   See workflow tour
-                  <ArrowRight size={16} />
+                  <Icon icon={ArrowRight} size="sm" />
                 </a>
               </Button>
             </Flex>
 
             <Flex
               justify="center"
-              gap="lg"
+              gap="sm"
               wrap
               style={{
                 animation: "var(--animation-slide-up)",
@@ -96,15 +104,11 @@ export function HeroSection() {
                 animationFillMode: "backwards",
               }}
             >
-              <Typography variant="small" color="secondary">
-                Built for product, ops, and client delivery teams
-              </Typography>
-              <Typography variant="small" color="secondary">
-                AI-native search and action layer
-              </Typography>
-              <Typography variant="small" color="secondary">
-                Fewer tools, less duplicated work
-              </Typography>
+              {heroSignals.map((signal) => (
+                <Badge key={signal} variant="outline" shape="pill">
+                  {signal}
+                </Badge>
+              ))}
             </Flex>
           </Stack>
 

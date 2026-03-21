@@ -8,6 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
@@ -15,8 +17,15 @@ import { Icon } from "@/components/ui/Icon";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
+import { BookOpen, Menu } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { NixeloLogo } from "./Icons";
+
+const landingNavItems = [
+  { href: "#features", label: "Features" },
+  { href: "#pricing", label: "Pricing" },
+  { href: "#resources", label: "Resources" },
+] as const;
 
 /** Landing page navigation header with logo, links, and theme toggle. */
 export function NavHeader() {
@@ -47,18 +56,18 @@ export function NavHeader() {
             <div
               className={cn(
                 getCardRecipeClassName("landingNavRail"),
-                "absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-2 md:flex",
+                "absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-2 lg:flex",
               )}
             >
-              {["Features", "Pricing", "Resources"].map((item) => (
+              {landingNavItems.map((item) => (
                 <Button
-                  key={item}
+                  key={item.label}
                   asChild
                   variant="unstyled"
                   chrome="landingNavLink"
                   chromeSize="landingNavPill"
                 >
-                  <a href={`#${item.toLowerCase()}`}>{item}</a>
+                  <a href={item.href}>{item.label}</a>
                 </Button>
               ))}
             </div>
@@ -98,21 +107,75 @@ export function NavHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="unstyled"
+                    chrome="landingNavLink"
+                    chromeSize="landingNavPill"
+                    className="lg:hidden"
+                  >
+                    <Icon icon={Menu} size="sm" />
+                    Menu
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel weight="normal">Jump to</DropdownMenuLabel>
+                  {landingNavItems.map((item) => (
+                    <DropdownMenuItem
+                      key={item.label}
+                      asChild
+                      icon={<Icon icon={BookOpen} size="sm" tone="secondary" />}
+                    >
+                      <a href={item.href}>{item.label}</a>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <Unauthenticated>
+                    <DropdownMenuItem asChild>
+                      <Link to={ROUTES.signin.path}>Sign in</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to={ROUTES.signup.path}>Get started</Link>
+                    </DropdownMenuItem>
+                  </Unauthenticated>
+                  <Authenticated>
+                    <DropdownMenuItem asChild>
+                      <Link to={ROUTES.app.path}>Go to App</Link>
+                    </DropdownMenuItem>
+                  </Authenticated>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Unauthenticated>
                 <Button
                   asChild
                   variant="unstyled"
                   chrome="landingNavLink"
                   chromeSize="landingNavPill"
+                  className="hidden lg:inline-flex"
                 >
                   <Link to={ROUTES.signin.path}>Sign in</Link>
                 </Button>
-                <Button asChild variant="landingPrimary" size="none">
-                  <Link to={ROUTES.signup.path}>Get Started</Link>
+                <Button
+                  asChild
+                  variant="landingPrimary"
+                  size="none"
+                  className="hidden sm:inline-flex"
+                >
+                  <Link to={ROUTES.signup.path}>
+                    <span className="hidden md:inline">Get Started</span>
+                    <span className="md:hidden">Start</span>
+                  </Link>
                 </Button>
               </Unauthenticated>
               <Authenticated>
-                <Button asChild variant="landingPrimary" size="none">
+                <Button
+                  asChild
+                  variant="landingPrimary"
+                  size="none"
+                  className="hidden sm:inline-flex"
+                >
                   <Link to={ROUTES.app.path}>Go to App</Link>
                 </Button>
               </Authenticated>

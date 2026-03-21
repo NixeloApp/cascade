@@ -34,6 +34,14 @@ describe("HeroSection", () => {
     );
   });
 
+  it("renders the compact proof signals under the hero actions", () => {
+    render(<HeroSection />);
+
+    expect(screen.getByText("Built for product, ops, and client delivery")).toBeInTheDocument();
+    expect(screen.getByText("AI-native search and action layer")).toBeInTheDocument();
+    expect(screen.getByText("Less context duplicated across tools")).toBeInTheDocument();
+  });
+
   it("renders the product showcase preview", () => {
     render(<HeroSection />);
 

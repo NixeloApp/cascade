@@ -1,7 +1,7 @@
 # Landing Page - Current State
 
 > **Route**: `/`
-> **Status**: 🟡 Landing now reads like the product end to end; responsive rhythm still needs polish
+> **Status**: 🟢 Landing now reads like the product end to end, including tablet/mobile hierarchy
 > **Last Updated**: 2026-03-21
 
 ---
@@ -71,8 +71,8 @@ The structure is no longer generic, the hero showcase reads like a workspace she
 reinforces that same product language, and the story/proof section now shows concrete operating
 evidence instead of generic outcome cards. Pricing now explains the rollout path without implying a
 different product for serious teams. The closing CTA now behaves like a real product handoff
-instead of polished filler. The remaining problem is mostly responsive rhythm: keeping that product
-authority intact on tablet and mobile.
+instead of polished filler, and the smaller-view hero/header rhythm no longer buries the product
+surface under crowded chrome.
 
 ---
 
@@ -111,25 +111,26 @@ authority intact on tablet and mobile.
 | 11 | Story/proof section now anchors its claims in concrete workflow evidence instead of generic outcome cards | Fixed |
 | 12 | Pricing now explains rollout stages and enterprise controls without reverting to generic SaaS plan marketing | Fixed |
 | 13 | Final CTA now closes with a product-grounded handoff instead of generic closing cards | Fixed |
+| 14 | Tablet/mobile header and hero now keep the product surface higher and reduce crowded nav density | Fixed |
 
 ---
 
 ## Problems
 
-| # | Problem | Area | Severity |
-|---|---------|------|----------|
-| 1 | Tablet/mobile rhythm still needs explicit review so the product preview stays authoritative above the fold | hero / landing responsive rhythm | MEDIUM |
+No material landing-specific problems remain in the current approved capture. The next visual pass
+should move back to broader screenshot-driven product consistency instead of reopening the landing
+page by default.
 
 ---
 
 ## Review Notes
 
 - The screenshot run may be valid technically while the composition is still wrong visually.
-- The hero, proof strip, evidence section, pricing, and final CTA are no longer the first places to spend effort.
-- The next pass should focus on responsive review:
-  - review mobile/tablet rhythm so the product preview keeps authority above the fold
-  - tighten nav density and hero spacing where smaller viewports still feel crowded
-  - confirm the lower sections keep their product-grounded hierarchy when the layout compresses
+- The hero, proof strip, evidence section, pricing, final CTA, and responsive hierarchy are no longer the first places to spend effort.
+- If the landing page is revisited, it should be for regression review only:
+  - confirm the compact nav path stays tighter than the desktop shell
+  - confirm the hero still puts the product surface above the fold on smaller viewports
+  - avoid reintroducing bespoke section styling while adjusting copy or CTAs
 
 ---
 
@@ -137,5 +138,6 @@ authority intact on tablet and mobile.
 
 The landing page now has the right sections, a convincing product showcase, a product-grounded
 proof strip, a stronger evidence section, pricing that explains the actual rollout model, and a
-closing CTA that reads like a real handoff into the product. The remaining work is mostly
-responsive consistency: keep the same authority and hierarchy intact on tablet and mobile.
+closing CTA that reads like a real handoff into the product. The responsive pass now keeps that
+same authority and hierarchy intact on tablet and mobile, so the next quality work should shift
+back to broader screenshot-driven product surfaces instead of the landing page.
