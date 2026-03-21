@@ -254,6 +254,8 @@ function nextIndex(prefix: string): number {
 const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   // Public pages with suffixes to avoid overwriting base spec screenshots
   [/^public-verify-2fa$/, "02-signin", "-verify-2fa"],
+  [/^public-signup-verify$/, "03-signup", "-verify"],
+  [/^public-forgot-password-reset$/, "04-forgot-password", "-reset"],
   [/^filled-dashboard-omnibox$/, "04-dashboard", "-omnibox"],
   [/^filled-dashboard-customize-modal$/, "04-dashboard", "-customize-modal"],
   [/^filled-dashboard-advanced-search-modal$/, "04-dashboard", "-advanced-search-modal"],
@@ -1137,6 +1139,36 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (["signin", "signup", "forgot-password", "invite-invalid"].includes(name)) {
     await page
       .getByText(/secure account access/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 });
+    await waitForScreenshotReady(page);
+    return;
+  }
+
+  if (name === "signup-verify") {
+    await page
+      .getByRole("heading", { name: /create your account/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page
+      .getByRole("heading", { name: /verify your email/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page
+      .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 });
+    await waitForScreenshotReady(page);
+    return;
+  }
+
+  if (name === "forgot-password-reset") {
+    await page
+      .getByRole("heading", { name: /check your email/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page
+      .getByTestId(TEST_IDS.AUTH.RESET_CODE_INPUT)
       .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
@@ -2348,7 +2380,9 @@ async function screenshotPublicPages(page: Page, seed: SeedScreenshotResult): Pr
     "landing",
     "signin",
     "signup",
+    "signup-verify",
     "forgot-password",
+    "forgot-password-reset",
     "verify-email",
     "verify-2fa",
     "invite",
@@ -2365,7 +2399,19 @@ async function screenshotPublicPages(page: Page, seed: SeedScreenshotResult): Pr
   await takeScreenshot(page, "public", "landing", ROUTES.home.build());
   await takeScreenshot(page, "public", "signin", ROUTES.signin.build());
   await takeScreenshot(page, "public", "signup", ROUTES.signup.build());
+  await takeScreenshot(
+    page,
+    "public",
+    "signup-verify",
+    `${ROUTES.signup.build()}?step=verify&email=screenshots%40inbox.mailtrap.io`,
+  );
   await takeScreenshot(page, "public", "forgot-password", ROUTES.forgotPassword.build());
+  await takeScreenshot(
+    page,
+    "public",
+    "forgot-password-reset",
+    `${ROUTES.forgotPassword.build()}?step=reset&email=screenshots%40inbox.mailtrap.io`,
+  );
   await takeScreenshot(
     page,
     "public",
@@ -4609,7 +4655,9 @@ const DRY_RUN_PAGES = [
   "public-landing",
   "public-signin",
   "public-signup",
+  "public-signup-verify",
   "public-forgot-password",
+  "public-forgot-password-reset",
   "public-verify-email",
   "public-verify-2fa",
   "public-invite",

@@ -7,11 +7,13 @@ import {
   ForgotPasswordForm,
   ResetPasswordForm,
 } from "@/components/Auth";
+import { getOptionalAuthFlowEmail } from "@/components/Auth/authFlowSearch";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 
 interface ForgotPasswordSearch {
   step?: "reset";
+  email?: string;
 }
 
 const RESET_EMAIL_STORAGE_KEY = "auth:forgot-password-email";
@@ -58,10 +60,14 @@ export const Route = createFileRoute("/forgot-password")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>): ForgotPasswordSearch => ({
     step: search.step === "reset" ? "reset" : undefined,
+    email: search.step === "reset" ? getOptionalAuthFlowEmail(search.email) : undefined,
   }),
 });
 
-function ForgotPasswordRoute() {
+/**
+ * Public forgot-password route with optional search-driven reset state for screenshot coverage.
+ */
+export function ForgotPasswordRoute() {
   return (
     <AuthRedirect>
       <ForgotPasswordPage />
@@ -70,24 +76,23 @@ function ForgotPasswordRoute() {
 }
 
 function ForgotPasswordPage() {
-  const [email, setEmail] = useState<string | null>(() => getStoredResetEmail());
-  const navigate = Route.useNavigate();
   const search = Route.useSearch();
+  const [email, setEmail] = useState<string | null>(() => search.email ?? getStoredResetEmail());
+  const navigate = Route.useNavigate();
 
   useEffect(() => {
     if (search.step === "reset") {
-      // Only update from storage if we get a value - preserve in-memory email
-      // when sessionStorage is unavailable (returns null)
-      const storedEmail = getStoredResetEmail();
-      if (storedEmail !== null) {
-        setEmail(storedEmail);
+      const activeEmail = search.email ?? getStoredResetEmail();
+      if (activeEmail !== null) {
+        setEmail(activeEmail);
+        setStoredResetEmail(activeEmail);
       }
       return;
     }
 
     clearStoredResetEmail();
     setEmail(null);
-  }, [search.step]);
+  }, [search.email, search.step]);
 
   if (search.step === "reset" && email) {
     return (

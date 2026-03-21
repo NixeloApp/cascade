@@ -15,6 +15,15 @@
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 
+## Verification State Coverage
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-verify.png) |
+| Desktop | Light | ![](screenshots/desktop-light-verify.png) |
+| Tablet | Light | ![](screenshots/tablet-light-verify.png) |
+| Mobile | Light | ![](screenshots/mobile-light-verify.png) |
+
 ---
 
 ## Current UI
@@ -35,6 +44,7 @@
 - The page-level account-switching copy remains in the right place.
 - Theme parity is stable across dark, light, tablet, and mobile captures.
 - The verification state now shares the same auth intro/step treatment as the main signup flow.
+- The verification state now has dedicated screenshot coverage across all standard viewports/themes.
 
 ---
 
@@ -42,7 +52,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The filled verification state still needs dedicated screenshot coverage so it cannot drift outside the calmer shared flow | screenshot coverage | LOW |
+| Filled auth interaction states now have coverage; remaining auth review is broader interaction-state consistency, not missing signup verification captures | review residue | LOW |
 
 ---
 

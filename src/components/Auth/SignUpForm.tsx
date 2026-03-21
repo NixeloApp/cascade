@@ -25,6 +25,10 @@ import { EmailVerificationForm } from "./EmailVerificationForm";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
+interface SignUpFormProps {
+  initialVerificationEmail?: string;
+}
+
 async function submitPasswordSignUp({
   event,
   signIn,
@@ -157,13 +161,13 @@ function SignUpEmailButton({
 /**
  * Sign up form with email/password registration and Google OAuth.
  */
-export function SignUpForm() {
+export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
   const { signIn } = useAuthActions();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialVerificationEmail ?? "");
   const [password, setPassword] = useState("");
-  const [showVerification, setShowVerification] = useState(false);
+  const [showVerification, setShowVerification] = useState(Boolean(initialVerificationEmail));
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [formReady, setFormReady] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -172,6 +176,15 @@ export function SignUpForm() {
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!initialVerificationEmail) {
+      return;
+    }
+
+    setEmail(initialVerificationEmail);
+    setShowVerification(true);
+  }, [initialVerificationEmail]);
 
   const handleShowEmailForm = () => {
     setShowEmailForm(true);

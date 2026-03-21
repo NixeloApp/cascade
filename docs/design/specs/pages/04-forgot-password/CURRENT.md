@@ -15,6 +15,15 @@
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 
+## Reset Code State Coverage
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-reset.png) |
+| Desktop | Light | ![](screenshots/desktop-light-reset.png) |
+| Tablet | Light | ![](screenshots/tablet-light-reset.png) |
+| Mobile | Light | ![](screenshots/mobile-light-reset.png) |
+
 ---
 
 ## Current UI
@@ -34,6 +43,7 @@
 - Subtitle links stay in the right place instead of floating below the form.
 - The reset request view no longer burns vertical space on duplicate heading chrome.
 - Theme parity is much closer to the rest of the auth suite.
+- The reset-code state now has dedicated screenshot coverage across all standard viewports/themes.
 
 ---
 
@@ -41,7 +51,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The reset-code step still needs dedicated screenshot coverage so the shared intro/strength treatment cannot regress quietly | screenshot coverage | LOW |
+| Filled auth interaction states now have coverage; remaining auth review is broader interaction-state consistency, not missing reset-code captures | review residue | LOW |
 
 ---
 

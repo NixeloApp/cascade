@@ -1,0 +1,11 @@
+/**
+ * Shared parsing for auth flow search params.
+ */
+export function getOptionalAuthFlowEmail(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
