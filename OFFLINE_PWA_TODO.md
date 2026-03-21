@@ -2,22 +2,21 @@
 
 This file intentionally lives at the repo root instead of `todos/`.
 
-Purpose:
+## Design Intent
 
-- keep the offline/PWA lane separate from the active `/todos` pipeline
-- show only remaining work
-- make handoff easy when multiple agents or devices are involved
+This is **not** a local-first offline app. Convex is server-authoritative, and fighting
+that would be a multi-month architecture rewrite for diminishing returns.
+
+The goal is **graceful degradation during connectivity blips**: the app doesn't break when
+signal drops for 10-60 seconds, queued actions replay transparently on reconnect, and the
+PWA install experience is solid. This is what Notion, Linear, and every serious SaaS tool
+ships — not full offline operation, but a non-broken experience when the network hiccups.
 
 ## Current Branch Snapshot
 
 - branch: `fix-backend`
-- worktree: clean
-- latest verified commands on this branch:
-  - `pnpm run typecheck`
-  - `pnpm test --run src/lib/authRecovery.test.ts src/lib/offline.test.ts src/hooks/useConvexHelpers.test.ts src/components/Dashboard.test.tsx`
-  - `pnpm test --run src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/authRecovery.test.ts src/lib/offline.test.ts`
-  - `pnpm exec playwright test -c playwright.preview.config.ts --workers=1`
-- latest preview result: `7/7` tests passed against the built app
+- all typecheck, validators (53/53), unit tests (33 affected), and preview E2E (7/7) pass
+- all PR review comments resolved
 
 ## Current Verified State
 
@@ -25,91 +24,144 @@ What is already true in the repo:
 
 - the app registers `/service-worker.js` from `src/lib/serviceWorker.ts`
 - built HTML no longer auto-registers the generated `vite-plugin-pwa` worker
-- `vite-plugin-pwa` still emits `/sw.js`
+- `vite-plugin-pwa` still emits `/sw.js` (to be resolved in Section 2)
 - built HTML links `/manifest.webmanifest`
-- production-preview browser automation now confirms `/service-worker.js` controls runtime and `/sw.js` does not take control unexpectedly
-- production-preview browser automation now confirms the runtime links `/manifest.webmanifest` and caches `/`, `/offline.html`, and `/manifest.webmanifest`
-- the public PWA icon set now exists in `public/` (`icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `badge-72.png`)
-- production-preview browser automation now confirms uncached offline navigation falls back to `offline.html`
-- production-preview browser automation now confirms previously visited authenticated routes reload and navigate offline in preview
-- production-preview browser automation now confirms Chromium reports zero installability errors for the built app
-- local IndexedDB is the only offline mutation queue source of truth
+- production-preview E2E confirms `/service-worker.js` controls runtime
+- production-preview E2E confirms the runtime caches `/`, `/offline.html`, `/manifest.webmanifest`
+- production-preview E2E confirms uncached offline navigation falls back to `offline.html`
+- production-preview E2E confirms previously visited authenticated routes survive offline reload
+- production-preview E2E confirms Chromium reports zero installability errors
+- PWA icon set committed in `public/` (`icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `badge-72.png`)
+- local IndexedDB is the only offline mutation queue (server-side queue removed)
 - `userSettings.update` is the first real replayable offline mutation family
-- replay runs on authenticated startup, reconnect, and manual `Process Queue`
-- Settings shows truthful local queue diagnostics, last successful local replay time, and capability-limit warnings
-- browser automation now covers queued timezone replay for `userSettings.update` in `e2e/settings/offline-replay.spec.ts`
-- browser automation now covers preview-runtime worker ownership and uncached offline fallback in `e2e/preview/pwa-runtime.spec.ts`
-- browser automation now covers authenticated preview replay, manual `Process Queue`, and `Last Successful Replay` updates in `e2e/preview/offline-replay-preview.spec.ts`
-- offline architecture and verification docs now exist:
-  - `docs/setup/PWA.md`
-  - `docs/setup/OFFLINE_ARCHITECTURE.md`
+- replay triggers: authenticated startup, reconnect (`online` event), manual "Process Queue"
+- Settings > Offline shows truthful queue diagnostics, failed-items-first display, retry/delete controls
+- type guard validates replay args before sending to Convex
+- SW precache uses `Promise.allSettled` so a single 404 doesn't block install
+- offline architecture and verification docs exist (`docs/setup/PWA.md`, `docs/setup/OFFLINE_ARCHITECTURE.md`)
 
-## Recommended Next Step
+## ~~Section 0: Code Review Bugs~~ (ALL RESOLVED)
 
-All Section 0 code review bugs and PR review comments are resolved. Next:
+All 7 bugs + 18 PR review comments fixed. See commits `12b358df`, `73f46da4`, `2dd1ab20`.
 
-1. **Push & worker update safety** (Section 1) — verify push subscriptions survive SW replacement
-2. **Worker/manifest ownership cleanup** (Section 2) — collapse to one clear owner
-3. **Move this file** to `todos/offline-pwa.md` (Section 0.7, minor housekeeping)
+---
 
 ## Remaining Work
 
-## ~~0. Code Review Bugs~~ (ALL RESOLVED)
+### 1. Push & Worker Update Safety
 
-All 7 issues plus 18 PR review comments fixed in commits `12b358df`, `73f46da4`:
-
-- ~~0.1~~ Infinite-render risk → memoized with `useRef`, removed from effect deps
-- ~~0.2~~ Untyped replay args → added `isUserSettingsUpdateArgs` type guard + `validateUserSettingsArgs`
-- ~~0.3~~ Stale attempt count → `completedAt` moved after handler execution
-- ~~0.4~~ Redundant online check → simplified to `!isOnline`
-- ~~0.5~~ Handler/flush race → merged into single `useEffect` in `OfflineReplayBootstrap`
-- ~~0.6~~ Per-render JSON parse → same fix as 0.1 (useRef)
-- ~~0.7~~ File location → still at root (minor, deferred to Section 2 cleanup)
-
-## 1. Push And Worker Update Safety
+Verify push notifications still work after the SW file changes in this PR.
 
 - [ ] Verify push subscription survives service worker replacement.
-- [ ] Verify push still works after cache clear plus worker re-registration.
+- [ ] Verify push still works after cache clear + worker re-registration.
 - [ ] Verify unsubscribe cleanup is correct when subscriptions rotate.
-- [ ] Confirm whether push depends only on service worker support or also on install state in practice.
+- [ ] Confirm whether push depends only on SW support or also on install state in practice.
 
-## 2. Worker / Manifest Ownership Cleanup
+### 2. Worker / Manifest Ownership Cleanup
 
-- [ ] Decide whether the app should keep manual worker ownership or fully move to the generated PWA worker.
-- [ ] Remove the unused path after that decision so there is one obvious worker owner.
-- [ ] Remove or intentionally keep `public/manifest.json`; do not leave it as an unexplained legacy artifact.
-- [ ] Re-check build output after cleanup and confirm only the intended worker/manifest artifacts remain meaningful.
+Collapse to one obvious owner for each concern.
 
-## 3. Replay Coverage Expansion
+- [ ] Decide: keep manual `public/service-worker.js` or fully move to `vite-plugin-pwa` generated worker.
+- [ ] Remove the unused path so there is one obvious worker owner.
+- [ ] Remove or intentionally keep `public/manifest.json` (currently a legacy artifact alongside `manifest.webmanifest`).
+- [ ] Re-check build output after cleanup — only intended artifacts should remain.
+- [ ] Move `OFFLINE_PWA_TODO.md` to `todos/offline-pwa.md` and add to `todos/README.md`.
 
-- [ ] Choose the next replayable mutation family after `userSettings.update`.
-- [ ] Add an explicit replay handler for that mutation family.
-- [ ] Define idempotency expectations for each replayable mutation family before expanding coverage.
-- [ ] Define how deleted or archived target entities should fail.
-- [ ] Define how conflict resolution should work when server state moved while the client was offline.
+### 3. High-Value Replay Mutations
 
-## 4. Retry Policy
+These are the actions users most commonly perform during a connectivity blip. Each is
+small, idempotent or append-only, and low-conflict — ideal for offline replay without
+needing a full local-first data layer.
 
-- [ ] Decide whether the current retry model remains best-effort only or needs real backoff.
-- [ ] If real backoff is required, define where that timing policy lives.
-- [ ] Decide which failures should be treated as retryable versus effectively permanent.
+**Priority order** (by frequency × simplicity × conflict risk):
 
-## 5. Tests Still Missing
+#### 3.1 Mark notification as read
 
-- [ ] Cover push after worker update only if the test harness can do it reliably.
+- [ ] Register replay handler for `notifications.markAsRead`.
+- [ ] Queue from `NotificationItem` / `NotificationCenter` when offline.
+- [ ] Idempotency: trivially idempotent — marking an already-read notification as read is a no-op.
+- [ ] Conflict risk: none. No state can "move" that invalidates a read-mark.
+- [ ] Error case: if notification was deleted server-side while offline, replay should silently succeed or mark as permanently failed (not retry).
 
-## 6. Docs To Revisit After Runtime Proof
+#### 3.2 Toggle issue status
 
-- [ ] Update `docs/setup/PWA.md` again after real browser verification so it reflects proven runtime behavior, not just source-level ownership.
-- [ ] Update `docs/setup/OFFLINE_ARCHITECTURE.md` if replay expands beyond `userSettings.update`.
-- [ ] Add a short note with final browser-verification findings once install/offline/push behavior is confirmed.
+- [ ] Register replay handler for `issues.updateStatus` (or the relevant mutation).
+- [ ] Queue from Kanban column drop, issue detail status dropdown, and board quick-actions.
+- [ ] Idempotency: last-write-wins on status field. If two offline users both change status, the last replay wins — acceptable for a connectivity-blip scenario.
+- [ ] Conflict risk: medium. Server-side status may have moved (e.g., another user closed the issue). Replay should check current status and skip if the issue was already moved to a "later" workflow state.
+- [ ] Error case: if issue was deleted/archived, replay should fail permanently with a descriptive message, not retry.
+
+#### 3.3 Add comment to issue
+
+- [ ] Register replay handler for `issueComments.create` (or equivalent).
+- [ ] Queue from the comment input when offline.
+- [ ] Idempotency: append-only — duplicate comments are possible if replay races. Add a client-generated `idempotencyKey` (UUID) to the mutation args and check server-side before inserting.
+- [ ] Conflict risk: low. Comments are append-only. The only edge case is commenting on a deleted/archived issue.
+- [ ] Error case: if issue was deleted, show the failed comment in the queue with "Issue no longer exists" and let the user dismiss it.
+
+#### 3.4 General replay infrastructure for new mutations
+
+Before adding each mutation above:
+
+- [ ] Define how deleted/archived target entities should fail (permanent failure, not retry).
+- [ ] Define how conflict resolution works when server state moved while offline.
+- [ ] Add an `idempotencyKey` pattern for non-idempotent mutations (comments, activity entries).
+- [ ] Update the OfflineTab "Current Verified Capabilities" list as each mutation ships.
+- [ ] Update `docs/setup/OFFLINE_ARCHITECTURE.md` with the expanded mutation table.
+
+### 4. Retry Policy
+
+- [ ] Decide whether current 3-attempt best-effort model is sufficient or needs real backoff.
+- [ ] If backoff: define timing policy (e.g., 5s, 30s, 2min) and where it lives.
+- [ ] Classify failure types: retryable (network error, 5xx) vs permanent (404, validation, deleted entity).
+- [ ] Permanent failures should stop retrying immediately and show a clear message in the queue UI.
+
+### 5. Graceful Degradation UX
+
+These are UI-level improvements that make connectivity blips feel invisible to the user.
+
+- [ ] Show a subtle "offline" indicator in the app header (not just the Settings tab) when connectivity drops.
+- [ ] Show optimistic UI for queued mutations — e.g., when a notification is marked read offline, grey it out immediately, don't wait for replay.
+- [ ] Show a "syncing" indicator when the queue is processing on reconnect.
+- [ ] Auto-dismiss the offline indicator after successful reconnect + queue drain.
+- [ ] Consider a toast on reconnect: "Back online — N changes synced" (only if queue was non-empty).
+
+### 6. Tests
+
+- [ ] Cover push after worker update (if test harness supports it reliably).
+- [ ] E2E test for mark-notification-as-read offline replay.
+- [ ] E2E test for issue status toggle offline replay.
+- [ ] E2E test for comment creation offline replay.
+- [ ] Unit test for idempotency key deduplication.
+
+### 7. Docs
+
+- [ ] Update `docs/setup/PWA.md` after real browser verification of push + install + offline.
+- [ ] Update `docs/setup/OFFLINE_ARCHITECTURE.md` with expanded mutation replay table.
+- [ ] Add a short "Offline Support" section to the main README or feature docs.
+
+---
+
+## What This Is NOT
+
+To prevent scope creep, these are explicitly **out of scope** for the offline lane:
+
+- **Full offline document editing** — would require a CRDT/OT sync layer (e.g., Yjs) on top of BlockNote. Fundamental architecture work, not an incremental addition.
+- **Offline Kanban board manipulation** — needs cached board state + optimistic drag-and-drop + reorder conflict resolution. Complex and low ROI for connectivity blips.
+- **Offline-first data layer** — would require something like `rxdb`, `electric-sql`, or a custom Convex sync adapter. Contradicts the server-authoritative model.
+- **iOS Background Sync** — Safari doesn't support the Background Sync API. Replay only works while the app is open.
+- **Offline project/issue creation** — ID generation, key sequencing (PROJ-123), and cross-entity references make this very complex for marginal benefit.
+
+If any of these become requirements, they should be separate initiatives with their own architecture proposals.
+
+---
 
 ## Open Questions
 
-- [ ] Should Background Sync remain best-effort only forever, or eventually become part of the supported path?
-- [ ] Should replay stay opt-in per mutation type, or should there ever be a more generic replay layer?
-- [ ] Do failed offline actions need durable server-side audit logging for support/debugging?
-- [ ] Is it worth keeping `vite-plugin-pwa` generation if manual worker ownership remains the intended model?
+- [ ] Should Background Sync remain best-effort only, or eventually become a supported path? (Limited browser support, especially no iOS.)
+- [ ] Should replay stay opt-in per mutation type, or should there be a generic replay layer? (Opt-in is safer — each mutation has different idempotency/conflict characteristics.)
+- [ ] Do failed offline actions need server-side audit logging for support? (Probably not for v1 — local queue UI is sufficient.)
+- [ ] Is it worth keeping `vite-plugin-pwa` if manual worker ownership remains the model? (Decide in Section 2.)
 
 ## Done When
 
@@ -117,5 +169,6 @@ All 7 issues plus 18 PR review comments fixed in commits `12b358df`, `73f46da4`:
 - [ ] One worker path clearly owns runtime behavior.
 - [ ] One manifest path clearly owns install metadata.
 - [ ] Push behavior is verified after worker changes.
-- [ ] At least one additional mutation family is replayable, or the team explicitly decides to stop at `userSettings.update`.
+- [ ] At least `markNotificationAsRead` and `toggleIssueStatus` are replayable beyond `userSettings.update`.
+- [ ] Offline indicator visible in app header during connectivity loss.
 - [ ] Docs match the verified runtime.
