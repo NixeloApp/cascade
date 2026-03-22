@@ -156,7 +156,6 @@ function useAppLayoutState() {
 
   return {
     isAuthLoading,
-    isAuthenticated,
     persistedAppLayoutState,
     redirectPath,
     userOrganizations,
@@ -164,18 +163,13 @@ function useAppLayoutState() {
   };
 }
 
-function AppLayout() {
+function useAppRedirectState(
+  redirectPath: string | null | undefined,
+  userOrganizations: UserOrganization[] | undefined,
+  persistedAppLayoutState: PersistedAppLayoutState | null | undefined,
+) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
-  const {
-    isAuthLoading,
-    isAuthenticated,
-    persistedAppLayoutState,
-    redirectPath,
-    userOrganizations,
-    currentUser,
-  } = useAppLayoutState();
 
   useEffect(() => {
     if (redirectPath === undefined) {
@@ -225,6 +219,28 @@ function AppLayout() {
       navigate({ to: stableRedirectPath, replace: true });
     }
   }, [navigate, redirectState.shouldRedirect, stableRedirectPath]);
+
+  return {
+    pathname,
+    stableRedirectPath,
+    stableUserOrganizations,
+    redirectState,
+    needsOrganizationBootstrap,
+  };
+}
+
+function AppLayout() {
+  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
+  const { isAuthLoading, persistedAppLayoutState, redirectPath, userOrganizations, currentUser } =
+    useAppLayoutState();
+
+  const {
+    pathname,
+    stableRedirectPath,
+    stableUserOrganizations,
+    redirectState,
+    needsOrganizationBootstrap,
+  } = useAppRedirectState(redirectPath, userOrganizations, persistedAppLayoutState);
 
   // Loading state - waiting for queries
   if (

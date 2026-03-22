@@ -54,8 +54,6 @@ function PublicBoardPage() {
     issuesByStatus.set(status, group);
   }
 
-  const statusNames = new Map(board.workflowStates.map((s) => [s.id, s.name]));
-
   return (
     <Flex direction="column" className="min-h-screen bg-ui-bg-secondary">
       <Card padding="lg" radius="none" className="border-b border-ui-border">
