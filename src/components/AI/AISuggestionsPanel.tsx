@@ -92,13 +92,13 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
         >
           <SegmentedControlItem value="all">All</SegmentedControlItem>
           <SegmentedControlItem value="risk_detection">
-            <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Risks
+            <Icon icon={AlertTriangle} size="sm" inline /> Risks
           </SegmentedControlItem>
           <SegmentedControlItem value="insight">
-            <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Insights
+            <Icon icon={Lightbulb} size="sm" inline /> Insights
           </SegmentedControlItem>
           <SegmentedControlItem value="sprint_planning">
-            <Icon icon={Calendar} size="sm" className="inline mr-1" /> Planning
+            <Icon icon={Calendar} size="sm" inline /> Planning
           </SegmentedControlItem>
         </SegmentedControl>
       </Card>
@@ -212,14 +212,14 @@ function SuggestionCard({ suggestion, onAccept, onDismiss }: SuggestionCardProps
           {suggestion.accepted && (
             <div className="mt-3">
               <Badge variant="success" size="sm">
-                <Icon icon={Check} size="xs" className="inline mr-1" /> Accepted
+                <Icon icon={Check} size="xs" inline /> Accepted
               </Badge>
             </div>
           )}
           {suggestion.dismissed && (
             <div className="mt-3">
               <Badge variant="neutral" size="sm">
-                <Icon icon={X} size="xs" className="inline mr-1" /> Dismissed
+                <Icon icon={X} size="xs" inline /> Dismissed
               </Badge>
             </div>
           )}

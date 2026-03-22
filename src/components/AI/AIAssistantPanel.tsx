@@ -107,7 +107,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
             >
               <TabsList className="w-full">
                 <TabsTrigger value="chat" width="fill">
-                  <Icon icon={MessageSquare} size="sm" className="inline mr-1" /> Chat
+                  <Icon icon={MessageSquare} size="sm" inline /> Chat
                   {chats && chats.length > 0 && (
                     <Badge variant="secondary" size="sm" className="ml-2">
                       {chats.length}
@@ -115,7 +115,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="suggestions" width="fill">
-                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Suggestions
+                  <Icon icon={Lightbulb} size="sm" inline /> Suggestions
                   {unreadSuggestions > 0 && (
                     <Badge variant="error" size="sm" className="ml-2">
                       {unreadSuggestions}

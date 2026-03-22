@@ -59,19 +59,19 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       case "success":
         return (
           <Badge variant="success" shape="pill">
-            <Icon icon={Check} size="xs" className="inline mr-1" /> Success
+            <Icon icon={Check} size="xs" inline /> Success
           </Badge>
         );
       case "failed":
         return (
           <Badge variant="error" shape="pill">
-            <Icon icon={X} size="xs" className="inline mr-1" /> Failed
+            <Icon icon={X} size="xs" inline /> Failed
           </Badge>
         );
       case "retrying":
         return (
           <Badge variant="warning" shape="pill">
-            <Icon icon={RefreshCw} size="xs" className="inline mr-1" /> Retrying
+            <Icon icon={RefreshCw} size="xs" inline /> Retrying
           </Badge>
         );
       default:
