@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import { act } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -119,7 +120,7 @@ describe("Collaborators", () => {
   it("renders nothing when there is no current user", () => {
     mockUseAuthenticatedQuery.mockReturnValue(undefined);
 
-    const { container } = render(<Collaborators documentId={"doc_1" as never} />);
+    const { container } = render(<Collaborators documentId={"doc_1" as Id<"documents">} />);
 
     expect(container).toBeEmptyDOMElement();
     expect(managers).toHaveLength(0);
@@ -132,7 +133,13 @@ describe("Collaborators", () => {
       image: "alex.png",
     });
 
-    render(<Collaborators documentId={"doc_1" as never} maxVisible={2} className="top-right" />);
+    render(
+      <Collaborators
+        documentId={"doc_1" as Id<"documents">}
+        maxVisible={2}
+        className="top-right"
+      />,
+    );
 
     expect(managers).toHaveLength(1);
     expect(managers[0].connect).toHaveBeenCalledTimes(1);
@@ -194,7 +201,7 @@ describe("Collaborators", () => {
       image: "alex.png",
     });
 
-    const { result, unmount } = renderHook(() => useCollaboratorCount("doc_2" as never));
+    const { result, unmount } = renderHook(() => useCollaboratorCount("doc_2" as Id<"documents">));
 
     expect(result.current).toBe(0);
     expect(managers).toHaveLength(1);

@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -61,7 +62,7 @@ describe("useOfflineAddComment", () => {
 
   it("calls the live mutation when online", async () => {
     const { result } = renderHook(() => useOfflineAddComment());
-    const response = await result.current.addComment("issue-123" as never, "Great work!");
+    const response = await result.current.addComment("issue-123" as Id<"issues">, "Great work!");
 
     expect(response).toEqual({ queued: false, commentId: "comment-new" });
     expect(mockMutation).toHaveBeenCalledWith({
@@ -77,7 +78,7 @@ describe("useOfflineAddComment", () => {
     mockQueueAddComment.mockResolvedValue(1);
 
     const { result } = renderHook(() => useOfflineAddComment());
-    const response = await result.current.addComment("issue-456" as never, "Will fix this");
+    const response = await result.current.addComment("issue-456" as Id<"issues">, "Will fix this");
 
     expect(response).toEqual({ queued: true });
     expect(mockQueueAddComment).toHaveBeenCalledWith(
@@ -98,7 +99,7 @@ describe("useOfflineAddComment", () => {
     });
 
     const { result } = renderHook(() => useOfflineAddComment());
-    await expect(result.current.addComment("issue-789" as never, "Hello")).rejects.toThrow(
+    await expect(result.current.addComment("issue-789" as Id<"issues">, "Hello")).rejects.toThrow(
       "Cannot queue offline mutation without an authenticated user",
     );
   });

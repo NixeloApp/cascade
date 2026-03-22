@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import { describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -16,7 +17,7 @@ vi.mock("@/hooks/useOrgContext", () => ({
 describe("Stickies", () => {
   it("renders empty state when no stickies exist", () => {
     vi.mocked(useOrganization).mockReturnValue({
-      organizationId: "org_1" as never,
+      organizationId: "org_1" as Id<"organizations">,
       orgSlug: "test-org",
       organizationName: "Test Org",
       userRole: "admin",

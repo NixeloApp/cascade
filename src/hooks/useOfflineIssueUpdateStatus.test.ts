@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -56,7 +57,11 @@ describe("useOfflineIssueUpdateStatus", () => {
 
   it("calls the live mutation when online", async () => {
     const { result } = renderHook(() => useOfflineIssueUpdateStatus());
-    const response = await result.current.updateStatus("issue-123" as never, "in-progress", 0);
+    const response = await result.current.updateStatus(
+      "issue-123" as Id<"issues">,
+      "in-progress",
+      0,
+    );
 
     expect(response).toEqual({ queued: false });
     expect(mockMutation).toHaveBeenCalledWith({
@@ -72,7 +77,7 @@ describe("useOfflineIssueUpdateStatus", () => {
     mockQueueIssueUpdateStatus.mockResolvedValue(1);
 
     const { result } = renderHook(() => useOfflineIssueUpdateStatus());
-    const response = await result.current.updateStatus("issue-456" as never, "done");
+    const response = await result.current.updateStatus("issue-456" as Id<"issues">, "done");
 
     expect(response).toEqual({ queued: true });
     expect(mockQueueIssueUpdateStatus).toHaveBeenCalledWith(
@@ -91,7 +96,7 @@ describe("useOfflineIssueUpdateStatus", () => {
     });
 
     const { result } = renderHook(() => useOfflineIssueUpdateStatus());
-    await expect(result.current.updateStatus("issue-789" as never, "todo")).rejects.toThrow(
+    await expect(result.current.updateStatus("issue-789" as Id<"issues">, "todo")).rejects.toThrow(
       "Cannot queue offline mutation without an authenticated user",
     );
   });

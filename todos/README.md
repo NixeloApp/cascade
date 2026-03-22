@@ -21,7 +21,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | ~~#908~~ | ~~`scripts/validate/check-raw-tailwind.js:252`~~ | ~~Structural allowlist short-circuits entire attribute.~~ **Fixed** — per-token stripping; only allowed tokens removed. |
 | ~~#908~~ | ~~`scripts/validate/tailwind-policy.js:92`~~ | ~~Class-string detection requires uppercase names.~~ **Fixed** — matches any const name containing TW patterns. |
 | #908 | `e2e/preview/offline-replay-preview.spec.ts:30` | Entire offline preview suite skipped in CI. Should find a reliable way to test SW caching, not skip it entirely. |
-| #909 | `src/hooks/useOfflineIssueUpdateStatus.test.ts:96` | Tests use `as never` casts instead of proper typed test helpers. |
+| ~~#909~~ | ~~`src/hooks/useOfflineIssueUpdateStatus.test.ts:96`~~ | ~~Tests use `as never` casts.~~ **Fixed** — replaced with `as Id<"table">` across 7 test files. |
 | ~~#918~~ | ~~`convex/deployBoards.ts:168`~~ | ~~Deploy board returns empty `workflowStates` when `status: false`.~~ **Fixed** — always return workflowStates; resolve assignee names. |
 | ~~#918~~ | ~~`src/routes/board.$slug.tsx`~~ | ~~Board card doesn't render assignee or dueDate.~~ **Fixed** — BoardIssueCard renders both fields. |
 | ~~#918~~ | ~~`src/routes/board.$slug.tsx:58`~~ | ~~Board renders no issues when status disabled.~~ **Fixed** — status always included for column grouping. |
@@ -36,7 +36,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | #908 | `todos/tailwind-cva-consolidation.md:29` | Stale violation counts (references 126/436 instead of current 102/261). |
 | #908 | `todos/validator-strengthening.md:53` | Claims all backend filter debt resolved but baseline still has calendarEvents/export entries. |
 | #909 | 6 files | EmptyState imports use relative paths instead of `@/` alias. |
-| #910 | `src/hooks/useOfflineAddComment.test.ts:64` | Test uses `as never` cast instead of proper typed test ID. |
+| ~~#910~~ | ~~`src/hooks/useOfflineAddComment.test.ts:64`~~ | ~~Test uses `as never` cast.~~ **Fixed** — replaced with `as Id<"issues">`. |
 | #911 | `convex/autoArchive.test.ts` (3 locations) | Magic numbers for day values; missing assertion that workflow state exists. |
 | #911 | `convex/schemaFields.ts:44` | `autoArchiveDays` field not exposed in project update mutation args — can only be set via direct DB patch. |
 | #912 | `todos/README.md:79` | Inconsistent terminology: "4 mutations" vs "4 mutation families." |
@@ -109,7 +109,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 24 (0 critical, 2 major, 22 minor) |
+| Unresolved PR comments | 22 (0 critical, 1 major, 21 minor) |
 | Unit tests | 4407 pass |
 | E2E tests | 164 pass (non-preview) |
 

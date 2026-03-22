@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { ReactNode } from "react";
@@ -201,7 +202,7 @@ describe("OrganizationSettings", () => {
     vi.clearAllMocks();
 
     mockUseOrganization.mockReturnValue({
-      organizationId: "org_123" as never,
+      organizationId: "org_123" as Id<"organizations">,
       organizationName: "Test Organization",
       orgSlug: "test-org",
       userRole: "admin",
