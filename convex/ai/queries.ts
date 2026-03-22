@@ -245,12 +245,10 @@ export const getUsageStats = authenticatedQuery({
 
     const byProvider = filtered.reduce<Record<AIProvider, number>>(
       (acc, u) => {
-        if (u.provider === "anthropic") {
-          acc[u.provider] = (acc[u.provider] || 0) + u.totalTokens;
-        }
+        acc[u.provider] = (acc[u.provider] || 0) + u.totalTokens;
         return acc;
       },
-      { anthropic: 0 },
+      { anthropic: 0, openai: 0 },
     );
 
     const byOperation = filtered.reduce<Record<AIOperation, number>>(

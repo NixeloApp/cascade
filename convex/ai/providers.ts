@@ -2,7 +2,7 @@
 
 /**
  * AI Provider Abstraction Layer
- * Unified interface for Anthropic Claude
+ * Unified interface for Anthropic Claude and OpenAI
  */
 
 import { validation } from "../lib/errors";
@@ -66,14 +66,61 @@ async function callAnthropic(config: AIConfig, messages: AIMessage[]): Promise<A
 }
 
 /**
- * Main AI call function - routes to Anthropic
+ * OpenAI provider (GPT-4o, GPT-4o-mini, etc.)
+ */
+async function callOpenAI(config: AIConfig, messages: AIMessage[]): Promise<AIResponse> {
+  const response = await fetchWithTimeout(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        max_tokens: config.maxTokens || 4096,
+        temperature: config.temperature || 0.7,
+      }),
+    },
+    MINUTE,
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw validation("openai", `OpenAI API error: ${error}`);
+  }
+
+  const data = await response.json();
+  const choice = data.choices?.[0];
+
+  if (!choice?.message?.content) {
+    throw validation("openai", "OpenAI returned empty response");
+  }
+
+  return {
+    content: choice.message.content,
+    usage: data.usage
+      ? {
+          promptTokens: data.usage.prompt_tokens,
+          completionTokens: data.usage.completion_tokens,
+          totalTokens: data.usage.total_tokens,
+        }
+      : undefined,
+  };
+}
+
+/**
+ * Main AI call function — routes to the configured provider
  */
 export async function callAI(config: AIConfig, messages: AIMessage[]): Promise<AIResponse> {
-  if (config.provider !== "anthropic") {
-    throw validation(
-      "provider",
-      `Unsupported AI provider: ${config.provider}. Only Anthropic is supported.`,
-    );
+  switch (config.provider) {
+    case "anthropic":
+      return callAnthropic(config, messages);
+    case "openai":
+      return callOpenAI(config, messages);
+    default:
+      throw validation("provider", `Unsupported AI provider: ${config.provider}`);
   }
-  return await callAnthropic(config, messages);
 }

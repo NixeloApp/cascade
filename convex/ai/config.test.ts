@@ -30,6 +30,7 @@ describe("AI Config", () => {
 
   describe("getAIConfig", () => {
     it("should return config when API key is set", () => {
+      vi.mocked(isAnthropicConfigured).mockReturnValue(true);
       vi.mocked(getAnthropicApiKey).mockReturnValue("test-api-key");
       vi.mocked(getAnthropicModel).mockReturnValue("claude-haiku-4-5");
 
@@ -44,12 +45,10 @@ describe("AI Config", () => {
       });
     });
 
-    it("should throw validation error when API key is not set", () => {
-      vi.mocked(getAnthropicApiKey).mockImplementation(() => {
-        throw new Error("ANTHROPIC_API_KEY not configured");
-      });
+    it("should throw validation error when no provider is configured", () => {
+      vi.mocked(isAnthropicConfigured).mockReturnValue(false);
 
-      expect(() => getAIConfig()).toThrow("ANTHROPIC_API_KEY not configured");
+      expect(() => getAIConfig()).toThrow("No AI provider configured");
     });
   });
 

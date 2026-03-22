@@ -1,12 +1,13 @@
 /**
  * AI Provider Configuration
- * Uses Anthropic Claude exclusively
+ * Supports Anthropic Claude and OpenAI GPT
+ * Provider is determined by which API key is configured
  */
 
 import { getAnthropicApiKey, getAnthropicModel, isAnthropicConfigured } from "../lib/env";
 import { validation } from "../lib/errors";
 
-export type AIProvider = "anthropic";
+export type AIProvider = "anthropic" | "openai";
 
 export interface AIConfig {
   provider: AIProvider;
@@ -17,7 +18,7 @@ export interface AIConfig {
 }
 
 /**
- * Claude models (using aliases - auto-point to latest snapshot)
+ * Claude models (using aliases — auto-point to latest snapshot)
  */
 export const CLAUDE_MODELS = {
   opus: "claude-opus-4-5",
@@ -25,38 +26,80 @@ export const CLAUDE_MODELS = {
 } as const;
 
 /**
- * Default model for each use case
+ * OpenAI models
  */
-export const DEFAULT_MODELS = {
-  chat: CLAUDE_MODELS.opus, // High quality for chat
-  suggestions: CLAUDE_MODELS.haiku, // Fast/cheap for suggestions
-  summary: CLAUDE_MODELS.opus, // High quality for meeting summaries
+export const OPENAI_MODELS = {
+  gpt4o: "gpt-4o",
+  gpt4oMini: "gpt-4o-mini",
 } as const;
 
 /**
- * Get AI configuration from environment variables
+ * Default model for each use case
  */
-export function getAIConfig(): AIConfig {
-  const anthropicKey = getAnthropicApiKey();
-  if (!anthropicKey) {
-    throw validation(
-      "ANTHROPIC_API_KEY",
-      "ANTHROPIC_API_KEY not configured. Set ANTHROPIC_API_KEY in environment variables.",
-    );
-  }
+export const DEFAULT_MODELS = {
+  chat: CLAUDE_MODELS.opus,
+  suggestions: CLAUDE_MODELS.haiku,
+  summary: CLAUDE_MODELS.opus,
+} as const;
 
-  return {
-    provider: "anthropic",
-    apiKey: anthropicKey,
-    model: getAnthropicModel(),
-    temperature: 0.7,
-    maxTokens: 4096,
-  };
+function getOpenAIApiKey(): string | undefined {
+  return process.env.OPENAI_API_KEY;
+}
+
+function getOpenAIModel(): string {
+  return process.env.OPENAI_MODEL || OPENAI_MODELS.gpt4o;
+}
+
+function isOpenAIConfigured(): boolean {
+  return !!process.env.OPENAI_API_KEY;
 }
 
 /**
- * Check if AI is configured
+ * Get AI configuration from environment variables.
+ * Prefers Anthropic if both are configured.
+ * Falls back to OpenAI if Anthropic is not available.
+ */
+export function getAIConfig(): AIConfig {
+  // Prefer Anthropic
+  if (isAnthropicConfigured()) {
+    return {
+      provider: "anthropic",
+      apiKey: getAnthropicApiKey(),
+      model: getAnthropicModel(),
+      temperature: 0.7,
+      maxTokens: 4096,
+    };
+  }
+
+  // Fallback to OpenAI
+  if (isOpenAIConfigured()) {
+    return {
+      provider: "openai",
+      apiKey: getOpenAIApiKey() as string,
+      model: getOpenAIModel(),
+      temperature: 0.7,
+      maxTokens: 4096,
+    };
+  }
+
+  throw validation(
+    "AI_API_KEY",
+    "No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in environment variables.",
+  );
+}
+
+/**
+ * Check if any AI provider is configured
  */
 export function isAIConfigured(): boolean {
-  return isAnthropicConfigured();
+  return isAnthropicConfigured() || isOpenAIConfigured();
+}
+
+/**
+ * Get the active provider name for display
+ */
+export function getActiveProviderName(): string | null {
+  if (isAnthropicConfigured()) return "Anthropic Claude";
+  if (isOpenAIConfigured()) return "OpenAI GPT";
+  return null;
 }
