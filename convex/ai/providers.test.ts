@@ -101,11 +101,11 @@ describe("AI Providers", () => {
     it("should throw validation error for unsupported provider", async () => {
       const invalidConfig = {
         ...mockConfig,
-        provider: "openai" as AIConfig["provider"],
+        provider: "unsupported" as AIConfig["provider"],
       };
 
       await expect(callAI(invalidConfig, mockMessages)).rejects.toThrow(
-        "Unsupported AI provider: openai",
+        "Unsupported AI provider: unsupported",
       );
     });
 

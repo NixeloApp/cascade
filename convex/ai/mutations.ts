@@ -214,7 +214,7 @@ export const dismissSuggestion = authenticatedMutation({
 export const trackUsage = authenticatedMutation({
   args: {
     projectId: v.optional(v.id("projects")),
-    provider: v.literal("anthropic"),
+    provider: v.union(v.literal("anthropic"), v.literal("openai")),
     model: v.string(),
     operation: v.union(
       v.literal("chat"),

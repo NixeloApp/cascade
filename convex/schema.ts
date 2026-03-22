@@ -1296,7 +1296,7 @@ const applicationTables = {
   aiUsage: defineTable({
     userId: v.id("users"),
     projectId: v.optional(v.id("projects")),
-    provider: v.literal("anthropic"),
+    provider: v.union(v.literal("anthropic"), v.literal("openai")),
     model: v.string(),
     operation: v.union(
       v.literal("chat"),
