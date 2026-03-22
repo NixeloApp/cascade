@@ -22,9 +22,6 @@ import { Skeleton, SkeletonText } from "./ui/Skeleton";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
-/** Shared sheet width for the issue detail panel. */
-const ISSUE_SHEET_SIZE = "w-full sm:max-w-xl lg:max-w-2xl";
-
 interface IssueDetailSheetProps {
   issueId: Id<"issues">;
   open: boolean;
@@ -52,7 +49,7 @@ export function IssueDetailSheet({
         side="right"
         layout="panel"
         bodyClassName="px-6 pb-6"
-        className={ISSUE_SHEET_SIZE}
+        className="w-full sm:max-w-xl lg:max-w-2xl"
       >
         <Stack as="output" aria-live="polite" aria-busy="true" gap="lg">
           <span className="sr-only">Loading...</span>
@@ -114,7 +111,7 @@ export function IssueDetailSheet({
       layout="panel"
       header={header}
       bodyClassName="p-0"
-      className={ISSUE_SHEET_SIZE}
+      className="w-full sm:max-w-xl lg:max-w-2xl"
       data-testid={TEST_IDS.ISSUE.DETAIL_MODAL}
     >
       <IssueDetailLayout detail={detail} billingEnabled={billingEnabled} canEdit={canEdit} />

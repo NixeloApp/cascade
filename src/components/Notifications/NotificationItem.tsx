@@ -180,9 +180,7 @@ export function NotificationItem({
       data-testid={TEST_IDS.NOTIFICATION.ITEM}
     >
       <Flex align="start" gap="md">
-        <FlexItem shrink={false}>
-          {getNotificationIcon(notification.type)}
-        </FlexItem>
+        <FlexItem shrink={false}>{getNotificationIcon(notification.type)}</FlexItem>
 
         <ContentWrapper />
 

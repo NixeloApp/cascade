@@ -196,7 +196,22 @@ export function run() {
       continue;
     }
 
-    const lines = fs.readFileSync(filePath, "utf-8").split("\n");
+    const content = fs.readFileSync(filePath, "utf-8");
+    const lines = content.split("\n");
+
+    // Pre-scan: collect const string declarations that contain raw TW patterns.
+    // This catches the anti-pattern of hiding raw Tailwind behind a variable:
+    //   const FOO = "w-full sm:max-w-xl";  <-- still raw TW
+    //   <Sheet className={FOO} />           <-- would otherwise dodge detection
+    const constStringMap = new Map();
+    for (let i = 0; i < lines.length; i++) {
+      const constMatch = lines[i].match(
+        /\bconst\s+([A-Z_][A-Z_0-9]*)\s*=\s*["'`]([\s\S]*?)["'`]\s*;/,
+      );
+      if (constMatch) {
+        constStringMap.set(constMatch[1], { value: constMatch[2], line: i });
+      }
+    }
 
     for (let index = 0; index < lines.length; index++) {
       const line = lines[index];
@@ -214,12 +229,22 @@ export function run() {
         continue;
       }
 
+      // Resolve className={CONST_VAR} references to their string value
+      let resolvedSpan = span;
+      const varRefMatch = span.match(/className\s*=\s*\{([A-Z_][A-Z_0-9]*)\}/);
+      if (varRefMatch) {
+        const entry = constStringMap.get(varRefMatch[1]);
+        if (entry) {
+          resolvedSpan = `className="${entry.value}"`;
+        }
+      }
+
       for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
-        if (!pattern.test(span)) continue;
+        if (!pattern.test(resolvedSpan)) continue;
 
         const violation = {
           line: index + 1,
-          replacement,
+          replacement: `${replacement} (class string extracted to const — still raw Tailwind)`,
         };
         const bucket = violationsByFile[rel] ?? [];
         bucket.push(violation);
