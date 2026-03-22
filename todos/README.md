@@ -18,8 +18,8 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 |----|------|-------|
 | ~~#908~~ | ~~`convex/export.ts:327`~~ | ~~Export queries use `.filter()` for sprintId/status.~~ **Fixed** — uses compound indexes `by_project_sprint_status` and `by_project_status`. |
 | ~~#908~~ | ~~`convex/hourCompliance.ts:563`~~ | ~~Compliance summary silently truncates.~~ **Fixed** — `isTruncated` flag exposed; dashboard shows "+" suffix and warning. |
-| #908 | `scripts/validate/check-raw-tailwind.js:252` | Structural allowlist short-circuits entire attribute instead of per-token. A `className="min-w-0 p-4"` skips the `p-4` violation. |
-| #908 | `scripts/validate/tailwind-policy.js:92` | Class-string detection requires uppercase const names — `const sectionClasses = "..."` bypasses detection. |
+| ~~#908~~ | ~~`scripts/validate/check-raw-tailwind.js:252`~~ | ~~Structural allowlist short-circuits entire attribute.~~ **Fixed** — per-token stripping; only allowed tokens removed. |
+| ~~#908~~ | ~~`scripts/validate/tailwind-policy.js:92`~~ | ~~Class-string detection requires uppercase names.~~ **Fixed** — matches any const name containing TW patterns. |
 | #908 | `e2e/preview/offline-replay-preview.spec.ts:30` | Entire offline preview suite skipped in CI. Should find a reliable way to test SW caching, not skip it entirely. |
 | #909 | `src/hooks/useOfflineIssueUpdateStatus.test.ts:96` | Tests use `as never` casts instead of proper typed test helpers. |
 | ~~#918~~ | ~~`convex/deployBoards.ts:168`~~ | ~~Deploy board returns empty `workflowStates` when `status: false`.~~ **Fixed** — always return workflowStates; resolve assignee names. |
@@ -109,7 +109,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 26 (0 critical, 4 major, 22 minor) |
+| Unresolved PR comments | 24 (0 critical, 2 major, 22 minor) |
 | Unit tests | 4407 pass |
 | E2E tests | 164 pass (non-preview) |
 

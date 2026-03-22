@@ -86,10 +86,9 @@ export function detectClassStringHiding(lines) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Const string: const FOO = "tw classes..."
-    const constStringMatch = line.match(
-      /\bconst\s+([A-Z_][A-Z_0-9]*)\s*=\s*["'`]([\s\S]*?)["'`]\s*;/,
-    );
+    // Const string: const FOO = "tw classes..." or const fooClasses = "tw classes..."
+    // Matches UPPER_CASE names and camelCase/PascalCase names that look like class strings.
+    const constStringMatch = line.match(/\bconst\s+([A-Za-z_]\w*)\s*=\s*["'`]([\s\S]*?)["'`]\s*;/);
     if (constStringMatch) {
       const value = constStringMatch[2];
       for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
