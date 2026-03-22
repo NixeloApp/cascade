@@ -6,95 +6,116 @@
 
 ## Problem
 
-The codebase has 126 files with raw Tailwind violations (was 148, ratcheted down) and 48 files with CVA definitions. Most remaining violations are **legitimate structural layout** — `min-w-0` for truncation, `h-5 w-px` dividers, `max-h-64` for scrollable dropdowns, `animate-*` tokens, Skeleton sizing. These are correct uses of Tailwind-first layout.
-
-The real remaining debt is:
-- **Dumb validator**: the raw TW validator flags structural layout that is correct, while missing anti-patterns like const-string class hiding (now fixed) and class-map style systems
-- **CVA sprawl**: too many one-off CVA recipes that should be primitive variants or plain components
-- **Missing primitive coverage**: some common patterns force raw TW because no owned variant exists
-
-## What's Done
-
-- [x] Ratcheted 35 stale baselines (148 → 126 files, ~148 violation-point reduction)
-- [x] Fixed violations in 5 files (NotificationItem, ApiKeysManager, AuthPageLayout, DocumentSidebar, OfflineTab)
-- [x] Validator now catches const-string class hiding (`const FOO = "w-full ..."` used in `className={FOO}`)
-- [x] Styling contract documented (below)
+126 files with raw Tailwind violations, 436 total violations. But the violations aren't equal — analysis shows they cluster into a few repeating patterns that should be fixed in batches, not one-by-one.
 
 ## Styling Contract
 
-- Tailwind-first for static feature/page layout — do not create local `cva()` helpers or local string-map style systems just to name a one-off class list
-- `cva()` is for shared primitive/component semantics, not for "this file has a section/header/list/icon wrapper" naming
-- `index.css` is for tokens, global utilities, and truly shared decorative effects — not single-page named style buckets
-- If a pattern repeats, extract a real component or add an owned primitive variant; if it does not repeat, keep it simple and local
-- Do not replace bad local `cva()` with bad local class-string objects; hidden style systems are worse, not better
-- `Icon` usage should be semantic — prefer owned `size`/`tone` props, keep the allowed color palette intentionally small
+- Tailwind-first for static feature/page layout — do not create local `cva()` helpers or string-map style systems for one-off class lists
+- `cva()` is for shared primitive/component semantics, not "this file has a section/header/list" naming
+- `index.css` is for tokens, global utilities, and truly shared effects — not single-page style buckets
+- If a pattern repeats, extract a real component or add an owned primitive variant; if it does not repeat, keep it raw Tailwind
+- Do not replace bad local `cva()` with bad local class-string objects — hidden style systems are worse
+- `Icon` usage should be semantic — owned `size`/`tone` props, small color palette
 
-## Next: Make the Validator Smart
+## What's Done
 
-The validator currently flags every raw Tailwind token mechanically. It needs to distinguish:
+- [x] Ratcheted 35 stale baselines (148 → 126 files)
+- [x] Fixed violations in 5 files (NotificationItem, ApiKeysManager, AuthPageLayout, DocumentSidebar, OfflineTab)
+- [x] Validator catches const-string class hiding (`const FOO = "w-full ..."` in `className={FOO}`)
+- [x] Violation cluster analysis (see below)
 
-### Legitimate structural layout (should NOT be flagged)
+## Violation Cluster Analysis
 
-These are correct Tailwind-first patterns per the styling contract:
+436 violations across 126 files. 223 of those are in the top 30 repeating patterns:
 
-| Pattern | Why it's fine |
-|---------|--------------|
-| `min-w-0` on a Flex child | Required for text truncation in flex layouts |
-| `h-5 w-px bg-ui-border` | Vertical divider — a semantic component would be over-engineering |
-| `max-h-64 overflow-y-auto` | Scroll constraint on a dropdown — specific to that context |
-| `animate-fade-in`, `animate-scale-in` | Animation tokens — already defined in `@theme`, just applied |
-| `sr-only` | Accessibility helper — not a styling concern |
-| `hidden sm:block` | Responsive visibility — layout concern, not design system |
-| Skeleton sizing (`h-8 w-56`) | Skeletons need arbitrary sizes to match content shapes |
+### Batch 1: Structural allowlist (zero-risk, ~65 violations removed)
 
-### Actual anti-patterns (SHOULD be flagged, some already are)
+These are correct Tailwind-first layout. Validator should stop flagging them.
 
-| Pattern | Status |
-|---------|--------|
-| `const CLASSES = "..."` used in `className={CLASSES}` | ✅ Now caught |
-| Repeated `p-3 bg-ui-bg-secondary` div (3+ times in a file) | Partially caught by cluster check |
-| `className="flex items-center gap-2"` when `<Flex align="center" gap="xs">` exists | Not caught — validator doesn't suggest component alternatives |
-| `h-X w-X` when `size-X` works | Caught by fixed-size-drift validator |
-| `opacity-50` on Icon when `tone="tertiary"` exists | Caught by icon-tone-drift validator |
+| Count | Pattern | Why it's fine |
+|-------|---------|---------------|
+| 49x | `min-w-0` | Required for flex text truncation |
+| 16x | `min-h-32` | Min-height constraint — layout concern |
 
-### Validator improvements needed
+### Batch 2: Sibling margins → Stack/Flex gap (~53 violations)
 
-- [ ] **Allowlist structural patterns**: `min-w-0`, `sr-only`, `hidden sm:*`, `animate-*` tokens, Skeleton sizing should not count as violations
-- [ ] **Flag class-map objects**: `const STYLES = { header: "...", body: "..." }` used for className — same anti-pattern as const-string hiding but in object form
-- [ ] **Suggest component alternatives**: when `className="flex items-center gap-2"` is flagged, suggest `<Flex align="center" gap="xs">` specifically
-- [ ] **Context-aware severity**: a `p-3` on a div inside a Card is different from `p-3` on a standalone section wrapper — the first is a layout concern, the second might need a Card variant
+Margins used for spacing between siblings. Replace parent with `<Stack gap="...">`.
 
-## Phase 2: Consolidate CVA Sprawl
+| Count | Files | Pattern |
+|-------|-------|---------|
+| 14x | 13 | `mb-2` |
+| 14x | 11 | `mt-2` |
+| 9x | 9 | `mt-1` |
+| 8x | 6 | `mb-1` |
+| 7x | 4 | `mt-3` |
+| 7x | 4 | `mt-0.5` |
 
-- [ ] Audit 10 feature-component CVA definitions (Landing pages, PageLayout) — merge into `ui/` primitives or keep if truly feature-specific
+Each fix: read the parent, wrap children in `<Stack gap="xs|sm|md">`, remove `mt-*`/`mb-*` from children.
+
+### Batch 3: Icon sizing → size-* or Icon prop (~19 violations)
+
+| Count | Pattern | Fix |
+|-------|---------|-----|
+| 7x | `w-4 h-4` | `size-4` |
+| 5x | `h-4 w-4` | `size-4` |
+| 4x | `h-5 w-5` | `size-5` |
+| 3x | `w-3 h-3` | `size-3` |
+
+### Batch 4: Repeated stat-cell pattern (~10 violations)
+
+| Count | Files | Pattern | Fix |
+|-------|-------|---------|-----|
+| 7x | 1 | `p-4 bg-ui-bg-secondary` | `<Card variant="section" padding="md">` — already used elsewhere in the codebase |
+| 3x | 2 | `p-4` standalone | Same |
+
+### Batch 5: Icon inline margin (~18 violations)
+
+| Count | Pattern | Fix |
+|-------|---------|-----|
+| 18x | `inline mr-1` | Icon before text — should use Button/Badge leading icon API or `<Icon>` with gap from parent Flex |
+
+## Execution Order
+
+1. **Allowlist `min-w-0` and `min-h-32`** in the validator — removes ~65 false positives from the count
+2. **Batch 3 (icon sizing)** — mechanical `h-X w-X` → `size-X`, safe, 19 violations
+3. **Batch 4 (stat cells)** — replace repeated `p-4 bg-ui-bg-secondary` divs with Card variant
+4. **Batch 2 (margins → gaps)** — largest batch, needs reading each context, 53 violations across 30+ files
+5. **Batch 5 (icon inline margin)** — needs audit of where `inline mr-1` is used and whether a component API exists
+
+## CVA Consolidation (after raw TW is reduced)
+
+- [ ] Audit 10 feature-component CVA definitions — merge into `ui/` primitives or keep if truly feature-specific
 - [ ] Typography: audit 30+ variants for overlap — merge variants that differ only by one property
 - [ ] Badge: audit 10+ variants for overlap
-- [ ] Card: audit 8+ variants — ensure no feature-local Card recipes exist
+- [ ] Card: audit 8+ variants
 - [ ] Delete or demote one-off CVAs (0 variants, single call site)
 - [ ] Audit primitive variant APIs for gaps that force local CVAs or raw TW
 
-## Phase 3: Enforce
+## Validator Improvements
 
-- [ ] Add a validator that flags new CVA definitions outside `src/components/ui/` (feature CVAs should be rare and justified)
-- [ ] Add a validator that flags CVA files with >10 variants (sign of sprawl)
+- [x] Catches const-string class hiding (`const FOO = "..."` in `className={FOO}`)
+- [ ] Allowlist structural patterns (`min-w-0`, `min-h-*`) so violation count reflects real debt
+- [ ] Flag class-map objects (`const STYLES = { header: "...", body: "..." }`)
+- [ ] Add a validator that flags new CVA definitions outside `src/components/ui/`
+- [ ] Add a validator that flags CVA files with >10 variants
 - [ ] Add a validator that flags feature-local CVAs with only base styles or a single call site
-- [ ] Tighten raw TW ratchet as structural allowlisting reduces false positives
 
-## Anti-patterns to Watch
+## Anti-patterns
 
 | Anti-pattern | What to do instead |
 |-------------|-------------------|
-| Raw `className="flex items-center gap-2 px-3 py-1.5 ..."` repeated 3+ times | Extract a component or add a CVA variant |
+| Raw `className="flex items-center gap-2 px-3 ..."` repeated 3+ times | Extract a component or add a CVA variant |
 | One-off CVA with 2 variants used in 1 file | Just use a component with props |
-| CVA in a feature component that duplicates a `ui/` primitive's variant | Add the variant to the primitive, delete the feature CVA |
-| `<Icon className="text-foo h-4 w-4" />` for product semantics | Use owned `size`/`tone` props |
+| CVA that duplicates a `ui/` primitive's variant | Add the variant to the primitive, delete the feature CVA |
+| `<Icon className="text-foo h-4 w-4" />` | Use owned `size`/`tone` props |
 | `cva()` with no variants (just a base) | Use `cn()` directly or a simple component |
-| `const SECTION_CLASSES = { ... }` or `const FOO = "w-full ..."` | Keep one-off layout as plain Tailwind or extract a real component |
+| `const SECTION_CLASSES = { ... }` or `const FOO = "w-full ..."` | Keep raw Tailwind or extract a real component |
 
 ## Done When
 
-- [ ] Validator smart enough to distinguish structural layout from design-system violations
-- [ ] Raw TW violation count reduced to <50 files (after structural patterns allowlisted)
+- [ ] Structural patterns allowlisted — violation count reflects real debt only
+- [ ] Raw TW violation count under 50 files (after allowlisting)
+- [ ] Top repeating clusters resolved (batches 2-5)
 - [ ] Feature-component CVAs either justified or merged into `ui/`
 - [ ] No CVA definition with 0 variants (just base styles)
-- [ ] Typography/Badge/Card variant counts reviewed and consolidated where overlapping
+- [ ] Typography/Badge/Card variant counts reviewed and consolidated
