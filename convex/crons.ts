@@ -55,6 +55,17 @@ crons.daily(
 );
 
 /**
+ * Auto-archive done issues
+ * Runs daily at 3:00 AM UTC
+ * Archives issues in "done" workflow states older than the project's autoArchiveDays setting
+ */
+crons.daily(
+  "auto-archive done issues",
+  { hourUTC: 3, minuteUTC: 0 },
+  internal.autoArchive.archiveStaleDoneIssues,
+);
+
+/**
  * OAuth Health Check (Synthetic)
  * Runs every 15 minutes to verify Google OAuth is working
  * Catches issues like expired refresh tokens or API outages

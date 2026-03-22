@@ -40,6 +40,8 @@ export const projectsFields = {
   defaultHourlyRate: v.optional(v.number()), // Default billing rate for this project
   clientName: v.optional(v.string()), // Client name for agency work
   budget: v.optional(v.number()), // Project budget in currency
+  // Auto-archive: archive done issues after N days (0 or undefined = disabled)
+  autoArchiveDays: v.optional(v.number()),
   // Soft Delete
   isDeleted: v.optional(v.boolean()),
   deletedAt: v.optional(v.number()),
