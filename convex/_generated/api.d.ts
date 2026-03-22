@@ -23,6 +23,7 @@ import type * as attachments from "../attachments.js";
 import type * as auditLogs from "../auditLogs.js";
 import type * as auth from "../auth.js";
 import type * as authWrapper from "../authWrapper.js";
+import type * as autoArchive from "../autoArchive.js";
 import type * as automationRules from "../automationRules.js";
 import type * as availability from "../availability.js";
 import type * as bookingPages from "../bookingPages.js";
@@ -196,6 +197,7 @@ declare const fullApi: ApiFromModules<{
   auditLogs: typeof auditLogs;
   auth: typeof auth;
   authWrapper: typeof authWrapper;
+  autoArchive: typeof autoArchive;
   automationRules: typeof automationRules;
   availability: typeof availability;
   bookingPages: typeof bookingPages;
