@@ -658,15 +658,11 @@ export const getTimeMetrics = projectQuery({
 
     // Find done status IDs
     const doneStatusIds = new Set(
-      project.workflowStates
-        .filter((s) => s.category === "done")
-        .map((s) => s.id),
+      project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
     );
 
     const inProgressStatusIds = new Set(
-      project.workflowStates
-        .filter((s) => s.category === "inprogress")
-        .map((s) => s.id),
+      project.workflowStates.filter((s) => s.category === "inprogress").map((s) => s.id),
     );
 
     if (doneStatusIds.size === 0) return null;
@@ -676,10 +672,7 @@ export const getTimeMetrics = projectQuery({
       .query("issues")
       .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
       .filter((q) =>
-        q.and(
-          q.neq(q.field("isDeleted"), true),
-          q.eq(q.field("archivedAt"), undefined),
-        ),
+        q.and(q.neq(q.field("isDeleted"), true), q.eq(q.field("archivedAt"), undefined)),
       )
       .order("desc")
       .take(MAX_PAGE_SIZE);
@@ -714,17 +707,12 @@ export const getTimeMetrics = projectQuery({
       const activities = await ctx.db
         .query("issueActivity")
         .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("action"), "updated"),
-            q.eq(q.field("field"), "status"),
-          ),
-        )
+        .filter((q) => q.and(q.eq(q.field("action"), "updated"), q.eq(q.field("field"), "status")))
         .take(50);
 
       // Find earliest transition to inprogress
-      const inProgressActivity = activities.find((a) =>
-        a.newValue && inProgressStatusIds.has(a.newValue),
+      const inProgressActivity = activities.find(
+        (a) => a.newValue && inProgressStatusIds.has(a.newValue),
       );
 
       if (inProgressActivity) {
