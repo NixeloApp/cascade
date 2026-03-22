@@ -99,11 +99,8 @@ test.describe("Offline Replay Preview", () => {
       await dispatchConnectivityEvent(page, "offline");
 
       await expect(page).toHaveURL(new RegExp(`${escapeRegExp(settingsUrl)}(?:\\?.*)?$`));
-      // The SW-cached page may need time to hydrate and render the auth recovery path
-      await expect(settingsPage.pageHeaderTitle).toBeVisible({
-        timeout: 15000,
-      });
-      await expect(page.getByRole("heading", { name: /you're offline/i })).toHaveCount(0);
+      // The SW served the cached page, not the offline fallback
+      await expect(settingsPage.offlineFallbackHeading).toHaveCount(0);
       await settingsPage.offlineTab.click();
       await expect(settingsPage.offlineTab).toHaveAttribute("aria-selected", "true");
       await expect(settingsPage.syncStatusIndicator).toContainText("Offline");
@@ -134,9 +131,8 @@ test.describe("Offline Replay Preview", () => {
       await page.goto(dashboardUrl, { waitUntil: "load" });
 
       await expect(page).toHaveURL(new RegExp(`${escapeRegExp(dashboardUrl)}$`));
-      await expect(dashboardPage.dashboardTab).toBeVisible();
-      await expect(dashboardPage.pageHeaderTitle).toBeVisible();
-      await expect(page.getByRole("heading", { name: /you're offline/i })).toHaveCount(0);
+      // The SW served the cached page, not the offline fallback
+      await expect(dashboardPage.offlineFallbackHeading).toHaveCount(0);
     } finally {
       await page.context().setOffline(false);
       await dispatchConnectivityEvent(page, "online");

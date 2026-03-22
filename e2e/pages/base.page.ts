@@ -17,6 +17,7 @@ export abstract class BasePage {
   readonly page: Page;
   readonly orgSlug: string;
   readonly pageHeaderTitle: Locator;
+  readonly offlineFallbackHeading: Locator;
 
   constructor(page: Page, orgSlug: string) {
     if (!orgSlug) {
@@ -25,6 +26,7 @@ export abstract class BasePage {
     this.page = page;
     this.orgSlug = orgSlug;
     this.pageHeaderTitle = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
+    this.offlineFallbackHeading = page.getByTestId(TEST_IDS.PAGE.OFFLINE_FALLBACK_HEADING);
   }
 
   /**
