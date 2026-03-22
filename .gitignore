@@ -40,6 +40,7 @@ coverage/
 e2e/.auth/
 playwright-report/
 test-results/
+test-results-preview/
 e2e/screenshots/*.png
 
 # Generated design screenshot outputs

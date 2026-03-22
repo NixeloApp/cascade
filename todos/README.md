@@ -55,6 +55,7 @@ Non-code-quality items from meetings that run alongside the pipeline.
 | File | What |
 |------|------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc, capture strategy, platform breadth, OSS evaluation, agent layer |
+| [offline-pwa.md](./offline-pwa.md) | SW ownership, push safety, replay expansion (notifications, issues, comments), graceful degradation UX |
 
 ---
 
