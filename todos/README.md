@@ -10,9 +10,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 
 ### Critical
 
-| PR | File | Issue |
-|----|------|-------|
-| #917 | `convex/intake.ts:123` | Issue key generation uses `.order("desc").first()` which can produce duplicate keys under concurrent submissions. Needs atomic sequence counter. |
+*All resolved.*
 
 ### Major
 
@@ -24,9 +22,9 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | #908 | `scripts/validate/tailwind-policy.js:92` | Class-string detection requires uppercase const names — `const sectionClasses = "..."` bypasses detection. |
 | #908 | `e2e/preview/offline-replay-preview.spec.ts:30` | Entire offline preview suite skipped in CI. Should find a reliable way to test SW caching, not skip it entirely. |
 | #909 | `src/hooks/useOfflineIssueUpdateStatus.test.ts:96` | Tests use `as never` casts instead of proper typed test helpers. |
-| #918 | `convex/deployBoards.ts:168` | Deploy board returns empty `workflowStates` when `status: false`, blanking the board. `assignee` field never exposed even when enabled. |
-| #918 | `src/routes/board.$slug.tsx` | Board card doesn't render assignee or dueDate even when those fields are enabled in visibleFields. |
-| #918 | `src/routes/board.$slug.tsx:58` | Board renders no issues when status visibility is disabled (no columns = no cards). |
+| ~~#918~~ | ~~`convex/deployBoards.ts:168`~~ | ~~Deploy board returns empty `workflowStates` when `status: false`.~~ **Fixed** — always return workflowStates; resolve assignee names. |
+| ~~#918~~ | ~~`src/routes/board.$slug.tsx`~~ | ~~Board card doesn't render assignee or dueDate.~~ **Fixed** — BoardIssueCard renders both fields. |
+| ~~#918~~ | ~~`src/routes/board.$slug.tsx:58`~~ | ~~Board renders no issues when status disabled.~~ **Fixed** — status always included for column grouping. |
 
 ### Minor
 
@@ -76,7 +74,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 |---------|--------|
 | Gantt chart polish | 🟡 RoadmapView exists (2671 lines). Needs: drag-resize, dependency arrows, zoom. |
 | Intake external capture | ✅ Backend shipped (PR #917). Needs: admin UI for token management. |
-| Deploy boards | ✅ Backend + public page shipped (PR #918). Needs: fix status=false blank board, add assignee/dueDate rendering (see unresolved comments above). |
+| Deploy boards | ✅ Shipped — backend, public page, assignee/dueDate rendering, status-hidden column fix. |
 | Auto-archive | ✅ Shipped |
 | Scheduled automation | ✅ Shipped (stale_in_status triggers) |
 | Stickies | ✅ Shipped |
@@ -111,8 +109,8 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 32 (1 critical, 9 major, 22 minor) |
-| Unit tests | 4372 pass |
+| Unresolved PR comments | 28 (0 critical, 6 major, 22 minor) |
+| Unit tests | 4403 pass |
 | E2E tests | 164 pass (non-preview) |
 
 ---

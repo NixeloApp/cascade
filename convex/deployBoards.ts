@@ -9,6 +9,7 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { projectAdminMutation, projectQuery } from "./customFunctions";
+import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 
 function generateSlug(): string {
@@ -148,21 +149,35 @@ export const getBySlug = query({
       )
       .take(MAX_PAGE_SIZE);
 
+    // Resolve assignee names if that field is visible
+    const assigneeMap = board.visibleFields.assignee
+      ? await batchFetchUsers(
+          ctx,
+          issues.map((i) => i.assigneeId),
+        )
+      : new Map();
+
     // Build public issue list with only visible fields
     const publicIssues = issues.map((issue) => ({
       key: issue.key,
       title: issue.title,
       type: issue.type,
-      status: board.visibleFields.status ? issue.status : undefined,
+      status: issue.status,
       priority: board.visibleFields.priority ? issue.priority : undefined,
+      assigneeName:
+        board.visibleFields.assignee && issue.assigneeId
+          ? getUserName(assigneeMap.get(issue.assigneeId))
+          : undefined,
       labels: board.visibleFields.labels ? issue.labels : undefined,
       dueDate: board.visibleFields.dueDate ? issue.dueDate : undefined,
     }));
 
+    // Always return workflowStates — the frontend needs them for column
+    // rendering even when the status badge is hidden on individual cards.
     return {
       projectName: project.name,
       projectKey: project.key,
-      workflowStates: board.visibleFields.status ? project.workflowStates : [],
+      workflowStates: project.workflowStates,
       issues: publicIssues,
       visibleFields: board.visibleFields,
     };

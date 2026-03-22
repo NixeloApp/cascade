@@ -15,7 +15,8 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { usePublicQuery } from "@/hooks/useConvexHelpers";
-import { FolderKanban } from "@/lib/icons";
+import { formatDate } from "@/lib/formatting";
+import { CalendarDays, FolderKanban, User } from "@/lib/icons";
 
 export const Route = createFileRoute("/board/$slug")({
   component: PublicBoardPage,
@@ -45,7 +46,7 @@ function PublicBoardPage() {
     );
   }
 
-  // Group issues by status
+  // Group issues by status for column rendering
   const issuesByStatus = new Map<string, typeof board.issues>();
   for (const issue of board.issues) {
     const status = issue.status ?? "unknown";
@@ -83,30 +84,11 @@ function PublicBoardPage() {
               </Flex>
               <Stack gap="xs">
                 {issues.map((issue) => (
-                  <Card key={issue.key} variant="section" padding="sm">
-                    <Stack gap="xs">
-                      <Flex align="center" gap="xs">
-                        <Typography variant="caption" color="secondary">
-                          {issue.key}
-                        </Typography>
-                        {board.visibleFields.priority && issue.priority && (
-                          <Badge variant="secondary" size="sm">
-                            {issue.priority}
-                          </Badge>
-                        )}
-                      </Flex>
-                      <Typography variant="small">{issue.title}</Typography>
-                      {board.visibleFields.labels && issue.labels && issue.labels.length > 0 && (
-                        <Flex gap="xs" wrap>
-                          {issue.labels.map((label) => (
-                            <Badge key={label} variant="outline" size="sm">
-                              {label}
-                            </Badge>
-                          ))}
-                        </Flex>
-                      )}
-                    </Stack>
-                  </Card>
+                  <BoardIssueCard
+                    key={issue.key}
+                    issue={issue}
+                    visibleFields={board.visibleFields}
+                  />
                 ))}
                 {issues.length === 0 && (
                   <Typography variant="caption" color="tertiary" className="text-center py-4">
@@ -119,5 +101,67 @@ function PublicBoardPage() {
         })}
       </Flex>
     </Flex>
+  );
+}
+
+type BoardIssue = NonNullable<
+  ReturnType<typeof usePublicQuery<typeof api.deployBoards.getBySlug>>
+>["issues"][number];
+type VisibleFields = NonNullable<
+  ReturnType<typeof usePublicQuery<typeof api.deployBoards.getBySlug>>
+>["visibleFields"];
+
+function BoardIssueCard({
+  issue,
+  visibleFields,
+}: {
+  issue: BoardIssue;
+  visibleFields: VisibleFields;
+}) {
+  return (
+    <Card variant="section" padding="sm">
+      <Stack gap="xs">
+        <Flex align="center" gap="xs">
+          <Typography variant="caption" color="secondary">
+            {issue.key}
+          </Typography>
+          {visibleFields.priority && issue.priority && (
+            <Badge variant="secondary" size="sm">
+              {issue.priority}
+            </Badge>
+          )}
+        </Flex>
+        <Typography variant="small">{issue.title}</Typography>
+        {visibleFields.labels && issue.labels && issue.labels.length > 0 && (
+          <Flex gap="xs" wrap>
+            {issue.labels.map((label) => (
+              <Badge key={label} variant="outline" size="sm">
+                {label}
+              </Badge>
+            ))}
+          </Flex>
+        )}
+        {(visibleFields.assignee || visibleFields.dueDate) && (
+          <Flex align="center" gap="sm">
+            {visibleFields.assignee && issue.assigneeName && (
+              <Flex align="center" gap="xs">
+                <User className="size-3 text-ui-text-tertiary" />
+                <Typography variant="caption" color="secondary">
+                  {issue.assigneeName}
+                </Typography>
+              </Flex>
+            )}
+            {visibleFields.dueDate && issue.dueDate && (
+              <Flex align="center" gap="xs">
+                <CalendarDays className="size-3 text-ui-text-tertiary" />
+                <Typography variant="caption" color="secondary">
+                  {formatDate(issue.dueDate)}
+                </Typography>
+              </Flex>
+            )}
+          </Flex>
+        )}
+      </Stack>
+    </Card>
   );
 }
