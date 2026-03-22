@@ -4,46 +4,12 @@
 
 ---
 
-## Unresolved PR Review Comments
+## PR Review Comments — All Resolved
 
-Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. Grouped by severity.
-
-### Critical
-
-*All resolved.*
-
-### Major
-
-| PR | File | Issue |
-|----|------|-------|
-| ~~#908~~ | ~~`convex/export.ts:327`~~ | ~~Export queries use `.filter()` for sprintId/status.~~ **Fixed** — uses compound indexes `by_project_sprint_status` and `by_project_status`. |
-| ~~#908~~ | ~~`convex/hourCompliance.ts:563`~~ | ~~Compliance summary silently truncates.~~ **Fixed** — `isTruncated` flag exposed; dashboard shows "+" suffix and warning. |
-| ~~#908~~ | ~~`scripts/validate/check-raw-tailwind.js:252`~~ | ~~Structural allowlist short-circuits entire attribute.~~ **Fixed** — per-token stripping; only allowed tokens removed. |
-| ~~#908~~ | ~~`scripts/validate/tailwind-policy.js:92`~~ | ~~Class-string detection requires uppercase names.~~ **Fixed** — matches any const name containing TW patterns. |
-| ~~#908~~ | ~~`e2e/preview/offline-replay-preview.spec.ts:30`~~ | ~~Offline suite skipped in CI.~~ **Fixed** — removed CI skip; deterministic `waitForCachedRoute` polls Cache API before going offline. |
-| ~~#909~~ | ~~`src/hooks/useOfflineIssueUpdateStatus.test.ts:96`~~ | ~~Tests use `as never` casts.~~ **Fixed** — replaced with `as Id<"table">` across 7 test files. |
-| ~~#918~~ | ~~`convex/deployBoards.ts:168`~~ | ~~Deploy board returns empty `workflowStates` when `status: false`.~~ **Fixed** — always return workflowStates; resolve assignee names. |
-| ~~#918~~ | ~~`src/routes/board.$slug.tsx`~~ | ~~Board card doesn't render assignee or dueDate.~~ **Fixed** — BoardIssueCard renders both fields. |
-| ~~#918~~ | ~~`src/routes/board.$slug.tsx:58`~~ | ~~Board renders no issues when status disabled.~~ **Fixed** — status always included for column grouping. |
-
-### Minor
-
-| PR | File | Issue |
-|----|------|-------|
-| ~~#905~~ | ~~`src/components/Settings/ProfileContent.tsx:319`~~ | ~~Grid span doesn't adapt.~~ **Fixed** — `colSpanLg` set to `undefined` when no account info, so grid defaults to full width. |
-| ~~#905~~ | ~~`e2e/utils/wait-helpers.ts:299`~~ | ~~Screenshot readiness waits on first spinner only.~~ **Fixed** — `waitForAllSpinnersToClear` polls until all spinners are hidden. |
-| ~~#908~~ | ~~`src/components/AI/AIAssistantButton.test.tsx:131`~~ | ~~Test misses responsive size variants.~~ **Fixed** — asserts both base `size-*` and responsive `sm:size-*` classes. |
-| ~~#908~~ | ~~`todos/tailwind-cva-consolidation.md:29`~~ | ~~Stale violation counts.~~ **Fixed** — updated to current numbers with strikethrough. |
-| ~~#908~~ | ~~`todos/validator-strengthening.md:53`~~ | ~~Stale export.ts description.~~ **Fixed** — updated to reflect compound index migration. |
-| ~~#909~~ | ~~6 files~~ | ~~EmptyState imports use relative paths.~~ **Fixed** — all 6 PR #909 files use `@/components/ui/EmptyState`. |
-| ~~#910~~ | ~~`src/hooks/useOfflineAddComment.test.ts:64`~~ | ~~Test uses `as never` cast.~~ **Fixed** — replaced with `as Id<"issues">`. |
-| ~~#911~~ | ~~`convex/autoArchive.test.ts`~~ | ~~Magic numbers; missing workflow state assertion.~~ **Fixed** — named constants, `moveIssueToDone` helper with assertion, new non-done test. |
-| ~~#911~~ | ~~`convex/schemaFields.ts:44`~~ | ~~`autoArchiveDays` not in mutation args.~~ **Fixed** — added to `updateProject` with non-negative integer clamping. |
-| ~~#912~~ | ~~`todos/README.md:79`~~ | ~~Inconsistent terminology.~~ **Fixed** — "4 mutation families." |
-| ~~#913~~ | ~~`todos/plane-features.md:8`~~ | ~~"Only unfinished items remain" contradiction.~~ **Fixed** — reworded to "Completed items are marked as shipped." |
-| ~~#913~~ | ~~`todos/README.md:82`~~ | ~~Phase 4 stickies reference.~~ **Fixed** — stickies already listed as shipped in Phase 3. |
-| ~~#917~~ | ~~`convex/http/intake.ts:52`~~ | ~~Bearer token parsing accepts non-Bearer headers.~~ **Fixed** — strict RFC 6750 parsing with `extractBearerToken()`, 10 unit tests. |
-| ~~#917~~ | ~~`todos/README.md:38`~~ | ~~Lists intake as remaining.~~ **Fixed** — already marked as shipped in Phase 3. |
+All 32 unresolved comments from PRs #905-#918 have been fixed:
+- **Critical (1):** Atomic issue key generation (race condition fix)
+- **Major (9):** Export compound indexes, compliance truncation flag, deploy board rendering, validator per-token allowlist, const detection, offline E2E suite, typed test IDs
+- **Minor (22):** Profile grid span, screenshot readiness, AI button test, auto-archive mutation args, Bearer token parsing, EmptyState imports, test magic numbers, stale doc counts
 
 ---
 
@@ -51,15 +17,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 
 ### Phase 1: Styling & Validators *(complete)*
 
-| Item | Status |
-|------|--------|
-| Raw TW reduction | ✅ 148 → 102 files / 261 violations |
-| Validator smartening | ✅ Structural allowlist, const/object-map detection |
-| Backend query fixes | ✅ All post-fetch JS filters moved to query level |
-| Icon sizing batch | ✅ 31 files h-X w-X → size-X |
-| Icon inline prop | ✅ 21 instances consolidated |
-| Margins → gaps | ✅ 14 files |
-| Empty states | ✅ 8 inline → EmptyState component |
+All 7 items shipped: raw TW reduction (148→102 files), validator smartening, backend query fixes, icon sizing, margins→gaps, empty states.
 
 ### Phase 2: Visual Consistency
 
@@ -73,16 +31,16 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Feature | Status |
 |---------|--------|
 | Gantt chart polish | 🟡 RoadmapView exists (2671 lines). Needs: drag-resize, dependency arrows, zoom. |
-| Intake external capture | ✅ Shipped — backend (PR #917) + admin UI for token management. |
-| Deploy boards | ✅ Shipped — backend, public page, assignee/dueDate rendering, status-hidden column fix. |
+| Intake external capture | ✅ Shipped — backend + admin UI |
+| Deploy boards | ✅ Shipped — backend, public page, assignee/dueDate, status-hidden fix |
 | Auto-archive | ✅ Shipped |
 | Scheduled automation | ✅ Shipped (stale_in_status triggers) |
 | Stickies | ✅ Shipped |
-| Bulk operations | ✅ Shipped (9 operation types including labels) |
+| Bulk operations | ✅ Shipped (9 operation types) |
 | Cycle/lead time | ✅ Shipped |
 | Multi-provider AI | ✅ Shipped (Anthropic + OpenAI) |
 | Version history | ✅ Shipped (list + restore) |
-| Offline replay | ✅ Shipped (4 mutation families, header badges, queue UI) |
+| Offline replay | ✅ Shipped (4 mutation families, retry policy, reconnect toast) |
 
 ### Phase 4: Docs & Low Priority
 
@@ -96,7 +54,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 
 | Track | Status |
 |-------|--------|
-| [offline-pwa.md](./offline-pwa.md) | ✅ SW/manifest ownership resolved. Push safety verification still pending. |
+| [offline-pwa.md](./offline-pwa.md) | ✅ Core complete. Push safety verification still pending. |
 | [meeting-intelligence.md](./meeting-intelligence.md) | Editor dependency, capture strategy |
 
 ---
@@ -106,7 +64,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Raw TW violations | 102 files / 261 violations (was 148 / 436) |
+| Raw TW violations | 103 files / 263 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
 | Unresolved PR comments | 0 — all resolved |
