@@ -492,6 +492,59 @@ export const listComplianceRecords = authenticatedQuery({
   },
 });
 
+const EMPTY_COMPLIANCE_SUMMARY = {
+  totalRecords: 0,
+  compliant: 0,
+  underHours: 0,
+  overHours: 0,
+  equityUnder: 0,
+  complianceRate: 0,
+};
+
+async function fetchComplianceRecords(
+  ctx: QueryCtx,
+  startDate?: number,
+  endDate?: number,
+): Promise<Doc<"hourComplianceRecords">[]> {
+  if (startDate && endDate) {
+    return ctx.db
+      .query("hourComplianceRecords")
+      .withIndex("by_period", (q) => q.gte("periodStart", startDate).lte("periodStart", endDate))
+      .filter((q) => q.lte(q.field("periodEnd"), endDate))
+      .take(MAX_COMPLIANCE_RECORDS);
+  }
+  if (startDate) {
+    return ctx.db
+      .query("hourComplianceRecords")
+      .withIndex("by_period", (q) => q.gte("periodStart", startDate))
+      .take(MAX_COMPLIANCE_RECORDS);
+  }
+  if (endDate) {
+    return ctx.db
+      .query("hourComplianceRecords")
+      .withIndex("by_period", (q) => q.lte("periodStart", endDate))
+      .filter((q) => q.lte(q.field("periodEnd"), endDate))
+      .take(MAX_COMPLIANCE_RECORDS);
+  }
+  return ctx.db.query("hourComplianceRecords").withIndex("by_period").take(MAX_COMPLIANCE_RECORDS);
+}
+
+function countByStatus(records: Doc<"hourComplianceRecords">[]) {
+  let compliant = 0;
+  let underHours = 0;
+  let overHours = 0;
+  let equityUnder = 0;
+
+  for (const record of records) {
+    if (record.status === "compliant") compliant++;
+    else if (record.status === "under_hours") underHours++;
+    else if (record.status === "over_hours") overHours++;
+    else if (record.status === "equity_under") equityUnder++;
+  }
+
+  return { compliant, underHours, overHours, equityUnder };
+}
+
 // Get compliance summary stats
 export const getComplianceSummary = authenticatedQuery({
   args: {
@@ -499,60 +552,12 @@ export const getComplianceSummary = authenticatedQuery({
     endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Return empty summary for non-admins (UI-driven visibility)
     if (!(await isAdmin(ctx, ctx.userId))) {
-      return {
-        totalRecords: 0,
-        compliant: 0,
-        underHours: 0,
-        overHours: 0,
-        equityUnder: 0,
-        complianceRate: 0,
-      };
+      return EMPTY_COMPLIANCE_SUMMARY;
     }
 
-    // Use by_period index with date bounds at the query level instead of
-    // fetching 1000 rows and filtering in JS.
-    let records: Doc<"hourComplianceRecords">[];
-
-    if (args.startDate && args.endDate) {
-      records = await ctx.db
-        .query("hourComplianceRecords")
-        .withIndex("by_period", (q) =>
-          q.gte("periodStart", args.startDate as number).lte("periodStart", args.endDate as number),
-        )
-        .filter((q) => q.lte(q.field("periodEnd"), args.endDate as number))
-        .take(MAX_COMPLIANCE_RECORDS);
-    } else if (args.startDate) {
-      records = await ctx.db
-        .query("hourComplianceRecords")
-        .withIndex("by_period", (q) => q.gte("periodStart", args.startDate as number))
-        .take(MAX_COMPLIANCE_RECORDS);
-    } else if (args.endDate) {
-      records = await ctx.db
-        .query("hourComplianceRecords")
-        .withIndex("by_period", (q) => q.lte("periodStart", args.endDate as number))
-        .filter((q) => q.lte(q.field("periodEnd"), args.endDate as number))
-        .take(MAX_COMPLIANCE_RECORDS);
-    } else {
-      records = await ctx.db
-        .query("hourComplianceRecords")
-        .withIndex("by_period")
-        .take(MAX_COMPLIANCE_RECORDS);
-    }
-
-    // Single-pass status counting instead of 5 separate .filter() calls
-    let compliant = 0;
-    let underHours = 0;
-    let overHours = 0;
-    let equityUnder = 0;
-
-    for (const record of records) {
-      if (record.status === "compliant") compliant++;
-      else if (record.status === "under_hours") underHours++;
-      else if (record.status === "over_hours") overHours++;
-      else if (record.status === "equity_under") equityUnder++;
-    }
+    const records = await fetchComplianceRecords(ctx, args.startDate, args.endDate);
+    const { compliant, underHours, overHours, equityUnder } = countByStatus(records);
 
     return {
       totalRecords: records.length,

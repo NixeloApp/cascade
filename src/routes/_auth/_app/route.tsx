@@ -130,11 +130,15 @@ function shouldShowAppLoading(
  * Google OAuth and other auth flows land here, and this gateway
  * ensures users end up in the right place.
  */
-function AppLayout() {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const { isAuthLoading, isAuthenticated } = useAuthReady();
-  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
+function AppLoadingScreen() {
+  return (
+    <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
+      <LoadingSpinner size="lg" />
+    </Flex>
+  );
+}
+
+function useAppLayoutState(isAuthenticated: boolean, isAuthLoading: boolean) {
   const persistedAppLayoutState = useRef(
     readLocalStorageJson<PersistedAppLayoutState>(APP_LAYOUT_CACHE_STORAGE_KEY),
   ).current;
@@ -144,6 +148,16 @@ function AppLayout() {
   useEffect(() => {
     persistAppSessionState(isAuthenticated, isAuthLoading);
   }, [isAuthenticated, isAuthLoading]);
+
+  return { persistedAppLayoutState };
+}
+
+function AppLayout() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { isAuthLoading, isAuthenticated } = useAuthReady();
+  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
+  const { persistedAppLayoutState } = useAppLayoutState(isAuthenticated, isAuthLoading);
 
   // Get redirect destination from backend (handles onboarding check)
   const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
@@ -211,30 +225,15 @@ function AppLayout() {
       canRecoverAuthenticatedSession,
     )
   ) {
-    return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <LoadingSpinner size="lg" />
-      </Flex>
-    );
+    return <AppLoadingScreen />;
   }
 
-  // If we have a redirect path that's not /app, potentially show loading if we are about to redirect
   if (stableRedirectPath && redirectState.shouldRedirect) {
-    return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <LoadingSpinner size="lg" />
-      </Flex>
-    );
+    return <AppLoadingScreen />;
   }
 
-  // Wait for the authenticated user document to load before attempting org bootstrap.
-  // undefined = still loading, null = profile missing (error state)
   if (needsOrganizationBootstrap && currentUser === undefined) {
-    return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <LoadingSpinner size="lg" />
-      </Flex>
-    );
+    return <AppLoadingScreen />;
   }
 
   // User profile not found - show error with recovery option
