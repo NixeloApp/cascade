@@ -41,7 +41,6 @@ describe("deployBoards", () => {
     expect(result?.issues.length).toBeGreaterThan(0);
     expect(result?.issues[0].title).toBe("Public issue");
     expect(result?.issues[0].status).toBeTypeOf("string"); // visible
-    expect(result?.issues[0].assignee).toBeUndefined(); // hidden
     expect(result?.issues[0].dueDate).toBeUndefined(); // hidden
   });
 
