@@ -8,6 +8,7 @@
 
 import { httpRouter } from "convex/server";
 import { handler as issuesHandler } from "./api/issues";
+import { handleIntakePreflight, handleIntakeSubmission } from "./http/intake";
 import { securePasswordReset, securePasswordResetPreflight } from "./authWrapper";
 import {
   batchCleanupEndpoint,
@@ -56,6 +57,18 @@ http.route({
   path: "/api/issues",
   method: "GET",
   handler: issuesHandler,
+});
+
+// Public intake endpoint for external issue submissions
+http.route({
+  path: "/api/intake",
+  method: "POST",
+  handler: handleIntakeSubmission,
+});
+http.route({
+  path: "/api/intake",
+  method: "OPTIONS",
+  handler: handleIntakePreflight,
 });
 
 // Google Calendar OAuth routes
