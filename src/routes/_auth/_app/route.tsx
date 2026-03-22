@@ -126,7 +126,9 @@ function AppLayout() {
     readLocalStorageJson<PersistedAppLayoutState>(APP_LAYOUT_CACHE_STORAGE_KEY),
   ).current;
 
-  updateAppSessionState(isAuthenticated, isAuthLoading);
+  useEffect(() => {
+    updateAppSessionState(isAuthenticated, isAuthLoading);
+  }, [isAuthenticated, isAuthLoading]);
 
   // Get redirect destination from backend (handles onboarding check)
   const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});

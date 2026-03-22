@@ -27,6 +27,12 @@ describe("offline replay queue", () => {
     vi.restoreAllMocks();
   });
 
+  // requeueStaleSyncingMutations runs at the start of every processOfflineQueue call.
+  // Mock it globally so tests focus on the replay logic, not the recovery step.
+  beforeEach(() => {
+    vi.spyOn(offlineDB, "requeueStaleSyncingMutations").mockResolvedValue(0);
+  });
+
   it("keeps unsupported mutation types pending with an explicit error", async () => {
     const queuedMutation = createQueuedMutation();
     const getPendingSpy = vi

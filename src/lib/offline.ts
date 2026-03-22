@@ -187,6 +187,17 @@ class OfflineDB {
     return db.getAllFromIndex("mutations", "status", "pending");
   }
 
+  /** Reset stale "syncing" items back to "pending" (e.g. after a tab crash mid-replay). */
+  async requeueStaleSyncingMutations(): Promise<number> {
+    const db = await this.open();
+    const syncing = await db.getAllFromIndex("mutations", "status", "syncing");
+    for (const mutation of syncing) {
+      mutation.status = "pending";
+      await db.put("mutations", mutation);
+    }
+    return syncing.length;
+  }
+
   async getQueuedMutations(): Promise<OfflineMutation[]> {
     const db = await this.open();
     const all = await db.getAll("mutations");
@@ -394,6 +405,8 @@ export async function processOfflineQueue(userId?: string): Promise<{ processed:
   }
   isProcessingQueue = true;
   try {
+    // Recover items stuck in "syncing" from a previous crashed/closed tab
+    await offlineDB.requeueStaleSyncingMutations();
     const pending = await offlineDB.getPendingMutations();
     const scoped = userId ? pending.filter((m) => m.userId === userId) : pending;
 
