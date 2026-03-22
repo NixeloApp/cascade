@@ -49,8 +49,17 @@ vi.mock("convex/react", () => ({
   usePaginatedQuery: vi.fn(),
 }));
 
+vi.mock("./Dashboard/Stickies", () => ({
+  Stickies: () => null,
+}));
+
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedQuery: vi.fn(),
+  useAuthenticatedMutation: vi.fn(() => ({
+    mutate: vi.fn(),
+    canAct: true,
+    isAuthLoading: false,
+  })),
   useAuthReady: vi.fn(),
 }));
 

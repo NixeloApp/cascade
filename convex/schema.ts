@@ -750,6 +750,18 @@ const applicationTables = {
     .index("by_source", ["source"])
     .index("by_created_by", ["createdBy"]),
 
+  // Quick notes / stickies for the dashboard
+  stickies: defineTable({
+    userId: v.id("users"),
+    organizationId: v.id("organizations"),
+    content: v.string(),
+    color: v.optional(v.string()), // "yellow" | "blue" | "green" | "pink" | "purple"
+    order: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_org", ["userId", "organizationId"])
+    .index("by_user", ["userId"]),
+
   savedFilters: defineTable({
     projectId: v.id("projects"),
     userId: v.id("users"),

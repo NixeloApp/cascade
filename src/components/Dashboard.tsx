@@ -28,6 +28,7 @@ import { Greeting } from "./Dashboard/Greeting";
 import { MyIssuesList } from "./Dashboard/MyIssuesList";
 import { QuickStats } from "./Dashboard/QuickStats";
 import { RecentActivity } from "./Dashboard/RecentActivity";
+import { Stickies } from "./Dashboard/Stickies";
 import { WorkspacesList } from "./Dashboard/WorkspacesList";
 
 type IssueFilter = "assigned" | "created" | "all";
@@ -133,6 +134,8 @@ function DashboardMainContent({
             {showWorkspaces && (
               <WorkspacesList projects={myProjects} projectNavigation={projectNavigation} />
             )}
+
+            <Stickies />
 
             {showRecentActivity && <RecentActivity activities={recentActivity} />}
           </Stack>
