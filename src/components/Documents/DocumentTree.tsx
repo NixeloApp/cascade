@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -100,24 +101,17 @@ export function DocumentTree({
 
   if (rootDocs.length === 0) {
     return (
-      <Card variant="flat" padding="md">
-        <Stack gap="sm" align="center" className="text-center">
-          <Icon icon={FileText} size="xl" color="tertiary" />
-          <Typography variant="small" color="secondary">
-            No documents yet
-          </Typography>
-          {onCreateDocument && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onCreateDocument()}
-              leftIcon={<Icon icon={Plus} size="sm" />}
-            >
-              New Document
-            </Button>
-          )}
-        </Stack>
-      </Card>
+      <EmptyState
+        icon={FileText}
+        title="No documents yet"
+        description="Create your first document to get started."
+        size="compact"
+        action={
+          onCreateDocument
+            ? { label: "New Document", onClick: () => onCreateDocument() }
+            : undefined
+        }
+      />
     );
   }
 

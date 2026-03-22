@@ -18,6 +18,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
@@ -107,15 +108,12 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       size="2xl"
     >
       {!executions || executions.length === 0 ? (
-        <Card padding="xl" variant="ghost">
-          <Stack align="center" gap="sm" className="text-center">
-            <Icon icon={BarChart3} size="xl" tone="tertiary" />
-            <Typography variant="h5">No delivery logs yet</Typography>
-            <Typography variant="caption">
-              Webhook deliveries will appear here once triggered
-            </Typography>
-          </Stack>
-        </Card>
+        <EmptyState
+          icon={BarChart3}
+          title="No delivery logs yet"
+          description="Webhook deliveries will appear here once triggered"
+          surface="bare"
+        />
       ) : (
         <Stack gap="md">
           <Typography variant="caption">

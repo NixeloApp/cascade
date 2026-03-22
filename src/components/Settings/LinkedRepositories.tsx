@@ -7,6 +7,7 @@ import { showError, showInfo, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
@@ -74,9 +75,13 @@ export function LinkedRepositories({ showHeading = true }: { showHeading?: boole
       {selectedWorkspace && (
         <Stack gap="sm">
           {repositories && repositories.length === 0 && (
-            <Typography variant="small" color="secondary" className="italic">
-              No repositories linked to this project yet.
-            </Typography>
+            <EmptyState
+              icon={Github}
+              title="No repositories linked"
+              description="No repositories linked to this project yet."
+              size="compact"
+              surface="bare"
+            />
           )}
           {repositories?.map((repo: Doc<"githubRepositories">) => (
             <Card key={repo._id} padding="sm" className="bg-ui-bg-secondary">

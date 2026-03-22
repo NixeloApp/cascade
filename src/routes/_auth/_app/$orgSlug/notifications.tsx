@@ -37,6 +37,7 @@ import {
   useAuthenticatedQuery,
   useAuthReady,
 } from "@/hooks/useConvexHelpers";
+import { useOfflineNotificationMarkAsRead } from "@/hooks/useOfflineNotificationMarkAsRead";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -115,7 +116,7 @@ export function NotificationsPage() {
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
 
   // Mutations
-  const { mutate: markAsRead } = useAuthenticatedMutation(api.notifications.markAsRead);
+  const { markAsRead: offlineMarkAsRead } = useOfflineNotificationMarkAsRead();
   const { mutate: markAllAsRead } = useAuthenticatedMutation(api.notifications.markAllAsRead);
   const { mutate: archiveNotification } = useAuthenticatedMutation(
     api.notifications.archiveNotification,
@@ -138,7 +139,7 @@ export function NotificationsPage() {
 
   const handleMarkAsRead = async (id: Id<"notifications">) => {
     try {
-      await markAsRead({ id });
+      await offlineMarkAsRead(id);
     } catch (error) {
       showError(error, "Failed to mark notification as read");
     }

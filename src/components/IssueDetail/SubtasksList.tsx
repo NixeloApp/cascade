@@ -10,9 +10,11 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { ListChecks } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
@@ -176,9 +178,13 @@ export function SubtasksList({
         </Stack>
       ) : (
         !isCreatingSubtask && (
-          <Typography variant="muted" className="italic">
-            No subtasks yet
-          </Typography>
+          <EmptyState
+            icon={ListChecks}
+            title="No subtasks yet"
+            description="Break this issue into smaller tasks."
+            size="compact"
+            surface="bare"
+          />
         )
       )}
     </Stack>

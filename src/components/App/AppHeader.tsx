@@ -15,14 +15,17 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { NotificationCenter } from "@/components/Notifications";
 import { TimerWidget as NavTimerWidget } from "@/components/TimeTracking/TimerWidget";
 import { UserMenu } from "@/components/UserMenu";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Dot";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
+import { useOnlineStatus } from "@/hooks/useOffline";
 import { useSidebarState } from "@/hooks/useSidebarState";
-import { CircleHelp, Menu } from "@/lib/icons";
+import { CircleHelp, Menu, WifiOff } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { CommandAction } from "../CommandPalette";
@@ -37,6 +40,7 @@ interface AppHeaderProps {
  */
 export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
   const { isMobileOpen, toggleMobile } = useSidebarState();
+  const isOnline = useOnlineStatus();
 
   return (
     <header className="sticky top-0 z-40">
@@ -104,6 +108,16 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
 
             {/* Visual separator between groups (desktop only) */}
             <div className="hidden h-5 w-px bg-ui-border/50 sm:block" aria-hidden="true" />
+
+            {/* Offline indicator — visible when connectivity drops */}
+            {!isOnline && (
+              <Tooltip content="You are offline — changes will sync when reconnected">
+                <Badge variant="error" size="sm">
+                  <Icon icon={WifiOff} size="xs" inline />
+                  Offline
+                </Badge>
+              </Tooltip>
+            )}
 
             {/* Group 2: Communication (notifications) */}
             <NotificationCenter />

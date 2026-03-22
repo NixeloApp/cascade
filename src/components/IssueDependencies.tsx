@@ -12,11 +12,13 @@ import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { LinkIcon } from "@/lib/icons";
 import { getTypeLabel, ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -231,11 +233,13 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
 
       {/* Empty State */}
       {links && links.outgoing.length === 0 && links.incoming.length === 0 && (
-        <Card padding="lg" variant="ghost">
-          <Flex justify="center">
-            <Typography variant="caption">No dependencies yet</Typography>
-          </Flex>
-        </Card>
+        <EmptyState
+          icon={LinkIcon}
+          title="No dependencies yet"
+          description="Link related issues to track blockers and relationships."
+          size="compact"
+          surface="bare"
+        />
       )}
 
       {/* Add Dependency Sheet (side panel to avoid nested dialog issue) */}

@@ -15,10 +15,9 @@ import { showError, showSuccess } from "@/lib/toast";
 import { CustomFieldCard } from "./Fields/CustomFieldCard";
 import { CustomFieldForm } from "./Fields/CustomFieldForm";
 import { Button } from "./ui/Button";
-import { Card, CardBody } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
+import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
-import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
@@ -102,16 +101,11 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
           <LoadingSpinner />
         </Flex>
       ) : customFields.length === 0 ? (
-        <Card>
-          <CardBody>
-            <Flex direction="column" align="center" justify="center" gap="md" className="min-h-32">
-              <Icon icon={ClipboardList} size="xl" tone="tertiary" />
-              <Typography variant="small" color="secondary">
-                No custom fields yet. Add your first field to get started.
-              </Typography>
-            </Flex>
-          </CardBody>
-        </Card>
+        <EmptyState
+          icon={ClipboardList}
+          title="No custom fields yet"
+          description="Add your first field to get started."
+        />
       ) : (
         <Stack gap="md">
           {customFields.map((field: Doc<"customFields">) => (

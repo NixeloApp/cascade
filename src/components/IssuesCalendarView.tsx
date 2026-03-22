@@ -211,75 +211,77 @@ export function IssuesCalendarView({
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, day)}
       >
-        <Flex align="center" justify="between" className="mb-1">
-          <Flex align="center" gap="xs">
-            {isTodayDate ? (
-              <Badge variant="brand" shape="pill">
-                {day}
+        <Stack gap="xs">
+          <Flex align="center" justify="between">
+            <Flex align="center" gap="xs">
+              {isTodayDate ? (
+                <Badge variant="brand" shape="pill">
+                  {day}
+                </Badge>
+              ) : (
+                <Typography variant="label">{day}</Typography>
+              )}
+              {canEdit && (
+                <Tooltip content="Create issue">
+                  <IconButton
+                    variant="ghost"
+                    size="xs"
+                    reveal="responsive"
+                    onClick={() => setCreateForDate(dayDueTimestamp)}
+                    aria-label={`Create issue for ${day}`}
+                  >
+                    <Icon icon={Plus} size="xs" />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Flex>
+            {dayIssues.length > 0 && (
+              <Badge size="sm" variant="neutral">
+                {dayIssues.length}
               </Badge>
-            ) : (
-              <Typography variant="label">{day}</Typography>
-            )}
-            {canEdit && (
-              <Tooltip content="Create issue">
-                <IconButton
-                  variant="ghost"
-                  size="xs"
-                  reveal="responsive"
-                  onClick={() => setCreateForDate(dayDueTimestamp)}
-                  aria-label={`Create issue for ${day}`}
-                >
-                  <Icon icon={Plus} size="xs" />
-                </IconButton>
-              </Tooltip>
             )}
           </Flex>
-          {dayIssues.length > 0 && (
-            <Badge size="sm" variant="neutral">
-              {dayIssues.length}
-            </Badge>
-          )}
-        </Flex>
 
-        <Stack gap="xs">
-          {(dayIssues ?? []).slice(0, MAX_VISIBLE_ISSUES_PER_DAY).map((issue: Doc<"issues">) => (
-            <Tooltip
-              key={issue._id}
-              content={canEdit ? `${issue.title} - Drag to reschedule` : issue.title}
-            >
-              <Button
-                variant="unstyled"
-                chrome="calendarIssue"
-                chromeSize="calendarIssue"
-                onClick={() => setSelectedIssue(issue._id)}
-                className={cn(
-                  "w-full",
-                  canEdit && "cursor-grab",
-                  draggedIssue === issue._id && "opacity-50",
-                )}
-                draggable={canEdit}
-                onDragStart={(e) => handleDragStart(e, issue._id)}
-                onDragEnd={handleDragEnd}
+          <Stack gap="xs">
+            {(dayIssues ?? []).slice(0, MAX_VISIBLE_ISSUES_PER_DAY).map((issue: Doc<"issues">) => (
+              <Tooltip
+                key={issue._id}
+                content={canEdit ? `${issue.title} - Drag to reschedule` : issue.title}
               >
-                <Flex align="center" gap="xs" className="w-full">
-                  <Dot className={getPriorityColor(issue.priority)} />
-                  <FlexItem flex="1" className="min-w-0">
-                    <Flex align="center" gap="xs">
-                      <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
-                      <Typography variant="caption" className="truncate">
-                        {issue.title}
-                      </Typography>
-                    </Flex>
-                  </FlexItem>
-                </Flex>
-              </Button>
-            </Tooltip>
-          ))}
-          {dayIssues.length > MAX_VISIBLE_ISSUES_PER_DAY && (
-            <Typography variant="caption" color="secondary">
-              +{dayIssues.length - MAX_VISIBLE_ISSUES_PER_DAY} more
-            </Typography>
-          )}
+                <Button
+                  variant="unstyled"
+                  chrome="calendarIssue"
+                  chromeSize="calendarIssue"
+                  onClick={() => setSelectedIssue(issue._id)}
+                  className={cn(
+                    "w-full",
+                    canEdit && "cursor-grab",
+                    draggedIssue === issue._id && "opacity-50",
+                  )}
+                  draggable={canEdit}
+                  onDragStart={(e) => handleDragStart(e, issue._id)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <Flex align="center" gap="xs" className="w-full">
+                    <Dot className={getPriorityColor(issue.priority)} />
+                    <FlexItem flex="1" className="min-w-0">
+                      <Flex align="center" gap="xs">
+                        <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
+                        <Typography variant="caption" className="truncate">
+                          {issue.title}
+                        </Typography>
+                      </Flex>
+                    </FlexItem>
+                  </Flex>
+                </Button>
+              </Tooltip>
+            ))}
+            {dayIssues.length > MAX_VISIBLE_ISSUES_PER_DAY && (
+              <Typography variant="caption" color="secondary">
+                +{dayIssues.length - MAX_VISIBLE_ISSUES_PER_DAY} more
+              </Typography>
+            )}
+          </Stack>
         </Stack>
       </Card>,
     );
@@ -296,7 +298,6 @@ export function IssuesCalendarView({
           alignSm="center"
           justify="between"
           gap="lg"
-          className="mb-6"
         >
           <Typography variant="h2">Issues Calendar</Typography>
 
@@ -361,7 +362,7 @@ export function IssuesCalendarView({
         </div>
 
         {/* Legend */}
-        <Flex align="center" gap="xl" className="mt-4">
+        <Flex align="center" gap="xl">
           {PRIORITY_LEGEND_ITEMS.map((item) => (
             <Flex key={item.label} align="center" gap="sm">
               <Dot size="lg" className={item.className} />

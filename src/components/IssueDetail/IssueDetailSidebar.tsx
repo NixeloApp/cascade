@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOfflineIssueUpdateStatus } from "@/hooks/useOfflineIssueUpdateStatus";
 import type { UserSummary, UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { showError } from "@/lib/toast";
 import { IssueDetailSection } from "./IssueDetailSection";
@@ -76,16 +77,16 @@ export function IssueDetailSidebar({
 
   // Mutations for inline updates
   const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
-  const { mutate: updateStatus } = useAuthenticatedMutation(api.issues.updateStatus);
+  const { updateStatus: offlineUpdateStatus } = useOfflineIssueUpdateStatus();
 
   // Extract project data for inline editing
   const members = project?.members ?? [];
   const workflowStates = project?.workflowStates ?? [];
 
-  // Handler for status changes (uses different mutation)
+  // Handler for status changes (uses offline-capable mutation)
   const handleStatusChange = async (newStatus: string) => {
     try {
-      await updateStatus({ issueId, newStatus, newOrder: 0 });
+      await offlineUpdateStatus(issueId, newStatus, 0);
     } catch (error) {
       showError(error, "Failed to update status");
     }
