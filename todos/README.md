@@ -75,8 +75,11 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 | **AI agents** | Multi-channel | -- | MCP placeholder | Medium |
 | **Intake/triage** | -- | Full system | Skeleton inbox (551-line InboxList) | Medium |
 | **Auto-archive** | -- | Scheduled | **Shipped** — daily cron, per-project autoArchiveDays | Done |
+| **Stickies** | -- | Full | **Shipped** — dashboard panel with colored notes | Done |
 | **Deploy boards** | -- | Per-entity | Token portal only | Medium |
 | **Offline replay** | -- | -- | **Shipped** — 4 mutations, header indicators, queue UI | Done |
+| **Bulk operations** | -- | Full | **Shipped** — status, priority, assignee, sprint, dates, archive, delete | Done |
+| **Version history** | -- | Full | **Shipped** — list + restore for documents | Done |
 | **Billing PDF export** | -- | -- | CSV only | Low |
 
 ---
