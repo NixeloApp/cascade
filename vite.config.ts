@@ -77,12 +77,15 @@ export default defineConfig(({ mode }) => ({
       },
     }),
     VitePWA({
+      // SERVICE WORKER OWNERSHIP:
+      // The app owns its own worker at public/service-worker.js, registered
+      // by src/lib/serviceWorker.ts. VitePWA is used ONLY for manifest
+      // generation. The plugin-generated /sw.js is a self-destroying stub
+      // that does nothing — all caching, push, and offline logic lives in
+      // the manually-authored service-worker.js.
       registerType: "autoUpdate",
-      // Keep registration owned by src/lib/serviceWorker.ts for now.
-      // The repo currently ships a push-capable public/service-worker.js,
-      // and auto-registering the plugin-generated /sw.js creates competing
-      // service-worker ownership for the same scope.
       injectRegister: false,
+      selfDestroying: true,
       includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
       manifest: {
         name: "Nixelo - Project Management",
@@ -109,40 +112,6 @@ export default defineConfig(({ mode }) => ({
             sizes: "512x512",
             type: "image/png",
             purpose: "any maskable",
-          },
-        ],
-      },
-      workbox: {
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "gstatic-fonts-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
           },
         ],
       },

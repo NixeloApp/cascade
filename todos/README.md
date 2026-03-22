@@ -96,7 +96,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 
 | Track | Status |
 |-------|--------|
-| [offline-pwa.md](./offline-pwa.md) | SW ownership cleanup, push safety verification still pending |
+| [offline-pwa.md](./offline-pwa.md) | ✅ SW/manifest ownership resolved. Push safety verification still pending. |
 | [meeting-intelligence.md](./meeting-intelligence.md) | Editor dependency, capture strategy |
 
 ---

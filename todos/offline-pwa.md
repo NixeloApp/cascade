@@ -55,15 +55,13 @@ Verify push notifications still work after the SW file changes in this PR.
 - [ ] Verify unsubscribe cleanup is correct when subscriptions rotate.
 - [ ] Confirm whether push depends only on SW support or also on install state in practice.
 
-### 2. Worker / Manifest Ownership Cleanup
+### ~~2. Worker / Manifest Ownership Cleanup~~ ✅ DONE
 
-Collapse to one obvious owner for each concern.
-
-- [ ] Decide: keep manual `public/service-worker.js` or fully move to `vite-plugin-pwa` generated worker.
-- [ ] Remove the unused path so there is one obvious worker owner.
-- [ ] Remove or intentionally keep `public/manifest.json` (currently a legacy artifact alongside `manifest.webmanifest`).
-- [ ] Re-check build output after cleanup — only intended artifacts should remain.
-- [ ] Move `OFFLINE_PWA_TODO.md` to `todos/offline-pwa.md` and add to `todos/README.md`.
+- [x] Decision: keep manual `public/service-worker.js` — it owns push, caching, and offline fallback.
+- [x] VitePWA config simplified: `selfDestroying: true`, workbox config removed. Plugin-generated `/sw.js` is now a self-destroying stub that does nothing.
+- [x] `public/manifest.json` removed — legacy duplicate of VitePWA-generated `manifest.webmanifest`.
+- [x] One worker owner: `public/service-worker.js` (registered by `src/lib/serviceWorker.ts`).
+- [x] One manifest owner: VitePWA generates `manifest.webmanifest` (linked in built HTML).
 
 ### 3. High-Value Replay Mutations
 
@@ -153,8 +151,8 @@ If any of these become requirements, they should be separate initiatives with th
 ## Done When
 
 - [x] All Section 0 (code review bugs) items are resolved.
-- [ ] One worker path clearly owns runtime behavior.
-- [ ] One manifest path clearly owns install metadata.
+- [x] One worker path clearly owns runtime behavior. (`public/service-worker.js`)
+- [x] One manifest path clearly owns install metadata. (VitePWA → `manifest.webmanifest`)
 - [ ] Push behavior is verified after worker changes.
 - [x] At least `markNotificationAsRead` and `toggleIssueStatus` are replayable beyond `userSettings.update`. (4 mutations total: userSettings, markAsRead, updateStatus, addComment)
 - [x] Offline indicator visible in app header during connectivity loss.
