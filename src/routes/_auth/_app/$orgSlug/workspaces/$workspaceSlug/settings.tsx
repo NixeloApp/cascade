@@ -108,9 +108,9 @@ function WorkspaceSettings() {
             <Typography variant="h3">General</Typography>
 
             {/* Workspace Icon */}
-            <div>
+            <Stack gap="sm">
               <Label htmlFor="workspace-icon">Icon</Label>
-              <Flex gap="sm" wrap className="mt-2">
+              <Flex gap="sm" wrap>
                 {WORKSPACE_ICONS.map((emoji) => (
                   <Button
                     key={emoji}
@@ -123,32 +123,30 @@ function WorkspaceSettings() {
                   </Button>
                 ))}
               </Flex>
-            </div>
+            </Stack>
 
             {/* Name */}
-            <div>
+            <Stack gap="sm">
               <Label htmlFor="workspace-name">Name</Label>
               <Input
                 id="workspace-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Workspace name"
-                className="mt-2"
               />
-            </div>
+            </Stack>
 
             {/* Description */}
-            <div>
+            <Stack gap="sm">
               <Label htmlFor="workspace-description">Description</Label>
               <Textarea
                 id="workspace-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Brief description of this workspace"
-                className="mt-2"
                 rows={3}
               />
-            </div>
+            </Stack>
           </Stack>
         </Card>
 

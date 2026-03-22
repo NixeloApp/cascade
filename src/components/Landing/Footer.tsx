@@ -7,6 +7,7 @@ import { Dot } from "../ui/Dot";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { IconCircle } from "../ui/IconCircle";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { NixeloLogo } from "./Icons";
 
@@ -35,8 +36,8 @@ export function Footer() {
     <footer className="border-t border-ui-border/20 bg-transparent px-6 py-16 transition-colors">
       <Container size="lg">
         <Grid cols={1} colsLg={5} gap="xl" className="mb-10">
-          <div className="lg:col-span-2">
-            <Flex align="center" gap="sm" className="mb-4">
+          <Stack gap="lg" className="lg:col-span-2">
+            <Flex align="center" gap="sm">
               <NixeloLogo />
               <Typography as="span" variant="h4">
                 Nixelo
@@ -46,7 +47,7 @@ export function Footer() {
               The calmer way to run delivery: shared docs, clearer execution, and AI help that stays
               connected to the actual work.
             </Typography>
-          </div>
+          </Stack>
 
           <Card recipe="landingStoryCard" padding="none" className="p-5 lg:col-span-3">
             <Flex align="start" gap="md">
@@ -72,8 +73,8 @@ export function Footer() {
 
         <Grid cols={1} colsSm={2} colsLg={4} gap="lg" className="mb-12">
           {footerColumns.map((column) => (
-            <div key={column.title}>
-              <Typography as="h4" variant="cardTitle" className="mb-4">
+            <Stack key={column.title} gap="lg">
+              <Typography as="h4" variant="cardTitle">
                 {column.title}
               </Typography>
               <ul className="space-y-2">
@@ -85,7 +86,7 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Stack>
           ))}
         </Grid>
 

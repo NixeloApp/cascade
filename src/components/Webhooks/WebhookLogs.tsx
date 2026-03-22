@@ -179,14 +179,17 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
                 {/* Error message */}
                 {execution.error && (
-                  <div className="mt-3 border border-status-error/30 bg-status-error-bg p-3">
-                    <Typography variant="caption" className="text-status-error-text mb-1">
+                  <Stack
+                    gap="xs"
+                    className="mt-3 border border-status-error/30 bg-status-error-bg p-3"
+                  >
+                    <Typography variant="caption" className="text-status-error-text">
                       Error:
                     </Typography>
                     <Typography variant="mono" className="text-status-error-text/90">
                       {String(execution.error)}
                     </Typography>
-                  </div>
+                  </Stack>
                 )}
 
                 {/* Expandable Details */}
