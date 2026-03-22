@@ -35,7 +35,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | ~~#908~~ | ~~`src/components/AI/AIAssistantButton.test.tsx:131`~~ | ~~Test misses responsive size variants.~~ **Fixed** — asserts both base `size-*` and responsive `sm:size-*` classes. |
 | ~~#908~~ | ~~`todos/tailwind-cva-consolidation.md:29`~~ | ~~Stale violation counts.~~ **Fixed** — updated to current numbers with strikethrough. |
 | ~~#908~~ | ~~`todos/validator-strengthening.md:53`~~ | ~~Stale export.ts description.~~ **Fixed** — updated to reflect compound index migration. |
-| #909 | 6 files | EmptyState imports use relative paths instead of `@/` alias. |
+| ~~#909~~ | ~~6 files~~ | ~~EmptyState imports use relative paths.~~ **Fixed** — all 6 PR #909 files use `@/components/ui/EmptyState`. |
 | ~~#910~~ | ~~`src/hooks/useOfflineAddComment.test.ts:64`~~ | ~~Test uses `as never` cast.~~ **Fixed** — replaced with `as Id<"issues">`. |
 | ~~#911~~ | ~~`convex/autoArchive.test.ts`~~ | ~~Magic numbers; missing workflow state assertion.~~ **Fixed** — named constants, `moveIssueToDone` helper with assertion, new non-done test. |
 | ~~#911~~ | ~~`convex/schemaFields.ts:44`~~ | ~~`autoArchiveDays` not in mutation args.~~ **Fixed** — added to `updateProject` with non-negative integer clamping. |
@@ -109,7 +109,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 9 (0 critical, 0 major, 9 minor) |
+| Unresolved PR comments | 0 — all resolved |
 | Unit tests | 4420 pass |
 | E2E tests | 164 pass (non-preview) |
 

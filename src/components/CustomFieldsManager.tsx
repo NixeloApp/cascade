@@ -9,6 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ClipboardList } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -16,7 +17,6 @@ import { CustomFieldCard } from "./Fields/CustomFieldCard";
 import { CustomFieldForm } from "./Fields/CustomFieldForm";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Stack } from "./ui/Stack";

@@ -1,13 +1,13 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Github, Trash2 } from "@/lib/icons";
 import { showError, showInfo, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
