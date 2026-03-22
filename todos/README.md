@@ -73,9 +73,10 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 | **Gantt chart** | -- | Full | Roadmap upgraded, dedicated Gantt polish remaining | High |
 | **OOO status** | Full API | -- | Shipped | Done |
 | **AI agents** | Multi-channel | -- | MCP placeholder | Medium |
-| **Intake/triage** | -- | Full system | Skeleton inbox | Medium |
-| **Auto-archive** | -- | Scheduled | Basic automation | Medium |
+| **Intake/triage** | -- | Full system | Skeleton inbox (551-line InboxList) | Medium |
+| **Auto-archive** | -- | Scheduled | **Shipped** — daily cron, per-project autoArchiveDays | Done |
 | **Deploy boards** | -- | Per-entity | Token portal only | Medium |
+| **Offline replay** | -- | -- | **Shipped** — 4 mutations, header indicators, queue UI | Done |
 | **Billing PDF export** | -- | -- | CSV only | Low |
 
 ---
