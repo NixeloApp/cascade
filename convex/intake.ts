@@ -8,7 +8,7 @@
 
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
-import { projectAdminMutation } from "./customFunctions";
+import { projectAdminMutation, projectQuery } from "./customFunctions";
 import { getNextIssueKey } from "./issues/helpers";
 
 /** Generate a secure intake token */
@@ -80,6 +80,22 @@ export const getToken = projectAdminMutation({
       .first();
 
     return token ? { token: token.token } : null;
+  },
+});
+
+/** Query whether an active intake token exists for this project. */
+export const getTokenStatus = projectQuery({
+  args: {},
+  handler: async (ctx) => {
+    const token = await ctx.db
+      .query("intakeTokens")
+      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
+      .filter((q) => q.eq(q.field("isRevoked"), false))
+      .first();
+
+    return token
+      ? { exists: true as const, token: token.token, createdAt: token._creationTime }
+      : { exists: false as const, token: null, createdAt: null };
   },
 });
 

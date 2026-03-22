@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader } from "../ui/Card";
 import { Stack } from "../ui/Stack";
 import { DangerZone } from "./DangerZone";
 import { GeneralSettings } from "./GeneralSettings";
+import { IntakeSettings } from "./IntakeSettings";
 import { MemberManagement } from "./MemberManagement";
 import { WorkflowSettings } from "./WorkflowSettings";
 
@@ -57,6 +58,7 @@ export function ProjectSettings({
       ownerId={ownerId}
     />,
     <WorkflowSettings key="workflow" projectId={projectId} workflowStates={workflowStates} />,
+    <IntakeSettings key="intake" projectId={projectId} />,
     ...(isOwner
       ? [
           <DangerZone
@@ -87,5 +89,6 @@ export function ProjectSettings({
 
 export { DangerZone } from "./DangerZone";
 export { GeneralSettings } from "./GeneralSettings";
+export { IntakeSettings } from "./IntakeSettings";
 export { MemberManagement } from "./MemberManagement";
 export { WorkflowSettings } from "./WorkflowSettings";

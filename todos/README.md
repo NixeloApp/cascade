@@ -73,7 +73,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Feature | Status |
 |---------|--------|
 | Gantt chart polish | 🟡 RoadmapView exists (2671 lines). Needs: drag-resize, dependency arrows, zoom. |
-| Intake external capture | ✅ Backend shipped (PR #917). Needs: admin UI for token management. |
+| Intake external capture | ✅ Shipped — backend (PR #917) + admin UI for token management. |
 | Deploy boards | ✅ Shipped — backend, public page, assignee/dueDate rendering, status-hidden column fix. |
 | Auto-archive | ✅ Shipped |
 | Scheduled automation | ✅ Shipped (stale_in_status triggers) |
@@ -110,7 +110,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
 | Unresolved PR comments | 0 — all resolved |
-| Unit tests | 4420 pass |
+| Unit tests | 4428 pass |
 | E2E tests | 164 pass (non-preview) |
 
 ---
