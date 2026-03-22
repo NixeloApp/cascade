@@ -2,76 +2,53 @@
 
 > **Priority:** P2
 > **Status:** Partial
-> **Last Updated:** 2026-03-18
+> **Last Updated:** 2026-03-22
 > **Source:** Plane repo at `github.com/makeplane/plane` (pulled 2026-03-18)
 
-Only unfinished items remain here. Completed roadmap/Gantt slices and org analytics are kept as shipped notes, not as open backlog.
+Only unfinished items remain here. Completed items are marked as shipped.
+
+## Shipped
+
+- [x] **Stickies / Quick Notes** — Dashboard stickies panel shipped (PR #912). Schema, CRUD backend, colored notes with inline editing.
+- [x] **Auto-archive stale issues** — Daily cron with per-project `autoArchiveDays` setting (PR #911).
+- [x] **Offline replay** — 4 mutation families with header indicators (PRs #907-#910).
+- [x] **Version history** — `convex/documentVersions.ts` (155 lines) + `VersionHistory.tsx` (304 lines) exist with list/restore functionality.
 
 ## High Priority
 
 ### Gantt Chart / Timeline View
 
-- [ ] **Finish the dedicated Gantt polish** — The roadmap has shipped core Gantt behavior, but it still needs the remaining deeper timeline-management and dedicated-Gantt polish.
+- [ ] **Finish the dedicated Gantt polish** — `RoadmapView.tsx` (2671 lines) has core Gantt behavior. Remaining: drag-to-resize duration, dependency arrows, critical path highlighting, zoom controls.
 
 ### Intake / Triage System
 
-- [ ] **Evaluate intake vs our inbox** — Our project inbox is still skeletal next to Plane’s triage workflow.
-- [ ] **External request capture** — Client-submitted requests still need a first-class triage path before backlog entry.
+- [ ] **Enhance external request capture** — `InboxList.tsx` (551 lines) has internal triage (accept/decline/snooze/duplicate). Missing: external submission form, email-to-inbox pipeline, public request portal.
 
 ### Deploy Boards (Public Sharing)
 
-- [ ] **Enhance client portal permissions** — Our token portal is still much simpler than Plane’s deploy-board model.
-- [ ] **Public issue boards** — We still do not expose a shareable public board surface.
-
-### Stickies / Quick Notes
-
-- [ ] **Evaluate dashboard stickies** — Quick-capture notes are still missing.
+- [ ] **Public issue boards** — Token-based client portal exists. Missing: shareable public board surface without authentication, configurable field visibility.
 
 ## Medium Priority
 
 ### Advanced Analytics
 
-- [ ] **Enhance project analytics** — Org analytics shipped, but Plane-style trend/insight depth is still open at the project level.
+- [ ] **Project-level trend depth** — Org analytics shipped. Project analytics has basic charts. Missing: velocity trends, cycle time, lead time, burndown comparison across sprints.
 
 ### Automation Workflows
 
-- [ ] **Enhance automation scheduling** — `AutomationRulesManager.tsx` still lacks Plane-style scheduled workflows.
-- [ ] **Auto-archive stale issues** — Done-state cleanup automation is still open.
+- [ ] **Scheduled triggers** — Current triggers are event-based only (status_changed, issue_created). Missing: time-based triggers ("if in status X for N days, do Y"), recurring automation schedules.
 
 ### Multi-Provider AI
 
-- [ ] **Add provider selection** — Admin-configurable model/provider choice is still missing.
-- [ ] **Model fallbacks** — Resilience/fallback behavior remains open.
-
-### Page Version Control
-
-- [ ] **Version history for documents/pages** — Real restoreable version history is still not a confirmed shipped surface.
+- [ ] **Provider selection** — Admin-configurable model/provider choice. Currently hardcoded.
+- [ ] **Model fallbacks** — Resilience/fallback when primary provider is down.
 
 ## Low Priority
 
-### Rich Filters
+### Notification Channels
 
-- [ ] **Compare with Plane’s richer filtering model** — Our filter surface is still simpler.
+- [ ] **Slack/Pumble/webhook notifications** — Backend integration exists but notification routing to external channels is not wired to the notification preference system.
 
-### Home Dashboard Widgets
+### ~~Bulk Operations~~ ✅ SHIPPED
 
-- [ ] **Evaluate customizable dashboard widgets** — Current dashboard is fixed-layout, not Plane-style widgetized.
-
-## Already Shipped From This Review
-
-- [x] Roadmap/Gantt core upgrade across drag, resize, milestones, zoom, navigation, grouping, hierarchy, progress rollups, sticky sidebar, and dependency interaction
-- [x] Org-level analytics
-
-## Reference Paths
-
-| Feature | Plane Path |
-|---------|------------|
-| Gantt | `apps/web/core/components/gantt-chart/` |
-| Intake | `apps/web/core/components/inbox/`, `apps/api/plane/app/views/intake.py` |
-| Deploy boards | `apps/api/plane/db/models/deploy_board.py` |
-| Stickies | `apps/web/core/components/stickies/` |
-| Analytics | `apps/web/core/components/analytics/` |
-| Automation | `apps/web/core/components/automation/` |
-| AI | `apps/api/plane/app/views/external/base.py` |
-| Page versions | `apps/web/core/components/pages/version/` |
-| Propel UI | `packages/propel/src/` |
+`BulkOperationsBar.tsx` (379 lines) already supports: bulk status, priority, assignee, sprint, start date, due date, archive, and delete. Only bulk label operations remain.

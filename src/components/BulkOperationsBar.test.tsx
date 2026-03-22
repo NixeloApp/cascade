@@ -64,6 +64,7 @@ describe("BulkOperationsBar - Component Behavior", () => {
   const mockBulkUpdatePriority = vi.fn();
   const mockBulkAssign = vi.fn();
   const mockBulkMoveToSprint = vi.fn();
+  const mockBulkAddLabels = vi.fn();
   const mockBulkArchive = vi.fn();
   const mockBulkDelete = vi.fn();
   const mockBulkUpdateStartDate = vi.fn();
@@ -75,8 +76,8 @@ describe("BulkOperationsBar - Component Behavior", () => {
     // Setup queries to cycle through values on each render
     let queryCallCount = 0;
     (useQuery as any).mockImplementation(() => {
-      const results = [mockSprints, mockMembers];
-      return results[queryCallCount++ % 2];
+      const results = [mockSprints, mockMembers, []]; // sprints, members, labels
+      return results[queryCallCount++ % 3];
     });
 
     // Setup mutations - each useMutation call gets the corresponding mock
@@ -85,10 +86,11 @@ describe("BulkOperationsBar - Component Behavior", () => {
     // 2. bulkUpdatePriority
     // 3. bulkAssign
     // 4. bulkMoveToSprint
-    // 5. bulkArchive
-    // 6. bulkDelete
-    // 7. bulkUpdateStartDate
-    // 8. bulkUpdateDueDate
+    // 5. bulkAddLabels
+    // 6. bulkArchive
+    // 7. bulkDelete
+    // 8. bulkUpdateStartDate
+    // 9. bulkUpdateDueDate
     let mutationCallCount = 0;
     (useMutation as any).mockImplementation(() => {
       const mocks = [
@@ -98,10 +100,11 @@ describe("BulkOperationsBar - Component Behavior", () => {
         mockBulkMoveToSprint,
         mockBulkArchive,
         mockBulkDelete,
+        mockBulkAddLabels,
         mockBulkUpdateStartDate,
         mockBulkUpdateDueDate,
       ];
-      return mocks[mutationCallCount++ % 8];
+      return mocks[mutationCallCount++ % 9];
     });
   });
 
