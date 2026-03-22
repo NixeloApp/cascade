@@ -48,6 +48,7 @@ export function BulkOperationsBar({
   const priorityId = useId();
   const assigneeId = useId();
   const sprintId = useId();
+  const labelId = useId();
   const startDateId = useId();
   const dueDateId = useId();
 
@@ -60,8 +61,11 @@ export function BulkOperationsBar({
   const { mutate: bulkMoveToSprint } = useAuthenticatedMutation(api.issues.bulkMoveToSprint);
   const { mutate: bulkArchive } = useAuthenticatedMutation(api.issues.bulkArchive);
   const { mutate: bulkDelete } = useAuthenticatedMutation(api.issues.bulkDelete);
+  const { mutate: bulkAddLabels } = useAuthenticatedMutation(api.issues.bulkAddLabels);
   const { mutate: bulkUpdateStartDate } = useAuthenticatedMutation(api.issues.bulkUpdateStartDate);
   const { mutate: bulkUpdateDueDate } = useAuthenticatedMutation(api.issues.bulkUpdateDueDate);
+
+  const labels = useAuthenticatedQuery(api.labels.list, { projectId });
 
   const issueIds = Array.from(selectedIssueIds);
   const count = issueIds.length;
@@ -112,6 +116,15 @@ export function BulkOperationsBar({
       onClearSelection();
     } catch (error) {
       showError(error, "Failed to move to sprint");
+    }
+  };
+
+  const handleAddLabel = async (labelName: string) => {
+    try {
+      const result = await bulkAddLabels({ issueIds, labels: [labelName] });
+      showSuccess(`Added label to ${result.updated} issue(s)`);
+    } catch (error) {
+      showError(error, "Failed to add label");
     }
   };
 
@@ -237,7 +250,7 @@ export function BulkOperationsBar({
 
           {showActions && (
             <div className={getCardRecipeClassName("bulkActionDetails")}>
-              <Grid cols={1} colsSm={2} colsMd={3} colsLg={6} gap="md">
+              <Grid cols={1} colsSm={2} colsMd={3} colsLg={7} gap="md">
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={statusId} variant="label" color="secondary">
                     Status
@@ -306,6 +319,24 @@ export function BulkOperationsBar({
                       {sprints?.map((sprint) => (
                         <SelectItem key={sprint._id} value={sprint._id}>
                           {sprint.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Stack>
+
+                <Stack gap="xs">
+                  <Typography as="label" htmlFor={labelId} variant="label" color="secondary">
+                    Add Label
+                  </Typography>
+                  <Select onValueChange={handleAddLabel}>
+                    <SelectTrigger id={labelId}>
+                      <SelectValue placeholder="Select label..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {labels?.map((label) => (
+                        <SelectItem key={label._id} value={label.name}>
+                          {label.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
