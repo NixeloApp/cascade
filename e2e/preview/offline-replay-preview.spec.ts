@@ -47,15 +47,19 @@ async function waitForCachedRoute(page: Page, urlPath: string, timeout = 30000) 
 
 /**
  * Ensure the SW is controlling and has cached the target route.
- * Visits the page, waits for the controller, then verifies the
- * cache contains the page shell before returning.
+ * Visits the page, waits for content to render and the SW to cache
+ * the response before returning. The page must fully render while
+ * online so the SW caches a complete response, not a loading shell.
  */
 async function ensureRouteCached(page: Page, url: string, urlPath: string) {
   await page.goto(url, { waitUntil: "load" });
   await waitForControllingWorker(page);
+  // Wait for content to render while online
+  await page.waitForLoadState("domcontentloaded");
   // Reload so the SW fetch handler intercepts and caches the response
   await page.reload({ waitUntil: "load" });
   await waitForControllingWorker(page);
+  await page.waitForLoadState("domcontentloaded");
   await waitForCachedRoute(page, urlPath);
 }
 
@@ -70,14 +74,23 @@ test.describe("Offline Replay Preview", () => {
     test.slow();
     const settingsUrl = ROUTES.settings.profile.build(orgSlug);
 
-    // Visit settings and deterministically wait for SW to cache the route
+    // Visit settings, wait for full render, then confirm SW has cached the route.
+    // The order matters: the page must fully render (so the SW fetch handler
+    // caches the complete response), and we must verify the heading is visible
+    // while still online before going offline.
     await settingsPage.goto();
     await waitForControllingWorker(page);
+    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+      timeout: 15000,
+    });
+    // Reload so the SW intercepts and caches the fully-rendered response
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
+    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+      timeout: 15000,
+    });
     await waitForCachedRoute(page, settingsUrl);
     await settingsPage.switchToTab("preferences");
-    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible();
 
     try {
       await page.context().setOffline(true);
@@ -138,13 +151,18 @@ test.describe("Offline Replay Preview", () => {
     let originalTimezone = "UTC";
     let queuedTimezone = "America/Chicago";
 
-    const settingsUrl = ROUTES.settings.profile.build("");
     await settingsPage.goto();
     await waitForControllingWorker(page);
+    // Wait for settings to fully render while online
+    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+      timeout: 15000,
+    });
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
-    // Wait for the settings route to be cached — use a prefix match since
-    // the exact URL includes the orgSlug which we don't have here.
+    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+      timeout: 15000,
+    });
+    // Wait for the settings route to be cached
     await page.waitForFunction(
       async () => {
         const cacheNames = await caches.keys();
