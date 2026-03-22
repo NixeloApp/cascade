@@ -13,8 +13,8 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
-import { MAX_COMPLIANCE_RECORDS } from "./lib/queryLimits";
 import { forbidden, notFound } from "./lib/errors";
+import { MAX_COMPLIANCE_RECORDS } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { periodTypes } from "./validators";
 
@@ -475,10 +475,7 @@ export const listComplianceRecords = authenticatedQuery({
         .filter(applyDateFilter)
         .take(limit);
     } else {
-      records = await ctx.db
-        .query("hourComplianceRecords")
-        .order("desc")
-        .take(limit);
+      records = await ctx.db.query("hourComplianceRecords").order("desc").take(limit);
     }
 
     // Batch fetch user details to avoid N+1 queries

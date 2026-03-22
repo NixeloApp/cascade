@@ -304,22 +304,27 @@ export const exportIssuesCSV = projectQuery({
   handler: async (ctx, args) => {
     // projectQuery handles auth + access check + provides ctx.projectId, ctx.project
 
-    // Get issues (bounded to prevent memory issues on large exports)
-    const issuesQuery = ctx.db
+    // Get issues with optional sprint/status filtering at the query level
+    let issuesQuery = ctx.db
       .query("issues")
       .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId));
 
-    let issues = await safeCollect(issuesQuery, BOUNDED_LIST_LIMIT, "exportIssuesCSV");
-
-    // Filter by sprint if specified
-    if (args.sprintId) {
-      issues = issues.filter((i) => i.sprintId === args.sprintId);
+    // Apply filters at the query level instead of post-fetch JS .filter()
+    if (args.sprintId && args.status) {
+      const sprintId = args.sprintId;
+      const status = args.status;
+      issuesQuery = issuesQuery.filter((q) =>
+        q.and(q.eq(q.field("sprintId"), sprintId), q.eq(q.field("status"), status)),
+      );
+    } else if (args.sprintId) {
+      const sprintId = args.sprintId;
+      issuesQuery = issuesQuery.filter((q) => q.eq(q.field("sprintId"), sprintId));
+    } else if (args.status) {
+      const status = args.status;
+      issuesQuery = issuesQuery.filter((q) => q.eq(q.field("status"), status));
     }
 
-    // Filter by status if specified
-    if (args.status) {
-      issues = issues.filter((i) => i.status === args.status);
-    }
+    const issues = await safeCollect(issuesQuery, BOUNDED_LIST_LIMIT, "exportIssuesCSV");
 
     // Batch fetch all users and sprints to avoid N+1 queries
     const userIds = [
@@ -479,20 +484,26 @@ export const exportIssuesJSON = projectQuery({
   handler: async (ctx, args) => {
     // projectQuery handles auth + access check + provides ctx.projectId, ctx.project
 
-    // Get issues with same filtering as CSV export (bounded)
-    const issuesQuery = ctx.db
+    // Get issues with optional sprint/status filtering at the query level
+    let issuesQuery = ctx.db
       .query("issues")
       .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId));
 
-    let issues = await safeCollect(issuesQuery, BOUNDED_LIST_LIMIT, "exportIssuesJSON");
-
-    if (args.sprintId) {
-      issues = issues.filter((i) => i.sprintId === args.sprintId);
+    if (args.sprintId && args.status) {
+      const sprintId = args.sprintId;
+      const status = args.status;
+      issuesQuery = issuesQuery.filter((q) =>
+        q.and(q.eq(q.field("sprintId"), sprintId), q.eq(q.field("status"), status)),
+      );
+    } else if (args.sprintId) {
+      const sprintId = args.sprintId;
+      issuesQuery = issuesQuery.filter((q) => q.eq(q.field("sprintId"), sprintId));
+    } else if (args.status) {
+      const status = args.status;
+      issuesQuery = issuesQuery.filter((q) => q.eq(q.field("status"), status));
     }
 
-    if (args.status) {
-      issues = issues.filter((i) => i.status === args.status);
-    }
+    const issues = await safeCollect(issuesQuery, BOUNDED_LIST_LIMIT, "exportIssuesJSON");
 
     // Batch fetch all users, sprints, and comment counts to avoid N+1 queries
     const userIds = [
