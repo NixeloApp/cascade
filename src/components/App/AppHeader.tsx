@@ -23,9 +23,9 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
-import { useOnlineStatus } from "@/hooks/useOffline";
+import { useOfflineQueue, useOnlineStatus } from "@/hooks/useOffline";
 import { useSidebarState } from "@/hooks/useSidebarState";
-import { CircleHelp, Menu, WifiOff } from "@/lib/icons";
+import { CircleHelp, Menu, RefreshCw, WifiOff } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { CommandAction } from "../CommandPalette";
@@ -41,6 +41,8 @@ interface AppHeaderProps {
 export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
   const { isMobileOpen, toggleMobile } = useSidebarState();
   const isOnline = useOnlineStatus();
+  const { pendingCount, syncingCount } = useOfflineQueue();
+  const hasPendingWork = pendingCount > 0 || syncingCount > 0;
 
   return (
     <header className="sticky top-0 z-40">
@@ -109,12 +111,20 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
             {/* Visual separator between groups (desktop only) */}
             <div className="hidden h-5 w-px bg-ui-border/50 sm:block" aria-hidden="true" />
 
-            {/* Offline indicator — visible when connectivity drops */}
+            {/* Connectivity indicator — offline or syncing queued changes */}
             {!isOnline && (
               <Tooltip content="You are offline — changes will sync when reconnected">
                 <Badge variant="error" size="sm">
                   <Icon icon={WifiOff} size="xs" inline />
                   Offline
+                </Badge>
+              </Tooltip>
+            )}
+            {isOnline && hasPendingWork && (
+              <Tooltip content={`Syncing ${pendingCount + syncingCount} queued change(s)…`}>
+                <Badge variant="warning" size="sm">
+                  <Icon icon={RefreshCw} size="xs" inline animation="spin" />
+                  Syncing
                 </Badge>
               </Tooltip>
             )}

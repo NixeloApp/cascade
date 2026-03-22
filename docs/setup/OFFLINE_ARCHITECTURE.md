@@ -164,13 +164,17 @@ Why:
 
 Current live replay coverage:
 
-- `userSettings.update`
+| Mutation type | Wired from | Idempotency | Conflict risk |
+|--------------|------------|-------------|---------------|
+| `userSettings.update` | PreferencesTab (theme, timezone, dashboard layout) | Idempotent — last-write-wins | None |
+| `notifications.markAsRead` | NotificationCenter, notifications page | Trivially idempotent | None |
+| `issues.updateStatus` | IssueDetailSidebar status dropdown | Last-write-wins, skips optimistic lock | Medium — status may have moved |
+| `issues.addComment` | IssueComments form | Append-only, no server-side dedup yet | Low — only edge case is deleted issue |
 
-That path currently covers queued changes originating from:
-
-- theme preference updates
-- timezone preference updates
-- dashboard layout preference updates
+**UX indicators:**
+- Offline badge in app header (WifiOff icon) — visible on every page
+- "Comment queued — will post when you reconnect" toast for offline comments
+- Settings > Offline tab shows full queue diagnostics with retry/delete controls
 
 ## What Settings Means
 
