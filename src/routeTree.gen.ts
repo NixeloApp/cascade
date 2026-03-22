@@ -19,6 +19,7 @@ import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as BoardSlugRouteImport } from './routes/board.$slug'
 import { Route as AuthOnboardingRouteImport } from './routes/_auth/onboarding'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/_app/route'
 import { Route as AuthAppAppRouteImport } from './routes/_auth/_app/app'
@@ -124,6 +125,11 @@ const PortalTokenRoute = PortalTokenRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoardSlugRoute = BoardSlugRouteImport.update({
+  id: '/board/$slug',
+  path: '/board/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthOnboardingRoute = AuthOnboardingRouteImport.update({
@@ -468,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/verify-2fa': typeof Verify2faRoute
   '/verify-email': typeof VerifyEmailRoute
   '/onboarding': typeof AuthOnboardingRoute
+  '/board/$slug': typeof BoardSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/portal/$token': typeof PortalTokenRouteWithChildren
   '/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
@@ -535,6 +542,7 @@ export interface FileRoutesByTo {
   '/verify-2fa': typeof Verify2faRoute
   '/verify-email': typeof VerifyEmailRoute
   '/onboarding': typeof AuthOnboardingRoute
+  '/board/$slug': typeof BoardSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/portal/$token': typeof PortalTokenRouteWithChildren
   '/app': typeof AuthAppAppRoute
@@ -601,6 +609,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/_auth/_app': typeof AuthAppRouteRouteWithChildren
   '/_auth/onboarding': typeof AuthOnboardingRoute
+  '/board/$slug': typeof BoardSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/portal/$token': typeof PortalTokenRouteWithChildren
   '/_auth/_app/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
@@ -670,6 +679,7 @@ export interface FileRouteTypes {
     | '/verify-2fa'
     | '/verify-email'
     | '/onboarding'
+    | '/board/$slug'
     | '/invite/$token'
     | '/portal/$token'
     | '/$orgSlug'
@@ -737,6 +747,7 @@ export interface FileRouteTypes {
     | '/verify-2fa'
     | '/verify-email'
     | '/onboarding'
+    | '/board/$slug'
     | '/invite/$token'
     | '/portal/$token'
     | '/app'
@@ -802,6 +813,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/_auth/_app'
     | '/_auth/onboarding'
+    | '/board/$slug'
     | '/invite/$token'
     | '/portal/$token'
     | '/_auth/_app/$orgSlug'
@@ -870,6 +882,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   Verify2faRoute: typeof Verify2faRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  BoardSlugRoute: typeof BoardSlugRoute
   InviteTokenRoute: typeof InviteTokenRoute
   PortalTokenRoute: typeof PortalTokenRouteWithChildren
 }
@@ -944,6 +957,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/board/$slug': {
+      id: '/board/$slug'
+      path: '/board/$slug'
+      fullPath: '/board/$slug'
+      preLoaderRoute: typeof BoardSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/onboarding': {
@@ -1571,6 +1591,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   Verify2faRoute: Verify2faRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  BoardSlugRoute: BoardSlugRoute,
   InviteTokenRoute: InviteTokenRoute,
   PortalTokenRoute: PortalTokenRouteWithChildren,
 }

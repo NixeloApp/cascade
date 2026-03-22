@@ -762,6 +762,24 @@ const applicationTables = {
     .index("by_project", ["projectId"])
     .index("by_token", ["token"]),
 
+  // Public deploy boards — shareable read-only project views
+  deployBoards: defineTable({
+    projectId: v.id("projects"),
+    slug: v.string(), // URL-safe slug for public access
+    isActive: v.boolean(),
+    visibleFields: v.object({
+      status: v.boolean(),
+      priority: v.boolean(),
+      assignee: v.boolean(),
+      labels: v.boolean(),
+      dueDate: v.boolean(),
+    }),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_slug", ["slug"]),
+
   // Quick notes / stickies for the dashboard
   stickies: defineTable({
     userId: v.id("users"),
