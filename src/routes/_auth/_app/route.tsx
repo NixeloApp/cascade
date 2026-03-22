@@ -172,7 +172,11 @@ function AppLayout() {
   const stableUserOrganizations =
     userOrganizations ?? cachedUserOrganizations ?? persistedAppLayoutState?.userOrganizations;
   const fallbackOrganization = stableUserOrganizations?.[0];
+  // Only use the dashboard fallback when offline — when online, wait for the
+  // server redirect query to resolve so onboarding and other gates aren't skipped.
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
   const fallbackRedirectPath =
+    isOffline &&
     !persistedAppLayoutState?.redirectPath &&
     !redirectPath &&
     !cachedRedirectPath &&

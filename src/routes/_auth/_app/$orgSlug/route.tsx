@@ -184,8 +184,9 @@ function shouldShowOrgLoading(
 
   if (organization === undefined || userOrgs === undefined) {
     // Only bypass loading if we have a confirmed session OR actual cached data to render.
-    // canRecover alone (localStorage marker) is not enough — we need real org data.
-    if (isAuthLoading && (hasAuthenticatedOrgSession || (canRecover && organization))) {
+    // Require both organization AND userOrgs to avoid false "Access denied" while
+    // membership data is still loading.
+    if (isAuthLoading && (hasAuthenticatedOrgSession || (canRecover && organization && userOrgs))) {
       return false;
     }
     return !canRenderOffline;
