@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useOfflineIssueUpdateStatus } from "@/hooks/useOfflineIssueUpdateStatus";
 import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import type { ReactNode } from "react";
@@ -21,6 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOfflineIssueUpdateStatus } from "@/hooks/useOfflineIssueUpdateStatus";
 import type { UserSummary, UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { showError } from "@/lib/toast";
 import { IssueDetailSection } from "./IssueDetailSection";

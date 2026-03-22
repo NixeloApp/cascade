@@ -21,9 +21,7 @@ function isIssueUpdateStatusArgs(value: unknown): value is IssueUpdateStatusArgs
 
 function validateIssueUpdateStatusArgs(args: Record<string, unknown>): IssueUpdateStatusArgs {
   if (!isIssueUpdateStatusArgs(args)) {
-    throw new Error(
-      `Invalid issues.updateStatus args: expected { issueId, newStatus, newOrder }`,
-    );
+    throw new Error(`Invalid issues.updateStatus args: expected { issueId, newStatus, newOrder }`);
   }
   return args;
 }
