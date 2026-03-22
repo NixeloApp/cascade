@@ -73,9 +73,9 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
                       <span aria-hidden="true">{workspace.icon}</span>
                     </IconCircle>
                   )}
-                  <div>
+                  <Stack gap="sm">
                     <Typography variant="h4">{workspace.name}</Typography>
-                    <Flex align="center" gap="sm" wrap className="mt-2">
+                    <Flex align="center" gap="sm" wrap>
                       <Badge variant="secondary" shape="pill">
                         Workspace
                       </Badge>
@@ -83,7 +83,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
                         {workspace.slug}
                       </Badge>
                     </Flex>
-                  </div>
+                  </Stack>
                 </Flex>
                 <Badge variant="outline" shape="pill">
                   {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
@@ -104,16 +104,20 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
             <Stack gap="sm" className="lg:col-span-5">
               <Grid cols={2} gap="sm">
                 <InsetPanel>
-                  <Typography variant="metricLabel">Teams</Typography>
-                  <Typography variant="h5" className="mt-2">
-                    {workspace.teamCount}
-                  </Typography>
+                  <Stack gap="sm">
+                    <Typography variant="metricLabel">Teams</Typography>
+                    <Typography variant="h5">
+                      {workspace.teamCount}
+                    </Typography>
+                  </Stack>
                 </InsetPanel>
                 <InsetPanel>
-                  <Typography variant="metricLabel">Projects</Typography>
-                  <Typography variant="h5" className="mt-2">
-                    {workspace.projectCount}
-                  </Typography>
+                  <Stack gap="sm">
+                    <Typography variant="metricLabel">Projects</Typography>
+                    <Typography variant="h5">
+                      {workspace.projectCount}
+                    </Typography>
+                  </Stack>
                 </InsetPanel>
               </Grid>
 
@@ -161,16 +165,20 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
 
           <Grid cols={2} gap="sm">
             <InsetPanel>
-              <Typography variant="metricLabel">Teams</Typography>
-              <Typography variant="h5" className="mt-2">
-                {workspace.teamCount}
-              </Typography>
+              <Stack gap="sm">
+                <Typography variant="metricLabel">Teams</Typography>
+                <Typography variant="h5">
+                  {workspace.teamCount}
+                </Typography>
+              </Stack>
             </InsetPanel>
             <InsetPanel>
-              <Typography variant="metricLabel">Projects</Typography>
-              <Typography variant="h5" className="mt-2">
-                {workspace.projectCount}
-              </Typography>
+              <Stack gap="sm">
+                <Typography variant="metricLabel">Projects</Typography>
+                <Typography variant="h5">
+                  {workspace.projectCount}
+                </Typography>
+              </Stack>
             </InsetPanel>
           </Grid>
 

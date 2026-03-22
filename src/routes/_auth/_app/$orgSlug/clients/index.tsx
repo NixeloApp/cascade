@@ -248,36 +248,38 @@ function ClientsListPage() {
             <CardTitle>New Client</CardTitle>
           </CardHeader>
           <CardContent>
-            <Grid cols={1} colsLg={4} gap="sm" className="pt-4">
-              <Input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Client name"
-              />
-              <Input
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="client@example.com"
-              />
-              <Input
-                value={company}
-                onChange={(event) => setCompany(event.target.value)}
-                placeholder="Company"
-              />
-              <Input
-                type="number"
-                min={0}
-                step={0.01}
-                value={hourlyRate}
-                onChange={(event) => setHourlyRate(event.target.value)}
-                placeholder="Hourly rate"
-              />
-            </Grid>
-            <div className="mt-3">
-              <Button onClick={handleCreateClient} disabled={!name.trim() || !email.trim()}>
-                Create client
-              </Button>
-            </div>
+            <Stack gap="md">
+              <Grid cols={1} colsLg={4} gap="sm" className="pt-4">
+                <Input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Client name"
+                />
+                <Input
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="client@example.com"
+                />
+                <Input
+                  value={company}
+                  onChange={(event) => setCompany(event.target.value)}
+                  placeholder="Company"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={hourlyRate}
+                  onChange={(event) => setHourlyRate(event.target.value)}
+                  placeholder="Hourly rate"
+                />
+              </Grid>
+              <div>
+                <Button onClick={handleCreateClient} disabled={!name.trim() || !email.trim()}>
+                  Create client
+                </Button>
+              </div>
+            </Stack>
           </CardContent>
         </Card>
 

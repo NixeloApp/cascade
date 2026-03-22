@@ -80,27 +80,29 @@ function MessageItem({
         )}
 
         <Stack gap="sm">
-        {/* Message content with markdown for assistant */}
-        {message.role === "assistant" ? (
-          <MarkdownContent variant="chat">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-          </MarkdownContent>
-        ) : (
-          <div className="whitespace-pre-wrap break-words">{message.content}</div>
-        )}
+          {/* Message content with markdown for assistant */}
+          {message.role === "assistant" ? (
+            <MarkdownContent variant="chat">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            </MarkdownContent>
+          ) : (
+            <div className="whitespace-pre-wrap break-words">{message.content}</div>
+          )}
 
-        {/* Message metadata */}
-        <Metadata className="opacity-70">
-          <MetadataItem>{messageTime}</MetadataItem>
-          {message.role === "assistant" && message.modelUsed && (
-            <MetadataItem hideBelow="sm">
-              {message.modelUsed.split("-").slice(0, 2).join("-")}
-            </MetadataItem>
-          )}
-          {message.role === "assistant" && message.responseTime && (
-            <MetadataItem hideBelow="md">{(message.responseTime / 1000).toFixed(1)}s</MetadataItem>
-          )}
-        </Metadata>
+          {/* Message metadata */}
+          <Metadata className="opacity-70">
+            <MetadataItem>{messageTime}</MetadataItem>
+            {message.role === "assistant" && message.modelUsed && (
+              <MetadataItem hideBelow="sm">
+                {message.modelUsed.split("-").slice(0, 2).join("-")}
+              </MetadataItem>
+            )}
+            {message.role === "assistant" && message.responseTime && (
+              <MetadataItem hideBelow="md">
+                {(message.responseTime / 1000).toFixed(1)}s
+              </MetadataItem>
+            )}
+          </Metadata>
         </Stack>
       </Card>
     </Flex>
@@ -191,46 +193,46 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
       {/* Input Area */}
       <Card recipe="assistantComposer" radius="none" className="safe-area-inset-bottom">
         <Stack gap="sm">
-        <Flex gap="sm" align="end">
-          <FlexItem flex="1">
-            <Textarea
-              ref={textareaRef}
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me anything about your project..."
-              disabled={isSending}
-              variant="chatComposer"
-              rows={1}
-              style={{
-                minHeight: `${AI_CONFIG.textarea.minHeight}px`,
-                maxHeight: `${AI_CONFIG.textarea.maxHeight}px`,
-              }}
-            />
-          </FlexItem>
-          <Button
-            variant="primary"
-            size="icon"
-            onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isSending}
-            isLoading={isSending}
-            aria-label="Send message"
-            className="shrink-0"
-          >
-            <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <title>Send</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+          <Flex gap="sm" align="end">
+            <FlexItem flex="1">
+              <Textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask me anything about your project..."
+                disabled={isSending}
+                variant="chatComposer"
+                rows={1}
+                style={{
+                  minHeight: `${AI_CONFIG.textarea.minHeight}px`,
+                  maxHeight: `${AI_CONFIG.textarea.maxHeight}px`,
+                }}
               />
-            </svg>
-          </Button>
-        </Flex>
-        <Typography variant="meta" className="hidden sm:block">
-          Press Enter to send, Shift+Enter for new line
-        </Typography>
+            </FlexItem>
+            <Button
+              variant="primary"
+              size="icon"
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || isSending}
+              isLoading={isSending}
+              aria-label="Send message"
+              className="shrink-0"
+            >
+              <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <title>Send</title>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
+            </Button>
+          </Flex>
+          <Typography variant="meta" className="hidden sm:block">
+            Press Enter to send, Shift+Enter for new line
+          </Typography>
         </Stack>
       </Card>
     </Flex>

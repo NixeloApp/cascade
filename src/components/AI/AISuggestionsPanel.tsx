@@ -59,50 +59,50 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
         className="border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary sm:p-4"
       >
         <Stack gap="md">
-        <Button
-          variant="accentGradient"
-          size="touchWide"
-          onClick={handleGenerateInsights}
-          disabled={isGenerating}
-        >
-          <Flex align="center" justify="center" gap="sm">
-            {isGenerating ? (
-              <>
-                <InlineSpinner size="sm" variant="inherit" className="sm:size-5" />
-                <span className="hidden sm:inline">Analyzing Project...</span>
-                <span className="sm:hidden">Analyzing...</span>
-              </>
-            ) : (
-              <>
-                <Icon icon={Sparkles} size="md" />
-                <span className="hidden sm:inline">Generate AI Insights</span>
-                <span className="sm:hidden">Generate Insights</span>
-              </>
-            )}
-          </Flex>
-        </Button>
+          <Button
+            variant="accentGradient"
+            size="touchWide"
+            onClick={handleGenerateInsights}
+            disabled={isGenerating}
+          >
+            <Flex align="center" justify="center" gap="sm">
+              {isGenerating ? (
+                <>
+                  <InlineSpinner size="sm" variant="inherit" className="sm:size-5" />
+                  <span className="hidden sm:inline">Analyzing Project...</span>
+                  <span className="sm:hidden">Analyzing...</span>
+                </>
+              ) : (
+                <>
+                  <Icon icon={Sparkles} size="md" />
+                  <span className="hidden sm:inline">Generate AI Insights</span>
+                  <span className="sm:hidden">Generate Insights</span>
+                </>
+              )}
+            </Flex>
+          </Button>
 
-        {/* Filter Tabs */}
-        <SegmentedControl
-          value={selectedType ?? "all"}
-          onValueChange={(value: string) =>
-            setSelectedType(value === "all" ? undefined : (value as SuggestionType))
-          }
-          wrap
-          className="w-full"
-          size="sm"
-        >
-          <SegmentedControlItem value="all">All</SegmentedControlItem>
-          <SegmentedControlItem value="risk_detection">
-            <Icon icon={AlertTriangle} size="sm" inline /> Risks
-          </SegmentedControlItem>
-          <SegmentedControlItem value="insight">
-            <Icon icon={Lightbulb} size="sm" inline /> Insights
-          </SegmentedControlItem>
-          <SegmentedControlItem value="sprint_planning">
-            <Icon icon={Calendar} size="sm" inline /> Planning
-          </SegmentedControlItem>
-        </SegmentedControl>
+          {/* Filter Tabs */}
+          <SegmentedControl
+            value={selectedType ?? "all"}
+            onValueChange={(value: string) =>
+              setSelectedType(value === "all" ? undefined : (value as SuggestionType))
+            }
+            wrap
+            className="w-full"
+            size="sm"
+          >
+            <SegmentedControlItem value="all">All</SegmentedControlItem>
+            <SegmentedControlItem value="risk_detection">
+              <Icon icon={AlertTriangle} size="sm" inline /> Risks
+            </SegmentedControlItem>
+            <SegmentedControlItem value="insight">
+              <Icon icon={Lightbulb} size="sm" inline /> Insights
+            </SegmentedControlItem>
+            <SegmentedControlItem value="sprint_planning">
+              <Icon icon={Calendar} size="sm" inline /> Planning
+            </SegmentedControlItem>
+          </SegmentedControl>
         </Stack>
       </Card>
 

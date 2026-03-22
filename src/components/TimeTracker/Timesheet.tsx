@@ -163,70 +163,70 @@ export function Timesheet() {
                 className={cn(isToday && "border-brand-ring bg-brand-subtle")}
               >
                 <Stack gap="sm">
-                {/* Day header */}
-                <Stack gap="none">
-                  <Typography variant="label">
-                    {day.date.toLocaleDateString("en-US", { weekday: "short" })}
-                  </Typography>
-                  <Typography variant="caption" color="tertiary">
-                    {day.date.getDate()}
-                  </Typography>
-                  {dayHours > 0 && (
-                    <Typography variant="caption" color="brand" className="mt-1">
-                      {formatHours(dayHours)}h
+                  {/* Day header */}
+                  <Stack gap="none">
+                    <Typography variant="label">
+                      {day.date.toLocaleDateString("en-US", { weekday: "short" })}
                     </Typography>
-                  )}
-                </Stack>
+                    <Typography variant="caption" color="tertiary">
+                      {day.date.getDate()}
+                    </Typography>
+                    {dayHours > 0 && (
+                      <Typography variant="caption" color="brand" className="mt-1">
+                        {formatHours(dayHours)}h
+                      </Typography>
+                    )}
+                  </Stack>
 
-                {/* Time entries */}
-                <Stack gap="sm">
-                  {day.entries.map((entry: TimeEntryWithHours) => (
-                    <Card
-                      key={entry._id}
-                      padding="sm"
-                      variant="section"
-                      className="bg-ui-bg-secondary"
-                    >
-                      <Flex justify="between" align="start" className="mb-1">
-                        <FlexItem flex="1" className="min-w-0">
-                          <Typography variant="mono" className="truncate block">
-                            {entry.projectKey}
-                          </Typography>
+                  {/* Time entries */}
+                  <Stack gap="sm">
+                    {day.entries.map((entry: TimeEntryWithHours) => (
+                      <Card
+                        key={entry._id}
+                        padding="sm"
+                        variant="section"
+                        className="bg-ui-bg-secondary"
+                      >
+                        <Flex justify="between" align="start" className="mb-1">
+                          <FlexItem flex="1" className="min-w-0">
+                            <Typography variant="mono" className="truncate block">
+                              {entry.projectKey}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="secondary"
+                              className="truncate block"
+                            >
+                              {entry.issueKey}
+                            </Typography>
+                          </FlexItem>
+                          {entry.billable && (
+                            <DollarSign className="size-3 text-status-success shrink-0" />
+                          )}
+                        </Flex>
+                        <Flex justify="between" align="center">
+                          <Typography variant="label">{formatHours(entry.hours)}h</Typography>
+                          <IconButton
+                            variant="danger"
+                            size="xs"
+                            onClick={() => handleDeleteClick(entry._id)}
+                            aria-label="Delete entry"
+                          >
+                            <Icon icon={Trash2} size="xs" />
+                          </IconButton>
+                        </Flex>
+                        {entry.description && (
                           <Typography
                             variant="caption"
-                            color="secondary"
-                            className="truncate block"
+                            color="tertiary"
+                            className="mt-1 line-clamp-1"
                           >
-                            {entry.issueKey}
+                            {entry.description}
                           </Typography>
-                        </FlexItem>
-                        {entry.billable && (
-                          <DollarSign className="size-3 text-status-success shrink-0" />
                         )}
-                      </Flex>
-                      <Flex justify="between" align="center">
-                        <Typography variant="label">{formatHours(entry.hours)}h</Typography>
-                        <IconButton
-                          variant="danger"
-                          size="xs"
-                          onClick={() => handleDeleteClick(entry._id)}
-                          aria-label="Delete entry"
-                        >
-                          <Icon icon={Trash2} size="xs" />
-                        </IconButton>
-                      </Flex>
-                      {entry.description && (
-                        <Typography
-                          variant="caption"
-                          color="tertiary"
-                          className="mt-1 line-clamp-1"
-                        >
-                          {entry.description}
-                        </Typography>
-                      )}
-                    </Card>
-                  ))}
-                </Stack>
+                      </Card>
+                    ))}
+                  </Stack>
                 </Stack>
               </Card>
             );
