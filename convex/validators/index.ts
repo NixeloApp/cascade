@@ -208,6 +208,7 @@ export const automationTriggers = literals(
   "priority_changed",
   "issue_created",
   "label_added",
+  "stale_in_status",
 );
 
 /** Available action types for automation rules */
