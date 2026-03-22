@@ -8,7 +8,7 @@
 
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
-import { authenticatedMutation, projectAdminMutation } from "./customFunctions";
+import { projectAdminMutation } from "./customFunctions";
 
 /** Generate a secure intake token */
 function generateIntakeToken(): string {

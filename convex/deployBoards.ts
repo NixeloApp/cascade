@@ -7,7 +7,7 @@
  */
 
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
 import { projectAdminMutation, projectQuery } from "./customFunctions";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 
