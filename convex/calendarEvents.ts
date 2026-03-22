@@ -183,7 +183,9 @@ async function getUserEventsInRange(
 
   const [organizedEvents, attendingEventsResult] = await Promise.all([
     applyFilters
-      ? organizedQuery.filter(applyFilters as Parameters<typeof organizedQuery.filter>[0]).take(MAX_PAGE_SIZE)
+      ? organizedQuery
+          .filter(applyFilters as Parameters<typeof organizedQuery.filter>[0])
+          .take(MAX_PAGE_SIZE)
       : organizedQuery.take(MAX_PAGE_SIZE),
 
     // User is attendee — filters applied after dedup since this uses a different query path
