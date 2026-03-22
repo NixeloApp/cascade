@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, authenticatedTest as test } from "../fixtures";
 import { escapeRegExp, ROUTES } from "../utils/routes";
 
@@ -22,45 +22,41 @@ async function waitForControllingWorker(page: Page) {
 }
 
 /**
- * Wait until the SW has cached a specific URL path.
- * Polls the Cache API until the path appears in any cache.
- * This replaces the fragile "reload and hope" approach — we only
- * go offline after the cache is provably populated.
+ * Wait until the SW has cached the current page URL.
+ * Uses cache.match() with the full URL (including query params)
+ * so the probe matches exactly what the SW will serve offline.
  */
-async function waitForCachedRoute(page: Page, urlPath: string, timeout = 30000) {
+async function waitForCurrentPageCached(page: Page, timeout = 30000) {
   await page.waitForFunction(
-    async (path) => {
+    async (url) => {
       const cacheNames = await caches.keys();
       for (const name of cacheNames) {
         const cache = await caches.open(name);
-        const keys = await cache.keys();
-        if (keys.some((req) => new URL(req.url).pathname === path)) {
+        if (await cache.match(url)) {
           return true;
         }
       }
       return false;
     },
-    urlPath,
+    page.url(),
     { timeout },
   );
 }
 
 /**
  * Ensure the SW is controlling and has cached the target route.
- * Visits the page, waits for content to render and the SW to cache
- * the response before returning. The page must fully render while
- * online so the SW caches a complete response, not a loading shell.
+ * Visits the page, waits for a readyLocator to confirm content has
+ * rendered, then reloads so the SW caches the full response.
  */
-async function ensureRouteCached(page: Page, url: string, urlPath: string) {
+async function ensureRouteCached(page: Page, url: string, readyLocator: Locator) {
   await page.goto(url, { waitUntil: "load" });
   await waitForControllingWorker(page);
-  // Wait for content to render while online
-  await page.waitForLoadState("domcontentloaded");
-  // Reload so the SW fetch handler intercepts and caches the response
+  await expect(readyLocator).toBeVisible({ timeout: 15000 });
+  // Reload so the SW fetch handler intercepts and caches the rendered response
   await page.reload({ waitUntil: "load" });
   await waitForControllingWorker(page);
-  await page.waitForLoadState("domcontentloaded");
-  await waitForCachedRoute(page, urlPath);
+  await expect(readyLocator).toBeVisible({ timeout: 15000 });
+  await waitForCurrentPageCached(page);
 }
 
 test.describe("Offline Replay Preview", () => {
@@ -80,16 +76,12 @@ test.describe("Offline Replay Preview", () => {
     // while still online before going offline.
     await settingsPage.goto();
     await waitForControllingWorker(page);
-    await expect(settingsPage.pageHeaderTitle).toBeVisible({
-      timeout: 15000,
-    });
+    await expect(settingsPage.pageHeaderTitle).toBeVisible({ timeout: 15000 });
     // Reload so the SW intercepts and caches the fully-rendered response
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
-    await expect(settingsPage.pageHeaderTitle).toBeVisible({
-      timeout: 15000,
-    });
-    await waitForCachedRoute(page, settingsUrl);
+    await expect(settingsPage.pageHeaderTitle).toBeVisible({ timeout: 15000 });
+    await waitForCurrentPageCached(page);
     await settingsPage.switchToTab("preferences");
 
     try {
@@ -121,7 +113,7 @@ test.describe("Offline Replay Preview", () => {
     const dashboardUrl = ROUTES.dashboard.build(orgSlug);
 
     // Ensure both routes are cached before going offline
-    await ensureRouteCached(page, dashboardUrl, dashboardUrl);
+    await ensureRouteCached(page, dashboardUrl, dashboardPage.pageHeaderTitle);
     await settingsPage.goto();
     await settingsPage.switchToTab("preferences");
 
@@ -149,30 +141,11 @@ test.describe("Offline Replay Preview", () => {
 
     await settingsPage.goto();
     await waitForControllingWorker(page);
-    // Wait for settings to fully render while online
-    await expect(settingsPage.pageHeaderTitle).toBeVisible({
-      timeout: 15000,
-    });
+    await expect(settingsPage.pageHeaderTitle).toBeVisible({ timeout: 15000 });
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
-    await expect(settingsPage.pageHeaderTitle).toBeVisible({
-      timeout: 15000,
-    });
-    // Wait for the settings route to be cached
-    await page.waitForFunction(
-      async () => {
-        const cacheNames = await caches.keys();
-        for (const name of cacheNames) {
-          const cache = await caches.open(name);
-          const keys = await cache.keys();
-          if (keys.some((req) => new URL(req.url).pathname.includes("/settings"))) {
-            return true;
-          }
-        }
-        return false;
-      },
-      { timeout: 30000 },
-    );
+    await expect(settingsPage.pageHeaderTitle).toBeVisible({ timeout: 15000 });
+    await waitForCurrentPageCached(page);
 
     await settingsPage.switchToTab("preferences");
     originalTimezone = await settingsPage.getCurrentTimezoneLabel();
