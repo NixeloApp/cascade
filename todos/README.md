@@ -8,12 +8,12 @@
 
 Work is ordered as a pipeline — each phase unblocks the next.
 
-### Phase 1: Tighten Styling Rules *(in progress)*
+### Phase 1: Tighten Styling Rules *(mechanical work complete)*
 
 | Order | File | Status | What |
 |-------|------|--------|------|
-| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | 🟡 In progress | Raw TW violations: 148 → 103 files / 269 violations. Done: validator smartened, icon sizing (31 files), Icon inline prop (21 instances), stat cells → Card, margins → gaps (10 files). Remaining: more margins → gaps, CVA variant consolidation. |
-| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | 🟡 In progress | Validator now context-aware (structural allowlist, const-string + object-map detection). Backend query/filter debt fully resolved (hourCompliance, export, calendarEvents). Query baselines ratcheted. Client-side filter items confirmed as non-issues. |
+| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | ✅ Mechanical done | Raw TW: 148 → 102 files / 261 violations. Validator smartened (structural allowlist, const/object-map detection). Icon sizing (31 files), Icon inline prop (21 instances), stat cells → Card, margins → gaps (14 files). Remaining violations are non-uniform/responsive/structural — not mechanically fixable. |
+| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | ✅ Done | Backend query/filter debt fully resolved. Query baselines ratcheted. 53/53 validators pass. |
 
 ### Phase 2: Screenshot-Driven Cleanup
 
@@ -53,9 +53,10 @@ Lower priority — features and documentation that don't block quality.
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Raw TW violations | 103 files / 301 violations (was 148 / 436) |
+| Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
+| Empty states | Standardized — 8 inline implementations → EmptyState component |
 | Unit tests | 4372 pass |
 | E2E tests | 164 pass (non-preview) |
 

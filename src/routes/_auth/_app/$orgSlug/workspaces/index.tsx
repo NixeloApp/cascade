@@ -106,17 +106,13 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
                 <InsetPanel>
                   <Stack gap="sm">
                     <Typography variant="metricLabel">Teams</Typography>
-                    <Typography variant="h5">
-                      {workspace.teamCount}
-                    </Typography>
+                    <Typography variant="h5">{workspace.teamCount}</Typography>
                   </Stack>
                 </InsetPanel>
                 <InsetPanel>
                   <Stack gap="sm">
                     <Typography variant="metricLabel">Projects</Typography>
-                    <Typography variant="h5">
-                      {workspace.projectCount}
-                    </Typography>
+                    <Typography variant="h5">{workspace.projectCount}</Typography>
                   </Stack>
                 </InsetPanel>
               </Grid>
@@ -167,17 +163,13 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
             <InsetPanel>
               <Stack gap="sm">
                 <Typography variant="metricLabel">Teams</Typography>
-                <Typography variant="h5">
-                  {workspace.teamCount}
-                </Typography>
+                <Typography variant="h5">{workspace.teamCount}</Typography>
               </Stack>
             </InsetPanel>
             <InsetPanel>
               <Stack gap="sm">
                 <Typography variant="metricLabel">Projects</Typography>
-                <Typography variant="h5">
-                  {workspace.projectCount}
-                </Typography>
+                <Typography variant="h5">{workspace.projectCount}</Typography>
               </Stack>
             </InsetPanel>
           </Grid>
