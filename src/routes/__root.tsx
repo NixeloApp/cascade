@@ -12,6 +12,10 @@ import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { processOfflineQueue, registerOfflineReplayHandler } from "@/lib/offline";
 import {
+  NOTIFICATION_MARK_READ_OFFLINE_MUTATION_TYPE,
+  replayNotificationMarkAsRead,
+} from "@/lib/offlineNotifications";
+import {
   replayUserSettingsUpdate,
   USER_SETTINGS_OFFLINE_MUTATION_TYPE,
 } from "@/lib/offlineUserSettings";
@@ -133,6 +137,9 @@ function OfflineReplayBootstrap() {
 
     registerOfflineReplayHandler(USER_SETTINGS_OFFLINE_MUTATION_TYPE, (args) =>
       replayUserSettingsUpdate(convexClient, args),
+    );
+    registerOfflineReplayHandler(NOTIFICATION_MARK_READ_OFFLINE_MUTATION_TYPE, (args) =>
+      replayNotificationMarkAsRead(convexClient, args),
     );
 
     const flushQueue = () => {
