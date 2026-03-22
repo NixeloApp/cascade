@@ -73,5 +73,5 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
 );
 Icon.displayName = "Icon";
 
-export { iconToneClasses, iconVariants };
 export type { IconTone };
+export { iconToneClasses, iconVariants };

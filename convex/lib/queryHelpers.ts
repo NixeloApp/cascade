@@ -61,12 +61,17 @@ export async function fetchPaginatedQuery<T extends GenericDocument>(
     // We check isDeleted != true to handle both explicit false and undefined (legacy data).
     .filter((q: FilterBuilder<TableInfoFor>) => q.neq(q.field("isDeleted"), true));
 
-  // Let errors (including InvalidCursor) propagate to the client.
-  // The client-side usePaginatedQuery hook handles cursor resets properly
-  // when args change. Server-side silent retry with cursor:null corrupts
-  // pagination state for callers (continueCursor points to page 2 while
-  // callers think they're on their original page).
-  return await query.paginate(opts.paginationOpts);
+  try {
+    return await query.paginate(opts.paginationOpts);
+  } catch (error) {
+    // When query args change (e.g., filter toggle), the client may still hold
+    // a cursor from the previous query shape. Retry with a fresh cursor
+    // instead of propagating a cryptic InvalidCursor error.
+    if (isInvalidCursorError(error) && opts.paginationOpts.cursor !== null) {
+      return await query.paginate({ ...opts.paginationOpts, cursor: null });
+    }
+    throw error;
+  }
 }
 
 export function isInvalidCursorError(error: unknown): boolean {

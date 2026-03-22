@@ -654,14 +654,14 @@ CardFooter.displayName = "CardFooter";
 
 export {
   Card,
+  CardBody,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardBody,
-  CardFooter,
-  cardVariants,
   cardRecipeVariants,
+  cardVariants,
   getCardRecipeClassName,
   getCardVariantClassName,
 };

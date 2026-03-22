@@ -43,6 +43,7 @@ import {
   writeLocalStorageJson,
 } from "@/lib/authRecovery";
 import { showError, showSuccess } from "@/lib/toast";
+
 // Re-export hooks for backwards compatibility with existing imports
 export { useOrganization, useOrganizationOptional };
 

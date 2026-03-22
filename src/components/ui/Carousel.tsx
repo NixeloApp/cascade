@@ -301,8 +301,8 @@ CarouselIndicators.displayName = "CarouselIndicators";
 export {
   Carousel,
   CarouselContent,
-  CarouselSlide,
-  CarouselNavigation,
   CarouselIndicators,
+  CarouselNavigation,
+  CarouselSlide,
   useCarousel,
 };
