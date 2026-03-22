@@ -42,6 +42,7 @@ import {
   listRepos as listGitHubRepos,
 } from "./http/githubOAuth";
 import { handleCallback, initiateAuth, triggerSync } from "./http/googleOAuth";
+import { handleIntakePreflight, handleIntakeSubmission } from "./http/intake";
 import { handleSlashCommand } from "./http/slackCommands";
 import {
   handleCallback as handleSlackCallback,
@@ -56,6 +57,18 @@ http.route({
   path: "/api/issues",
   method: "GET",
   handler: issuesHandler,
+});
+
+// Public intake endpoint for external issue submissions
+http.route({
+  path: "/api/intake",
+  method: "POST",
+  handler: handleIntakeSubmission,
+});
+http.route({
+  path: "/api/intake",
+  method: "OPTIONS",
+  handler: handleIntakePreflight,
 });
 
 // Google Calendar OAuth routes

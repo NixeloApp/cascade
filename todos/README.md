@@ -35,7 +35,7 @@ Lower priority — features and documentation that don't block quality.
 | Order | File | What |
 |-------|------|------|
 | 4.1 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Missing page-spec doc triplets plus missing current-feature coverage/state docs for shipped surfaces |
-| 4.2 | [plane-features.md](./plane-features.md) | Gantt polish, intake/triage, deploy boards, stickies, analytics, automation, multi-provider AI, page versions |
+| 4.2 | [plane-features.md](./plane-features.md) | Remaining: Gantt polish, intake external capture, deploy boards. Most items shipped (stickies, analytics, automation, AI, bulk ops). |
 | 4.3 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation reasons (backend done, no UI), workflow translation, custom domain/SMTP, branding |
 | 4.4 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
 
@@ -75,11 +75,14 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 | **AI agents** | Multi-channel | -- | MCP placeholder | Medium |
 | **Intake/triage** | -- | Full system | Skeleton inbox (551-line InboxList) | Medium |
 | **Auto-archive** | -- | Scheduled | **Shipped** — daily cron, per-project autoArchiveDays | Done |
+| **Scheduled automation** | -- | Basic | **Shipped** — stale_in_status triggers, daily cron | Done |
 | **Stickies** | -- | Full | **Shipped** — dashboard panel with colored notes | Done |
 | **Deploy boards** | -- | Per-entity | Token portal only | Medium |
 | **Offline replay** | -- | -- | **Shipped** — 4 mutations, header indicators, queue UI | Done |
-| **Bulk operations** | -- | Full | **Shipped** — status, priority, assignee, sprint, dates, archive, delete | Done |
+| **Bulk operations** | -- | Full | **Shipped** — status, priority, assignee, sprint, labels, dates, archive, delete | Done |
 | **Version history** | -- | Full | **Shipped** — list + restore for documents | Done |
+| **Cycle/lead time** | -- | Full | **Shipped** — median cycle + lead time with sparkline data | Done |
+| **Multi-provider AI** | Multi-channel | -- | **Shipped** — Anthropic + OpenAI, env-based provider selection | Done |
 | **Billing PDF export** | -- | -- | CSV only | Low |
 
 ---

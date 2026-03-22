@@ -750,6 +750,18 @@ const applicationTables = {
     .index("by_source", ["source"])
     .index("by_created_by", ["createdBy"]),
 
+  // Intake tokens for public issue submission
+  intakeTokens: defineTable({
+    projectId: v.id("projects"),
+    token: v.string(),
+    isRevoked: v.boolean(),
+    revokedAt: v.optional(v.number()),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_token", ["token"]),
+
   // Quick notes / stickies for the dashboard
   stickies: defineTable({
     userId: v.id("users"),
