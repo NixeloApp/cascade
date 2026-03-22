@@ -143,7 +143,9 @@ export const getBySlug = query({
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_project", (q) => q.eq("projectId", board.projectId))
-      .filter((q) => q.and(q.neq(q.field("isDeleted"), true), q.eq(q.field("archivedAt"), undefined)))
+      .filter((q) =>
+        q.and(q.neq(q.field("isDeleted"), true), q.eq(q.field("archivedAt"), undefined)),
+      )
       .take(MAX_PAGE_SIZE);
 
     // Build public issue list with only visible fields

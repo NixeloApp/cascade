@@ -7,7 +7,6 @@
 
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import { usePublicQuery } from "@/hooks/useConvexHelpers";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -16,6 +15,7 @@ import { Grid } from "@/components/ui/Grid";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { usePublicQuery } from "@/hooks/useConvexHelpers";
 import { FolderKanban } from "@/lib/icons";
 
 export const Route = createFileRoute("/board/$slug")({
@@ -99,17 +99,15 @@ function PublicBoardPage() {
                         )}
                       </Flex>
                       <Typography variant="small">{issue.title}</Typography>
-                      {board.visibleFields.labels &&
-                        issue.labels &&
-                        issue.labels.length > 0 && (
-                          <Flex gap="xs" wrap>
-                            {issue.labels.map((label) => (
-                              <Badge key={label} variant="outline" size="sm">
-                                {label}
-                              </Badge>
-                            ))}
-                          </Flex>
-                        )}
+                      {board.visibleFields.labels && issue.labels && issue.labels.length > 0 && (
+                        <Flex gap="xs" wrap>
+                          {issue.labels.map((label) => (
+                            <Badge key={label} variant="outline" size="sm">
+                              {label}
+                            </Badge>
+                          ))}
+                        </Flex>
+                      )}
                     </Stack>
                   </Card>
                 ))}
