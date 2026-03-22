@@ -151,14 +151,22 @@ function isNavigatorOffline(): boolean {
   return typeof navigator !== "undefined" && !navigator.onLine;
 }
 
-function updateOrgSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
+/** Synchronous module-level state update (safe in render). */
+function updateOrgSessionFlags(isAuthenticated: boolean, isAuthLoading: boolean) {
   if (isAuthenticated) {
     hasAuthenticatedOrgSession = true;
-    markAuthenticatedSession();
   } else if (!isAuthLoading && !isNavigatorOffline()) {
     hasAuthenticatedOrgSession = false;
     cachedOrgUserOrganizations = undefined;
     cachedOrganizationsBySlug.clear();
+  }
+}
+
+/** Side-effectful localStorage writes (run in useEffect). */
+function persistOrgSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
+  if (isAuthenticated) {
+    markAuthenticatedSession();
+  } else if (!isAuthLoading && !isNavigatorOffline()) {
     clearAuthenticatedSessionMarker();
     removeLocalStorageValue(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY);
   }
@@ -191,8 +199,13 @@ function OrganizationLayout() {
   const { isAuthLoading, isAuthenticated } = useAuthReady();
   const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
 
+  // Module-level flags must be synchronous so guards work on the first render
+  updateOrgSessionFlags(isAuthenticated, isAuthLoading);
+
+  // localStorage writes are side effects — run in useEffect to avoid
+  // synchronous storage churn during React render (especially StrictMode)
   useEffect(() => {
-    updateOrgSessionState(isAuthenticated, isAuthLoading);
+    persistOrgSessionState(isAuthenticated, isAuthLoading);
   }, [isAuthenticated, isAuthLoading]);
 
   const { organization, userOrgs } = useStableOrgData(orgSlug);

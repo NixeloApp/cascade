@@ -45,10 +45,10 @@ let cachedRedirectPath: string | null | undefined;
 let cachedUserOrganizations: UserOrganization[] | undefined;
 let hasAuthenticatedAppSession = false;
 
-function updateAppSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
+/** Synchronous module-level state update (safe in render). */
+function updateAppSessionFlags(isAuthenticated: boolean, isAuthLoading: boolean) {
   if (isAuthenticated) {
     hasAuthenticatedAppSession = true;
-    markAuthenticatedSession();
     return;
   }
 
@@ -57,6 +57,18 @@ function updateAppSessionState(isAuthenticated: boolean, isAuthLoading: boolean)
     hasAuthenticatedAppSession = false;
     cachedRedirectPath = undefined;
     cachedUserOrganizations = undefined;
+  }
+}
+
+/** Side-effectful localStorage writes (run in useEffect). */
+function persistAppSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
+  if (isAuthenticated) {
+    markAuthenticatedSession();
+    return;
+  }
+
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+  if (!isAuthLoading && !isOffline) {
     clearAuthenticatedSessionMarker();
     removeLocalStorageValue(APP_LAYOUT_CACHE_STORAGE_KEY);
   }
@@ -126,8 +138,10 @@ function AppLayout() {
     readLocalStorageJson<PersistedAppLayoutState>(APP_LAYOUT_CACHE_STORAGE_KEY),
   ).current;
 
+  updateAppSessionFlags(isAuthenticated, isAuthLoading);
+
   useEffect(() => {
-    updateAppSessionState(isAuthenticated, isAuthLoading);
+    persistAppSessionState(isAuthenticated, isAuthLoading);
   }, [isAuthenticated, isAuthLoading]);
 
   // Get redirect destination from backend (handles onboarding check)
