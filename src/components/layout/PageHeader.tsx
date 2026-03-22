@@ -13,6 +13,7 @@ import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 
 interface BreadcrumbData {
@@ -77,7 +78,7 @@ export function PageHeader({
             <Dot size="md" halo />
             <Typography variant="pageHeaderEyebrow">Workspace view</Typography>
           </Flex>
-          <Typography variant="pageHeaderTitle" as="h2">
+          <Typography variant="pageHeaderTitle" as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
             {title}
           </Typography>
           {description && <Typography variant="pageHeaderDescription">{description}</Typography>}

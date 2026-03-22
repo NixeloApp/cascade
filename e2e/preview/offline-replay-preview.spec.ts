@@ -80,13 +80,13 @@ test.describe("Offline Replay Preview", () => {
     // while still online before going offline.
     await settingsPage.goto();
     await waitForControllingWorker(page);
-    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+    await expect(settingsPage.pageHeaderTitle).toBeVisible({
       timeout: 15000,
     });
     // Reload so the SW intercepts and caches the fully-rendered response
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
-    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+    await expect(settingsPage.pageHeaderTitle).toBeVisible({
       timeout: 15000,
     });
     await waitForCachedRoute(page, settingsUrl);
@@ -100,7 +100,7 @@ test.describe("Offline Replay Preview", () => {
 
       await expect(page).toHaveURL(new RegExp(`${escapeRegExp(settingsUrl)}(?:\\?.*)?$`));
       // The SW-cached page may need time to hydrate and render the auth recovery path
-      await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+      await expect(settingsPage.pageHeaderTitle).toBeVisible({
         timeout: 15000,
       });
       await expect(page.getByRole("heading", { name: /you're offline/i })).toHaveCount(0);
@@ -135,7 +135,7 @@ test.describe("Offline Replay Preview", () => {
 
       await expect(page).toHaveURL(new RegExp(`${escapeRegExp(dashboardUrl)}$`));
       await expect(dashboardPage.dashboardTab).toBeVisible();
-      await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+      await expect(dashboardPage.pageHeaderTitle).toBeVisible();
       await expect(page.getByRole("heading", { name: /you're offline/i })).toHaveCount(0);
     } finally {
       await page.context().setOffline(false);
@@ -154,12 +154,12 @@ test.describe("Offline Replay Preview", () => {
     await settingsPage.goto();
     await waitForControllingWorker(page);
     // Wait for settings to fully render while online
-    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+    await expect(settingsPage.pageHeaderTitle).toBeVisible({
       timeout: 15000,
     });
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
-    await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible({
+    await expect(settingsPage.pageHeaderTitle).toBeVisible({
       timeout: 15000,
     });
     // Wait for the settings route to be cached
