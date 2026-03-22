@@ -258,6 +258,11 @@ class OfflineDB {
     return (await db.add("mutations", mutation as OfflineMutation)) as number;
   }
 
+  async getMutation(id: number): Promise<OfflineMutation | undefined> {
+    const db = await this.open();
+    return db.get("mutations", id);
+  }
+
   async getPendingMutations(): Promise<OfflineMutation[]> {
     const db = await this.open();
     return db.getAllFromIndex("mutations", "status", "pending");
@@ -475,9 +480,24 @@ export async function queueOfflineMutation(
  */
 let isProcessingQueue = false;
 
-export async function processOfflineQueue(userId?: string): Promise<{ processed: boolean }> {
+export interface OfflineQueueResult {
+  /** Whether the queue was processed (false if another call was already in progress). */
+  processed: boolean;
+  /** Number of mutations successfully synced in this run. */
+  synced: number;
+  /** Number of mutations that failed permanently or exhausted retries. */
+  failed: number;
+  /** Number of mutations skipped (still in backoff window). */
+  skipped: number;
+}
+
+/**
+ * Processes pending offline mutations. Attempts to sync each mutation,
+ * respecting backoff windows and classifying failures.
+ */
+export async function processOfflineQueue(userId?: string): Promise<OfflineQueueResult> {
   if (isProcessingQueue) {
-    return { processed: false };
+    return { processed: false, synced: 0, failed: 0, skipped: 0 };
   }
   isProcessingQueue = true;
   try {
@@ -486,10 +506,18 @@ export async function processOfflineQueue(userId?: string): Promise<{ processed:
     const pending = await offlineDB.getPendingMutations();
     const scoped = userId ? pending.filter((m) => m.userId === userId) : pending;
 
+    let synced = 0;
+    let failed = 0;
+    let skipped = 0;
+
     for (const mutation of scoped) {
-      await processQueuedMutation(mutation);
+      const outcome = await processQueuedMutation(mutation);
+      if (outcome === "synced") synced++;
+      else if (outcome === "failed") failed++;
+      else skipped++;
     }
-    return { processed: true };
+
+    return { processed: true, synced, failed, skipped };
   } finally {
     isProcessingQueue = false;
   }
@@ -581,18 +609,20 @@ async function persistMutationFailureStatus(
   }
 }
 
-async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
+type MutationOutcome = "synced" | "failed" | "pending" | "skipped";
+
+async function processQueuedMutation(mutation: OfflineMutation): Promise<MutationOutcome> {
   if (!mutation.id) {
     console.info("[offline] Skipping queued mutation without id", {
       mutationType: mutation.mutationType,
       timestamp: mutation.timestamp,
     });
-    return;
+    return "skipped";
   }
 
   // Skip mutations that are in backoff
   if (!isEligibleForRetry(mutation)) {
-    return;
+    return "skipped";
   }
 
   const nextAttemptCount = mutation.attempts + 1;
@@ -610,6 +640,7 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
       clearError: true,
     });
     recordLastSuccessfulOfflineReplayAt(completedAt);
+    return "synced";
   } catch (error) {
     const nextStatus = getNextFailureStatus(mutation.attempts + 1, error);
     const permanent = isPermanentFailure(error);
@@ -622,5 +653,6 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
       error,
     });
     await persistMutationFailureStatus(mutation, nextStatus, error);
+    return nextStatus;
   }
 }

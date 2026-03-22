@@ -110,7 +110,7 @@ Shows toast: "Comment queued — will post when you reconnect".
 - [x] Auto-dismiss when queue empties (badge disappears)
 - [x] Toast for queued comments ("Comment queued — will post when you reconnect")
 - [ ] Show optimistic UI for queued mutations (e.g., grey out read notification immediately)
-- [ ] Consider a toast on reconnect: "Back online — N changes synced" (only if queue was non-empty)
+- [x] Toast on reconnect: "Back online — N changes synced" (only shown when queue had items to sync)
 
 ### 6. Tests
 

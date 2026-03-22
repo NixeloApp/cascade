@@ -10,7 +10,11 @@ import { IconCircle } from "@/components/ui/IconCircle";
 import { Toaster } from "@/components/ui/Sonner";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { processOfflineQueue, registerOfflineReplayHandler } from "@/lib/offline";
+import {
+  type OfflineQueueResult,
+  processOfflineQueue,
+  registerOfflineReplayHandler,
+} from "@/lib/offline";
 import { COMMENT_ADD_OFFLINE_MUTATION_TYPE, replayAddComment } from "@/lib/offlineComments";
 import {
   ISSUE_UPDATE_STATUS_OFFLINE_MUTATION_TYPE,
@@ -24,6 +28,7 @@ import {
   replayUserSettingsUpdate,
   USER_SETTINGS_OFFLINE_MUTATION_TYPE,
 } from "@/lib/offlineUserSettings";
+import { showInfo } from "@/lib/toast";
 import { getVapidPublicKey, WebPushProvider } from "@/lib/webPush";
 import { LazyPostHog } from "../components/LazyPostHog";
 import { NotFoundPage } from "../components/NotFoundPage";
@@ -153,19 +158,28 @@ function OfflineReplayBootstrap() {
       replayAddComment(convexClient, args),
     );
 
-    const flushQueue = () => {
+    const flushQueue = (showReconnectToast: boolean) => {
       if (typeof navigator !== "undefined" && !navigator.onLine) {
         return;
       }
-      processOfflineQueue(userId).catch((error: unknown) => {
-        console.info("[offline] Failed to flush queued mutations", { error });
-      });
+      processOfflineQueue(userId)
+        .then((result: OfflineQueueResult) => {
+          if (showReconnectToast && result.synced > 0) {
+            const label = result.synced === 1 ? "change" : "changes";
+            showInfo(`Back online — ${result.synced} ${label} synced`);
+          }
+        })
+        .catch((error: unknown) => {
+          console.info("[offline] Failed to flush queued mutations", { error });
+        });
     };
 
-    flushQueue();
+    // Initial flush on mount — no toast (user just loaded the app)
+    flushQueue(false);
 
     const handleOnline = () => {
-      flushQueue();
+      // Reconnect flush — show toast if items were synced
+      flushQueue(true);
     };
 
     window.addEventListener("online", handleOnline);
