@@ -138,7 +138,8 @@ function AppLoadingScreen() {
   );
 }
 
-function useAppLayoutState(isAuthenticated: boolean, isAuthLoading: boolean) {
+function useAppLayoutState() {
+  const { isAuthLoading, isAuthenticated } = useAuthReady();
   const persistedAppLayoutState = useRef(
     readLocalStorageJson<PersistedAppLayoutState>(APP_LAYOUT_CACHE_STORAGE_KEY),
   ).current;
@@ -149,22 +150,32 @@ function useAppLayoutState(isAuthenticated: boolean, isAuthLoading: boolean) {
     persistAppSessionState(isAuthenticated, isAuthLoading);
   }, [isAuthenticated, isAuthLoading]);
 
-  return { persistedAppLayoutState };
+  const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
+  const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {});
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
+
+  return {
+    isAuthLoading,
+    isAuthenticated,
+    persistedAppLayoutState,
+    redirectPath,
+    userOrganizations,
+    currentUser,
+  };
 }
 
 function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { isAuthLoading, isAuthenticated } = useAuthReady();
   const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
-  const { persistedAppLayoutState } = useAppLayoutState(isAuthenticated, isAuthLoading);
-
-  // Get redirect destination from backend (handles onboarding check)
-  const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
-
-  // Get user's organizations to check if we need initialization
-  const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {});
-  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
+  const {
+    isAuthLoading,
+    isAuthenticated,
+    persistedAppLayoutState,
+    redirectPath,
+    userOrganizations,
+    currentUser,
+  } = useAppLayoutState();
 
   useEffect(() => {
     if (redirectPath === undefined) {
