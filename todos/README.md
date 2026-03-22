@@ -31,19 +31,19 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | PR | File | Issue |
 |----|------|-------|
 | #905 | `src/components/Settings/ProfileContent.tsx:319` | Profile grid span doesn't adapt when `showAccountInfo` is false. |
-| #905 | `e2e/utils/wait-helpers.ts:299` | Screenshot readiness helper only waits on first loading spinner, not all. |
+| ~~#905~~ | ~~`e2e/utils/wait-helpers.ts:299`~~ | ~~Screenshot readiness waits on first spinner only.~~ **Fixed** — `waitForAllSpinnersToClear` polls until all spinners are hidden. |
 | #908 | `src/components/AI/AIAssistantButton.test.tsx:131` | Test only checks base `size-*` class, misses responsive `sm:size-*` variants. |
-| #908 | `todos/tailwind-cva-consolidation.md:29` | Stale violation counts (references 126/436 instead of current 102/261). |
-| #908 | `todos/validator-strengthening.md:53` | Claims all backend filter debt resolved but baseline still has calendarEvents/export entries. |
+| ~~#908~~ | ~~`todos/tailwind-cva-consolidation.md:29`~~ | ~~Stale violation counts.~~ **Fixed** — updated to current numbers with strikethrough. |
+| ~~#908~~ | ~~`todos/validator-strengthening.md:53`~~ | ~~Stale export.ts description.~~ **Fixed** — updated to reflect compound index migration. |
 | #909 | 6 files | EmptyState imports use relative paths instead of `@/` alias. |
 | ~~#910~~ | ~~`src/hooks/useOfflineAddComment.test.ts:64`~~ | ~~Test uses `as never` cast.~~ **Fixed** — replaced with `as Id<"issues">`. |
 | ~~#911~~ | ~~`convex/autoArchive.test.ts`~~ | ~~Magic numbers; missing workflow state assertion.~~ **Fixed** — named constants, `moveIssueToDone` helper with assertion, new non-done test. |
 | ~~#911~~ | ~~`convex/schemaFields.ts:44`~~ | ~~`autoArchiveDays` not in mutation args.~~ **Fixed** — added to `updateProject` with non-negative integer clamping. |
-| #912 | `todos/README.md:79` | Inconsistent terminology: "4 mutations" vs "4 mutation families." |
-| #913 | `todos/plane-features.md:8` | "Only unfinished items remain here" contradicts the Shipped section below. |
-| #913 | `todos/README.md:82` | Phase 4 summary still references stickies as remaining. |
+| ~~#912~~ | ~~`todos/README.md:79`~~ | ~~Inconsistent terminology.~~ **Fixed** — "4 mutation families." |
+| ~~#913~~ | ~~`todos/plane-features.md:8`~~ | ~~"Only unfinished items remain" contradiction.~~ **Fixed** — reworded to "Completed items are marked as shipped." |
+| ~~#913~~ | ~~`todos/README.md:82`~~ | ~~Phase 4 stickies reference.~~ **Fixed** — stickies already listed as shipped in Phase 3. |
 | ~~#917~~ | ~~`convex/http/intake.ts:52`~~ | ~~Bearer token parsing accepts non-Bearer headers.~~ **Fixed** — strict RFC 6750 parsing with `extractBearerToken()`, 10 unit tests. |
-| #917 | `todos/README.md:38` | Lists intake as remaining but backend is shipped. |
+| ~~#917~~ | ~~`todos/README.md:38`~~ | ~~Lists intake as remaining.~~ **Fixed** — already marked as shipped in Phase 3. |
 
 ---
 
@@ -82,7 +82,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Cycle/lead time | ✅ Shipped |
 | Multi-provider AI | ✅ Shipped (Anthropic + OpenAI) |
 | Version history | ✅ Shipped (list + restore) |
-| Offline replay | ✅ Shipped (4 mutations, header badges, queue UI) |
+| Offline replay | ✅ Shipped (4 mutation families, header badges, queue UI) |
 
 ### Phase 4: Docs & Low Priority
 
@@ -109,7 +109,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 19 (0 critical, 1 major, 18 minor) |
+| Unresolved PR comments | 12 (0 critical, 1 major, 11 minor) |
 | Unit tests | 4420 pass |
 | E2E tests | 164 pass (non-preview) |
 

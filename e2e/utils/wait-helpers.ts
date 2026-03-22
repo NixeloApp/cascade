@@ -289,14 +289,36 @@ export async function dismissAllDialogs(page: Page): Promise<void> {
 }
 
 /**
+ * Wait for ALL loading spinners to disappear, not just the first one.
+ * A page may have multiple concurrent spinners (sidebar, main content, widgets).
+ */
+async function waitForAllSpinnersToClear(page: Page, timeout: number): Promise<void> {
+  const spinnerLocator = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
+  await expect
+    .poll(
+      async () => {
+        const count = await spinnerLocator.count();
+        let visibleCount = 0;
+        for (let i = 0; i < count; i++) {
+          if (await isLocatorVisible(spinnerLocator.nth(i))) {
+            visibleCount++;
+          }
+        }
+        return visibleCount;
+      },
+      { timeout, intervals: [100, 200, 500] },
+    )
+    .toBe(0);
+}
+
+/**
  * Wait for route/query loading indicators to clear before taking a screenshot.
  * This fails when app-shell loading never settles instead of capturing spinners.
  */
 export async function waitForScreenshotReady(page: Page, timeout = 5000): Promise<void> {
   await page.waitForLoadState("domcontentloaded");
 
-  const loadingSpinner = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
-  await loadingSpinner.first().waitFor({ state: "hidden", timeout });
+  await waitForAllSpinnersToClear(page, timeout);
   await waitForLoadingSkeletonsToClear(page, timeout);
 
   await waitForAnimation(page);

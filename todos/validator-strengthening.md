@@ -50,7 +50,7 @@ All backend post-fetch filter debt is resolved:
 | `convex/hourCompliance.ts` | ~~`.take(1000)` + 5x JS filter~~ → `by_period` index + query-level date bounds + single-pass status count |
 | `convex/hourCompliance.ts` | ~~`.take(50)` + JS date filter~~ → query-level `.filter()` with `applyDateFilter` |
 | `convex/calendarEvents.ts` | ~~JS `.filter()` by projectId/status~~ → `getUserEventsInRange` accepts filter params, applies at query level |
-| `convex/export.ts` | ~~JS `.filter()` by sprintId/status~~ → query-level `.filter()` before `.take()` |
+| `convex/export.ts` | ~~JS `.filter()` by sprintId/status~~ → compound indexes `by_project_sprint_status` / `by_project_status` (no `.filter()` at all) |
 
 ### Client-side: React component filters — NOT ACTUAL ISSUES
 

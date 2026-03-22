@@ -26,7 +26,7 @@
 
 ## Violation Cluster Analysis
 
-436 violations across 126 files. 223 of those are in the top 30 repeating patterns:
+~~436 violations across 126 files~~ → **Current: ~263 violations across ~104 files** (post Phase 1 cleanup). 223 of the original were in the top 30 repeating patterns:
 
 ### Batch 1: Structural allowlist (zero-risk, ~65 violations removed)
 

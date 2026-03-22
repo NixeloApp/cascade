@@ -5,7 +5,7 @@
 > **Last Updated:** 2026-03-22
 > **Source:** Plane repo at `github.com/makeplane/plane` (pulled 2026-03-18)
 
-Only unfinished items remain here. Completed items are marked as shipped.
+Completed items are marked as shipped below. Remaining items are under evaluation.
 
 ## Shipped
 
