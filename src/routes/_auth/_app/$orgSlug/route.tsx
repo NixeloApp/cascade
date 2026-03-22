@@ -191,7 +191,9 @@ function OrganizationLayout() {
   const { isAuthLoading, isAuthenticated } = useAuthReady();
   const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
 
-  updateOrgSessionState(isAuthenticated, isAuthLoading);
+  useEffect(() => {
+    updateOrgSessionState(isAuthenticated, isAuthLoading);
+  }, [isAuthenticated, isAuthLoading]);
 
   const { organization, userOrgs } = useStableOrgData(orgSlug);
 

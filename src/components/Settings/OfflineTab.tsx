@@ -433,7 +433,7 @@ export function OfflineTab() {
                 Refresh Queue
               </Button>
             </Flex>
-            {pendingCount > 0 && isOnline && (
+            {pendingCount > 0 && isOnline && user?._id && (
               <Flex justify="end">
                 <Button
                   variant="primary"
