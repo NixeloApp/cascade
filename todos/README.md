@@ -30,7 +30,7 @@ All 7 items shipped: raw TW reduction (148→102 files), validator smartening, b
 
 | Feature | Status |
 |---------|--------|
-| Gantt chart polish | 🟡 RoadmapView exists (2671 lines). Needs: drag-resize, dependency arrows, zoom. |
+| Gantt chart polish | 🟡 RoadmapView exists. ✅ Zoom shipped. Remaining: drag-resize, dependency arrows. |
 | Intake external capture | ✅ Shipped — backend + admin UI |
 | Deploy boards | ✅ Shipped — backend, public page, assignee/dueDate, status-hidden fix |
 | Auto-archive | ✅ Shipped |

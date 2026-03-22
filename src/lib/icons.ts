@@ -130,4 +130,6 @@ export {
   X,
   XCircle,
   Zap,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";

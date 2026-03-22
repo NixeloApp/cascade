@@ -14,7 +14,7 @@ import { useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { CalendarDays, ChevronLeft, ChevronRight } from "@/lib/icons";
+import { CalendarDays, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -57,12 +57,35 @@ const TIME_SCALE_OPTIONS: Array<{ value: TimeScale; short: string; long: string 
   { value: "quarter", short: "Q", long: "Quarter" },
 ];
 
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 3;
+const ZOOM_STEP = 0.25;
+const ZOOM_DEFAULT = 1;
+
+/** Base column width in px, multiplied by zoom level. */
+const BASE_COLUMN_WIDTH = 120;
+
 /**
  * Timeline/Gantt-style roadmap view showing issues and sprints on a timeline.
  */
 export function RoadmapView({ projectId }: RoadmapViewProps) {
   const [timeScale, setTimeScale] = useState<TimeScale>("month");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [zoomLevel, setZoomLevel] = useState(ZOOM_DEFAULT);
+
+  const handleZoomIn = () => {
+    setZoomLevel((z) => Math.min(ZOOM_MAX, z + ZOOM_STEP));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel((z) => Math.max(ZOOM_MIN, z - ZOOM_STEP));
+  };
+
+  const handleZoomReset = () => {
+    setZoomLevel(ZOOM_DEFAULT);
+  };
+
+  const columnWidth = Math.round(BASE_COLUMN_WIDTH * zoomLevel);
 
   // Calculate date range based on time scale
   const { startDate, endDate, columns } = getDateRange(currentDate, timeScale);
@@ -203,24 +226,53 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
             </Typography>
           </Flex>
 
-          {/* Time Scale Toggle */}
-          <SegmentedControl
-            value={timeScale}
-            onValueChange={handleTimeScaleChange}
-            variant="outline"
-            size="sm"
-            aria-label="Time scale"
-          >
-            {TIME_SCALE_OPTIONS.map((option) => (
-              <SegmentedControlItem
-                key={option.value}
-                value={option.value}
-                aria-label={option.long}
+          <Flex gap="sm" gapSm="md" align="center">
+            {/* Time Scale Toggle */}
+            <SegmentedControl
+              value={timeScale}
+              onValueChange={handleTimeScaleChange}
+              variant="outline"
+              size="sm"
+              aria-label="Time scale"
+            >
+              {TIME_SCALE_OPTIONS.map((option) => (
+                <SegmentedControlItem
+                  key={option.value}
+                  value={option.value}
+                  aria-label={option.long}
+                >
+                  <ResponsiveText short={option.short} long={option.long} />
+                </SegmentedControlItem>
+              ))}
+            </SegmentedControl>
+
+            {/* Zoom Controls */}
+            <Flex gap="xs" align="center">
+              <IconButton
+                variant="ghost"
+                size="sm"
+                onClick={handleZoomOut}
+                disabled={zoomLevel <= ZOOM_MIN}
+                aria-label="Zoom out"
               >
-                <ResponsiveText short={option.short} long={option.long} />
-              </SegmentedControlItem>
-            ))}
-          </SegmentedControl>
+                <Icon icon={ZoomOut} size="sm" />
+              </IconButton>
+              <Button variant="ghost" size="xs" onClick={handleZoomReset} aria-label="Reset zoom">
+                <Typography variant="caption" color="secondary">
+                  {Math.round(zoomLevel * 100)}%
+                </Typography>
+              </Button>
+              <IconButton
+                variant="ghost"
+                size="sm"
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= ZOOM_MAX}
+                aria-label="Zoom in"
+              >
+                <Icon icon={ZoomIn} size="sm" />
+              </IconButton>
+            </Flex>
+          </Flex>
         </Flex>
       </div>
 
@@ -241,7 +293,11 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               <FlexItem flex="1">
                 <Flex>
                   {columns.map((col) => (
-                    <FlexItem key={col.date.getTime()} flex="1">
+                    <FlexItem
+                      key={col.date.getTime()}
+                      flex="1"
+                      style={{ minWidth: `${columnWidth}px` }}
+                    >
                       <div className={getCardRecipeClassName("calendarRoadmapDateHeader")}>
                         <Typography className="text-center" variant="label">
                           {col.label}
@@ -294,7 +350,11 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                       <FlexItem flex="1" className="relative">
                         <Flex className="absolute inset-0">
                           {columns.map((col) => (
-                            <FlexItem key={col.date.getTime()} flex="1">
+                            <FlexItem
+                              key={col.date.getTime()}
+                              flex="1"
+                              style={{ minWidth: `${columnWidth}px` }}
+                            >
                               <div
                                 className={getCardRecipeClassName("calendarRoadmapTimelineCell")}
                               />
