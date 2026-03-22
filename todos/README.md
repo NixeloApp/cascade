@@ -110,7 +110,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
 | Unresolved PR comments | 0 — all resolved |
-| Unit tests | 4428 pass |
+| Unit tests | 4439 pass |
 | E2E tests | 164 pass (non-preview) |
 
 ---

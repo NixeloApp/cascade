@@ -95,12 +95,13 @@ Shows toast: "Comment queued — will post when you reconnect".
 - [x] Update `docs/setup/OFFLINE_ARCHITECTURE.md` with expanded mutation table
 - [ ] Update OfflineTab "Current Verified Capabilities" list
 
-### 4. Retry Policy
+### ~~4. Retry Policy~~ ✅ DONE
 
-- [ ] Decide whether current 3-attempt best-effort model is sufficient or needs real backoff.
-- [ ] If backoff: define timing policy (e.g., 5s, 30s, 2min) and where it lives.
-- [ ] Classify failure types: retryable (network error, 5xx) vs permanent (404, validation, deleted entity).
-- [ ] Permanent failures should stop retrying immediately and show a clear message in the queue UI.
+- [x] Backoff: 5s → 30s → 2min escalating intervals between retries (RETRY_BACKOFF_MS).
+- [x] Failure classification: `isPermanentFailure()` detects not-found, auth, validation, deleted entities.
+- [x] Permanent failures immediately marked "failed" with human-readable reason (`getFailureReason()`).
+- [x] Transient failures use nextRetryAfter timestamp; queue processor skips mutations still in backoff.
+- [x] 15 unit tests covering: permanent vs transient classification, backoff timing, reason messages.
 
 ### 5. Graceful Degradation UX
 
