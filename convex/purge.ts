@@ -55,6 +55,7 @@ export const TABLES: TableNames[] = [
   "githubRepositories",
   "githubPullRequests",
   "githubCommits",
+  "stickies",
   "testOtpCodes",
   "oauthHealthChecks",
   "oauthTokenHealthChecks",

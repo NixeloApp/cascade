@@ -112,6 +112,7 @@ export {
   Smartphone,
   Sparkles,
   Star,
+  StickyNote,
   Sun,
   Tag,
   Target,

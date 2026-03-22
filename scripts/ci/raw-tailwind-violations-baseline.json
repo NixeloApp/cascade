@@ -101,6 +101,7 @@
     "src/components/TimeTracking/UserRatesManagement.tsx": 1,
     "src/components/UserMenu.tsx": 1,
     "src/components/Webhooks/WebhookForm.tsx": 1,
-    "src/components/Webhooks/WebhookLogs.tsx": 6
+    "src/components/Webhooks/WebhookLogs.tsx": 6,
+    "src/components/Dashboard/Stickies.tsx": 2
   }
 }

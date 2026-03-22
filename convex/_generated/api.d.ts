@@ -159,6 +159,7 @@ import type * as slackUnfurl from "../slackUnfurl.js";
 import type * as softDeleteCleanup from "../softDeleteCleanup.js";
 import type * as sprints from "../sprints.js";
 import type * as sso from "../sso.js";
+import type * as stickies from "../stickies.js";
 import type * as teams from "../teams.js";
 import type * as templates from "../templates.js";
 import type * as testConfig from "../testConfig.js";
@@ -333,6 +334,7 @@ declare const fullApi: ApiFromModules<{
   softDeleteCleanup: typeof softDeleteCleanup;
   sprints: typeof sprints;
   sso: typeof sso;
+  stickies: typeof stickies;
   teams: typeof teams;
   templates: typeof templates;
   testConfig: typeof testConfig;
