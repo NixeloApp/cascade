@@ -22,12 +22,7 @@ export const archiveStaleDoneIssues = internalMutation({
     const projects = await ctx.db
       .query("projects")
       .withIndex("by_deleted")
-      .filter((q) =>
-        q.and(
-          q.neq(q.field("isDeleted"), true),
-          q.gt(q.field("autoArchiveDays"), 0),
-        ),
-      )
+      .filter((q) => q.and(q.neq(q.field("isDeleted"), true), q.gt(q.field("autoArchiveDays"), 0)))
       .take(BOUNDED_LIST_LIMIT);
 
     let totalArchived = 0;
@@ -40,9 +35,7 @@ export const archiveStaleDoneIssues = internalMutation({
 
       // Find done workflow state IDs for this project
       const doneStateIds = new Set(
-        project.workflowStates
-          .filter((s) => s.category === "done")
-          .map((s) => s.id),
+        project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
       );
 
       if (doneStateIds.size === 0) continue;
