@@ -17,6 +17,7 @@ import { InlineSpinner, LoadingSpinner } from "../ui/LoadingSpinner";
 import { MarkdownContent } from "../ui/MarkdownContent";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Skeleton } from "../ui/Skeleton";
+import { Stack } from "../ui/Stack";
 import { Textarea } from "../ui/Textarea";
 import { Typography } from "../ui/Typography";
 import { AI_CONFIG } from "./config";
@@ -78,6 +79,7 @@ function MessageItem({
           </IconButton>
         )}
 
+        <Stack gap="sm">
         {/* Message content with markdown for assistant */}
         {message.role === "assistant" ? (
           <MarkdownContent variant="chat">
@@ -88,7 +90,7 @@ function MessageItem({
         )}
 
         {/* Message metadata */}
-        <Metadata className="mt-2 opacity-70">
+        <Metadata className="opacity-70">
           <MetadataItem>{messageTime}</MetadataItem>
           {message.role === "assistant" && message.modelUsed && (
             <MetadataItem hideBelow="sm">
@@ -99,6 +101,7 @@ function MessageItem({
             <MetadataItem hideBelow="md">{(message.responseTime / 1000).toFixed(1)}s</MetadataItem>
           )}
         </Metadata>
+        </Stack>
       </Card>
     </Flex>
   );
@@ -187,6 +190,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
 
       {/* Input Area */}
       <Card recipe="assistantComposer" radius="none" className="safe-area-inset-bottom">
+        <Stack gap="sm">
         <Flex gap="sm" align="end">
           <FlexItem flex="1">
             <Textarea
@@ -224,9 +228,10 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
             </svg>
           </Button>
         </Flex>
-        <Typography variant="meta" className="mt-2 hidden sm:block">
+        <Typography variant="meta" className="hidden sm:block">
           Press Enter to send, Shift+Enter for new line
         </Typography>
+        </Stack>
       </Card>
     </Flex>
   );

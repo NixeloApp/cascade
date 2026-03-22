@@ -211,7 +211,8 @@ export function IssuesCalendarView({
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, day)}
       >
-        <Flex align="center" justify="between" className="mb-1">
+        <Stack gap="xs">
+        <Flex align="center" justify="between">
           <Flex align="center" gap="xs">
             {isTodayDate ? (
               <Badge variant="brand" shape="pill">
@@ -281,6 +282,7 @@ export function IssuesCalendarView({
             </Typography>
           )}
         </Stack>
+        </Stack>
       </Card>,
     );
   }
@@ -296,7 +298,6 @@ export function IssuesCalendarView({
           alignSm="center"
           justify="between"
           gap="lg"
-          className="mb-6"
         >
           <Typography variant="h2">Issues Calendar</Typography>
 
@@ -361,7 +362,7 @@ export function IssuesCalendarView({
         </div>
 
         {/* Legend */}
-        <Flex align="center" gap="xl" className="mt-4">
+        <Flex align="center" gap="xl">
           {PRIORITY_LEGEND_ITEMS.map((item) => (
             <Flex key={item.label} align="center" gap="sm">
               <Dot size="lg" className={item.className} />

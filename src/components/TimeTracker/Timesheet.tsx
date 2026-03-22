@@ -162,8 +162,9 @@ export function Timesheet() {
                 variant="section"
                 className={cn(isToday && "border-brand-ring bg-brand-subtle")}
               >
+                <Stack gap="sm">
                 {/* Day header */}
-                <Stack gap="none" className="mb-2">
+                <Stack gap="none">
                   <Typography variant="label">
                     {day.date.toLocaleDateString("en-US", { weekday: "short" })}
                   </Typography>
@@ -225,6 +226,7 @@ export function Timesheet() {
                       )}
                     </Card>
                   ))}
+                </Stack>
                 </Stack>
               </Card>
             );

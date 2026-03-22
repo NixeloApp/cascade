@@ -15,6 +15,7 @@ import { MetadataTimestamp } from "../ui/Metadata";
 import { Progress } from "../ui/Progress";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Skeleton } from "../ui/Skeleton";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { SUGGESTION_METADATA, type SuggestionType } from "./config";
 import { useAISuggestions } from "./hooks";
@@ -57,6 +58,7 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
         radius="none"
         className="border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary sm:p-4"
       >
+        <Stack gap="md">
         <Button
           variant="accentGradient"
           size="touchWide"
@@ -87,7 +89,7 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
             setSelectedType(value === "all" ? undefined : (value as SuggestionType))
           }
           wrap
-          className="mt-3 w-full"
+          className="w-full"
           size="sm"
         >
           <SegmentedControlItem value="all">All</SegmentedControlItem>
@@ -101,6 +103,7 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
             <Icon icon={Calendar} size="sm" inline /> Planning
           </SegmentedControlItem>
         </SegmentedControl>
+        </Stack>
       </Card>
 
       {/* Suggestions List */}

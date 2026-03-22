@@ -12,7 +12,7 @@ Work is ordered as a pipeline — each phase unblocks the next.
 
 | Order | File | Status | What |
 |-------|------|--------|------|
-| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | 🟡 In progress | Raw TW violations: 148 → 103 files (validator smartened, icon sizing batched, stat cells consolidated). Remaining: margins → gaps (53 violations), icon inline margins (18). CVA boundaries already clean — zero feature CVAs outside ui/. |
+| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | 🟡 In progress | Raw TW violations: 148 → 103 files / 269 violations. Done: validator smartened, icon sizing (31 files), Icon inline prop (21 instances), stat cells → Card, margins → gaps (10 files). Remaining: more margins → gaps, CVA variant consolidation. |
 | 1.2 | [validator-strengthening.md](./validator-strengthening.md) | 🟡 In progress | Validator now context-aware (structural allowlist, const-string + object-map detection). Backend query/filter debt fully resolved (hourCompliance, export, calendarEvents). Query baselines ratcheted. Client-side filter items confirmed as non-issues. |
 
 ### Phase 2: Screenshot-Driven Cleanup
