@@ -4,47 +4,43 @@
 
 ---
 
-## Execution Order
+## Remaining Work
 
-Work is ordered as a pipeline — each phase unblocks the next.
+### Visual Consistency (Phase 2)
 
-### Phase 1: Tighten Styling Rules *(mechanical work complete)*
+Requires dev server + screenshots. Cannot be done blind.
 
-| Order | File | Status | What |
-|-------|------|--------|------|
-| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | ✅ Mechanical done | Raw TW: 148 → 102 files / 261 violations. Validator smartened (structural allowlist, const/object-map detection). Icon sizing (31 files), Icon inline prop (21 instances), stat cells → Card, margins → gaps (14 files). Remaining violations are non-uniform/responsive/structural — not mechanically fixable. |
-| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | ✅ Done | Backend query/filter debt fully resolved. Query baselines ratcheted. 53/53 validators pass. |
+| Item | Detail |
+|------|--------|
+| [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Screenshot-driven cleanup, broken states, cross-surface drift |
+| [meeting-intelligence.md](./meeting-intelligence.md) | Meetings visual QA, meeting-to-doc flow, capture strategy |
 
-### Phase 2: Screenshot-Driven Cleanup
+### Docs (Phase 4)
 
-| Order | File | What |
-|-------|------|------|
-| 2.1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Fix screenshot-exposed inconsistencies, broken states, cross-surface visual drift, and missing tablet/mobile + feature-state screenshot coverage |
-| 2.2 | [meeting-intelligence.md](./meeting-intelligence.md) | Finish meetings visual QA and build meeting-to-doc now that editor persistence/save wiring is closed |
+| Item | Detail |
+|------|--------|
+| [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page specs missing CURRENT/IMPLEMENTATION/TARGET docs |
 
-### Phase 3: Finish Validator Paydown
+### Low Priority / Evaluation
 
-| Order | File | What |
-|-------|------|------|
-| 3.1 | [validator-strengthening.md](./validator-strengthening.md) | Retire temporary ratchets as debt hits zero and close remaining standards cleanup |
+| Item | Detail |
+|------|--------|
+| [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation UI, workflow translation |
+| [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
+| [plane-features.md](./plane-features.md) | Remaining evaluation items from Plane feature review |
+| Offline push safety | Verify push subscriptions survive SW replacement (manual browser testing) |
+| Raw TW cleanup | 102 files / 261 violations baselined — requires visual verification to fix |
 
-### Phase 4: Feature & Docs Expansion
+---
 
-Lower priority — features and documentation that don't block quality.
+## Shipped
 
-| Order | File | What |
-|-------|------|------|
-| 4.1 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Missing page-spec doc triplets plus missing current-feature coverage/state docs for shipped surfaces |
-| 4.2 | [plane-features.md](./plane-features.md) | Remaining: Gantt polish, intake external capture, deploy boards. Most items shipped (stickies, analytics, automation, AI, bulk ops). |
-| 4.3 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation reasons (backend done, no UI), workflow translation, custom domain/SMTP, branding |
-| 4.4 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
+All critical/major work is complete:
 
-### Parallel Tracks
-
-| File | What |
-|------|------|
-| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc, capture strategy, platform breadth, OSS evaluation, agent layer |
-| [offline-pwa.md](./offline-pwa.md) | SW ownership, push safety, replay expansion (notifications, issues, comments), graceful degradation UX |
+- **PR review backlog:** 32/32 resolved (1 critical, 9 major, 22 minor)
+- **Phase 1 (Styling & Validators):** 7/7 items
+- **Phase 3 (Feature Gaps):** 11/11 features (Gantt, intake, deploy boards, auto-archive, automation, stickies, bulk ops, cycle time, AI, version history, offline replay)
+- **Offline track:** SW/manifest ownership, 4 mutation families, retry policy with backoff, reconnect toast, architecture docs, OfflineTab capabilities
 
 ---
 
@@ -54,53 +50,7 @@ Lower priority — features and documentation that don't block quality.
 |--------|-------|
 | Validators | 53/53 pass |
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
-| Backend query debt | 0 (was 11 post-fetch JS filters) |
-| CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Empty states | Standardized — 8 inline implementations → EmptyState component |
-| Offline replay | 4 mutation families (settings, notifications, status, comments) |
-| Offline UX | Header badges (offline/syncing), queue diagnostics in Settings |
-| Unit tests | 4372 pass |
+| Backend query debt | 0 |
+| Unresolved PR comments | 0 |
+| Unit tests | 4433 pass |
 | E2E tests | 164 pass (non-preview) |
-
----
-
-## Biggest Remaining Feature Gaps
-
-Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
-
-| Feature | Cal.com | Plane | Nixelo | Impact |
-|---------|---------|-------|--------|--------|
-| **Gantt chart** | -- | Full | Roadmap upgraded, dedicated Gantt polish remaining | High |
-| **OOO status** | Full API | -- | Shipped | Done |
-| **AI agents** | Multi-channel | -- | MCP placeholder | Medium |
-| **Intake/triage** | -- | Full system | Skeleton inbox (551-line InboxList) | Medium |
-| **Auto-archive** | -- | Scheduled | **Shipped** — daily cron, per-project autoArchiveDays | Done |
-| **Scheduled automation** | -- | Basic | **Shipped** — stale_in_status triggers, daily cron | Done |
-| **Stickies** | -- | Full | **Shipped** — dashboard panel with colored notes | Done |
-| **Deploy boards** | -- | Per-entity | Token portal only | Medium |
-| **Offline replay** | -- | -- | **Shipped** — 4 mutations, header indicators, queue UI | Done |
-| **Bulk operations** | -- | Full | **Shipped** — status, priority, assignee, sprint, labels, dates, archive, delete | Done |
-| **Version history** | -- | Full | **Shipped** — list + restore for documents | Done |
-| **Cycle/lead time** | -- | Full | **Shipped** — median cycle + lead time with sparkline data | Done |
-| **Multi-provider AI** | Multi-channel | -- | **Shipped** — Anthropic + OpenAI, env-based provider selection | Done |
-| **Billing PDF export** | -- | -- | CSV only | Low |
-
----
-
-## Visual Validation Workflow
-
-- Capture current UI state with `pnpm screenshots`
-- Audit route/spec screenshot coverage with `pnpm run validate`
-- Detect screenshot drift with `pnpm screenshots:diff`
-- Approve intentional visual changes with `pnpm screenshots:approve`
-
-## Reference Repos
-
-| Repo | Path | Last pulled |
-|------|------|-------------|
-| Cal.com | [github.com/calcom/cal.com](https://github.com/calcom/cal.com) | 2026-03-18 |
-| Plane | [github.com/makeplane/plane](https://github.com/makeplane/plane) | 2026-03-18 |
-
-## Post-MVP
-
-See [../todos-post-mvp/README.md](../todos-post-mvp/README.md) for blocked and post-MVP items.

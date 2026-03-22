@@ -113,21 +113,34 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object";
 }
 
+const SIMPLE_MARK_MAP: Record<string, string> = {
+  bold: "bold",
+  italic: "italic",
+  underline: "underline",
+  strike: "strikethrough",
+  code: "code",
+  highlight: "highlight",
+};
+
+const ATTR_MARK_MAP: Record<string, string> = {
+  fontColor: "fontColor",
+  backgroundColor: "backgroundColor",
+};
+
 function applyTextMarks(leaf: Record<string, unknown>, marks: ProseMirrorMark[] | undefined) {
   for (const mark of marks ?? []) {
-    if (mark.type === "bold") leaf.bold = true;
-    if (mark.type === "italic") leaf.italic = true;
-    if (mark.type === "underline") leaf.underline = true;
-    if (mark.type === "strike") leaf.strikethrough = true;
-    if (mark.type === "code") leaf.code = true;
-    if (mark.type === "highlight") leaf.highlight = true;
-    if (mark.type === "fontColor") {
-      const v = mark.attrs?.value as string | undefined;
-      if (v) leaf.fontColor = v;
+    if (!mark.type) continue;
+
+    const simpleProp = SIMPLE_MARK_MAP[mark.type];
+    if (simpleProp) {
+      leaf[simpleProp] = true;
+      continue;
     }
-    if (mark.type === "backgroundColor") {
-      const v = mark.attrs?.value as string | undefined;
-      if (v) leaf.backgroundColor = v;
+
+    const attrProp = ATTR_MARK_MAP[mark.type];
+    if (attrProp) {
+      const value = mark.attrs?.value as string | undefined;
+      if (value) leaf[attrProp] = value;
     }
   }
 }

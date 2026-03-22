@@ -42,6 +42,10 @@ export const projectsFields = {
   budget: v.optional(v.number()), // Project budget in currency
   // Auto-archive: archive done issues after N days (0 or undefined = disabled)
   autoArchiveDays: v.optional(v.number()),
+  // Issue key sequence — atomic counter for generating PROJ-N keys.
+  // Stores the last issued number; next issue gets nextIssueNumber + 1.
+  // Optional for backwards compatibility with existing projects (treated as 0).
+  nextIssueNumber: v.optional(v.number()),
   // Soft Delete
   isDeleted: v.optional(v.boolean()),
   deletedAt: v.optional(v.number()),

@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api } from "./_generated/api";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -10,6 +11,9 @@ import {
   createTestUser,
   expectThrowsAsync,
 } from "./testUtils";
+
+/** Sunday 2024-01-07T00:00:00Z — stable base for period arithmetic. */
+const BASE_PERIOD_START = Date.UTC(2024, 0, 7);
 
 describe("Hour Compliance", () => {
   test("detects under hours", async () => {
@@ -243,5 +247,107 @@ describe("Hour Compliance", () => {
         periodEnd: endOfWeek,
       });
     }, "admin"); // Expect "admin" in error message
+  });
+
+  describe("getComplianceSummary", () => {
+    test("returns isTruncated=false when records fit within limit", async () => {
+      const t = convexTest(schema, modules);
+      const adminCtx = await createTestContext(t, { name: "Admin Summary" });
+      const adminId = adminCtx.userId;
+
+      // Make user an admin by creating a project
+      await createProjectInOrganization(t, adminId, adminCtx.organizationId);
+
+      // Insert a few compliance records
+      await t.run(async (ctx) => {
+        for (let i = 0; i < 3; i++) {
+          await ctx.db.insert("hourComplianceRecords", {
+            userId: adminId,
+            periodType: "week",
+            periodStart: BASE_PERIOD_START + i * WEEK,
+            periodEnd: BASE_PERIOD_START + (i + 1) * WEEK,
+            totalHoursWorked: 40,
+            status: "compliant",
+            notificationSent: false,
+            updatedAt: Date.now(),
+          });
+        }
+      });
+
+      const summary = await adminCtx.asUser.query(api.hourCompliance.getComplianceSummary, {});
+
+      expect(summary.totalRecords).toBe(3);
+      expect(summary.compliant).toBe(3);
+      expect(summary.complianceRate).toBe(100);
+      expect(summary.isTruncated).toBe(false);
+    });
+
+    test("returns correct status breakdown", async () => {
+      const t = convexTest(schema, modules);
+      const adminCtx = await createTestContext(t, { name: "Admin Breakdown" });
+      const adminId = adminCtx.userId;
+
+      await createProjectInOrganization(t, adminId, adminCtx.organizationId);
+
+      await t.run(async (ctx) => {
+        const base = {
+          userId: adminId,
+          periodType: "week" as const,
+          totalHoursWorked: 35,
+          notificationSent: false,
+          updatedAt: Date.now(),
+        };
+
+        await ctx.db.insert("hourComplianceRecords", {
+          ...base,
+          periodStart: BASE_PERIOD_START,
+          periodEnd: BASE_PERIOD_START + WEEK,
+          status: "compliant",
+        });
+        await ctx.db.insert("hourComplianceRecords", {
+          ...base,
+          periodStart: BASE_PERIOD_START + WEEK,
+          periodEnd: BASE_PERIOD_START + 2 * WEEK,
+          status: "under_hours",
+          hoursDeficit: 5,
+        });
+        await ctx.db.insert("hourComplianceRecords", {
+          ...base,
+          periodStart: BASE_PERIOD_START + 2 * WEEK,
+          periodEnd: BASE_PERIOD_START + 3 * WEEK,
+          totalHoursWorked: 50,
+          status: "over_hours",
+          hoursExcess: 10,
+        });
+        await ctx.db.insert("hourComplianceRecords", {
+          ...base,
+          periodStart: BASE_PERIOD_START + 3 * WEEK,
+          periodEnd: BASE_PERIOD_START + 4 * WEEK,
+          status: "equity_under",
+          equityHoursDeficit: 2,
+        });
+      });
+
+      const summary = await adminCtx.asUser.query(api.hourCompliance.getComplianceSummary, {});
+
+      expect(summary.totalRecords).toBe(4);
+      expect(summary.compliant).toBe(1);
+      expect(summary.underHours).toBe(1);
+      expect(summary.overHours).toBe(1);
+      expect(summary.equityUnder).toBe(1);
+      expect(summary.complianceRate).toBe(25);
+      expect(summary.isTruncated).toBe(false);
+    });
+
+    test("returns empty summary for non-admin", async () => {
+      const t = convexTest(schema, modules);
+      const viewerId = await createTestUser(t, { name: "Viewer" });
+      const asViewer = asAuthenticatedUser(t, viewerId);
+
+      const summary = await asViewer.query(api.hourCompliance.getComplianceSummary, {});
+
+      expect(summary.totalRecords).toBe(0);
+      expect(summary.isTruncated).toBe(false);
+    });
   });
 });

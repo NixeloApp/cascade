@@ -122,6 +122,7 @@ describe("AIAssistantButton", () => {
 
       const button = screen.getByRole("button");
       expect(button).toHaveClass("size-14");
+      expect(button).toHaveClass("sm:size-16");
     });
 
     it("should render with large size", () => {
@@ -129,6 +130,7 @@ describe("AIAssistantButton", () => {
 
       const button = screen.getByRole("button");
       expect(button).toHaveClass("size-16");
+      expect(button).toHaveClass("sm:size-20");
     });
   });
 });

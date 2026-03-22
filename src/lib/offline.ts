@@ -15,6 +15,12 @@ const DB_VERSION = 1;
 export const MAX_OFFLINE_REPLAY_ATTEMPTS = 3;
 const LAST_SUCCESSFUL_OFFLINE_REPLAY_AT_STORAGE_KEY = "nixelo-offline-last-successful-replay-at";
 
+/**
+ * Backoff intervals between retry attempts (in milliseconds).
+ * Index 0 = delay after 1st failure, index 1 = after 2nd, etc.
+ */
+export const RETRY_BACKOFF_MS = [5_000, 30_000, 120_000] as const;
+
 type OfflineMutationArgs = Record<string, unknown>;
 export type OfflineReplayHandler = (args: OfflineMutationArgs) => Promise<void>;
 
@@ -22,6 +28,7 @@ interface UpdateMutationStatusOptions {
   error?: string;
   incrementAttempts?: boolean;
   clearError?: boolean;
+  nextRetryAfter?: number;
 }
 
 interface SyncManager {
@@ -48,6 +55,67 @@ export interface OfflineMutation {
   timestamp: number;
   syncedAt?: number;
   error?: string;
+  /** Timestamp after which this mutation is eligible for the next retry. */
+  nextRetryAfter?: number;
+}
+
+/**
+ * Error message patterns that indicate a permanent (non-retryable) failure.
+ * These errors won't resolve by retrying — the entity is gone, the input
+ * is invalid, or the user lacks permissions.
+ */
+const PERMANENT_FAILURE_PATTERNS = [
+  /not found/i,
+  /not authenticated/i,
+  /unauthorized/i,
+  /forbidden/i,
+  /invalid.*token/i,
+  /validation/i,
+  /does not exist/i,
+  /has been deleted/i,
+  /is deleted/i,
+  /revoked/i,
+  /unsupported offline mutation/i,
+] as const;
+
+/**
+ * Classify whether an error is permanent (should not be retried) or
+ * transient (may succeed on a later attempt).
+ *
+ * Permanent: entity deleted, auth invalid, validation failed.
+ * Transient: network error, timeout, server 5xx.
+ */
+export function isPermanentFailure(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return PERMANENT_FAILURE_PATTERNS.some((pattern) => pattern.test(message));
+}
+
+/**
+ * Get a human-readable failure reason for display in the queue UI.
+ */
+export function getFailureReason(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (/not found|does not exist|has been deleted|is deleted/i.test(message)) {
+    return "The item was deleted or no longer exists";
+  }
+  if (/not authenticated|unauthorized/i.test(message)) {
+    return "Authentication expired — sign in again";
+  }
+  if (/forbidden/i.test(message)) {
+    return "You no longer have permission for this action";
+  }
+  if (/invalid.*token|revoked/i.test(message)) {
+    return "The access token was revoked";
+  }
+  if (/validation/i.test(message)) {
+    return "The data is no longer valid";
+  }
+  if (/unsupported offline mutation/i.test(message)) {
+    return "This action type is not supported for offline replay";
+  }
+
+  return message;
 }
 
 export interface CachedData {
@@ -139,12 +207,20 @@ function applyMutationStatusUpdate(
   }
   if (options.clearError) {
     delete mutation.error;
+    delete mutation.nextRetryAfter;
   }
   if (options.error) {
     mutation.error = options.error;
   }
+  if (options.nextRetryAfter !== undefined) {
+    mutation.nextRetryAfter = options.nextRetryAfter;
+  }
   if (status === "synced") {
     mutation.syncedAt = Date.now();
+    delete mutation.nextRetryAfter;
+  }
+  if (status === "failed") {
+    delete mutation.nextRetryAfter;
   }
   return mutation;
 }
@@ -180,6 +256,11 @@ class OfflineDB {
   async addMutation(mutation: Omit<OfflineMutation, "id">): Promise<number> {
     const db = await this.open();
     return (await db.add("mutations", mutation as OfflineMutation)) as number;
+  }
+
+  async getMutation(id: number): Promise<OfflineMutation | undefined> {
+    const db = await this.open();
+    return db.get("mutations", id);
   }
 
   async getPendingMutations(): Promise<OfflineMutation[]> {
@@ -399,9 +480,24 @@ export async function queueOfflineMutation(
  */
 let isProcessingQueue = false;
 
-export async function processOfflineQueue(userId?: string): Promise<{ processed: boolean }> {
+export interface OfflineQueueResult {
+  /** Whether the queue was processed (false if another call was already in progress). */
+  processed: boolean;
+  /** Number of mutations successfully synced in this run. */
+  synced: number;
+  /** Number of mutations that failed permanently or exhausted retries. */
+  failed: number;
+  /** Number of mutations skipped (still in backoff window). */
+  skipped: number;
+}
+
+/**
+ * Processes pending offline mutations. Attempts to sync each mutation,
+ * respecting backoff windows and classifying failures.
+ */
+export async function processOfflineQueue(userId?: string): Promise<OfflineQueueResult> {
   if (isProcessingQueue) {
-    return { processed: false };
+    return { processed: false, synced: 0, failed: 0, skipped: 0 };
   }
   isProcessingQueue = true;
   try {
@@ -410,17 +506,48 @@ export async function processOfflineQueue(userId?: string): Promise<{ processed:
     const pending = await offlineDB.getPendingMutations();
     const scoped = userId ? pending.filter((m) => m.userId === userId) : pending;
 
+    let synced = 0;
+    let failed = 0;
+    let skipped = 0;
+
     for (const mutation of scoped) {
-      await processQueuedMutation(mutation);
+      const outcome = await processQueuedMutation(mutation);
+      if (outcome === "synced") synced++;
+      else if (outcome === "failed") failed++;
+      else skipped++;
     }
-    return { processed: true };
+
+    return { processed: true, synced, failed, skipped };
   } finally {
     isProcessingQueue = false;
   }
 }
 
-function getNextFailureStatus(attempts: number): "failed" | "pending" {
+function getNextFailureStatus(attempts: number, error: unknown): "failed" | "pending" {
+  if (isPermanentFailure(error)) {
+    return "failed";
+  }
   return attempts >= MAX_OFFLINE_REPLAY_ATTEMPTS ? "failed" : "pending";
+}
+
+/**
+ * Compute the next retry timestamp using the backoff schedule.
+ * Returns undefined if no more retries (max attempts reached).
+ */
+function computeNextRetryAfter(attempts: number): number | undefined {
+  if (attempts >= MAX_OFFLINE_REPLAY_ATTEMPTS) {
+    return undefined;
+  }
+  const backoffIndex = Math.min(Math.max(0, attempts - 1), RETRY_BACKOFF_MS.length - 1);
+  return Date.now() + RETRY_BACKOFF_MS[backoffIndex];
+}
+
+/**
+ * Check whether a mutation is eligible for retry right now.
+ */
+function isEligibleForRetry(mutation: OfflineMutation): boolean {
+  if (!mutation.nextRetryAfter) return true;
+  return Date.now() >= mutation.nextRetryAfter;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -465,8 +592,13 @@ async function persistMutationFailureStatus(
   if (!mutation.id) return;
 
   try {
+    const reason = isPermanentFailure(error) ? getFailureReason(error) : getErrorMessage(error);
+    const nextRetryAfter =
+      nextStatus === "pending" ? computeNextRetryAfter(mutation.attempts + 1) : undefined;
+
     await offlineDB.updateMutationStatus(mutation.id, nextStatus, {
-      error: getErrorMessage(error),
+      error: reason,
+      nextRetryAfter,
     });
   } catch (statusError) {
     console.info("[offline] Failed to persist queued mutation failure status", {
@@ -477,13 +609,20 @@ async function persistMutationFailureStatus(
   }
 }
 
-async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
+type MutationOutcome = "synced" | "failed" | "pending" | "skipped";
+
+async function processQueuedMutation(mutation: OfflineMutation): Promise<MutationOutcome> {
   if (!mutation.id) {
     console.info("[offline] Skipping queued mutation without id", {
       mutationType: mutation.mutationType,
       timestamp: mutation.timestamp,
     });
-    return;
+    return "skipped";
+  }
+
+  // Skip mutations that are in backoff
+  if (!isEligibleForRetry(mutation)) {
+    return "skipped";
   }
 
   const nextAttemptCount = mutation.attempts + 1;
@@ -501,15 +640,19 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
       clearError: true,
     });
     recordLastSuccessfulOfflineReplayAt(completedAt);
+    return "synced";
   } catch (error) {
-    const nextStatus = getNextFailureStatus(mutation.attempts + 1);
+    const nextStatus = getNextFailureStatus(mutation.attempts + 1, error);
+    const permanent = isPermanentFailure(error);
     console.info("[offline] Failed to process queued mutation", {
       id: mutation.id,
       mutationType: mutation.mutationType,
       attempts: nextAttemptCount,
       nextStatus,
+      permanent,
       error,
     });
     await persistMutationFailureStatus(mutation, nextStatus, error);
+    return nextStatus;
   }
 }

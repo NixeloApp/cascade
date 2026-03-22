@@ -175,36 +175,47 @@ export function HourComplianceDashboard() {
       </Stack>
 
       {summary && (
-        <Grid cols={2} colsMd={5} gap="lg">
-          <SummaryStatCard
-            label="Compliance Rate"
-            value={`${summary.complianceRate.toFixed(1)}%`}
-          />
-          <SummaryStatCard
-            icon={CheckCircle}
-            label="Compliant"
-            value={summary.compliant}
-            valueColor="success"
-          />
-          <SummaryStatCard
-            icon={AlertTriangle}
-            label="Under Hours"
-            value={summary.underHours}
-            valueColor="warning"
-          />
-          <SummaryStatCard
-            icon={XCircle}
-            label="Over Hours"
-            value={summary.overHours}
-            valueColor="error"
-          />
-          <SummaryStatCard
-            icon={Gem}
-            label="Equity Short"
-            value={summary.equityUnder}
-            valueColor="brand"
-          />
-        </Grid>
+        <Stack gap="sm">
+          <Grid cols={2} colsMd={5} gap="lg">
+            <SummaryStatCard
+              label="Compliance Rate"
+              value={`${summary.complianceRate.toFixed(1)}%${summary.isTruncated ? "+" : ""}`}
+            />
+            <SummaryStatCard
+              icon={CheckCircle}
+              label="Compliant"
+              value={summary.isTruncated ? `${summary.compliant}+` : summary.compliant}
+              valueColor="success"
+            />
+            <SummaryStatCard
+              icon={AlertTriangle}
+              label="Under Hours"
+              value={summary.isTruncated ? `${summary.underHours}+` : summary.underHours}
+              valueColor="warning"
+            />
+            <SummaryStatCard
+              icon={XCircle}
+              label="Over Hours"
+              value={summary.isTruncated ? `${summary.overHours}+` : summary.overHours}
+              valueColor="error"
+            />
+            <SummaryStatCard
+              icon={Gem}
+              label="Equity Short"
+              value={summary.isTruncated ? `${summary.equityUnder}+` : summary.equityUnder}
+              valueColor="brand"
+            />
+          </Grid>
+          {summary.isTruncated && (
+            <Flex align="center" gap="xs">
+              <AlertTriangle className="size-4 text-status-warning" />
+              <Typography variant="caption" color="secondary">
+                Showing first {summary.totalRecords} records. Narrow the date range for complete
+                results.
+              </Typography>
+            </Flex>
+          )}
+        </Stack>
       )}
 
       <SectionControls gap="lg">

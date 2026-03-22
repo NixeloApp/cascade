@@ -15,6 +15,17 @@
 
 export const TEST_IDS = {
   // ============================================================
+  // Page Layout
+  // ============================================================
+
+  PAGE: {
+    /** @see src/components/layout/PageHeader.tsx */
+    HEADER_TITLE: "page-header-title",
+    /** @see public/offline.html */
+    OFFLINE_FALLBACK_HEADING: "offline-fallback-heading",
+  },
+
+  // ============================================================
   // Issues & Board
   // ============================================================
 

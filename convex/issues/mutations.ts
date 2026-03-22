@@ -30,12 +30,11 @@ import {
   applyStatusUpdate,
   assertVersionMatch,
   fetchIssuesWithProjects,
-  generateIssueKey,
   getMaxOrderForStatus,
+  getNextIssueKey,
   getNextVersion,
   getSearchContent,
   type IssueActivityAction,
-  issueKeyExists,
   notifyCommentParticipants,
   performBulkDateUpdate,
   performBulkUpdate,
@@ -135,13 +134,8 @@ async function prepareCreateIssue(
   // Validate parent/epic constraints
   const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
 
-  // Generate issue key with duplicate detection
-  let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
-
-  if (await issueKeyExists(ctx, issueKey)) {
-    const suffix = Date.now() % 10000;
-    issueKey = `${issueKey}-${suffix}`;
-  }
+  // Atomically allocate the next issue key via the project's sequence counter
+  const { key: issueKey } = await getNextIssueKey(ctx, ctx.projectId, ctx.project.key);
 
   const defaultStatus = ctx.project.workflowStates[0]?.id || "todo";
   const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);

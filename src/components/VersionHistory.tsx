@@ -9,6 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useEffect, useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Clock, RotateCcw } from "@/lib/icons";
@@ -19,7 +20,6 @@ import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
-import { EmptyState } from "./ui/EmptyState";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "./ui/Metadata";
 import { Stack } from "./ui/Stack";

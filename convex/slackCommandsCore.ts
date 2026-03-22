@@ -7,7 +7,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
-import { generateIssueKey, getSearchContent, issueKeyExists } from "./issues/helpers";
+import { getNextIssueKey, getSearchContent } from "./issues/helpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { syncProjectIssueStats } from "./lib/projectIssueStats";
 import { notDeleted } from "./lib/softDeleteHelpers";
@@ -185,10 +185,7 @@ async function createIssueFromCommand(
     throw new Error("You do not have permission to create issues.");
   }
 
-  let key = await generateIssueKey(ctx, projectId, project.key);
-  if (await issueKeyExists(ctx, key)) {
-    key = `${project.key}-${Date.now() % 100000}`;
-  }
+  const { key } = await getNextIssueKey(ctx, projectId, project.key);
 
   const now = Date.now();
   const issueId = await ctx.db.insert("issues", {

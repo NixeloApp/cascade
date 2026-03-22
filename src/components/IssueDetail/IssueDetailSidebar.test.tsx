@@ -133,7 +133,7 @@ function createMutationMock(
 }
 
 const updateIssue = vi.fn<MutationProcedure>();
-const updateStatus = vi.fn<MutationProcedure>();
+const updateStatus = vi.fn<ReturnType<typeof useOfflineIssueUpdateStatus>["updateStatus"]>();
 
 const defaultProps = {
   issueId: "issue_1" as Id<"issues">,
@@ -164,7 +164,7 @@ describe("IssueDetailSidebar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     updateIssue.mockResolvedValue(undefined);
-    updateStatus.mockResolvedValue(undefined);
+    updateStatus.mockResolvedValue({ queued: false });
     mockUseAuthenticatedQuery.mockReturnValue(project);
     mockUseAuthenticatedMutation.mockReturnValue({
       mutate: createMutationMock(updateIssue),
@@ -172,7 +172,7 @@ describe("IssueDetailSidebar", () => {
       isAuthLoading: false,
     });
     vi.mocked(useOfflineIssueUpdateStatus).mockReturnValue({
-      updateStatus: updateStatus as never,
+      updateStatus,
       isOnline: true,
       isLoading: false,
     });

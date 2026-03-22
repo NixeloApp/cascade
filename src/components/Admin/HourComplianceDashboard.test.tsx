@@ -308,6 +308,7 @@ let summaryData:
       underHours: number;
       overHours: number;
       equityUnder: number;
+      isTruncated: boolean;
     }
   | undefined;
 
@@ -360,6 +361,7 @@ describe("HourComplianceDashboard", () => {
       underHours: 2,
       overHours: 1,
       equityUnder: 1,
+      isTruncated: false,
     };
     recordsData = [];
 

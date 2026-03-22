@@ -130,11 +130,16 @@ function shouldShowAppLoading(
  * Google OAuth and other auth flows land here, and this gateway
  * ensures users end up in the right place.
  */
-function AppLayout() {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
+function AppLoadingScreen() {
+  return (
+    <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
+      <LoadingSpinner size="lg" />
+    </Flex>
+  );
+}
+
+function useAppLayoutState() {
   const { isAuthLoading, isAuthenticated } = useAuthReady();
-  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
   const persistedAppLayoutState = useRef(
     readLocalStorageJson<PersistedAppLayoutState>(APP_LAYOUT_CACHE_STORAGE_KEY),
   ).current;
@@ -145,12 +150,26 @@ function AppLayout() {
     persistAppSessionState(isAuthenticated, isAuthLoading);
   }, [isAuthenticated, isAuthLoading]);
 
-  // Get redirect destination from backend (handles onboarding check)
   const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
-
-  // Get user's organizations to check if we need initialization
   const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {});
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
+
+  return {
+    isAuthLoading,
+    persistedAppLayoutState,
+    redirectPath,
+    userOrganizations,
+    currentUser,
+  };
+}
+
+function useAppRedirectState(
+  redirectPath: string | null | undefined,
+  userOrganizations: UserOrganization[] | undefined,
+  persistedAppLayoutState: PersistedAppLayoutState | null | undefined,
+) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     if (redirectPath === undefined) {
@@ -201,6 +220,28 @@ function AppLayout() {
     }
   }, [navigate, redirectState.shouldRedirect, stableRedirectPath]);
 
+  return {
+    pathname,
+    stableRedirectPath,
+    stableUserOrganizations,
+    redirectState,
+    needsOrganizationBootstrap,
+  };
+}
+
+function AppLayout() {
+  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
+  const { isAuthLoading, persistedAppLayoutState, redirectPath, userOrganizations, currentUser } =
+    useAppLayoutState();
+
+  const {
+    pathname,
+    stableRedirectPath,
+    stableUserOrganizations,
+    redirectState,
+    needsOrganizationBootstrap,
+  } = useAppRedirectState(redirectPath, userOrganizations, persistedAppLayoutState);
+
   // Loading state - waiting for queries
   if (
     shouldShowAppLoading(
@@ -211,30 +252,15 @@ function AppLayout() {
       canRecoverAuthenticatedSession,
     )
   ) {
-    return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <LoadingSpinner size="lg" />
-      </Flex>
-    );
+    return <AppLoadingScreen />;
   }
 
-  // If we have a redirect path that's not /app, potentially show loading if we are about to redirect
   if (stableRedirectPath && redirectState.shouldRedirect) {
-    return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <LoadingSpinner size="lg" />
-      </Flex>
-    );
+    return <AppLoadingScreen />;
   }
 
-  // Wait for the authenticated user document to load before attempting org bootstrap.
-  // undefined = still loading, null = profile missing (error state)
   if (needsOrganizationBootstrap && currentUser === undefined) {
-    return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <LoadingSpinner size="lg" />
-      </Flex>
-    );
+    return <AppLoadingScreen />;
   }
 
   // User profile not found - show error with recovery option

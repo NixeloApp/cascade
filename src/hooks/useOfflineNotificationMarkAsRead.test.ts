@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -56,7 +57,7 @@ describe("useOfflineNotificationMarkAsRead", () => {
 
   it("calls the live mutation when online", async () => {
     const { result } = renderHook(() => useOfflineNotificationMarkAsRead());
-    const response = await result.current.markAsRead("notification-123" as never);
+    const response = await result.current.markAsRead("notification-123" as Id<"notifications">);
 
     expect(response).toEqual({ queued: false });
     expect(mockMutation).toHaveBeenCalledWith({ id: "notification-123" });
@@ -68,7 +69,7 @@ describe("useOfflineNotificationMarkAsRead", () => {
     mockQueueNotificationMarkAsRead.mockResolvedValue(1);
 
     const { result } = renderHook(() => useOfflineNotificationMarkAsRead());
-    const response = await result.current.markAsRead("notification-456" as never);
+    const response = await result.current.markAsRead("notification-456" as Id<"notifications">);
 
     expect(response).toEqual({ queued: true });
     expect(mockQueueNotificationMarkAsRead).toHaveBeenCalledWith(
@@ -87,8 +88,8 @@ describe("useOfflineNotificationMarkAsRead", () => {
     });
 
     const { result } = renderHook(() => useOfflineNotificationMarkAsRead());
-    await expect(result.current.markAsRead("notification-789" as never)).rejects.toThrow(
-      "Cannot queue offline mutation without an authenticated user",
-    );
+    await expect(
+      result.current.markAsRead("notification-789" as Id<"notifications">),
+    ).rejects.toThrow("Cannot queue offline mutation without an authenticated user");
   });
 });

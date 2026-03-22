@@ -14,6 +14,7 @@ import type {
   AutomationTrigger,
 } from "@convex/validators";
 import { useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -22,7 +23,6 @@ import { AutomationRuleForm } from "./Automation/AutomationRuleForm";
 import { Button } from "./ui/Button";
 import { Card, CardBody } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Stack } from "./ui/Stack";

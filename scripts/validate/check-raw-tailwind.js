@@ -226,14 +226,11 @@ export function run() {
         continue;
       }
 
-      // Skip structural Tailwind patterns that are legitimate layout concerns
+      // Skip tag-based structural allowlist entries (e.g., Skeleton components)
       if (
-        RAW_TAILWIND_STRUCTURAL_ALLOWLIST.some((allow) => {
-          // Tag-based allowlist entries (e.g., Skeleton) check the opening tag
-          if (allow.source.startsWith("^<")) return allow.test(tagText.trim());
-          // Class-based entries check the className span
-          return allow.test(span);
-        })
+        RAW_TAILWIND_STRUCTURAL_ALLOWLIST.some(
+          (allow) => allow.source.startsWith("^<") && allow.test(tagText.trim()),
+        )
       ) {
         index = endIndex;
         continue;
@@ -242,7 +239,7 @@ export function run() {
       // Resolve className={CONST_VAR} references to their string value
       let resolvedSpan = span;
       let isConstRef = false;
-      const varRefMatch = span.match(/className\s*=\s*\{([A-Z_][A-Z_0-9]*)\}/);
+      const varRefMatch = span.match(/className\s*=\s*\{([A-Za-z_]\w*)\}/);
       if (varRefMatch) {
         const entry = constStringMap.get(varRefMatch[1]);
         if (entry) {
@@ -251,8 +248,20 @@ export function run() {
         }
       }
 
+      // Strip structurally-allowed tokens (per-token, not per-attribute)
+      // so that e.g. "min-w-0 p-4" only strips min-w-0 and still flags p-4.
+      const classBasedAllowlist = RAW_TAILWIND_STRUCTURAL_ALLOWLIST.filter(
+        (allow) => !allow.source.startsWith("^<"),
+      );
+      let filteredSpan = resolvedSpan;
+      if (classBasedAllowlist.length > 0) {
+        filteredSpan = resolvedSpan.replace(/(?<=["'\s])(\S+)/g, (token) =>
+          classBasedAllowlist.some((allow) => allow.test(token)) ? "" : token,
+        );
+      }
+
       for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
-        if (!pattern.test(resolvedSpan)) continue;
+        if (!pattern.test(filteredSpan)) continue;
 
         const suffix = isConstRef ? " (hidden in const — still raw Tailwind)" : "";
         const violation = {

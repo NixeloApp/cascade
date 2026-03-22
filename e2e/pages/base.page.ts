@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { getToastLocator } from "../utils/toast-locators";
 
@@ -15,6 +16,8 @@ const FALLBACK_BASE_URL = process.env.BASE_URL || "http://localhost:5555";
 export abstract class BasePage {
   readonly page: Page;
   readonly orgSlug: string;
+  readonly pageHeaderTitle: Locator;
+  readonly offlineFallbackHeading: Locator;
 
   constructor(page: Page, orgSlug: string) {
     if (!orgSlug) {
@@ -22,6 +25,8 @@ export abstract class BasePage {
     }
     this.page = page;
     this.orgSlug = orgSlug;
+    this.pageHeaderTitle = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
+    this.offlineFallbackHeading = page.getByTestId(TEST_IDS.PAGE.OFFLINE_FALLBACK_HEADING);
   }
 
   /**
