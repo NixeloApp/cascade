@@ -21,12 +21,45 @@ async function waitForControllingWorker(page: Page) {
   await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller));
 }
 
-// Skip entire offline preview suite in CI — SW cache timing is unreliable
-// on GitHub Actions runners. These tests pass locally where the preview
-// server has time to warm up and the SW can cache page shells.
-// TODO: re-enable once SW precaching is deterministic (vite-plugin-pwa injectManifest)
+/**
+ * Wait until the SW has cached a specific URL path.
+ * Polls the Cache API until the path appears in any cache.
+ * This replaces the fragile "reload and hope" approach — we only
+ * go offline after the cache is provably populated.
+ */
+async function waitForCachedRoute(page: Page, urlPath: string, timeout = 30000) {
+  await page.waitForFunction(
+    async (path) => {
+      const cacheNames = await caches.keys();
+      for (const name of cacheNames) {
+        const cache = await caches.open(name);
+        const keys = await cache.keys();
+        if (keys.some((req) => new URL(req.url).pathname === path)) {
+          return true;
+        }
+      }
+      return false;
+    },
+    urlPath,
+    { timeout },
+  );
+}
+
+/**
+ * Ensure the SW is controlling and has cached the target route.
+ * Visits the page, waits for the controller, then verifies the
+ * cache contains the page shell before returning.
+ */
+async function ensureRouteCached(page: Page, url: string, urlPath: string) {
+  await page.goto(url, { waitUntil: "load" });
+  await waitForControllingWorker(page);
+  // Reload so the SW fetch handler intercepts and caches the response
+  await page.reload({ waitUntil: "load" });
+  await waitForControllingWorker(page);
+  await waitForCachedRoute(page, urlPath);
+}
+
 test.describe("Offline Replay Preview", () => {
-  test.skip(!!process.env.CI, "SW cache timing unreliable in CI");
   test.describe.configure({ mode: "serial" });
 
   test("reloads a visited authenticated settings route while offline in preview", async ({
@@ -37,15 +70,13 @@ test.describe("Offline Replay Preview", () => {
     test.slow();
     const settingsUrl = ROUTES.settings.profile.build(orgSlug);
 
-    // Visit settings and ensure SW caches the page shell.
-    // Reload twice so the SW has a chance to intercept and cache.
+    // Visit settings and deterministically wait for SW to cache the route
     await settingsPage.goto();
     await waitForControllingWorker(page);
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
+    await waitForCachedRoute(page, settingsUrl);
     await settingsPage.switchToTab("preferences");
-    // One more reload to confirm the SW-cached version works online first
-    await page.reload({ waitUntil: "load" });
     await expect(page.getByRole("heading", { name: /^settings$/i })).toBeVisible();
 
     try {
@@ -79,9 +110,8 @@ test.describe("Offline Replay Preview", () => {
 
     const dashboardUrl = ROUTES.dashboard.build(orgSlug);
 
-    await dashboardPage.goto();
-    await page.reload({ waitUntil: "load" });
-    await waitForControllingWorker(page);
+    // Ensure both routes are cached before going offline
+    await ensureRouteCached(page, dashboardUrl, dashboardUrl);
     await settingsPage.goto();
     await settingsPage.switchToTab("preferences");
 
@@ -108,9 +138,27 @@ test.describe("Offline Replay Preview", () => {
     let originalTimezone = "UTC";
     let queuedTimezone = "America/Chicago";
 
+    const settingsUrl = ROUTES.settings.profile.build("");
     await settingsPage.goto();
+    await waitForControllingWorker(page);
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
+    // Wait for the settings route to be cached — use a prefix match since
+    // the exact URL includes the orgSlug which we don't have here.
+    await page.waitForFunction(
+      async () => {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          if (keys.some((req) => new URL(req.url).pathname.includes("/settings"))) {
+            return true;
+          }
+        }
+        return false;
+      },
+      { timeout: 30000 },
+    );
 
     await settingsPage.switchToTab("preferences");
     originalTimezone = await settingsPage.getCurrentTimezoneLabel();

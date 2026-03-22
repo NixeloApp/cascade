@@ -20,7 +20,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | ~~#908~~ | ~~`convex/hourCompliance.ts:563`~~ | ~~Compliance summary silently truncates.~~ **Fixed** — `isTruncated` flag exposed; dashboard shows "+" suffix and warning. |
 | ~~#908~~ | ~~`scripts/validate/check-raw-tailwind.js:252`~~ | ~~Structural allowlist short-circuits entire attribute.~~ **Fixed** — per-token stripping; only allowed tokens removed. |
 | ~~#908~~ | ~~`scripts/validate/tailwind-policy.js:92`~~ | ~~Class-string detection requires uppercase names.~~ **Fixed** — matches any const name containing TW patterns. |
-| #908 | `e2e/preview/offline-replay-preview.spec.ts:30` | Entire offline preview suite skipped in CI. Should find a reliable way to test SW caching, not skip it entirely. |
+| ~~#908~~ | ~~`e2e/preview/offline-replay-preview.spec.ts:30`~~ | ~~Offline suite skipped in CI.~~ **Fixed** — removed CI skip; deterministic `waitForCachedRoute` polls Cache API before going offline. |
 | ~~#909~~ | ~~`src/hooks/useOfflineIssueUpdateStatus.test.ts:96`~~ | ~~Tests use `as never` casts.~~ **Fixed** — replaced with `as Id<"table">` across 7 test files. |
 | ~~#918~~ | ~~`convex/deployBoards.ts:168`~~ | ~~Deploy board returns empty `workflowStates` when `status: false`.~~ **Fixed** — always return workflowStates; resolve assignee names. |
 | ~~#918~~ | ~~`src/routes/board.$slug.tsx`~~ | ~~Board card doesn't render assignee or dueDate.~~ **Fixed** — BoardIssueCard renders both fields. |
@@ -109,7 +109,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 10 (0 critical, 1 major, 9 minor) |
+| Unresolved PR comments | 9 (0 critical, 0 major, 9 minor) |
 | Unit tests | 4420 pass |
 | E2E tests | 164 pass (non-preview) |
 
