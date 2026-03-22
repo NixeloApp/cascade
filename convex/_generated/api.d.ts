@@ -36,6 +36,7 @@ import type * as crons from "../crons.js";
 import type * as customFields from "../customFields.js";
 import type * as customFunctions from "../customFunctions.js";
 import type * as dashboard from "../dashboard.js";
+import type * as deployBoards from "../deployBoards.js";
 import type * as documentTemplates from "../documentTemplates.js";
 import type * as documentVersions from "../documentVersions.js";
 import type * as documents from "../documents.js";
@@ -213,6 +214,7 @@ declare const fullApi: ApiFromModules<{
   customFields: typeof customFields;
   customFunctions: typeof customFunctions;
   dashboard: typeof dashboard;
+  deployBoards: typeof deployBoards;
   documentTemplates: typeof documentTemplates;
   documentVersions: typeof documentVersions;
   documents: typeof documents;
