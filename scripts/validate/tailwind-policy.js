@@ -195,7 +195,6 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/CommentReactions.tsx",
   "/CommentRenderer.tsx",
   "/Calendar/EventDetailsModal.tsx",
-  "/Calendar/RoadmapView.tsx",
   "/FuzzySearch/FuzzySearchInput.tsx",
   "/FilterBar.tsx",
   "/Landing/FinalCTASection.tsx",

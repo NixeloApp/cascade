@@ -6,7 +6,7 @@
  *
  * Examples of issues detected:
  * - src/components/ui/Input.tsx vs src/components/ui/form/Input.tsx
- * - src/components/RoadmapView.tsx vs src/components/Calendar/RoadmapView.tsx
+ * - src/components/Foo.tsx vs src/components/Bar/Foo.tsx
  *
  * Known Exceptions:
  * - ui/form/* duplicates are intentional (form-specific wrappers)
@@ -42,7 +42,6 @@ const ALLOWED_DUPLICATES = new Set([
   "ui/Textarea.tsx:ui/form/Textarea.tsx",
   // Different implementations for different contexts
   "Analytics/RecentActivity.tsx:Dashboard/RecentActivity.tsx",
-  "Calendar/RoadmapView.tsx:RoadmapView.tsx",
 ]);
 
 /**
