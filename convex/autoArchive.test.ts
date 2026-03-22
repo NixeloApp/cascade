@@ -27,8 +27,12 @@ async function moveIssueToDone(
 ) {
   await t.run(async (ctx) => {
     const project = await ctx.db.get(projectId);
-    expect(project).not.toBeNull();
-    const doneState = project?.workflowStates.find((s) => s.category === "done");
+    if (!project) {
+      throw new Error("Project not found");
+    }
+    const doneState = project.workflowStates.find(
+      (s: { id: string; category: string }) => s.category === "done",
+    );
     if (!doneState) {
       throw new Error("Project is missing a 'done' workflow state");
     }
