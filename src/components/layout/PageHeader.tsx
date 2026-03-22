@@ -22,7 +22,7 @@ interface BreadcrumbData {
 
 interface PageHeaderProps {
   title: string;
-  description?: string;
+  description?: ReactNode;
   actions?: ReactNode;
   breadcrumbs?: BreadcrumbData[];
   className?: string;

@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppHeader, AppSidebar } from "@/components/App";
 import { useCommands } from "@/components/CommandPalette";
 import { CreateProjectFromTemplate } from "@/components/CreateProjectFromTemplate";
@@ -34,11 +34,26 @@ import {
   useOrganizationOptional,
 } from "@/hooks/useOrgContext";
 import { SidebarProvider } from "@/hooks/useSidebarState";
+import {
+  clearAuthenticatedSessionMarker,
+  hasRecoverableAuthenticatedSession,
+  markAuthenticatedSession,
+  readLocalStorageJson,
+  removeLocalStorageValue,
+  writeLocalStorageJson,
+} from "@/lib/authRecovery";
 import { showError, showSuccess } from "@/lib/toast";
 // Re-export hooks for backwards compatibility with existing imports
 export { useOrganization, useOrganizationOptional };
 
 type UserOrganization = FunctionReturnType<typeof api.organizations.getUserOrganizations>[number];
+type PersistedOrganization = FunctionReturnType<typeof api.organizations.getOrganizationBySlug>;
+const ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY = "nixelo-organization-layout-cache";
+
+interface PersistedOrganizationLayoutState {
+  userOrganizations?: UserOrganization[];
+  organizationsBySlug?: Record<string, PersistedOrganization>;
+}
 
 let cachedOrgUserOrganizations: UserOrganization[] | undefined;
 const cachedOrganizationsBySlug = new Map<
@@ -76,6 +91,9 @@ function OrgError({ title, message }: { title: string; message: string }) {
 }
 
 function useStableOrgData(orgSlug: string) {
+  const persistedStateRef = useRef(
+    readLocalStorageJson<PersistedOrganizationLayoutState>(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY),
+  );
   const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {}) as
     | UserOrganization[]
     | undefined;
@@ -84,47 +102,128 @@ function useStableOrgData(orgSlug: string) {
     slug: orgSlug,
   });
 
-  if (userOrganizations !== undefined) {
+  useEffect(() => {
+    if (userOrganizations === undefined) {
+      return;
+    }
+
     cachedOrgUserOrganizations = userOrganizations;
-  }
+    const current = persistedStateRef.current;
+    const next = {
+      ...current,
+      userOrganizations,
+      organizationsBySlug: current?.organizationsBySlug ?? {},
+    };
+    persistedStateRef.current = next;
+    writeLocalStorageJson(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY, next);
+  }, [userOrganizations]);
 
-  if (organization !== undefined) {
+  useEffect(() => {
+    if (organization === undefined) {
+      return;
+    }
+
     cachedOrganizationsBySlug.set(orgSlug, organization);
+    const current = persistedStateRef.current;
+    const next = {
+      ...current,
+      userOrganizations: userOrganizations ?? current?.userOrganizations,
+      organizationsBySlug: {
+        ...(current?.organizationsBySlug ?? {}),
+        [orgSlug]: organization,
+      },
+    };
+    persistedStateRef.current = next;
+    writeLocalStorageJson(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY, next);
+  }, [orgSlug, organization, userOrganizations]);
+
+  const persistedState = persistedStateRef.current;
+  return {
+    organization:
+      organization ??
+      cachedOrganizationsBySlug.get(orgSlug) ??
+      persistedState?.organizationsBySlug?.[orgSlug],
+    userOrgs: userOrganizations ?? cachedOrgUserOrganizations ?? persistedState?.userOrganizations,
+  };
+}
+
+function isNavigatorOffline(): boolean {
+  return typeof navigator !== "undefined" && !navigator.onLine;
+}
+
+/** Synchronous module-level state update (safe in render). */
+function updateOrgSessionFlags(isAuthenticated: boolean, isAuthLoading: boolean) {
+  if (isAuthenticated) {
+    hasAuthenticatedOrgSession = true;
+  } else if (!isAuthLoading && !isNavigatorOffline()) {
+    hasAuthenticatedOrgSession = false;
+    cachedOrgUserOrganizations = undefined;
+    cachedOrganizationsBySlug.clear();
+  }
+}
+
+/** Side-effectful localStorage writes (run in useEffect). */
+function persistOrgSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
+  if (isAuthenticated) {
+    markAuthenticatedSession();
+  } else if (!isAuthLoading && !isNavigatorOffline()) {
+    clearAuthenticatedSessionMarker();
+    removeLocalStorageValue(ORGANIZATION_LAYOUT_CACHE_STORAGE_KEY);
+  }
+}
+
+function shouldShowOrgLoading(
+  isAuthenticated: boolean,
+  isAuthLoading: boolean,
+  canRecover: boolean,
+  organization: unknown,
+  userOrgs: unknown,
+): boolean {
+  const isOffline = isNavigatorOffline();
+  const canRenderOffline = isOffline && canRecover && organization && userOrgs;
+
+  if (organization === undefined || userOrgs === undefined) {
+    // Only bypass loading if we have a confirmed session OR actual cached data to render.
+    // Require both organization AND userOrgs to avoid false "Access denied" while
+    // membership data is still loading.
+    if (isAuthLoading && (hasAuthenticatedOrgSession || (canRecover && organization && userOrgs))) {
+      return false;
+    }
+    return !canRenderOffline;
   }
 
-  return {
-    organization: organization ?? cachedOrganizationsBySlug.get(orgSlug),
-    userOrgs: userOrganizations ?? cachedOrgUserOrganizations,
-  };
+  return !(isAuthenticated || (isAuthLoading && organization) || canRenderOffline);
 }
 
 function OrganizationLayout() {
   const { orgSlug } = Route.useParams();
   const { isAuthLoading, isAuthenticated } = useAuthReady();
+  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
 
-  if (isAuthenticated) {
-    hasAuthenticatedOrgSession = true;
-  } else if (!isAuthLoading) {
-    hasAuthenticatedOrgSession = false;
-    cachedOrgUserOrganizations = undefined;
-    cachedOrganizationsBySlug.clear();
-  }
+  // Module-level flags must be synchronous so guards work on the first render
+  updateOrgSessionFlags(isAuthenticated, isAuthLoading);
+
+  // localStorage writes are side effects — run in useEffect to avoid
+  // synchronous storage churn during React render (especially StrictMode)
+  useEffect(() => {
+    persistOrgSessionState(isAuthenticated, isAuthLoading);
+  }, [isAuthenticated, isAuthLoading]);
 
   const { organization, userOrgs } = useStableOrgData(orgSlug);
 
   if (
-    (isAuthLoading && !hasAuthenticatedOrgSession && !organization) ||
-    organization === undefined ||
-    userOrgs === undefined
+    shouldShowOrgLoading(
+      isAuthenticated,
+      isAuthLoading,
+      canRecoverAuthenticatedSession,
+      organization,
+      userOrgs,
+    )
   ) {
     return <OrgLoading />;
   }
 
-  if (!(isAuthenticated || organization)) {
-    return <OrgLoading />;
-  }
-
-  if (organization === null) {
+  if (organization === null || organization === undefined) {
     return (
       <OrgError
         title="organization not found"

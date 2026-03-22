@@ -233,7 +233,9 @@ export class ProjectsPage extends BasePage {
 
     // Analytics
     this.analyticsPageHeader = page.getByTestId(TEST_IDS.ANALYTICS.PAGE_HEADER);
-    this.analyticsPageDescription = page.getByText(/project insights.*velocity.*metrics/i);
+    this.analyticsPageDescription = page
+      .getByTestId(TEST_IDS.ANALYTICS.PAGE_HEADER)
+      .getByTestId(TEST_IDS.ANALYTICS.PAGE_DESCRIPTION);
     this.analyticsTotalIssuesMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES);
     this.analyticsUnassignedMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_UNASSIGNED);
     this.analyticsAvgVelocityMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_AVG_VELOCITY);

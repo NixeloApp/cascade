@@ -78,6 +78,11 @@ export default defineConfig(({ mode }) => ({
     }),
     VitePWA({
       registerType: "autoUpdate",
+      // Keep registration owned by src/lib/serviceWorker.ts for now.
+      // The repo currently ships a push-capable public/service-worker.js,
+      // and auto-registering the plugin-generated /sw.js creates competing
+      // service-worker ownership for the same scope.
+      injectRegister: false,
       includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
       manifest: {
         name: "Nixelo - Project Management",

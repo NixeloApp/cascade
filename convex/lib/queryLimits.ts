@@ -71,9 +71,6 @@ export const MAX_SPRINT_ISSUES = 1000;
 /** Max API key usage records per query */
 export const MAX_API_KEY_USAGE_RECORDS = 100;
 
-/** Max offline sync items per request */
-export const MAX_OFFLINE_SYNC_ITEMS = 50;
-
 /** Max compliance records for reports */
 export const MAX_COMPLIANCE_RECORDS = 1000;
 

@@ -1,6 +1,6 @@
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { ConvexReactClient } from "convex/react";
+import { ConvexReactClient, useConvex } from "convex/react";
 import { CloudOff } from "lucide-react";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -8,13 +8,20 @@ import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Toaster } from "@/components/ui/Sonner";
+import { useAuthReady } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { processOfflineQueue, registerOfflineReplayHandler } from "@/lib/offline";
+import {
+  replayUserSettingsUpdate,
+  USER_SETTINGS_OFFLINE_MUTATION_TYPE,
+} from "@/lib/offlineUserSettings";
 import { getVapidPublicKey, WebPushProvider } from "@/lib/webPush";
 import { LazyPostHog } from "../components/LazyPostHog";
 import { NotFoundPage } from "../components/NotFoundPage";
 import { TooltipProvider } from "../components/ui/Tooltip";
 import { Typography } from "../components/ui/Typography";
 import { ThemeProvider } from "../contexts/ThemeContext";
-import { register as registerServiceWorker } from "../lib/serviceWorker";
+import { promptInstall, register as registerServiceWorker } from "../lib/serviceWorker";
 
 declare global {
   interface Window {
@@ -29,7 +36,8 @@ if (typeof window !== "undefined") {
     const convexUrl = import.meta.env.VITE_CONVEX_URL as string;
     if (convexUrl) {
       convex = new ConvexReactClient(convexUrl);
-      // Expose convex client globally for E2E testing
+      // Expose for E2E helpers (waitForConvexConnectionReady, etc.).
+      // Harmless in production — just a reference on window.
       window.__convex_test_client = convex;
     }
   } catch (error) {
@@ -53,11 +61,11 @@ function RootComponent() {
     document.body.classList.add("app-hydrated");
   }, []);
 
-  // Register service worker for PWA (client-side only, production only)
+  // Register service worker for PWA (production only)
   useEffect(() => {
-    // DO NOT register service worker in E2E tests as it can interfere with LocalStorage/Auth
-    if (import.meta.env.PROD && !window.__convex_test_client) {
+    if (import.meta.env.PROD) {
       registerServiceWorker();
+      promptInstall();
     }
   }, []);
 
@@ -68,6 +76,7 @@ function RootComponent() {
           {convex ? (
             <ConvexAuthProvider client={convex}>
               <ErrorBoundary>
+                <OfflineReplayBootstrap />
                 <WebPushProvider vapidPublicKey={getVapidPublicKey()}>
                   <Outlet />
                 </WebPushProvider>
@@ -109,4 +118,43 @@ function RootComponent() {
       </LazyPostHog>
     </ThemeProvider>
   );
+}
+
+function OfflineReplayBootstrap() {
+  const convexClient = useConvex();
+  const { isAuthenticated, isAuthLoading } = useAuthReady();
+  const { user } = useCurrentUser();
+  const userId = user?._id;
+
+  useEffect(() => {
+    if (isAuthLoading || !isAuthenticated || !userId) {
+      return;
+    }
+
+    registerOfflineReplayHandler(USER_SETTINGS_OFFLINE_MUTATION_TYPE, (args) =>
+      replayUserSettingsUpdate(convexClient, args),
+    );
+
+    const flushQueue = () => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        return;
+      }
+      processOfflineQueue(userId).catch((error: unknown) => {
+        console.info("[offline] Failed to flush queued mutations", { error });
+      });
+    };
+
+    flushQueue();
+
+    const handleOnline = () => {
+      flushQueue();
+    };
+
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [convexClient, isAuthenticated, isAuthLoading, userId]);
+
+  return null;
 }

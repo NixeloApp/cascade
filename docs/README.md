@@ -152,7 +152,7 @@ const { page, continueCursor } = await ctx.db
 - IndexedDB for local storage
 - Offline mutation queue with auto-sync
 - Installable as native app
-- Functions: `convex/offlineSync.ts`, `src/lib/offline.ts`
+- Functions: `public/service-worker.js`, `src/lib/offline.ts`
 
 ---
 
@@ -217,6 +217,7 @@ Combine **Real-time Issue Tracking** (Linear) + **Integrated Docs** (Notion) + *
 | File                    | Description                                  |
 | ----------------------- | -------------------------------------------- |
 | `setup/ENV.md`          | Complete environment variables documentation |
+| `setup/OFFLINE_ARCHITECTURE.md` | Offline queue ownership and replay flow |
 | `setup/PWA.md`          | Progressive Web App configuration            |
 | `setup/PATH_ALIASES.md` | Import path configuration                    |
 

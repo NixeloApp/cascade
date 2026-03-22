@@ -56,9 +56,26 @@ export async function fetchPaginatedQuery<T extends GenericDocument>(
     buildQuery: (db: QueryCtx["db"]) => unknown;
   },
 ): Promise<PaginationResult<T>> {
-  return await (opts.buildQuery(ctx.db) as PaginatedSoftDeleteQuery<T>)
+  const query = (opts.buildQuery(ctx.db) as PaginatedSoftDeleteQuery<T>)
     // Always filter out soft-deleted items.
     // We check isDeleted != true to handle both explicit false and undefined (legacy data).
-    .filter((q: FilterBuilder<TableInfoFor>) => q.neq(q.field("isDeleted"), true))
-    .paginate(opts.paginationOpts);
+    .filter((q: FilterBuilder<TableInfoFor>) => q.neq(q.field("isDeleted"), true));
+
+  // Let errors (including InvalidCursor) propagate to the client.
+  // The client-side usePaginatedQuery hook handles cursor resets properly
+  // when args change. Server-side silent retry with cursor:null corrupts
+  // pagination state for callers (continueCursor points to page 2 while
+  // callers think they're on their original page).
+  return await query.paginate(opts.paginationOpts);
+}
+
+export function isInvalidCursorError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes("InvalidCursor");
+  }
+  if (typeof error === "object" && error !== null && "data" in error) {
+    const data = (error as { data: unknown }).data;
+    return typeof data === "string" && data.includes("InvalidCursor");
+  }
+  return false;
 }

@@ -12,7 +12,6 @@ import {
   MAX_API_KEY_USAGE_RECORDS,
   MAX_COMPLIANCE_RECORDS,
   MAX_LABELS_PER_PROJECT,
-  MAX_OFFLINE_SYNC_ITEMS,
   MAX_OFFSET,
   MAX_ORG_MEMBERS,
   MAX_PAGE_SIZE,
@@ -76,10 +75,6 @@ describe("query limits", () => {
 
     it("should have correct API key usage records limit", () => {
       expect(MAX_API_KEY_USAGE_RECORDS).toBe(100);
-    });
-
-    it("should have correct offline sync items limit", () => {
-      expect(MAX_OFFLINE_SYNC_ITEMS).toBe(50);
     });
 
     it("should have correct compliance records limit", () => {

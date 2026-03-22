@@ -3,14 +3,28 @@ const CACHE_NAME = "nixelo-v2"; // Bump version for push notification support
 const OFFLINE_URL = "/offline.html";
 
 // Assets to cache on install
-const STATIC_ASSETS = ["/", "/offline.html", "/manifest.json"];
+const STATIC_ASSETS = [
+  "/",
+  "/offline.html",
+  "/manifest.webmanifest",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-touch-icon.png",
+  "/badge-72.png",
+];
 
-// Install event - cache static assets
+// Install event - cache static assets individually so a single 404 doesn't block install
 self.addEventListener("install", (event) => {
   console.log("Nixelo Service Worker installing...");
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return Promise.allSettled(
+        STATIC_ASSETS.map((asset) =>
+          cache.add(asset).catch((err) => {
+            console.warn(`Failed to cache ${asset}:`, err);
+          }),
+        ),
+      );
     }),
   );
   self.skipWaiting();
@@ -41,8 +55,8 @@ self.addEventListener("push", async (event) => {
 
   const options = {
     body: body || "You have a new notification",
-    icon: icon || "/icons/icon-192x192.png",
-    badge: "/icons/icon-72x72.png",
+    icon: icon || "/icon-192.png",
+    badge: "/badge-72.png",
     data: data || {},
     tag: tag || `nixelo-${Date.now()}`,
     renotify: true,

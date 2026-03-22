@@ -1789,25 +1789,6 @@ const applicationTables = {
     .index("by_target", ["targetId"])
     .index("by_timestamp", ["timestamp"]),
 
-  offlineSyncQueue: defineTable({
-    userId: v.id("users"),
-    mutationType: v.string(),
-    mutationArgs: v.string(), // JSON
-    status: v.union(
-      v.literal("pending"),
-      v.literal("syncing"),
-      v.literal("completed"),
-      v.literal("failed"),
-    ),
-    attempts: v.number(),
-    lastAttempt: v.optional(v.number()),
-    error: v.optional(v.string()),
-    updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_status", ["status"])
-    .index("by_user_status", ["userId", "status"]),
-
   // ===========================================================================
   // E2E TESTING & MONITORING
   // ===========================================================================

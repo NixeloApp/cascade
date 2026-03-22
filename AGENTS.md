@@ -168,3 +168,13 @@ pnpm run mirror:batch
 
 **Gitignored (regenerable):** `assets/`, `*.html`, `*_manifest.json`, `*_network.json`
 **Tracked (intelligence):** `*_deep.json` (CSS vars, keyframes, fonts)
+
+## PR Size Limits
+
+- **Hard limit: 150 files per PR.** AI reviewers (CodeRabbit, etc.) degrade significantly beyond this.
+- **Warning at 100 files:** Stop adding new features/changes. Focus exclusively on:
+  1. Fixing any failing CI checks
+  2. Addressing review comments
+  3. Getting the current PR to a mergeable state
+- **At 150 files:** Do NOT add more files unless explicitly asked or required to fix existing issues.
+- Check file count before starting new work: `git diff --stat origin/main...HEAD | tail -1`

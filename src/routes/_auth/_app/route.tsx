@@ -20,32 +20,74 @@ import {
   useAuthenticatedQuery,
   useAuthReady,
 } from "@/hooks/useConvexHelpers";
+import {
+  clearAuthenticatedSessionMarker,
+  hasRecoverableAuthenticatedSession,
+  markAuthenticatedSession,
+  readLocalStorageJson,
+  removeLocalStorageValue,
+  writeLocalStorageJson,
+} from "@/lib/authRecovery";
 
 export const Route = createFileRoute("/_auth/_app")({
   component: AppLayout,
 });
 
 type UserOrganization = FunctionReturnType<typeof api.organizations.getUserOrganizations>[number];
+const APP_LAYOUT_CACHE_STORAGE_KEY = "nixelo-app-layout-cache";
+
+interface PersistedAppLayoutState {
+  redirectPath?: string | null;
+  userOrganizations?: UserOrganization[];
+}
 
 let cachedRedirectPath: string | null | undefined;
 let cachedUserOrganizations: UserOrganization[] | undefined;
 let hasAuthenticatedAppSession = false;
 
-function updateAppSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
+/** Synchronous module-level state update (safe in render). */
+function updateAppSessionFlags(isAuthenticated: boolean, isAuthLoading: boolean) {
   if (isAuthenticated) {
     hasAuthenticatedAppSession = true;
     return;
   }
 
-  if (!isAuthLoading) {
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+  if (!isAuthLoading && !isOffline) {
     hasAuthenticatedAppSession = false;
     cachedRedirectPath = undefined;
     cachedUserOrganizations = undefined;
   }
 }
 
+/** Side-effectful localStorage writes (run in useEffect). */
+function persistAppSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
+  if (isAuthenticated) {
+    markAuthenticatedSession();
+    return;
+  }
+
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+  if (!isAuthLoading && !isOffline) {
+    clearAuthenticatedSessionMarker();
+    removeLocalStorageValue(APP_LAYOUT_CACHE_STORAGE_KEY);
+  }
+}
+
+function persistAppLayoutState(partial: Partial<PersistedAppLayoutState>) {
+  const existingState = readLocalStorageJson<PersistedAppLayoutState>(APP_LAYOUT_CACHE_STORAGE_KEY);
+  writeLocalStorageJson(APP_LAYOUT_CACHE_STORAGE_KEY, {
+    ...existingState,
+    ...partial,
+  });
+}
+
+function isGatewayPath(pathname: string) {
+  return pathname === ROUTES.app.path || pathname === `${ROUTES.app.path}/`;
+}
+
 function getAppRedirectState(pathname: string, redirectPath: string | null) {
-  const isGateway = pathname === ROUTES.app.path || pathname === `${ROUTES.app.path}/`;
+  const isGateway = isGatewayPath(pathname);
   const isOnboardingTarget = redirectPath?.includes(ROUTES.onboarding.path) ?? false;
   const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
   const shouldRedirect =
@@ -60,14 +102,20 @@ function getAppRedirectState(pathname: string, redirectPath: string | null) {
 
 function shouldShowAppLoading(
   isAuthLoading: boolean,
+  pathname: string,
   stableRedirectPath: string | null | undefined,
   stableUserOrganizations: UserOrganization[] | undefined,
+  canRecoverAuthenticatedSession: boolean,
 ) {
-  return (
-    (isAuthLoading && !hasAuthenticatedAppSession) ||
-    stableRedirectPath === undefined ||
-    stableUserOrganizations === undefined
-  );
+  if (isAuthLoading && !hasAuthenticatedAppSession && !canRecoverAuthenticatedSession) {
+    return true;
+  }
+
+  if (!isGatewayPath(pathname)) {
+    return stableUserOrganizations === undefined;
+  }
+
+  return stableRedirectPath === undefined || stableUserOrganizations === undefined;
 }
 
 /**
@@ -85,8 +133,16 @@ function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isAuthLoading, isAuthenticated } = useAuthReady();
+  const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
+  const persistedAppLayoutState = useRef(
+    readLocalStorageJson<PersistedAppLayoutState>(APP_LAYOUT_CACHE_STORAGE_KEY),
+  ).current;
 
-  updateAppSessionState(isAuthenticated, isAuthLoading);
+  updateAppSessionFlags(isAuthenticated, isAuthLoading);
+
+  useEffect(() => {
+    persistAppSessionState(isAuthenticated, isAuthLoading);
+  }, [isAuthenticated, isAuthLoading]);
 
   // Get redirect destination from backend (handles onboarding check)
   const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
@@ -95,17 +151,47 @@ function AppLayout() {
   const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {});
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
 
-  if (redirectPath !== undefined) {
+  useEffect(() => {
+    if (redirectPath === undefined) {
+      return;
+    }
+
     cachedRedirectPath = redirectPath;
-  }
+    persistAppLayoutState({ redirectPath });
+  }, [redirectPath]);
 
-  if (userOrganizations !== undefined) {
+  useEffect(() => {
+    if (userOrganizations === undefined) {
+      return;
+    }
+
     cachedUserOrganizations = userOrganizations;
-  }
+    persistAppLayoutState({ userOrganizations });
+  }, [userOrganizations]);
 
-  const stableRedirectPath = redirectPath ?? cachedRedirectPath;
-  const stableUserOrganizations = userOrganizations ?? cachedUserOrganizations;
+  const stableUserOrganizations =
+    userOrganizations ?? cachedUserOrganizations ?? persistedAppLayoutState?.userOrganizations;
+  const fallbackOrganization = stableUserOrganizations?.[0];
+  // Only use the dashboard fallback when offline — when online, wait for the
+  // server redirect query to resolve so onboarding and other gates aren't skipped.
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+  const fallbackRedirectPath =
+    isOffline &&
+    !persistedAppLayoutState?.redirectPath &&
+    !redirectPath &&
+    !cachedRedirectPath &&
+    fallbackOrganization
+      ? ROUTES.dashboard.build(fallbackOrganization.slug)
+      : undefined;
+  // redirectPath is string | null | undefined:
+  //   undefined = still loading, null = backend says "stay here", string = redirect target.
+  // Only fall through to cache/persisted when the query hasn't loaded yet (undefined).
+  const stableRedirectPath =
+    redirectPath !== undefined
+      ? redirectPath
+      : (cachedRedirectPath ?? persistedAppLayoutState?.redirectPath ?? fallbackRedirectPath);
   const redirectState = getAppRedirectState(pathname, stableRedirectPath ?? null);
+  const needsOrganizationBootstrap = (stableUserOrganizations ?? []).length === 0;
 
   // Redirect to correct destination if not at /app
   useEffect(() => {
@@ -115,7 +201,15 @@ function AppLayout() {
   }, [navigate, redirectState.shouldRedirect, stableRedirectPath]);
 
   // Loading state - waiting for queries
-  if (shouldShowAppLoading(isAuthLoading, stableRedirectPath, stableUserOrganizations)) {
+  if (
+    shouldShowAppLoading(
+      isAuthLoading,
+      pathname,
+      stableRedirectPath,
+      stableUserOrganizations,
+      canRecoverAuthenticatedSession,
+    )
+  ) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <LoadingSpinner size="lg" />
@@ -134,7 +228,7 @@ function AppLayout() {
 
   // Wait for the authenticated user document to load before attempting org bootstrap.
   // undefined = still loading, null = profile missing (error state)
-  if (currentUser === undefined) {
+  if (needsOrganizationBootstrap && currentUser === undefined) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <LoadingSpinner size="lg" />
@@ -143,7 +237,7 @@ function AppLayout() {
   }
 
   // User profile not found - show error with recovery option
-  if (currentUser === null) {
+  if (needsOrganizationBootstrap && currentUser === null) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <div className="text-center">
@@ -159,7 +253,7 @@ function AppLayout() {
   }
 
   // User has no organizations - initialize default organization
-  if ((stableUserOrganizations ?? []).length === 0) {
+  if (needsOrganizationBootstrap) {
     return <InitializeOrganization />;
   }
 

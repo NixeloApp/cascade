@@ -10,7 +10,8 @@ import { api } from "@convex/_generated/api";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpdate";
 import { Monitor, Moon, Sun } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -28,7 +29,7 @@ export function PreferencesTab() {
 
   // Settings from DB
   const userSettings = useAuthenticatedQuery(api.userSettings.get, {});
-  const { mutate: updateSettings } = useAuthenticatedMutation(api.userSettings.update);
+  const { update: updateSettings } = useOfflineUserSettingsUpdate();
 
   // Local state for timezone (defaults to system if not set)
   const [selectedTimezone, setSelectedTimezone] = useState<string>(
@@ -48,22 +49,32 @@ export function PreferencesTab() {
 
   const handleThemeChange = async (value: "light" | "dark" | "system") => {
     const previousTheme = theme;
-    setTheme(value);
+    setTheme(value); // Update local context optimistically
     try {
-      await updateSettings({ theme: value });
-      showSuccess("Theme updated");
+      await updateSettings(
+        { theme: value },
+        { queuedMessage: "Theme preference saved for sync when you are back online" },
+      );
     } catch (error) {
-      setTheme(previousTheme);
+      setTheme(previousTheme); // Rollback on failure
       showError(error, "Failed to update theme");
     }
   };
 
   const handleTimezoneChange = async (value: string) => {
+    const previousTimezone = selectedTimezone;
     setSelectedTimezone(value);
     try {
-      await updateSettings({ timezone: value });
-      showSuccess("Timezone updated");
+      const result = await updateSettings(
+        { timezone: value },
+        { queuedMessage: "Timezone change queued for sync when you are back online" },
+      );
+      // Only show success when not queued — the hook already showed the queued message
+      if (!result.queued) {
+        showSuccess("Timezone updated");
+      }
     } catch (error) {
+      setSelectedTimezone(previousTimezone);
       showError(error, "Failed to update timezone");
     }
   };
@@ -79,10 +90,10 @@ export function PreferencesTab() {
     }
 
     try {
-      await updateSettings({ desktopNotifications: enabled });
+      await updateSettings({ desktopNotifications: enabled }, { allowOfflineQueue: false });
       showSuccess(`Desktop notifications ${enabled ? "enabled" : "disabled"}`);
     } catch (error) {
-      showError(error, "Failed to update notification preference");
+      showError(error, "Failed to update desktop notification setting");
     }
   };
 

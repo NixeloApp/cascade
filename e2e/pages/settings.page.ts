@@ -57,6 +57,9 @@ export class SettingsPage extends BasePage {
   readonly offlineToggle: Locator;
   readonly syncStatusIndicator: Locator;
   readonly forceSyncButton: Locator;
+  readonly processQueueButton: Locator;
+  readonly localOfflineQueueHeading: Locator;
+  readonly lastSuccessfulReplayLabel: Locator;
 
   // ===================
   // Locators - Preferences
@@ -150,6 +153,9 @@ export class SettingsPage extends BasePage {
       .or(page.getByRole("checkbox", { name: /offline/i }));
     this.syncStatusIndicator = page.getByTestId(TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD);
     this.forceSyncButton = page.getByRole("button", { name: /sync|force.*sync/i });
+    this.processQueueButton = page.getByRole("button", { name: /^process queue$/i });
+    this.localOfflineQueueHeading = page.getByRole("heading", { name: /local offline queue/i });
+    this.lastSuccessfulReplayLabel = page.getByText(/^Last Successful Replay$/);
 
     // Preferences
     this.notificationPreferences = page.getByTestId(
@@ -162,7 +168,7 @@ export class SettingsPage extends BasePage {
       .getByRole("switch", { name: /push/i })
       .or(page.getByRole("checkbox", { name: /push.*notification/i }));
     this.languageSelect = page.getByRole("combobox", { name: /language/i });
-    this.timezoneSelect = page.getByRole("combobox", { name: /timezone/i });
+    this.timezoneSelect = page.locator("#timezone");
 
     // Admin
     this.userManagementSection = page.getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION);
@@ -171,7 +177,7 @@ export class SettingsPage extends BasePage {
     this.userTypeManager = page.getByTestId(TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION);
     this.hourComplianceDashboard = page.getByTestId(TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION);
     this.adminUsersTab = page.getByTestId(TEST_IDS.SETTINGS.ADMIN_USERS_TAB);
-    this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
+    this.platformUsersTable = page.getByRole("table", { name: /user invitations/i });
     this.inviteEmptyState = page.getByText(/^No invitations$/);
 
     // Invite user form (it's an inline Card, not a dialog)
@@ -323,6 +329,54 @@ export class SettingsPage extends BasePage {
 
   async forceSync() {
     await this.forceSyncButton.click();
+  }
+
+  async getCurrentTimezoneLabel() {
+    await expect(this.timezoneSelect).toBeVisible();
+    const text = await this.timezoneSelect.innerText();
+    return text.trim();
+  }
+
+  async selectTimezone(timezone: string) {
+    const option = this.page.getByRole("option", { name: timezone, exact: true });
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await expect(this.timezoneSelect).toBeVisible();
+      await this.timezoneSelect.click();
+
+      try {
+        await expect(option).toBeVisible();
+        await option.click();
+        await this.expectTimezoneSelected(timezone);
+        return;
+      } catch (error) {
+        if (attempt === 1) {
+          throw error;
+        }
+      }
+    }
+  }
+
+  async expectTimezoneSelected(timezone: string) {
+    await expect(this.timezoneSelect).toContainText(timezone);
+  }
+
+  getOfflineQueueItem(mutationType: string) {
+    return this.page.getByText(mutationType, { exact: true });
+  }
+
+  async expectOfflineQueueItemVisible(mutationType: string) {
+    await expect(this.localOfflineQueueHeading).toBeVisible();
+    await expect(this.getOfflineQueueItem(mutationType)).toBeVisible();
+  }
+
+  async expectOfflineQueueHidden() {
+    await expect(this.localOfflineQueueHeading).toHaveCount(0);
+  }
+
+  async processOfflineQueue() {
+    await expect(this.processQueueButton).toBeVisible();
+    await this.processQueueButton.click();
   }
 
   // ===================
@@ -538,10 +592,7 @@ export class SettingsPage extends BasePage {
   }
 
   async openAdminUsersList() {
-    await expect(this.userManagementHeading).toBeVisible();
-    await expect(this.adminUsersTab).toBeVisible();
-    await this.adminUsersTab.click();
-    await expect(this.adminUsersTab).toHaveAttribute("data-state", "on");
+    await expect(this.userManagementHeading).toBeVisible({ timeout: 15000 });
     await expect(this.platformUsersTable).toBeVisible();
   }
 
