@@ -8,7 +8,6 @@
 
 import { httpRouter } from "convex/server";
 import { handler as issuesHandler } from "./api/issues";
-import { handleIntakePreflight, handleIntakeSubmission } from "./http/intake";
 import { securePasswordReset, securePasswordResetPreflight } from "./authWrapper";
 import {
   batchCleanupEndpoint,
@@ -43,6 +42,7 @@ import {
   listRepos as listGitHubRepos,
 } from "./http/githubOAuth";
 import { handleCallback, initiateAuth, triggerSync } from "./http/googleOAuth";
+import { handleIntakePreflight, handleIntakeSubmission } from "./http/intake";
 import { handleSlashCommand } from "./http/slackCommands";
 import {
   handleCallback as handleSlackCallback,

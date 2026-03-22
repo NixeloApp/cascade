@@ -6,8 +6,8 @@
  * to identify the target project.
  */
 
-import { httpAction } from "../_generated/server";
 import { api } from "../_generated/api";
+import { httpAction } from "../_generated/server";
 
 interface IntakeSubmission {
   title: string;
@@ -45,27 +45,24 @@ export const handleIntakeSubmission = httpAction(async (ctx, request) => {
   const token = authHeader?.replace("Bearer ", "") || url.searchParams.get("token");
 
   if (!token) {
-    return new Response(
-      JSON.stringify({ error: "Missing intake token" }),
-      { status: 401, headers },
-    );
+    return new Response(JSON.stringify({ error: "Missing intake token" }), {
+      status: 401,
+      headers,
+    });
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON body" }),
-      { status: 400, headers },
-    );
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400, headers });
   }
 
   if (!isValidSubmission(body)) {
-    return new Response(
-      JSON.stringify({ error: "Required: { title: string (1-500 chars) }" }),
-      { status: 400, headers },
-    );
+    return new Response(JSON.stringify({ error: "Required: { title: string (1-500 chars) }" }), {
+      status: 400,
+      headers,
+    });
   }
 
   try {
@@ -77,15 +74,12 @@ export const handleIntakeSubmission = httpAction(async (ctx, request) => {
       submitterName: body.submitterName?.trim(),
     });
 
-    return new Response(
-      JSON.stringify({ success: true, inboxIssueId: result.inboxIssueId }),
-      { status: 201, headers },
-    );
+    return new Response(JSON.stringify({ success: true, inboxIssueId: result.inboxIssueId }), {
+      status: 201,
+      headers,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal error";
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 400, headers },
-    );
+    return new Response(JSON.stringify({ error: message }), { status: 400, headers });
   }
 });
