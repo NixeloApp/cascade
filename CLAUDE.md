@@ -44,7 +44,7 @@ nixelo/
 ├── emails/               # React Email templates
 ├── bot-service/          # Voice AI meeting bot
 ├── scripts/validate/     # Custom validation checks (run with: node scripts/validate.js)
-└── docs/                 # Feature documentation
+└── docs/                 # ai/, architecture/, convex/, design/, guides/, research/
 ```
 
 **Component organization:** Related components are grouped into feature directories. When adding new components, place them in the appropriate feature directory or create a new one if needed.
