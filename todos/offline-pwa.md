@@ -1,7 +1,5 @@
 # Offline / PWA Remaining Todo
 
-This file intentionally lives at the repo root instead of `todos/`.
-
 ## Design Intent
 
 This is **not** a local-first offline app. Convex is server-authoritative, and fighting

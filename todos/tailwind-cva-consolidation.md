@@ -2,81 +2,120 @@
 
 > **Priority:** P2
 > **Status:** In Progress
-> **Last Updated:** 2026-03-20
-> **Depends on:** validator-strengthening.md (validators must block first so this work doesn't regress)
+> **Last Updated:** 2026-03-22
 
 ## Problem
 
-The codebase has 148 files with raw Tailwind violations and 48 files with CVA definitions. CVA is the right tool but it's being spammed -- too many one-off CVA recipes that should either be:
-- Merged into an existing primitive's variant system
-- Consolidated with a nearby CVA that does the same thing
-- Not a CVA at all (just a simple component with props)
-
-The pipeline is: **less raw Tailwind -> promote repeated semantics into owned primitives -> keep one-off static layout as plain Tailwind -> merge overlapping CVAs together if they overlap**.
+126 files with raw Tailwind violations, 436 total violations. But the violations aren't equal — analysis shows they cluster into a few repeating patterns that should be fixed in batches, not one-by-one.
 
 ## Styling Contract
 
-- [ ] Tailwind-first for static feature/page layout -- do not create local `cva()` helpers or local string-map style systems just to name a one-off class list
-- [ ] `cva()` is for shared primitive/component semantics, not for "this file has a section/header/list/icon wrapper" naming
-- [ ] `index.css` is for tokens, global utilities, and truly shared decorative effects -- not single-page named style buckets that should have stayed in Tailwind
-- [ ] If a pattern repeats, extract a real component or add an owned primitive variant; if it does not repeat, keep it simple and local
-- [ ] Do not replace bad local `cva()` with bad local class-string objects; hidden style systems are worse, not better
-- [ ] `Icon` usage should be semantic too -- prefer owned `size`/`tone` props, keep the allowed color palette intentionally small, and use `className` mostly for layout-only concerns rather than ad hoc `text-*` color overrides
+- Tailwind-first for static feature/page layout — do not create local `cva()` helpers or string-map style systems for one-off class lists
+- `cva()` is for shared primitive/component semantics, not "this file has a section/header/list" naming
+- `index.css` is for tokens, global utilities, and truly shared effects — not single-page style buckets
+- If a pattern repeats, extract a real component or add an owned primitive variant; if it does not repeat, keep it raw Tailwind
+- Do not replace bad local `cva()` with bad local class-string objects — hidden style systems are worse
+- `Icon` usage should be semantic — owned `size`/`tone` props, small color palette
 
-## Phase 1: Reduce Raw Tailwind
+## What's Done
 
-Target the remaining raw Tailwind violations by grouping repeated class clusters into owned abstractions.
+- [x] Ratcheted 35 stale baselines (148 → 126 files)
+- [x] Fixed violations in 5 files (NotificationItem, ApiKeysManager, AuthPageLayout, DocumentSidebar, OfflineTab)
+- [x] Validator catches const-string class hiding (`const FOO = "w-full ..."` in `className={FOO}`)
+- [x] Violation cluster analysis (see below)
 
-- [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
-- [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
-- [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant
-- [ ] Tighten raw Tailwind rules on app surfaces -- colors, radius, spacing, and shell treatments should come from owned primitives or explicit variants, not feature-local class clusters
-- [ ] Audit `className` escape-hatch usage on owned primitives -- recurring size/chrome/spacing overrides should become variants instead of one-off patches
-- [ ] Audit icon usage specifically -- repeated icon spacing, icon color overrides, and menu/button leading-icon patterns should move onto owned `Icon`, `Button`, `DropdownMenuItem`, and related primitive APIs
-- [ ] Audit landing/main-page files specifically for static layout that should just be Tailwind, not local CVAs or section-specific CSS
+## Violation Cluster Analysis
 
-## Phase 2: Consolidate CVA Sprawl
+436 violations across 126 files. 223 of those are in the top 30 repeating patterns:
 
-- [ ] Audit 10 feature-component CVA definitions (Landing pages, PageLayout) -- merge into `ui/` primitives or keep if truly feature-specific
-- [ ] Typography: audit 30+ variants for overlap -- merge variants that differ only by one property (e.g., `metricLabel` vs `caption` with `uppercase tracking-wider`)
-- [ ] Badge: audit 10+ variants for overlap -- some may be duplicating each other with minor differences
-- [ ] Card: audit 8+ variants -- ensure no feature-local Card recipes exist that should be a variant
-- [ ] Look for CVA definitions in the same file that could be a single CVA with compound variants
-- [ ] Delete or demote one-off CVAs that are only wrapping a base class or a single call site -- those should become plain components or existing primitive variants
-- [ ] Audit primitive variant APIs for gaps that force local CVAs or local raw Tailwind -- fill the primitive first, then delete the feature-local workaround
-- [ ] Landing-specific paydown: remove remaining local CVA/style-bundle debt from `FeaturesSection` and `LogoBar` without replacing it with hidden string maps or bespoke global CSS
-- [ ] Audit `index.css` additions from recent landing cleanup and fold any section-specific styles back into Tailwind/shared primitives unless they are truly global/shared effects
+### Batch 1: Structural allowlist (zero-risk, ~65 violations removed)
 
-## Phase 3: Make It Impossible to Slop
+These are correct Tailwind-first layout. Validator should stop flagging them.
 
-- [ ] Add a validator that flags new CVA definitions outside `src/components/ui/` (feature CVAs should be rare and justified)
-- [ ] Add a validator that flags CVA files with >10 variants (sign of sprawl -- should split or rethink)
-- [ ] Add a validator that flags raw Tailwind class clusters appearing 3+ times across files (should be a component)
-- [ ] Tighten the raw TW validator from advisory to blocking with a ratchet (current baseline: 148 files, fail on increase)
-- [ ] Add a validator that flags repeated primitive `className` overrides for size/chrome/radius/color when an owned variant should exist
-- [ ] Add a validator that flags feature-local CVAs with only base styles or a single live call site
-- [ ] Tighten validator coverage for hidden feature-local style systems: local class maps/constants that try to replace CVA should be penalized harder than explicit feature-local `cva()`
+| Count | Pattern | Why it's fine |
+|-------|---------|---------------|
+| 49x | `min-w-0` | Required for flex text truncation |
+| 16x | `min-h-32` | Min-height constraint — layout concern |
 
-## Anti-patterns to Watch
+### Batch 2: Sibling margins → Stack/Flex gap (~53 violations)
+
+Margins used for spacing between siblings. Replace parent with `<Stack gap="...">`.
+
+| Count | Files | Pattern |
+|-------|-------|---------|
+| 14x | 13 | `mb-2` |
+| 14x | 11 | `mt-2` |
+| 9x | 9 | `mt-1` |
+| 8x | 6 | `mb-1` |
+| 7x | 4 | `mt-3` |
+| 7x | 4 | `mt-0.5` |
+
+Each fix: read the parent, wrap children in `<Stack gap="xs|sm|md">`, remove `mt-*`/`mb-*` from children.
+
+### Batch 3: Icon sizing → size-* or Icon prop (~19 violations)
+
+| Count | Pattern | Fix |
+|-------|---------|-----|
+| 7x | `w-4 h-4` | `size-4` |
+| 5x | `h-4 w-4` | `size-4` |
+| 4x | `h-5 w-5` | `size-5` |
+| 3x | `w-3 h-3` | `size-3` |
+
+### Batch 4: Repeated stat-cell pattern (~10 violations)
+
+| Count | Files | Pattern | Fix |
+|-------|-------|---------|-----|
+| 7x | 1 | `p-4 bg-ui-bg-secondary` | `<Card variant="section" padding="md">` — already used elsewhere in the codebase |
+| 3x | 2 | `p-4` standalone | Same |
+
+### Batch 5: Icon inline margin (~18 violations)
+
+| Count | Pattern | Fix |
+|-------|---------|-----|
+| 18x | `inline mr-1` | Icon before text — should use Button/Badge leading icon API or `<Icon>` with gap from parent Flex |
+
+## Execution Order
+
+1. **Allowlist `min-w-0` and `min-h-32`** in the validator — removes ~65 false positives from the count
+2. **Batch 3 (icon sizing)** — mechanical `h-X w-X` → `size-X`, safe, 19 violations
+3. **Batch 4 (stat cells)** — replace repeated `p-4 bg-ui-bg-secondary` divs with Card variant
+4. **Batch 2 (margins → gaps)** — largest batch, needs reading each context, 53 violations across 30+ files
+5. **Batch 5 (icon inline margin)** — needs audit of where `inline mr-1` is used and whether a component API exists
+
+## CVA Consolidation (after raw TW is reduced)
+
+- [ ] Audit 10 feature-component CVA definitions — merge into `ui/` primitives or keep if truly feature-specific
+- [ ] Typography: audit 30+ variants for overlap — merge variants that differ only by one property
+- [ ] Badge: audit 10+ variants for overlap
+- [ ] Card: audit 8+ variants
+- [ ] Delete or demote one-off CVAs (0 variants, single call site)
+- [ ] Audit primitive variant APIs for gaps that force local CVAs or raw TW
+
+## Validator Improvements
+
+- [x] Catches const-string class hiding (`const FOO = "..."` in `className={FOO}`)
+- [ ] Allowlist structural patterns (`min-w-0`, `min-h-*`) so violation count reflects real debt
+- [ ] Flag class-map objects (`const STYLES = { header: "...", body: "..." }`)
+- [ ] Add a validator that flags new CVA definitions outside `src/components/ui/`
+- [ ] Add a validator that flags CVA files with >10 variants
+- [ ] Add a validator that flags feature-local CVAs with only base styles or a single call site
+
+## Anti-patterns
 
 | Anti-pattern | What to do instead |
 |-------------|-------------------|
-| Raw `className="flex items-center gap-2 px-3 py-1.5 ..."` repeated 3+ times | Extract a component or add a CVA variant |
-| One-off CVA with 2 variants used in 1 file | Just use a component with props, CVA overhead isn't worth it |
-| CVA in a feature component that duplicates a `ui/` primitive's variant | Add the variant to the primitive, delete the feature CVA |
-| Typography variant for a single use case | Use `className` override on an existing variant, or merge with a similar variant |
-| `<Icon className="text-foo h-4 w-4" />` for product semantics | Use owned `size`/`tone` props and keep icon color choices inside the shared palette |
+| Raw `className="flex items-center gap-2 px-3 ..."` repeated 3+ times | Extract a component or add a CVA variant |
+| One-off CVA with 2 variants used in 1 file | Just use a component with props |
+| CVA that duplicates a `ui/` primitive's variant | Add the variant to the primitive, delete the feature CVA |
+| `<Icon className="text-foo h-4 w-4" />` | Use owned `size`/`tone` props |
 | `cva()` with no variants (just a base) | Use `cn()` directly or a simple component |
-| Replacing local `cva()` with `const SECTION_CLASSES = { ... }` | Keep one-off layout as plain Tailwind or extract a real component; do not create hidden local style APIs |
-| Adding page/section-specific named classes to `index.css` | Keep it in Tailwind unless the style is truly global/shared or a decorative effect used across sections |
+| `const SECTION_CLASSES = { ... }` or `const FOO = "w-full ..."` | Keep raw Tailwind or extract a real component |
 
 ## Done When
 
-- [ ] Raw TW violation count reduced from 148 to <50 files
+- [ ] Structural patterns allowlisted — violation count reflects real debt only
+- [ ] Raw TW violation count under 50 files (after allowlisting)
+- [ ] Top repeating clusters resolved (batches 2-5)
 - [ ] Feature-component CVAs either justified or merged into `ui/`
 - [ ] No CVA definition with 0 variants (just base styles)
-- [ ] Validator blocks new raw TW cluster repetition and unjustified feature CVAs
-- [ ] Typography/Badge/Card variant counts reviewed and consolidated where overlapping
-- [ ] Owned primitives cover the common styling needs without widespread `className` restyling escape hatches
-- [ ] Icon usage is mostly semantic and consistent -- shared `size`/`tone` ownership, limited color palette, and no widespread raw icon spacing/color utilities in product code
-- [ ] Static layout on landing/main-page surfaces is mostly plain Tailwind plus shared primitives, not feature-local CVAs, hidden style maps, or `index.css` escape hatches
+- [ ] Typography/Badge/Card variant counts reviewed and consolidated

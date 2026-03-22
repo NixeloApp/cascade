@@ -254,7 +254,7 @@ export function DocumentTemplatesManager({
                       onClick={() => onSelectTemplate?.(template._id)}
                     >
                       <Flex align="start" gap="md">
-                        <TemplateIcon value={template.icon} className="w-7 h-7" />
+                        <TemplateIcon value={template.icon} className="size-7" />
                         <FlexItem flex="1">
                           <Stack gap="xs">
                             <Typography variant="label">{template.name}</Typography>
@@ -294,7 +294,7 @@ export function DocumentTemplatesManager({
                             onClick={() => onSelectTemplate?.(template._id)}
                           >
                             <Flex align="start" gap="md">
-                              <TemplateIcon value={template.icon} className="w-6 h-6" />
+                              <TemplateIcon value={template.icon} className="size-6" />
                               <FlexItem flex="1">
                                 <Stack gap="xs">
                                   <Typography variant="label">{template.name}</Typography>

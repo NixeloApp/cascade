@@ -43,6 +43,8 @@ interface IconProps
     VariantProps<typeof iconVariants> {
   /** The Lucide icon component to render */
   icon: LucideIcon;
+  /** Render inline with text (adds inline display + right margin) */
+  inline?: boolean;
   /** Additional className for layout/animation details not owned by size/tone */
   className?: string;
 }
@@ -59,11 +61,11 @@ interface IconProps
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon: IconComponent, size, tone, animation, className, ...props }, ref) => {
+  ({ icon: IconComponent, size, tone, animation, inline, className, ...props }, ref) => {
     return (
       <IconComponent
         ref={ref}
-        className={cn(iconVariants({ size, tone, animation }), className)}
+        className={cn(iconVariants({ size, tone, animation }), inline && "inline mr-1", className)}
         {...props}
       />
     );

@@ -85,9 +85,9 @@ export function IssueDetailModal({
                 aria-label="Copy issue key"
               >
                 {detail.hasCopied ? (
-                  <Check className="w-3.5 h-3.5 text-status-success" />
+                  <Check className="size-3.5 text-status-success" />
                 ) : (
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="size-3.5" />
                 )}
               </Button>
             </Tooltip>

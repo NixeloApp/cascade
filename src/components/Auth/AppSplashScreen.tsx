@@ -17,7 +17,7 @@ export function AppSplashScreen({ message }: { message?: string }) {
     >
       {/* Background Glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 bg-landing-accent/10 rounded-full blur-glow" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-125 bg-landing-accent/10 rounded-full blur-glow" />
       </div>
 
       <Flex direction="column" align="center" gap="2xl" className="relative">

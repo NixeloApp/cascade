@@ -147,16 +147,13 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
           >
             <Flex direction="column" gap="xs" className="mt-4">
               <Typography variant="meta">
-                <Icon icon={Lightbulb} size="sm" className="mr-1 inline" /> "What's our team
-                velocity?"
+                <Icon icon={Lightbulb} size="sm" inline /> "What's our team velocity?"
               </Typography>
               <Typography variant="meta">
-                <Icon icon={Lightbulb} size="sm" className="mr-1 inline" /> "Which issues are
-                blocking the sprint?"
+                <Icon icon={Lightbulb} size="sm" inline /> "Which issues are blocking the sprint?"
               </Typography>
               <Typography variant="meta">
-                <Icon icon={Lightbulb} size="sm" className="mr-1 inline" /> "Summarize this week's
-                progress"
+                <Icon icon={Lightbulb} size="sm" inline /> "Summarize this week's progress"
               </Typography>
             </Flex>
           </EmptyState>
@@ -216,7 +213,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
             aria-label="Send message"
             className="shrink-0"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <title>Send</title>
               <path
                 strokeLinecap="round"

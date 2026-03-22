@@ -396,14 +396,14 @@ function SearchListContent({
           className="text-ui-text-secondary"
         >
           <div className="p-4">
-            <Flex direction="column" align="center">
-              <div className={cn(getCardRecipeClassName("controlStrip"), "mb-3 p-2")}>
+            <Flex direction="column" align="center" gap="md">
+              <div className={cn(getCardRecipeClassName("controlStrip"), "p-2")}>
                 <Icon icon={Search} size="xl" />
               </div>
               <Typography variant="label">
                 {hasCommandMatches ? "No issue or document results" : "No results found"}
               </Typography>
-              <Button variant="ghost" size="sm" onClick={onOpenAdvancedSearch} className="mt-3">
+              <Button variant="ghost" size="sm" onClick={onOpenAdvancedSearch}>
                 Open advanced search
               </Button>
             </Flex>

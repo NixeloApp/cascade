@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
@@ -123,16 +124,14 @@ function AssistantConfig() {
                   >
                     <Icon icon={Bot} size="md" />
                   </IconCircle>
-                  <div>
-                    <Typography variant="h5" className="mb-1">
-                      Assistant Status
-                    </Typography>
+                  <Stack gap="xs">
+                    <Typography variant="h5">Assistant Status</Typography>
                     <Typography variant="small" color="secondary">
                       {enabled
                         ? "Your assistant is active and answering questions."
                         : "Assistant is currently disabled."}
                     </Typography>
-                  </div>
+                  </Stack>
                 </Flex>
                 <Flex align="center" gap="md">
                   {enabled && (

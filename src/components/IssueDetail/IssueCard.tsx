@@ -133,7 +133,7 @@ function IssueCardHeader({
             className="cursor-grab pointer-events-auto"
           >
             <GripVertical
-              className="h-3 w-3 shrink-0 -ml-0.5 text-ui-text-tertiary opacity-40"
+              className="size-3 shrink-0 -ml-0.5 text-ui-text-tertiary opacity-40"
               aria-hidden="true"
             />
           </div>

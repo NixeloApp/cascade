@@ -13,6 +13,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import {
@@ -240,14 +241,14 @@ function AppLayout() {
   if (needsOrganizationBootstrap && currentUser === null) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <div className="text-center">
-          <Typography variant="authStatusTitle" color="error" className="mb-2">
+        <Stack gap="sm" className="text-center">
+          <Typography variant="authStatusTitle" color="error">
             Account Error
           </Typography>
-          <Typography variant="p" color="secondary" className="mb-4">
+          <Typography variant="p" color="secondary">
             Your user profile could not be found. Please sign out and try again.
           </Typography>
-        </div>
+        </Stack>
       </Flex>
     );
   }
@@ -307,26 +308,26 @@ function InitializeOrganization() {
   if (error) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <div className="text-center">
-          <Typography variant="authStatusTitle" color="error" className="mb-2">
+        <Stack gap="sm" className="text-center">
+          <Typography variant="authStatusTitle" color="error">
             Error
           </Typography>
           <Typography variant="p" color="secondary">
             {error}
           </Typography>
-        </div>
+        </Stack>
       </Flex>
     );
   }
 
   return (
     <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-      <div className="text-center">
+      <Stack align="center" gap="lg" className="text-center">
         <LoadingSpinner size="lg" />
-        <Typography variant="p" color="secondary" className="mt-4">
+        <Typography variant="p" color="secondary">
           Setting up your project...
         </Typography>
-      </div>
+      </Stack>
     </Flex>
   );
 }

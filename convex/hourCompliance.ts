@@ -6,6 +6,7 @@
  * Supports admin dashboard views and compliance reporting.
  */
 
+import type { FilterBuilder, GenericTableInfo } from "convex/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
@@ -13,6 +14,7 @@ import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
+import { MAX_COMPLIANCE_RECORDS } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { periodTypes } from "./validators";
 
@@ -426,6 +428,18 @@ export const listComplianceRecords = authenticatedQuery({
       return [];
     }
 
+    // Apply date range filter at the query level instead of post-fetch JS filter.
+    // This ensures .take(limit) returns the correct number of date-bounded results.
+    function applyDateFilter(q: FilterBuilder<GenericTableInfo>) {
+      const conditions = [];
+      if (args.startDate) conditions.push(q.gte(q.field("periodStart"), args.startDate));
+      if (args.endDate) conditions.push(q.lte(q.field("periodEnd"), args.endDate));
+      if (conditions.length === 2) return q.and(conditions[0], conditions[1]);
+      if (conditions.length === 1) return conditions[0];
+      return true;
+    }
+
+    const limit = args.limit || 50;
     let records: Doc<"hourComplianceRecords">[];
 
     if (args.userId && args.status) {
@@ -435,35 +449,33 @@ export const listComplianceRecords = authenticatedQuery({
         .query("hourComplianceRecords")
         .withIndex("by_user_status", (q) => q.eq("userId", userId).eq("status", status))
         .order("desc")
-        .take(args.limit || 50);
+        .filter(applyDateFilter)
+        .take(limit);
     } else if (args.userId) {
       const userId = args.userId;
       records = await ctx.db
         .query("hourComplianceRecords")
         .withIndex("by_user", (q) => q.eq("userId", userId))
         .order("desc")
-        .take(args.limit || 50);
+        .filter(applyDateFilter)
+        .take(limit);
     } else if (args.status) {
       const status = args.status;
       records = await ctx.db
         .query("hourComplianceRecords")
         .withIndex("by_status", (q) => q.eq("status", status))
         .order("desc")
-        .take(args.limit || 50);
-    } else {
+        .filter(applyDateFilter)
+        .take(limit);
+    } else if (args.startDate) {
       records = await ctx.db
         .query("hourComplianceRecords")
+        .withIndex("by_period", (q) => q.gte("periodStart", args.startDate as number))
         .order("desc")
-        .take(args.limit || 50);
-    }
-
-    // Filter by date range if provided
-    if (args.startDate || args.endDate) {
-      records = records.filter((r) => {
-        if (args.startDate && r.periodStart < args.startDate) return false;
-        if (args.endDate && r.periodEnd > args.endDate) return false;
-        return true;
-      });
+        .filter(applyDateFilter)
+        .take(limit);
+    } else {
+      records = await ctx.db.query("hourComplianceRecords").order("desc").take(limit);
     }
 
     // Batch fetch user details to avoid N+1 queries
@@ -499,31 +511,57 @@ export const getComplianceSummary = authenticatedQuery({
       };
     }
 
-    let records = await ctx.db.query("hourComplianceRecords").order("desc").take(1000); // Get recent records
+    // Use by_period index with date bounds at the query level instead of
+    // fetching 1000 rows and filtering in JS.
+    let records: Doc<"hourComplianceRecords">[];
 
-    // Filter by date range (JS array filter, not a DB query filter)
-    if (args.startDate || args.endDate) {
-      // Apply date bounds to in-memory results
-      records = records.filter((r) => {
-        if (args.startDate && r.periodStart < args.startDate) return false;
-        if (args.endDate && r.periodEnd > args.endDate) return false;
-        return true;
-      });
+    if (args.startDate && args.endDate) {
+      records = await ctx.db
+        .query("hourComplianceRecords")
+        .withIndex("by_period", (q) =>
+          q.gte("periodStart", args.startDate as number).lte("periodStart", args.endDate as number),
+        )
+        .filter((q) => q.lte(q.field("periodEnd"), args.endDate as number))
+        .take(MAX_COMPLIANCE_RECORDS);
+    } else if (args.startDate) {
+      records = await ctx.db
+        .query("hourComplianceRecords")
+        .withIndex("by_period", (q) => q.gte("periodStart", args.startDate as number))
+        .take(MAX_COMPLIANCE_RECORDS);
+    } else if (args.endDate) {
+      records = await ctx.db
+        .query("hourComplianceRecords")
+        .withIndex("by_period", (q) => q.lte("periodStart", args.endDate as number))
+        .filter((q) => q.lte(q.field("periodEnd"), args.endDate as number))
+        .take(MAX_COMPLIANCE_RECORDS);
+    } else {
+      records = await ctx.db
+        .query("hourComplianceRecords")
+        .withIndex("by_period")
+        .take(MAX_COMPLIANCE_RECORDS);
     }
 
-    const summary = {
-      totalRecords: records.length,
-      compliant: records.filter((r) => r.status === "compliant").length,
-      underHours: records.filter((r) => r.status === "under_hours").length,
-      overHours: records.filter((r) => r.status === "over_hours").length,
-      equityUnder: records.filter((r) => r.status === "equity_under").length,
-      complianceRate:
-        records.length > 0
-          ? (records.filter((r) => r.status === "compliant").length / records.length) * 100
-          : 0,
-    };
+    // Single-pass status counting instead of 5 separate .filter() calls
+    let compliant = 0;
+    let underHours = 0;
+    let overHours = 0;
+    let equityUnder = 0;
 
-    return summary;
+    for (const record of records) {
+      if (record.status === "compliant") compliant++;
+      else if (record.status === "under_hours") underHours++;
+      else if (record.status === "over_hours") overHours++;
+      else if (record.status === "equity_under") equityUnder++;
+    }
+
+    return {
+      totalRecords: records.length,
+      compliant,
+      underHours,
+      overHours,
+      equityUnder,
+      complianceRate: records.length > 0 ? (compliant / records.length) * 100 : 0,
+    };
   },
 });
 

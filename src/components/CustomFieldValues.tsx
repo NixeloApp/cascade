@@ -197,11 +197,11 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
       case "checkbox":
         return value === "true" ? (
           <Badge variant="success" size="sm">
-            <Icon icon={Check} size="xs" className="inline mr-1" /> Yes
+            <Icon icon={Check} size="xs" inline /> Yes
           </Badge>
         ) : (
           <Typography variant="small" color="secondary">
-            <Icon icon={X} size="xs" className="inline mr-1" /> No
+            <Icon icon={X} size="xs" inline /> No
           </Typography>
         );
 

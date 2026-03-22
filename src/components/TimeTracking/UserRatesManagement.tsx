@@ -115,24 +115,29 @@ export function UserRatesManagement() {
             <Card key={rate._id} hoverable>
               <Flex justify="between" align="start">
                 <FlexItem flex="1">
-                  <Flex align="center" gap="md">
-                    <Typography variant="label">{rate.user?.name || "Unknown User"}</Typography>
-                    <Badge size="sm" variant={rate.rateType === "billable" ? "success" : "neutral"}>
-                      {rate.rateType}
-                    </Badge>
-                  </Flex>
-                  <Typography variant="caption" color="secondary" className="mt-2">
-                    {rate.projectId ? (
-                      <span>Project-specific rate</span>
-                    ) : (
-                      <span>Default rate (applies to all projects)</span>
-                    )}
-                  </Typography>
-                  {rate.notes && (
-                    <Typography variant="caption" color="tertiary" className="mt-2">
-                      {rate.notes}
+                  <Stack gap="sm">
+                    <Flex align="center" gap="md">
+                      <Typography variant="label">{rate.user?.name || "Unknown User"}</Typography>
+                      <Badge
+                        size="sm"
+                        variant={rate.rateType === "billable" ? "success" : "neutral"}
+                      >
+                        {rate.rateType}
+                      </Badge>
+                    </Flex>
+                    <Typography variant="caption" color="secondary">
+                      {rate.projectId ? (
+                        <span>Project-specific rate</span>
+                      ) : (
+                        <span>Default rate (applies to all projects)</span>
+                      )}
                     </Typography>
-                  )}
+                    {rate.notes && (
+                      <Typography variant="caption" color="tertiary">
+                        {rate.notes}
+                      </Typography>
+                    )}
+                  </Stack>
                 </FlexItem>
                 <Stack gap="xs" align="end">
                   <Typography variant="h3">

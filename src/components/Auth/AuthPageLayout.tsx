@@ -76,8 +76,8 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
 
           <GridItem className="xl:col-span-7">
             <Flex align="center" justify="center" className="w-full">
-              <div className="w-full max-w-auth lg:max-w-md">
-                <Stack gap="sm" className="mb-4 xl:hidden">
+              <Stack gap="lg" className="w-full max-w-auth lg:max-w-md">
+                <Stack gap="sm" className="xl:hidden">
                   <Button asChild variant="unstyled" size="none" className="w-fit">
                     <Link to={ROUTES.home.path}>
                       <Flex align="center" gap="sm">
@@ -126,7 +126,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                     </Typography>
                   </Stack>
                 </div>
-              </div>
+              </Stack>
             </Flex>
           </GridItem>
         </Grid>

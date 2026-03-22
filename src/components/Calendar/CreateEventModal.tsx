@@ -200,8 +200,8 @@ export function CreateEventModal({
                   </form.Field>
 
                   {/* Event Type */}
-                  <div>
-                    <Label className="mb-1">Event Type</Label>
+                  <Stack gap="xs">
+                    <Label>Event Type</Label>
                     <SegmentedControl
                       value={eventType}
                       onValueChange={(value: string) => {
@@ -229,11 +229,11 @@ export function CreateEventModal({
                         </SegmentedControlItem>
                       ))}
                     </SegmentedControl>
-                  </div>
+                  </Stack>
 
                   {/* Color */}
-                  <div>
-                    <Label className="mb-1">Color</Label>
+                  <Stack gap="xs">
+                    <Label>Color</Label>
                     <Flex gap="sm" wrap>
                       {PALETTE_COLORS.map((color) => {
                         const isActive =
@@ -258,7 +258,7 @@ export function CreateEventModal({
                         );
                       })}
                     </Flex>
-                  </div>
+                  </Stack>
 
                   {/* Date and Time */}
                   <Grid cols={3} gap="lg">
@@ -385,10 +385,8 @@ export function CreateEventModal({
                   )}
 
                   {/* Link to Project */}
-                  <div>
-                    <Label htmlFor="event-project" className="mb-1">
-                      Link to Project
-                    </Label>
+                  <Stack gap="xs">
+                    <Label htmlFor="event-project">Link to Project</Label>
                     <Select
                       value={selectedWorkspaceId || "none"}
                       onValueChange={(value) =>
@@ -409,7 +407,7 @@ export function CreateEventModal({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </Stack>
 
                   {/* Actions - Keep inside form.Subscribe to access isSubmitting */}
                   <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">

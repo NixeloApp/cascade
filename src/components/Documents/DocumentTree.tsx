@@ -280,7 +280,7 @@ function ExpandToggle({
   onToggle: (e: React.MouseEvent) => void;
 }) {
   if (!hasChildren) {
-    return <FlexItem as="span" aria-hidden shrink={false} className="h-5 w-5" />;
+    return <FlexItem as="span" aria-hidden shrink={false} className="size-5" />;
   }
   return (
     <Button

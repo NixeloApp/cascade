@@ -180,7 +180,7 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
                       onClick={() => setDeleteConfirm(link._id)}
                       aria-label="Remove dependency"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="size-3.5" />
                     </IconButton>
                   </Tooltip>
                 </Flex>
@@ -219,7 +219,7 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
                       onClick={() => setDeleteConfirm(link._id)}
                       aria-label="Remove dependency"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="size-3.5" />
                     </IconButton>
                   </Tooltip>
                 </Flex>

@@ -41,7 +41,7 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
               <Tooltip content="Default template">
                 <Badge variant="brand" size="sm">
                   <Flex align="center" gap="xs">
-                    <Star className="w-3 h-3" />
+                    <Star className="size-3" />
                     Default
                   </Flex>
                 </Badge>
@@ -89,7 +89,7 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
             leftIcon={
               <svg
                 aria-hidden="true"
-                className="w-4 h-4"
+                className="size-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -112,7 +112,7 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
             leftIcon={
               <svg
                 aria-hidden="true"
-                className="w-4 h-4"
+                className="size-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

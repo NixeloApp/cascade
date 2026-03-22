@@ -129,19 +129,19 @@ export function NotificationItem({
   }
 
   const content = (
-    <>
+    <Stack gap="xs">
       <Typography variant="label" as="p">
         {notification.title}
       </Typography>
-      <Typography variant="small" color="secondary" className="mt-0.5 line-clamp-2">
+      <Typography variant="small" color="secondary" className="line-clamp-2">
         {notification.message}
       </Typography>
 
-      <Metadata className="mt-1.5">
+      <Metadata>
         <MetadataTimestamp date={notification._creationTime} />
         {notification.actorName && <MetadataItem>{notification.actorName}</MetadataItem>}
       </Metadata>
-    </>
+    </Stack>
   );
 
   const ContentWrapper = () => {
@@ -180,9 +180,7 @@ export function NotificationItem({
       data-testid={TEST_IDS.NOTIFICATION.ITEM}
     >
       <Flex align="start" gap="md">
-        <FlexItem shrink={false} className="mt-0.5">
-          {getNotificationIcon(notification.type)}
-        </FlexItem>
+        <FlexItem shrink={false}>{getNotificationIcon(notification.type)}</FlexItem>
 
         <ContentWrapper />
 

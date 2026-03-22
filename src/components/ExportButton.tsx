@@ -32,7 +32,7 @@ export function ExportButton({ projectId, sprintId, status }: ExportButtonProps)
           onClick={() => setIsModalOpen(true)}
           aria-label="Import / Export"
         >
-          <ArrowLeftRight className="h-3.5 w-3.5" />
+          <ArrowLeftRight className="size-3.5" />
         </IconButton>
       </div>
       <div className="hidden sm:block">
@@ -41,7 +41,7 @@ export function ExportButton({ projectId, sprintId, status }: ExportButtonProps)
           size="sm"
           onClick={() => setIsModalOpen(true)}
           aria-label="Import / Export"
-          leftIcon={<ArrowLeftRight className="h-4 w-4" />}
+          leftIcon={<ArrowLeftRight className="size-4" />}
         >
           <span>Import / Export</span>
         </Button>

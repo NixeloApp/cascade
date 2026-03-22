@@ -1,28 +1,21 @@
 # Nixelo Todo — MVP
 
-> **Last Updated:** 2026-03-20
+> **Last Updated:** 2026-03-22
 
 ---
 
 ## Execution Order
 
-Work is ordered as a pipeline -- each phase unblocks the next. AI will fix these in order.
+Work is ordered as a pipeline — each phase unblocks the next.
 
-### Phase 1: Tighten Styling Rules
+### Phase 1: Tighten Styling Rules *(in progress)*
 
-Make CVA usage and raw Tailwind rules stricter first, so the next cleanup passes do not reintroduce slop.
-Default to Tailwind for static feature/page layout, reserve `cva()` for shared primitive semantics, and keep `index.css` for tokens/global utilities/shared effects instead of section-specific dumping grounds.
-
-| Order | File | What |
-|-------|------|------|
-| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | Tighten CVA boundaries, tighten raw Tailwind rules, and reduce remaining styling escape hatches |
-| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | Make the stricter styling rules enforceable so new slop cannot land, and keep the validator suite itself maintainable as it grows |
+| Order | File | Status | What |
+|-------|------|--------|------|
+| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | 🟡 In progress | Raw TW violations: 148 → 103 files (validator smartened, icon sizing batched, stat cells consolidated). Remaining: margins → gaps (53 violations), icon inline margins (18). CVA boundaries already clean — zero feature CVAs outside ui/. |
+| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | 🟡 In progress | Validator now context-aware (structural allowlist, const-string + object-map detection). Backend query/filter debt fully resolved (hourCompliance, export, calendarEvents). Query baselines ratcheted. Client-side filter items confirmed as non-issues. |
 
 ### Phase 2: Screenshot-Driven Cleanup
-
-Use screenshots as the review surface, fix obviously broken states, and turn visual weirdness into explicit cleanup items.
-Main-page/landing cleanup belongs here too: if the marketing surface is inconsistent or looks unlike the actual product, treat that as product-quality debt, not decoration.
-This phase also owns screenshot-matrix completeness: page specs should not silently stay desktop-first, and important feature states should not be left uncaptured just because the canonical route screenshot looks acceptable.
 
 | Order | File | What |
 |-------|------|------|
@@ -31,15 +24,13 @@ This phase also owns screenshot-matrix completeness: page specs should not silen
 
 ### Phase 3: Finish Validator Paydown
 
-Keep the stricter validator regime, but pay off the remaining debt so ratchets and baselines can be removed.
-
 | Order | File | What |
 |-------|------|------|
-| 3.1 | [validator-strengthening.md](./validator-strengthening.md) | Retire temporary ratchets as debt hits zero and close the remaining standards/query-filter cleanup |
+| 3.1 | [validator-strengthening.md](./validator-strengthening.md) | Retire temporary ratchets as debt hits zero and close remaining standards cleanup |
 
 ### Phase 4: Feature & Docs Expansion
 
-Lower priority -- features and documentation that don't block quality.
+Lower priority — features and documentation that don't block quality.
 
 | Order | File | What |
 |-------|------|------|
@@ -48,13 +39,25 @@ Lower priority -- features and documentation that don't block quality.
 | 4.3 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation reasons (backend done, no UI), workflow translation, custom domain/SMTP, branding |
 | 4.4 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
 
-### Meeting Intelligence (parallel track)
-
-Non-code-quality items from meetings that run alongside the pipeline.
+### Parallel Tracks
 
 | File | What |
 |------|------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc, capture strategy, platform breadth, OSS evaluation, agent layer |
+| [offline-pwa.md](./offline-pwa.md) | SW ownership, push safety, replay expansion (notifications, issues, comments), graceful degradation UX |
+
+---
+
+## Current Health
+
+| Metric | Value |
+|--------|-------|
+| Validators | 53/53 pass |
+| Raw TW violations | 103 files / 301 violations (was 148 / 436) |
+| Backend query debt | 0 (was 11 post-fetch JS filters) |
+| CVA boundaries | Clean — 0 feature CVAs outside ui/ |
+| Unit tests | 4372 pass |
+| E2E tests | 164 pass (non-preview) |
 
 ---
 

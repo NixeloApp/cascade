@@ -41,27 +41,26 @@ The validators are useful, but the suite itself is becoming harder to reason abo
 
 The ratchets exist, but the underlying query/filter debt still needs to be removed from product code.
 
-### Backend: `.take()`/`.collect()` then JS `.filter()` (11 instances)
+### Backend: `.take()`/`.collect()` then JS `.filter()` — DONE
 
-Filter logic that could be a Convex query filter or index but is applied in JS after fetching:
+All backend post-fetch filter debt is resolved:
 
-| File | Pattern | Fix |
-|------|---------|-----|
-| `convex/hourCompliance.ts:502-522` | `.take(1000)` then `.filter()` 5 times for counting | Use status index or pre-aggregate |
-| `convex/hourCompliance.ts:462-466` | `.take(50)` then date range filter | Use `by_user_period` index |
-| `convex/calendarEvents.ts:359` | `.take()` then filter by `projectId` | Extend index |
-| `convex/calendarEvents.ts:518,652` | `.take()` then filter `status !== 'cancelled'` | Add query-level status filter |
-| `convex/export.ts:312-322` | `.collect()` then filter by `sprintId` and `status` | Add to index |
+| File | What was done |
+|------|---------------|
+| `convex/hourCompliance.ts` | ~~`.take(1000)` + 5x JS filter~~ → `by_period` index + query-level date bounds + single-pass status count |
+| `convex/hourCompliance.ts` | ~~`.take(50)` + JS date filter~~ → query-level `.filter()` with `applyDateFilter` |
+| `convex/calendarEvents.ts` | ~~JS `.filter()` by projectId/status~~ → `getUserEventsInRange` accepts filter params, applies at query level |
+| `convex/export.ts` | ~~JS `.filter()` by sprintId/status~~ → query-level `.filter()` before `.take()` |
 
-### Client-side: React components filtering query results (3 instances)
+### Client-side: React component filters — NOT ACTUAL ISSUES
 
-Fetches all data then filters in the component when the filter could be a backend query arg:
+These were flagged as potential backend query args, but they're all filtering small, already-loaded lists for display:
 
-| File | Pattern | Fix |
-|------|---------|-----|
-| `src/components/MentionInput.tsx:61-62` | `members?.filter(m => name.includes(search))` | Add `searchQuery` arg to backend |
-| `src/components/Settings/OutOfOfficeSettings.tsx:70` | `users?.filter(u => u._id !== currentUser)` | Add `excludeUserId` arg |
-| `src/components/Documents/DocumentTemplatesManager.tsx:208-209` | `templates?.filter(t => t.isBuiltIn)` split into two groups | Add `isBuiltIn` filter arg |
+| File | Why it's fine |
+|------|--------------|
+| `MentionInput.tsx` | Searching project members (small list) by name — search-as-you-type UX, not a query issue |
+| `OutOfOfficeSettings.tsx` | Excluding current user from delegate picker — one item removed from a shared org members list |
+| `DocumentTemplatesManager.tsx` | Splitting templates into built-in vs custom groups — display-side organization, not a data-fetching concern |
 
 ## Existing Validator Improvements
 

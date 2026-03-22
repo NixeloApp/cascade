@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
@@ -109,10 +110,10 @@ function InviteRoute() {
   if (invite === undefined) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <div className="text-center">
-          <Icon icon={Loader2} size="xl" tone="brand" animation="spin" className="mx-auto mb-4" />
+        <Stack align="center" gap="lg" className="text-center">
+          <Icon icon={Loader2} size="xl" tone="brand" animation="spin" />
           <Typography className="text-ui-text-secondary">Loading invitation...</Typography>
-        </div>
+        </Stack>
       </Flex>
     );
   }
@@ -204,10 +205,8 @@ function InviteRoute() {
         <div className="max-w-md w-full">
           {/* Invitation Card */}
           <Card radius="full" padding="xl" className="mb-6">
-            <div className="text-center mb-6">
-              <Typography variant="h3" className="mb-2">
-                You're Invited!
-              </Typography>
+            <Stack gap="sm" className="text-center mb-6">
+              <Typography variant="h3">You're Invited!</Typography>
               <Typography variant="p" color="secondary">
                 <Typography as="strong" variant="strong" className="text-ui-text">
                   {invite.inviterName}
@@ -223,21 +222,21 @@ function InviteRoute() {
                   "has invited you to join Nixelo"
                 )}
               </Typography>
-            </div>
+            </Stack>
 
             {/* Invite Details */}
-            <div className="bg-ui-bg-secondary p-4 mb-6">
+            <Stack gap="sm" className="bg-ui-bg-secondary p-4 mb-6">
               <Flex justify="between" align="center" className="text-sm">
                 <Typography variant="muted">Invited email</Typography>
                 <Typography variant="small">{invite.email}</Typography>
               </Flex>
               {isProjectInvite ? (
                 <>
-                  <Flex justify="between" align="center" className="text-sm mt-2">
+                  <Flex justify="between" align="center" className="text-sm">
                     <Typography variant="muted">Project</Typography>
                     <Typography variant="small">{invite.projectName}</Typography>
                   </Flex>
-                  <Flex justify="between" align="center" className="text-sm mt-2">
+                  <Flex justify="between" align="center" className="text-sm">
                     <Typography variant="muted">Project Role</Typography>
                     <Typography variant="small" className="capitalize">
                       {invite.projectRole || "editor"}
@@ -245,14 +244,14 @@ function InviteRoute() {
                   </Flex>
                 </>
               ) : (
-                <Flex justify="between" align="center" className="text-sm mt-2">
+                <Flex justify="between" align="center" className="text-sm">
                   <Typography variant="muted">Role</Typography>
                   <Typography variant="small" className="capitalize">
                     {invite.role}
                   </Typography>
                 </Flex>
               )}
-            </div>
+            </Stack>
 
             {/* Auth-dependent content */}
             {invite.status === "pending" && (

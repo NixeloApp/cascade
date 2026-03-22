@@ -29,6 +29,7 @@ interface IssueDetailSheetProps {
   canEdit?: boolean;
 }
 
+/** Side panel view for issue details with loading skeleton fallback. */
 export function IssueDetailSheet({
   issueId,
   open,

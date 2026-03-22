@@ -50,9 +50,9 @@ export function IssueDetailHeader({
                 aria-label={hasCopied ? "Copied" : "Copy issue key"}
               >
                 {hasCopied ? (
-                  <Check className="w-3 h-3 text-status-success" />
+                  <Check className="size-3 text-status-success" />
                 ) : (
-                  <Copy className="w-3 h-3" />
+                  <Copy className="size-3" />
                 )}
               </IconButton>
             </Tooltip>

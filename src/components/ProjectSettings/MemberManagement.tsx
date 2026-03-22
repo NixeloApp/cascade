@@ -150,10 +150,8 @@ export function MemberManagement({
         </Flex>
 
         {showAddForm && (
-          <div className="p-4 mb-5 bg-ui-bg">
-            <Typography variant="label" className="mb-4">
-              Add New Member
-            </Typography>
+          <Stack gap="lg" className="p-4 mb-5 bg-ui-bg">
+            <Typography variant="label">Add New Member</Typography>
             <Stack gap="md">
               <Input
                 label="Email Address"
@@ -191,7 +189,7 @@ export function MemberManagement({
                 </Button>
               </Flex>
             </Stack>
-          </div>
+          </Stack>
         )}
 
         <Stack gap="sm">

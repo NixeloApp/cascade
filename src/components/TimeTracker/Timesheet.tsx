@@ -200,7 +200,7 @@ export function Timesheet() {
                           </Typography>
                         </FlexItem>
                         {entry.billable && (
-                          <DollarSign className="w-3 h-3 text-status-success shrink-0" />
+                          <DollarSign className="size-3 text-status-success shrink-0" />
                         )}
                       </Flex>
                       <Flex justify="between" align="center">
@@ -235,7 +235,7 @@ export function Timesheet() {
         {timesheet.totalHours === 0 && (
           <Card padding="xl" variant="section">
             <Stack gap="md" align="center">
-              <Calendar className="w-12 h-12 text-ui-text-tertiary" />
+              <Calendar className="size-12 text-ui-text-tertiary" />
               <Typography color="secondary">
                 No time entries this week. Start a timer to begin tracking!
               </Typography>

@@ -57,6 +57,87 @@ export const RAW_TAILWIND_PATTERNS = [
   { pattern: /\banimate-(?!none|spin|ping|pulse|bounce)\w+/, replacement: "animation token" },
 ];
 
+/**
+ * Structural Tailwind patterns that are legitimate layout concerns.
+ * These should not count as raw TW violations — they are correct
+ * Tailwind-first usage per the styling contract.
+ */
+export const RAW_TAILWIND_STRUCTURAL_ALLOWLIST = [
+  // Flex truncation helper — required on flex children for text-overflow
+  /\bmin-w-0\b/,
+  // Accessibility — screen reader only
+  /\bsr-only\b/,
+  // Responsive visibility — layout concern, not design system
+  /\bhidden\s+(?:sm|md|lg|xl|2xl):/,
+  // Skeleton components need arbitrary sizing to match content shapes
+  /^<Skeleton\b/,
+  /^<SkeletonText\b/,
+];
+
+/**
+ * Detect class-string hiding via const declarations or object maps.
+ * Returns violations for patterns like:
+ *   const FOO = "w-full sm:max-w-xl"     (string hiding)
+ *   const STYLES = { header: "p-4 ..." } (object map hiding)
+ */
+export function detectClassStringHiding(lines) {
+  const violations = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Const string: const FOO = "tw classes..."
+    const constStringMatch = line.match(
+      /\bconst\s+([A-Z_][A-Z_0-9]*)\s*=\s*["'`]([\s\S]*?)["'`]\s*;/,
+    );
+    if (constStringMatch) {
+      const value = constStringMatch[2];
+      for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
+        if (pattern.test(`className="${value}"`)) {
+          violations.push({
+            name: constStringMatch[1],
+            value,
+            line: i,
+            type: "const-string",
+            replacement,
+          });
+          break;
+        }
+      }
+    }
+
+    // Object map: const STYLES = { key: "tw classes...", ... }
+    // Detects the common pattern of hiding class lists in an object
+    const objectMapMatch = line.match(
+      /\bconst\s+([A-Z_][A-Z_a-z0-9]*)\s*(?::\s*Record<[^>]+>)?\s*=\s*\{/,
+    );
+    if (objectMapMatch && !line.includes("import")) {
+      // Scan forward for string values containing TW patterns
+      for (let j = i; j < Math.min(lines.length, i + 30); j++) {
+        const valueLine = lines[j];
+        const valueMatch = valueLine.match(/^\s*\w+\s*:\s*["'`]([^"'`]+)["'`]/);
+        if (valueMatch) {
+          const mapValue = valueMatch[1];
+          for (const { pattern } of RAW_TAILWIND_PATTERNS) {
+            if (pattern.test(`className="${mapValue}"`)) {
+              violations.push({
+                name: objectMapMatch[1],
+                value: mapValue,
+                line: j,
+                type: "object-map",
+              });
+              break;
+            }
+          }
+        }
+        if (valueLine.includes("};")) break;
+      }
+    }
+  }
+
+  return violations;
+}
+
 export const DESIGN_SYSTEM_TARGET_FILES = [
   "/AI/AIAssistantButton.tsx",
   "/AI/AIChat.tsx",

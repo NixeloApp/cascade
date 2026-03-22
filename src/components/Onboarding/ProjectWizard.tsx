@@ -224,13 +224,13 @@ export function ProjectWizard({
                   </Typography>
                   <Stack gap="xs" className="mt-2">
                     <Typography as="span" variant="caption" color="tertiary">
-                      <Icon icon={Check} size="xs" className="inline mr-1" /> No time constraints
+                      <Icon icon={Check} size="xs" inline /> No time constraints
                     </Typography>
                     <Typography as="span" variant="caption" color="tertiary">
-                      <Icon icon={Check} size="xs" className="inline mr-1" /> Visualize workflow
+                      <Icon icon={Check} size="xs" inline /> Visualize workflow
                     </Typography>
                     <Typography as="span" variant="caption" color="tertiary">
-                      <Icon icon={Check} size="xs" className="inline mr-1" /> Limit work in progress
+                      <Icon icon={Check} size="xs" inline /> Limit work in progress
                     </Typography>
                   </Stack>
                 </Stack>
@@ -253,13 +253,13 @@ export function ProjectWizard({
                   </Typography>
                   <Stack gap="xs" className="mt-2">
                     <Typography as="span" variant="caption" color="tertiary">
-                      <Icon icon={Check} size="xs" className="inline mr-1" /> Sprint planning
+                      <Icon icon={Check} size="xs" inline /> Sprint planning
                     </Typography>
                     <Typography as="span" variant="caption" color="tertiary">
-                      <Icon icon={Check} size="xs" className="inline mr-1" /> Velocity tracking
+                      <Icon icon={Check} size="xs" inline /> Velocity tracking
                     </Typography>
                     <Typography as="span" variant="caption" color="tertiary">
-                      <Icon icon={Check} size="xs" className="inline mr-1" /> Burndown charts
+                      <Icon icon={Check} size="xs" inline /> Burndown charts
                     </Typography>
                   </Stack>
                 </Stack>
@@ -391,7 +391,7 @@ export function ProjectWizard({
                 variant="ghost"
                 leftIcon={
                   <svg
-                    className="h-4 w-4"
+                    className="size-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -415,7 +415,7 @@ export function ProjectWizard({
                   variant="primary"
                   rightIcon={
                     <svg
-                      className="h-4 w-4"
+                      className="size-4"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

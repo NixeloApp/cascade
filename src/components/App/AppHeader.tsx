@@ -54,7 +54,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
               aria-label="Toggle sidebar menu"
               aria-expanded={isMobileOpen}
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="size-5" />
             </Button>
 
             <div
@@ -96,7 +96,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
                     aria-label="Keyboard shortcuts"
                     data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
                   >
-                    <CircleHelp className="h-5 w-5" />
+                    <CircleHelp className="size-5" />
                   </Button>
                 </Tooltip>
               )}

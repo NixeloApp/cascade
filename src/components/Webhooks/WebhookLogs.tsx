@@ -59,19 +59,19 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       case "success":
         return (
           <Badge variant="success" shape="pill">
-            <Icon icon={Check} size="xs" className="inline mr-1" /> Success
+            <Icon icon={Check} size="xs" inline /> Success
           </Badge>
         );
       case "failed":
         return (
           <Badge variant="error" shape="pill">
-            <Icon icon={X} size="xs" className="inline mr-1" /> Failed
+            <Icon icon={X} size="xs" inline /> Failed
           </Badge>
         );
       case "retrying":
         return (
           <Badge variant="warning" shape="pill">
-            <Icon icon={RefreshCw} size="xs" className="inline mr-1" /> Retrying
+            <Icon icon={RefreshCw} size="xs" inline /> Retrying
           </Badge>
         );
       default:
@@ -179,14 +179,17 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
                 {/* Error message */}
                 {execution.error && (
-                  <div className="mt-3 border border-status-error/30 bg-status-error-bg p-3">
-                    <Typography variant="caption" className="text-status-error-text mb-1">
+                  <Stack
+                    gap="xs"
+                    className="mt-3 border border-status-error/30 bg-status-error-bg p-3"
+                  >
+                    <Typography variant="caption" className="text-status-error-text">
                       Error:
                     </Typography>
                     <Typography variant="mono" className="text-status-error-text/90">
                       {String(execution.error)}
                     </Typography>
-                  </div>
+                  </Stack>
                 )}
 
                 {/* Expandable Details */}

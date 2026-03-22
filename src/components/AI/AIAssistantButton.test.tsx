@@ -114,21 +114,21 @@ describe("AIAssistantButton", () => {
       render(<AIAssistantButton {...defaultProps} size="sm" />);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("w-12", "h-12");
+      expect(button).toHaveClass("size-12");
     });
 
     it("should render with medium size (default)", () => {
       render(<AIAssistantButton {...defaultProps} />);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("w-14", "h-14");
+      expect(button).toHaveClass("size-14");
     });
 
     it("should render with large size", () => {
       render(<AIAssistantButton {...defaultProps} size="lg" />);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("w-16", "h-16");
+      expect(button).toHaveClass("size-16");
     });
   });
 });

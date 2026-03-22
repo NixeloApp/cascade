@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <Stack align="center" gap="lg">
               {/* Subtle icon */}
               <IconCircle size="xl" variant="error">
-                <AlertTriangle className="h-10 w-10 text-status-error" />
+                <AlertTriangle className="size-10 text-status-error" />
               </IconCircle>
 
               {/* Large error code with tight tracking */}

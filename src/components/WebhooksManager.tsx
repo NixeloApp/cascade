@@ -71,7 +71,7 @@ export function WebhooksManager({ projectId }: WebhooksManagerProps) {
           title="Webhooks"
           description="Configure webhooks to receive real-time notifications"
           action={
-            <Button onClick={handleCreate} leftIcon={<Plus className="w-4 h-4" />}>
+            <Button onClick={handleCreate} leftIcon={<Plus className="size-4" />}>
               New Webhook
             </Button>
           }
