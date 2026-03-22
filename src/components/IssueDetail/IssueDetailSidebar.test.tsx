@@ -211,9 +211,7 @@ describe("IssueDetailSidebar", () => {
     await user.click(screen.getByRole("button", { name: "Change Assignee" }));
     await user.click(screen.getByRole("button", { name: "Change Story Points" }));
 
-    await waitFor(() =>
-      expect(updateStatus).toHaveBeenCalledWith("issue_1", "in_progress", 0),
-    );
+    await waitFor(() => expect(updateStatus).toHaveBeenCalledWith("issue_1", "in_progress", 0));
     expect(updateIssue).toHaveBeenNthCalledWith(1, {
       issueId: "issue_1",
       type: "task",
