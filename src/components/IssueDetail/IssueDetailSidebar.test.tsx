@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOfflineIssueUpdateStatus } from "@/hooks/useOfflineIssueUpdateStatus";
 import { showError } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { IssueDetailSidebar } from "./IssueDetailSidebar";
@@ -15,6 +16,10 @@ import { IssueDetailSidebar } from "./IssueDetailSidebar";
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedMutation: vi.fn(),
   useAuthenticatedQuery: vi.fn(),
+}));
+
+vi.mock("@/hooks/useOfflineIssueUpdateStatus", () => ({
+  useOfflineIssueUpdateStatus: vi.fn(),
 }));
 
 vi.mock("@/lib/toast", () => ({
@@ -161,17 +166,16 @@ describe("IssueDetailSidebar", () => {
     updateIssue.mockResolvedValue(undefined);
     updateStatus.mockResolvedValue(undefined);
     mockUseAuthenticatedQuery.mockReturnValue(project);
-    mockUseAuthenticatedMutation
-      .mockReturnValueOnce({
-        mutate: createMutationMock(updateIssue),
-        canAct: true,
-        isAuthLoading: false,
-      })
-      .mockReturnValueOnce({
-        mutate: createMutationMock(updateStatus),
-        canAct: true,
-        isAuthLoading: false,
-      });
+    mockUseAuthenticatedMutation.mockReturnValue({
+      mutate: createMutationMock(updateIssue),
+      canAct: true,
+      isAuthLoading: false,
+    });
+    vi.mocked(useOfflineIssueUpdateStatus).mockReturnValue({
+      updateStatus: updateStatus as never,
+      isOnline: true,
+      isLoading: false,
+    });
   });
 
   it("renders each sidebar section and forwards editable project data to child surfaces", () => {
@@ -208,11 +212,7 @@ describe("IssueDetailSidebar", () => {
     await user.click(screen.getByRole("button", { name: "Change Story Points" }));
 
     await waitFor(() =>
-      expect(updateStatus).toHaveBeenCalledWith({
-        issueId: "issue_1",
-        newStatus: "in_progress",
-        newOrder: 0,
-      }),
+      expect(updateStatus).toHaveBeenCalledWith("issue_1", "in_progress", 0),
     );
     expect(updateIssue).toHaveBeenNthCalledWith(1, {
       issueId: "issue_1",
