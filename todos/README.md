@@ -37,8 +37,8 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | #908 | `todos/validator-strengthening.md:53` | Claims all backend filter debt resolved but baseline still has calendarEvents/export entries. |
 | #909 | 6 files | EmptyState imports use relative paths instead of `@/` alias. |
 | ~~#910~~ | ~~`src/hooks/useOfflineAddComment.test.ts:64`~~ | ~~Test uses `as never` cast.~~ **Fixed** — replaced with `as Id<"issues">`. |
-| #911 | `convex/autoArchive.test.ts` (3 locations) | Magic numbers for day values; missing assertion that workflow state exists. |
-| #911 | `convex/schemaFields.ts:44` | `autoArchiveDays` field not exposed in project update mutation args — can only be set via direct DB patch. |
+| ~~#911~~ | ~~`convex/autoArchive.test.ts`~~ | ~~Magic numbers; missing workflow state assertion.~~ **Fixed** — named constants, `moveIssueToDone` helper with assertion, new non-done test. |
+| ~~#911~~ | ~~`convex/schemaFields.ts:44`~~ | ~~`autoArchiveDays` not in mutation args.~~ **Fixed** — added to `updateProject` with non-negative integer clamping. |
 | #912 | `todos/README.md:79` | Inconsistent terminology: "4 mutations" vs "4 mutation families." |
 | #913 | `todos/plane-features.md:8` | "Only unfinished items remain here" contradicts the Shipped section below. |
 | #913 | `todos/README.md:82` | Phase 4 summary still references stickies as remaining. |
@@ -109,8 +109,8 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 21 (0 critical, 1 major, 20 minor) |
-| Unit tests | 4417 pass |
+| Unresolved PR comments | 19 (0 critical, 1 major, 18 minor) |
+| Unit tests | 4420 pass |
 | E2E tests | 164 pass (non-preview) |
 
 ---

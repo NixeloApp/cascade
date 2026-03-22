@@ -843,6 +843,62 @@ describe("Projects", () => {
       await t.finishInProgressScheduledFunctions();
     });
 
+    it("should allow admin to set autoArchiveDays", async () => {
+      const t = convexTest(schema, modules);
+      const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
+
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
+        name: "Archive Test",
+        key: "ARCH",
+        isPublic: false,
+        boardType: "kanban",
+        organizationId,
+        workspaceId,
+        teamId,
+      });
+
+      await asUser.mutation(api.projects.updateProject, {
+        projectId,
+        autoArchiveDays: 14,
+      });
+
+      const project = await asUser.query(api.projects.getProject, { id: projectId });
+      expect(project?.autoArchiveDays).toBe(14);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should clamp autoArchiveDays to non-negative integer", async () => {
+      const t = convexTest(schema, modules);
+      const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
+
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
+        name: "Clamp Test",
+        key: "CLAMP",
+        isPublic: false,
+        boardType: "kanban",
+        organizationId,
+        workspaceId,
+        teamId,
+      });
+
+      // Negative should become 0
+      await asUser.mutation(api.projects.updateProject, {
+        projectId,
+        autoArchiveDays: -5,
+      });
+      let project = await asUser.query(api.projects.getProject, { id: projectId });
+      expect(project?.autoArchiveDays).toBe(0);
+
+      // Fractional should be floored
+      await asUser.mutation(api.projects.updateProject, {
+        projectId,
+        autoArchiveDays: 7.9,
+      });
+      project = await asUser.query(api.projects.getProject, { id: projectId });
+      expect(project?.autoArchiveDays).toBe(7);
+      await t.finishInProgressScheduledFunctions();
+    });
+
     it("should deny non-admin from updating project", async () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t, { name: "Admin" });

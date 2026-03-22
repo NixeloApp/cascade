@@ -563,6 +563,7 @@ export const getByKey = authenticatedQuery({
  * @param name - Optional new name.
  * @param description - Optional new description.
  * @param isPublic - Optional visibility toggle.
+ * @param autoArchiveDays - Optional auto-archive threshold (0 to disable).
  *
  * @returns Object containing the projectId.
  * @throws {ConvexError} "Forbidden" if user is not a project admin.
@@ -572,6 +573,7 @@ export const updateProject = projectAdminMutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     isPublic: v.optional(v.boolean()), // organization-visible
+    autoArchiveDays: v.optional(v.number()), // 0 or undefined = disabled
   },
   returns: v.object({ success: v.literal(true), projectId: v.id("projects") }),
   handler: async (ctx, args) => {
@@ -589,6 +591,10 @@ export const updateProject = projectAdminMutation({
     }
     if (args.isPublic !== undefined) {
       updates.isPublic = args.isPublic;
+    }
+    if (args.autoArchiveDays !== undefined) {
+      // Clamp to non-negative integer; 0 disables auto-archive
+      updates.autoArchiveDays = Math.max(0, Math.floor(args.autoArchiveDays));
     }
 
     await ctx.db.patch(ctx.projectId, updates);
