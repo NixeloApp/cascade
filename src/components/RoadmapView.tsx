@@ -973,7 +973,7 @@ function RoadmapTimelineBar({
           <div
             className={cn(
               getCardRecipeClassName(isActive ? "roadmapTimelineBarActive" : "roadmapTimelineBar"),
-              "absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-sm transition-transform",
+              "absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-sm transition-transform",
               getPriorityColor(issue.priority, "bg"),
               isActive && "scale-110",
             )}
@@ -1924,7 +1924,7 @@ function RoadmapLoadingState() {
                   <Flex align="center">
                     <FlexItem shrink={false} className="w-64 pr-4">
                       <Flex align="center" gap="sm">
-                        <Skeleton className="h-4 w-4 rounded-full" />
+                        <Skeleton className="size-4 rounded-full" />
                         <Skeleton className="h-4 w-16" />
                       </Flex>
                       <Skeleton className="h-3 w-32" />

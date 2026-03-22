@@ -139,7 +139,7 @@ export function LeadOnboarding({
         size="sm"
         onClick={backAction.onClick}
         className="self-start"
-        leftIcon={<ArrowLeft className="h-4 w-4" />}
+        leftIcon={<ArrowLeft className="size-4" />}
       >
         {backAction.label}
       </Button>
@@ -272,7 +272,7 @@ function LeadProjectSetupStep({
   return (
     <>
       <Stack gap="md" className="text-center">
-        <Card recipe="onboardingHeroCircle" className="mx-auto h-16 w-16">
+        <Card recipe="onboardingHeroCircle" className="mx-auto size-16">
           <Flex align="center" justify="center" className="h-full w-full">
             <Icon icon={Building2} size="xl" tone="brand" />
           </Flex>

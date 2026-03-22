@@ -9,7 +9,7 @@ export function CalendarHeaderDateIcon(): React.ReactElement {
   const { calendarIconIsToday, date: calendarDate } = useCalendarContext();
   const date = calendarIconIsToday ? new Date() : calendarDate;
   return (
-    <Card recipe="calendarHeaderDateIcon" className="h-10 w-10 sm:w-14">
+    <Card recipe="calendarHeaderDateIcon" className="size-10 sm:w-14">
       <Flex direction="column" align="start" className="h-full w-full">
         <div className={getCardRecipeClassName("calendarHeaderDateIconMonth")}>
           <Flex align="center" justify="center" className="h-full w-full">

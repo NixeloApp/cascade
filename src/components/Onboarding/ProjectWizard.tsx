@@ -391,7 +391,7 @@ export function ProjectWizard({
                 variant="ghost"
                 leftIcon={
                   <svg
-                    className="h-4 w-4"
+                    className="size-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -415,7 +415,7 @@ export function ProjectWizard({
                   variant="primary"
                   rightIcon={
                     <svg
-                      className="h-4 w-4"
+                      className="size-4"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

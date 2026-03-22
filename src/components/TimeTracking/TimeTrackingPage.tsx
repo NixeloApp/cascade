@@ -316,7 +316,7 @@ function TimeTrackingContent({
     return (
       <Card variant="soft" className="text-center">
         <svg
-          className="mx-auto h-12 w-12 text-ui-text-tertiary"
+          className="mx-auto size-12 text-ui-text-tertiary"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

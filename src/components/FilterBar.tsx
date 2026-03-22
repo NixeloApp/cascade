@@ -263,7 +263,7 @@ function SavedFiltersDropdown({
                   }}
                   aria-label="Delete filter"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="size-3" />
                 </IconButton>
               )}
             </Flex>

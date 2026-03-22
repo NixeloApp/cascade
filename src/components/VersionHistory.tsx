@@ -177,7 +177,7 @@ export function VersionHistory({
           </Card>
         ) : versions.length === 0 ? (
           <Card padding="xl" variant="ghost" className="text-center">
-            <Clock className="w-12 h-12 text-ui-text-tertiary mx-auto mb-4" />
+            <Clock className="size-12 text-ui-text-tertiary mx-auto mb-4" />
             <Typography variant="h5" className="mb-2">
               No version history yet
             </Typography>
@@ -265,7 +265,7 @@ export function VersionHistory({
                           <Typography variant="label">{version.title}</Typography>
                         </Flex>
                         <Metadata>
-                          <MetadataItem icon={<Clock className="w-3.5 h-3.5" />}>
+                          <MetadataItem icon={<Clock className="size-3.5" />}>
                             {formatDate(version._creationTime)}
                           </MetadataItem>
                           <MetadataItem>by {version.createdByName}</MetadataItem>
@@ -288,7 +288,7 @@ export function VersionHistory({
                             onClick={() => handleRestore(version._id)}
                             size="sm"
                             variant="secondary"
-                            leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                            leftIcon={<RotateCcw className="size-3.5" />}
                           >
                             Restore
                           </Button>

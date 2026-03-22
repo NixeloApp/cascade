@@ -66,7 +66,7 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
           <Flex align="center" justify="center" gap="sm">
             {isGenerating ? (
               <>
-                <InlineSpinner size="sm" variant="inherit" className="sm:h-5 sm:w-5" />
+                <InlineSpinner size="sm" variant="inherit" className="sm:size-5" />
                 <span className="hidden sm:inline">Analyzing Project...</span>
                 <span className="sm:hidden">Analyzing...</span>
               </>

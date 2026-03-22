@@ -24,9 +24,9 @@ export interface AIAssistantButtonProps {
 }
 
 const SIZE_CLASSES = {
-  sm: "w-12 h-12 text-xl",
-  md: "w-14 h-14 sm:w-16 sm:h-16 text-2xl sm:text-3xl",
-  lg: "w-16 h-16 sm:w-20 sm:h-20 text-3xl sm:text-4xl",
+  sm: "size-12 text-xl",
+  md: "size-14 sm:size-16 text-2xl sm:text-3xl",
+  lg: "size-16 sm:size-20 text-3xl sm:text-4xl",
 } as const;
 
 export function AIAssistantButton({

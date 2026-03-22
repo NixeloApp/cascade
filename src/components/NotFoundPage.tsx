@@ -29,7 +29,7 @@ export function NotFoundPage() {
         <Stack align="center" gap="lg">
           {/* Subtle icon */}
           <IconCircle size="xl" variant="soft">
-            <FileQuestion className="h-10 w-10 text-ui-text-tertiary" />
+            <FileQuestion className="size-10 text-ui-text-tertiary" />
           </IconCircle>
 
           {/* Large error code with tight tracking */}

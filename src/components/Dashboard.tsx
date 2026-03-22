@@ -300,8 +300,8 @@ export function Dashboard() {
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-brand-subtle/24 via-ui-bg-secondary/12 to-transparent" />
       <div className="pointer-events-none absolute inset-x-8 top-20 h-px bg-ui-border/35" />
-      <div className="pointer-events-none absolute left-8 top-10 h-28 w-28 rounded-full bg-ui-bg-elevated/80 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 top-8 h-36 w-36 rounded-full bg-brand-subtle/12 blur-3xl" />
+      <div className="pointer-events-none absolute left-8 top-10 size-28 rounded-full bg-ui-bg-elevated/80 blur-3xl" />
+      <div className="pointer-events-none absolute right-0 top-8 size-36 rounded-full bg-brand-subtle/12 blur-3xl" />
 
       <div className="relative">
         <Stack gap="2xl">

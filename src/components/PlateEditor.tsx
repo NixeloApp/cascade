@@ -258,7 +258,7 @@ function LockedDocumentBanner({
 }) {
   return (
     <Alert variant="warning" radius="none" className="border-x-0">
-      <Lock className="h-4 w-4" />
+      <Lock className="size-4" />
       <AlertTitle>Document Locked</AlertTitle>
       <AlertDescription>
         This document is locked by {lockStatus.lockedByName || "another user"}.

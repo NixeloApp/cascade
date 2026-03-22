@@ -1144,7 +1144,7 @@ export function CreateIssueModal({
               {project?.members.map((member) => (
                 <SelectItem key={member._id} value={member._id}>
                   <Flex align="center" gap="sm">
-                    <Avatar name={member.name} src={member.image} size="xs" className="h-5 w-5" />
+                    <Avatar name={member.name} src={member.image} size="xs" className="size-5" />
                     <div className="min-w-0">
                       <Flex align="center" gap="xs">
                         <Typography variant="small">{member.name}</Typography>
