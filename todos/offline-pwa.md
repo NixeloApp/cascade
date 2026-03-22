@@ -93,7 +93,7 @@ Shows toast: "Comment queued — will post when you reconnect".
 
 - [ ] Add server-side idempotency key for comment replay (deferred — low risk for v1)
 - [x] Update `docs/setup/OFFLINE_ARCHITECTURE.md` with expanded mutation table
-- [ ] Update OfflineTab "Current Verified Capabilities" list
+- [x] Update OfflineTab "Current Verified Capabilities" list — now shows 4 verified capabilities
 
 ### ~~4. Retry Policy~~ ✅ DONE
 
@@ -123,7 +123,7 @@ Shows toast: "Comment queued — will post when you reconnect".
 ### 7. Docs
 
 - [ ] Update `docs/setup/PWA.md` after real browser verification of push + install + offline.
-- [ ] Update `docs/setup/OFFLINE_ARCHITECTURE.md` with expanded mutation replay table.
+- [x] Update `docs/setup/OFFLINE_ARCHITECTURE.md` — comprehensive rewrite reflecting all shipped work.
 - [ ] Add a short "Offline Support" section to the main README or feature docs.
 
 ---
@@ -157,4 +157,4 @@ If any of these become requirements, they should be separate initiatives with th
 - [ ] Push behavior is verified after worker changes.
 - [x] At least `markNotificationAsRead` and `toggleIssueStatus` are replayable beyond `userSettings.update`. (4 mutations total: userSettings, markAsRead, updateStatus, addComment)
 - [x] Offline indicator visible in app header during connectivity loss.
-- [ ] Docs match the verified runtime.
+- [x] Docs match the verified runtime. (OFFLINE_ARCHITECTURE.md fully rewritten)

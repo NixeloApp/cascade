@@ -96,7 +96,7 @@ describe("OfflineTab", () => {
     expect(screen.getAllByText("Unavailable")).toHaveLength(2);
     expect(screen.getByText("Service worker features are unavailable here")).toBeInTheDocument();
     expect(screen.getByText("Current Verified Capabilities")).toBeInTheDocument();
-    expect(screen.getByText("Local Queue Visibility")).toBeInTheDocument();
+    expect(screen.getByText("Offline Mutation Replay")).toBeInTheDocument();
     expect(screen.queryByText("Local Offline Queue")).not.toBeInTheDocument();
   });
 

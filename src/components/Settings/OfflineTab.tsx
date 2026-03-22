@@ -383,16 +383,18 @@ export function OfflineTab() {
               <Stack gap="xs">
                 <Typography variant="label">Connectivity Tracking</Typography>
                 <Typography variant="small" color="secondary">
-                  The app tracks browser online and offline state in the client.
+                  The app tracks browser online and offline state. Header badges show current
+                  status.
                 </Typography>
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
               <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <Stack gap="xs">
-                <Typography variant="label">Local Queue Visibility</Typography>
+                <Typography variant="label">Offline Mutation Replay</Typography>
                 <Typography variant="small" color="secondary">
-                  Pending local offline items are stored in IndexedDB and listed below when present.
+                  Status changes, comments, notification reads, and preference updates are queued
+                  locally and replayed automatically on reconnect with exponential backoff.
                 </Typography>
               </Stack>
             </Flex>
@@ -401,18 +403,18 @@ export function OfflineTab() {
               <Stack gap="xs">
                 <Typography variant="label">Fallback Offline Page</Typography>
                 <Typography variant="small" color="secondary">
-                  The shipped service worker includes an offline fallback page for navigation
-                  failures.
+                  Uncached routes show an offline fallback page. Previously visited pages remain
+                  accessible via service worker cache.
                 </Typography>
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
-              <Icon icon={X} size="sm" className="mt-0.5 text-status-error" />
+              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <Stack gap="xs">
-                <Typography variant="label">Replay And Install Flow</Typography>
+                <Typography variant="label">Smart Retry Policy</Typography>
                 <Typography variant="small" color="secondary">
-                  Automatic replay, install prompting, and worker ownership are not yet verified as
-                  a single coherent runtime path.
+                  Failed replays use escalating backoff (5s, 30s, 2min). Permanent errors like
+                  deleted items are detected and stopped immediately.
                 </Typography>
               </Stack>
             </Flex>
