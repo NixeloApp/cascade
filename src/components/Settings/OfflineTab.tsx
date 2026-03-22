@@ -268,26 +268,26 @@ export function OfflineTab() {
         <Grid cols={1} colsLg={5} gap="lg" className="items-stretch">
           <Card variant="section" padding="md">
             <Flex gap="md" align="center">
-            <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
-              {isOnline ? (
-                <Wifi className="size-6 text-brand-foreground" />
-              ) : (
-                <WifiOff className="size-6 text-brand-foreground" />
-              )}
-            </div>
-            <Stack gap="xs">
-              <Typography variant="label">Connection</Typography>
-              <Typography
-                variant="small"
-                as="span"
-                className={isOnline ? "text-status-success" : "text-status-error"}
-              >
-                <Flex as="span" align="center" gap="xs">
-                  {isOnline ? <Icon icon={Check} size="sm" /> : <Icon icon={X} size="sm" />}
-                  {isOnline ? "Online" : "Offline"}
-                </Flex>
-              </Typography>
-            </Stack>
+                <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
+                  {isOnline ? (
+                    <Wifi className="size-6 text-brand-foreground" />
+                  ) : (
+                    <WifiOff className="size-6 text-brand-foreground" />
+                  )}
+                </div>
+                <Stack gap="xs">
+                  <Typography variant="label">Connection</Typography>
+                  <Typography
+                    variant="small"
+                    as="span"
+                    className={isOnline ? "text-status-success" : "text-status-error"}
+                  >
+                    <Flex as="span" align="center" gap="xs">
+                      {isOnline ? <Icon icon={Check} size="sm" /> : <Icon icon={X} size="sm" />}
+                      {isOnline ? "Online" : "Offline"}
+                    </Flex>
+                  </Typography>
+                </Stack>
             </Flex>
           </Card>
           <Card variant="section" padding="md">
