@@ -269,11 +269,11 @@ If a test needs a timeout to pass, the underlying code likely has a performance 
 
 ## Resources
 
-- [Convex Best Practices](./docs/CONVEX_BEST_PRACTICES.md)
-- [Testing Guide](./docs/testing/README.md)
-- [Pagination Patterns](./docs/PAGINATION_PATTERNS.md)
-- [Email System](./docs/email/README.md)
-- [AI Features](./docs/ai/README.md)
+- [Convex Best Practices](./docs/convex/BEST_PRACTICES.md)
+- [Testing Guide](./docs/guides/testing-e2e.md)
+- [Pagination Patterns](./docs/convex/PAGINATION.md)
+- [Email System](./docs/guides/email-setup.md)
+- [AI Features](./docs/ai/text/SETUP.md)
 
 ---
 
