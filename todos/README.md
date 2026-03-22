@@ -4,47 +4,102 @@
 
 ---
 
-## Execution Order
+## Unresolved PR Review Comments
 
-Work is ordered as a pipeline — each phase unblocks the next.
+Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. Grouped by severity.
 
-### Phase 1: Tighten Styling Rules *(mechanical work complete)*
+### Critical
 
-| Order | File | Status | What |
-|-------|------|--------|------|
-| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | ✅ Mechanical done | Raw TW: 148 → 102 files / 261 violations. Validator smartened (structural allowlist, const/object-map detection). Icon sizing (31 files), Icon inline prop (21 instances), stat cells → Card, margins → gaps (14 files). Remaining violations are non-uniform/responsive/structural — not mechanically fixable. |
-| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | ✅ Done | Backend query/filter debt fully resolved. Query baselines ratcheted. 53/53 validators pass. |
+| PR | File | Issue |
+|----|------|-------|
+| #917 | `convex/intake.ts:123` | Issue key generation uses `.order("desc").first()` which can produce duplicate keys under concurrent submissions. Needs atomic sequence counter. |
 
-### Phase 2: Screenshot-Driven Cleanup
+### Major
 
-| Order | File | What |
-|-------|------|------|
-| 2.1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Fix screenshot-exposed inconsistencies, broken states, cross-surface visual drift, and missing tablet/mobile + feature-state screenshot coverage |
-| 2.2 | [meeting-intelligence.md](./meeting-intelligence.md) | Finish meetings visual QA and build meeting-to-doc now that editor persistence/save wiring is closed |
+| PR | File | Issue |
+|----|------|-------|
+| #908 | `convex/export.ts:327` | Export queries use `by_project` index then `.filter()` for sprintId/status — should use compound indexes for performance. |
+| #908 | `convex/hourCompliance.ts:563` | Compliance summary silently becomes partial after MAX_COMPLIANCE_RECORDS — should expose `isTruncated` flag. |
+| #908 | `scripts/validate/check-raw-tailwind.js:252` | Structural allowlist short-circuits entire attribute instead of per-token. A `className="min-w-0 p-4"` skips the `p-4` violation. |
+| #908 | `scripts/validate/tailwind-policy.js:92` | Class-string detection requires uppercase const names — `const sectionClasses = "..."` bypasses detection. |
+| #908 | `e2e/preview/offline-replay-preview.spec.ts:30` | Entire offline preview suite skipped in CI. Should find a reliable way to test SW caching, not skip it entirely. |
+| #909 | `src/hooks/useOfflineIssueUpdateStatus.test.ts:96` | Tests use `as never` casts instead of proper typed test helpers. |
+| #918 | `convex/deployBoards.ts:168` | Deploy board returns empty `workflowStates` when `status: false`, blanking the board. `assignee` field never exposed even when enabled. |
+| #918 | `src/routes/board.$slug.tsx` | Board card doesn't render assignee or dueDate even when those fields are enabled in visibleFields. |
+| #918 | `src/routes/board.$slug.tsx:58` | Board renders no issues when status visibility is disabled (no columns = no cards). |
 
-### Phase 3: Finish Validator Paydown
+### Minor
 
-| Order | File | What |
-|-------|------|------|
-| 3.1 | [validator-strengthening.md](./validator-strengthening.md) | Retire temporary ratchets as debt hits zero and close remaining standards cleanup |
+| PR | File | Issue |
+|----|------|-------|
+| #905 | `src/components/Settings/ProfileContent.tsx:319` | Profile grid span doesn't adapt when `showAccountInfo` is false. |
+| #905 | `e2e/utils/wait-helpers.ts:299` | Screenshot readiness helper only waits on first loading spinner, not all. |
+| #908 | `src/components/AI/AIAssistantButton.test.tsx:131` | Test only checks base `size-*` class, misses responsive `sm:size-*` variants. |
+| #908 | `todos/tailwind-cva-consolidation.md:29` | Stale violation counts (references 126/436 instead of current 102/261). |
+| #908 | `todos/validator-strengthening.md:53` | Claims all backend filter debt resolved but baseline still has calendarEvents/export entries. |
+| #909 | 6 files | EmptyState imports use relative paths instead of `@/` alias. |
+| #910 | `src/hooks/useOfflineAddComment.test.ts:64` | Test uses `as never` cast instead of proper typed test ID. |
+| #911 | `convex/autoArchive.test.ts` (3 locations) | Magic numbers for day values; missing assertion that workflow state exists. |
+| #911 | `convex/schemaFields.ts:44` | `autoArchiveDays` field not exposed in project update mutation args — can only be set via direct DB patch. |
+| #912 | `todos/README.md:79` | Inconsistent terminology: "4 mutations" vs "4 mutation families." |
+| #913 | `todos/plane-features.md:8` | "Only unfinished items remain here" contradicts the Shipped section below. |
+| #913 | `todos/README.md:82` | Phase 4 summary still references stickies as remaining. |
+| #917 | `convex/http/intake.ts:52` | Bearer token parsing doesn't reject non-Bearer auth headers (e.g., "Basic xyz" → extracts garbage). |
+| #917 | `todos/README.md:38` | Lists intake as remaining but backend is shipped. |
 
-### Phase 4: Feature & Docs Expansion
+---
 
-Lower priority — features and documentation that don't block quality.
+## Execution Pipeline
 
-| Order | File | What |
-|-------|------|------|
-| 4.1 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Missing page-spec doc triplets plus missing current-feature coverage/state docs for shipped surfaces |
-| 4.2 | [plane-features.md](./plane-features.md) | Remaining: Gantt polish, intake external capture, deploy boards. Most items shipped (stickies, analytics, automation, AI, bulk ops). |
-| 4.3 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation reasons (backend done, no UI), workflow translation, custom domain/SMTP, branding |
-| 4.4 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
+### Phase 1: Styling & Validators *(complete)*
+
+| Item | Status |
+|------|--------|
+| Raw TW reduction | ✅ 148 → 102 files / 261 violations |
+| Validator smartening | ✅ Structural allowlist, const/object-map detection |
+| Backend query fixes | ✅ All post-fetch JS filters moved to query level |
+| Icon sizing batch | ✅ 31 files h-X w-X → size-X |
+| Icon inline prop | ✅ 21 instances consolidated |
+| Margins → gaps | ✅ 14 files |
+| Empty states | ✅ 8 inline → EmptyState component |
+
+### Phase 2: Visual Consistency
+
+| Item | Status |
+|------|--------|
+| [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Screenshot-driven cleanup, broken states, cross-surface drift |
+| [meeting-intelligence.md](./meeting-intelligence.md) | Meetings visual QA, meeting-to-doc flow |
+
+### Phase 3: Feature Gaps
+
+| Feature | Status |
+|---------|--------|
+| Gantt chart polish | 🟡 RoadmapView exists (2671 lines). Needs: drag-resize, dependency arrows, zoom. |
+| Intake external capture | ✅ Backend shipped (PR #917). Needs: admin UI for token management. |
+| Deploy boards | ✅ Backend + public page shipped (PR #918). Needs: fix status=false blank board, add assignee/dueDate rendering (see unresolved comments above). |
+| Auto-archive | ✅ Shipped |
+| Scheduled automation | ✅ Shipped (stale_in_status triggers) |
+| Stickies | ✅ Shipped |
+| Bulk operations | ✅ Shipped (9 operation types including labels) |
+| Cycle/lead time | ✅ Shipped |
+| Multi-provider AI | ✅ Shipped (Anthropic + OpenAI) |
+| Version history | ✅ Shipped (list + restore) |
+| Offline replay | ✅ Shipped (4 mutations, header badges, queue UI) |
+
+### Phase 4: Docs & Low Priority
+
+| Item | Status |
+|------|--------|
+| [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page specs missing CURRENT/IMPLEMENTATION/TARGET docs |
+| [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation UI, workflow translation |
+| [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
 
 ### Parallel Tracks
 
-| File | What |
-|------|------|
-| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc, capture strategy, platform breadth, OSS evaluation, agent layer |
-| [offline-pwa.md](./offline-pwa.md) | SW ownership, push safety, replay expansion (notifications, issues, comments), graceful degradation UX |
+| Track | Status |
+|-------|--------|
+| [offline-pwa.md](./offline-pwa.md) | SW ownership cleanup, push safety verification still pending |
+| [meeting-intelligence.md](./meeting-intelligence.md) | Editor dependency, capture strategy |
 
 ---
 
@@ -56,34 +111,9 @@ Lower priority — features and documentation that don't block quality.
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Empty states | Standardized — 8 inline implementations → EmptyState component |
-| Offline replay | 4 mutation families (settings, notifications, status, comments) |
-| Offline UX | Header badges (offline/syncing), queue diagnostics in Settings |
+| Unresolved PR comments | 32 (1 critical, 9 major, 22 minor) |
 | Unit tests | 4372 pass |
 | E2E tests | 164 pass (non-preview) |
-
----
-
-## Biggest Remaining Feature Gaps
-
-Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
-
-| Feature | Cal.com | Plane | Nixelo | Impact |
-|---------|---------|-------|--------|--------|
-| **Gantt chart** | -- | Full | Roadmap upgraded, dedicated Gantt polish remaining | High |
-| **OOO status** | Full API | -- | Shipped | Done |
-| **AI agents** | Multi-channel | -- | MCP placeholder | Medium |
-| **Intake/triage** | -- | Full system | Skeleton inbox (551-line InboxList) | Medium |
-| **Auto-archive** | -- | Scheduled | **Shipped** — daily cron, per-project autoArchiveDays | Done |
-| **Scheduled automation** | -- | Basic | **Shipped** — stale_in_status triggers, daily cron | Done |
-| **Stickies** | -- | Full | **Shipped** — dashboard panel with colored notes | Done |
-| **Deploy boards** | -- | Per-entity | Token portal only | Medium |
-| **Offline replay** | -- | -- | **Shipped** — 4 mutations, header indicators, queue UI | Done |
-| **Bulk operations** | -- | Full | **Shipped** — status, priority, assignee, sprint, labels, dates, archive, delete | Done |
-| **Version history** | -- | Full | **Shipped** — list + restore for documents | Done |
-| **Cycle/lead time** | -- | Full | **Shipped** — median cycle + lead time with sparkline data | Done |
-| **Multi-provider AI** | Multi-channel | -- | **Shipped** — Anthropic + OpenAI, env-based provider selection | Done |
-| **Billing PDF export** | -- | -- | CSV only | Low |
 
 ---
 
@@ -93,13 +123,6 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 - Audit route/spec screenshot coverage with `pnpm run validate`
 - Detect screenshot drift with `pnpm screenshots:diff`
 - Approve intentional visual changes with `pnpm screenshots:approve`
-
-## Reference Repos
-
-| Repo | Path | Last pulled |
-|------|------|-------------|
-| Cal.com | [github.com/calcom/cal.com](https://github.com/calcom/cal.com) | 2026-03-18 |
-| Plane | [github.com/makeplane/plane](https://github.com/makeplane/plane) | 2026-03-18 |
 
 ## Post-MVP
 
