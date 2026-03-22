@@ -57,6 +57,8 @@ Lower priority — features and documentation that don't block quality.
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
 | Empty states | Standardized — 8 inline implementations → EmptyState component |
+| Offline replay | 4 mutation families (settings, notifications, status, comments) |
+| Offline UX | Header badges (offline/syncing), queue diagnostics in Settings |
 | Unit tests | 4372 pass |
 | E2E tests | 164 pass (non-preview) |
 

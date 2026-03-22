@@ -106,13 +106,12 @@ Shows toast: "Comment queued — will post when you reconnect".
 
 ### 5. Graceful Degradation UX
 
-These are UI-level improvements that make connectivity blips feel invisible to the user.
-
-- [ ] Show a subtle "offline" indicator in the app header (not just the Settings tab) when connectivity drops.
-- [ ] Show optimistic UI for queued mutations — e.g., when a notification is marked read offline, grey it out immediately, don't wait for replay.
-- [ ] Show a "syncing" indicator when the queue is processing on reconnect.
-- [ ] Auto-dismiss the offline indicator after successful reconnect + queue drain.
-- [ ] Consider a toast on reconnect: "Back online — N changes synced" (only if queue was non-empty).
+- [x] "Offline" badge in app header when connectivity drops (red, WifiOff icon)
+- [x] "Syncing" badge in app header when queue is draining (warning, spinning RefreshCw)
+- [x] Auto-dismiss when queue empties (badge disappears)
+- [x] Toast for queued comments ("Comment queued — will post when you reconnect")
+- [ ] Show optimistic UI for queued mutations (e.g., grey out read notification immediately)
+- [ ] Consider a toast on reconnect: "Back online — N changes synced" (only if queue was non-empty)
 
 ### 6. Tests
 
