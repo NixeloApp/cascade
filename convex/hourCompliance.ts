@@ -499,34 +499,51 @@ const EMPTY_COMPLIANCE_SUMMARY = {
   overHours: 0,
   equityUnder: 0,
   complianceRate: 0,
+  isTruncated: false,
 };
 
+/**
+ * Fetch compliance records for a date range, detecting truncation.
+ *
+ * Fetches limit+1 records to detect whether there are more records
+ * beyond the limit. Returns the trimmed set and a flag indicating
+ * whether the results are incomplete.
+ */
 async function fetchComplianceRecords(
   ctx: QueryCtx,
   startDate?: number,
   endDate?: number,
-): Promise<Doc<"hourComplianceRecords">[]> {
+): Promise<{ records: Doc<"hourComplianceRecords">[]; isTruncated: boolean }> {
+  // Fetch one extra to detect truncation
+  const fetchLimit = MAX_COMPLIANCE_RECORDS + 1;
+
+  let results: Doc<"hourComplianceRecords">[];
+
   if (startDate && endDate) {
-    return ctx.db
+    results = await ctx.db
       .query("hourComplianceRecords")
       .withIndex("by_period", (q) => q.gte("periodStart", startDate).lte("periodStart", endDate))
       .filter((q) => q.lte(q.field("periodEnd"), endDate))
-      .take(MAX_COMPLIANCE_RECORDS);
-  }
-  if (startDate) {
-    return ctx.db
+      .take(fetchLimit);
+  } else if (startDate) {
+    results = await ctx.db
       .query("hourComplianceRecords")
       .withIndex("by_period", (q) => q.gte("periodStart", startDate))
-      .take(MAX_COMPLIANCE_RECORDS);
-  }
-  if (endDate) {
-    return ctx.db
+      .take(fetchLimit);
+  } else if (endDate) {
+    results = await ctx.db
       .query("hourComplianceRecords")
       .withIndex("by_period", (q) => q.lte("periodStart", endDate))
       .filter((q) => q.lte(q.field("periodEnd"), endDate))
-      .take(MAX_COMPLIANCE_RECORDS);
+      .take(fetchLimit);
+  } else {
+    results = await ctx.db.query("hourComplianceRecords").withIndex("by_period").take(fetchLimit);
   }
-  return ctx.db.query("hourComplianceRecords").withIndex("by_period").take(MAX_COMPLIANCE_RECORDS);
+
+  const isTruncated = results.length > MAX_COMPLIANCE_RECORDS;
+  const records = isTruncated ? results.slice(0, MAX_COMPLIANCE_RECORDS) : results;
+
+  return { records, isTruncated };
 }
 
 function countByStatus(records: Doc<"hourComplianceRecords">[]) {
@@ -556,7 +573,11 @@ export const getComplianceSummary = authenticatedQuery({
       return EMPTY_COMPLIANCE_SUMMARY;
     }
 
-    const records = await fetchComplianceRecords(ctx, args.startDate, args.endDate);
+    const { records, isTruncated } = await fetchComplianceRecords(
+      ctx,
+      args.startDate,
+      args.endDate,
+    );
     const { compliant, underHours, overHours, equityUnder } = countByStatus(records);
 
     return {
@@ -566,6 +587,7 @@ export const getComplianceSummary = authenticatedQuery({
       overHours,
       equityUnder,
       complianceRate: records.length > 0 ? (compliant / records.length) * 100 : 0,
+      isTruncated,
     };
   },
 });
