@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/Sonner";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { processOfflineQueue, registerOfflineReplayHandler } from "@/lib/offline";
+import { COMMENT_ADD_OFFLINE_MUTATION_TYPE, replayAddComment } from "@/lib/offlineComments";
 import {
   ISSUE_UPDATE_STATUS_OFFLINE_MUTATION_TYPE,
   replayIssueUpdateStatus,
@@ -147,6 +148,9 @@ function OfflineReplayBootstrap() {
     );
     registerOfflineReplayHandler(ISSUE_UPDATE_STATUS_OFFLINE_MUTATION_TYPE, (args) =>
       replayIssueUpdateStatus(convexClient, args),
+    );
+    registerOfflineReplayHandler(COMMENT_ADD_OFFLINE_MUTATION_TYPE, (args) =>
+      replayAddComment(convexClient, args),
     );
 
     const flushQueue = () => {

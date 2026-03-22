@@ -19,6 +19,7 @@ import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Separator } from "@/components/ui/Separator";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOfflineAddComment } from "@/hooks/useOfflineAddComment";
 import { formatRelativeTime } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { CommentReactions } from "./CommentReactions";
@@ -117,7 +118,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
     loadMore,
   } = usePaginatedQuery(api.issues.listComments, { issueId }, { initialNumItems: 50 });
 
-  const { mutate: addComment } = useAuthenticatedMutation(api.issues.addComment);
+  const { addComment } = useOfflineAddComment();
   const { mutate: generateUploadUrl } = useAuthenticatedMutation(api.attachments.generateUploadUrl);
   const { mutate: attachToIssue } = useAuthenticatedMutation(api.attachments.attachToIssue);
   const { mutate: removeAttachment } = useAuthenticatedMutation(api.attachments.removeAttachment);
@@ -166,20 +167,21 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
 
     setIsSubmitting(true);
     try {
-      await addComment({
+      const result = await addComment(
         issueId,
-        content: newComment,
-        mentions: mentions.length > 0 ? mentions : undefined,
-        attachments:
-          commentAttachments.length > 0
-            ? commentAttachments.map((attachment) => attachment.storageId)
-            : undefined,
-      });
+        newComment,
+        mentions.length > 0 ? mentions : undefined,
+        commentAttachments.length > 0
+          ? commentAttachments.map((a) => a.storageId)
+          : undefined,
+      );
 
       setNewComment("");
       setMentions([]);
       setCommentAttachments([]);
-      showSuccess("Comment added");
+      if (!result.queued) {
+        showSuccess("Comment added");
+      }
     } catch (error) {
       showError(error, "Failed to add comment");
     } finally {
