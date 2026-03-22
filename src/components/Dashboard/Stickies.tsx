@@ -151,7 +151,12 @@ export function Stickies() {
         title="Quick Notes"
         actions={
           !isAdding ? (
-            <Button chrome="quiet" chromeSize="icon" onClick={() => setIsAdding(true)} aria-label="Add note">
+            <Button
+              chrome="quiet"
+              chromeSize="icon"
+              onClick={() => setIsAdding(true)}
+              aria-label="Add note"
+            >
               <Icon icon={Plus} size="sm" />
             </Button>
           ) : undefined

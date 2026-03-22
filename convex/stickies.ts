@@ -49,9 +49,10 @@ export const create = authenticatedMutation({
 
     const now = Date.now();
     const order = existing.length;
-    const color = args.color && VALID_COLORS.includes(args.color as (typeof VALID_COLORS)[number])
-      ? args.color
-      : "yellow";
+    const color =
+      args.color && VALID_COLORS.includes(args.color as (typeof VALID_COLORS)[number])
+        ? args.color
+        : "yellow";
 
     const stickyId = await ctx.db.insert("stickies", {
       userId: ctx.userId,
