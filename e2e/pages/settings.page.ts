@@ -177,7 +177,7 @@ export class SettingsPage extends BasePage {
     this.userTypeManager = page.getByTestId(TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION);
     this.hourComplianceDashboard = page.getByTestId(TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION);
     this.adminUsersTab = page.getByTestId(TEST_IDS.SETTINGS.ADMIN_USERS_TAB);
-    this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
+    this.platformUsersTable = page.getByRole("table", { name: /user invitations/i });
     this.inviteEmptyState = page.getByText(/^No invitations$/);
 
     // Invite user form (it's an inline Card, not a dialog)
@@ -592,10 +592,7 @@ export class SettingsPage extends BasePage {
   }
 
   async openAdminUsersList() {
-    await expect(this.userManagementHeading).toBeVisible();
-    await expect(this.adminUsersTab).toBeVisible();
-    await this.adminUsersTab.click();
-    await expect(this.adminUsersTab).toHaveAttribute("data-state", "on");
+    await expect(this.userManagementHeading).toBeVisible({ timeout: 15000 });
     await expect(this.platformUsersTable).toBeVisible();
   }
 

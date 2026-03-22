@@ -312,6 +312,8 @@ export const TEST_IDS = {
     PAGE: "analytics-page",
     /** @see src/components/AnalyticsDashboard.tsx - page header */
     PAGE_HEADER: "analytics-page-header",
+    /** @see src/components/AnalyticsDashboard.tsx - page description */
+    PAGE_DESCRIPTION: "analytics-page-description",
     /** @see src/components/AnalyticsDashboard.tsx - chart cards */
     CHART_STATUS: "analytics-chart-status",
     CHART_TYPE: "analytics-chart-type",

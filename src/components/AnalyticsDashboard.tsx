@@ -210,7 +210,11 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
         <div data-testid={TEST_IDS.ANALYTICS.PAGE_HEADER}>
           <PageHeader
             title={`${projectName} analytics`}
-            description={`Delivery, workload, and ownership signals for ${projectKey}.`}
+            description={
+              <span data-testid={TEST_IDS.ANALYTICS.PAGE_DESCRIPTION}>
+                Delivery, workload, and ownership signals for {projectKey}.
+              </span>
+            }
             spacing="stack"
           />
         </div>
