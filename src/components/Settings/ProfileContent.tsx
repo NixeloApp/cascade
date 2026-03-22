@@ -327,7 +327,7 @@ function LoadedProfileContent({
             gap="md"
             style={isOwnProfile ? { marginTop: "-0.375rem" } : undefined}
           >
-            <GridItem colSpanLg={showAccountInfo ? 3 : 5}>
+            <GridItem colSpanLg={showAccountInfo ? 3 : undefined}>
               <Card variant="section" padding="lg">
                 <ProfileHeader
                   user={viewUser}

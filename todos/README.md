@@ -30,9 +30,9 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 
 | PR | File | Issue |
 |----|------|-------|
-| #905 | `src/components/Settings/ProfileContent.tsx:319` | Profile grid span doesn't adapt when `showAccountInfo` is false. |
+| ~~#905~~ | ~~`src/components/Settings/ProfileContent.tsx:319`~~ | ~~Grid span doesn't adapt.~~ **Fixed** — `colSpanLg` set to `undefined` when no account info, so grid defaults to full width. |
 | ~~#905~~ | ~~`e2e/utils/wait-helpers.ts:299`~~ | ~~Screenshot readiness waits on first spinner only.~~ **Fixed** — `waitForAllSpinnersToClear` polls until all spinners are hidden. |
-| #908 | `src/components/AI/AIAssistantButton.test.tsx:131` | Test only checks base `size-*` class, misses responsive `sm:size-*` variants. |
+| ~~#908~~ | ~~`src/components/AI/AIAssistantButton.test.tsx:131`~~ | ~~Test misses responsive size variants.~~ **Fixed** — asserts both base `size-*` and responsive `sm:size-*` classes. |
 | ~~#908~~ | ~~`todos/tailwind-cva-consolidation.md:29`~~ | ~~Stale violation counts.~~ **Fixed** — updated to current numbers with strikethrough. |
 | ~~#908~~ | ~~`todos/validator-strengthening.md:53`~~ | ~~Stale export.ts description.~~ **Fixed** — updated to reflect compound index migration. |
 | #909 | 6 files | EmptyState imports use relative paths instead of `@/` alias. |
@@ -109,7 +109,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 12 (0 critical, 1 major, 11 minor) |
+| Unresolved PR comments | 10 (0 critical, 1 major, 9 minor) |
 | Unit tests | 4420 pass |
 | E2E tests | 164 pass (non-preview) |
 
