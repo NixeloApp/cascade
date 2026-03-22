@@ -22,6 +22,32 @@ function isValidSubmission(body: unknown): body is IntakeSubmission {
   return typeof obj.title === "string" && obj.title.trim().length > 0 && obj.title.length <= 500;
 }
 
+/**
+ * Extract a Bearer token from an Authorization header.
+ * Returns the token string if the header uses the Bearer scheme,
+ * null if no header is provided, or an error string for malformed headers.
+ *
+ * Rejects non-Bearer schemes (Basic, Digest, etc.) rather than
+ * silently extracting garbage as a token.
+ */
+export function extractBearerToken(
+  authHeader: string | null,
+): { token: string } | { error: string } | null {
+  if (!authHeader) return null;
+
+  // RFC 6750: "Bearer" is case-insensitive
+  const match = authHeader.match(/^Bearer\s+(\S+)$/i);
+  if (!match) {
+    // Distinguish between a different auth scheme vs. malformed Bearer
+    if (/^Bearer\s*$/i.test(authHeader)) {
+      return { error: "Bearer token value is missing" };
+    }
+    return { error: "Unsupported authorization scheme — use Bearer token" };
+  }
+
+  return { token: match[1] };
+}
+
 function corsHeaders(): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": "*",
@@ -40,9 +66,17 @@ export const handleIntakePreflight = httpAction(async () => {
 export const handleIntakeSubmission = httpAction(async (ctx, request) => {
   const headers = { ...corsHeaders(), "Content-Type": "application/json" };
 
-  const authHeader = request.headers.get("Authorization");
+  // Extract token from Authorization header or query parameter
+  const authResult = extractBearerToken(request.headers.get("Authorization"));
+  if (authResult && "error" in authResult) {
+    return new Response(JSON.stringify({ error: authResult.error }), {
+      status: 401,
+      headers,
+    });
+  }
+
   const url = new URL(request.url);
-  const token = authHeader?.replace("Bearer ", "") || url.searchParams.get("token");
+  const token = authResult?.token ?? url.searchParams.get("token");
 
   if (!token) {
     return new Response(JSON.stringify({ error: "Missing intake token" }), {

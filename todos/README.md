@@ -42,7 +42,7 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | #912 | `todos/README.md:79` | Inconsistent terminology: "4 mutations" vs "4 mutation families." |
 | #913 | `todos/plane-features.md:8` | "Only unfinished items remain here" contradicts the Shipped section below. |
 | #913 | `todos/README.md:82` | Phase 4 summary still references stickies as remaining. |
-| #917 | `convex/http/intake.ts:52` | Bearer token parsing doesn't reject non-Bearer auth headers (e.g., "Basic xyz" → extracts garbage). |
+| ~~#917~~ | ~~`convex/http/intake.ts:52`~~ | ~~Bearer token parsing accepts non-Bearer headers.~~ **Fixed** — strict RFC 6750 parsing with `extractBearerToken()`, 10 unit tests. |
 | #917 | `todos/README.md:38` | Lists intake as remaining but backend is shipped. |
 
 ---
@@ -109,8 +109,8 @@ Issues flagged by reviewers on PRs #905-#918 that were not fixed before merge. G
 | Raw TW violations | 102 files / 261 violations (was 148 / 436) |
 | Backend query debt | 0 (was 11 post-fetch JS filters) |
 | CVA boundaries | Clean — 0 feature CVAs outside ui/ |
-| Unresolved PR comments | 22 (0 critical, 1 major, 21 minor) |
-| Unit tests | 4407 pass |
+| Unresolved PR comments | 21 (0 critical, 1 major, 20 minor) |
+| Unit tests | 4417 pass |
 | E2E tests | 164 pass (non-preview) |
 
 ---
