@@ -73,39 +73,29 @@ needing a full local-first data layer.
 
 **Priority order** (by frequency × simplicity × conflict risk):
 
-#### 3.1 Mark notification as read
+#### ~~3.1 Mark notification as read~~ ✅ DONE (PR #909)
 
-- [ ] Register replay handler for `notifications.markAsRead`.
-- [ ] Queue from `NotificationItem` / `NotificationCenter` when offline.
-- [ ] Idempotency: trivially idempotent — marking an already-read notification as read is a no-op.
-- [ ] Conflict risk: none. No state can "move" that invalidates a read-mark.
-- [ ] Error case: if notification was deleted server-side while offline, replay should silently succeed or mark as permanently failed (not retry).
+Replay handler registered, wired into NotificationCenter and notifications page.
+Trivially idempotent, zero conflict risk.
 
-#### 3.2 Toggle issue status
+#### ~~3.2 Toggle issue status~~ ✅ DONE (PR #909)
 
-- [ ] Register replay handler for `issues.updateStatus` (or the relevant mutation).
-- [ ] Queue from Kanban column drop, issue detail status dropdown, and board quick-actions.
-- [ ] Idempotency: last-write-wins on status field. If two offline users both change status, the last replay wins — acceptable for a connectivity-blip scenario.
-- [ ] Conflict risk: medium. Server-side status may have moved (e.g., another user closed the issue). Replay should check current status and skip if the issue was already moved to a "later" workflow state.
-- [ ] Error case: if issue was deleted/archived, replay should fail permanently with a descriptive message, not retry.
+Replay handler registered, wired into IssueDetailSidebar.
+Skips optimistic lock (expectedVersion) for replay. Uses newOrder: 0.
+Last-write-wins — acceptable for connectivity blips.
 
-#### 3.3 Add comment to issue
+#### ~~3.3 Add comment to issue~~ ✅ DONE (PR #910)
 
-- [ ] Register replay handler for `issueComments.create` (or equivalent).
-- [ ] Queue from the comment input when offline.
-- [ ] Idempotency: append-only — duplicate comments are possible if replay races. Add a client-generated `idempotencyKey` (UUID) to the mutation args and check server-side before inserting.
-- [ ] Conflict risk: low. Comments are append-only. The only edge case is commenting on a deleted/archived issue.
-- [ ] Error case: if issue was deleted, show the failed comment in the queue with "Issue no longer exists" and let the user dismiss it.
+Replay handler registered, wired into IssueComments.
+Attachments not supported offline (can't queue file uploads).
+No server-side idempotency key for v1 — duplicate risk minimal for blip scenarios.
+Shows toast: "Comment queued — will post when you reconnect".
 
-#### 3.4 General replay infrastructure for new mutations
+#### 3.4 Remaining replay infrastructure
 
-Before adding each mutation above:
-
-- [ ] Define how deleted/archived target entities should fail (permanent failure, not retry).
-- [ ] Define how conflict resolution works when server state moved while offline.
-- [ ] Add an `idempotencyKey` pattern for non-idempotent mutations (comments, activity entries).
-- [ ] Update the OfflineTab "Current Verified Capabilities" list as each mutation ships.
-- [ ] Update `docs/setup/OFFLINE_ARCHITECTURE.md` with the expanded mutation table.
+- [ ] Add server-side idempotency key for comment replay (deferred — low risk for v1)
+- [x] Update `docs/setup/OFFLINE_ARCHITECTURE.md` with expanded mutation table
+- [ ] Update OfflineTab "Current Verified Capabilities" list
 
 ### 4. Retry Policy
 
@@ -167,6 +157,6 @@ If any of these become requirements, they should be separate initiatives with th
 - [ ] One worker path clearly owns runtime behavior.
 - [ ] One manifest path clearly owns install metadata.
 - [ ] Push behavior is verified after worker changes.
-- [ ] At least `markNotificationAsRead` and `toggleIssueStatus` are replayable beyond `userSettings.update`.
-- [ ] Offline indicator visible in app header during connectivity loss.
+- [x] At least `markNotificationAsRead` and `toggleIssueStatus` are replayable beyond `userSettings.update`. (4 mutations total: userSettings, markAsRead, updateStatus, addComment)
+- [x] Offline indicator visible in app header during connectivity loss.
 - [ ] Docs match the verified runtime.

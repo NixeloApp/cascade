@@ -171,9 +171,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
         issueId,
         newComment,
         mentions.length > 0 ? mentions : undefined,
-        commentAttachments.length > 0
-          ? commentAttachments.map((a) => a.storageId)
-          : undefined,
+        commentAttachments.length > 0 ? commentAttachments.map((a) => a.storageId) : undefined,
       );
 
       setNewComment("");

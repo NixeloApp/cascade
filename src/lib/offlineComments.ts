@@ -23,10 +23,7 @@ function validateAddCommentArgs(args: Record<string, unknown>): AddCommentArgs {
 }
 
 /** Queues a comment creation to IndexedDB for offline replay. */
-export async function queueAddComment(
-  args: AddCommentArgs,
-  userId?: string,
-): Promise<number> {
+export async function queueAddComment(args: AddCommentArgs, userId?: string): Promise<number> {
   return queueOfflineMutation(COMMENT_ADD_OFFLINE_MUTATION_TYPE, args, userId);
 }
 
