@@ -44,14 +44,16 @@ test.describe("Offline Replay", () => {
       await expect(settingsPage.syncStatusIndicator).toContainText("Offline");
       await settingsPage.expectOfflineQueueItemVisible(OFFLINE_USER_SETTINGS_MUTATION_TYPE);
 
-      // Process Queue is hidden while offline — restore network first
+      // Restore network and trigger reconnect — the bootstrap auto-replays
+      // queued mutations on the "online" event.
       await page.context().setOffline(false);
       await dispatchConnectivityEvent(page, "online");
-      await expect(settingsPage.processQueueButton).toBeVisible();
 
-      await settingsPage.processOfflineQueue();
-      await settingsPage.expectToast("Queued items processed");
-      await expect(settingsPage.localOfflineQueueHeading).toHaveCount(0);
+      // Wait for the queue to drain (auto-replay or manual — either path works)
+      await expect(async () => {
+        await settingsPage.offlineTab.click();
+        await expect(settingsPage.localOfflineQueueHeading).toHaveCount(0);
+      }).toPass({ intervals: [500, 1000, 2000] });
       await expect(settingsPage.page.getByText(/^Never$/)).toHaveCount(0);
 
       await settingsPage.switchToTab("preferences");
