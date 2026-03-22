@@ -150,23 +150,43 @@ async function resolveEventScope(
 }
 
 // Helper: Get events where user is organizer or attendee in a date range
+interface UserEventsFilter {
+  projectId?: Id<"projects">;
+  excludeStatus?: string;
+}
+
 async function getUserEventsInRange(
   ctx: QueryCtx,
   userId: Id<"users">,
   startDate: number,
   endDate: number,
+  filters?: UserEventsFilter,
 ) {
-  // Parallel fetch: organized events + attending events
-  const [organizedEvents, attendingEventsResult] = await Promise.all([
-    // User is organizer
-    ctx.db
-      .query("calendarEvents")
-      .withIndex("by_organizer", (q) =>
-        q.eq("organizerId", userId).gte("startTime", startDate).lte("startTime", endDate),
-      )
-      .take(MAX_PAGE_SIZE),
+  // Build optional query-level filter for projectId and status exclusion
+  const applyFilters = filters
+    ? (q: Parameters<Parameters<ReturnType<typeof ctx.db.query>["filter"]>[0]>[0]) => {
+        const conditions = [];
+        if (filters.projectId) conditions.push(q.eq(q.field("projectId"), filters.projectId));
+        if (filters.excludeStatus) conditions.push(q.neq(q.field("status"), filters.excludeStatus));
+        if (conditions.length === 2) return q.and(conditions[0], conditions[1]);
+        if (conditions.length === 1) return conditions[0];
+        return true;
+      }
+    : null;
 
-    // User is attendee
+  // Parallel fetch: organized events + attending events
+  const organizedQuery = ctx.db
+    .query("calendarEvents")
+    .withIndex("by_organizer", (q) =>
+      q.eq("organizerId", userId).gte("startTime", startDate).lte("startTime", endDate),
+    );
+
+  const [organizedEvents, attendingEventsResult] = await Promise.all([
+    applyFilters
+      ? organizedQuery.filter(applyFilters as Parameters<typeof organizedQuery.filter>[0]).take(MAX_PAGE_SIZE)
+      : organizedQuery.take(MAX_PAGE_SIZE),
+
+    // User is attendee — filters applied after dedup since this uses a different query path
     queryCalendarEventsByAttendeeInRange(ctx, userId, startDate, endDate),
   ]);
 
@@ -192,10 +212,20 @@ async function getUserEventsInRange(
 
   // Combine and deduplicate
   const allEvents = [...organizedEvents, ...attendingEvents];
-  // Use Map to deduplicate by ID
   const uniqueEvents = Array.from(new Map(allEvents.map((e) => [e._id, e])).values());
 
-  return uniqueEvents.sort((a, b) => a.startTime - b.startTime);
+  // Apply filters to the combined set (attendee events weren't filtered at query level)
+  let result = uniqueEvents;
+  if (filters?.projectId) {
+    const pid = filters.projectId;
+    result = result.filter((e) => e.projectId === pid);
+  }
+  if (filters?.excludeStatus) {
+    const excluded = filters.excludeStatus;
+    result = result.filter((e) => e.status !== excluded);
+  }
+
+  return result.sort((a, b) => a.startTime - b.startTime);
 }
 
 async function enrichEventsWithOrganizers(
@@ -412,14 +442,11 @@ export const listByDateRange = authenticatedQuery({
     projectId: v.optional(v.id("projects")),
   },
   handler: async (ctx, args) => {
-    const events = await getUserEventsInRange(ctx, ctx.userId, args.startDate, args.endDate);
+    const events = await getUserEventsInRange(ctx, ctx.userId, args.startDate, args.endDate, {
+      projectId: args.projectId,
+    });
 
-    // Filter by project if specified
-    const filteredEvents = args.projectId
-      ? events.filter((event) => event.projectId === args.projectId)
-      : events;
-
-    return await enrichEventsWithOrganizers(ctx, filteredEvents);
+    return await enrichEventsWithOrganizers(ctx, events);
   },
 });
 
@@ -570,14 +597,11 @@ export const listMine = authenticatedQuery({
     const startDate = args.startDate ?? defaultStart;
     const endDate = args.endDate ?? defaultEnd;
 
-    const events = await getUserEventsInRange(ctx, ctx.userId, startDate, endDate);
+    const events = await getUserEventsInRange(ctx, ctx.userId, startDate, endDate, {
+      excludeStatus: args.includeCompleted ? undefined : "cancelled",
+    });
 
-    // Filter by status if requested
-    const filteredEvents = args.includeCompleted
-      ? events
-      : events.filter((event) => event.status !== "cancelled");
-
-    return await enrichEventsWithOrganizers(ctx, filteredEvents);
+    return await enrichEventsWithOrganizers(ctx, events);
   },
 });
 
@@ -666,13 +690,12 @@ export const getUpcoming = authenticatedQuery({
     const now = Date.now();
     const sevenDaysFromNow = now + WEEK;
 
-    const events = await getUserEventsInRange(ctx, ctx.userId, now, sevenDaysFromNow);
-
-    // Filter to active events (not cancelled)
-    const visibleEvents = events.filter((event) => event.status !== "cancelled");
+    const events = await getUserEventsInRange(ctx, ctx.userId, now, sevenDaysFromNow, {
+      excludeStatus: "cancelled",
+    });
 
     // Limit results
-    const limitedEvents = args.limit ? visibleEvents.slice(0, args.limit) : visibleEvents;
+    const limitedEvents = args.limit ? events.slice(0, args.limit) : events;
 
     return await enrichEventsWithOrganizers(ctx, limitedEvents);
   },
