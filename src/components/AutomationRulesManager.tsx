@@ -15,12 +15,14 @@ import type {
 } from "@convex/validators";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { AutomationRuleCard } from "./Automation/AutomationRuleCard";
 import { AutomationRuleForm } from "./Automation/AutomationRuleForm";
 import { Button } from "./ui/Button";
 import { Card, CardBody } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
+import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Stack } from "./ui/Stack";
@@ -106,18 +108,11 @@ export function AutomationRulesManager({ projectId }: AutomationRulesManagerProp
           </CardBody>
         </Card>
       ) : rules.length === 0 ? (
-        <Card>
-          <CardBody>
-            <Flex direction="column" align="center" justify="center" gap="sm" className="min-h-32">
-              <Typography variant="small" color="secondary">
-                No automation rules yet
-              </Typography>
-              <Typography variant="caption">
-                Create your first rule to automate repetitive tasks
-              </Typography>
-            </Flex>
-          </CardBody>
-        </Card>
+        <EmptyState
+          icon={Zap}
+          title="No automation rules yet"
+          description="Create your first rule to automate repetitive tasks"
+        />
       ) : (
         <Stack gap="sm">
           {rules.map((rule: AutomationRule) => (
