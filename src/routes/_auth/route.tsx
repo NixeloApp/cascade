@@ -36,32 +36,22 @@ function AuthLayout() {
     }
   }, [isAuthenticated, isAuthLoading]);
 
+  // Offline with recovery signal: render immediately regardless of auth state.
+  // Auth can't resolve without connectivity, but the user was previously
+  // authenticated and the page is served from SW cache.
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+  if (isOffline && canRecoverAuthenticatedSession) {
+    return <Outlet />;
+  }
+
   if (isAuthLoading) {
-    if (!hasAuthenticatedSession.current && !canRecoverAuthenticatedSession) {
-      return <AppSplashScreen />;
-    }
-    // Confirmed session from this page lifetime — safe to keep rendering
     if (hasAuthenticatedSession.current) {
-      return <Outlet />;
-    }
-    // Recovery signal from localStorage but no confirmed session yet.
-    // When offline, render the cached layout since auth can't resolve —
-    // this is the graceful-degradation path for connectivity blips.
-    // When online, show splash and let auth resolve normally.
-    if (canRecoverAuthenticatedSession && typeof navigator !== "undefined" && !navigator.onLine) {
       return <Outlet />;
     }
     return <AppSplashScreen />;
   }
 
   if (isAuthenticated) {
-    return <Outlet />;
-  }
-
-  // When offline with a recovery signal, keep rendering instead of redirecting.
-  // Auth can't resolve without connectivity, but the user was previously authenticated
-  // and the page is served from SW cache — this is graceful degradation.
-  if (canRecoverAuthenticatedSession && typeof navigator !== "undefined" && !navigator.onLine) {
     return <Outlet />;
   }
 
