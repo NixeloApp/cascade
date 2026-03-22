@@ -2,14 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addDays,
   daysBetween,
-  formatDate,
-  formatDateCustom,
   formatHours,
   formatRelativeTimeSimple,
   getTodayString,
   isFuture,
   isPast,
 } from "./dates";
+import { formatDate } from "./formatting";
 
 // Shared test fixtures
 const JAN_15_NOON = new Date("2026-01-15T12:00:00Z").getTime();
@@ -83,17 +82,17 @@ describe("dates utility functions", () => {
     });
   });
 
-  describe("formatDateCustom", () => {
+  describe("formatDate", () => {
     it("should format with custom options", () => {
-      expect(
-        formatDateCustom(JAN_15_NOON, { year: "numeric", month: "long", day: "numeric" }),
-      ).toBe("January 15, 2026");
+      expect(formatDate(JAN_15_NOON, { year: "numeric", month: "long", day: "numeric" })).toBe(
+        "January 15, 2026",
+      );
     });
 
     it("should format with weekday", () => {
-      expect(
-        formatDateCustom(JAN_15_NOON, { weekday: "short", month: "short", day: "numeric" }),
-      ).toBe("Thu, Jan 15");
+      expect(formatDate(JAN_15_NOON, { weekday: "short", month: "short", day: "numeric" })).toBe(
+        "Thu, Jan 15",
+      );
     });
   });
 

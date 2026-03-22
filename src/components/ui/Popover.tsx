@@ -76,12 +76,12 @@ PopoverContent.displayName = PopoverPrimitive.Content.displayName;
 
 export {
   OverlayBody as PopoverBody,
-  Popover,
-  PopoverAnchor,
-  PopoverContent,
   OverlayDescription as PopoverDescription,
   OverlayFooter as PopoverFooter,
   OverlayHeader as PopoverHeader,
   OverlayTitle as PopoverTitle,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
   PopoverTrigger,
 };

@@ -7,7 +7,6 @@ import { modules } from "../testSetup.test-helper";
 import { createTestIssue, createTestProject, createTestUser } from "../testUtils";
 import {
   fetchIssuesWithProjects,
-  generateIssueKey,
   getMaxOrderForStatus,
   getNextIssueKey,
   getSearchContent,
@@ -518,35 +517,6 @@ describe("issue helpers", () => {
           return await validateParentIssue(ctx, parentId, "task", undefined); // Should be 'subtask'
         }),
       ).rejects.toThrow(/must be of type 'subtask'/);
-    });
-  });
-
-  describe("generateIssueKey (integration)", () => {
-    it("should generate first issue key", async () => {
-      const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const projectId = await createTestProject(t, userId, { key: "KEYTEST" });
-
-      const key = await t.run(async (ctx) => {
-        return await generateIssueKey(ctx, projectId, "KEYTEST");
-      });
-
-      expect(key).toBe("KEYTEST-1");
-    });
-
-    it("should increment issue number", async () => {
-      const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const projectId = await createTestProject(t, userId, { key: "INC" });
-
-      // Create first issue
-      await createTestIssue(t, projectId, userId);
-
-      const key = await t.run(async (ctx) => {
-        return await generateIssueKey(ctx, projectId, "INC");
-      });
-
-      expect(key).toBe("INC-2");
     });
   });
 

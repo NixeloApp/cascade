@@ -20,7 +20,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { formatDate } from "@/lib/dates";
+import { formatDate } from "@/lib/formatting";
 import { WEEK } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
 

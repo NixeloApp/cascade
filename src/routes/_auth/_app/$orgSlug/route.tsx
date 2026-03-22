@@ -27,12 +27,7 @@ import {
   useAuthReady,
 } from "@/hooks/useConvexHelpers";
 import { useKeyboardShortcutsWithSequences } from "@/hooks/useKeyboardShortcuts";
-import {
-  OrgContext,
-  type OrgContextType,
-  useOrganization,
-  useOrganizationOptional,
-} from "@/hooks/useOrgContext";
+import { OrgContext, type OrgContextType, useOrganization } from "@/hooks/useOrgContext";
 import { SidebarProvider } from "@/hooks/useSidebarState";
 import {
   clearAuthenticatedSessionMarker,
@@ -43,8 +38,6 @@ import {
   writeLocalStorageJson,
 } from "@/lib/authRecovery";
 import { showError, showSuccess } from "@/lib/toast";
-// Re-export hooks for backwards compatibility with existing imports
-export { useOrganization, useOrganizationOptional };
 
 type UserOrganization = FunctionReturnType<typeof api.organizations.getUserOrganizations>[number];
 type PersistedOrganization = FunctionReturnType<typeof api.organizations.getOrganizationBySlug>;

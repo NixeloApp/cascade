@@ -170,6 +170,7 @@ function OverlayDescription({
   );
 }
 
+export type { OverlaySurface };
 export {
   OverlayBody,
   OverlayDescription,
@@ -181,4 +182,3 @@ export {
   overlaySectionVariants,
   overlayTitleVariants,
 };
-export type { OverlaySurface };

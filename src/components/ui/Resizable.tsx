@@ -95,4 +95,4 @@ function ResizableHandle({ withHandle, className, ...props }: ResizableHandlePro
   );
 }
 
-export { ResizablePanelGroup, ResizablePanel, ResizableHandle };
+export { ResizableHandle, ResizablePanel, ResizablePanelGroup };

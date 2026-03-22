@@ -237,9 +237,9 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<"span"
 
 export {
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
-  PaginationPrevious,
   PaginationNext,
-  PaginationEllipsis,
+  PaginationPrevious,
 };

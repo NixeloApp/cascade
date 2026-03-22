@@ -355,9 +355,6 @@ export async function sendEmailWithProvider(
   return { ...result, provider: providerName };
 }
 
-// Re-export types
-export type { EmailSendParams, EmailSendResult };
-
 // =============================================================================
 // Internal Actions/Mutations for Async Sending
 // =============================================================================

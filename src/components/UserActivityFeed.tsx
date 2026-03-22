@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { LucideIcon } from "lucide-react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { formatRelativeTime } from "@/lib/dates";
+import { formatRelativeTime } from "@/lib/formatting";
 import {
   AlertTriangle,
   Ban,

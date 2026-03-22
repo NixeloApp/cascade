@@ -104,4 +104,4 @@ function CollapsibleHeader({
   );
 }
 
-export { Collapsible, CollapsibleTrigger, CollapsibleContent, CollapsibleHeader };
+export { Collapsible, CollapsibleContent, CollapsibleHeader, CollapsibleTrigger };

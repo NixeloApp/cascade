@@ -18,5 +18,5 @@ const iconToneClasses = {
 
 type IconTone = keyof typeof iconToneClasses;
 
-export { iconToneClasses };
 export type { IconTone };
+export { iconToneClasses };

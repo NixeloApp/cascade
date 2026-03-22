@@ -35,7 +35,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { formatDate } from "@/lib/dates";
+import { formatDate } from "@/lib/formatting";
 import { Trophy } from "@/lib/icons";
 import { getStatusBadgeTone } from "@/lib/issue-utils";
 import {

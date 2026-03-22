@@ -2,23 +2,9 @@
  * Date and time utilities
  *
  * Date FORMATTING lives in @/lib/formatting (single source of truth).
- * This file re-exports formatting functions for backward compatibility
- * and provides date calculation/comparison utilities.
+ * This file provides date calculation/comparison utilities only.
  */
 import { DAY, HOUR, MINUTE } from "@/lib/time";
-
-// Re-export all date formatting from the canonical source
-/**
- * Format a date with custom locale options (delegates to formatDate with options)
- */
-export {
-  formatDate,
-  formatDate as formatDateCustom,
-  formatDateForInput,
-  formatDateTime,
-  formatRelativeTime,
-  formatTime,
-} from "@/lib/formatting";
 
 /**
  * Get today's date in YYYY-MM-DD format (local timezone)

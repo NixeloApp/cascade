@@ -69,7 +69,7 @@ const plainTextValue: Value = [{ type: "p", children: [{ text: "plain text value
 const parsedJsonValue: Value = [{ type: "p", children: [{ text: "json value" }] }];
 const changedValue: Value = [{ type: "p", children: [{ text: "changed value" }] }];
 const editorInstance = { id: "mock-editor" } as NonNullable<ReturnType<typeof usePlateEditor>>;
-const plugins = ["mock-plugin"];
+const plugins: ReturnType<typeof getIssueDescriptionPlugins> = [];
 type PlateProps = ComponentProps<typeof Plate>;
 
 let latestPlateProps:
