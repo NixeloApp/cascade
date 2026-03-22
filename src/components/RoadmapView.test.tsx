@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { formatDate } from "@/lib/dates";
+import { formatDate } from "@/lib/formatting";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { fireEvent, render, screen, within } from "@/test/custom-render";

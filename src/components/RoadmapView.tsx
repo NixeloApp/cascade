@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
-import { formatDate } from "@/lib/dates";
+import { formatDate } from "@/lib/formatting";
 import {
   CalendarDays,
   ChevronDown,

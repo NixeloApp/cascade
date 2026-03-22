@@ -156,19 +156,6 @@ async function scanHighestIssueNumber(
 }
 
 /**
- * Generates a unique issue key. Delegates to getNextIssueKey.
- * Kept for backwards compatibility with existing call sites.
- */
-export async function generateIssueKey(
-  ctx: MutationCtx,
-  projectId: Id<"projects">,
-  projectKey: string,
-): Promise<string> {
-  const { key } = await getNextIssueKey(ctx, projectId, projectKey);
-  return key;
-}
-
-/**
  * Checks if an issue key already exists to prevent duplicates.
  *
  * @param ctx - Mutation context.

@@ -11,7 +11,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { formatDate } from "@/lib/dates";
+import { formatDate } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/invoices/$invoiceId")({
   component: InvoiceDetailPage,

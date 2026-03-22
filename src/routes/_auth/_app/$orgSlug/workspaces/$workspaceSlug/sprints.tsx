@@ -6,7 +6,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { formatDate } from "@/lib/dates";
+import { formatDate } from "@/lib/formatting";
 import { Calendar } from "@/lib/icons";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints")({
   component: WorkspaceSprintsPage,

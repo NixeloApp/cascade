@@ -2,7 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { formatRelativeTime } from "@/lib/dates";
+import { formatRelativeTime } from "@/lib/formatting";
 import { DAY, HOUR, MINUTE, WEEK } from "@/lib/time";
 import { render, screen } from "@/test/custom-render";
 import { UserActivityFeed } from "./UserActivityFeed";
@@ -11,7 +11,7 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedQuery: vi.fn(),
 }));
 
-vi.mock("@/lib/dates", () => ({
+vi.mock("@/lib/formatting", () => ({
   formatRelativeTime: vi.fn(),
 }));
 
