@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api } from "./_generated/api";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -10,6 +11,9 @@ import {
   createTestUser,
   expectThrowsAsync,
 } from "./testUtils";
+
+/** Sunday 2024-01-07T00:00:00Z — stable base for period arithmetic. */
+const BASE_PERIOD_START = Date.UTC(2024, 0, 7);
 
 describe("Hour Compliance", () => {
   test("detects under hours", async () => {
@@ -260,8 +264,8 @@ describe("Hour Compliance", () => {
           await ctx.db.insert("hourComplianceRecords", {
             userId: adminId,
             periodType: "week",
-            periodStart: 1704585600000 + i * 604800000,
-            periodEnd: 1704585600000 + (i + 1) * 604800000,
+            periodStart: BASE_PERIOD_START + i * WEEK,
+            periodEnd: BASE_PERIOD_START + (i + 1) * WEEK,
             totalHoursWorked: 40,
             status: "compliant",
             notificationSent: false,
@@ -296,29 +300,29 @@ describe("Hour Compliance", () => {
 
         await ctx.db.insert("hourComplianceRecords", {
           ...base,
-          periodStart: 1704585600000,
-          periodEnd: 1705190400000,
+          periodStart: BASE_PERIOD_START,
+          periodEnd: BASE_PERIOD_START + WEEK,
           status: "compliant",
         });
         await ctx.db.insert("hourComplianceRecords", {
           ...base,
-          periodStart: 1705190400000,
-          periodEnd: 1705795200000,
+          periodStart: BASE_PERIOD_START + WEEK,
+          periodEnd: BASE_PERIOD_START + 2 * WEEK,
           status: "under_hours",
           hoursDeficit: 5,
         });
         await ctx.db.insert("hourComplianceRecords", {
           ...base,
-          periodStart: 1705795200000,
-          periodEnd: 1706400000000,
+          periodStart: BASE_PERIOD_START + 2 * WEEK,
+          periodEnd: BASE_PERIOD_START + 3 * WEEK,
           totalHoursWorked: 50,
           status: "over_hours",
           hoursExcess: 10,
         });
         await ctx.db.insert("hourComplianceRecords", {
           ...base,
-          periodStart: 1706400000000,
-          periodEnd: 1707004800000,
+          periodStart: BASE_PERIOD_START + 3 * WEEK,
+          periodEnd: BASE_PERIOD_START + 4 * WEEK,
           status: "equity_under",
           equityHoursDeficit: 2,
         });
