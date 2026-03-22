@@ -638,3 +638,115 @@ export const getOrgAnalytics = authenticatedQuery({
     };
   },
 });
+
+/**
+ * Get cycle time and lead time stats for a project.
+ *
+ * Cycle time: median time from first "inprogress" status to "done" status.
+ * Lead time: median time from issue creation to "done" status.
+ *
+ * Analyzes the most recent completed issues (up to 100).
+ */
+export const getTimeMetrics = projectQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = clampLimit(args.limit, 100);
+    const project = ctx.project;
+    if (!project) return null;
+
+    // Find done status IDs
+    const doneStatusIds = new Set(
+      project.workflowStates
+        .filter((s) => s.category === "done")
+        .map((s) => s.id),
+    );
+
+    const inProgressStatusIds = new Set(
+      project.workflowStates
+        .filter((s) => s.category === "inprogress")
+        .map((s) => s.id),
+    );
+
+    if (doneStatusIds.size === 0) return null;
+
+    // Find recently completed issues
+    const completedIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("isDeleted"), true),
+          q.eq(q.field("archivedAt"), undefined),
+        ),
+      )
+      .order("desc")
+      .take(MAX_PAGE_SIZE);
+
+    const doneIssues = completedIssues
+      .filter((issue) => doneStatusIds.has(issue.status))
+      .slice(0, limit);
+
+    if (doneIssues.length === 0) {
+      return {
+        cycleTimeMedianDays: null,
+        leadTimeMedianDays: null,
+        sampleSize: 0,
+        cycleTimeData: [],
+        leadTimeData: [],
+      };
+    }
+
+    // For each done issue, find when it first entered inprogress (cycle time start)
+    // and use _creationTime for lead time start
+    const cycleTimeDays: number[] = [];
+    const leadTimeDays: number[] = [];
+
+    for (const issue of doneIssues) {
+      // Lead time: creation → now (issue is in done status)
+      const leadTime = (issue.updatedAt - issue._creationTime) / DAY;
+      if (leadTime >= 0) leadTimeDays.push(Math.round(leadTime * 10) / 10);
+
+      // Cycle time: first inprogress activity → updatedAt
+      // We approximate using the issue's updatedAt as the "done" timestamp
+      // and look for the first status change to inprogress in activity
+      const activities = await ctx.db
+        .query("issueActivity")
+        .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("action"), "updated"),
+            q.eq(q.field("field"), "status"),
+          ),
+        )
+        .take(50);
+
+      // Find earliest transition to inprogress
+      const inProgressActivity = activities.find((a) =>
+        a.newValue && inProgressStatusIds.has(a.newValue),
+      );
+
+      if (inProgressActivity) {
+        const cycleTime = (issue.updatedAt - inProgressActivity._creationTime) / DAY;
+        if (cycleTime >= 0) cycleTimeDays.push(Math.round(cycleTime * 10) / 10);
+      }
+    }
+
+    // Calculate medians
+    const median = (arr: number[]) => {
+      if (arr.length === 0) return null;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    };
+
+    return {
+      cycleTimeMedianDays: median(cycleTimeDays),
+      leadTimeMedianDays: median(leadTimeDays),
+      sampleSize: doneIssues.length,
+      cycleTimeData: cycleTimeDays.slice(0, 20), // Last 20 for sparkline
+      leadTimeData: leadTimeDays.slice(0, 20),
+    };
+  },
+});

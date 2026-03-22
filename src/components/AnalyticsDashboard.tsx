@@ -130,6 +130,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
     projectId,
     limit: 10,
   });
+  const timeMetrics = useAuthenticatedQuery(api.analytics.getTimeMetrics, { projectId });
 
   if (!(analytics && velocity)) {
     return (
@@ -284,6 +285,22 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
             icon={CheckCircle}
             testId={TEST_IDS.ANALYTICS.METRIC_COMPLETED_SPRINTS}
           />
+          {timeMetrics && timeMetrics.cycleTimeMedianDays !== null && (
+            <MetricCard
+              title="Cycle Time"
+              value={timeMetrics.cycleTimeMedianDays}
+              subtitle="days (median)"
+              icon={TrendingUp}
+            />
+          )}
+          {timeMetrics && timeMetrics.leadTimeMedianDays !== null && (
+            <MetricCard
+              title="Lead Time"
+              value={timeMetrics.leadTimeMedianDays}
+              subtitle="days (median)"
+              icon={TrendingUp}
+            />
+          )}
         </Grid>
 
         <Grid cols={1} colsLg={2} gap="lg">
