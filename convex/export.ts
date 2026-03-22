@@ -41,7 +41,8 @@ async function queryProjectIssues(
         .query("issues")
         .withIndex("by_project_sprint_status", (q) =>
           q.eq("projectId", projectId).eq("sprintId", sprintId).eq("status", status),
-        ),
+        )
+        .filter(notDeleted),
       limit,
       label,
     );
@@ -54,7 +55,8 @@ async function queryProjectIssues(
         .query("issues")
         .withIndex("by_project_sprint_status", (q) =>
           q.eq("projectId", projectId).eq("sprintId", sprintId),
-        ),
+        )
+        .filter(notDeleted),
       limit,
       label,
     );
@@ -65,14 +67,18 @@ async function queryProjectIssues(
     return safeCollect(
       ctx.db
         .query("issues")
-        .withIndex("by_project_status", (q) => q.eq("projectId", projectId).eq("status", status)),
+        .withIndex("by_project_status", (q) => q.eq("projectId", projectId).eq("status", status))
+        .filter(notDeleted),
       limit,
       label,
     );
   }
 
   return safeCollect(
-    ctx.db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
+    ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", projectId))
+      .filter(notDeleted),
     limit,
     label,
   );

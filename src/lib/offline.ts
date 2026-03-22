@@ -538,7 +538,7 @@ function computeNextRetryAfter(attempts: number): number | undefined {
   if (attempts >= MAX_OFFLINE_REPLAY_ATTEMPTS) {
     return undefined;
   }
-  const backoffIndex = Math.min(attempts, RETRY_BACKOFF_MS.length - 1);
+  const backoffIndex = Math.min(Math.max(0, attempts - 1), RETRY_BACKOFF_MS.length - 1);
   return Date.now() + RETRY_BACKOFF_MS[backoffIndex];
 }
 

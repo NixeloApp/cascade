@@ -83,10 +83,15 @@ export const getToken = projectAdminMutation({
   },
 });
 
-/** Query whether an active intake token exists for this project. */
+/** Query whether an active intake token exists for this project (admin-only). */
 export const getTokenStatus = projectQuery({
   args: {},
   handler: async (ctx) => {
+    // Only admins can see token details — matches createToken/revokeToken guard.
+    if (ctx.role !== "admin") {
+      return { exists: false as const, token: null, createdAt: null };
+    }
+
     const token = await ctx.db
       .query("intakeTokens")
       .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))

@@ -126,6 +126,19 @@ export function IntakeSettings({ projectId }: IntakeSettingsProps) {
     }
   };
 
+  const handleRegenerate = async () => {
+    setIsCreating(true);
+    try {
+      await revokeToken({ projectId });
+      await createToken({ projectId });
+      showSuccess("Intake token regenerated");
+    } catch (error) {
+      showError(error, "Failed to regenerate intake token");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const handleRevoke = async () => {
     setIsRevoking(true);
     try {
@@ -173,7 +186,7 @@ export function IntakeSettings({ projectId }: IntakeSettingsProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleCreate}
+                onClick={handleRegenerate}
                 disabled={isCreating}
                 leftIcon={<Icon icon={RotateCcw} size="sm" />}
               >

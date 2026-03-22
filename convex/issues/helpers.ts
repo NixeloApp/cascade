@@ -136,18 +136,23 @@ async function scanHighestIssueNumber(
   ctx: MutationCtx,
   projectId: Id<"projects">,
 ): Promise<number> {
-  const latestIssue = await ctx.db
+  // Must scan all issues — the by_project index sorts by creation time,
+  // not by key number. Issues created out of order (e.g., imports) would
+  // cause .order("desc").first() to return a lower-numbered key.
+  const issues = await ctx.db
     .query("issues")
     .withIndex("by_project", (q) => q.eq("projectId", projectId))
-    .order("desc")
-    .first();
+    .collect();
 
-  if (!latestIssue) {
-    return 0;
+  let max = 0;
+  for (const issue of issues) {
+    const match = issue.key.match(/-(\d+)$/);
+    if (match) {
+      const num = Number.parseInt(match[1], 10);
+      if (num > max) max = num;
+    }
   }
-
-  const match = latestIssue.key.match(/-(\d+)$/);
-  return match ? Number.parseInt(match[1], 10) : 0;
+  return max;
 }
 
 /**

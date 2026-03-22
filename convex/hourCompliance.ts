@@ -519,18 +519,18 @@ async function fetchComplianceRecords(
 
   let results: Doc<"hourComplianceRecords">[];
 
-  if (startDate && endDate) {
+  if (startDate !== undefined && endDate !== undefined) {
     results = await ctx.db
       .query("hourComplianceRecords")
       .withIndex("by_period", (q) => q.gte("periodStart", startDate).lte("periodStart", endDate))
       .filter((q) => q.lte(q.field("periodEnd"), endDate))
       .take(fetchLimit);
-  } else if (startDate) {
+  } else if (startDate !== undefined) {
     results = await ctx.db
       .query("hourComplianceRecords")
       .withIndex("by_period", (q) => q.gte("periodStart", startDate))
       .take(fetchLimit);
-  } else if (endDate) {
+  } else if (endDate !== undefined) {
     results = await ctx.db
       .query("hourComplianceRecords")
       .withIndex("by_period", (q) => q.lte("periodStart", endDate))
