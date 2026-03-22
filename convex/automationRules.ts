@@ -10,9 +10,11 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import { authenticatedMutation, projectAdminMutation, projectQuery } from "./customFunctions";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { notFound, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
+import { DAY } from "./lib/timeUtils";
 import { assertIsProjectAdmin } from "./projectAccess";
 import { automationActionTypes, automationActionValue, automationTriggers } from "./validators";
 
@@ -281,5 +283,102 @@ export const executeRules = internalMutation({
         );
       }
     }
+  },
+});
+
+interface StaleTriggerConfig {
+  statusId: string;
+  days: number;
+}
+
+function parseStaleTriggerValue(value: string | undefined): StaleTriggerConfig | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as Record<string, unknown>;
+    if (typeof parsed.statusId === "string" && typeof parsed.days === "number" && parsed.days > 0) {
+      return { statusId: parsed.statusId, days: parsed.days };
+    }
+  } catch {
+    // Invalid JSON — skip rule
+  }
+  return null;
+}
+
+/**
+ * Process scheduled automation triggers (stale_in_status).
+ * Runs daily via cron. Finds issues that have been in a specific status
+ * for longer than the configured number of days and executes the rule's action.
+ */
+export const processScheduledTriggers = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    // Find all active stale_in_status rules
+    const rules = await ctx.db
+      .query("automationRules")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .filter((q) => q.eq(q.field("trigger"), "stale_in_status"))
+      .take(BOUNDED_LIST_LIMIT);
+
+    let totalExecuted = 0;
+
+    for (const rule of rules) {
+      const config = parseStaleTriggerValue(rule.triggerValue);
+      if (!config) continue;
+
+      const cutoff = now - config.days * DAY;
+
+      // Find issues in the target status that haven't been updated recently
+      const issues = await ctx.db
+        .query("issues")
+        .withIndex("by_project", (q) => q.eq("projectId", rule.projectId))
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("status"), config.statusId),
+            q.neq(q.field("isDeleted"), true),
+            q.eq(q.field("archivedAt"), undefined),
+            q.lt(q.field("updatedAt"), cutoff),
+          ),
+        )
+        .take(BOUNDED_LIST_LIMIT);
+
+      const results = await Promise.all(
+        issues.map(async (issue) => {
+          try {
+            const { executed } = await executeAutomationAction(
+              ctx,
+              rule,
+              issue._id,
+              issue.labels || [],
+            );
+            return executed ? 1 : 0;
+          } catch (error) {
+            logger.error(
+              `[automationRules] Scheduled rule "${rule.name}" (${rule._id}) failed for issue ${issue._id}:`,
+              { error },
+            );
+            return 0;
+          }
+        }),
+      );
+
+      const executedForRule = results.reduce<number>((sum, v) => sum + v, 0);
+      if (executedForRule > 0) {
+        await ctx.db.patch(rule._id, {
+          executionCount: rule.executionCount + executedForRule,
+        });
+        totalExecuted += executedForRule;
+      }
+    }
+
+    if (totalExecuted > 0) {
+      logger.info("[automationRules] Processed scheduled triggers", {
+        rulesChecked: rules.length,
+        actionsExecuted: totalExecuted,
+      });
+    }
+
+    return { executed: totalExecuted };
   },
 });

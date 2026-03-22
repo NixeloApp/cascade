@@ -55,6 +55,18 @@ crons.daily(
 );
 
 /**
+ * Process scheduled automation triggers (stale_in_status)
+ * Runs daily at 4:00 AM UTC
+ * Finds issues that have been in a specific status for longer than configured days
+ * and executes the matching automation rule's action
+ */
+crons.daily(
+  "process scheduled automation triggers",
+  { hourUTC: 4, minuteUTC: 0 },
+  internal.automationRules.processScheduledTriggers,
+);
+
+/**
  * Auto-archive done issues
  * Runs daily at 3:00 AM UTC
  * Archives issues in "done" workflow states older than the project's autoArchiveDays setting
