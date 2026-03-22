@@ -197,7 +197,7 @@ function TableOfContents({
           style={{ paddingLeft: `${(heading.level - 1) * 12 + 8}px` }}
           title={heading.text}
         >
-          <Icon icon={Hash} size="xs" className="shrink-0 opacity-50" />
+          <Icon icon={Hash} size="xs" tone="tertiary" className="shrink-0" />
           <span className="truncate">{heading.text}</span>
         </Button>
       ))}

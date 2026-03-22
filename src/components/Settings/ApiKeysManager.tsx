@@ -162,7 +162,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
     <SettingsSectionInset
       title={apiKey.name}
       action={
-        <Flex gap="sm" align="center" className="ml-4">
+        <Flex gap="sm" align="center">
           {apiKey.isActive ? (
             <Badge variant="success">Active</Badge>
           ) : (
@@ -402,7 +402,6 @@ function GenerateKeyModal({
                           id={`scope-${scope.value}`}
                           checked={selectedScopes.includes(scope.value)}
                           onChange={() => toggleScope(scope.value)}
-                          className="mt-0.5"
                         />
                         <Stack gap="none">
                           <Typography variant="label">{scope.label}</Typography>
