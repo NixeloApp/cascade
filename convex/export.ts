@@ -10,6 +10,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { projectEditorMutation, projectQuery } from "./customFunctions";
+import { getNextIssueKey } from "./issues/helpers";
 import { batchFetchSprints, batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, safeCollect } from "./lib/boundedQueries";
 import { validation } from "./lib/errors";
@@ -17,36 +18,17 @@ import { getPlainTextFromDescription } from "./lib/richText";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
 /**
- * Compute the next sequential issue key and the insertion order for a project.
- *
- * @param projectId - The project identifier used to find existing issues
- * @param projectKey - The project's short key used as the prefix for generated issue keys (for example, `PROJ`)
- * @returns An object with `key` set to the next issue key (e.g., `PROJ-12`) and `order` equal to the current count of existing issues
+ * Allocate the next issue key and compute an insertion order for imports.
+ * Delegates key generation to the centralized atomic counter.
  */
 async function generateNextIssueKey(
   ctx: MutationCtx,
   projectId: Id<"projects">,
   projectKey: string,
 ): Promise<{ key: string; order: number }> {
-  // Get the most recent issue by creation time to find the highest key number
-  // Order desc and take first - efficient O(1) lookup instead of scanning all issues
-  const latestIssue = await ctx.db
-    .query("issues")
-    .withIndex("by_project", (q) => q.eq("projectId", projectId))
-    .order("desc")
-    .first();
+  const { key } = await getNextIssueKey(ctx, projectId, projectKey);
 
-  let maxNumber = 0;
-  if (latestIssue) {
-    const match = latestIssue.key.match(/-(\d+)$/);
-    if (match) {
-      maxNumber = Number.parseInt(match[1], 10);
-    }
-  }
-
-  const key = `${projectKey}-${maxNumber + 1}`;
-
-  // Get approximate order (bounded count)
+  // Get approximate order (bounded count) for column positioning
   const issueCount = await ctx.db
     .query("issues")
     .withIndex("by_project", (q) => q.eq("projectId", projectId))

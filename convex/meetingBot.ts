@@ -18,7 +18,7 @@ import {
   query,
 } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { generateIssueKey, getMaxOrderForStatus, getSearchContent } from "./issues/helpers";
+import { getMaxOrderForStatus, getNextIssueKey, getSearchContent } from "./issues/helpers";
 import { batchFetchCalendarEvents, batchFetchRecordings } from "./lib/batchHelpers";
 import { requireBotApiKey } from "./lib/botAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
@@ -1118,7 +1118,7 @@ export const createIssueFromActionItem = authenticatedMutation({
     await validateAssigneeMembership(ctx, project.organizationId, actionItem.assigneeUserId);
 
     const status = project.workflowStates[0]?.id ?? "todo";
-    const issueKey = await generateIssueKey(ctx, args.projectId, project.key);
+    const { key: issueKey } = await getNextIssueKey(ctx, args.projectId, project.key);
     const maxOrder = await getMaxOrderForStatus(ctx, args.projectId, status);
     const description = "Created from meeting action item";
 

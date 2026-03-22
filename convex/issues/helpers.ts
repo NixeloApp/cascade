@@ -87,38 +87,80 @@ export async function validateParentIssue(
 }
 
 /**
- * Generates a unique issue key (e.g., "PROJ-123") with race condition protection.
+ * Atomically allocates the next issue number for a project.
  *
- * Finds the highest existing key number in the project and increments it.
- * Note: This relies on creation time ordering and keys being sequential.
+ * Uses the `nextIssueNumber` counter on the project document as a sequence.
+ * Because Convex serializes mutations that touch the same document, two
+ * concurrent calls will never receive the same number — the second caller
+ * will see the incremented value written by the first.
+ *
+ * For projects created before the counter field existed, the first call
+ * bootstraps the counter from the highest existing issue key number.
  *
  * @param ctx - Mutation context.
  * @param projectId - The project ID.
  * @param projectKey - The project key prefix (e.g., "PROJ").
- * @returns The generated key string.
+ * @returns The generated key string (e.g., "PROJ-42") and the sequence number.
  */
-export async function generateIssueKey(
+export async function getNextIssueKey(
   ctx: MutationCtx,
   projectId: Id<"projects">,
   projectKey: string,
-): Promise<string> {
-  // Get the most recent issue by creation time to find the highest key number
-  // We order desc and take the first - this works because keys are sequential
+): Promise<{ key: string; number: number }> {
+  const project = await ctx.db.get(projectId);
+  if (!project) {
+    throw notFound("projects");
+  }
+
+  let currentNumber = project.nextIssueNumber;
+
+  // Bootstrap: project predates the counter — scan existing keys once.
+  if (currentNumber === undefined) {
+    currentNumber = await scanHighestIssueNumber(ctx, projectId);
+  }
+
+  const nextNumber = currentNumber + 1;
+
+  // Atomic increment — Convex serializes writes to the same document,
+  // so concurrent mutations are safe.
+  await ctx.db.patch(projectId, { nextIssueNumber: nextNumber });
+
+  return { key: `${projectKey}-${nextNumber}`, number: nextNumber };
+}
+
+/**
+ * Scans existing issues to find the highest key number.
+ * Used only once per project to bootstrap the counter for legacy projects.
+ */
+async function scanHighestIssueNumber(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+): Promise<number> {
   const latestIssue = await ctx.db
     .query("issues")
     .withIndex("by_project", (q) => q.eq("projectId", projectId))
     .order("desc")
     .first();
 
-  let maxNumber = 0;
-  if (latestIssue) {
-    const match = latestIssue.key.match(/-(\d+)$/);
-    if (match) {
-      maxNumber = parseInt(match[1], 10);
-    }
+  if (!latestIssue) {
+    return 0;
   }
 
-  return `${projectKey}-${maxNumber + 1}`;
+  const match = latestIssue.key.match(/-(\d+)$/);
+  return match ? Number.parseInt(match[1], 10) : 0;
+}
+
+/**
+ * Generates a unique issue key. Delegates to getNextIssueKey.
+ * Kept for backwards compatibility with existing call sites.
+ */
+export async function generateIssueKey(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+  projectKey: string,
+): Promise<string> {
+  const { key } = await getNextIssueKey(ctx, projectId, projectKey);
+  return key;
 }
 
 /**

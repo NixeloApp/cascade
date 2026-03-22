@@ -9,6 +9,7 @@ import {
   fetchIssuesWithProjects,
   generateIssueKey,
   getMaxOrderForStatus,
+  getNextIssueKey,
   getSearchContent,
   matchesArrayFilter,
   matchesAssigneeFilter,
@@ -546,6 +547,108 @@ describe("issue helpers", () => {
       });
 
       expect(key).toBe("INC-2");
+    });
+  });
+
+  describe("getNextIssueKey (atomic counter)", () => {
+    it("should generate first key and set counter to 1", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId, { key: "ATOM" });
+
+      const result = await t.run(async (ctx) => {
+        return await getNextIssueKey(ctx, projectId, "ATOM");
+      });
+
+      expect(result.key).toBe("ATOM-1");
+      expect(result.number).toBe(1);
+
+      // Verify the counter was persisted on the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.nextIssueNumber).toBe(1);
+    });
+
+    it("should increment counter on successive calls", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId, { key: "SEQ" });
+
+      const first = await t.run(async (ctx) => {
+        return await getNextIssueKey(ctx, projectId, "SEQ");
+      });
+      const second = await t.run(async (ctx) => {
+        return await getNextIssueKey(ctx, projectId, "SEQ");
+      });
+      const third = await t.run(async (ctx) => {
+        return await getNextIssueKey(ctx, projectId, "SEQ");
+      });
+
+      expect(first.key).toBe("SEQ-1");
+      expect(second.key).toBe("SEQ-2");
+      expect(third.key).toBe("SEQ-3");
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.nextIssueNumber).toBe(3);
+    });
+
+    it("should bootstrap counter from existing issues for legacy projects", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId, { key: "LEGACY" });
+
+      // Simulate legacy state: issues exist but no counter on project
+      await createTestIssue(t, projectId, userId); // LEGACY-1
+      await createTestIssue(t, projectId, userId); // LEGACY-2
+
+      // Verify project has no counter yet (test helper doesn't set it)
+      const projectBefore = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(projectBefore?.nextIssueNumber).toBeUndefined();
+
+      // First call should bootstrap from existing keys
+      const result = await t.run(async (ctx) => {
+        return await getNextIssueKey(ctx, projectId, "LEGACY");
+      });
+
+      expect(result.key).toBe("LEGACY-3");
+      expect(result.number).toBe(3);
+
+      // Counter should now be persisted
+      const projectAfter = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(projectAfter?.nextIssueNumber).toBe(3);
+    });
+
+    it("should never produce duplicate keys across sequential calls", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId, { key: "UNIQ" });
+
+      const keys = new Set<string>();
+      for (let i = 0; i < 10; i++) {
+        const result = await t.run(async (ctx) => {
+          return await getNextIssueKey(ctx, projectId, "UNIQ");
+        });
+        expect(keys.has(result.key)).toBe(false);
+        keys.add(result.key);
+      }
+
+      expect(keys.size).toBe(10);
+    });
+
+    it("should throw for non-existent project", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId, { key: "X" });
+
+      // Delete the project to simulate non-existent
+      await t.run(async (ctx) => {
+        await ctx.db.delete(projectId);
+      });
+
+      await expect(
+        t.run(async (ctx) => {
+          return await getNextIssueKey(ctx, projectId, "X");
+        }),
+      ).rejects.toThrow();
     });
   });
 

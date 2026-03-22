@@ -9,6 +9,7 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { projectAdminMutation } from "./customFunctions";
+import { getNextIssueKey } from "./issues/helpers";
 
 /** Generate a secure intake token */
 function generateIntakeToken(): string {
@@ -110,17 +111,12 @@ export const createExternal = mutation({
 
     const now = Date.now();
 
-    // Create the issue
-    // Use the project's issue sequence for key generation.
-    // Count via order desc + first to get the highest existing number.
-    const lastIssue = await ctx.db
-      .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", tokenRecord.projectId))
-      .order("desc")
-      .first();
-
-    const nextNumber = lastIssue ? (lastIssue.order ?? 0) + 1 : 1;
-    const key = `${project.key}-${nextNumber}`;
+    // Atomically allocate the next issue key via the project's sequence counter.
+    const { key, number: issueNumber } = await getNextIssueKey(
+      ctx,
+      tokenRecord.projectId,
+      project.key,
+    );
     const defaultStatus = project.workflowStates[0]?.id ?? "todo";
 
     const issueId = await ctx.db.insert("issues", {
@@ -139,7 +135,7 @@ export const createExternal = mutation({
       reporterId: tokenRecord.createdBy,
       updatedAt: now,
       version: 1,
-      order: nextNumber,
+      order: issueNumber,
     });
 
     // Create inbox issue for triage
