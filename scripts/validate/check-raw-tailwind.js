@@ -16,9 +16,11 @@ import path from "node:path";
 import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
 import {
   collectClassNameSpan,
+  detectClassStringHiding,
   findOpeningTag,
   isRawTailwindBoundary,
   RAW_TAILWIND_PATTERNS,
+  RAW_TAILWIND_STRUCTURAL_ALLOWLIST,
 } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
@@ -199,17 +201,12 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
-    // Pre-scan: collect const string declarations that contain raw TW patterns.
-    // This catches the anti-pattern of hiding raw Tailwind behind a variable:
-    //   const FOO = "w-full sm:max-w-xl";  <-- still raw TW
-    //   <Sheet className={FOO} />           <-- would otherwise dodge detection
+    // Pre-scan: detect class-string hiding (const strings and object maps)
+    const hiddenClassViolations = detectClassStringHiding(lines);
     const constStringMap = new Map();
-    for (let i = 0; i < lines.length; i++) {
-      const constMatch = lines[i].match(
-        /\bconst\s+([A-Z_][A-Z_0-9]*)\s*=\s*["'`]([\s\S]*?)["'`]\s*;/,
-      );
-      if (constMatch) {
-        constStringMap.set(constMatch[1], { value: constMatch[2], line: i });
+    for (const v of hiddenClassViolations) {
+      if (v.type === "const-string") {
+        constStringMap.set(v.name, { value: v.value, line: v.line });
       }
     }
 
@@ -229,22 +226,38 @@ export function run() {
         continue;
       }
 
+      // Skip structural Tailwind patterns that are legitimate layout concerns
+      if (
+        RAW_TAILWIND_STRUCTURAL_ALLOWLIST.some((allow) => {
+          // Tag-based allowlist entries (e.g., Skeleton) check the opening tag
+          if (allow.source.startsWith("^<")) return allow.test(tagText.trim());
+          // Class-based entries check the className span
+          return allow.test(span);
+        })
+      ) {
+        index = endIndex;
+        continue;
+      }
+
       // Resolve className={CONST_VAR} references to their string value
       let resolvedSpan = span;
+      let isConstRef = false;
       const varRefMatch = span.match(/className\s*=\s*\{([A-Z_][A-Z_0-9]*)\}/);
       if (varRefMatch) {
         const entry = constStringMap.get(varRefMatch[1]);
         if (entry) {
           resolvedSpan = `className="${entry.value}"`;
+          isConstRef = true;
         }
       }
 
       for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
         if (!pattern.test(resolvedSpan)) continue;
 
+        const suffix = isConstRef ? " (hidden in const — still raw Tailwind)" : "";
         const violation = {
           line: index + 1,
-          replacement: `${replacement} (class string extracted to const — still raw Tailwind)`,
+          replacement: `${replacement}${suffix}`,
         };
         const bucket = violationsByFile[rel] ?? [];
         bucket.push(violation);
@@ -254,6 +267,17 @@ export function run() {
 
       // Skip past multiline spans to avoid double-counting
       index = endIndex;
+    }
+
+    // Report class-map hiding as separate violations
+    for (const v of hiddenClassViolations.filter((h) => h.type === "object-map")) {
+      const violation = {
+        line: v.line + 1,
+        replacement: `hidden style map "${v.name}" — use plain Tailwind or extract a component`,
+      };
+      const bucket = violationsByFile[rel] ?? [];
+      bucket.push(violation);
+      violationsByFile[rel] = bucket;
     }
   }
 
