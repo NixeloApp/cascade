@@ -169,6 +169,85 @@ describe("Export", () => {
       expect(csv).not.toContain("Todo Issue");
     });
 
+    it("should filter by both sprint and status simultaneously", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Combined Filter Project",
+        key: "CMB",
+      });
+
+      const sprintId = await t.run(async (ctx) => {
+        return await ctx.db.insert("sprints", {
+          projectId,
+          name: "Sprint A",
+          status: "active",
+          startDate: Date.now(),
+          endDate: Date.now() + 2 * WEEK,
+          createdBy: userId,
+          updatedAt: Date.now(),
+        });
+      });
+
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        const base = {
+          projectId,
+          organizationId: project.organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          type: "task" as const,
+          priority: "medium" as const,
+          reporterId: userId,
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          loggedHours: 0,
+          updatedAt: Date.now(),
+        };
+
+        // Sprint + done
+        await ctx.db.insert("issues", {
+          ...base,
+          key: "CMB-1",
+          title: "Sprint Done",
+          status: "done",
+          sprintId,
+          order: 0,
+        });
+        // Sprint + todo
+        await ctx.db.insert("issues", {
+          ...base,
+          key: "CMB-2",
+          title: "Sprint Todo",
+          status: "todo",
+          sprintId,
+          order: 1,
+        });
+        // No sprint + done
+        await ctx.db.insert("issues", {
+          ...base,
+          key: "CMB-3",
+          title: "No Sprint Done",
+          status: "done",
+          order: 2,
+        });
+      });
+
+      // Filter by both sprint AND status=done — should get only "Sprint Done"
+      const csv = await asUser.query(api.export.exportIssuesCSV, {
+        projectId,
+        sprintId,
+        status: "done",
+      });
+
+      expect(csv).toContain("Sprint Done");
+      expect(csv).not.toContain("Sprint Todo");
+      expect(csv).not.toContain("No Sprint Done");
+    });
+
     it("should reject unauthenticated users", async () => {
       const t = convexTest(schema, modules);
       const { userId, organizationId } = await createTestContext(t);

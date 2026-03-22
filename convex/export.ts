@@ -8,7 +8,7 @@
 
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import type { MutationCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { projectEditorMutation, projectQuery } from "./customFunctions";
 import { getNextIssueKey } from "./issues/helpers";
 import { batchFetchSprints, batchFetchUsers } from "./lib/batchHelpers";
@@ -16,6 +16,67 @@ import { BOUNDED_LIST_LIMIT, safeCollect } from "./lib/boundedQueries";
 import { validation } from "./lib/errors";
 import { getPlainTextFromDescription } from "./lib/richText";
 import { notDeleted } from "./lib/softDeleteHelpers";
+
+/**
+ * Build an optimized issues query using compound indexes instead of .filter().
+ *
+ * Uses these existing indexes:
+ * - sprint + status: `by_project_sprint_status` ["projectId","sprintId","status","order"]
+ * - sprint only:     `by_project_sprint_status` (prefix match on projectId + sprintId)
+ * - status only:     `by_project_status` ["projectId","status","order"]
+ * - no filter:       `by_project` ["projectId"]
+ */
+async function queryProjectIssues(
+  ctx: QueryCtx,
+  projectId: Id<"projects">,
+  filters: { sprintId?: Id<"sprints">; status?: string },
+  limit: number,
+  label: string,
+) {
+  if (filters.sprintId && filters.status) {
+    const sprintId = filters.sprintId;
+    const status = filters.status;
+    return safeCollect(
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_sprint_status", (q) =>
+          q.eq("projectId", projectId).eq("sprintId", sprintId).eq("status", status),
+        ),
+      limit,
+      label,
+    );
+  }
+
+  if (filters.sprintId) {
+    const sprintId = filters.sprintId;
+    return safeCollect(
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_sprint_status", (q) =>
+          q.eq("projectId", projectId).eq("sprintId", sprintId),
+        ),
+      limit,
+      label,
+    );
+  }
+
+  if (filters.status) {
+    const status = filters.status;
+    return safeCollect(
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_status", (q) => q.eq("projectId", projectId).eq("status", status)),
+      limit,
+      label,
+    );
+  }
+
+  return safeCollect(
+    ctx.db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
+    limit,
+    label,
+  );
+}
 
 /**
  * Allocate the next issue key and compute an insertion order for imports.
@@ -286,27 +347,14 @@ export const exportIssuesCSV = projectQuery({
   handler: async (ctx, args) => {
     // projectQuery handles auth + access check + provides ctx.projectId, ctx.project
 
-    // Get issues with optional sprint/status filtering at the query level
-    let issuesQuery = ctx.db
-      .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId));
-
-    // Apply filters at the query level instead of post-fetch JS .filter()
-    if (args.sprintId && args.status) {
-      const sprintId = args.sprintId;
-      const status = args.status;
-      issuesQuery = issuesQuery.filter((q) =>
-        q.and(q.eq(q.field("sprintId"), sprintId), q.eq(q.field("status"), status)),
-      );
-    } else if (args.sprintId) {
-      const sprintId = args.sprintId;
-      issuesQuery = issuesQuery.filter((q) => q.eq(q.field("sprintId"), sprintId));
-    } else if (args.status) {
-      const status = args.status;
-      issuesQuery = issuesQuery.filter((q) => q.eq(q.field("status"), status));
-    }
-
-    const issues = await safeCollect(issuesQuery, BOUNDED_LIST_LIMIT, "exportIssuesCSV");
+    // Use compound indexes for efficient filtering instead of .filter()
+    const issues = await queryProjectIssues(
+      ctx,
+      ctx.projectId,
+      { sprintId: args.sprintId, status: args.status },
+      BOUNDED_LIST_LIMIT,
+      "exportIssuesCSV",
+    );
 
     // Batch fetch all users and sprints to avoid N+1 queries
     const userIds = [
@@ -466,26 +514,14 @@ export const exportIssuesJSON = projectQuery({
   handler: async (ctx, args) => {
     // projectQuery handles auth + access check + provides ctx.projectId, ctx.project
 
-    // Get issues with optional sprint/status filtering at the query level
-    let issuesQuery = ctx.db
-      .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId));
-
-    if (args.sprintId && args.status) {
-      const sprintId = args.sprintId;
-      const status = args.status;
-      issuesQuery = issuesQuery.filter((q) =>
-        q.and(q.eq(q.field("sprintId"), sprintId), q.eq(q.field("status"), status)),
-      );
-    } else if (args.sprintId) {
-      const sprintId = args.sprintId;
-      issuesQuery = issuesQuery.filter((q) => q.eq(q.field("sprintId"), sprintId));
-    } else if (args.status) {
-      const status = args.status;
-      issuesQuery = issuesQuery.filter((q) => q.eq(q.field("status"), status));
-    }
-
-    const issues = await safeCollect(issuesQuery, BOUNDED_LIST_LIMIT, "exportIssuesJSON");
+    // Use compound indexes for efficient filtering instead of .filter()
+    const issues = await queryProjectIssues(
+      ctx,
+      ctx.projectId,
+      { sprintId: args.sprintId, status: args.status },
+      BOUNDED_LIST_LIMIT,
+      "exportIssuesJSON",
+    );
 
     // Batch fetch all users, sprints, and comment counts to avoid N+1 queries
     const userIds = [
