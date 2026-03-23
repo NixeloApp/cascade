@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -27,6 +28,7 @@ import {
 } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/Button";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
@@ -54,9 +56,17 @@ interface ActivityFeedProps {
 /**
  * Displays a timeline of recent project activity (issue creation, updates, comments).
  */
-export function ActivityFeed({ projectId, limit = 50, compact = false }: ActivityFeedProps) {
+export function ActivityFeed({
+  projectId,
+  limit: initialLimit = 50,
+  compact = false,
+}: ActivityFeedProps) {
   const { orgSlug } = useOrganization();
-  const activities = useAuthenticatedQuery(api.analytics.getRecentActivity, { projectId, limit });
+  const [displayLimit, setDisplayLimit] = useState(initialLimit);
+  const activities = useAuthenticatedQuery(api.analytics.getRecentActivity, {
+    projectId,
+    limit: displayLimit,
+  });
 
   const getActionIcon = (action: string): LucideIcon => {
     switch (action) {
@@ -245,6 +255,18 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
           </Flex>
         </Card>
       ))}
+
+      {!compact && activities.length >= displayLimit && (
+        <Flex justify="center">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setDisplayLimit((prev) => prev + 50)}
+          >
+            Load More
+          </Button>
+        </Flex>
+      )}
     </Flex>
   );
 }

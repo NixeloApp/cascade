@@ -81,7 +81,7 @@ a relative timestamp.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | No pagination -- loads up to 50 entries then stops; no "load more" | `ActivityFeed` | MEDIUM |
+| ~~1~~ | ~~No pagination~~ **Fixed** — "Load More" button appears when results hit the limit, increments by 50 | ~~`ActivityFeed`~~ | ~~MEDIUM~~ |
 | 2 | No filtering by action type, user, or date range | `ActivityFeed` | LOW |
 | ~~3~~ | ~~No link on issue key~~ **Fixed** — issue keys are now `<Link>` elements that navigate to issue detail | ~~`ActivityFeed`~~ | ~~MEDIUM~~ |
 
