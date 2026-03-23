@@ -10,13 +10,11 @@
 
 | Item | Detail |
 |------|--------|
-| AI slop cleanup | Nested cards, redundant shells, panel-in-panel layouts |
-| Mobile/tablet coverage | Backfill responsive gaps |
-| ~~Icon import consistency~~ | ~~82 files imported from lucide-react~~ **Fixed** — all product files now use @/lib/icons barrel (45 icons added) |
+| AI slop cleanup | Redundant shells, panel-in-panel layouts (needs visual review with dev server) |
+| Mobile/tablet coverage | Backfill responsive gaps (needs visual review) |
 | Icon visual consistency | Sizing, stroke-weight rhythm, tone drift (needs visual review) |
-| Shell discipline | Card nesting, composition pattern drift |
-| Raw styling cleanup | 99 files / 186 violations (mostly structural — sidebar padding, timeline positioning, border separators). Diminishing returns. |
-| RoadmapView decomposition | 1761 lines remaining. Types + 48 utilities extracted. Next: extract React sub-components (RoadmapTimelineBar, RoadmapGroupRow, etc.) |
+| Shell discipline | Composition pattern drift (needs visual review) |
+| Raw styling cleanup | 99 files / 186 violations (structural patterns, diminishing returns) |
 
 ### Phase 2: Screenshot Baselines
 
@@ -42,8 +40,8 @@
 | Validators | 53/53 pass |
 | Raw styling violations | 99 files / 186 baselined (was 276) |
 | Fixed size drift | 0 |
-| Ratcheted query debt | ~39 issues |
-| Backend query debt | 0 |
+| RoadmapView | 775 lines (was 2671, 71% reduction via Roadmap/ directory) |
+| Icon imports | 100% via @/lib/icons barrel |
 | Unit tests | 4436+ pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
@@ -62,3 +60,4 @@
 | Width/height tokens | 90% |
 | Animations | 95%+ |
 | Fixed sizing | 100% |
+| Icon imports | 100% |
