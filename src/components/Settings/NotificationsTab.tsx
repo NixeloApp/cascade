@@ -30,8 +30,8 @@ import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Input } from "../ui/form";
-import { InsetPanel } from "../ui/InsetPanel";
 import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
 import { SkeletonText } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
@@ -77,14 +77,14 @@ function NotificationToggleCard({
   onChange,
 }: NotificationToggleCardProps) {
   return (
-    <InsetPanel>
+    <CardSection>
       <SettingsSectionRow
         title={label}
         description={description}
         icon={icon}
         action={<Switch checked={checked} onCheckedChange={onChange} disabled={isDisabled} />}
       />
-    </InsetPanel>
+    </CardSection>
   );
 }
 
@@ -106,7 +106,7 @@ function DigestOptionCard({
   value,
 }: DigestOptionCardProps) {
   return (
-    <InsetPanel>
+    <CardSection>
       <RadioGroupItem
         value={value}
         label={label}
@@ -114,7 +114,7 @@ function DigestOptionCard({
         disabled={isDisabled}
         onClick={onChange}
       />
-    </InsetPanel>
+    </CardSection>
   );
 }
 
@@ -179,9 +179,9 @@ function PushNotificationsPreferences({
 
   if (!pushPreferences) {
     return (
-      <InsetPanel>
+      <CardSection>
         <SkeletonText lines={2} />
-      </InsetPanel>
+      </CardSection>
     );
   }
 
@@ -448,7 +448,7 @@ function QuietHoursRange({
   quietHoursStart: string;
 }) {
   return (
-    <InsetPanel size="md">
+    <CardSection size="md">
       <Stack gap="sm">
         <Typography variant="label">Delivery window</Typography>
         <Flex direction="column" gap="sm" directionSm="row" alignSm="end">
@@ -478,7 +478,7 @@ function QuietHoursRange({
           Default: 10:00 PM to 8:00 AM in your local timezone
         </Typography>
       </Stack>
-    </InsetPanel>
+    </CardSection>
   );
 }
 
@@ -488,26 +488,26 @@ function NotificationsLoadingState() {
       <Card padding="lg">
         <Stack gap="md">
           <SkeletonText lines={2} />
-          <InsetPanel>
+          <CardSection>
             <SkeletonText lines={1} />
-          </InsetPanel>
-          <InsetPanel>
+          </CardSection>
+          <CardSection>
             <SkeletonText lines={1} />
-          </InsetPanel>
+          </CardSection>
         </Stack>
       </Card>
       <Card padding="lg">
         <Stack gap="md">
           <SkeletonText lines={2} />
-          <InsetPanel>
+          <CardSection>
             <SkeletonText lines={1} />
-          </InsetPanel>
-          <InsetPanel>
+          </CardSection>
+          <CardSection>
             <SkeletonText lines={1} />
-          </InsetPanel>
-          <InsetPanel>
+          </CardSection>
+          <CardSection>
             <SkeletonText lines={1} />
-          </InsetPanel>
+          </CardSection>
         </Stack>
       </Card>
     </Stack>

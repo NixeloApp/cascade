@@ -18,11 +18,11 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
-import { InsetPanel } from "../ui/InsetPanel";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { ScrollArea } from "../ui/ScrollArea";
 import { Stack } from "../ui/Stack";
@@ -184,7 +184,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
                   {/* Error message */}
                   {execution.error && (
-                    <InsetPanel
+                    <CardSection
                       size="compact"
                       className="border border-status-error/30 bg-status-error-bg"
                     >
@@ -196,7 +196,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                           {String(execution.error)}
                         </Typography>
                       </Stack>
-                    </InsetPanel>
+                    </CardSection>
                   )}
 
                   {/* Expandable Details */}
@@ -205,24 +205,24 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                       {/* Request Payload */}
                       <Stack gap="xs">
                         <Typography variant="label">Request Payload:</Typography>
-                        <InsetPanel size="compact" className="overflow-x-auto">
+                        <CardSection size="compact" className="overflow-x-auto">
                           <Typography as="pre" variant="mono">
                             {formatJson(execution.requestPayload)}
                           </Typography>
-                        </InsetPanel>
+                        </CardSection>
                       </Stack>
 
                       {/* Response Body */}
                       {execution.responseBody && (
                         <Stack gap="xs">
                           <Typography variant="label">Response Body:</Typography>
-                          <InsetPanel size="compact" className="overflow-x-auto">
+                          <CardSection size="compact" className="overflow-x-auto">
                             <ScrollArea size="contentSm">
                               <Typography as="pre" variant="mono">
                                 {execution.responseBody}
                               </Typography>
                             </ScrollArea>
-                          </InsetPanel>
+                          </CardSection>
                         </Stack>
                       )}
                     </Stack>

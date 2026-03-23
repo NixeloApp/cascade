@@ -15,6 +15,7 @@ import { PageContent } from "@/components/layout";
 import { Badge, type BadgeProps } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -22,7 +23,6 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Label } from "@/components/ui/Label";
 import { List } from "@/components/ui/List";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -801,7 +801,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                       segmentRefs.current[segmentKey] = element;
                     }}
                   >
-                    <InsetPanel size="compact">
+                    <CardSection size="compact">
                       <Stack gap="xs">
                         <Flex justify="between" align="start" gap="sm" wrap>
                           <Flex gap="xs" wrap>
@@ -817,7 +817,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                           {segment.text}
                         </Typography>
                       </Stack>
-                    </InsetPanel>
+                    </CardSection>
                   </li>
                 );
               })}
@@ -926,7 +926,7 @@ function ActionItemCard({
         {actionItem.issueCreated ? (
           <LinkedIssueDetails issueId={actionItem.issueCreated} />
         ) : (
-          <InsetPanel size="compact">
+          <CardSection size="compact">
             <Stack gap="xs">
               <Typography variant="caption" color="secondary">
                 Turn this follow-up into a tracked issue.
@@ -972,7 +972,7 @@ function ActionItemCard({
                 </Flex>
               )}
             </Stack>
-          </InsetPanel>
+          </CardSection>
         )}
       </Stack>
     </Card>
@@ -1249,14 +1249,14 @@ function RecordingDetailPanel({
           </Metadata>
 
           {recording.errorMessage && (
-            <InsetPanel size="compact">
+            <CardSection size="compact">
               <Flex gap="sm" align="start">
                 <Icon icon={XCircle} size="sm" tone="error" />
                 <Typography variant="caption" color="secondary">
                   {recording.errorMessage}
                 </Typography>
               </Flex>
-            </InsetPanel>
+            </CardSection>
           )}
         </Stack>
       </Card>

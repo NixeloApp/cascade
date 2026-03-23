@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, getCardRecipeClassName } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Container } from "../ui/Container";
 import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Grid, GridItem } from "../ui/Grid";
 import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
-import { InsetPanel } from "../ui/InsetPanel";
 import { SectionIntro } from "../ui/SectionIntro";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -101,7 +101,7 @@ export function FinalCTASection() {
 
             <Grid cols={1} colsLg={12} gap="lg">
               <GridItem colSpanLg={8}>
-                <InsetPanel
+                <CardSection
                   size="lg"
                   className={cn(getCardRecipeClassName("dashboardPanel"), "h-full")}
                 >
@@ -124,11 +124,11 @@ export function FinalCTASection() {
                       ))}
                     </Stack>
                   </Stack>
-                </InsetPanel>
+                </CardSection>
               </GridItem>
 
               <GridItem colSpanLg={4}>
-                <InsetPanel
+                <CardSection
                   size="lg"
                   className={cn(getCardRecipeClassName("dashboardPanelInset"), "h-full")}
                 >
@@ -167,7 +167,7 @@ export function FinalCTASection() {
                       </Button>
                     </Stack>
                   </Stack>
-                </InsetPanel>
+                </CardSection>
               </GridItem>
             </Grid>
           </Stack>
@@ -187,7 +187,7 @@ function LaunchStepCard({
   title,
 }: LaunchStep) {
   return (
-    <InsetPanel size="md" className={getCardRecipeClassName("overlayInset")}>
+    <CardSection size="md" className={getCardRecipeClassName("overlayInset")}>
       <Stack gap="md">
         <Flex align="center" justify="between" gap="sm" wrap>
           <Flex align="center" gap="sm" style={{ minWidth: 0 }}>
@@ -213,18 +213,18 @@ function LaunchStepCard({
           <Typography variant="caption">{resultValue}</Typography>
         </Flex>
       </Stack>
-    </InsetPanel>
+    </CardSection>
   );
 }
 
 function ClosingSignalRow({ label, value }: ClosingSignal) {
   return (
-    <InsetPanel size="compact" className={getCardRecipeClassName("overlayInset")}>
+    <CardSection size="compact" className={getCardRecipeClassName("overlayInset")}>
       <Stack gap="xs">
         <Typography variant="pageHeaderEyebrow">{label}</Typography>
         <Typography variant="caption">{value}</Typography>
       </Stack>
-    </InsetPanel>
+    </CardSection>
   );
 }
 

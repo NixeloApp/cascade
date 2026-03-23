@@ -9,7 +9,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
-import { InsetPanel } from "@/components/ui/InsetPanel";
+import { CardSection } from "@/components/ui/CardSection";
 import type { UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
 import { Badge } from "../ui/Badge";
@@ -173,7 +173,7 @@ export function IssueMetadataSection({
 
   return (
     <Stack gap="md">
-      <InsetPanel>
+      <CardSection>
         <Stack gap="sm">
           <PropertyRow label="Status">
             {renderStatusContent(
@@ -211,14 +211,14 @@ export function IssueMetadataSection({
             )}
           </PropertyRow>
         </Stack>
-      </InsetPanel>
+      </CardSection>
 
       {labels.length > 0 && (
         <Stack gap="sm">
           <Typography variant="meta" color="secondary">
             Labels
           </Typography>
-          <InsetPanel size="compact">
+          <CardSection size="compact">
             <Flex wrap gap="sm">
               {labels.map((label) => (
                 <Badge
@@ -231,7 +231,7 @@ export function IssueMetadataSection({
                 </Badge>
               ))}
             </Flex>
-          </InsetPanel>
+          </CardSection>
         </Stack>
       )}
     </Stack>

@@ -13,12 +13,12 @@ import { PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
-import { InsetPanel } from "@/components/ui/InsetPanel";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
@@ -266,7 +266,7 @@ function RecentChats() {
         ) : (
           <Stack gap="sm">
             {chats.slice(0, 10).map((chat) => (
-              <InsetPanel key={chat._id} size="compact">
+              <CardSection key={chat._id} size="compact">
                 <Flex justify="between" align="center">
                   <Stack gap="xs">
                     <Typography variant="label">{chat.title || "Untitled Chat"}</Typography>
@@ -278,7 +278,7 @@ function RecentChats() {
                     {formatDate(chat.updatedAt)}
                   </Typography>
                 </Flex>
-              </InsetPanel>
+              </CardSection>
             ))}
           </Stack>
         )}

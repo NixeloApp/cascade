@@ -8,10 +8,10 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { CardSection } from "@/components/ui/CardSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
-import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Eye } from "@/lib/icons";
@@ -74,7 +74,7 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
           </Typography>
           <Stack gap="sm">
             {watchers.map((watcher: Watcher) => (
-              <InsetPanel key={watcher._id} size="compact">
+              <CardSection key={watcher._id} size="compact">
                 <Flex align="center" gap="md">
                   <Avatar name={watcher.userName} size="md" />
 
@@ -89,7 +89,7 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
                     )}
                   </FlexItem>
                 </Flex>
-              </InsetPanel>
+              </CardSection>
             ))}
           </Stack>
         </Stack>

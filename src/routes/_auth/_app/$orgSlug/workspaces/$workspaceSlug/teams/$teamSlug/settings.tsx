@@ -6,10 +6,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Flex } from "@/components/ui/Flex";
 import { Checkbox, Input, Textarea } from "@/components/ui/form";
-import { InsetPanel } from "@/components/ui/InsetPanel";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   Select,
@@ -260,7 +260,7 @@ function MembersSection({ teamId, members, canEdit }: MembersSectionProps) {
 
         <Stack gap="sm">
           {members.map((member) => (
-            <InsetPanel key={member._id} size="compact" className="bg-ui-bg">
+            <CardSection key={member._id} size="compact" className="bg-ui-bg">
               <Flex align="center" justify="between">
                 <Flex gap="md" align="center">
                   <Avatar name={member.user?.name} src={member.user?.image} size="sm" />
@@ -305,7 +305,7 @@ function MembersSection({ teamId, members, canEdit }: MembersSectionProps) {
                   )}
                 </Flex>
               </Flex>
-            </InsetPanel>
+            </CardSection>
           ))}
           {members.length === 0 && (
             <Typography variant="small" color="tertiary" className="text-center">

@@ -5,9 +5,9 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { Flex } from "@/components/ui/Flex";
 import { Input, Select, Textarea } from "@/components/ui/form";
-import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -224,7 +224,7 @@ export function OutOfOfficeSettings() {
         </Stack>
 
         {status ? (
-          <InsetPanel size="md">
+          <CardSection size="md">
             <Stack gap="xs">
               <Flex align="center" gap="sm">
                 <Badge variant={status.isActive ? "warning" : "info"}>
@@ -252,7 +252,7 @@ export function OutOfOfficeSettings() {
                 </Flex>
               ) : null}
             </Stack>
-          </InsetPanel>
+          </CardSection>
         ) : null}
 
         <Flex direction="column" directionSm="row" gap="md">

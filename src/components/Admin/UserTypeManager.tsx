@@ -17,6 +17,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
@@ -24,7 +25,6 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox, Input, Select, Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
-import { InsetPanel } from "../ui/InsetPanel";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -383,7 +383,7 @@ export function UserTypeManager() {
           ) : (
             <Grid cols={1} colsMd={3} gap="lg">
               {configs.map((config: EmploymentTypeConfig) => (
-                <InsetPanel key={config.type} size="md" hoverable>
+                <CardSection key={config.type} size="md" hoverable>
                   <Stack gap="sm">
                     <Flex justify="between" align="start">
                       <Flex align="center" gap="sm">
@@ -447,7 +447,7 @@ export function UserTypeManager() {
                       Edit Configuration
                     </Button>
                   </Stack>
-                </InsetPanel>
+                </CardSection>
               ))}
             </Grid>
           )}
@@ -463,14 +463,14 @@ export function UserTypeManager() {
         <CardBody>
           {/* Users without profiles */}
           {usersWithoutProfiles && usersWithoutProfiles.length > 0 && (
-            <InsetPanel size="md" className="mb-6 border-status-warning bg-status-warning-bg">
+            <CardSection size="md" className="mb-6 border-status-warning bg-status-warning-bg">
               <Stack gap="sm">
                 <Typography variant="label" className="text-status-warning-text">
                   Unassigned Users ({usersWithoutProfiles.length})
                 </Typography>
                 <Stack gap="sm">
                   {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
-                    <InsetPanel key={user._id}>
+                    <CardSection key={user._id}>
                       <Flex justify="between" align="center">
                         <Typography variant="small">
                           {user.name || user.email || "Unknown User"}
@@ -479,7 +479,7 @@ export function UserTypeManager() {
                           Assign Type
                         </Button>
                       </Flex>
-                    </InsetPanel>
+                    </CardSection>
                   ))}
                   {usersWithoutProfiles.length > 5 && (
                     <Typography variant="caption">
@@ -488,7 +488,7 @@ export function UserTypeManager() {
                   )}
                 </Stack>
               </Stack>
-            </InsetPanel>
+            </CardSection>
           )}
 
           {/* Assigned users */}
@@ -507,7 +507,7 @@ export function UserTypeManager() {
           ) : (
             <Stack gap="sm">
               {profiles.map((profile: UserProfileWithUser) => (
-                <InsetPanel key={profile._id} size="md" hoverable>
+                <CardSection key={profile._id} size="md" hoverable>
                   <Flex justify="between" align="start" gap="md">
                     <FlexItem flex="1">
                       <Stack gap="sm">
@@ -594,7 +594,7 @@ export function UserTypeManager() {
                       </Button>
                     </Flex>
                   </Flex>
-                </InsetPanel>
+                </CardSection>
               ))}
             </Stack>
           )}
@@ -871,7 +871,7 @@ export function UserTypeManager() {
                         rows={2}
                       />
 
-                      <InsetPanel className="border-brand-border bg-brand-subtle">
+                      <CardSection className="border-brand-border bg-brand-subtle">
                         <Flex align="start" gap="sm" className="text-brand-hover">
                           <Icon icon={Lightbulb} size="sm" className="shrink-0" />
                           <Typography variant="small">
@@ -880,7 +880,7 @@ export function UserTypeManager() {
                             overwork.
                           </Typography>
                         </Flex>
-                      </InsetPanel>
+                      </CardSection>
                     </Stack>
                   )}
                 </Stack>

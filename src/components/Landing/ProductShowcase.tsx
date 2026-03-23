@@ -3,12 +3,12 @@ import { ArrowRight, Bot, Clock, FileText, KanbanSquare, Sparkles } from "@/lib/
 import { cn } from "@/lib/utils";
 import { Badge, type BadgeProps } from "../ui/Badge";
 import { Card, getCardRecipeClassName } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Grid, GridItem } from "../ui/Grid";
 import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
-import { InsetPanel } from "../ui/InsetPanel";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -143,7 +143,7 @@ export function ProductShowcase() {
         <div className="bg-linear-to-b from-ui-bg-soft/82 via-ui-bg-elevated/96 to-ui-bg px-4 py-5 sm:px-6 sm:py-6">
           <Grid cols={1} colsLg={12} gap="lg">
             <GridItem colSpanLg={8}>
-              <InsetPanel
+              <CardSection
                 size="lg"
                 className={cn(getCardRecipeClassName("dashboardPanelInset"), "h-full")}
               >
@@ -182,11 +182,11 @@ export function ProductShowcase() {
                     ))}
                   </Grid>
                 </Stack>
-              </InsetPanel>
+              </CardSection>
             </GridItem>
 
             <GridItem colSpanLg={4}>
-              <InsetPanel
+              <CardSection
                 size="lg"
                 className={cn(getCardRecipeClassName("dashboardPanel"), "h-full")}
               >
@@ -207,7 +207,7 @@ export function ProductShowcase() {
                     ))}
                   </Stack>
 
-                  <InsetPanel size="md" className={getCardRecipeClassName("overlayInset")}>
+                  <CardSection size="md" className={getCardRecipeClassName("overlayInset")}>
                     <Stack gap="sm">
                       <Flex align="center" gap="sm">
                         <IconCircle size="xs" variant="brand">
@@ -225,7 +225,7 @@ export function ProductShowcase() {
                         "Summarize what changed since the last client review and flag blockers."
                       </Typography>
                     </Stack>
-                  </InsetPanel>
+                  </CardSection>
 
                   <Stack gap="sm">
                     {showcaseAssistantActions.map((item) => (
@@ -233,7 +233,7 @@ export function ProductShowcase() {
                     ))}
                   </Stack>
                 </Stack>
-              </InsetPanel>
+              </CardSection>
             </GridItem>
           </Grid>
         </div>
@@ -324,7 +324,7 @@ function WorkspaceSignalRow({
   value: string;
 }) {
   return (
-    <InsetPanel size="compact" className={getCardRecipeClassName("overlayInset")}>
+    <CardSection size="compact" className={getCardRecipeClassName("overlayInset")}>
       <Flex align="start" justify="between" gap="sm">
         <Flex align="start" gap="sm">
           <IconCircle size="xs" variant="soft">
@@ -340,7 +340,7 @@ function WorkspaceSignalRow({
           {value}
         </Typography>
       </Flex>
-    </InsetPanel>
+    </CardSection>
   );
 }
 

@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card, getCardRecipeClassName } from "./ui/Card";
+import { CardSection } from "./ui/CardSection";
 import { Checkbox } from "./ui/Checkbox";
 import {
   DropdownMenu,
@@ -37,7 +38,6 @@ import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { Input } from "./ui/Input";
-import { InsetPanel } from "./ui/InsetPanel";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
@@ -252,7 +252,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
           {/* Bulk Actions Bar */}
           {activeTab === "open" && triageableCount > 0 && (
-            <InsetPanel className="bg-ui-bg-soft">
+            <CardSection className="bg-ui-bg-soft">
               <Flex align="center" gap="md">
                 <Checkbox
                   checked={selectedIds.size === triageableCount && triageableCount > 0}
@@ -289,7 +289,7 @@ export function InboxList({ projectId }: InboxListProps) {
                   </Typography>
                 )}
               </Flex>
-            </InsetPanel>
+            </CardSection>
           )}
 
           <TabsContent value="open" className="overflow-auto">

@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, getCardRecipeClassName } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Grid, GridItem } from "../ui/Grid";
 import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
-import { InsetPanel } from "../ui/InsetPanel";
 import { SectionIntro } from "../ui/SectionIntro";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -224,12 +224,12 @@ function PlanPricingCard({
           ))}
         </Stack>
 
-        <InsetPanel size="compact" className={getCardRecipeClassName("overlayInset")}>
+        <CardSection size="compact" className={getCardRecipeClassName("overlayInset")}>
           <Stack gap="xs">
             <Typography variant="pageHeaderEyebrow">Best when</Typography>
             <Typography variant="caption">{proof}</Typography>
           </Stack>
-        </InsetPanel>
+        </CardSection>
 
         <div style={{ flex: 1 }} />
 
@@ -269,7 +269,7 @@ function PricingContinuityCard() {
 
         <Stack gap="sm">
           {pricingSignals.map((signal) => (
-            <InsetPanel
+            <CardSection
               key={signal.label}
               size="compact"
               className={cn(getCardRecipeClassName("overlayInset"), "h-full")}
@@ -278,11 +278,11 @@ function PricingContinuityCard() {
                 <Typography variant="pageHeaderEyebrow">{signal.label}</Typography>
                 <Typography variant="caption">{signal.value}</Typography>
               </Stack>
-            </InsetPanel>
+            </CardSection>
           ))}
         </Stack>
 
-        <InsetPanel size="md" className={getCardRecipeClassName("metricTileAccent")}>
+        <CardSection size="md" className={getCardRecipeClassName("metricTileAccent")}>
           <Stack gap="xs">
             <Typography variant="label">Enterprise controls, when they matter</Typography>
             <Typography variant="caption">
@@ -290,7 +290,7 @@ function PricingContinuityCard() {
               force a separate operating surface or a separate story about how work gets done.
             </Typography>
           </Stack>
-        </InsetPanel>
+        </CardSection>
       </Stack>
     </Card>
   );
