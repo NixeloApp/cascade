@@ -329,4 +329,42 @@ describe("Users", () => {
       expect(stats.issuesCompleted).toBe(1);
     });
   });
+
+  describe("searchUsers", () => {
+    it("should exclude the specified user when excludeUserId is provided", async () => {
+      const t = convexTest(schema, modules);
+      register(t);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      // Create a second user in the same org
+      const user2Id = await createTestUser(t, { name: "Bob Search" });
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: user2Id,
+          role: "member",
+          addedBy: userId,
+        });
+      });
+
+      // Without exclude: should find both users
+      const allResults = await asUser.query(api.users.searchUsers, {
+        query: "",
+        limit: 50,
+      });
+      const allIds = allResults.map((u) => u._id);
+      expect(allIds).toContain(userId);
+      expect(allIds).toContain(user2Id);
+
+      // With exclude: should not find the excluded user
+      const filtered = await asUser.query(api.users.searchUsers, {
+        query: "",
+        limit: 50,
+        excludeUserId: userId,
+      });
+      const filteredIds = filtered.map((u) => u._id);
+      expect(filteredIds).not.toContain(userId);
+      expect(filteredIds).toContain(user2Id);
+    });
+  });
 });

@@ -173,6 +173,49 @@ describe("Teams", () => {
       await t.finishInProgressScheduledFunctions();
     });
 
+    it("should filter teams by workspaceId when provided", async () => {
+      const t = convexTest(schema, modules);
+      const { organizationId, workspaceId, asUser } = await createTestContext(t);
+
+      // Create a second workspace
+      const { workspaceId: workspace2Id } = await asUser.mutation(api.workspaces.create, {
+        organizationId,
+        name: "Workspace 2",
+        slug: "workspace-2",
+      });
+
+      // Create a team in workspace 2
+      await asUser.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId: workspace2Id,
+        name: "Other Team",
+        isPrivate: false,
+      });
+
+      // Without filter: should see all teams (default + Other Team)
+      const allTeams = await asUser.query(api.teams.getOrganizationTeams, { organizationId });
+      expect(allTeams.length).toBeGreaterThanOrEqual(2);
+
+      // With workspace filter: should see only teams in workspace 1
+      const ws1Teams = await asUser.query(api.teams.getOrganizationTeams, {
+        organizationId,
+        workspaceId,
+      });
+      for (const team of ws1Teams) {
+        expect(team.workspaceId).toBe(workspaceId);
+      }
+
+      // With workspace 2 filter: should see only Other Team
+      const ws2Teams = await asUser.query(api.teams.getOrganizationTeams, {
+        organizationId,
+        workspaceId: workspace2Id,
+      });
+      expect(ws2Teams).toHaveLength(1);
+      expect(ws2Teams[0].name).toBe("Other Team");
+
+      await t.finishInProgressScheduledFunctions();
+    });
+
     it("should list user teams", async () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, asUser } = await createTestContext(t);
