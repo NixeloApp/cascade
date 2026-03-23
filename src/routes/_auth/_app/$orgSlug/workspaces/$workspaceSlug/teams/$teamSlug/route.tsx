@@ -1,9 +1,12 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { PageControls, PageHeader, PageLayout, PageStack } from "@/components/layout";
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -32,6 +35,11 @@ export function TeamLayout() {
           slug: teamSlug,
         }
       : "skip",
+  );
+
+  const members = useAuthenticatedQuery(
+    api.teams.getTeamMembers,
+    team?._id ? { teamId: team._id } : "skip",
   );
 
   if (workspace === undefined || team === undefined) {
@@ -63,6 +71,26 @@ export function TeamLayout() {
             { label: team.name },
           ]}
         />
+
+        {members && members.length > 0 && (
+          <Flex align="center" gap="sm">
+            <Flex gap="xs">
+              {members.slice(0, 8).map((member) => (
+                <Tooltip key={member._id} content={member.user?.name ?? "Team member"}>
+                  <Avatar name={member.user?.name} src={member.user?.image} size="xs" />
+                </Tooltip>
+              ))}
+            </Flex>
+            {members.length > 8 && (
+              <Badge variant="neutral" size="sm">
+                +{members.length - 8}
+              </Badge>
+            )}
+            <Typography variant="caption" color="tertiary">
+              {members.length} member{members.length !== 1 ? "s" : ""}
+            </Typography>
+          </Flex>
+        )}
 
         <PageControls padding="sm" spacing="stack">
           <RouteNav aria-label="Team sections">

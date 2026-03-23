@@ -116,7 +116,7 @@ The team detail page is the working surface for a single team within a workspace
 | 4 | Index route uses `useEffect` redirect instead of TanStack Router `redirect` | architecture | LOW |
 | 5 | Wiki page shares identical card markup with workspace wiki -- should be a shared component | code duplication | MEDIUM |
 | 6 | Board route loads workspace + team just to pass `team._id` to KanbanBoard; team ID could come from layout context | efficiency | LOW |
-| 7 | No team member list visible anywhere -- the team detail page doesn't show who's on the team | functionality | MEDIUM |
+| ~~7~~ | ~~No team member list visible~~ **Fixed** — team layout header shows member avatar row with tooltips (up to 8, +N overflow badge) | ~~functionality~~ | ~~MEDIUM~~ |
 | 8 | Settings placeholder uses an inline SVG icon instead of an icon from `@/lib/icons` | consistency | LOW |
 
 ---
