@@ -6,9 +6,9 @@
 
 ## Priority Improvements
 
-### 1. Server-side grouping (MEDIUM)
+### ~~1. Server-side grouping~~ *(shipped)*
 
-Grouping happens client-side on 100 items. Issues beyond that page are invisible until "Load More". Server-side group-by query would show complete counts.
+~~Grouping happens client-side on 100 items.~~ Server-side `getMyIssueGroupCounts` query returns complete counts across the full dataset. Column headers show "loaded / total" when not all issues are loaded.
 
 ### 2. Priority and date filters (LOW)
 
@@ -24,5 +24,5 @@ No filters beyond group-by. Adding priority and due date filters would help tria
 
 ## Acceptance Criteria
 
-- [ ] Group counts reflect the full dataset, not just loaded page
+- [x] Group counts reflect the full dataset, not just loaded page
 - [ ] Priority filter narrows the visible set

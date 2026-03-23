@@ -135,6 +135,63 @@ export const getMyIssues = authenticatedQuery({
 });
 
 /**
+ * Get server-side group counts for My Issues.
+ * Scans all non-deleted issues assigned to the current user and returns
+ * counts grouped by either status or project key. This gives accurate
+ * totals regardless of client-side pagination.
+ */
+export const getMyIssueGroupCounts = authenticatedQuery({
+  args: {
+    groupBy: v.union(v.literal("status"), v.literal("project")),
+  },
+  returns: v.array(
+    v.object({
+      key: v.string(),
+      label: v.string(),
+      count: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const issues = await ctx.db
+      .query("issues")
+      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
+      .take(MAX_USER_ASSIGNED_ISSUES);
+
+    if (args.groupBy === "status") {
+      const counts = new Map<string, number>();
+      for (const issue of issues) {
+        counts.set(issue.status, (counts.get(issue.status) ?? 0) + 1);
+      }
+      return [...counts.entries()]
+        .map(([key, count]) => ({ key, label: key, count }))
+        .sort((a, b) => b.count - a.count);
+    }
+
+    // Group by project — need to fetch project names
+    const projectCounts = new Map<Id<"projects">, number>();
+    for (const issue of issues) {
+      if (issue.projectId) {
+        projectCounts.set(issue.projectId, (projectCounts.get(issue.projectId) ?? 0) + 1);
+      }
+    }
+
+    const projectIds = [...projectCounts.keys()];
+    const projectMap = await batchFetchProjects(ctx, projectIds);
+
+    return [...projectCounts.entries()]
+      .map(([projectId, count]) => {
+        const project = projectMap.get(projectId);
+        return {
+          key: project?.key ?? "???",
+          label: project?.name ?? "Unknown",
+          count,
+        };
+      })
+      .sort((a, b) => b.count - a.count);
+  },
+});
+
+/**
  * Get the most recently created issues reported by the current user.
  * Results are sorted by creation time (descending) and limited by `MAX_USER_ASSIGNED_ISSUES`.
  * Uses batched data fetches to efficiently attach assignee and project details.

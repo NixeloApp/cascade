@@ -126,6 +126,89 @@ describe("Dashboard", () => {
     });
   });
 
+  describe("getMyIssueGroupCounts", () => {
+    it("should return counts grouped by status", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Group Test",
+        key: "GRPT",
+      });
+
+      await createTestIssue(t, projectId, userId, {
+        title: "Issue 1",
+        assigneeId: userId,
+      });
+      await createTestIssue(t, projectId, userId, {
+        title: "Issue 2",
+        assigneeId: userId,
+      });
+
+      // Change one issue's status
+      const issues = await t.run(async (ctx) =>
+        ctx.db
+          .query("issues")
+          .withIndex("by_assignee", (q) => q.eq("assigneeId", userId))
+          .collect(),
+      );
+      await t.run(async (ctx) => {
+        await ctx.db.patch(issues[0]._id, { status: "Done" });
+      });
+
+      const result = await asUser.query(api.dashboard.getMyIssueGroupCounts, {
+        groupBy: "status",
+      });
+
+      expect(result.length).toBeGreaterThanOrEqual(2);
+      const totalCount = result.reduce((sum, g) => sum + g.count, 0);
+      expect(totalCount).toBe(2);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should return counts grouped by project", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const project1 = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Project Alpha",
+        key: "ALPH",
+      });
+      const project2 = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Project Beta",
+        key: "BETA",
+      });
+
+      await createTestIssue(t, project1, userId, { title: "Alpha 1", assigneeId: userId });
+      await createTestIssue(t, project1, userId, { title: "Alpha 2", assigneeId: userId });
+      await createTestIssue(t, project2, userId, { title: "Beta 1", assigneeId: userId });
+
+      const result = await asUser.query(api.dashboard.getMyIssueGroupCounts, {
+        groupBy: "project",
+      });
+
+      expect(result).toHaveLength(2);
+      const alpha = result.find((g) => g.key === "ALPH");
+      const beta = result.find((g) => g.key === "BETA");
+      expect(alpha?.count).toBe(2);
+      expect(alpha?.label).toBe("Project Alpha");
+      expect(beta?.count).toBe(1);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should return empty array for user with no issues", async () => {
+      const t = convexTest(schema, modules);
+      const { asUser } = await createTestContext(t);
+
+      const result = await asUser.query(api.dashboard.getMyIssueGroupCounts, {
+        groupBy: "status",
+      });
+
+      expect(result).toHaveLength(0);
+      await t.finishInProgressScheduledFunctions();
+    });
+  });
+
   describe("getMyCreatedIssues", () => {
     it("should return issues created by the current user", async () => {
       const t = convexTest(schema, modules);
