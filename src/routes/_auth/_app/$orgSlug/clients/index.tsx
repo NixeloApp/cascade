@@ -1,8 +1,6 @@
 import { api } from "@convex/_generated/api";
-import type { Doc } from "@convex/_generated/dataModel";
+import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
-import { anyApi } from "convex/server";
 import { Users } from "lucide-react";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
@@ -29,10 +27,8 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/clients/")({
   component: ClientsListPage,
 });
 
-const clientPortalApi = anyApi.clientPortal;
-
 type ClientPortalTokenRow = {
-  _id: string;
+  _id: Id<"clientPortalTokens">;
   isRevoked: boolean;
   expiresAt?: number;
   lastAccessedAt?: number;
@@ -44,8 +40,8 @@ function PortalTokenDetails({
   onRevokePortalToken,
   tokens,
 }: {
-  clientId: string;
-  onRevokePortalToken: (clientId: string, tokenId: string) => void;
+  clientId: Id<"clients">;
+  onRevokePortalToken: (clientId: Id<"clients">, tokenId: Id<"clientPortalTokens">) => void;
   tokens: ClientPortalTokenRow[];
 }) {
   return tokens.map((token) => (
@@ -98,9 +94,9 @@ function ClientCard({
 }: {
   client: Doc<"clients">;
   generatedPortalLink?: string;
-  onGeneratePortalLink: (clientId: string, projectId: string) => void;
-  onRefreshPortalTokens: (clientId: string) => void;
-  onRevokePortalToken: (clientId: string, tokenId: string) => void;
+  onGeneratePortalLink: (clientId: Id<"clients">, projectId: string) => void;
+  onRefreshPortalTokens: (clientId: Id<"clients">) => void;
+  onRevokePortalToken: (clientId: Id<"clients">, tokenId: Id<"clientPortalTokens">) => void;
   portalTokens: ClientPortalTokenRow[];
   projects: ProjectOption[];
 }) {
@@ -173,9 +169,11 @@ function ClientsListPage() {
     | undefined;
   const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
   const { mutate: createClient } = useAuthenticatedMutation(api.clients.create);
-  const generatePortalToken = useMutation(clientPortalApi.generateToken);
-  const listPortalTokens = useMutation(clientPortalApi.listTokensByClient);
-  const revokePortalToken = useMutation(clientPortalApi.revokeToken);
+  const { mutate: generatePortalToken } = useAuthenticatedMutation(api.clientPortal.generateToken);
+  const { mutate: listPortalTokens } = useAuthenticatedMutation(
+    api.clientPortal.listTokensByClient,
+  );
+  const { mutate: revokePortalToken } = useAuthenticatedMutation(api.clientPortal.revokeToken);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -205,7 +203,7 @@ function ClientsListPage() {
     }
   };
 
-  const handleGeneratePortalLink = async (clientId: string, projectId: string) => {
+  const handleGeneratePortalLink = async (clientId: Id<"clients">, projectId: string) => {
     try {
       if (!projectId) {
         showError("Select a project to scope the portal link");
@@ -215,7 +213,7 @@ function ClientsListPage() {
       const response = await generatePortalToken({
         organizationId,
         clientId,
-        projectIds: [projectId],
+        projectIds: [projectId as Id<"projects">],
         permissions: {
           viewIssues: true,
           viewDocuments: false,
@@ -234,7 +232,7 @@ function ClientsListPage() {
     }
   };
 
-  const handleRefreshPortalTokens = async (clientId: string) => {
+  const handleRefreshPortalTokens = async (clientId: Id<"clients">) => {
     try {
       const tokens = await listPortalTokens({
         organizationId,
@@ -249,7 +247,10 @@ function ClientsListPage() {
     }
   };
 
-  const handleRevokePortalToken = async (clientId: string, tokenId: string) => {
+  const handleRevokePortalToken = async (
+    clientId: Id<"clients">,
+    tokenId: Id<"clientPortalTokens">,
+  ) => {
     try {
       await revokePortalToken({
         organizationId,
