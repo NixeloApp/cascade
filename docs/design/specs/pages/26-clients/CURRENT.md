@@ -86,7 +86,7 @@ The clients page manages billing contacts for agency-style organizations and pro
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | The entire page (310 lines) is in one file with inline sub-components (`ClientCard`, `PortalTokenDetails`) -- should be extracted | architecture | MEDIUM |
+| ~~1~~ | ~~The entire page (310 lines) is in one file with inline sub-components~~ **Fixed** — extracted `ClientCard` and `PortalTokenDetails` to `src/components/Clients/ClientCard.tsx` with tests | ~~architecture~~ | ~~MEDIUM~~ |
 | ~~2~~ | ~~Create form mixed with list~~ **Fixed** — moved to Dialog modal with Cancel/Create buttons, "+ New Client" button in header and empty state | ~~UX~~ | ~~MEDIUM~~ |
 | ~~3~~ | ~~Portal token uses untyped anyApi~~ **Fixed** — replaced `useMutation(anyApi.clientPortal.*)` with typed `useAuthenticatedMutation(api.clientPortal.*)` | ~~type safety~~ | ~~MEDIUM~~ |
 | 4 | Token details display raw token IDs to the user, which is not meaningful information | UX | LOW |

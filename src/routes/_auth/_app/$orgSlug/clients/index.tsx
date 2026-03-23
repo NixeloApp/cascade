@@ -2,167 +2,25 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import type { ClientPortalTokenRow } from "@/components/Clients/ClientCard";
+import { ClientCard } from "@/components/Clients/ClientCard";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { formatDate } from "@/lib/formatting";
 import { Plus, Users } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+
 export const Route = createFileRoute("/_auth/_app/$orgSlug/clients/")({
   component: ClientsListPage,
 });
-
-type ClientPortalTokenRow = {
-  _id: Id<"clientPortalTokens">;
-  isRevoked: boolean;
-  expiresAt?: number;
-  lastAccessedAt?: number;
-  updatedAt: number;
-};
-
-function PortalTokenDetails({
-  clientId,
-  onRevokePortalToken,
-  tokens,
-}: {
-  clientId: Id<"clients">;
-  onRevokePortalToken: (clientId: Id<"clients">, tokenId: Id<"clientPortalTokens">) => void;
-  tokens: ClientPortalTokenRow[];
-}) {
-  return tokens.map((token) => (
-    <div key={token._id} className="mt-2 border-t border-ui-border p-3">
-      <Typography variant="caption" className="block">
-        Token: {token._id}
-      </Typography>
-      <Typography variant="caption" className="block">
-        Status: {token.isRevoked ? "revoked" : "active"}
-      </Typography>
-      <Typography variant="caption" className="block">
-        Updated: {formatDate(token.updatedAt)}
-      </Typography>
-      {token.lastAccessedAt ? (
-        <Typography variant="caption" className="block">
-          Last accessed: {formatDate(token.lastAccessedAt)}
-        </Typography>
-      ) : null}
-      {token.expiresAt ? (
-        <Typography variant="caption" className="block">
-          Expires: {formatDate(token.expiresAt)}
-        </Typography>
-      ) : null}
-      {!token.isRevoked ? (
-        <Button
-          variant="ghost"
-          className="mt-1"
-          onClick={() => onRevokePortalToken(clientId, token._id)}
-        >
-          Revoke token
-        </Button>
-      ) : null}
-    </div>
-  ));
-}
-
-interface ProjectOption {
-  _id: string;
-  name: string;
-}
-
-function ClientCard({
-  client,
-  generatedPortalLink,
-  onGeneratePortalLink,
-  onRefreshPortalTokens,
-  onRevokePortalToken,
-  portalTokens,
-  projects,
-}: {
-  client: Doc<"clients">;
-  generatedPortalLink?: string;
-  onGeneratePortalLink: (clientId: Id<"clients">, projectId: string) => void;
-  onRefreshPortalTokens: (clientId: Id<"clients">) => void;
-  onRevokePortalToken: (clientId: Id<"clients">, tokenId: Id<"clientPortalTokens">) => void;
-  portalTokens: ClientPortalTokenRow[];
-  projects: ProjectOption[];
-}) {
-  const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?._id ?? "");
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{client.name}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Stack gap="sm">
-          <Typography variant="small">{client.email}</Typography>
-          {client.company ? (
-            <Typography variant="small" color="secondary">
-              {client.company}
-            </Typography>
-          ) : null}
-          <Typography variant="small" color="secondary">
-            Default rate: ${client.hourlyRate?.toFixed(2) ?? "0.00"}
-          </Typography>
-          <Stack gap="sm">
-            <Flex wrap gap="sm" align="end">
-              {projects.length > 1 ? (
-                <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (
-                      <SelectItem key={p._id} value={p._id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : null}
-              <Button
-                variant="secondary"
-                disabled={!selectedProjectId}
-                onClick={() => onGeneratePortalLink(client._id, selectedProjectId)}
-              >
-                Generate portal link
-              </Button>
-              <Button variant="ghost" onClick={() => onRefreshPortalTokens(client._id)}>
-                Refresh tokens
-              </Button>
-            </Flex>
-            {generatedPortalLink ? (
-              <Typography variant="caption" className="text-brand">
-                {generatedPortalLink}
-              </Typography>
-            ) : null}
-            <PortalTokenDetails
-              clientId={client._id}
-              onRevokePortalToken={onRevokePortalToken}
-              tokens={portalTokens}
-            />
-          </Stack>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
 
 function ClientsListPage() {
   const { organizationId } = useOrganization();
@@ -271,6 +129,14 @@ function ClientsListPage() {
     return <PageContent isLoading>{null}</PageContent>;
   }
 
+  const projectOptions =
+    projects?.page
+      .filter((p: { organizationId: string }) => p.organizationId === organizationId)
+      .map((p: { _id: string; name: string }) => ({
+        _id: p._id,
+        name: p.name,
+      })) ?? [];
+
   return (
     <PageLayout>
       <PageHeader
@@ -356,14 +222,7 @@ function ClientsListPage() {
                 onRefreshPortalTokens={handleRefreshPortalTokens}
                 onRevokePortalToken={handleRevokePortalToken}
                 portalTokens={portalTokensByClient[client._id] || []}
-                projects={
-                  projects?.page
-                    .filter((p: { organizationId: string }) => p.organizationId === organizationId)
-                    .map((p: { _id: string; name: string }) => ({
-                      _id: p._id,
-                      name: p.name,
-                    })) ?? []
-                }
+                projects={projectOptions}
               />
             ))}
           </Grid>

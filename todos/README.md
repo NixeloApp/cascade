@@ -29,7 +29,7 @@
 |------|--------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (product design) |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
-| ~34 MEDIUM page spec issues | Architecture extractions, invoice UX, workspace cleanup, visual polish |
+| ~30 MEDIUM page spec issues | Architecture extractions, invoice UX, visual polish (4 fixed: clients extraction, workspace card extraction + AI slop cleanup) |
 
 ---
 
@@ -43,11 +43,11 @@
 | RoadmapView | 775 lines (was 2671, 71% reduction via Roadmap/ directory) |
 | Icon imports | 100% via @/lib/icons barrel |
 | Card variant="section" usage | 94 → 69 (25 converted to subtle or removed) |
-| Unit tests | 4458 pass |
+| Unit tests | 4468 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | HIGH severity issues | 1 remaining (meeting-to-doc) |
-| MEDIUM severity issues | ~34 remaining |
+| MEDIUM severity issues | ~30 remaining |
 
 ### Consistency Scorecard
 

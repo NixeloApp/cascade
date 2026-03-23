@@ -81,10 +81,10 @@ The workspaces list page is the top-level organizational view for departments an
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | `WorkspaceCard` is 146 lines of inline component in the route file -- should be extracted to `src/components/Workspaces/` | architecture | MEDIUM |
-| 2 | The compact vs standard layout logic produces two completely different page structures, making the code hard to follow | complexity | MEDIUM |
-| 3 | The `OverviewBand` aside text ("Recommended next step", "Design principle") reads like AI-generated coaching copy rather than actionable workspace information | content | MEDIUM |
-| 4 | The compact `WorkspaceCard` is over-designed with redundant information (badge "Workspace", slug badge, team count badge, plus metric panels, plus footer metadata all showing the same data) | information density | MEDIUM |
+| ~~1~~ | ~~`WorkspaceCard` is 146 lines inline in route~~ **Fixed** — extracted to `src/components/Workspaces/WorkspaceCard.tsx` with sub-components and tests | ~~architecture~~ | ~~MEDIUM~~ |
+| 2 | The compact vs standard layout logic produces two different page structures | complexity | MEDIUM |
+| ~~3~~ | ~~AI coaching copy in OverviewBand aside~~ **Fixed** — removed "Recommended next step" / "Design principle" AI filler text | ~~content~~ | ~~MEDIUM~~ |
+| ~~4~~ | ~~Compact card over-designed with redundant badges~~ **Fixed** — removed "Workspace" badge, kept only slug badge and team count | ~~information density~~ | ~~MEDIUM~~ |
 | 5 | `IconCircle` uses `className="h-12 w-12"` arbitrary sizing alongside `size="md"` prop -- mixed sizing approaches | styling | LOW |
 | 6 | No search or filter for workspaces | scalability | LOW |
 | 7 | `handleWorkspaceCreated` navigates to teams list, but the workspace was just created and has no teams yet | UX | LOW |
