@@ -29,6 +29,7 @@ const BASELINE_FILES = new Set([
   // Pseudo-elements and drag handles (can't use React components)
   "src/components/IssueDetail/IssueCard.tsx",
   "src/components/RoadmapView.tsx",
+  "src/components/Roadmap/RoadmapLoadingState.tsx",
   "src/lib/kanban-dnd.ts",
   // Raw DOM strings (outside React rendering)
   "src/lib/serviceWorker.ts",
