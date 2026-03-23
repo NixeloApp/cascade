@@ -1,4 +1,4 @@
-/** Shared formatting helpers for Convex server functions. */
+/** Shared formatting helpers for Convex server functions (backend). */
 
 /** Format a number as USD currency (e.g., "$1,234.56"). */
 export function formatCurrency(amount: number): string {

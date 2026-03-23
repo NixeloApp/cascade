@@ -99,6 +99,7 @@ import type * as lib_envDetection from "../lib/envDetection.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_fetchWithTimeout from "../lib/fetchWithTimeout.js";
 import type * as lib_fileValidators from "../lib/fileValidators.js";
+import type * as lib_formatting from "../lib/formatting.js";
 import type * as lib_html from "../lib/html.js";
 import type * as lib_issueCalculation from "../lib/issueCalculation.js";
 import type * as lib_issueHelpers from "../lib/issueHelpers.js";
@@ -277,6 +278,7 @@ declare const fullApi: ApiFromModules<{
   "lib/errors": typeof lib_errors;
   "lib/fetchWithTimeout": typeof lib_fetchWithTimeout;
   "lib/fileValidators": typeof lib_fileValidators;
+  "lib/formatting": typeof lib_formatting;
   "lib/html": typeof lib_html;
   "lib/issueCalculation": typeof lib_issueCalculation;
   "lib/issueHelpers": typeof lib_issueHelpers;
