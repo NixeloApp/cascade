@@ -12,7 +12,8 @@
 |------|--------|
 | AI slop cleanup | Nested cards, redundant shells, panel-in-panel layouts |
 | Mobile/tablet coverage | Backfill responsive gaps |
-| Icon consistency | Sizing, stroke-weight rhythm, tone drift |
+| ~~Icon import consistency~~ | ~~82 files imported from lucide-react~~ **Fixed** — all product files now use @/lib/icons barrel (45 icons added) |
+| Icon visual consistency | Sizing, stroke-weight rhythm, tone drift (needs visual review) |
 | Shell discipline | Card nesting, composition pattern drift |
 | Raw styling cleanup | 99 files / 186 violations (mostly structural — sidebar padding, timeline positioning, border separators). Diminishing returns. |
 | RoadmapView decomposition | 1761 lines remaining. Types + 48 utilities extracted. Next: extract React sub-components (RoadmapTimelineBar, RoadmapGroupRow, etc.) |
