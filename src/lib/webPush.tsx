@@ -7,7 +7,7 @@
 
 import { api } from "@convex/_generated/api";
 import { createContext, useContext, useEffect, useState } from "react";
-import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "./toast";
 
 declare global {
@@ -128,6 +128,9 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
   // Check if push is supported
   const isSupported = isWebPushSupported();
 
+  // Server-side subscription state for recovery detection
+  const serverHasSubscription = useAuthenticatedQuery(api.pushNotifications.hasSubscription, {});
+
   // Initialize service worker and check subscription
   useEffect(() => {
     if (!isSupported) return;
@@ -141,6 +144,36 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
           // Check for existing subscription
           const subscription = await registration.pushManager.getSubscription();
           setCurrentSubscription(subscription);
+
+          // Recovery: server thinks we have a subscription but browser lost it
+          // (can happen after SW replacement on some browsers)
+          if (
+            !subscription &&
+            serverHasSubscription &&
+            vapidPublicKey &&
+            getBrowserNotificationPermission() === "granted"
+          ) {
+            console.info("[push] Subscription lost after SW update, re-subscribing...");
+            const keyArray = urlBase64ToUint8Array(vapidPublicKey);
+            const recovered = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: keyArray.buffer as ArrayBuffer,
+            });
+            setCurrentSubscription(recovered);
+
+            const p256dh = recovered.getKey("p256dh");
+            const auth = recovered.getKey("auth");
+            if (p256dh && auth) {
+              await subscribeMutation({
+                endpoint: recovered.endpoint,
+                p256dh: btoa(String.fromCharCode(...new Uint8Array(p256dh))),
+                auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
+                expirationTime: recovered.expirationTime ?? undefined,
+                userAgent: navigator.userAgent,
+              });
+              console.info("[push] Subscription recovered successfully");
+            }
+          }
         }
       } catch (error) {
         console.info("[push] Failed to initialize push manager:", error);
@@ -148,7 +181,7 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
     };
 
     initServiceWorker();
-  }, [isSupported]);
+  }, [isSupported, serverHasSubscription, vapidPublicKey, subscribeMutation]);
 
   // Subscribe to push notifications
   const subscribe = async () => {

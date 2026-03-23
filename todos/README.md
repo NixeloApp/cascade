@@ -36,7 +36,7 @@ All 21 page specs rewritten to production quality — ASCII diagrams, screenshot
 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation UI, workflow translation |
 | ~~[tech-debt-billing-export.md](./tech-debt-billing-export.md)~~ | ~~PDF export~~ **Shipped** — jsPDF + jspdf-autotable |
 | [plane-features.md](./plane-features.md) | Remaining evaluation items from Plane feature review |
-| Offline push safety | Verify push subscriptions survive SW replacement |
+| ~~Offline push safety~~ | ~~Verify push subscriptions survive SW replacement~~ **Shipped** — auto-recovery detects lost subscriptions after SW update and re-subscribes |
 
 ---
 
