@@ -7,6 +7,7 @@ import { modules } from "./testSetup.test-helper";
 import {
   addProjectMember,
   asAuthenticatedUser,
+  createTestIssue,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -760,6 +761,101 @@ describe("Analytics", () => {
       await expect(async () => {
         await asOther.query(api.analytics.getRecentActivity, { projectId });
       }).rejects.toThrow("Not authorized");
+    });
+  });
+
+  describe("getTimeMetricsBreakdown", () => {
+    it("should return per-assignee cycle/lead time breakdowns", async () => {
+      const t = convexTest(schema, modules);
+      const user1 = await createTestUser(t, { name: "Alice" });
+      const user2 = await createTestUser(t, { name: "Bob" });
+      const projectId = await createTestProject(t, user1);
+      await addProjectMember(t, projectId, user2, "editor", user1);
+
+      const asUser1 = asAuthenticatedUser(t, user1);
+      const project = await asUser1.query(api.projects.getProject, { id: projectId });
+      const doneState = project?.workflowStates.find(
+        (s: { category: string }) => s.category === "done",
+      );
+
+      // Create issues via helper, then patch to done status
+      const issue1 = await createTestIssue(t, projectId, user1, {
+        title: "Alice issue",
+        assigneeId: user1,
+      });
+      const issue2 = await createTestIssue(t, projectId, user1, {
+        title: "Bob issue",
+        assigneeId: user2,
+      });
+
+      await t.run(async (ctx) => {
+        await ctx.db.patch(issue1, { status: doneState!.id });
+        await ctx.db.patch(issue2, { status: doneState!.id });
+      });
+
+      const result = await asUser1.query(api.analytics.getTimeMetricsBreakdown, {
+        projectId,
+        groupBy: "assignee",
+      });
+
+      expect(result.groups).toHaveLength(2);
+      const alice = result.groups.find((g) => g.label === "Alice");
+      const bob = result.groups.find((g) => g.label === "Bob");
+      expect(alice?.issueCount).toBe(1);
+      expect(bob?.issueCount).toBe(1);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should return per-label breakdowns", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t, { name: "User" });
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const project = await asUser.query(api.projects.getProject, { id: projectId });
+      const doneState = project?.workflowStates.find(
+        (s: { category: string }) => s.category === "done",
+      );
+
+      const issue1 = await createTestIssue(t, projectId, userId, {
+        title: "Bug issue",
+        labels: ["bug"],
+      });
+      const issue2 = await createTestIssue(t, projectId, userId, {
+        title: "Feature issue",
+        labels: ["feature", "bug"],
+      });
+
+      await t.run(async (ctx) => {
+        await ctx.db.patch(issue1, { status: doneState!.id });
+        await ctx.db.patch(issue2, { status: doneState!.id });
+      });
+
+      const result = await asUser.query(api.analytics.getTimeMetricsBreakdown, {
+        projectId,
+        groupBy: "label",
+      });
+
+      expect(result.groups).toHaveLength(2);
+      const bugGroup = result.groups.find((g) => g.label === "bug");
+      const featureGroup = result.groups.find((g) => g.label === "feature");
+      expect(bugGroup?.issueCount).toBe(2);
+      expect(featureGroup?.issueCount).toBe(1);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should return empty for projects with no done issues", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t, { name: "User" });
+      const projectId = await createTestProject(t, userId);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const result = await asUser.query(api.analytics.getTimeMetricsBreakdown, {
+        projectId,
+        groupBy: "assignee",
+      });
+
+      expect(result.groups).toHaveLength(0);
     });
   });
 });

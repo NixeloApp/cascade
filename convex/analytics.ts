@@ -738,3 +738,154 @@ export const getTimeMetrics = projectQuery({
     };
   },
 });
+
+/**
+ * Get cycle/lead time breakdowns per assignee and per label.
+ * Extends getTimeMetrics with dimensional grouping so teams can
+ * identify which assignees or label categories are slower.
+ */
+export const getTimeMetricsBreakdown = projectQuery({
+  args: {
+    groupBy: v.union(v.literal("assignee"), v.literal("label")),
+  },
+  returns: v.object({
+    groups: v.array(
+      v.object({
+        key: v.string(),
+        label: v.string(),
+        cycleTimeMedianDays: v.union(v.number(), v.null()),
+        leadTimeMedianDays: v.union(v.number(), v.null()),
+        issueCount: v.number(),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const project = ctx.project;
+    if (!project) return { groups: [] };
+
+    const doneStatusIds = new Set(
+      project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
+    );
+    const inProgressStatusIds = new Set(
+      project.workflowStates.filter((s) => s.category === "inprogress").map((s) => s.id),
+    );
+
+    if (doneStatusIds.size === 0) return { groups: [] };
+
+    // Fetch completed issues
+    const allIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
+      .filter((q) =>
+        q.and(q.neq(q.field("isDeleted"), true), q.eq(q.field("archivedAt"), undefined)),
+      )
+      .order("desc")
+      .take(MAX_PAGE_SIZE);
+
+    const doneIssues = allIssues.filter((issue) => doneStatusIds.has(issue.status));
+
+    if (doneIssues.length === 0) return { groups: [] };
+
+    // Batch fetch activity for cycle time calculation
+    const activityByIssue = new Map<Id<"issues">, Doc<"issueActivity">[]>();
+    await Promise.all(
+      doneIssues.map(async (issue) => {
+        const activities = await ctx.db
+          .query("issueActivity")
+          .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+          .filter((q) =>
+            q.and(q.eq(q.field("action"), "updated"), q.eq(q.field("field"), "status")),
+          )
+          .take(50);
+        activityByIssue.set(issue._id, activities);
+      }),
+    );
+
+    // Calculate times and group keys for each issue
+    type IssueWithTimes = {
+      leadTimeDays: number;
+      cycleTimeDays: number | null;
+      groupKeys: string[];
+    };
+
+    const issuesWithTimes: IssueWithTimes[] = doneIssues.map((issue) => {
+      const leadTimeDays = Math.round(((issue.updatedAt - issue._creationTime) / DAY) * 10) / 10;
+
+      const activities = activityByIssue.get(issue._id) ?? [];
+      const inProgressActivity = activities.find(
+        (a) => a.newValue && inProgressStatusIds.has(a.newValue),
+      );
+      const cycleTimeDays = inProgressActivity
+        ? Math.round(((issue.updatedAt - inProgressActivity._creationTime) / DAY) * 10) / 10
+        : null;
+
+      let groupKeys: string[];
+      if (args.groupBy === "assignee") {
+        groupKeys = [issue.assigneeId ?? "unassigned"];
+      } else {
+        groupKeys = issue.labels.length > 0 ? issue.labels : ["unlabeled"];
+      }
+
+      return { leadTimeDays, cycleTimeDays, groupKeys };
+    });
+
+    // Aggregate into groups
+    const groupMap = new Map<
+      string,
+      { leadTimes: number[]; cycleTimes: number[]; count: number }
+    >();
+
+    for (const item of issuesWithTimes) {
+      for (const key of item.groupKeys) {
+        const group = groupMap.get(key) ?? { leadTimes: [], cycleTimes: [], count: 0 };
+        if (item.leadTimeDays >= 0) group.leadTimes.push(item.leadTimeDays);
+        if (item.cycleTimeDays !== null && item.cycleTimeDays >= 0)
+          group.cycleTimes.push(item.cycleTimeDays);
+        group.count++;
+        groupMap.set(key, group);
+      }
+    }
+
+    const median = (arr: number[]) => {
+      if (arr.length === 0) return null;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    };
+
+    if (args.groupBy === "assignee") {
+      const userIds = [...groupMap.keys()]
+        .filter((k) => k !== "unassigned")
+        .map((k) => k as Id<"users">);
+      const userMap = await batchFetchUsers(ctx, userIds);
+
+      const groups = [...groupMap.entries()]
+        .map(([key, data]) => ({
+          key,
+          label:
+            key === "unassigned"
+              ? "Unassigned"
+              : (getUserName(userMap.get(key as Id<"users">)) ?? "Unknown"),
+          cycleTimeMedianDays: median(data.cycleTimes),
+          leadTimeMedianDays: median(data.leadTimes),
+          issueCount: data.count,
+        }))
+        .sort((a, b) => b.issueCount - a.issueCount);
+
+      return { groups };
+    }
+
+    // Label grouping
+    const groups = [...groupMap.entries()]
+      .map(([key, data]) => ({
+        key,
+        label: key === "unlabeled" ? "Unlabeled" : key,
+        cycleTimeMedianDays: median(data.cycleTimes),
+        leadTimeMedianDays: median(data.leadTimes),
+        issueCount: data.count,
+      }))
+      .sort((a, b) => b.issueCount - a.issueCount);
+
+    return { groups };
+  },
+});
