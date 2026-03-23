@@ -95,4 +95,3 @@ docs/research/library/**/*.json
 skills/
 skills-lock.json
 AGENTS.md
-convex/_generated/ai/ai-files.state.json
