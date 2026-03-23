@@ -110,7 +110,7 @@ The team detail page is the working surface for a single team within a workspace
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Settings tab is a static "Coming Soon" placeholder with no actual functionality | functionality | HIGH |
+| ~~1~~ | ~~Settings tab is a static "Coming Soon" placeholder~~ **Fixed** — general settings (name, description, privacy), member management (roles, removal), and danger zone (delete team) | functionality | ~~HIGH~~ |
 | 2 | The "Projects" tab label in RouteNav does not match the actual content (it redirects to the board, not a project list) | naming | MEDIUM |
 | 3 | Each child route independently resolves workspace + team, creating duplicate queries (same issue as workspace-detail) | performance | MEDIUM |
 | 4 | Index route uses `useEffect` redirect instead of TanStack Router `redirect` | architecture | LOW |
