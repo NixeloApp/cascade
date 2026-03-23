@@ -1,8 +1,7 @@
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Doc } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import type { ClientPortalTokenRow } from "@/components/Clients/ClientCard";
 import { ClientCard } from "@/components/Clients/ClientCard";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
@@ -29,21 +28,12 @@ function ClientsListPage() {
     | undefined;
   const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
   const { mutate: createClient } = useAuthenticatedMutation(api.clients.create);
-  const { mutate: generatePortalToken } = useAuthenticatedMutation(api.clientPortal.generateToken);
-  const { mutate: listPortalTokens } = useAuthenticatedMutation(
-    api.clientPortal.listTokensByClient,
-  );
-  const { mutate: revokePortalToken } = useAuthenticatedMutation(api.clientPortal.revokeToken);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [hourlyRate, setHourlyRate] = useState("0");
-  const [generatedPortalLinks, setGeneratedPortalLinks] = useState<Record<string, string>>({});
-  const [portalTokensByClient, setPortalTokensByClient] = useState<
-    Record<string, ClientPortalTokenRow[]>
-  >({});
 
   const handleCreateClient = async () => {
     try {
@@ -62,66 +52,6 @@ function ClientsListPage() {
       showSuccess("Client created");
     } catch (error) {
       showError(error, "Failed to create client");
-    }
-  };
-
-  const handleGeneratePortalLink = async (clientId: Id<"clients">, projectId: string) => {
-    try {
-      if (!projectId) {
-        showError("Select a project to scope the portal link");
-        return;
-      }
-
-      const response = await generatePortalToken({
-        organizationId,
-        clientId,
-        projectIds: [projectId as Id<"projects">],
-        permissions: {
-          viewIssues: true,
-          viewDocuments: false,
-          viewTimeline: true,
-          addComments: false,
-        },
-      });
-
-      setGeneratedPortalLinks((previous) => ({
-        ...previous,
-        [clientId]: response.portalPath,
-      }));
-      showSuccess("Portal link generated");
-    } catch (error) {
-      showError(error, "Failed to generate portal link");
-    }
-  };
-
-  const handleRefreshPortalTokens = async (clientId: Id<"clients">) => {
-    try {
-      const tokens = await listPortalTokens({
-        organizationId,
-        clientId,
-      });
-      setPortalTokensByClient((previous) => ({
-        ...previous,
-        [clientId]: tokens,
-      }));
-    } catch (error) {
-      showError(error, "Failed to load client portal tokens");
-    }
-  };
-
-  const handleRevokePortalToken = async (
-    clientId: Id<"clients">,
-    tokenId: Id<"clientPortalTokens">,
-  ) => {
-    try {
-      await revokePortalToken({
-        organizationId,
-        tokenId,
-      });
-      showSuccess("Portal token revoked");
-      await handleRefreshPortalTokens(clientId);
-    } catch (error) {
-      showError(error, "Failed to revoke portal token");
     }
   };
 
@@ -214,16 +144,7 @@ function ClientsListPage() {
         ) : (
           <Grid cols={1} colsLg={2} gap="md">
             {clients.map((client: Doc<"clients">) => (
-              <ClientCard
-                key={client._id}
-                client={client}
-                generatedPortalLink={generatedPortalLinks[client._id]}
-                onGeneratePortalLink={handleGeneratePortalLink}
-                onRefreshPortalTokens={handleRefreshPortalTokens}
-                onRevokePortalToken={handleRevokePortalToken}
-                portalTokens={portalTokensByClient[client._id] || []}
-                projects={projectOptions}
-              />
+              <ClientCard key={client._id} client={client} projects={projectOptions} />
             ))}
           </Grid>
         )}

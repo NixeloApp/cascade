@@ -2,12 +2,17 @@
  * Client Card
  *
  * Displays a single client's details: name, email, company, hourly rate.
- * Includes portal link generation and token management.
+ * Includes portal link generation and reactive token management.
+ * Token list auto-updates via Convex reactive query.
  */
 
+import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDate } from "@/lib/formatting";
+import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
@@ -16,14 +21,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
-export interface ClientPortalTokenRow {
-  _id: Id<"clientPortalTokens">;
-  isRevoked: boolean;
-  expiresAt?: number;
-  lastAccessedAt?: number;
-  updatedAt: number;
-}
-
 export interface ProjectOption {
   _id: string;
   name: string;
@@ -31,69 +28,101 @@ export interface ProjectOption {
 
 interface PortalTokenDetailsProps {
   clientId: Id<"clients">;
-  onRevokePortalToken: (clientId: Id<"clients">, tokenId: Id<"clientPortalTokens">) => void;
-  tokens: ClientPortalTokenRow[];
+  organizationId: Id<"organizations">;
 }
 
-export function PortalTokenDetails({
-  clientId,
-  onRevokePortalToken,
-  tokens,
-}: PortalTokenDetailsProps) {
-  return tokens.map((token) => (
-    <div key={token._id} className="mt-2 border-t border-ui-border p-3">
-      <Stack gap="xs">
-        <Typography variant="caption">Token: {token._id}</Typography>
-        <Flex align="center" gap="sm">
-          <Typography variant="caption">Status:</Typography>
-          <Badge size="sm" variant={token.isRevoked ? "error" : "success"}>
-            {token.isRevoked ? "Revoked" : "Active"}
-          </Badge>
-        </Flex>
-        <Typography variant="caption">Updated: {formatDate(token.updatedAt)}</Typography>
-        {token.lastAccessedAt ? (
-          <Typography variant="caption">
-            Last accessed: {formatDate(token.lastAccessedAt)}
-          </Typography>
-        ) : null}
-        {token.expiresAt ? (
-          <Typography variant="caption">Expires: {formatDate(token.expiresAt)}</Typography>
-        ) : null}
-      </Stack>
-      {!token.isRevoked ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mt-1"
-          onClick={() => onRevokePortalToken(clientId, token._id)}
-        >
-          Revoke token
-        </Button>
-      ) : null}
-    </div>
-  ));
+function PortalTokenDetails({ clientId, organizationId }: PortalTokenDetailsProps) {
+  const tokens =
+    useAuthenticatedQuery(api.clientPortal.listTokensByClientReactive, {
+      organizationId,
+      clientId,
+    }) ?? [];
+  const { mutate: revokePortalToken } = useAuthenticatedMutation(api.clientPortal.revokeToken);
+
+  const handleRevoke = async (tokenId: Id<"clientPortalTokens">) => {
+    try {
+      await revokePortalToken({ organizationId, tokenId });
+      showSuccess("Portal token revoked");
+    } catch (error) {
+      showError(error, "Failed to revoke portal token");
+    }
+  };
+
+  if (tokens.length === 0) {
+    return null;
+  }
+
+  return (
+    <Stack gap="sm">
+      <Typography variant="caption" color="secondary">
+        {tokens.length} {tokens.length === 1 ? "token" : "tokens"}
+      </Typography>
+      {tokens.map((token) => (
+        <div key={token._id} className="border-t border-ui-border pt-2">
+          <Flex align="center" justify="between" gap="sm">
+            <Stack gap="xs">
+              <Flex align="center" gap="sm">
+                <Badge size="sm" variant={token.isRevoked ? "error" : "success"}>
+                  {token.isRevoked ? "Revoked" : "Active"}
+                </Badge>
+                <Typography variant="caption" color="secondary">
+                  {formatDate(token.updatedAt)}
+                </Typography>
+              </Flex>
+              {token.lastAccessedAt ? (
+                <Typography variant="caption" color="tertiary">
+                  Last accessed {formatDate(token.lastAccessedAt)}
+                </Typography>
+              ) : null}
+            </Stack>
+            {!token.isRevoked ? (
+              <Button variant="ghost" size="sm" onClick={() => handleRevoke(token._id)}>
+                Revoke
+              </Button>
+            ) : null}
+          </Flex>
+        </div>
+      ))}
+    </Stack>
+  );
 }
 
 export interface ClientCardProps {
   client: Doc<"clients">;
-  generatedPortalLink?: string;
-  onGeneratePortalLink: (clientId: Id<"clients">, projectId: string) => void;
-  onRefreshPortalTokens: (clientId: Id<"clients">) => void;
-  onRevokePortalToken: (clientId: Id<"clients">, tokenId: Id<"clientPortalTokens">) => void;
-  portalTokens: ClientPortalTokenRow[];
   projects: ProjectOption[];
 }
 
-export function ClientCard({
-  client,
-  generatedPortalLink,
-  onGeneratePortalLink,
-  onRefreshPortalTokens,
-  onRevokePortalToken,
-  portalTokens,
-  projects,
-}: ClientCardProps) {
+export function ClientCard({ client, projects }: ClientCardProps) {
+  const { organizationId } = useOrganization();
+  const { mutate: generatePortalToken } = useAuthenticatedMutation(api.clientPortal.generateToken);
   const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?._id ?? "");
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+
+  const handleGeneratePortalLink = async () => {
+    try {
+      if (!selectedProjectId) {
+        showError("Select a project to scope the portal link");
+        return;
+      }
+
+      const response = await generatePortalToken({
+        organizationId,
+        clientId: client._id,
+        projectIds: [selectedProjectId as Id<"projects">],
+        permissions: {
+          viewIssues: true,
+          viewDocuments: false,
+          viewTimeline: true,
+          addComments: false,
+        },
+      });
+
+      setGeneratedLink(response.portalPath);
+      showSuccess("Portal link generated");
+    } catch (error) {
+      showError(error, "Failed to generate portal link");
+    }
+  };
 
   return (
     <Card>
@@ -130,24 +159,17 @@ export function ClientCard({
               <Button
                 variant="secondary"
                 disabled={!selectedProjectId}
-                onClick={() => onGeneratePortalLink(client._id, selectedProjectId)}
+                onClick={handleGeneratePortalLink}
               >
                 Generate portal link
               </Button>
-              <Button variant="ghost" onClick={() => onRefreshPortalTokens(client._id)}>
-                Refresh tokens
-              </Button>
             </Flex>
-            {generatedPortalLink ? (
+            {generatedLink ? (
               <Typography variant="caption" className="text-brand">
-                {generatedPortalLink}
+                {generatedLink}
               </Typography>
             ) : null}
-            <PortalTokenDetails
-              clientId={client._id}
-              onRevokePortalToken={onRevokePortalToken}
-              tokens={portalTokens}
-            />
+            <PortalTokenDetails clientId={client._id} organizationId={organizationId} />
           </Stack>
         </Stack>
       </CardContent>

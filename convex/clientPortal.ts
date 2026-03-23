@@ -7,7 +7,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
-import { organizationAdminMutation } from "./customFunctions";
+import { organizationAdminMutation, organizationQuery } from "./customFunctions";
 import { forbidden, notFound } from "./lib/errors";
 import { DAY } from "./lib/timeUtils";
 import { rateLimit } from "./rateLimits";
@@ -375,6 +375,31 @@ export const listTokensByClient = organizationAdminMutation({
       lastAccessedAt: token.lastAccessedAt,
       isRevoked: token.isRevoked,
       revokedAt: token.revokedAt,
+      updatedAt: token.updatedAt,
+    }));
+  },
+});
+
+/** Reactive query version of listTokensByClient. Auto-updates when tokens change. */
+export const listTokensByClientReactive = organizationQuery({
+  args: {
+    clientId: v.id("clients"),
+  },
+  handler: async (ctx, args) => {
+    await assertClientForOrganization(ctx.db, ctx.organizationId, args.clientId);
+
+    const MAX_PORTAL_TOKENS = 100;
+    const tokens = await ctx.db
+      .query("clientPortalTokens")
+      .withIndex("by_client", (q) => q.eq("clientId", args.clientId))
+      .filter((q) => q.eq(q.field("organizationId"), ctx.organizationId))
+      .take(MAX_PORTAL_TOKENS);
+
+    return tokens.map((token) => ({
+      _id: token._id,
+      isRevoked: token.isRevoked,
+      expiresAt: token.expiresAt,
+      lastAccessedAt: token.lastAccessedAt,
       updatedAt: token.updatedAt,
     }));
   },

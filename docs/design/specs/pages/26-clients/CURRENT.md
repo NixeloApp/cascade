@@ -94,7 +94,7 @@ The clients page manages billing contacts for agency-style organizations and pro
 | 6 | Hourly rate input defaults to "0" string and uses `Number.parseFloat` -- edge cases with empty or invalid input | robustness | LOW |
 | 7 | No search or filter functionality for the client list | scalability | LOW |
 | 8 | No pagination -- all clients load at once | scalability | MEDIUM |
-| 9 | Portal token state is managed locally (not reactive) -- tokens won't update if changed elsewhere | reactivity | MEDIUM |
+| ~~9~~ | ~~Portal token state managed locally (not reactive)~~ **Fixed** — added `listTokensByClientReactive` Convex query; `PortalTokenDetails` subscribes via `useAuthenticatedQuery` and auto-updates. Removed manual refresh button and local state. | ~~reactivity~~ | ~~MEDIUM~~ |
 
 ---
 
