@@ -55,8 +55,8 @@ Personal issue board showing only issues assigned to or created by the current u
 
 | # | Problem | Severity |
 |---|---------|----------|
-| 1 | Client-side grouping on 100 items only. No server-side group query. | MEDIUM |
-| 2 | No priority or date filters. Only group-by toggle. | LOW |
+| ~~1~~ | ~~Client-side grouping only~~ **Fixed** — `getMyIssueGroupCounts` returns server-side totals | ~~MEDIUM~~ |
+| ~~2~~ | ~~No priority or date filters~~ **Fixed** — priority and due date dropdowns with clear button | ~~LOW~~ |
 
 ## Source Files
 

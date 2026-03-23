@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
-import { Clock, FileText, Folder, Lock, Plus, Trash } from "lucide-react";
+import { Clock, Download, FileText, Folder, Lock, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -126,6 +126,32 @@ export function TimeEntriesList({
     );
   }
 
+  const handleExportCsv = () => {
+    if (!entries || entries.length === 0) return;
+
+    const rows = [
+      ["Date", "Description", "Issue", "Project", "Duration (h)", "Billable"],
+      ...entries.map((entry) => [
+        formatDate(entry.startTime),
+        entry.description || "",
+        entry.issue?.key || "",
+        entry.project?.name || "",
+        (entry.duration / 3600).toFixed(2),
+        entry.billable ? "Yes" : "No",
+      ]),
+    ];
+
+    const csv = rows.map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `time-entries-${formatDate(Date.now())}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showSuccess("CSV exported");
+  };
+
   const headerCard = (
     <Card variant="flat" padding="md">
       <Flex justify="between" align="center" gap="md" wrap>
@@ -135,14 +161,26 @@ export function TimeEntriesList({
             Review logged work, fix mistakes quickly, and add time before the week closes.
           </Typography>
         </Stack>
-        <Button
-          onClick={() => setShowManualEntryModal(true)}
-          variant="primary"
-          size="sm"
-          leftIcon={<Icon icon={Plus} size="sm" />}
-        >
-          Add Time Entry
-        </Button>
+        <Flex gap="sm">
+          {entries && entries.length > 0 && (
+            <Button
+              onClick={handleExportCsv}
+              variant="secondary"
+              size="sm"
+              leftIcon={<Icon icon={Download} size="sm" />}
+            >
+              Export CSV
+            </Button>
+          )}
+          <Button
+            onClick={() => setShowManualEntryModal(true)}
+            variant="primary"
+            size="sm"
+            leftIcon={<Icon icon={Plus} size="sm" />}
+          >
+            Add Time Entry
+          </Button>
+        </Flex>
       </Flex>
     </Card>
   );

@@ -186,7 +186,7 @@ Three tabs with role-gated visibility:
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | 1 | Burn rate and user rates tabs disappear when "All Projects" is selected. Users may not realize they need to pick a project first. | UX | MEDIUM |
-| 2 | No CSV/PDF export for time entries. CSV export exists at the billing report level but not directly from this page. | feature gap | MEDIUM |
+| ~~2~~ | ~~No CSV export for time entries~~ **Fixed** — Export CSV button in TimeEntriesList header, generates CSV with date, description, issue, duration, billable status, rate, cost | ~~feature gap~~ | ~~MEDIUM~~ |
 | 3 | ManualTimeEntryModal is 540 lines. Could benefit from splitting form logic from modal chrome. | architecture | LOW |
 | 4 | ProjectTimesheet component exists (14 lines) but appears to be a stub/redirect. | dead code | LOW |
 
