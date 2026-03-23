@@ -204,3 +204,91 @@ export interface HierarchyIssueRow {
   summaryDueDate?: number;
   summaryStartDate?: number;
 }
+
+// ── Component prop interfaces ──
+
+export interface RoadmapTimelineBarProps {
+  canEdit: boolean;
+  draggingIssueId?: Id<"issues">;
+  getPositionOnTimeline: (date: number) => number;
+  issue: RoadmapBarIssue;
+  onBarDragStart: (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => void;
+  onOpenIssue: (issueId: Id<"issues">) => void;
+  onResizeStart: (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    edge: "left" | "right",
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => void;
+  resizingIssueId?: Id<"issues">;
+}
+
+export interface RoadmapGroupRowProps {
+  getPositionOnTimeline: (date: number) => number;
+  group: TimelineGroup;
+  onToggle: (groupKey: string) => void;
+  style: React.CSSProperties;
+}
+
+export interface RoadmapIssueRowProps {
+  childCount: number;
+  canEdit: boolean;
+  childrenCollapsed: boolean;
+  depth: 0 | 1;
+  draggingIssueId?: Id<"issues">;
+  getPositionOnTimeline: (date: number) => number;
+  hasChildren: boolean;
+  issue: RoadmapIssue;
+  onBarDragStart: (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => void;
+  onOpenIssue: (issueId: Id<"issues">) => void;
+  onToggleChildren: (issueId: Id<"issues">) => void;
+  onResizeStart: (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    edge: "left" | "right",
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => void;
+  resizingIssueId?: Id<"issues">;
+  selected: boolean;
+  summaryCompletedCount: number;
+  summaryDueDate?: number;
+  summaryStartDate?: number;
+  style: React.CSSProperties;
+  timelineRef: React.RefObject<HTMLDivElement | null>;
+  parentIssue: Pick<RoadmapIssue, "_id" | "key" | "title"> | null;
+}
+
+export interface RoadmapIssueIdentityProps {
+  childCount: number;
+  childrenCollapsed: boolean;
+  hasChildren: boolean;
+  isNestedSubtask: boolean;
+  issue: RoadmapIssue;
+  onOpenIssue: (issueId: Id<"issues">) => void;
+  onToggleChildren: (issueId: Id<"issues">) => void;
+  parentIssue: Pick<RoadmapIssue, "_id" | "key" | "title"> | null;
+  selected: boolean;
+  summaryDueDate?: number;
+  summaryStartDate?: number;
+}
+
+export interface RoadmapSummaryBarProps {
+  completedCount: number;
+  dueDate: number;
+  getPositionOnTimeline: (date: number) => number;
+  issueKey: string;
+  totalCount: number;
+  startDate?: number;
+}

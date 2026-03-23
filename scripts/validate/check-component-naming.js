@@ -37,6 +37,7 @@ const SKIP_PATTERNS = [
   /shadcn-calendar/, // Vendored component with own conventions
   /Icons\.tsx$/, // Icon bundles export multiple icons
   /InlinePropertyEdit\.tsx$/, // Co-located inline edit components
+  /RoadmapRows\.tsx$/, // Multi-component barrel for roadmap row types
 ];
 
 // Valid non-PascalCase file names (utilities, hooks, etc.)
