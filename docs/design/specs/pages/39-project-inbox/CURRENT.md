@@ -170,7 +170,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | No search or filter within the inbox. Users must scan visually. | UX | MEDIUM |
+| ~~1~~ | ~~No search or filter~~ **Fixed** — search bar filters inbox items by issue title/key, empty states adapt to search context | ~~UX~~ | ~~MEDIUM~~ |
 | 2 | Snooze durations are hardcoded (1d, 3d, 1w). No custom date picker. | flexibility | LOW |
 | 3 | Decline reason is optional and not prominently surfaced in the UI. | accountability | LOW |
 | 4 | Mark-as-duplicate requires knowing the target issue key. No search picker. | UX | LOW |
