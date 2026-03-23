@@ -67,7 +67,7 @@ The org calendar provides a single unified view of calendar events across all wo
 |---|---------|------|----------|
 | 1 | Filter dropdowns use `className="w-full sm:w-56"` -- arbitrary width may not align with design tokens | styling | LOW |
 | 2 | CalendarView is lazy-loaded but the Suspense fallback is a generic loading spinner with no skeleton layout | loading UX | LOW |
-| 3 | No URL-based persistence of filter selections -- workspace/team resets on navigation | state | MEDIUM |
+| ~~3~~ | ~~No URL-based filter persistence~~ **Fixed** — workspace/team filters stored in URL search params via `validateSearch`, survive navigation | ~~state~~ | ~~MEDIUM~~ |
 | 4 | Team filter is not disabled when no workspace is selected (it shows all org teams, which can be a long list) | UX | LOW |
 | 5 | Scope label in header changes dynamically but there is no visual transition | polish | LOW |
 
