@@ -83,7 +83,7 @@ a relative timestamp.
 |---|---------|------|----------|
 | 1 | No pagination -- loads up to 50 entries then stops; no "load more" | `ActivityFeed` | MEDIUM |
 | 2 | No filtering by action type, user, or date range | `ActivityFeed` | LOW |
-| 3 | No link on the issue key to navigate to the issue detail page | `ActivityFeed` | MEDIUM |
+| ~~3~~ | ~~No link on issue key~~ **Fixed** — issue keys are now `<Link>` elements that navigate to issue detail | ~~`ActivityFeed`~~ | ~~MEDIUM~~ |
 
 ---
 

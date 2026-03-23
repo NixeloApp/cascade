@@ -12,6 +12,34 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedQuery: vi.fn(),
 }));
 
+vi.mock("@/hooks/useOrgContext", () => ({
+  useOrganization: vi.fn(() => ({
+    orgSlug: "test-org",
+    organizationId: "org-1",
+    organizationName: "Test Org",
+    userRole: "owner",
+    billingEnabled: false,
+  })),
+}));
+
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({
+    children,
+    to,
+    params,
+    className,
+  }: {
+    children: ReactNode;
+    to: string;
+    params?: Record<string, string>;
+    className?: string;
+  }) => (
+    <a href={to} className={className} data-params={JSON.stringify(params)}>
+      {children}
+    </a>
+  ),
+}));
+
 vi.mock("@/lib/formatting", () => ({
   formatRelativeTime: vi.fn(),
 }));

@@ -8,8 +8,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
+import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { formatRelativeTime } from "@/lib/formatting";
 import {
   AlertTriangle,
@@ -52,6 +55,7 @@ interface ActivityFeedProps {
  * Displays a timeline of recent project activity (issue creation, updates, comments).
  */
 export function ActivityFeed({ projectId, limit = 50, compact = false }: ActivityFeedProps) {
+  const { orgSlug } = useOrganization();
   const activities = useAuthenticatedQuery(api.analytics.getRecentActivity, { projectId, limit });
 
   const getActionIcon = (action: string): LucideIcon => {
@@ -214,7 +218,13 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
                       {formatActivityMessage(activity)}
                     </span>
                     {activity.issueKey && (
-                      <code className="ml-1 font-mono">{activity.issueKey}</code>
+                      <Link
+                        to={ROUTES.issues.detail.path}
+                        params={{ orgSlug, key: activity.issueKey }}
+                        className="ml-1 font-mono text-brand"
+                      >
+                        {activity.issueKey}
+                      </Link>
                     )}
                   </Typography>
                   {!compact && activity.field && activity.newValue && (
