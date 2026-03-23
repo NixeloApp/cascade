@@ -6,11 +6,35 @@
 
 ## Remaining Work
 
-### Phase 0: Docs
+### Phase 0: Page Spec Docs (state-of-the-art quality)
 
-| Item | Detail |
-|------|--------|
-| [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page specs missing CURRENT/IMPLEMENTATION/TARGET docs |
+All 21 page specs need full CURRENT/IMPLEMENTATION/TARGET docs at the quality level of `04-dashboard` — ASCII layout diagrams, screenshot matrices, composition walkthroughs, state coverage tables, strengths/problems analysis, source file maps, review guidance.
+
+Stubs exist for all 21. Each must be rewritten to production spec quality.
+
+| # | Spec | Priority | Status |
+|---|------|----------|--------|
+| 1 | 19-issues | P0 — core product surface | stub |
+| 2 | 21-notifications | P0 — critical UX | stub |
+| 3 | 35-roadmap | P0 — complex Gantt interactions | stub |
+| 4 | 39-project-inbox | P0 — triage/intake flow | stub |
+| 5 | 22-time-tracking | P0 — billing feature | stub |
+| 6 | 20-my-issues | P1 | stub |
+| 7 | 23-org-calendar | P1 | stub |
+| 8 | 24-org-analytics | P1 | stub |
+| 9 | 25-invoices | P1 | stub |
+| 10 | 26-clients | P1 | stub |
+| 11 | 27-workspaces | P1 | stub |
+| 12 | 28-workspace-detail | P1 | stub |
+| 13 | 29-team-detail | P1 | stub |
+| 14 | 31-authentication | P1 | stub |
+| 15 | 32-add-ons | P2 | stub |
+| 16 | 33-assistant | P2 | stub |
+| 17 | 34-mcp-server | P2 | stub |
+| 18 | 36-activity | P2 | stub |
+| 19 | 37-billing | P2 | stub |
+| 20 | 38-timesheet | P2 | stub |
+| 21 | 40-error | P2 | stub |
 
 ### Phase 1: Code Quality & Consistency
 
