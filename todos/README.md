@@ -29,7 +29,7 @@
 |------|--------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (product design) |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
-| ~22 MEDIUM page spec issues | Visual polish remaining (12 fixed: extractions, wiki dedup, tab label, auth hydration, invoice client join + draft dialog, portal reactivity, archived pagination, roadmap decomp) |
+| ~22 MEDIUM page spec issues | Mostly visual polish and product decisions (17 spec issues fixed total across all severities: extractions, redirects, dedup, reactivity, formatting, dead code) |
 
 ---
 
