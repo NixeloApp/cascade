@@ -1,14 +1,16 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import {
   Select,
@@ -175,6 +177,7 @@ function ClientsListPage() {
   );
   const { mutate: revokePortalToken } = useAuthenticatedMutation(api.clientPortal.revokeToken);
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -197,6 +200,7 @@ function ClientsListPage() {
       setEmail("");
       setCompany("");
       setHourlyRate("0");
+      setShowCreateModal(false);
       showSuccess("Client created");
     } catch (error) {
       showError(error, "Failed to create client");
@@ -269,54 +273,77 @@ function ClientsListPage() {
 
   return (
     <PageLayout>
-      <PageHeader title="Clients" description="Manage billing contacts and default rates." />
+      <PageHeader
+        title="Clients"
+        description="Manage billing contacts and default rates."
+        actions={
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            leftIcon={<Icon icon={Plus} size="sm" />}
+          >
+            New Client
+          </Button>
+        }
+      />
+
+      <Dialog
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        title="New Client"
+        description="Add a new billing contact to your organization."
+        size="md"
+      >
+        <Stack gap="md">
+          <Grid cols={1} colsMd={2} gap="sm">
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Client name"
+            />
+            <Input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="client@example.com"
+            />
+            <Input
+              value={company}
+              onChange={(event) => setCompany(event.target.value)}
+              placeholder="Company"
+            />
+            <Input
+              type="number"
+              min={0}
+              step={0.01}
+              value={hourlyRate}
+              onChange={(event) => setHourlyRate(event.target.value)}
+              placeholder="Hourly rate"
+            />
+          </Grid>
+          <Flex justify="end" gap="sm">
+            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateClient} disabled={!name.trim() || !email.trim()}>
+              Create Client
+            </Button>
+          </Flex>
+        </Stack>
+      </Dialog>
 
       <Stack gap="md">
-        <Card>
-          <CardHeader>
-            <CardTitle>New Client</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Stack gap="md">
-              <Grid cols={1} colsLg={4} gap="sm" className="pt-4">
-                <Input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Client name"
-                />
-                <Input
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="client@example.com"
-                />
-                <Input
-                  value={company}
-                  onChange={(event) => setCompany(event.target.value)}
-                  placeholder="Company"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={hourlyRate}
-                  onChange={(event) => setHourlyRate(event.target.value)}
-                  placeholder="Hourly rate"
-                />
-              </Grid>
-              <div>
-                <Button onClick={handleCreateClient} disabled={!name.trim() || !email.trim()}>
-                  Create client
-                </Button>
-              </div>
-            </Stack>
-          </CardContent>
-        </Card>
-
         {clients.length === 0 ? (
           <EmptyState
             icon={Users}
             title="No clients yet"
-            description="Add your first billing contact above to get started."
+            description="Click 'New Client' to add your first billing contact."
+            action={
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                leftIcon={<Icon icon={Plus} size="sm" />}
+              >
+                New Client
+              </Button>
+            }
           />
         ) : (
           <Grid cols={1} colsLg={2} gap="md">

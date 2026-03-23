@@ -87,7 +87,7 @@ The clients page manages billing contacts for agency-style organizations and pro
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | 1 | The entire page (310 lines) is in one file with inline sub-components (`ClientCard`, `PortalTokenDetails`) -- should be extracted | architecture | MEDIUM |
-| 2 | The "New Client" form uses a `Card` at the top of the page, mixing creation and listing in one view; a modal would be cleaner | UX | MEDIUM |
+| ~~2~~ | ~~Create form mixed with list~~ **Fixed** — moved to Dialog modal with Cancel/Create buttons, "+ New Client" button in header and empty state | ~~UX~~ | ~~MEDIUM~~ |
 | ~~3~~ | ~~Portal token uses untyped anyApi~~ **Fixed** — replaced `useMutation(anyApi.clientPortal.*)` with typed `useAuthenticatedMutation(api.clientPortal.*)` | ~~type safety~~ | ~~MEDIUM~~ |
 | 4 | Token details display raw token IDs to the user, which is not meaningful information | UX | LOW |
 | ~~5~~ | ~~Portal link grabs first project~~ **Fixed** — each client card has a project selector dropdown; user explicitly chooses which project to scope the portal link to | ~~correctness~~ | ~~HIGH~~ |
