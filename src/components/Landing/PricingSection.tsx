@@ -3,14 +3,16 @@ import { ROUTES } from "@/config/routes";
 import type { LucideIcon } from "@/lib/icons";
 import { ArrowRight, Check, Rocket, ShieldCheck, Users } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Grid, GridItem } from "../ui/Grid";
 import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
+import { InsetPanel } from "../ui/InsetPanel";
 import { SectionIntro } from "../ui/SectionIntro";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -222,12 +224,12 @@ function PlanPricingCard({
           ))}
         </Stack>
 
-        <Card recipe="overlayInset" variant="section" padding="sm">
+        <InsetPanel size="compact" className={getCardRecipeClassName("overlayInset")}>
           <Stack gap="xs">
             <Typography variant="pageHeaderEyebrow">Best when</Typography>
             <Typography variant="caption">{proof}</Typography>
           </Stack>
-        </Card>
+        </InsetPanel>
 
         <div style={{ flex: 1 }} />
 
@@ -267,22 +269,20 @@ function PricingContinuityCard() {
 
         <Stack gap="sm">
           {pricingSignals.map((signal) => (
-            <Card
+            <InsetPanel
               key={signal.label}
-              recipe="overlayInset"
-              variant="section"
-              padding="sm"
-              className="h-full"
+              size="compact"
+              className={cn(getCardRecipeClassName("overlayInset"), "h-full")}
             >
               <Stack gap="xs">
                 <Typography variant="pageHeaderEyebrow">{signal.label}</Typography>
                 <Typography variant="caption">{signal.value}</Typography>
               </Stack>
-            </Card>
+            </InsetPanel>
           ))}
         </Stack>
 
-        <Card recipe="metricTileAccent" variant="section" padding="md">
+        <InsetPanel size="md" className={getCardRecipeClassName("metricTileAccent")}>
           <Stack gap="xs">
             <Typography variant="label">Enterprise controls, when they matter</Typography>
             <Typography variant="caption">
@@ -290,7 +290,7 @@ function PricingContinuityCard() {
               force a separate operating surface or a separate story about how work gets done.
             </Typography>
           </Stack>
-        </Card>
+        </InsetPanel>
       </Stack>
     </Card>
   );

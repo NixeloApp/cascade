@@ -10,11 +10,11 @@
 
 | Item | Detail |
 |------|--------|
-| AI slop cleanup | Card variant="subtle" added; worst offenders fixed (OfflineTab 11→0, NotificationsTab 8→2, UserTypeManager 5→2). Remaining visual review items need dev server. |
+| AI slop cleanup | Worst offenders fixed. Remaining items need visual review with dev server. |
 | Mobile/tablet coverage | Backfill responsive gaps (needs visual review) |
 | Icon visual consistency | Sizing, stroke-weight rhythm, tone drift (needs visual review) |
 | Shell discipline | Composition pattern drift (needs visual review) |
-| Raw styling cleanup | 102 files / 162 violations (long tail: 58 files at 1, 32 at 2; mostly margins and widths) |
+| Raw styling cleanup | 102 files / 162 violations. Long tail — 58 files at 1, 32 at 2. Mostly structural margins/widths. Diminishing returns. |
 
 ### Phase 2: Screenshot Baselines
 
@@ -29,7 +29,26 @@
 |------|--------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (product design) |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
-| ~22 MEDIUM page spec issues | Mostly visual polish and product decisions (17 spec issues fixed total across all severities: extractions, redirects, dedup, reactivity, formatting, dead code) |
+| ~22 MEDIUM page spec issues | Mostly visual polish and product decisions. See breakdown below. |
+
+#### MEDIUM issues breakdown
+
+| Category | Count | Examples |
+|----------|-------|---------|
+| Visual/shell weight | 8 | Auth shell, dashboard gradients, meetings density |
+| Screenshot coverage | 3 | Documents, analytics, auth sign-up |
+| Product decisions | 5 | Invoice table vs cards, sprint depth, dependency graph, workspace filtering |
+| Scalability | 3 | Invoice/client pagination (already bounded), workspace layout complexity |
+| Responsive | 2 | Roadmap touch interactions, meeting detail layout |
+| Content | 1 | Sprint progress semantics |
+
+#### What's been fixed (41 spec issues total)
+
+Architecture: RoadmapView decomposition (2671→768 lines), ClientCard extraction, WorkspaceCard extraction, WikiDocumentGrid dedup, ProjectTimesheet dead code removal, useEffect→beforeLoad redirects (2 routes), auth hydrated/formReady removal, formatCurrency consolidation (6 duplicates→2 shared modules).
+
+Backend: Invoice list with client join, reactive portal tokens, archived notification pagination, admin-scoped token query.
+
+Frontend: Invoice draft dialog, portal admin gating, footer link wiring, icon barrel migration (82 files), Card variant cleanup, design tokens (roadmap + sidebar).
 
 ---
 
@@ -40,14 +59,14 @@
 | Validators | 53/53 pass |
 | Raw styling violations | 102 files / 162 baselined (was 276) |
 | Fixed size drift | 0 |
-| RoadmapView | 775 lines (was 2671, 71% reduction via Roadmap/ directory) |
+| RoadmapView | 768 lines (was 2671, 71% reduction) |
 | Icon imports | 100% via @/lib/icons barrel |
-| Card variant="section" usage | 94 → 69 (25 converted to subtle or removed) |
-| Unit tests | 4468 pass |
+| Unit tests | 4472 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
+| Spec issues fixed | 41 total (across all severities) |
 | HIGH severity issues | 1 remaining (meeting-to-doc) |
-| MEDIUM severity issues | ~22 remaining |
+| MEDIUM severity issues | 22 remaining |
 
 ### Consistency Scorecard
 

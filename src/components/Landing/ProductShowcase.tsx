@@ -8,6 +8,7 @@ import { Flex } from "../ui/Flex";
 import { Grid, GridItem } from "../ui/Grid";
 import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
+import { InsetPanel } from "../ui/InsetPanel";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -114,7 +115,7 @@ export function ProductShowcase() {
       />
 
       <Card recipe="dashboardShell" padding="none" className="overflow-hidden">
-        <Card recipe="appHeaderShell" variant="section" padding="none" radius="none">
+        <div className={cn(getCardRecipeClassName("appHeaderShell"), "p-0")}>
           <Flex align="center" justify="between" gap="sm" className="w-full">
             <Flex align="center" gap="sm" className="min-w-0">
               <div className={cn(getCardRecipeClassName("workspaceCockpitChip"), "min-w-0")}>
@@ -137,12 +138,15 @@ export function ProductShowcase() {
               <WorkspaceHeaderChip icon={Clock} iconTone="secondary" label="Time tracking" />
             </Flex>
           </Flex>
-        </Card>
+        </div>
 
         <div className="bg-linear-to-b from-ui-bg-soft/82 via-ui-bg-elevated/96 to-ui-bg px-4 py-5 sm:px-6 sm:py-6">
           <Grid cols={1} colsLg={12} gap="lg">
             <GridItem colSpanLg={8}>
-              <Card recipe="dashboardPanelInset" variant="section" padding="lg" className="h-full">
+              <InsetPanel
+                size="lg"
+                className={cn(getCardRecipeClassName("dashboardPanelInset"), "h-full")}
+              >
                 <Stack gap="lg">
                   <Flex
                     direction="column"
@@ -178,11 +182,14 @@ export function ProductShowcase() {
                     ))}
                   </Grid>
                 </Stack>
-              </Card>
+              </InsetPanel>
             </GridItem>
 
             <GridItem colSpanLg={4}>
-              <Card recipe="dashboardPanel" variant="section" padding="lg" className="h-full">
+              <InsetPanel
+                size="lg"
+                className={cn(getCardRecipeClassName("dashboardPanel"), "h-full")}
+              >
                 <Stack gap="lg">
                   <Flex align="center" justify="between" gap="md">
                     <Stack gap="xs">
@@ -200,7 +207,7 @@ export function ProductShowcase() {
                     ))}
                   </Stack>
 
-                  <Card recipe="overlayInset" variant="section" padding="md">
+                  <InsetPanel size="md" className={getCardRecipeClassName("overlayInset")}>
                     <Stack gap="sm">
                       <Flex align="center" gap="sm">
                         <IconCircle size="xs" variant="brand">
@@ -218,7 +225,7 @@ export function ProductShowcase() {
                         "Summarize what changed since the last client review and flag blockers."
                       </Typography>
                     </Stack>
-                  </Card>
+                  </InsetPanel>
 
                   <Stack gap="sm">
                     {showcaseAssistantActions.map((item) => (
@@ -226,7 +233,7 @@ export function ProductShowcase() {
                     ))}
                   </Stack>
                 </Stack>
-              </Card>
+              </InsetPanel>
             </GridItem>
           </Grid>
         </div>
@@ -254,7 +261,7 @@ function BoardPreviewColumn({
 
         <Stack gap="sm">
           {cards.map((card) => (
-            <Card key={card.key} recipe="issueCard" variant="section" padding="none">
+            <div key={card.key} className={getCardRecipeClassName("issueCard")}>
               <Stack gap="xs" className="min-w-0">
                 <Flex align="center" justify="between" gap="sm">
                   <Typography variant="issueKeyMono">{card.key}</Typography>
@@ -265,7 +272,7 @@ function BoardPreviewColumn({
                 <Typography variant="small">{card.title}</Typography>
                 <Typography variant="caption">{card.detail}</Typography>
               </Stack>
-            </Card>
+            </div>
           ))}
         </Stack>
       </Stack>
@@ -317,7 +324,7 @@ function WorkspaceSignalRow({
   value: string;
 }) {
   return (
-    <Card recipe="overlayInset" variant="section" padding="sm">
+    <InsetPanel size="compact" className={getCardRecipeClassName("overlayInset")}>
       <Flex align="start" justify="between" gap="sm">
         <Flex align="start" gap="sm">
           <IconCircle size="xs" variant="soft">
@@ -333,7 +340,7 @@ function WorkspaceSignalRow({
           {value}
         </Typography>
       </Flex>
-    </Card>
+    </InsetPanel>
   );
 }
 

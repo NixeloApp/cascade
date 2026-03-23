@@ -18,6 +18,7 @@ import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Input, Select } from "../ui/form";
+import { InsetPanel } from "../ui/InsetPanel";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -151,7 +152,7 @@ export function MemberManagement({
           </Flex>
 
           {showAddForm && (
-            <Card variant="section" padding="md" className="bg-ui-bg">
+            <InsetPanel size="md" className="bg-ui-bg">
               <Typography variant="label">Add New Member</Typography>
               <Stack gap="md">
                 <Input
@@ -190,12 +191,12 @@ export function MemberManagement({
                   </Button>
                 </Flex>
               </Stack>
-            </Card>
+            </InsetPanel>
           )}
 
           <Stack gap="sm">
             {members.map((member) => (
-              <Card key={member._id} variant="section" padding="sm" className="bg-ui-bg">
+              <InsetPanel key={member._id} className="bg-ui-bg">
                 <Flex align="center" justify="between">
                   <Flex gap="md" align="center">
                     <Avatar src={member.image} name={member.name} email={member.email} size="sm" />
@@ -244,7 +245,7 @@ export function MemberManagement({
                     )}
                   </Flex>
                 </Flex>
-              </Card>
+              </InsetPanel>
             ))}
           </Stack>
         </Stack>

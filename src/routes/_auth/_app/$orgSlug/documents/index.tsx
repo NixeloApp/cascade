@@ -203,7 +203,7 @@ export function DocumentsListPage() {
               </GridItem>
 
               <GridItem colSpanLg={4}>
-                <Card variant="section" padding="lg" className="h-full">
+                <InsetPanel size="lg" className="h-full">
                   <Stack gap="md" className="h-full">
                     <Flex align="center" gap="sm">
                       <IconCircle size="sm" tone="brand" variant="muted">
@@ -237,7 +237,7 @@ export function DocumentsListPage() {
                       </Link>
                     </Button>
                   </Stack>
-                </Card>
+                </InsetPanel>
               </GridItem>
             </Grid>
           </Card>

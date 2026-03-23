@@ -49,33 +49,8 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
-    /** Variants allowed inside another Card (inner sections only) */
-    const INNER_CARD_VARIANTS = new Set(["section"]);
-
-    /** Check if a JSX opening or self-closing element has an inner-card-safe variant */
-    function isSectionVariant(element) {
-      const attrs = element.attributes;
-      if (!attrs || !ts.isJsxAttributes(attrs)) return false;
-      for (const prop of attrs.properties) {
-        if (ts.isJsxAttribute(prop) && prop.name.getText() === "variant" && prop.initializer) {
-          // variant="section" / variant="subtle"
-          if (
-            ts.isStringLiteral(prop.initializer) &&
-            INNER_CARD_VARIANTS.has(prop.initializer.text)
-          ) {
-            return true;
-          }
-          // variant={"section"} / variant={"subtle"}
-          if (
-            ts.isJsxExpression(prop.initializer) &&
-            prop.initializer.expression &&
-            ts.isStringLiteral(prop.initializer.expression) &&
-            INNER_CARD_VARIANTS.has(prop.initializer.expression.text)
-          ) {
-            return true;
-          }
-        }
-      }
+    /** No Card variants are exempt — Cards inside Cards is always banned. */
+    function isSectionVariant(_element) {
       return false;
     }
 
@@ -91,7 +66,7 @@ export function run() {
             reportError(
               filePath,
               opening,
-              `Card inside Card is banned. Use variant="section" for inner sections or a div with appropriate styling.`,
+              `Card inside Card is banned. Use a div with appropriate styling instead.`,
             );
           }
 
@@ -111,7 +86,7 @@ export function run() {
           reportError(
             filePath,
             node,
-            `Card inside Card is banned. Use variant="section" for inner sections or a div with appropriate styling.`,
+            `Card inside Card is banned. Use a div with appropriate styling instead.`,
           );
         }
       }

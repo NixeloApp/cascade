@@ -22,6 +22,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
+import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Label } from "@/components/ui/Label";
 import { List } from "@/components/ui/List";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -800,7 +801,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                       segmentRefs.current[segmentKey] = element;
                     }}
                   >
-                    <Card variant="section" padding="sm">
+                    <InsetPanel size="compact">
                       <Stack gap="xs">
                         <Flex justify="between" align="start" gap="sm" wrap>
                           <Flex gap="xs" wrap>
@@ -816,7 +817,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                           {segment.text}
                         </Typography>
                       </Stack>
-                    </Card>
+                    </InsetPanel>
                   </li>
                 );
               })}
@@ -925,7 +926,7 @@ function ActionItemCard({
         {actionItem.issueCreated ? (
           <LinkedIssueDetails issueId={actionItem.issueCreated} />
         ) : (
-          <Card variant="section" padding="sm">
+          <InsetPanel size="compact">
             <Stack gap="xs">
               <Typography variant="caption" color="secondary">
                 Turn this follow-up into a tracked issue.
@@ -971,7 +972,7 @@ function ActionItemCard({
                 </Flex>
               )}
             </Stack>
-          </Card>
+          </InsetPanel>
         )}
       </Stack>
     </Card>
@@ -1248,14 +1249,14 @@ function RecordingDetailPanel({
           </Metadata>
 
           {recording.errorMessage && (
-            <Card variant="section" padding="sm">
+            <InsetPanel size="compact">
               <Flex gap="sm" align="start">
                 <Icon icon={XCircle} size="sm" tone="error" />
                 <Typography variant="caption" color="secondary">
                   {recording.errorMessage}
                 </Typography>
               </Flex>
-            </Card>
+            </InsetPanel>
           )}
         </Stack>
       </Card>

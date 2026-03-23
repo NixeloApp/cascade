@@ -2,15 +2,17 @@ import { Link } from "@tanstack/react-router";
 import { ROUTES } from "@/config/routes";
 import type { LucideIcon } from "@/lib/icons";
 import { ArrowRight, Bot, Rocket, ShieldCheck } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Container } from "../ui/Container";
 import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Grid, GridItem } from "../ui/Grid";
 import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
+import { InsetPanel } from "../ui/InsetPanel";
 import { SectionIntro } from "../ui/SectionIntro";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -99,7 +101,10 @@ export function FinalCTASection() {
 
             <Grid cols={1} colsLg={12} gap="lg">
               <GridItem colSpanLg={8}>
-                <Card recipe="dashboardPanel" variant="section" padding="lg" className="h-full">
+                <InsetPanel
+                  size="lg"
+                  className={cn(getCardRecipeClassName("dashboardPanel"), "h-full")}
+                >
                   <Stack gap="lg">
                     <Flex align="center" justify="between" gap="md" wrap>
                       <Stack gap="xs">
@@ -119,15 +124,13 @@ export function FinalCTASection() {
                       ))}
                     </Stack>
                   </Stack>
-                </Card>
+                </InsetPanel>
               </GridItem>
 
               <GridItem colSpanLg={4}>
-                <Card
-                  recipe="dashboardPanelInset"
-                  variant="section"
-                  padding="lg"
-                  className="h-full"
+                <InsetPanel
+                  size="lg"
+                  className={cn(getCardRecipeClassName("dashboardPanelInset"), "h-full")}
                 >
                   <Stack gap="lg" className="h-full">
                     <Stack gap="sm">
@@ -164,7 +167,7 @@ export function FinalCTASection() {
                       </Button>
                     </Stack>
                   </Stack>
-                </Card>
+                </InsetPanel>
               </GridItem>
             </Grid>
           </Stack>
@@ -184,7 +187,7 @@ function LaunchStepCard({
   title,
 }: LaunchStep) {
   return (
-    <Card recipe="overlayInset" variant="section" padding="md">
+    <InsetPanel size="md" className={getCardRecipeClassName("overlayInset")}>
       <Stack gap="md">
         <Flex align="center" justify="between" gap="sm" wrap>
           <Flex align="center" gap="sm" style={{ minWidth: 0 }}>
@@ -210,18 +213,18 @@ function LaunchStepCard({
           <Typography variant="caption">{resultValue}</Typography>
         </Flex>
       </Stack>
-    </Card>
+    </InsetPanel>
   );
 }
 
 function ClosingSignalRow({ label, value }: ClosingSignal) {
   return (
-    <Card recipe="overlayInset" variant="section" padding="sm">
+    <InsetPanel size="compact" className={getCardRecipeClassName("overlayInset")}>
       <Stack gap="xs">
         <Typography variant="pageHeaderEyebrow">{label}</Typography>
         <Typography variant="caption">{value}</Typography>
       </Stack>
-    </Card>
+    </InsetPanel>
   );
 }
 

@@ -28,6 +28,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/form";
 import { IconButton } from "../ui/IconButton";
+import { InsetPanel } from "../ui/InsetPanel";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
 import { AvatarUploadModal } from "./AvatarUploadModal";
@@ -113,14 +114,14 @@ export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: num
       </Stack>
       <Stack gap="sm">
         {rows.map((row) => (
-          <Card key={row.label} variant="section" padding="sm">
+          <InsetPanel key={row.label}>
             <Grid cols={1} colsSm={2} gap="xs">
               <Typography variant="label" color="secondary">
                 {row.label}
               </Typography>
               {row.value}
             </Grid>
-          </Card>
+          </InsetPanel>
         ))}
       </Stack>
     </Card>
@@ -319,7 +320,7 @@ function LoadedProfileContent({
         </MediaPreviewFrame>
       )}
 
-      <Card padding="md" radius="none" variant="section">
+      <InsetPanel size="md">
         <Stack gap="md">
           <Grid
             cols={1}
@@ -328,7 +329,7 @@ function LoadedProfileContent({
             style={isOwnProfile ? { marginTop: "-0.375rem" } : undefined}
           >
             <GridItem colSpanLg={showAccountInfo ? 3 : undefined}>
-              <Card variant="section" padding="lg">
+              <InsetPanel size="lg">
                 <ProfileHeader
                   user={viewUser}
                   isOwnProfile={isOwnProfile}
@@ -346,7 +347,7 @@ function LoadedProfileContent({
                   onCancel={onCancel}
                   onAvatarClick={onAvatarClick}
                 />
-              </Card>
+              </InsetPanel>
             </GridItem>
 
             {showAccountInfo && (
@@ -372,14 +373,14 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <Card padding="md" variant="section">
+          <InsetPanel size="md">
             <Stack gap="sm">
               <Typography variant="h5">Recent Activity</Typography>
               <UserActivityFeed userId={viewUser._id} limit={10} />
             </Stack>
-          </Card>
+          </InsetPanel>
         </Stack>
-      </Card>
+      </InsetPanel>
     </Card>
   );
 }

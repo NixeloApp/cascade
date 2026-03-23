@@ -31,6 +31,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/form";
+import { InsetPanel } from "../ui/InsetPanel";
 import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
 import { SkeletonText } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
@@ -76,14 +77,14 @@ function NotificationToggleCard({
   onChange,
 }: NotificationToggleCardProps) {
   return (
-    <Card variant="section" padding="sm">
+    <InsetPanel>
       <SettingsSectionRow
         title={label}
         description={description}
         icon={icon}
         action={<Switch checked={checked} onCheckedChange={onChange} disabled={isDisabled} />}
       />
-    </Card>
+    </InsetPanel>
   );
 }
 
@@ -105,7 +106,7 @@ function DigestOptionCard({
   value,
 }: DigestOptionCardProps) {
   return (
-    <Card padding="sm" hoverable variant={checked ? "outline" : "section"}>
+    <InsetPanel>
       <RadioGroupItem
         value={value}
         label={label}
@@ -113,7 +114,7 @@ function DigestOptionCard({
         disabled={isDisabled}
         onClick={onChange}
       />
-    </Card>
+    </InsetPanel>
   );
 }
 
@@ -178,9 +179,9 @@ function PushNotificationsPreferences({
 
   if (!pushPreferences) {
     return (
-      <Card variant="section" padding="sm">
+      <InsetPanel>
         <SkeletonText lines={2} />
-      </Card>
+      </InsetPanel>
     );
   }
 
@@ -447,7 +448,7 @@ function QuietHoursRange({
   quietHoursStart: string;
 }) {
   return (
-    <Card variant="section" padding="md">
+    <InsetPanel size="md">
       <Stack gap="sm">
         <Typography variant="label">Delivery window</Typography>
         <Flex direction="column" gap="sm" directionSm="row" alignSm="end">
@@ -477,7 +478,7 @@ function QuietHoursRange({
           Default: 10:00 PM to 8:00 AM in your local timezone
         </Typography>
       </Stack>
-    </Card>
+    </InsetPanel>
   );
 }
 
@@ -487,26 +488,26 @@ function NotificationsLoadingState() {
       <Card padding="lg">
         <Stack gap="md">
           <SkeletonText lines={2} />
-          <Card variant="section" padding="sm">
+          <InsetPanel>
             <SkeletonText lines={1} />
-          </Card>
-          <Card variant="section" padding="sm">
+          </InsetPanel>
+          <InsetPanel>
             <SkeletonText lines={1} />
-          </Card>
+          </InsetPanel>
         </Stack>
       </Card>
       <Card padding="lg">
         <Stack gap="md">
           <SkeletonText lines={2} />
-          <Card variant="section" padding="sm">
+          <InsetPanel>
             <SkeletonText lines={1} />
-          </Card>
-          <Card variant="section" padding="sm">
+          </InsetPanel>
+          <InsetPanel>
             <SkeletonText lines={1} />
-          </Card>
-          <Card variant="section" padding="sm">
+          </InsetPanel>
+          <InsetPanel>
             <SkeletonText lines={1} />
-          </Card>
+          </InsetPanel>
         </Stack>
       </Card>
     </Stack>

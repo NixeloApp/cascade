@@ -24,6 +24,7 @@ import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Input, Select, Textarea } from "./ui/form";
 import { Icon } from "./ui/Icon";
+import { InsetPanel } from "./ui/InsetPanel";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
@@ -220,7 +221,7 @@ function TemplateSummary({
         </Flex>
 
         <Grid cols={1} colsSm={3} gap="md">
-          <Card recipe="overlayInset" variant="section" padding="sm">
+          <InsetPanel>
             <Stack gap="xs">
               <Typography variant="eyebrowWide">Workflow</Typography>
               <Typography variant="h4">{selectedTemplate.workflowStates.length}</Typography>
@@ -228,8 +229,8 @@ function TemplateSummary({
                 Starter states ready for the project board.
               </Typography>
             </Stack>
-          </Card>
-          <Card recipe="overlayInset" variant="section" padding="sm">
+          </InsetPanel>
+          <InsetPanel>
             <Stack gap="xs">
               <Typography variant="eyebrowWide">Labels</Typography>
               <Typography variant="h4">{selectedTemplate.defaultLabels.length}</Typography>
@@ -237,8 +238,8 @@ function TemplateSummary({
                 Pre-configured tags included from day one.
               </Typography>
             </Stack>
-          </Card>
-          <Card recipe="overlayInset" variant="section" padding="sm">
+          </InsetPanel>
+          <InsetPanel>
             <Stack gap="xs">
               <Typography variant="eyebrowWide">Board</Typography>
               <Typography variant="h4" className="capitalize">
@@ -248,7 +249,7 @@ function TemplateSummary({
                 Delivery mode applied across the new project.
               </Typography>
             </Stack>
-          </Card>
+          </InsetPanel>
         </Grid>
 
         <Stack gap="sm">

@@ -19,6 +19,7 @@ import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select } from "../ui/form";
 import { Icon } from "../ui/Icon";
+import { InsetPanel } from "../ui/InsetPanel";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -180,7 +181,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
           <Stack gap="md">
             <Stack gap="sm">
               {states.map((state, index) => (
-                <Card key={state.id} variant="section" padding="md" className="bg-ui-bg">
+                <InsetPanel key={state.id} size="md" className="bg-ui-bg">
                   <Flex align="center" gap="md">
                     <Flex gap="xs" direction="column">
                       <Button
@@ -221,7 +222,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                       Remove
                     </Button>
                   </Flex>
-                </Card>
+                </InsetPanel>
               ))}
             </Stack>
 
@@ -241,7 +242,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
         ) : (
           <Stack gap="lg">
             {(["todo", "inprogress", "done"] as const).map((category) => (
-              <Card key={category} variant="section" padding="md" className="bg-ui-bg">
+              <InsetPanel key={category} size="md" className="bg-ui-bg">
                 <Stack gap="sm">
                   <Typography variant="label" color="secondary">
                     {category === "inprogress"
@@ -258,7 +259,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                     ))}
                   </Flex>
                 </Stack>
-              </Card>
+              </InsetPanel>
             ))}
           </Stack>
         )}

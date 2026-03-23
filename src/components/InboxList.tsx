@@ -37,6 +37,7 @@ import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { Input } from "./ui/Input";
+import { InsetPanel } from "./ui/InsetPanel";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
@@ -251,7 +252,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
           {/* Bulk Actions Bar */}
           {activeTab === "open" && triageableCount > 0 && (
-            <Card variant="section" padding="sm" className="bg-ui-bg-soft">
+            <InsetPanel className="bg-ui-bg-soft">
               <Flex align="center" gap="md">
                 <Checkbox
                   checked={selectedIds.size === triageableCount && triageableCount > 0}
@@ -288,7 +289,7 @@ export function InboxList({ projectId }: InboxListProps) {
                   </Typography>
                 )}
               </Flex>
-            </Card>
+            </InsetPanel>
           )}
 
           <TabsContent value="open" className="overflow-auto">

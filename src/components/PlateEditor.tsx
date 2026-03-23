@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
+import { InsetPanel } from "@/components/ui/InsetPanel";
 import { PlateRichTextContent } from "@/components/ui/PlateRichTextContent";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
@@ -707,7 +708,7 @@ function EditorCanvas({
 
             <Grid cols={1} colsMd={3} gap="md">
               {DOCUMENT_STARTER_SECTIONS.map((section) => (
-                <Card key={section.title} variant="section" padding="md" className="h-full">
+                <InsetPanel key={section.title} size="md" className="h-full">
                   <Stack gap="sm">
                     <Badge variant="outline" shape="pill" className="w-fit">
                       <Flex as="span" align="center" gap="xs">
@@ -719,7 +720,7 @@ function EditorCanvas({
                       {section.description}
                     </Typography>
                   </Stack>
-                </Card>
+                </InsetPanel>
               ))}
             </Grid>
           </Stack>
