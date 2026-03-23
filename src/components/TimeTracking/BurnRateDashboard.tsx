@@ -9,9 +9,9 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
-import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import type { LucideIcon } from "@/lib/icons";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";

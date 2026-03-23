@@ -9,8 +9,8 @@
  * - Empty search state
  */
 
-import { Search } from "lucide-react";
 import { useState } from "react";
+import { Search } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import { Card, getCardRecipeClassName } from "./ui/Card";

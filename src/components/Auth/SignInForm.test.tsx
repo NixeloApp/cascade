@@ -49,10 +49,6 @@ describe("SignInForm", () => {
   it("expands email form when Continue with email is clicked", async () => {
     render(<SignInForm />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED)).toBeInTheDocument();
-    });
-
     const submitButton = screen.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
     fireEvent.click(submitButton);
 

@@ -277,49 +277,20 @@ export const archiveAllNotifications = authenticatedMutation({
   },
 });
 
-/** List archived notifications for the current user. */
+/** List archived notifications for the current user with pagination. */
 export const listArchived = authenticatedQuery({
-  args: {},
-  returns: v.array(
-    v.object({
-      _id: v.id("notifications"),
-      _creationTime: v.number(),
-      userId: v.id("users"),
-      type: v.string(),
-      title: v.string(),
-      message: v.string(),
-      issueId: v.optional(v.id("issues")),
-      projectId: v.optional(v.id("projects")),
-      documentId: v.optional(v.id("documents")),
-      actorId: v.optional(v.id("users")),
-      isRead: v.boolean(),
-      isArchived: v.optional(v.boolean()),
-      archivedAt: v.optional(v.number()),
-    }),
-  ),
-  handler: async (ctx) => {
-    const notifications = await ctx.db
-      .query("notifications")
-      .withIndex("by_user_archived", (q) => q.eq("userId", ctx.userId).eq("isArchived", true))
-      .filter(notDeleted)
-      .order("desc")
-      .take(100);
-
-    return notifications.map((n) => ({
-      _id: n._id,
-      _creationTime: n._creationTime,
-      userId: n.userId,
-      type: n.type,
-      title: n.title,
-      message: n.message,
-      issueId: n.issueId,
-      projectId: n.projectId,
-      documentId: n.documentId,
-      actorId: n.actorId,
-      isRead: n.isRead,
-      isArchived: n.isArchived,
-      archivedAt: n.archivedAt,
-    }));
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    return await fetchPaginatedQuery<Doc<"notifications">>(ctx, {
+      paginationOpts: args.paginationOpts,
+      buildQuery: (db) =>
+        db
+          .query("notifications")
+          .withIndex("by_user_archived", (q) => q.eq("userId", ctx.userId).eq("isArchived", true))
+          .order("desc"),
+    });
   },
 });
 

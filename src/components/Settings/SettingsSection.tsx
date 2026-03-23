@@ -1,5 +1,5 @@
-import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import type { LucideIcon } from "@/lib/icons";
 import { Card, type CardProps } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";

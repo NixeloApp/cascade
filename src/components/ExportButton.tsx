@@ -7,8 +7,8 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
-import { ArrowLeftRight } from "lucide-react";
 import { useState } from "react";
+import { ArrowLeftRight } from "@/lib/icons";
 import { ImportExportModal } from "./ImportExportModal";
 import { Button } from "./ui/Button";
 import { IconButton } from "./ui/IconButton";

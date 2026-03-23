@@ -6,7 +6,7 @@
  * Allows skipping to go directly to dashboard.
  */
 
-import { Check, PartyPopper } from "lucide-react";
+import { Check, PartyPopper } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card, getCardRecipeClassName } from "../ui/Card";

@@ -8,13 +8,13 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import type { LucideIcon } from "@/lib/icons";
 import { Archive, File, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { AttachmentRow } from "./ui/AttachmentRow";

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Puzzle } from "lucide-react";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Puzzle } from "@/lib/icons";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/add-ons")({
   component: AddOnsPage,

@@ -6,12 +6,12 @@
  * Used in lead and member onboarding flows.
  */
 
-import type { LucideIcon } from "lucide-react";
-import { FileText, Kanban, Zap } from "lucide-react";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
+import type { LucideIcon } from "@/lib/icons";
+import { FileText, Kanban, Zap } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 

@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { Eye, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { Eye, Pencil } from "@/lib/icons";
 import { CommentRenderer } from "./CommentRenderer";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";

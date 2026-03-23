@@ -1,5 +1,5 @@
-import type { LucideIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
+import type { LucideIcon } from "@/lib/icons";
 import { Badge, type BadgeProps } from "../ui/Badge";
 import type { IconTone } from "../ui/icon-tones";
 import { Stack } from "../ui/Stack";

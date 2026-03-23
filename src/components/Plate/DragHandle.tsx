@@ -5,7 +5,6 @@
  * Uses @platejs/dnd for drag-drop functionality.
  */
 
-import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { useEditorRef, useElement, useNodePath } from "platejs/react";
 import { useState } from "react";
 import { getCardRecipeClassName } from "@/components/ui/Card";
@@ -19,6 +18,7 @@ import {
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
+import { GripVertical, Plus, Trash2 } from "@/lib/icons";
 import { NODE_TYPES } from "@/lib/plate/plugins";
 import { cn } from "@/lib/utils";
 

@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
@@ -76,8 +76,6 @@ export function SignInForm() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [formReady, setFormReady] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
   const [email, setEmail] = useState("");
 
   // Public query - SSO discovery must work on sign-in page before auth
@@ -92,15 +90,8 @@ export function SignInForm() {
   );
   const hasGoogleWorkspaceSso = isGoogleWorkspaceSsoConnection(ssoConnection);
 
-  // Set hydrated on mount
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
   const handleShowEmailForm = () => {
     setShowEmailForm(true);
-    // Use microtask to ensure fields are rendered
-    void Promise.resolve().then(() => setFormReady(true));
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -111,7 +102,14 @@ export function SignInForm() {
       return;
     }
 
-    if (!formReady) return;
+    // Validate inputs (replaces browser-native required attribute)
+    const formData = new FormData(e.currentTarget);
+    const formEmail = (formData.get("email") as string)?.trim();
+    const formPassword = formData.get("password") as string;
+    if (!formEmail || !formPassword) {
+      showError("Please enter both email and password.");
+      return;
+    }
 
     void submitPasswordSignIn({
       event: e,
@@ -130,10 +128,7 @@ export function SignInForm() {
       />
       <AuthMethodDivider />
       <form onSubmit={handleSubmit} data-testid={TEST_IDS.AUTH.FORM}>
-        {hydrated ? (
-          <span data-testid={TEST_IDS.AUTH.FORM_HYDRATED} hidden aria-hidden="true" />
-        ) : null}
-        {formReady ? (
+        {showEmailForm ? (
           <span data-testid={TEST_IDS.AUTH.FORM_READY} hidden aria-hidden="true" />
         ) : null}
         <Flex direction="column">
@@ -151,7 +146,6 @@ export function SignInForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                required={formReady}
                 className="transition-default"
                 data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
               />
@@ -159,7 +153,6 @@ export function SignInForm() {
                 type="password"
                 name="password"
                 placeholder="Password"
-                required={formReady}
                 className="transition-default"
                 data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
               />
@@ -178,7 +171,6 @@ export function SignInForm() {
             variant={showEmailForm ? "primary" : "secondary"}
             size="lg"
             className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
-            disabled={!hydrated}
             isLoading={showEmailForm && submitting}
             leftIcon={!showEmailForm ? <Icon icon={Mail} size="md" /> : undefined}
             data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}

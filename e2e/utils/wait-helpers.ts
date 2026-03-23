@@ -38,14 +38,13 @@ export const WAIT_TIMEOUTS = {
 
 /**
  * Wait for auth form to be ready for submission.
- * The SignInForm/SignUpForm have a 350ms delay before formReady=true.
- * This waits for the owned auth readiness markers and visible inputs.
+ * Waits for the FORM_READY marker (rendered when the email form is expanded)
+ * or falls back to checking visible inputs and enabled submit button.
  */
 export async function waitForFormReady(page: Page, timeout = 5000): Promise<boolean> {
   const form = page.getByTestId(TEST_IDS.AUTH.FORM);
   const emailForm = form.getByTestId(TEST_IDS.AUTH.EMAIL_FORM);
   const formReadyMarker = form.getByTestId(TEST_IDS.AUTH.FORM_READY);
-  const hydratedMarker = form.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED);
   const emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
   const passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
   const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
@@ -63,20 +62,12 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
         }
 
         const expanded = (await getLocatorCount(emailForm)) > 0;
-        const hydrated = (await getLocatorCount(hydratedMarker)) > 0;
         const emailVisible = await isLocatorVisible(emailInput);
         const passwordVisible = await isLocatorVisible(passwordInput);
         const submitVisible = await isLocatorVisible(submitButton);
         const submitEnabled = submitVisible && !(await isLocatorDisabled(submitButton, true));
 
-        if (
-          expanded &&
-          hydrated &&
-          emailVisible &&
-          passwordVisible &&
-          submitVisible &&
-          submitEnabled
-        ) {
+        if (expanded && emailVisible && passwordVisible && submitVisible && submitEnabled) {
           return "fallback-ready";
         }
 

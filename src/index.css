@@ -284,9 +284,24 @@
   /* Dropdown menus — scrollable content constraint */
   --max-height-dropdown: 16rem;
 
-  /* Sidebar widths */
+  /* Sidebar */
   --width-sidebar: 16rem;
   --width-sidebar-collapsed: 4rem;
+  --spacing-sidebar-nav: 0.25rem;
+  --spacing-sidebar-indent: 0.5rem;
+  --spacing-sidebar-separator: 0.5rem;
+  --spacing-sidebar-section-label: 0.75rem;
+  --spacing-sidebar-section-gap: 1.25rem;
+  --min-height-sidebar-item: 2.25rem;
+
+  /* Roadmap timeline dimensions */
+  --height-roadmap-bar: 1.5rem;
+  --height-roadmap-row: 2rem;
+  --height-roadmap-summary: 1rem;
+  --height-roadmap-grip: 0.75rem;
+  --width-roadmap-grip: 0.125rem;
+  --width-roadmap-tree-connector: 0.75rem;
+  --spacing-roadmap-subtask-indent: 1.5rem;
 
   /* Auth page shell min-height (full viewport minus py-6 padding) */
   --min-height-auth-shell: calc(100vh - 3rem);

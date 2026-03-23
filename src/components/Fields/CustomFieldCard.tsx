@@ -1,5 +1,5 @@
 import type { Id } from "@convex/_generated/dataModel";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "@/lib/icons";
 import {
   Calendar,
   Check,

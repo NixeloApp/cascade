@@ -194,7 +194,7 @@ The toolbar is dense with controls, organized in rows:
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Component is 2671 lines in a single file. Should be split into sub-components (toolbar, info column, timeline bar, dependency layer). | architecture | MEDIUM |
+| ~~1~~ | ~~2671 lines in a single file~~ **Fixed** — decomposed into 7 files in `src/components/Roadmap/` (types, utils, rows, header, dependency panel, loading state, today marker). Main file is 775 lines. | ~~architecture~~ | ~~MEDIUM~~ |
 | 2 | Mobile/tablet experience is limited for a dense Gantt chart. Drag interactions are designed for mouse, not touch. | responsive | MEDIUM |
 | 3 | No undo for drag/resize operations. Accidental drags save immediately. | UX | LOW |
 | 4 | Dependency arrows can overlap and become hard to trace in dense timelines. | visualization | LOW |

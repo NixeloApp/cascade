@@ -1,5 +1,5 @@
 import type { Id } from "@convex/_generated/dataModel";
-import { Star } from "lucide-react";
+import { Star } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";

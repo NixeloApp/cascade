@@ -12,6 +12,7 @@ import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { formatCurrency } from "@/lib/formatting";
 
 type InvoiceLineItem = {
   description: string;
@@ -27,10 +28,6 @@ interface InvoiceEditorProps {
   initialLineItems: InvoiceLineItem[];
   onSave: (lineItems: InvoiceLineItem[]) => Promise<void>;
   isSaving?: boolean;
-}
-
-function formatCurrency(value: number): string {
-  return `$${value.toFixed(2)}`;
 }
 
 /**

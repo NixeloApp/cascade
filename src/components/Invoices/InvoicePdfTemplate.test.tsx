@@ -33,7 +33,7 @@ describe("InvoicePdfTemplate", () => {
     expect(screen.getByText("3.50h")).toBeInTheDocument();
     expect(screen.getByText("Subtotal: $950.00")).toBeInTheDocument();
     expect(screen.getByText("Tax: $95.00")).toBeInTheDocument();
-    expect(screen.getByText("Total: $1045.00")).toBeInTheDocument();
+    expect(screen.getByText("Total: $1,045.00")).toBeInTheDocument();
     expect(screen.getByText("Notes: Payment due within 15 days.")).toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: "Open generated PDF" })).toHaveAttribute(

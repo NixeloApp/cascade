@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { Camera, ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid, GridItem } from "@/components/ui/Grid";
@@ -21,6 +20,7 @@ import {
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate } from "@/lib/formatting";
+import { Camera, ImageIcon } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { UserActivityFeed } from "../UserActivityFeed";
 import { Avatar } from "../ui/Avatar";

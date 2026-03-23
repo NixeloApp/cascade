@@ -9,7 +9,6 @@
  * - Label
  */
 
-import { ChevronDown, Rows3 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
   DropdownMenu,
@@ -17,6 +16,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
+import { ChevronDown, Rows3 } from "@/lib/icons";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import { getSwimlanGroupByLabel, getSwimlanGroupByOptions } from "@/lib/swimlane-utils";
 import { Icon } from "../ui/Icon";

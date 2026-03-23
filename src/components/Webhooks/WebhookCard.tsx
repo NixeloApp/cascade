@@ -1,5 +1,5 @@
 import type { Id } from "@convex/_generated/dataModel";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";

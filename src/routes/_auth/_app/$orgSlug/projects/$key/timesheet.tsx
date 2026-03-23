@@ -5,10 +5,10 @@ import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useProjectByKey } from "@/hooks/useProjectByKey";
 
-// Lazy load the timesheet component for better performance
-const ProjectTimesheet = React.lazy(() =>
-  import("@/components/TimeTracking/ProjectTimesheet").then((module) => ({
-    default: module.ProjectTimesheet,
+// Lazy load the time tracking page for better performance
+const TimeTrackingPage = React.lazy(() =>
+  import("@/components/TimeTracking/TimeTrackingPage").then((module) => ({
+    default: module.TimeTrackingPage,
   })),
 );
 
@@ -42,7 +42,7 @@ function TimesheetPage() {
           </Flex>
         }
       >
-        <ProjectTimesheet projectId={project._id} userRole={project.userRole} />
+        <TimeTrackingPage projectId={project._id} userRole={project.userRole} />
       </React.Suspense>
     </PageLayout>
   );

@@ -111,10 +111,10 @@ The team detail page is the working surface for a single team within a workspace
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | ~~1~~ | ~~Settings tab is a static "Coming Soon" placeholder~~ **Fixed** — general settings (name, description, privacy), member management (roles, removal), and danger zone (delete team) | functionality | ~~HIGH~~ |
-| 2 | The "Projects" tab label in RouteNav does not match the actual content (it redirects to the board, not a project list) | naming | MEDIUM |
+| ~~2~~ | ~~"Projects" tab label mismatch~~ **Fixed** — renamed to "Board" to match actual content (team index redirects to board view) | ~~naming~~ | ~~MEDIUM~~ |
 | ~~3~~ | ~~Duplicate workspace+team queries in child routes~~ **Fixed** — TeamLayoutContext provides teamId/workspaceId from parent; board/calendar/wiki/settings use useTeamLayout() | ~~performance~~ | ~~MEDIUM~~ |
-| 4 | Index route uses `useEffect` redirect instead of TanStack Router `redirect` | architecture | LOW |
-| 5 | Wiki page shares identical card markup with workspace wiki -- should be a shared component | code duplication | MEDIUM |
+| ~~4~~ | ~~useEffect redirect in index route~~ **Fixed** — replaced with TanStack Router `beforeLoad` + `redirect()`. No component renders, no query fires. | ~~architecture~~ | ~~LOW~~ |
+| ~~5~~ | ~~Wiki page shares identical card markup with workspace wiki~~ **Fixed** — extracted `WikiDocumentGrid` to `src/components/Documents/WikiDocumentGrid.tsx`, used by both team and workspace wiki | ~~code duplication~~ | ~~MEDIUM~~ |
 | 6 | Board route loads workspace + team just to pass `team._id` to KanbanBoard; team ID could come from layout context | efficiency | LOW |
 | ~~7~~ | ~~No team member list visible~~ **Fixed** — team layout header shows member avatar row with tooltips (up to 8, +N overflow badge) | ~~functionality~~ | ~~MEDIUM~~ |
 | 8 | Settings placeholder uses an inline SVG icon instead of an icon from `@/lib/icons` | consistency | LOW |

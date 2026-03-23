@@ -9,12 +9,12 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatRelativeTime } from "@/lib/formatting";
+import type { LucideIcon } from "@/lib/icons";
 import {
   AlertTriangle,
   Ban,

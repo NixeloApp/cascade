@@ -1,10 +1,10 @@
-import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import type { LucideIcon } from "@/lib/icons";
 
 interface EmptyStateConfig {
   icon: LucideIcon;

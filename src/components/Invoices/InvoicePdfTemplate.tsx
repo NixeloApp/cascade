@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/Table";
 import { Typography } from "@/components/ui/Typography";
+import { formatCurrency } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 
 type InvoiceLineItem = {
@@ -36,10 +37,6 @@ interface InvoicePdfTemplateProps {
   total: number;
   notes?: string;
   pdfUrl?: string;
-}
-
-function formatCurrency(value: number): string {
-  return `$${value.toFixed(2)}`;
 }
 
 function formatDate(timestamp: number): string {

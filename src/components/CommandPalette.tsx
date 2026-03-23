@@ -8,8 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import { useNavigate } from "@tanstack/react-router";
-
-import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -17,6 +15,7 @@ import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import type { LucideIcon } from "@/lib/icons";
 import { FileText, FolderKanban, Home, LayoutGrid, Plus } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";

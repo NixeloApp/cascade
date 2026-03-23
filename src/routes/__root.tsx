@@ -1,7 +1,6 @@
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ConvexReactClient, useConvex } from "convex/react";
-import { CloudOff } from "lucide-react";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +9,7 @@ import { IconCircle } from "@/components/ui/IconCircle";
 import { Toaster } from "@/components/ui/Sonner";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { CloudOff } from "@/lib/icons";
 import {
   type OfflineQueueResult,
   processOfflineQueue,

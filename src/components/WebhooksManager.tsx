@@ -8,11 +8,10 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
-import { LinkIcon } from "@/lib/icons";
+import { LinkIcon, Plus } from "@/lib/icons";
 import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";

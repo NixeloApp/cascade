@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { ChevronDown, ChevronRight, FolderPlus, Pencil, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { useAsyncMutation } from "@/hooks/useAsyncMutation";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -16,7 +15,7 @@ import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { useEntityForm } from "@/hooks/useEntityForm";
 import { useModal } from "@/hooks/useModal";
 import { COLORS } from "@/lib/constants";
-import { Tag } from "@/lib/icons";
+import { ChevronDown, ChevronRight, FolderPlus, Pencil, Plus, Tag, Trash } from "@/lib/icons";
 import { showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";

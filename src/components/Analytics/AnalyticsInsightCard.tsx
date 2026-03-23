@@ -1,10 +1,10 @@
-import type { LucideIcon } from "lucide-react";
 import { FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Metadata } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import type { LucideIcon } from "@/lib/icons";
 
 interface AnalyticsInsightCardProps {
   title: string;

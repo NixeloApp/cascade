@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -18,6 +17,7 @@ import { Progress } from "@/components/ui/Progress";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatCurrency, formatHours } from "@/lib/formatting";
+import { ChevronDown, Play, Plus, Square } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { TimeEntryModal } from "./TimeTracking/TimeEntryModal";

@@ -1275,4 +1275,119 @@ describe("RoadmapView", () => {
 
     expect(updateIssueDates).not.toHaveBeenCalled();
   });
+
+  it("renders the loading state when queries have not resolved", () => {
+    mockUseAuthenticatedQuery.mockReturnValue(undefined);
+    render(<RoadmapView projectId={projectId} />);
+
+    // Loading state should show skeleton elements, not the main timeline
+    expect(screen.queryByTestId(TEST_IDS.ROADMAP.TIMELINE_CANVAS)).not.toBeInTheDocument();
+  });
+
+  it("resizes the left handle to change the start date of an issue", async () => {
+    const issues: RoadmapIssue[] = [
+      {
+        _id: issue1Id,
+        key: "ROAD-1",
+        title: "Resizable Issue",
+        status: "inprogress",
+        startDate: now,
+        dueDate: now + 10 * DAY,
+        type: "task",
+        priority: "medium",
+      },
+    ];
+    mockRoadmapQueries({ issues });
+    render(<RoadmapView projectId={projectId} canEdit />);
+
+    const leftHandle = screen.getByTitle("Drag to change start date");
+
+    await act(async () => {
+      fireEvent.mouseDown(leftHandle, { clientX: 100, button: 0 });
+    });
+    await act(async () => {
+      fireEvent.mouseMove(document, { clientX: 80 });
+    });
+    await act(async () => {
+      fireEvent.mouseUp(document, { clientX: 80 });
+      await Promise.resolve();
+    });
+
+    expect(updateIssueDates).toHaveBeenCalledWith(expect.objectContaining({ issueId: issue1Id }));
+  });
+
+  it("resizes the right handle to change the due date of an issue", async () => {
+    const issues: RoadmapIssue[] = [
+      {
+        _id: issue1Id,
+        key: "ROAD-1",
+        title: "Resizable Issue",
+        status: "inprogress",
+        startDate: now,
+        dueDate: now + 10 * DAY,
+        type: "task",
+        priority: "medium",
+      },
+    ];
+    mockRoadmapQueries({ issues });
+    render(<RoadmapView projectId={projectId} canEdit />);
+
+    const rightHandle = screen.getByTitle("Drag to change due date");
+
+    await act(async () => {
+      fireEvent.mouseDown(rightHandle, { clientX: 200, button: 0 });
+    });
+    await act(async () => {
+      fireEvent.mouseMove(document, { clientX: 220 });
+    });
+    await act(async () => {
+      fireEvent.mouseUp(document, { clientX: 220 });
+      await Promise.resolve();
+    });
+
+    expect(updateIssueDates).toHaveBeenCalledWith(expect.objectContaining({ issueId: issue1Id }));
+  });
+
+  it("renders epic filter options from the epics query", () => {
+    const issues: RoadmapIssue[] = [
+      {
+        _id: issue1Id,
+        key: "ROAD-1",
+        title: "Epic Issue",
+        status: "inprogress",
+        startDate: now,
+        dueDate: now + 5 * DAY,
+        type: "task",
+        priority: "medium",
+        epic: { _id: epicId, key: "EPIC-1", title: "My Epic" },
+      },
+    ];
+    const epics = [{ _id: epicId, title: "My Epic" }];
+    mockRoadmapQueries({ issues, epics });
+    render(<RoadmapView projectId={projectId} />);
+
+    // Epic filter should show "All Epics" default and the epic option
+    expect(screen.getByText("All Epics")).toBeInTheDocument();
+    expect(screen.getByText("My Epic")).toBeInTheDocument();
+  });
+
+  it("hides resize handles when canEdit is false", () => {
+    const issues: RoadmapIssue[] = [
+      {
+        _id: issue1Id,
+        key: "ROAD-1",
+        title: "Read Only",
+        status: "inprogress",
+        startDate: now,
+        dueDate: now + 5 * DAY,
+        type: "task",
+        priority: "medium",
+      },
+    ];
+    mockRoadmapQueries({ issues });
+    render(<RoadmapView projectId={projectId} canEdit={false} />);
+
+    expect(screen.queryByTitle("Drag to change start date")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("Drag to change due date")).not.toBeInTheDocument();
+  });
 });

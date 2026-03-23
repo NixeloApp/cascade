@@ -45,7 +45,6 @@ export class AuthPage extends BasePage {
   readonly authForm: Locator;
   readonly emailForm: Locator;
   readonly authFormReadyMarker: Locator;
-  readonly authFormHydratedMarker: Locator;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly signInButton: Locator;
@@ -127,7 +126,6 @@ export class AuthPage extends BasePage {
     this.authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
     this.emailForm = page.getByTestId(TEST_IDS.AUTH.EMAIL_FORM);
     this.authFormReadyMarker = page.getByTestId(TEST_IDS.AUTH.FORM_READY);
-    this.authFormHydratedMarker = page.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED);
     this.emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
     this.passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
     // Submit button reuses the same DOM node across expanded states; bind by stable test id.
@@ -178,7 +176,7 @@ export class AuthPage extends BasePage {
   async gotoSignIn() {
     await this.page.goto(ROUTES.signin.build(), { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
-    await this.waitForAuthFormHydrated();
+
     // Expand form using robust click logic
     await this.expandEmailForm("signin");
     // Verify form is expanded using owned auth markers plus visible inputs.
@@ -188,7 +186,6 @@ export class AuthPage extends BasePage {
   async gotoSignInLanding() {
     await this.page.goto(ROUTES.signin.build(), { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
-    await this.waitForAuthFormHydrated();
   }
 
   /**
@@ -197,7 +194,7 @@ export class AuthPage extends BasePage {
   async gotoSignUp() {
     await this.page.goto(ROUTES.signup.build(), { waitUntil: "domcontentloaded" });
     await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
-    await this.waitForAuthFormHydrated();
+
     // Expand form using robust click logic
     await this.expandEmailForm("signup");
     // Verify form is expanded using owned auth markers plus visible inputs.
@@ -230,7 +227,6 @@ export class AuthPage extends BasePage {
    * Uses one bounded second-click recovery if the first expansion misses
    */
   async expandEmailForm(mode?: "signin" | "signup") {
-    await this.waitForAuthFormHydrated();
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
 
     if (await this.waitForStableEmailFormExpanded(1800, expectedMode)) {
@@ -639,17 +635,12 @@ export class AuthPage extends BasePage {
    * This is a best-effort wait - it won't throw if the form doesn't have this attribute
    */
   async waitForFormReady(mode?: "signin" | "signup") {
-    await this.waitForAuthFormHydrated();
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
     await this.expectEmailFormExpanded(expectedMode);
 
     if (expectedMode === "signin") {
       await expect(this.forgotPasswordLink).toBeVisible();
     }
-  }
-
-  private async waitForAuthFormHydrated(timeout = 15000) {
-    await expect(this.authFormHydratedMarker).toHaveCount(1, { timeout });
   }
 
   private async waitForAuthLanding(mode: "signin" | "signup", timeout = 15000) {
@@ -718,11 +709,6 @@ export class AuthPage extends BasePage {
       route = null;
     }
     if (!route) {
-      return "pending";
-    }
-
-    const hydrated = (await getLocatorCount(this.authFormHydratedMarker)) > 0;
-    if (!hydrated) {
       return "pending";
     }
 

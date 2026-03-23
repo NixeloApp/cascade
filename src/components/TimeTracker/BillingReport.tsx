@@ -9,10 +9,10 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
-import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { formatDate } from "@/lib/formatting";
+import { formatCurrency, formatDate } from "@/lib/formatting";
+import type { LucideIcon } from "@/lib/icons";
 import { Clock, DollarSign, Download, FileText, TrendingUp, Users } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -31,14 +31,6 @@ import { Progress } from "../ui/Progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
-
-// Pure functions - no need to be inside component
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
 
 function formatHours(hours: number): string {
   return hours.toFixed(2);

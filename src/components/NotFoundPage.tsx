@@ -7,7 +7,6 @@
  */
 
 import { Link } from "@tanstack/react-router";
-import { FileQuestion } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -15,6 +14,7 @@ import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { FileQuestion } from "@/lib/icons";
 
 /** 404 error page with link to return home. */
 export function NotFoundPage() {

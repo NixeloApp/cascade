@@ -8,13 +8,13 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { Eye } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { Eye } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";

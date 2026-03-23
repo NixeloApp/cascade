@@ -33,7 +33,6 @@ export const authFormLocators = (page: Page) => ({
   // Form state
   emailForm: page.getByTestId(TEST_IDS.AUTH.EMAIL_FORM),
   formReady: page.getByTestId(TEST_IDS.AUTH.FORM_READY),
-  formHydrated: page.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED),
 
   // Links
   forgotPasswordLink: page.getByRole("button", { name: /forgot password/i }),

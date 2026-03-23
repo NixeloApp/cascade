@@ -29,6 +29,9 @@ const BASELINE_FILES = new Set([
   // Pseudo-elements and drag handles (can't use React components)
   "src/components/IssueDetail/IssueCard.tsx",
   "src/components/RoadmapView.tsx",
+  // Roadmap timeline: rounded-full on progress fills, rounded-sm on milestone diamonds
+  "src/components/Roadmap/RoadmapLoadingState.tsx",
+  "src/components/Roadmap/RoadmapRows.tsx",
   "src/lib/kanban-dnd.ts",
   // Raw DOM strings (outside React rendering)
   "src/lib/serviceWorker.ts",

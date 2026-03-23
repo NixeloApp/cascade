@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
-import { Clock, Download, FileText, Folder, Lock, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -19,6 +18,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatCurrency, formatDate } from "@/lib/formatting";
+import { Clock, Download, FileText, Folder, Lock, Plus, Trash } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";

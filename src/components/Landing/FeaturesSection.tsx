@@ -1,7 +1,6 @@
-import type { LucideIcon } from "lucide-react";
-import { FileText, PanelsTopLeft, Users } from "lucide-react";
 import type { ComponentProps } from "react";
-import { ArrowRight } from "@/lib/icons";
+import type { LucideIcon } from "@/lib/icons";
+import { ArrowRight, FileText, PanelsTopLeft, Users } from "@/lib/icons";
 import { Button } from "../ui/Button";
 import { Card, type CardProps } from "../ui/Card";
 import { Container } from "../ui/Container";

@@ -5,26 +5,9 @@
  * Uses cmdk for fuzzy search and keyboard navigation.
  */
 
-import {
-  Code,
-  Heading1,
-  Heading2,
-  Heading3,
-  Heading4,
-  Heading5,
-  Heading6,
-  Image,
-  List,
-  ListOrdered,
-  type LucideIcon,
-  Quote,
-  Table,
-  Type,
-} from "lucide-react";
 import type { PlateEditor } from "platejs/react";
 import { useEditorRef, useEditorSelection } from "platejs/react";
 import { useEffect, useState } from "react";
-
 import {
   Command,
   CommandEmpty,
@@ -36,6 +19,22 @@ import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
 import { Typography } from "@/components/ui/Typography";
+import {
+  Code,
+  Heading1,
+  Heading2,
+  Heading3,
+  Heading4,
+  Heading5,
+  Heading6,
+  Image,
+  ListIcon as List,
+  ListOrdered,
+  type LucideIcon,
+  Quote,
+  Table,
+  Type,
+} from "@/lib/icons";
 import { NODE_TYPES } from "@/lib/plate/plugins";
 import { showError } from "@/lib/toast";
 

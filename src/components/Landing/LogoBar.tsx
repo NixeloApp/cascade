@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "@/lib/icons";
 import { Bot, Clock, FileText, MessageSquare } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";

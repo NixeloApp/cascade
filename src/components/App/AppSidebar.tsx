@@ -10,8 +10,6 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
-import type { LucideIcon } from "lucide-react";
-
 import { useEffect, useRef, useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
@@ -31,6 +29,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
+import type { LucideIcon } from "@/lib/icons";
 import {
   BarChart3,
   Bot,
@@ -161,7 +160,7 @@ function NavSubItem({
 }: NavSubItemProps) {
   return (
     <Tooltip content={label}>
-      <NavItemBase asChild active={isActive} size="sm" className="min-h-9">
+      <NavItemBase asChild active={isActive} size="sm" className="min-h-sidebar-item">
         <Link to={to} params={params} onClick={onClick} {...props}>
           {Icon && (
             <SidebarIconShell
@@ -232,7 +231,7 @@ function WorkspacesSectionContent({
         </li>
       )}
       {onCreateProject && (
-        <li className="list-none px-1 mb-1">
+        <li className="list-none px-sidebar-nav mb-sidebar-nav">
           <Button
             variant="ghost"
             size="sm"
@@ -331,12 +330,12 @@ function DocumentsSectionContent({
           icon={Copy}
         />
       </li>
-      <li className="list-none mx-2" aria-hidden="true">
+      <li className="list-none mx-sidebar-separator" aria-hidden="true">
         <Separator spacing="sm" />
       </li>
       {favorites.length > 0 && (
         <>
-          <li className="list-none px-3 pt-1">
+          <li className="list-none px-sidebar-section-label pt-sidebar-nav">
             <Flex align="center" gap="xs" className="text-ui-text-tertiary">
               <AppIcon icon={Star} size="xsPlus" tone="warning" className="fill-status-warning" />
               <Typography variant="caption">Favorites</Typography>
@@ -354,7 +353,7 @@ function DocumentsSectionContent({
               />
             </li>
           ))}
-          <li className="list-none mx-2" aria-hidden="true">
+          <li className="list-none mx-sidebar-separator" aria-hidden="true">
             <Separator spacing="sm" />
           </li>
         </>
@@ -414,7 +413,7 @@ function WorkspaceNavItem({
   const shouldShowTeams = isExpanded;
 
   return (
-    <li className="ml-2 group list-none" data-testid={itemTestId}>
+    <li className="ml-sidebar-indent group list-none" data-testid={itemTestId}>
       <Flex align="center" gap="xs">
         <IconButton
           variant="ghost"
@@ -706,7 +705,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
               className="overflow-y-auto overflow-x-hidden scrollbar-subtle"
               aria-label="Main Navigation"
             >
-              <div className="p-1">
+              <div className="p-sidebar-nav">
                 <Stack as="ul" gap="sm" className="list-none">
                   {/* Dashboard */}
                   <NavItem
@@ -770,7 +769,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   {/* Products Section */}
                   {!showCollapsed && (
                     <li className="list-none">
-                      <div className="p-1 mb-3 mt-5">
+                      <div className="p-sidebar-nav mb-sidebar-section-label mt-sidebar-section-gap">
                         <Badge variant="sidebarSection" shape="pill">
                           Products
                         </Badge>
