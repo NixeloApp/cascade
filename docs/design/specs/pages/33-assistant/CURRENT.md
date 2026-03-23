@@ -91,11 +91,11 @@ All data is currently hardcoded -- there is no backend integration.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | All stats are hardcoded -- no backend queries power this page | `AssistantStats`, `AssistantConfig` | HIGH |
-| 2 | Model list includes both OpenAI and Anthropic models but no actual API integration | `AssistantConfig` | HIGH |
-| 3 | Billing tab "Upgrade Plan" button has no handler | `AssistantConfig` | MEDIUM |
-| 4 | Usage chart is a dashed placeholder box with no charting library | `AssistantConfig` | MEDIUM |
-| 5 | Config form changes are client-only `useState` -- nothing persists | `AssistantConfig` | HIGH |
+| ~~1~~ | ~~All stats are hardcoded~~ **Fixed** — wired to `getUsageStats` (total cost, requests, success rate, tokens, response time) and `getUserChats` | ~~HIGH~~ |
+| ~~2~~ | ~~Model list with no integration~~ **Fixed** — removed fake model selector, shows real provider breakdown from usage data | ~~HIGH~~ |
+| 3 | Billing tab removed (was placeholder with no backend) | MEDIUM |
+| 4 | Usage chart replaced with operation/provider breakdown cards | MEDIUM |
+| ~~5~~ | ~~Config form not persisted~~ **Fixed** — removed fake config form, page now shows real data | ~~HIGH~~ |
 
 ---
 
