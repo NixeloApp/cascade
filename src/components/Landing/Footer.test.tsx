@@ -17,13 +17,14 @@ describe("Footer", () => {
     expect(screen.getByText("All systems normal")).toBeInTheDocument();
   });
 
-  it("renders primary footer navigation groups", () => {
+  it("renders footer link columns with real destinations", () => {
     render(<Footer />);
 
     expect(screen.getByText("Product")).toBeInTheDocument();
-    expect(screen.getByText("Company")).toBeInTheDocument();
-    expect(screen.getByText("Resources")).toBeInTheDocument();
     expect(screen.getByText("Legal")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Features" })).toHaveAttribute("href", "/#features");
+    expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
   });
 
   it("renders social links and copyright", () => {
@@ -51,6 +52,6 @@ describe("Footer", () => {
     const { container } = render(<Footer />);
 
     expect(container.querySelector("footer")).toBeInTheDocument();
-    expect(screen.getAllByRole("heading").length).toBeGreaterThanOrEqual(4);
+    expect(screen.getAllByRole("heading").length).toBeGreaterThanOrEqual(2);
   });
 });

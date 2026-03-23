@@ -1,3 +1,4 @@
+import { ROUTES } from "@/config/routes";
 import { ShieldCheck } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -11,22 +12,25 @@ import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { NixeloLogo } from "./Icons";
 
-const footerColumns = [
+interface FooterLink {
+  label: string;
+  href: string;
+}
+
+const FOOTER_COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Product",
-    links: ["Features", "Pricing", "Integrations", "Changelog"],
-  },
-  {
-    title: "Company",
-    links: ["About", "Blog", "Careers", "Contact"],
-  },
-  {
-    title: "Resources",
-    links: ["Documentation", "Help Center", "API Reference", "Status"],
+    links: [
+      { label: "Features", href: "/#features" },
+      { label: "Pricing", href: "/#pricing" },
+    ],
   },
   {
     title: "Legal",
-    links: ["Privacy", "Terms", "Cookies"],
+    links: [
+      { label: "Privacy", href: ROUTES.privacy.path },
+      { label: "Terms", href: ROUTES.terms.path },
+    ],
   },
 ];
 
@@ -73,21 +77,21 @@ export function Footer() {
           </Grid>
 
           <Grid cols={1} colsSm={2} colsLg={4} gap="lg">
-            {footerColumns.map((column) => (
+            {FOOTER_COLUMNS.map((column) => (
               <Stack key={column.title} gap="lg">
                 <Typography as="h4" variant="cardTitle">
                   {column.title}
                 </Typography>
                 <Stack as="ul" gap="sm" className="list-none">
-                  {column.links.map((item) => (
-                    <li key={item}>
+                  {column.links.map((link) => (
+                    <li key={link.label}>
                       <Button
                         asChild
                         variant="unstyled"
                         chrome="footerLink"
                         chromeSize="footerLink"
                       >
-                        <a href="/">{item}</a>
+                        <a href={link.href}>{link.label}</a>
                       </Button>
                     </li>
                   ))}
