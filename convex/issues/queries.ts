@@ -385,16 +385,6 @@ export const listRoadmapIssues = authenticatedQuery({
       );
     }
 
-    // Apply memory filters for safety/completeness
-    if (args.excludeEpics) {
-      issues = issues.filter((i) => i.type !== "epic");
-    }
-    if (args.epicId) {
-      issues = issues.filter((i) => i.epicId === args.epicId);
-    }
-    if (args.hasDueDate) {
-      issues = issues.filter((i) => i.dueDate !== undefined);
-    }
     if (args.includeSubtasks) {
       issues = await includeRoadmapParentContextIssues(
         ctx,

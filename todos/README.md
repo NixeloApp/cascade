@@ -66,7 +66,7 @@ All 21 page specs rewritten to production quality — ASCII diagrams, screenshot
 | Validators | 53/53 pass (18 ratcheted, 35 binary) |
 | Raw styling violations | 100 files / 197 baselined (was 276) |
 | Fixed size drift | 0 violations (was 85 across 54 files — all h-N w-N pairs converted to size-N) |
-| Ratcheted query debt | 43 issues across client filters + post-fetch filters |
+| Ratcheted query debt | 40 issues across client filters + post-fetch filters (was 52) |
 | E2E hard rules debt | 8 hardcoded timeouts (all in screenshot-pages.ts) |
 | Backend query debt | 0 |
 | Unresolved PR comments | 0 |

@@ -10,7 +10,7 @@
     "convex/export.ts": 3,
     "convex/files.ts": 1,
     "convex/invoices.ts": 1,
-    "convex/issues/queries.ts": 7,
+    "convex/issues/queries.ts": 4,
     "convex/oauthHealthCheck.ts": 1,
     "convex/softDeleteCleanup.ts": 1,
     "convex/sprints.ts": 1,
