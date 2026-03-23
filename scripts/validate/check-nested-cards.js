@@ -49,22 +49,28 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
-    /** Check if a JSX opening or self-closing element has variant="section" */
+    /** Variants allowed inside another Card (inner sections/surfaces) */
+    const INNER_CARD_VARIANTS = new Set(["section", "subtle"]);
+
+    /** Check if a JSX opening or self-closing element has an inner-card-safe variant */
     function isSectionVariant(element) {
       const attrs = element.attributes;
       if (!attrs || !ts.isJsxAttributes(attrs)) return false;
       for (const prop of attrs.properties) {
         if (ts.isJsxAttribute(prop) && prop.name.getText() === "variant" && prop.initializer) {
-          // variant="section"
-          if (ts.isStringLiteral(prop.initializer) && prop.initializer.text === "section") {
+          // variant="section" / variant="subtle"
+          if (
+            ts.isStringLiteral(prop.initializer) &&
+            INNER_CARD_VARIANTS.has(prop.initializer.text)
+          ) {
             return true;
           }
-          // variant={"section"}
+          // variant={"section"} / variant={"subtle"}
           if (
             ts.isJsxExpression(prop.initializer) &&
             prop.initializer.expression &&
             ts.isStringLiteral(prop.initializer.expression) &&
-            prop.initializer.expression.text === "section"
+            INNER_CARD_VARIANTS.has(prop.initializer.expression.text)
           ) {
             return true;
           }

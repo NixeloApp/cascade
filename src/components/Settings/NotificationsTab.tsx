@@ -178,7 +178,7 @@ function PushNotificationsPreferences({
 
   if (!pushPreferences) {
     return (
-      <Card variant="section" padding="sm">
+      <Card variant="subtle" padding="sm">
         <SkeletonText lines={2} />
       </Card>
     );
@@ -487,10 +487,10 @@ function NotificationsLoadingState() {
       <Card padding="lg">
         <Stack gap="md">
           <SkeletonText lines={2} />
-          <Card variant="section" padding="sm">
+          <Card variant="subtle" padding="sm">
             <SkeletonText lines={1} />
           </Card>
-          <Card variant="section" padding="sm">
+          <Card variant="subtle" padding="sm">
             <SkeletonText lines={1} />
           </Card>
         </Stack>
@@ -498,13 +498,13 @@ function NotificationsLoadingState() {
       <Card padding="lg">
         <Stack gap="md">
           <SkeletonText lines={2} />
-          <Card variant="section" padding="sm">
+          <Card variant="subtle" padding="sm">
             <SkeletonText lines={1} />
           </Card>
-          <Card variant="section" padding="sm">
+          <Card variant="subtle" padding="sm">
             <SkeletonText lines={1} />
           </Card>
-          <Card variant="section" padding="sm">
+          <Card variant="subtle" padding="sm">
             <SkeletonText lines={1} />
           </Card>
         </Stack>

@@ -41,6 +41,43 @@ describe("Card", () => {
     });
   });
 
+  describe("Subtle Variant", () => {
+    it("should have minimal styling without gradients or shadows", () => {
+      const { container } = render(<Card variant="subtle">Content</Card>);
+
+      const card = container.firstChild;
+      expect(card).toHaveClass("bg-ui-bg-secondary/50");
+      expect(card).toHaveClass("border-ui-border-secondary/80");
+      expect(card).not.toHaveClass("shadow-card");
+      expect(card).not.toHaveClass("shadow-soft");
+      expect(card).not.toHaveClass("bg-linear-to-b");
+    });
+
+    it("should work with padding prop", () => {
+      const { container } = render(
+        <Card variant="subtle" padding="sm">
+          Content
+        </Card>,
+      );
+
+      const card = container.firstChild;
+      expect(card).toHaveClass("p-3");
+      expect(card).toHaveClass("bg-ui-bg-secondary/50");
+    });
+
+    it("should allow className overrides for semantic colors", () => {
+      const { container } = render(
+        <Card variant="subtle" className="border-status-warning bg-status-warning-bg">
+          Warning content
+        </Card>,
+      );
+
+      const card = container.firstChild;
+      expect(card).toHaveClass("border-status-warning");
+      expect(card).toHaveClass("bg-status-warning-bg");
+    });
+  });
+
   describe("Custom Styling", () => {
     it("should apply custom className", () => {
       const { container } = render(<Card className="custom-class">Content</Card>);

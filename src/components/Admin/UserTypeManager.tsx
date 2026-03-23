@@ -463,9 +463,9 @@ export function UserTypeManager() {
           {/* Users without profiles */}
           {usersWithoutProfiles && usersWithoutProfiles.length > 0 && (
             <Card
+              variant="subtle"
               padding="md"
-              variant="section"
-              className="mb-6 bg-status-warning-bg border-status-warning"
+              className="mb-6 border-status-warning bg-status-warning-bg"
             >
               <Stack gap="sm">
                 <Typography variant="label" className="text-status-warning-text">
@@ -473,7 +473,7 @@ export function UserTypeManager() {
                 </Typography>
                 <Stack gap="sm">
                   {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
-                    <Card key={user._id} padding="sm" variant="section">
+                    <Card key={user._id} variant="subtle" padding="sm">
                       <Flex justify="between" align="center">
                         <Typography variant="small">
                           {user.name || user.email || "Unknown User"}
@@ -874,14 +874,18 @@ export function UserTypeManager() {
                         rows={2}
                       />
 
-                      <Card padding="sm" variant="section" className="bg-brand-subtle">
+                      <Card
+                        variant="subtle"
+                        padding="sm"
+                        className="border-brand-border bg-brand-subtle"
+                      >
                         <Flex align="start" gap="sm" className="text-brand-hover">
                           <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
-                          <span>
+                          <Typography variant="small">
                             Tip: Equity hours are non-paid hours compensated with equity. Set
                             required hours/week OR hours/month (not both). Max hours/week prevents
                             overwork.
-                          </span>
+                          </Typography>
                         </Flex>
                       </Card>
                     </Stack>
