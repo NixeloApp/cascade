@@ -141,39 +141,39 @@ export function ClientCard({ client, projects }: ClientCardProps) {
           <Typography variant="small" color="secondary">
             Default rate: ${client.hourlyRate?.toFixed(2) ?? "0.00"}
           </Typography>
-          <Stack gap="sm">
-            <Flex wrap gap="sm" align="end">
-              {projects.length > 1 ? (
-                <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (
-                      <SelectItem key={p._id} value={p._id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {isAdmin ? (
+            <Stack gap="sm">
+              <Flex wrap gap="sm" align="end">
+                {projects.length > 1 ? (
+                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects.map((p) => (
+                        <SelectItem key={p._id} value={p._id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : null}
+                <Button
+                  variant="secondary"
+                  disabled={!selectedProjectId}
+                  onClick={handleGeneratePortalLink}
+                >
+                  Generate portal link
+                </Button>
+              </Flex>
+              {generatedLink ? (
+                <Typography variant="caption" className="text-brand">
+                  {generatedLink}
+                </Typography>
               ) : null}
-              <Button
-                variant="secondary"
-                disabled={!selectedProjectId}
-                onClick={handleGeneratePortalLink}
-              >
-                Generate portal link
-              </Button>
-            </Flex>
-            {generatedLink ? (
-              <Typography variant="caption" className="text-brand">
-                {generatedLink}
-              </Typography>
-            ) : null}
-            {isAdmin ? (
               <PortalTokenDetails clientId={client._id} organizationId={organizationId} />
-            ) : null}
-          </Stack>
+            </Stack>
+          ) : null}
         </Stack>
       </CardContent>
     </Card>
