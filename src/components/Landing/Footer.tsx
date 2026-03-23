@@ -108,7 +108,7 @@ export function Footer() {
             className="border-t border-ui-border/20 pt-8 sm:flex-row"
           >
             <Typography variant="muted" className="text-ui-text-secondary">
-              © 2026 Nixelo. All rights reserved.
+              © {new Date().getFullYear()} Nixelo. All rights reserved.
             </Typography>
 
             <Flex align="center" gap="xl">

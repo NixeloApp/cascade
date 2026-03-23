@@ -145,7 +145,7 @@ function QueueItemList({
   return (
     <Stack gap="sm">
       {visible.map((item) => (
-        <Card key={item.id} variant="flat" padding="sm">
+        <Card key={item.id} variant="section" padding="sm">
           <Stack gap="sm">
             <Flex justify="between" align="center">
               <Stack gap="none">

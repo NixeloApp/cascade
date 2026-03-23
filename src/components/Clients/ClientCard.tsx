@@ -93,7 +93,8 @@ export interface ClientCardProps {
 }
 
 export function ClientCard({ client, projects }: ClientCardProps) {
-  const { organizationId } = useOrganization();
+  const { organizationId, userRole } = useOrganization();
+  const isAdmin = userRole === "admin" || userRole === "owner";
   const { mutate: generatePortalToken } = useAuthenticatedMutation(api.clientPortal.generateToken);
   const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?._id ?? "");
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -169,7 +170,9 @@ export function ClientCard({ client, projects }: ClientCardProps) {
                 {generatedLink}
               </Typography>
             ) : null}
-            <PortalTokenDetails clientId={client._id} organizationId={organizationId} />
+            {isAdmin ? (
+              <PortalTokenDetails clientId={client._id} organizationId={organizationId} />
+            ) : null}
           </Stack>
         </Stack>
       </CardContent>
