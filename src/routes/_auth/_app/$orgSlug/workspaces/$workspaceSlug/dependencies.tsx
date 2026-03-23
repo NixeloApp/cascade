@@ -35,7 +35,10 @@ function WorkspaceDependenciesPage() {
     organizationId,
     slug: workspaceSlug,
   });
-  const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, { organizationId });
+  const workspaceTeams = useAuthenticatedQuery(
+    api.teams.getOrganizationTeams,
+    workspace ? { organizationId, workspaceId: workspace._id } : "skip",
+  );
   const dependencies = useAuthenticatedQuery(
     api.workspaces.getCrossTeamDependencies,
     workspace
@@ -48,9 +51,6 @@ function WorkspaceDependenciesPage() {
       : "skip",
   );
 
-  const workspaceTeams =
-    workspace && teams ? teams.filter((team) => team.workspaceId === workspace._id) : [];
-
   const statusOptions = dependencies
     ? [...new Set(dependencies.flatMap((dep) => [dep.fromIssue.status, dep.toIssue.status]))].sort()
     : [];
@@ -61,7 +61,7 @@ function WorkspaceDependenciesPage() {
       ].sort()
     : [];
 
-  if (workspace === undefined || teams === undefined || dependencies === undefined) {
+  if (workspace === undefined || workspaceTeams === undefined || dependencies === undefined) {
     return <PageContent isLoading>{null}</PageContent>;
   }
 

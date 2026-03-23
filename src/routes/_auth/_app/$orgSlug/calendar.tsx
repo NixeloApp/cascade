@@ -38,11 +38,14 @@ function OrganizationCalendarPage() {
   const navigate = Route.useNavigate();
 
   const workspaces = useAuthenticatedQuery(api.workspaces.list, { organizationId });
-  const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, { organizationId });
-
   const selectedWorkspaceId: Id<"workspaces"> | "all" =
     (workspaceParam as Id<"workspaces">) || "all";
   const selectedTeamId: Id<"teams"> | "all" = (teamParam as Id<"teams">) || "all";
+
+  const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, {
+    organizationId,
+    workspaceId: selectedWorkspaceId !== "all" ? selectedWorkspaceId : undefined,
+  });
 
   const setSelectedWorkspaceId = (value: Id<"workspaces"> | "all") => {
     navigate({
@@ -66,10 +69,7 @@ function OrganizationCalendarPage() {
     return <PageContent isLoading>{null}</PageContent>;
   }
 
-  const workspaceTeams =
-    selectedWorkspaceId === "all"
-      ? teams
-      : teams.filter((team) => team.workspaceId === selectedWorkspaceId);
+  const workspaceTeams = teams ?? [];
 
   const scopeLabel =
     selectedTeamId !== "all"

@@ -7,9 +7,6 @@
     "src/components/LabelsManager.tsx": 1,
     "src/components/MentionInput.tsx": 1,
     "src/components/Settings/OutOfOfficeSettings.tsx": 1,
-    "src/components/Sprints/SprintManager.tsx": 1,
-    "src/routes/_auth/_app/$orgSlug/calendar.tsx": 1,
-    "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar.tsx": 1,
-    "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies.tsx": 1
+    "src/components/Sprints/SprintManager.tsx": 1
   }
 }
