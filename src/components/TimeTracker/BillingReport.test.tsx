@@ -27,10 +27,15 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
 globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
 globalThis.URL.revokeObjectURL = vi.fn();
 
+vi.mock("@/lib/formatting", () => ({
+  formatDate: () => "March 23, 2026",
+}));
+
 vi.mock("@/lib/icons", () => ({
   Clock: () => <span data-testid="clock-icon" />,
   DollarSign: () => <span data-testid="dollar-icon" />,
   Download: () => <span data-testid="download-icon" />,
+  FileText: () => <span data-testid="file-text-icon" />,
   TrendingUp: () => <span data-testid="trend-icon" />,
   Users: () => <span data-testid="users-icon" />,
 }));
@@ -47,6 +52,17 @@ vi.mock("../ui/Button", () => ({
   }) => (
     <button type="button" onClick={onClick}>
       {leftIcon}
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock("../ui/DropdownMenu", () => ({
+  DropdownMenu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, onSelect }: { children: ReactNode; onSelect?: () => void }) => (
+    <button type="button" onClick={onSelect}>
       {children}
     </button>
   ),
@@ -223,9 +239,11 @@ describe("BillingReport", () => {
     expect(screen.getByText("Blended Rate")).toBeInTheDocument();
     expect(screen.getAllByTestId("billing-progress")).toHaveLength(2);
 
+    // Export dropdown: click trigger then CSV option
     await user.click(screen.getByRole("button", { name: "Export" }));
+    await user.click(screen.getByText("Export as CSV"));
 
-    expect(mockShowSuccess).toHaveBeenCalledWith("Billing report exported");
+    expect(mockShowSuccess).toHaveBeenCalledWith("CSV exported");
   });
 
   it("switches date ranges and renders the empty team state when there are no time entries", async () => {
