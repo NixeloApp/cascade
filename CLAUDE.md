@@ -44,7 +44,7 @@ nixelo/
 ├── emails/               # React Email templates
 ├── bot-service/          # Voice AI meeting bot
 ├── scripts/validate/     # Custom validation checks (run with: node scripts/validate.js)
-└── docs/                 # Feature documentation
+└── docs/                 # ai/, architecture/, convex/, design/, guides/, research/
 ```
 
 **Component organization:** Related components are grouped into feature directories. When adding new components, place them in the appropriate feature directory or create a new one if needed.
@@ -155,6 +155,8 @@ export const update = mutation({
 **RBAC:** Roles are admin > editor > viewer. Use `convex/rbac.ts` utilities.
 
 ## Scripts
+
+**Assume `pnpm dev` is always running.** The dev server is needed for E2E tests, screenshots, and Convex function testing.
 
 ```bash
 pnpm dev              # Start frontend + backend
@@ -269,12 +271,20 @@ If a test needs a timeout to pass, the underlying code likely has a performance 
 
 ## Resources
 
-- [Convex Best Practices](./docs/CONVEX_BEST_PRACTICES.md)
-- [Testing Guide](./docs/testing/README.md)
-- [Pagination Patterns](./docs/PAGINATION_PATTERNS.md)
-- [Email System](./docs/email/README.md)
-- [AI Features](./docs/ai/README.md)
+- [Convex Best Practices](./docs/convex/BEST_PRACTICES.md)
+- [Testing Guide](./docs/guides/testing-e2e.md)
+- [Pagination Patterns](./docs/convex/PAGINATION.md)
+- [Email System](./docs/guides/email-setup.md)
+- [AI Features](./docs/ai/text/SETUP.md)
 
 ---
 
 **Convex Deployment:** peaceful-salmon-964 | **Node:** 18+ | **Package Manager:** pnpm
+
+<!-- convex-ai-start -->
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+<!-- convex-ai-end -->

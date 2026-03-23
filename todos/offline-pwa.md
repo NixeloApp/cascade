@@ -28,7 +28,7 @@ Manual browser verification needed:
 
 ### Docs
 
-- [ ] Update `docs/setup/PWA.md` after real browser verification of push + install + offline
+- [ ] Update `docs/guides/pwa.md` after real browser verification of push + install + offline
 - [ ] Add a short "Offline Support" section to the main README or feature docs
 
 ## Out of Scope

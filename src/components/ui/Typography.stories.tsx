@@ -191,8 +191,8 @@ export const ColorTertiary: Story = {
 export const ColorPrimary: Story = {
   args: {
     variant: "p",
-    color: "primary",
-    children: "Primary (brand) color text",
+    color: "brand",
+    children: "Brand color text",
   },
 };
 
@@ -237,49 +237,6 @@ export const ColorAccent: Story = {
 };
 
 // ============================================================================
-// Size Overrides
-// ============================================================================
-
-export const SizeExtraSmall: Story = {
-  args: {
-    variant: "p",
-    size: "xs",
-    children: "Extra small text size",
-  },
-};
-
-export const SizeSmall: Story = {
-  args: {
-    variant: "p",
-    size: "sm",
-    children: "Small text size",
-  },
-};
-
-export const SizeMedium: Story = {
-  args: {
-    variant: "p",
-    size: "md",
-    children: "Medium text size (base)",
-  },
-};
-
-export const SizeLarge: Story = {
-  args: {
-    variant: "p",
-    size: "lg",
-    children: "Large text size",
-  },
-};
-
-export const SizeExtraLarge: Story = {
-  args: {
-    variant: "p",
-    size: "xl",
-    children: "Extra large text size",
-  },
-};
-
 // ============================================================================
 // Typography Scale - All Variants Together
 // ============================================================================

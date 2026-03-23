@@ -18,98 +18,140 @@
 
 Tired of paying $10+/user/month for Jira and Confluence? Nixelo gives you:
 
-- **Real-time collaboration** - See changes instantly, no refresh needed
-- **Documents + Issues + Boards** - All in one place, linked together
-- **Self-hosted** - Your data, your servers, no vendor lock-in
-- **Modern stack** - React 19, TypeScript, Convex - easy to customize
+- **Real-time collaboration** — see changes instantly, no refresh needed
+- **Documents + Issues + Boards** — all in one place, linked together
+- **Self-hosted** — your data, your servers, no vendor lock-in
+- **Modern stack** — React 19, TypeScript, Convex — easy to customize
 
 ## Features
 
-### 📝 Documents (Confluence-like)
+### Documents (Confluence-like)
 
 - Real-time collaborative editing with live cursors
-- Rich text editor with formatting, tables, code blocks
-- Document templates and organization
-- Full-text search
-- Document favorites (star for quick access)
+- Rich text editor (Plate.js / Slate) with formatting, tables, code blocks, mentions
+- Document templates, version history with restore
+- Full-text search and document favorites
 
-### 📊 Project Management (Jira-like)
+### Project Management (Jira-like)
 
 - Kanban and Scrum boards with drag-and-drop
-- Issues: tasks, bugs, stories, epics, and **Linear-style Sub-tasks**
+- Issues: tasks, bugs, stories, epics, and sub-tasks
 - Sprint planning with burndown charts and velocity tracking
-- Custom workflows, labels, and **Emoji Reactions**
-- Built-in time tracking with active timer widgets
+- Custom workflows, labels, emoji reactions
+- Gantt chart / roadmap with drag-resize, dependency arrows, zoom
+- Bulk operations (status, priority, assignee, labels, dates, archive, delete)
+- Auto-archive done issues after configurable days
+- Cycle time and lead time analytics
 
-### 🔗 Integrations
+### Time Tracking
+
+- Active timer widgets with start/stop
+- Manual time entry and timesheet views
+- Billing reports with CSV export
+- Hour compliance monitoring
+
+### Collaboration
+
+- Stickies / quick notes on dashboard
+- Comment threads with mentions and reactions
+- Activity feeds (project-level and user-level)
+- Notification center with read/snooze/archive
+
+### AI
+
+- AI assistant chat with project context
+- Multi-provider support (Anthropic + OpenAI)
+- Meeting bot with transcription and action items
+
+### Integrations
 
 - **REST API** with API key management
 - **Google Calendar** sync (OAuth)
-- **Pumble/Slack** notifications
+- **Pumble/Slack** notifications and slash commands
 - **GitHub** PR and commit linking
 - **Email** notifications and digests
+- **External intake** — public API endpoint for issue submissions
+- **Deploy boards** — shareable public project views
 
-### 🔐 Enterprise Ready
+### Enterprise Ready
 
 - Role-based access control (RBAC)
-- User invitation system
+- Workspace and team hierarchy
+- User invitation system with role assignment
 - Google OAuth + Email/Password auth
 - Audit logging
 
-### 📱 Works Everywhere
+### Works Everywhere
 
 - Responsive design (mobile, tablet, desktop)
 - Progressive Web App (installable)
-- Offline support with auto-sync
+- Offline support — queued mutations replay on reconnect with exponential backoff
 - Dark mode
 
 ## Quick Start
 
 ```bash
 # Clone
-git clone https://github.com/yourusername/nixelo.git
-cd nixelo
+git clone https://github.com/NixeloApp/cascade.git
+cd cascade
 
 # Install
 pnpm install
 
 # Run
-pnpm run dev
+pnpm dev
 ```
 
-Open http://localhost:5555 - that's it!
+Open http://localhost:5555
 
 ### First Steps
 
 1. Sign up with email or Google
 2. Create a project (e.g., key: "PROJ")
 3. Start creating documents and issues
-4. Invite your team via Settings → User Management
+4. Invite your team via Settings > User Management
 
 ## Tech Stack
 
-| Layer    | Technology                                          |
-| -------- | --------------------------------------------------- |
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS            |
-| Backend  | [Convex](https://convex.dev) (real-time serverless) |
-| Editor   | BlockNote (ProseMirror)                             |
-| Auth     | Convex Auth (Email, Google, Anonymous)              |
-| Testing  | Vitest, React Testing Library                       |
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19, Vite, TanStack Router, Tailwind CSS 4 |
+| Backend | [Convex](https://convex.dev) (real-time serverless) |
+| Editor | Plate.js (Slate-based) |
+| Auth | Convex Auth (Email, Google) |
+| Linter | Biome + 53 custom validators |
+| Testing | Vitest (unit), Playwright (E2E) |
 
 ## Project Structure
 
 ```
 nixelo/
-├── src/                  # React frontend
-│   ├── components/       # UI components
-│   ├── hooks/           # Custom hooks
-│   └── lib/             # Utilities
-├── convex/              # Backend (Convex)
-│   ├── schema.ts        # Database schema
-│   ├── documents.ts     # Document operations
-│   ├── issues.ts        # Issue tracking
-│   └── ...
-└── docs/                # Documentation
+├── src/
+│   ├── routes/           # TanStack Router file-based routes
+│   ├── components/       # React components (ui/, App/, IssueDetail/, ...)
+│   ├── hooks/            # Custom hooks
+│   ├── lib/              # Utilities, constants, offline queue
+│   └── config/routes.ts  # Route definitions
+├── convex/               # Backend (schema, mutations, queries, crons)
+├── e2e/                  # Playwright E2E tests + page objects
+├── scripts/validate/     # 53 custom validators
+├── docs/                 # ai/, architecture/, convex/, design/, guides/, research/
+└── todos/                # Task tracking
+```
+
+## Commands
+
+```bash
+pnpm dev              # Start frontend + backend
+pnpm run check        # Typecheck + lint + validate + tests (full CI)
+pnpm run fixme        # Auto-fix lint/format + typecheck
+pnpm run biome        # Lint with auto-fix
+pnpm run typecheck    # TypeScript check
+pnpm run validate     # 53 custom validators
+pnpm test             # Unit tests (Vitest)
+pnpm e2e:ui           # E2E tests (Playwright, interactive)
+pnpm screenshots      # Capture visual baselines
+pnpm screenshots:diff # Compare against approved baselines
 ```
 
 ## Deployment
@@ -118,95 +160,64 @@ nixelo/
 
 1. Push to GitHub
 2. Import in Vercel
-3. Set environment variables:
-   - `CONVEX_DEPLOY_KEY` (from Convex dashboard)
+3. Set `CONVEX_DEPLOY_KEY` from Convex dashboard
 4. Build command: `npx convex deploy --cmd 'pnpm run build'`
 5. Output directory: `dist`
 
 ### Self-hosted
 
 ```bash
-# Build
 pnpm run build
-
-# Deploy Convex backend
 npx convex deploy
-
 # Serve dist/ with any static host
 ```
 
-See [SETUP.md](./SETUP.md) for detailed configuration (email, OAuth, etc.)
+See [docs/guides/env.md](./docs/guides/env.md) for environment variables and [docs/guides/email-setup.md](./docs/guides/email-setup.md) for email configuration.
 
 ## Configuration
 
-| Feature             | Required | Setup                    |
-| ------------------- | -------- | ------------------------ |
-| Email notifications | Optional | Resend API key           |
-| Google OAuth        | Optional | Google Cloud credentials |
-| GitHub integration  | Optional | GitHub OAuth app         |
-| Analytics           | Optional | PostHog key              |
-
-## Commands
-
-```bash
-pnpm run dev          # Start development
-pnpm run build        # Build for production
-pnpm run typecheck    # Type checking
-pnpm run biome        # Linting
-pnpm test             # Run tests
-```
+| Feature | Required | Setup |
+|---------|----------|-------|
+| Email notifications | Optional | Resend or Mailtrap API key |
+| Google OAuth | Optional | Google Cloud credentials |
+| GitHub integration | Optional | GitHub OAuth app |
+| Google Calendar | Optional | Google Calendar API |
+| Analytics | Optional | PostHog key |
 
 ## Contributing
 
 Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
-Community intake is standardized via GitHub templates:
-
 - [Bug report template](./.github/ISSUE_TEMPLATE/bug-report.yml)
 - [Feature request template](./.github/ISSUE_TEMPLATE/feature-request.yml)
 
-### Development
-
-```bash
-pnpm run dev:frontend  # Frontend only
-pnpm run dev:backend   # Backend only (Convex)
-```
-
-### Testing
-
-```bash
-pnpm test              # Frontend tests
-pnpm test:backend      # Backend tests
-```
-
 ## Comparison
 
-| Feature          | Nixelo | Jira     | Confluence | Linear   |
-| ---------------- | ------ | -------- | ---------- | -------- |
-| Real-time collab | ✅     | ❌       | ❌         | ✅       |
-| Self-hosted      | ✅     | 💰       | 💰         | ❌       |
-| Open source      | ✅     | ❌       | ❌         | ❌       |
-| Docs + Issues    | ✅     | ❌       | ❌         | ❌       |
-| Time Tracking    | ✅     | 💰       | ❌         | ❌       |
-| Price            | Free   | $8+/user | $6+/user   | $8+/user |
+| Feature | Nixelo | Jira | Confluence | Linear |
+|---------|--------|------|------------|--------|
+| Real-time collab | ✅ | ❌ | ❌ | ✅ |
+| Self-hosted | ✅ | 💰 | 💰 | ❌ |
+| Open source | ✅ | ❌ | ❌ | ❌ |
+| Docs + Issues | ✅ | ❌ | ❌ | ❌ |
+| Time Tracking | ✅ | 💰 | ❌ | ❌ |
+| Gantt / Roadmap | ✅ | 💰 | ❌ | ✅ |
+| Offline support | ✅ | ❌ | ❌ | ✅ |
+| Price | Free | $8+/user | $6+/user | $8+/user |
 
 ## License
 
-MIT License - see [LICENSE](./LICENSE)
+MIT License — see [LICENSE](./LICENSE)
 
 ## Links
 
 - [Documentation](./docs/)
-- [Setup Guide](./SETUP.md)
-- [Community Launch Runbook](./docs/launch/COMMUNITY_LAUNCH_RUNBOOK.md)
-- [Demo Video Script](./docs/launch/DEMO_VIDEO_SCRIPT.md)
-- [Launch Channel Drafts](./docs/launch/CHANNEL_POST_DRAFTS.md)
-- [Research Inventory](./docs/research/INVENTORY.md)
+- [Convex Best Practices](./docs/convex/BEST_PRACTICES.md)
+- [Testing Guide](./docs/guides/testing-e2e.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Convex Dashboard](https://dashboard.convex.dev)
 
 ---
 
 <p align="center">
-  Built with ❤️ using <a href="https://convex.dev">Convex</a>, <a href="https://react.dev">React</a>, and <a href="https://tailwindcss.com">Tailwind CSS</a>
+  Built with <a href="https://convex.dev">Convex</a>, <a href="https://react.dev">React</a>, and <a href="https://tailwindcss.com">Tailwind CSS</a>
 </p>

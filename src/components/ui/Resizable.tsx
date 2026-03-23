@@ -3,7 +3,7 @@ import * as ResizablePrimitive from "react-resizable-panels";
 import { cn } from "@/lib/utils";
 
 export interface ResizablePanelGroupProps
-  extends React.ComponentPropsWithoutRef<typeof ResizablePrimitive.PanelGroup> {}
+  extends React.ComponentPropsWithoutRef<typeof ResizablePrimitive.Group> {}
 
 /**
  * ResizablePanelGroup - Container for resizable panels.
@@ -17,7 +17,7 @@ export interface ResizablePanelGroupProps
  */
 function ResizablePanelGroup({ className, ...props }: ResizablePanelGroupProps) {
   return (
-    <ResizablePrimitive.PanelGroup
+    <ResizablePrimitive.Group
       className={cn("flex h-full w-full data-[panel-group-direction=vertical]:flex-col", className)}
       {...props}
     />
@@ -33,7 +33,7 @@ export interface ResizablePanelProps
 const ResizablePanel = ResizablePrimitive.Panel;
 
 export interface ResizableHandleProps
-  extends React.ComponentPropsWithoutRef<typeof ResizablePrimitive.PanelResizeHandle> {
+  extends React.ComponentPropsWithoutRef<typeof ResizablePrimitive.Separator> {
   withHandle?: boolean;
 }
 
@@ -50,7 +50,7 @@ export interface ResizableHandleProps
  */
 function ResizableHandle({ withHandle, className, ...props }: ResizableHandleProps) {
   return (
-    <ResizablePrimitive.PanelResizeHandle
+    <ResizablePrimitive.Separator
       className={cn(
         "relative flex w-px items-center justify-center bg-ui-border",
         "after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2",
@@ -91,7 +91,7 @@ function ResizableHandle({ withHandle, className, ...props }: ResizableHandlePro
           </svg>
         </div>
       )}
-    </ResizablePrimitive.PanelResizeHandle>
+    </ResizablePrimitive.Separator>
   );
 }
 
