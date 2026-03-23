@@ -190,7 +190,7 @@
     "autoprefixer": "~10.4.27",
     "babel-plugin-react-compiler": "^1.0.0",
     "convex-helpers": "^0.1.114",
-    "convex-test": "^0.0.43",
+    "convex-test": "^0.0.41",
     "dotenv": "^17.3.1",
     "husky": "^9.1.7",
     "jsdom": "^27.4.0",
