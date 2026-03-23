@@ -110,7 +110,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
     return (
       <Card>
         <CardBody>
-          <Flex align="center" justify="center" className="min-h-32">
+          <Flex align="center" justify="center" className="min-h-content-block">
             <LoadingSpinner size="md" />
           </Flex>
         </CardBody>
@@ -136,7 +136,13 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
       {connections.length === 0 ? (
         <Card>
           <CardBody>
-            <Flex direction="column" align="center" justify="center" gap="md" className="min-h-32">
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              gap="md"
+              className="min-h-content-block"
+            >
               <Icon icon={Key} size="xl" tone="tertiary" />
               <Typography variant="small" color="secondary" className="text-center">
                 No SSO connections configured.
@@ -431,7 +437,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   if (!connection) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange} title="Configure SSO">
-        <Flex align="center" justify="center" className="min-h-32">
+        <Flex align="center" justify="center" className="min-h-content-block">
           <LoadingSpinner size="md" />
         </Flex>
       </Dialog>

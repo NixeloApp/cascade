@@ -31,8 +31,15 @@ import { Checkbox, Input as FormInput } from "./ui/form";
 import { Icon } from "./ui/Icon";
 import { IconButton } from "./ui/IconButton";
 import { Input } from "./ui/Input";
+import { Separator } from "./ui/Separator";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
+
+/** Vertical toolbar divider — hidden on mobile, visible on sm+ */
+function FilterDivider() {
+  return <Separator orientation="vertical" className="hidden sm:block" />;
+}
+
 export interface DateRangeFilter {
   from?: string; // ISO date string (YYYY-MM-DD)
   to?: string;
@@ -116,7 +123,10 @@ function FilterDropdown<T>({
           {isActive && ` (${activeCount})`}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className={cn(scrollable && "max-h-64 overflow-y-auto")}>
+      <DropdownMenuContent
+        align="start"
+        className={cn(scrollable && "max-h-dropdown overflow-y-auto")}
+      >
         {items?.map((item) => (
           <DropdownMenuCheckboxItem
             key={getKey(item)}
@@ -236,7 +246,7 @@ function SavedFiltersDropdown({
           <span className="hidden sm:inline">Saved Filters</span> ({savedFilters.length})
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto min-w-48">
+      <DropdownMenuContent align="start" className="max-h-dropdown overflow-y-auto min-w-48">
         {savedFilters.map((filter) => (
           <DropdownMenuItem key={filter._id} onSelect={() => onLoadFilter(filter)}>
             <Flex align="center" justify="between" className="w-full">
@@ -428,7 +438,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
         />
 
         {/* Divider */}
-        <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />
+        <FilterDivider />
 
         {/* Type Filter */}
         <FilterDropdown
@@ -507,7 +517,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
         />
 
         {/* Date divider */}
-        <div className="hidden h-6 w-px bg-ui-border/70 sm:block" />
+        <FilterDivider />
 
         {/* Due Date Filter */}
         <DateRangeDropdown
@@ -534,7 +544,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
         />
 
         {/* Divider */}
-        {hasActiveFilters && <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />}
+        {hasActiveFilters && <FilterDivider />}
 
         {/* Clear Filters */}
         {hasActiveFilters && (
@@ -558,7 +568,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
         {/* Saved Filters */}
         {savedFilters && savedFilters.length > 0 && (
           <>
-            <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />
+            <FilterDivider />
             <SavedFiltersDropdown
               savedFilters={savedFilters}
               onLoadFilter={handleLoadFilter}

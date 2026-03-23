@@ -278,6 +278,16 @@
   /* Textarea min-height */
   --min-height-textarea: 120px;
 
+  /* Centered content minimum height (loading spinners, empty states) */
+  --min-height-content-block: 8rem;
+
+  /* Dropdown menus — scrollable content constraint */
+  --max-height-dropdown: 16rem;
+
+  /* Sidebar widths */
+  --width-sidebar: 16rem;
+  --width-sidebar-collapsed: 4rem;
+
   /* Auth page shell min-height (full viewport minus py-6 padding) */
   --min-height-auth-shell: calc(100vh - 3rem);
 
