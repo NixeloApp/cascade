@@ -90,7 +90,7 @@ The clients page manages billing contacts for agency-style organizations and pro
 | 2 | The "New Client" form uses a `Card` at the top of the page, mixing creation and listing in one view; a modal would be cleaner | UX | MEDIUM |
 | 3 | Portal token management (generate, refresh, revoke) uses imperative `useMutation` from `convex/react` with `anyApi` instead of typed `useAuthenticatedMutation` | type safety | MEDIUM |
 | 4 | Token details display raw token IDs to the user, which is not meaningful information | UX | LOW |
-| 5 | `handleGeneratePortalLink` grabs the first project in the org as the scope -- this is arbitrary and may not be the right project for the client | correctness | HIGH |
+| ~~5~~ | ~~Portal link grabs first project~~ **Fixed** — each client card has a project selector dropdown; user explicitly chooses which project to scope the portal link to | ~~correctness~~ | ~~HIGH~~ |
 | 6 | Hourly rate input defaults to "0" string and uses `Number.parseFloat` -- edge cases with empty or invalid input | robustness | LOW |
 | 7 | No search or filter functionality for the client list | scalability | LOW |
 | 8 | No pagination -- all clients load at once | scalability | MEDIUM |

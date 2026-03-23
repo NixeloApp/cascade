@@ -12,6 +12,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -75,6 +82,11 @@ function PortalTokenDetails({
   ));
 }
 
+interface ProjectOption {
+  _id: string;
+  name: string;
+}
+
 function ClientCard({
   client,
   generatedPortalLink,
@@ -82,21 +94,25 @@ function ClientCard({
   onRefreshPortalTokens,
   onRevokePortalToken,
   portalTokens,
+  projects,
 }: {
   client: Doc<"clients">;
   generatedPortalLink?: string;
-  onGeneratePortalLink: (clientId: string) => void;
+  onGeneratePortalLink: (clientId: string, projectId: string) => void;
   onRefreshPortalTokens: (clientId: string) => void;
   onRevokePortalToken: (clientId: string, tokenId: string) => void;
   portalTokens: ClientPortalTokenRow[];
+  projects: ProjectOption[];
 }) {
+  const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?._id ?? "");
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{client.name}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Stack gap="xs" className="pt-4">
+        <Stack gap="sm">
           <Typography variant="small">{client.email}</Typography>
           {client.company ? (
             <Typography variant="small" color="secondary">
@@ -106,9 +122,27 @@ function ClientCard({
           <Typography variant="small" color="secondary">
             Default rate: ${client.hourlyRate?.toFixed(2) ?? "0.00"}
           </Typography>
-          <div className="pt-2">
-            <Flex wrap gap="sm">
-              <Button variant="secondary" onClick={() => onGeneratePortalLink(client._id)}>
+          <Stack gap="sm">
+            <Flex wrap gap="sm" align="end">
+              {projects.length > 1 ? (
+                <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((p) => (
+                      <SelectItem key={p._id} value={p._id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : null}
+              <Button
+                variant="secondary"
+                disabled={!selectedProjectId}
+                onClick={() => onGeneratePortalLink(client._id, selectedProjectId)}
+              >
                 Generate portal link
               </Button>
               <Button variant="ghost" onClick={() => onRefreshPortalTokens(client._id)}>
@@ -116,7 +150,7 @@ function ClientCard({
               </Button>
             </Flex>
             {generatedPortalLink ? (
-              <Typography variant="caption" className="mt-2 block text-brand">
+              <Typography variant="caption" className="text-brand">
                 {generatedPortalLink}
               </Typography>
             ) : null}
@@ -125,7 +159,7 @@ function ClientCard({
               onRevokePortalToken={onRevokePortalToken}
               tokens={portalTokens}
             />
-          </div>
+          </Stack>
         </Stack>
       </CardContent>
     </Card>
@@ -171,23 +205,17 @@ function ClientsListPage() {
     }
   };
 
-  const handleGeneratePortalLink = async (clientId: string) => {
+  const handleGeneratePortalLink = async (clientId: string, projectId: string) => {
     try {
-      const scopedProject = projects?.page.find(
-        (project: { organizationId: string }) => project.organizationId === organizationId,
-      );
-      if (!scopedProject) {
-        showError(
-          "No project available",
-          "Create at least one project before generating a portal link",
-        );
+      if (!projectId) {
+        showError("Select a project to scope the portal link");
         return;
       }
 
       const response = await generatePortalToken({
         organizationId,
         clientId,
-        projectIds: [scopedProject._id],
+        projectIds: [projectId],
         permissions: {
           viewIssues: true,
           viewDocuments: false,
@@ -300,6 +328,14 @@ function ClientsListPage() {
                 onRefreshPortalTokens={handleRefreshPortalTokens}
                 onRevokePortalToken={handleRevokePortalToken}
                 portalTokens={portalTokensByClient[client._id] || []}
+                projects={
+                  projects?.page
+                    .filter((p: { organizationId: string }) => p.organizationId === organizationId)
+                    .map((p: { _id: string; name: string }) => ({
+                      _id: p._id,
+                      name: p.name,
+                    })) ?? []
+                }
               />
             ))}
           </Grid>
