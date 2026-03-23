@@ -10,7 +10,6 @@ import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element
 import type { Id } from "@convex/_generated/dataModel";
 import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
-import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -23,6 +22,7 @@ import { Typography } from "@/components/ui/Typography";
 import type { CardDisplayOptions } from "@/lib/card-display-utils";
 import { ANIMATION } from "@/lib/constants";
 import type { UserSummary } from "@/lib/entitySummaries";
+import { Maximize2, Minimize2, Plus } from "@/lib/icons";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { getWorkflowCategoryColor } from "@/lib/issue-utils";
 import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kanban-dnd";

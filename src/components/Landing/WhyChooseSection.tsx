@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "@/lib/icons";
 import { ArrowRight, Building2, KanbanSquare, MessageSquare } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Badge } from "../ui/Badge";

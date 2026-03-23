@@ -5,7 +5,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { Camera, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -23,6 +22,7 @@ import {
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { Camera, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 
 interface CoverImageUploadModalProps {

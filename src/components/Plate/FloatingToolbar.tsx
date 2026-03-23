@@ -6,27 +6,26 @@
  */
 
 import {
-  Bold,
-  Code,
-  Highlighter,
-  Italic,
-  Link,
-  type LucideIcon,
-  Strikethrough,
-  Underline,
-} from "lucide-react";
-import {
   useEditorRef,
   useEditorSelection,
   useMarkToolbarButton,
   useMarkToolbarButtonState,
 } from "platejs/react";
 import { useEffect, useState } from "react";
-
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
 import { Separator } from "@/components/ui/Separator";
+import {
+  Bold,
+  Code,
+  Highlighter,
+  Italic,
+  LinkIcon as Link,
+  type LucideIcon,
+  Strikethrough,
+  Underline,
+} from "@/lib/icons";
 import { NODE_TYPES } from "@/lib/plate/plugins";
 import { showError } from "@/lib/toast";
 import { ColorPickerButton } from "./ColorPickerButton";

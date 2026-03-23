@@ -7,10 +7,10 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { Globe, Plus, Shield, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Globe, Plus, Shield, ShieldAlert, ShieldCheck, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import {
   SettingsSection,

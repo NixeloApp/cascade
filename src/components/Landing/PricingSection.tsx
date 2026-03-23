@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
 import { ROUTES } from "@/config/routes";
+import type { LucideIcon } from "@/lib/icons";
 import { ArrowRight, Check, Rocket, ShieldCheck, Users } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Badge } from "../ui/Badge";

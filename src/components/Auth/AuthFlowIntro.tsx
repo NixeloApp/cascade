@@ -1,9 +1,9 @@
-import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Icon, type IconSize, type IconTone } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import type { LucideIcon } from "@/lib/icons";
 
 interface AuthFlowIntroProps {
   icon: LucideIcon;

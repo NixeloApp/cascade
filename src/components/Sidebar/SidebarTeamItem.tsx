@@ -11,7 +11,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Link, useLocation } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference, FunctionReturnType } from "convex/server";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -22,6 +21,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { ChevronDown, ChevronRight } from "@/lib/icons";
 
 type PaginatedQuery = FunctionReference<"query", "public">;
 

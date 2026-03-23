@@ -9,17 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import {
-  Archive,
-  ChevronDown,
-  ChevronRight,
-  File,
-  FileText,
-  FolderOpen,
-  MoreHorizontal,
-  Plus,
-  Star,
-} from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -38,6 +27,17 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import {
+  Archive,
+  ChevronDown,
+  ChevronRight,
+  File,
+  FileText,
+  FolderOpen,
+  MoreHorizontal,
+  Plus,
+  Star,
+} from "@/lib/icons";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 

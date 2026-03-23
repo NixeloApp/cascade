@@ -9,7 +9,6 @@
  */
 
 import { DAY } from "@convex/lib/timeUtils";
-import { ChevronDown, FileText, Hash, Info, List, type LucideIcon, User } from "lucide-react";
 import type { Value } from "platejs";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -22,6 +21,15 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { getDocumentHeadingAnchorId } from "@/lib/documents/headingAnchors";
+import {
+  ChevronDown,
+  FileText,
+  Hash,
+  Info,
+  ListIcon as List,
+  type LucideIcon,
+  User,
+} from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 interface HeadingItem {

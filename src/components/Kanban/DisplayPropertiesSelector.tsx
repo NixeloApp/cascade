@@ -9,7 +9,6 @@
  * - Story Points
  */
 
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
   DropdownMenu,
@@ -28,6 +27,7 @@ import {
   showAllProperties,
   toggleProperty,
 } from "@/lib/card-display-utils";
+import { ChevronDown, SlidersHorizontal } from "@/lib/icons";
 import { Icon } from "../ui/Icon";
 
 interface DisplayPropertiesSelectorProps {

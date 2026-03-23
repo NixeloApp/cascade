@@ -10,13 +10,13 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { ChevronDown, ChevronRight } from "@/lib/icons";
 import type { SwimlanConfig } from "@/lib/swimlane-utils";
 import { getSwimlanIssueCount } from "@/lib/swimlane-utils";
 import { Badge } from "../ui/Badge";

@@ -9,12 +9,11 @@
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Link } from "@tanstack/react-router";
-
-import { LogOut, Settings } from "lucide-react";
 import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
+import { LogOut, Settings } from "@/lib/icons";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import {

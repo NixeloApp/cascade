@@ -7,7 +7,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -16,6 +15,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useDebounce } from "@/hooks/useDebounce";
+import { AlertTriangle } from "@/lib/icons";
 import type { IssueType } from "@/lib/issue-utils";
 import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 

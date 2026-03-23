@@ -1,6 +1,6 @@
-import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import type { LucideIcon } from "@/lib/icons";
 import { BarChart3 } from "@/lib/icons";
 import { AnalyticsSection } from "./AnalyticsSection";
 

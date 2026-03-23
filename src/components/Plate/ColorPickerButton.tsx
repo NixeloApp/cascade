@@ -5,15 +5,14 @@
  */
 
 import { EDITOR_HIGHLIGHT_COLOR_OPTIONS, EDITOR_TEXT_COLOR_OPTIONS } from "@convex/shared/colors";
-import { ChevronDown, Highlighter, type LucideIcon, Type } from "lucide-react";
 import { useEditorRef } from "platejs/react";
 import { useState } from "react";
-
 import { Button } from "@/components/ui/Button";
 import { ColorSwatchButton } from "@/components/ui/ColorSwatchButton";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { ChevronDown, Highlighter, type LucideIcon, Type } from "@/lib/icons";
 
 interface ColorPickerButtonProps {
   type: "fontColor" | "backgroundColor";

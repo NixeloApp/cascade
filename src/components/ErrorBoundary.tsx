@@ -6,11 +6,11 @@
  * Supports custom fallback rendering and error reporting callbacks.
  */
 
-import { AlertTriangle } from "lucide-react";
 import { Component, type ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
+import { AlertTriangle } from "@/lib/icons";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Typography } from "./ui/Typography";

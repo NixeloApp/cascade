@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { Smile } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { Smile } from "@/lib/icons";
 import { showError } from "@/lib/toast";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
 import { Button } from "./ui/Button";

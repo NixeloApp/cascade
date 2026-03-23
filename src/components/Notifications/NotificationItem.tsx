@@ -9,20 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import {
-  Archive,
-  Bell,
-  Check,
-  Clock,
-  FileText,
-  Flag,
-  MessageCircle,
-  MessageSquare,
-  RefreshCw,
-  Rocket,
-  Trash2,
-  User,
-} from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -37,6 +23,20 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import {
+  Archive,
+  Bell,
+  Check,
+  Clock,
+  FileText,
+  Flag,
+  MessageCircle,
+  MessageSquare,
+  RefreshCw,
+  Rocket,
+  Trash2,
+  User,
+} from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { HOUR, WEEK } from "@/lib/time";
 export interface NotificationWithActor extends Doc<"notifications"> {

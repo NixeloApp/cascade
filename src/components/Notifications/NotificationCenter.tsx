@@ -11,7 +11,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
-import { Bell, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -38,7 +37,7 @@ import {
 } from "@/hooks/useConvexHelpers";
 import { useOfflineNotificationMarkAsRead } from "@/hooks/useOfflineNotificationMarkAsRead";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
-import { Inbox } from "@/lib/icons";
+import { Bell, ExternalLink, Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";

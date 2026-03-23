@@ -1,7 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { FileText, Globe, Lock, Plus, Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { DocumentTree } from "@/components/Documents/DocumentTree";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
@@ -21,6 +20,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { FileText, Globe, Lock, Plus, Search, Sparkles } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/documents/")({

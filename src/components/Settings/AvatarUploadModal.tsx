@@ -5,7 +5,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { Camera, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/MediaPreview";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { Camera, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 
 interface AvatarUploadModalProps {

@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { usePaginatedQuery } from "convex/react";
-import { MessageCircle, Paperclip, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -21,6 +20,7 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOfflineAddComment } from "@/hooks/useOfflineAddComment";
 import { formatRelativeTime } from "@/lib/formatting";
+import { MessageCircle, Paperclip, X } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { CommentReactions } from "./CommentReactions";
 import { CommentRenderer } from "./CommentRenderer";

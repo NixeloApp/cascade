@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { Authenticated, Unauthenticated } from "convex/react";
-import { Laptop, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
@@ -17,7 +16,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
-import { BookOpen, Menu } from "@/lib/icons";
+import { BookOpen, Laptop, Menu, Moon, Sun } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { NixeloLogo } from "./Icons";
 

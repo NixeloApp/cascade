@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Authenticated, Unauthenticated } from "convex/react";
-import { AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { AuthRedirect, SignInForm } from "@/components/Auth";
@@ -22,6 +21,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
+import { AlertCircle, CheckCircle, Clock, Loader2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 export const Route = createFileRoute("/invite/$token")({
   component: InviteRoute,

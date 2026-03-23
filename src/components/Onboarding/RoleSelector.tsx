@@ -6,8 +6,6 @@
  * Routes to appropriate onboarding flow.
  */
 
-import type { LucideIcon } from "lucide-react";
-import { Check, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
@@ -15,6 +13,8 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
+import type { LucideIcon } from "@/lib/icons";
+import { Check, User, Users } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";

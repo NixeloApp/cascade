@@ -17,7 +17,6 @@ import {
   extractClosestEdge,
 } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import type { Id } from "@convex/_generated/dataModel";
-import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -29,6 +28,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { type CardDisplayOptions, DEFAULT_CARD_DISPLAY } from "@/lib/card-display-utils";
 import type { UserSummary } from "@/lib/entitySummaries";
+import { GripVertical } from "@/lib/icons";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import {
   getIssueAccessibleLabel,

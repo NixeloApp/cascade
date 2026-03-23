@@ -1,7 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +23,7 @@ import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDate } from "@/lib/formatting";
+import { Plus, Users } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/clients/")({
   component: ClientsListPage,

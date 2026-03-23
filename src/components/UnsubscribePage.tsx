@@ -6,7 +6,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthPageLayout } from "@/components/Auth/AuthPageLayout";
 import { Card } from "@/components/ui/Card";
@@ -16,6 +15,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { usePublicMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
+import { AlertTriangle, CheckCircle, XCircle } from "@/lib/icons";
 
 interface UnsubscribePageProps {
   token: string;

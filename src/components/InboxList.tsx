@@ -9,6 +9,8 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { DAY, WEEK } from "@convex/lib/timeUtils";
+import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -17,9 +19,7 @@ import {
   Inbox,
   MoreHorizontal,
   XCircle,
-} from "lucide-react";
-import { useState } from "react";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+} from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";

@@ -1,12 +1,11 @@
 import { api } from "@convex/_generated/api";
-
-import { Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpdate";
+import { Settings2 } from "@/lib/icons";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { Label } from "../ui/Label";

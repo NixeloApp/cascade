@@ -7,7 +7,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { ArrowLeft, Bell, Building2, Clock, FileText, Kanban } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
@@ -19,6 +18,7 @@ import { KeyboardShortcut } from "@/components/ui/KeyboardShortcut";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { ArrowLeft, Bell, Building2, Clock, FileText, Kanban } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";

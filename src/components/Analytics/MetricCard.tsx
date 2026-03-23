@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";

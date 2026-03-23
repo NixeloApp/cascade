@@ -7,11 +7,11 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import type { LucideIcon } from "@/lib/icons";
 import {
   AtSign,
   Bell,

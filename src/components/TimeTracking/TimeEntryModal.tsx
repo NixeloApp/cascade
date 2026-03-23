@@ -9,10 +9,10 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
-import { Clock, Hourglass, Play, X } from "lucide-react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ACTIVITY_TYPES } from "@/lib/constants";
 import { formatDateForInput, formatDurationHuman } from "@/lib/formatting";
+import { Clock, Hourglass, Play, X } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
