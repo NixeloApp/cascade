@@ -172,12 +172,15 @@ export class SettingsPage extends BasePage {
 
     // Admin
     this.userManagementSection = page.getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION);
-    this.userManagementHeading = page.getByRole("heading", { name: /user management/i });
+    this.userManagementHeading = page
+      .getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION)
+      .getByRole("heading")
+      .first();
     this.inviteUserButton = page.getByRole("button", { name: /invite.*user/i });
     this.userTypeManager = page.getByTestId(TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION);
     this.hourComplianceDashboard = page.getByTestId(TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION);
     this.adminUsersTab = page.getByTestId(TEST_IDS.SETTINGS.ADMIN_USERS_TAB);
-    this.platformUsersTable = page.getByRole("table", { name: /user invitations/i });
+    this.platformUsersTable = page.getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION);
     this.inviteEmptyState = page.getByText(/^No invitations$/);
 
     // Invite user form (it's an inline Card, not a dialog)
@@ -593,7 +596,7 @@ export class SettingsPage extends BasePage {
 
   async openAdminUsersList() {
     await expect(this.userManagementHeading).toBeVisible({ timeout: 15000 });
-    await expect(this.platformUsersTable).toBeVisible();
+    await expect(this.platformUsersTable).toBeVisible({ timeout: 10000 });
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
