@@ -1,22 +1,122 @@
 # Error Page - Current State
 
 > **Component**: `src/components/ErrorBoundary.tsx`
-> **Last Updated**: 2026-03-23
+> **Status**: IMPLEMENTED -- functional error boundary wrapping the app
+> **Last Updated**: 2026-03-22
+
+---
 
 ## Purpose
 
-React error boundary that catches render-time crashes and shows a recovery UI instead of a blank screen.
+React class-based error boundary that catches uncaught render-time errors
+anywhere in the component tree and displays a recovery UI instead of
+crashing to a blank screen. Supports an optional custom fallback and an
+`onError` callback for external error reporting.
 
-## Layout
+---
 
-- Centered card with error icon (IconCircle, error variant)
-- Large "500" heading
-- "Something went wrong" message
-- Collapsible error details (expandable `<details>` with stack trace)
-- "Reload page" button
+## Component Anatomy
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Flex  (full screen, centered, bg-ui-bg, animate-fade-in)                   │
+│                                                                              │
+│   ┌──────────────────────────────────────────────────────────────────────┐   │
+│   │ Card  (variant="flat", padding="lg", max-w-md, text-center)        │   │
+│   │                                                                     │   │
+│   │   ┌─────────┐                                                       │   │
+│   │   │  /!\    │  IconCircle (size="xl", variant="error")              │   │
+│   │   │ Alert   │  AlertTriangle icon (size-10, text-status-error)      │   │
+│   │   └─────────┘                                                       │   │
+│   │                                                                     │   │
+│   │   500                                                                │   │
+│   │   Typography (variant="errorCodeDisplay")                           │   │
+│   │                                                                     │   │
+│   │   Something went wrong                                               │   │
+│   │   Typography (variant="large", color="secondary")                   │   │
+│   │                                                                     │   │
+│   │   We encountered an unexpected error.                                │   │
+│   │   Please try refreshing the page.                                    │   │
+│   │   Typography (color="tertiary")                                     │   │
+│   │                                                                     │   │
+│   │   > View error details            (collapsible <details>)           │   │
+│   │     ┌────────────────────────────────────────────────────────┐       │   │
+│   │     │ error.message                                          │       │   │
+│   │     │ (pre, mono, bg-ui-bg-soft, max-h-40, overflow-auto)  │       │   │
+│   │     └────────────────────────────────────────────────────────┘       │   │
+│   │                                                                     │   │
+│   │   [ Reload page ]                                                   │   │
+│   │   Button (size="lg", calls window.location.reload())               │   │
+│   │                                                                     │   │
+│   └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Composition Walkthrough
+
+1. **ErrorBoundary** is a React class component (required for `componentDidCatch`).
+2. In normal operation (`hasError === false`), it transparently renders `this.props.children`.
+3. When an error is caught:
+   - `getDerivedStateFromError` sets `hasError: true` and stores the `error` object.
+   - `componentDidCatch` logs to console and calls the optional `onError` prop.
+   - If a custom `fallback` prop is provided, it renders that instead of the default UI.
+   - Default fallback:
+     - Full-screen centered `Flex` with fade-in animation.
+     - `Card` (flat variant, lg padding) containing a vertical `Stack`:
+       - `IconCircle` (xl, error) with `AlertTriangle` icon.
+       - Large "500" text using `errorCodeDisplay` typography variant.
+       - "Something went wrong" heading.
+       - Instructional text.
+       - Collapsible `<details>` with error message in a monospace pre block
+         (max-height 40, scrollable).
+       - "Reload page" `Button` (size lg) that calls `window.location.reload()`.
+
+---
 
 ## States
 
-- **Error caught**: full error card with details
-- **Custom fallback**: optional `fallback` prop for component-level boundaries
-- **No error**: renders children normally (transparent wrapper)
+| State | Behavior |
+|-------|----------|
+| No error | Renders children transparently (invisible wrapper) |
+| Error caught, no fallback prop | Renders the default 500 card described above |
+| Error caught, fallback prop provided | Renders the custom fallback `ReactNode` |
+
+---
+
+## Screenshot Matrix
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
+
+---
+
+## Problems
+
+| # | Problem | Area | Severity |
+|---|---------|------|----------|
+| 1 | No "Go back" or "Go to dashboard" navigation option -- only reload | `ErrorBoundary` | LOW |
+| 2 | No external error reporting integration (Sentry, PostHog) -- only console.error | `componentDidCatch` | MEDIUM |
+| 3 | Error details only show `error.message`, not the component stack trace | `<details>` block | LOW |
+| 4 | No way to recover without a full page reload -- no "try again" that re-mounts | `ErrorBoundary` | LOW |
+
+---
+
+## Source Files
+
+| File | Purpose |
+|------|---------|
+| `src/components/ErrorBoundary.tsx` | Error boundary component (109 lines) |
+| `src/routes/__root.tsx` | Wraps the app outlet in `<ErrorBoundary>` |
+| `src/components/ui/Card.tsx` | Card primitive (flat variant) |
+| `src/components/ui/IconCircle.tsx` | Circular icon container (error variant) |
+| `src/components/ui/Typography.tsx` | Typography variants (errorCodeDisplay, large) |
+| `src/components/ui/Button.tsx` | Reload button |
+| `src/components/ui/Stack.tsx` | Vertical layout |
+| `src/components/ui/Flex.tsx` | Centering layout |
