@@ -73,7 +73,9 @@ export const RAW_TAILWIND_STRUCTURAL_ALLOWLIST = [
   /^<Skeleton\b/,
   /^<SkeletonText\b/,
   // Project-defined animation utilities (global CSS in index.css, not arbitrary TW)
-  /\banimate-(?:fade-in|fade-out|slide-up|slide-down|scale-in|scale-out|enter-right|enter-left|exit-right|exit-left|slide-up-out|slide-down-out)\b/,
+  /\banimate-(?:fade-in|fade-out|slide-up|slide-down|scale-in|scale-out|enter-right|enter-left|exit-right|exit-left|slide-up-out|slide-down-out|flow-1|flow-2|flow-3)\b/,
+  // Responsive layout toggling — hiding/showing with breakpoint prefix is structural
+  /\b(?:sm|md|lg|xl|2xl):(?:flex|block|inline-flex|grid|hidden)\b/,
 ];
 
 /**
