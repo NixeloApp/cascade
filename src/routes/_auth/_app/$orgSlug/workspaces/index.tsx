@@ -68,7 +68,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
                     <IconCircle
                       size="md"
                       variant="soft"
-                      className="h-12 w-12 border border-ui-border/60 text-2xl shadow-soft"
+                      className="size-12 border border-ui-border/60 text-2xl shadow-soft"
                     >
                       <span aria-hidden="true">{workspace.icon}</span>
                     </IconCircle>
@@ -139,7 +139,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
                 <IconCircle
                   size="md"
                   variant="soft"
-                  className="h-12 w-12 border border-ui-border/60 text-2xl shadow-soft"
+                  className="size-12 border border-ui-border/60 text-2xl shadow-soft"
                 >
                   <span aria-hidden="true">{workspace.icon}</span>
                 </IconCircle>

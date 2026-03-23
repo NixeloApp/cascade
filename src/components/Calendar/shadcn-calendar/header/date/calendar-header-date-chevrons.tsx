@@ -52,7 +52,7 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
         onClick={handleDateBackward}
         aria-label="Previous month"
       >
-        <ChevronLeft className="min-w-5 min-h-5" />
+        <ChevronLeft className="min-size-5 min-" />
       </Button>
       <time dateTime={format(date, "yyyy-MM-dd")} className="min-w-16 text-center sm:min-w-35">
         <Typography as="span" variant="calendarHeaderDate">
@@ -66,7 +66,7 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
         onClick={handleDateForward}
         aria-label="Next month"
       >
-        <ChevronRight className="min-w-5 min-h-5" />
+        <ChevronRight className="min-size-5 min-" />
       </Button>
     </Flex>
   );

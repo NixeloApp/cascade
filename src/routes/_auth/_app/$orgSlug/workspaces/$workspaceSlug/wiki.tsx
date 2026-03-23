@@ -69,7 +69,7 @@ function WorkspaceWikiPage() {
             <Flex direction="column" gap="md">
               <Flex justify="between" align="start" gap="md">
                 <Flex align="center" gap="md">
-                  <IconCircle size="md" tone="secondary" variant="muted" className="w-10 h-10">
+                  <IconCircle size="md" tone="secondary" variant="muted" className="size-10">
                     <FileText size={20} />
                   </IconCircle>
                   <Typography variant="wikiCardTitle">{doc.title || "Untitled"}</Typography>

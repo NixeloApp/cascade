@@ -23,7 +23,7 @@ function TeamSettings() {
               <svg
                 role="img"
                 aria-label="Team settings icon"
-                className="w-6 h-6 text-brand"
+                className="size-6 text-brand"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
