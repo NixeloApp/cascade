@@ -183,7 +183,7 @@ Those cases still need to work, but they are not yet in the canonical screenshot
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | 1 | Search is client-side only — filters the loaded page, not the full dataset. With 20 items per page, a search for item #50 will not find it until the user loads more. | search/pagination | MEDIUM |
-| 2 | No advanced filters — no priority, assignee, label, date range, or type filters. Only status. | controls | MEDIUM |
+| ~~2~~ | ~~No advanced filters~~ **Fixed** — added server-side priority and type filters via `listOrganizationIssues` args, plus clear-filters button | ~~controls~~ | ~~MEDIUM~~ |
 | 3 | ViewModeToggle is present but the list view mode may not be fully wired in this route (originally from Kanban). | controls | LOW |
 | 4 | `IssueCard` type cast suggests a type mismatch between the paginated query result and the card's expected type. | types | LOW |
 

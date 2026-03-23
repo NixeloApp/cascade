@@ -10,6 +10,7 @@
     "src/components/Sprints/SprintManager.tsx": 1,
     "src/routes/_auth/_app/$orgSlug/calendar.tsx": 1,
     "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar.tsx": 1,
-    "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies.tsx": 1
+    "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies.tsx": 1,
+    "src/routes/_auth/_app/$orgSlug/issues/index.tsx": 1
   }
 }
