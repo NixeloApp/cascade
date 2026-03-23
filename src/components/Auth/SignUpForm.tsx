@@ -221,8 +221,6 @@ export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
       <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign up with Google" />
       <AuthMethodDivider />
       <form onSubmit={handleSubmit} data-testid={TEST_IDS.AUTH.FORM}>
-        {/* E2E readiness markers — always present in SPA (no SSR hydration delay) */}
-        <span data-testid={TEST_IDS.AUTH.FORM_HYDRATED} hidden aria-hidden="true" />
         {showEmailForm ? (
           <span data-testid={TEST_IDS.AUTH.FORM_READY} hidden aria-hidden="true" />
         ) : null}

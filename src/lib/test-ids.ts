@@ -204,8 +204,6 @@ export const TEST_IDS = {
     EMAIL_FORM: "auth-email-form",
     /** @see src/components/Auth/SignInForm.tsx */
     FORM_READY: "auth-form-ready",
-    /** @see src/components/Auth/SignInForm.tsx */
-    FORM_HYDRATED: "auth-form-hydrated",
     /** @see src/components/auth/GoogleAuthButton.tsx */
     GOOGLE_BUTTON: "auth-google-button",
     /** @see src/components/Auth/EmailVerificationForm.tsx */
