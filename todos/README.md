@@ -34,7 +34,7 @@ All 21 page specs rewritten to production quality — ASCII diagrams, screenshot
 |------|--------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meetings visual QA, meeting-to-doc flow, capture strategy |
 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation UI, workflow translation |
-| [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
+| ~~[tech-debt-billing-export.md](./tech-debt-billing-export.md)~~ | ~~PDF export~~ **Shipped** — jsPDF + jspdf-autotable |
 | [plane-features.md](./plane-features.md) | Remaining evaluation items from Plane feature review |
 | Offline push safety | Verify push subscriptions survive SW replacement |
 
@@ -50,6 +50,7 @@ All 21 page specs rewritten to production quality — ASCII diagrams, screenshot
 - **Package upgrades:** Convex 1.34, Storybook 10, all Radix/Plate/Mantine/TanStack
 - **Docs reorg:** 220MB stale content removed, 8 clean directories
 - **Backwards compat:** all shims removed
+- **PDF export:** billing reports via jsPDF
 
 ---
 
