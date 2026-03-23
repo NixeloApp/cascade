@@ -88,13 +88,11 @@ function buildDelegateOptions({
   status: ReturnType<typeof useAuthenticatedQuery<typeof api.outOfOffice.getCurrent>>;
 }) {
   const delegateOptions =
-    searchableUsers
-      ?.filter((user) => user._id !== currentUserId)
-      .map((user) => ({
-        _id: user._id,
-        name: user.name ?? user.email ?? "Unknown",
-        image: user.image,
-      })) ?? [];
+    searchableUsers?.map((user) => ({
+      _id: user._id,
+      name: user.name ?? user.email ?? "Unknown",
+      image: user.image,
+    })) ?? [];
 
   const delegateId = status?.delegate?._id ?? status?.delegateUserId;
   const shouldIncludeDelegate = delegateId && delegateId !== currentUserId;
@@ -167,7 +165,10 @@ async function saveOutOfOfficeStatus({
 export function OutOfOfficeSettings() {
   const status = useAuthenticatedQuery(api.outOfOffice.getCurrent, {});
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
-  const searchableUsers = useAuthenticatedQuery(api.users.searchUsers, { query: "", limit: 50 });
+  const searchableUsers = useAuthenticatedQuery(
+    api.users.searchUsers,
+    currentUser ? { query: "", limit: 50, excludeUserId: currentUser._id } : "skip",
+  );
   const { mutate: saveOutOfOffice } = useAuthenticatedMutation(api.outOfOffice.upsert);
   const { mutate: clearOutOfOffice } = useAuthenticatedMutation(api.outOfOffice.clear);
 
