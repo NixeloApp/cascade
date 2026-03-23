@@ -88,3 +88,11 @@ docs/research/library/**/*.json
 # EXCEPTIONS (Track these)
 !docs/research/library/mintlify/
 !docs/research/library/mintlify/**
+
+# Convex AI agent skills (regenerate with: npx convex ai-files install)
+.agents/
+.agent/
+skills/
+skills-lock.json
+AGENTS.md
+convex/_generated/ai/ai-files.state.json

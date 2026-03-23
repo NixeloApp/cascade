@@ -156,6 +156,8 @@ export const update = mutation({
 
 ## Scripts
 
+**Assume `pnpm dev` is always running.** The dev server is needed for E2E tests, screenshots, and Convex function testing.
+
 ```bash
 pnpm dev              # Start frontend + backend
 pnpm run check        # Typecheck + lint + validate + tests (full CI check)
@@ -278,3 +280,11 @@ If a test needs a timeout to pass, the underlying code likely has a performance 
 ---
 
 **Convex Deployment:** peaceful-salmon-964 | **Node:** 18+ | **Package Manager:** pnpm
+
+<!-- convex-ai-start -->
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+<!-- convex-ai-end -->
