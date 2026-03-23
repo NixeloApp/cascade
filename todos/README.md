@@ -48,7 +48,9 @@ Architecture: RoadmapView decomposition (2671→768 lines), ClientCard extractio
 
 Backend: Invoice list with client join, reactive portal tokens, archived notification pagination, admin-scoped token query.
 
-Frontend: Invoice draft dialog, portal admin gating, footer link wiring, icon barrel migration (82 files), Card variant cleanup, design tokens (roadmap + sidebar).
+Frontend: Invoice draft dialog, portal admin gating, footer link wiring, icon barrel migration (82 files), design tokens (roadmap + sidebar).
+
+Card architecture: Banned all nested Cards (no exemptions). Introduced `CardSection` as the designated inner surface (58 replacements across 21 files). Card = outer container, CardSection = inner grouping. Validator enforces the ban.
 
 ---
 
