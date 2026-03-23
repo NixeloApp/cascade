@@ -1,5 +1,7 @@
 import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createContext, useContext } from "react";
 import { PageControls, PageHeader, PageLayout, PageStack } from "@/components/layout";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -11,6 +13,24 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+
+// Context for child routes to access team data without re-querying
+interface TeamLayoutContextValue {
+  teamId: Id<"teams">;
+  teamName: string;
+  workspaceId: Id<"workspaces">;
+  workspaceName: string;
+  workspaceSlug: string;
+}
+
+const TeamLayoutContext = createContext<TeamLayoutContextValue | null>(null);
+
+/** Hook for child routes to access parent-resolved team/workspace data. */
+export function useTeamLayout(): TeamLayoutContextValue {
+  const ctx = useContext(TeamLayoutContext);
+  if (!ctx) throw new Error("useTeamLayout must be used within TeamLayout");
+  return ctx;
+}
 export const Route = createFileRoute(
   "/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug",
 )({
@@ -58,84 +78,94 @@ export function TeamLayout() {
     );
   }
 
+  const teamLayoutValue: TeamLayoutContextValue = {
+    teamId: team._id,
+    teamName: team.name,
+    workspaceId: workspace._id,
+    workspaceName: workspace.name,
+    workspaceSlug,
+  };
+
   return (
-    <PageLayout>
-      <PageStack>
-        <PageHeader
-          title={team.name}
-          description={team.description ?? undefined}
-          spacing="stack"
-          breadcrumbs={[
-            { label: "Workspaces", to: ROUTES.workspaces.list.build(orgSlug) },
-            { label: workspace.name, to: ROUTES.workspaces.detail.build(orgSlug, workspaceSlug) },
-            { label: team.name },
-          ]}
-        />
+    <TeamLayoutContext.Provider value={teamLayoutValue}>
+      <PageLayout>
+        <PageStack>
+          <PageHeader
+            title={team.name}
+            description={team.description ?? undefined}
+            spacing="stack"
+            breadcrumbs={[
+              { label: "Workspaces", to: ROUTES.workspaces.list.build(orgSlug) },
+              { label: workspace.name, to: ROUTES.workspaces.detail.build(orgSlug, workspaceSlug) },
+              { label: team.name },
+            ]}
+          />
 
-        {members && members.length > 0 && (
-          <Flex align="center" gap="sm">
-            <Flex gap="xs">
-              {members.slice(0, 8).map((member) => (
-                <Tooltip key={member._id} content={member.user?.name ?? "Team member"}>
-                  <Avatar name={member.user?.name} src={member.user?.image} size="xs" />
-                </Tooltip>
-              ))}
+          {members && members.length > 0 && (
+            <Flex align="center" gap="sm">
+              <Flex gap="xs">
+                {members.slice(0, 8).map((member) => (
+                  <Tooltip key={member._id} content={member.user?.name ?? "Team member"}>
+                    <Avatar name={member.user?.name} src={member.user?.image} size="xs" />
+                  </Tooltip>
+                ))}
+              </Flex>
+              {members.length > 8 && (
+                <Badge variant="neutral" size="sm">
+                  +{members.length - 8}
+                </Badge>
+              )}
+              <Typography variant="caption" color="tertiary">
+                {members.length} member{members.length !== 1 ? "s" : ""}
+              </Typography>
             </Flex>
-            {members.length > 8 && (
-              <Badge variant="neutral" size="sm">
-                +{members.length - 8}
-              </Badge>
-            )}
-            <Typography variant="caption" color="tertiary">
-              {members.length} member{members.length !== 1 ? "s" : ""}
-            </Typography>
-          </Flex>
-        )}
+          )}
 
-        <PageControls padding="sm" spacing="stack">
-          <RouteNav aria-label="Team sections">
-            <RouteNavItem asChild>
-              <Link
-                to={ROUTES.workspaces.teams.detail.path}
-                params={{ orgSlug, workspaceSlug, teamSlug }}
-                activeOptions={{ exact: true }}
-                activeProps={{ "aria-current": "page" }}
-              >
-                Projects
-              </Link>
-            </RouteNavItem>
-            <RouteNavItem asChild>
-              <Link
-                to={ROUTES.workspaces.teams.calendar.path}
-                params={{ orgSlug, workspaceSlug, teamSlug }}
-                activeProps={{ "aria-current": "page" }}
-              >
-                Calendar
-              </Link>
-            </RouteNavItem>
-            <RouteNavItem asChild>
-              <Link
-                to={ROUTES.workspaces.teams.wiki.path}
-                params={{ orgSlug, workspaceSlug, teamSlug }}
-                activeProps={{ "aria-current": "page" }}
-              >
-                Wiki
-              </Link>
-            </RouteNavItem>
-            <RouteNavItem asChild>
-              <Link
-                to={ROUTES.workspaces.teams.settings.path}
-                params={{ orgSlug, workspaceSlug, teamSlug }}
-                activeProps={{ "aria-current": "page" }}
-              >
-                Settings
-              </Link>
-            </RouteNavItem>
-          </RouteNav>
-        </PageControls>
+          <PageControls padding="sm" spacing="stack">
+            <RouteNav aria-label="Team sections">
+              <RouteNavItem asChild>
+                <Link
+                  to={ROUTES.workspaces.teams.detail.path}
+                  params={{ orgSlug, workspaceSlug, teamSlug }}
+                  activeOptions={{ exact: true }}
+                  activeProps={{ "aria-current": "page" }}
+                >
+                  Projects
+                </Link>
+              </RouteNavItem>
+              <RouteNavItem asChild>
+                <Link
+                  to={ROUTES.workspaces.teams.calendar.path}
+                  params={{ orgSlug, workspaceSlug, teamSlug }}
+                  activeProps={{ "aria-current": "page" }}
+                >
+                  Calendar
+                </Link>
+              </RouteNavItem>
+              <RouteNavItem asChild>
+                <Link
+                  to={ROUTES.workspaces.teams.wiki.path}
+                  params={{ orgSlug, workspaceSlug, teamSlug }}
+                  activeProps={{ "aria-current": "page" }}
+                >
+                  Wiki
+                </Link>
+              </RouteNavItem>
+              <RouteNavItem asChild>
+                <Link
+                  to={ROUTES.workspaces.teams.settings.path}
+                  params={{ orgSlug, workspaceSlug, teamSlug }}
+                  activeProps={{ "aria-current": "page" }}
+                >
+                  Settings
+                </Link>
+              </RouteNavItem>
+            </RouteNav>
+          </PageControls>
 
-        <Outlet />
-      </PageStack>
-    </PageLayout>
+          <Outlet />
+        </PageStack>
+      </PageLayout>
+    </TeamLayoutContext.Provider>
   );
 }

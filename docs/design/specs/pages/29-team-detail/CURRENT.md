@@ -112,7 +112,7 @@ The team detail page is the working surface for a single team within a workspace
 |---|---------|------|----------|
 | ~~1~~ | ~~Settings tab is a static "Coming Soon" placeholder~~ **Fixed** — general settings (name, description, privacy), member management (roles, removal), and danger zone (delete team) | functionality | ~~HIGH~~ |
 | 2 | The "Projects" tab label in RouteNav does not match the actual content (it redirects to the board, not a project list) | naming | MEDIUM |
-| 3 | Each child route independently resolves workspace + team, creating duplicate queries (same issue as workspace-detail) | performance | MEDIUM |
+| ~~3~~ | ~~Duplicate workspace+team queries in child routes~~ **Fixed** — TeamLayoutContext provides teamId/workspaceId from parent; board/calendar/wiki/settings use useTeamLayout() | ~~performance~~ | ~~MEDIUM~~ |
 | 4 | Index route uses `useEffect` redirect instead of TanStack Router `redirect` | architecture | LOW |
 | 5 | Wiki page shares identical card markup with workspace wiki -- should be a shared component | code duplication | MEDIUM |
 | 6 | Board route loads workspace + team just to pass `team._id` to KanbanBoard; team ID could come from layout context | efficiency | LOW |

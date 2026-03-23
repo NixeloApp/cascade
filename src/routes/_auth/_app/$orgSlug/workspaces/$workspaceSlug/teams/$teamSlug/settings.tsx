@@ -23,6 +23,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
+import { useTeamLayout } from "./route";
 
 export const Route = createFileRoute(
   "/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings",
@@ -31,26 +32,14 @@ export const Route = createFileRoute(
 });
 
 function TeamSettings() {
-  const { organizationId, orgSlug } = useOrganization();
-  const { workspaceSlug, teamSlug } = Route.useParams();
+  const { orgSlug } = useOrganization();
+  const { teamId, workspaceSlug } = useTeamLayout();
   const navigate = useNavigate();
 
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
-    organizationId,
-    slug: workspaceSlug,
-  });
+  const team = useAuthenticatedQuery(api.teams.getTeam, { teamId });
+  const members = useAuthenticatedQuery(api.teams.getTeamMembers, { teamId });
 
-  const team = useAuthenticatedQuery(
-    api.teams.getBySlug,
-    workspace?._id ? { workspaceId: workspace._id, slug: teamSlug } : "skip",
-  );
-
-  const members = useAuthenticatedQuery(
-    api.teams.getTeamMembers,
-    team?._id ? { teamId: team._id } : "skip",
-  );
-
-  if (workspace === undefined || team === undefined) {
+  if (team === undefined) {
     return (
       <Flex align="center" justify="center" className="min-h-content-block">
         <LoadingSpinner />
@@ -58,7 +47,7 @@ function TeamSettings() {
     );
   }
 
-  if (!(workspace && team)) {
+  if (!team) {
     return <Typography variant="h3">Team not found</Typography>;
   }
 
