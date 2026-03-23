@@ -130,7 +130,7 @@ export function TeamLayout() {
                   activeOptions={{ exact: true }}
                   activeProps={{ "aria-current": "page" }}
                 >
-                  Projects
+                  Board
                 </Link>
               </RouteNavItem>
               <RouteNavItem asChild>

@@ -77,7 +77,7 @@ describe("TeamLayout", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Delivery" })).toBeInTheDocument();
     expect(screen.getByText("Core product team")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Team sections" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Projects" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Board" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
     expect(screen.getByText("Team content")).toBeInTheDocument();
 
