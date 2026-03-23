@@ -29,7 +29,7 @@
 |------|--------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (product design) |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
-| ~28 MEDIUM page spec issues | Invoice UX, visual polish (6 fixed: clients + workspace card extractions, wiki grid dedup, tab label fix, AI slop cleanup) |
+| ~27 MEDIUM page spec issues | Invoice UX, visual polish (7 fixed: clients + workspace card extractions, wiki grid dedup, tab label fix, auth hydration cleanup, AI slop) |
 
 ---
 
@@ -47,7 +47,7 @@
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | HIGH severity issues | 1 remaining (meeting-to-doc) |
-| MEDIUM severity issues | ~28 remaining |
+| MEDIUM severity issues | ~27 remaining |
 
 ### Consistency Scorecard
 

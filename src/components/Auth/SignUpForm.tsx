@@ -87,16 +87,12 @@ function SignUpVerificationStep({
 }
 
 function SignUpEmailButton({
-  formReady,
-  hydrated,
   password,
   showEmailForm,
   submitting,
   setPassword,
   handleShowEmailForm,
 }: {
-  formReady: boolean;
-  hydrated: boolean;
   password: string;
   showEmailForm: boolean;
   submitting: boolean;
@@ -117,7 +113,6 @@ function SignUpEmailButton({
             type="email"
             name="email"
             placeholder="Email"
-            required={formReady}
             className="transition-default"
             data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
           />
@@ -126,7 +121,6 @@ function SignUpEmailButton({
             name="password"
             placeholder="Password"
             minLength={8}
-            required={formReady}
             className="transition-default"
             data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
             value={password}
@@ -147,7 +141,6 @@ function SignUpEmailButton({
         variant={showEmailForm ? "primary" : "secondary"}
         size="lg"
         className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
-        disabled={!hydrated}
         isLoading={showEmailForm && submitting}
         leftIcon={!showEmailForm ? <Icon icon={Mail} size="md" /> : undefined}
         data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
@@ -169,13 +162,6 @@ export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
   const [password, setPassword] = useState("");
   const [showVerification, setShowVerification] = useState(Boolean(initialVerificationEmail));
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [formReady, setFormReady] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  // Set hydrated on mount
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
 
   useEffect(() => {
     if (!initialVerificationEmail) {
@@ -188,8 +174,6 @@ export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
 
   const handleShowEmailForm = () => {
     setShowEmailForm(true);
-    // Use microtask to ensure fields are rendered
-    void Promise.resolve().then(() => setFormReady(true));
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -200,7 +184,18 @@ export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
       return;
     }
 
-    if (!formReady) return;
+    // Validate inputs (replaces browser-native required attribute)
+    const formData = new FormData(e.currentTarget);
+    const formEmail = (formData.get("email") as string)?.trim();
+    const formPassword = formData.get("password") as string;
+    if (!formEmail || !formPassword) {
+      showError("Please enter both email and password.");
+      return;
+    }
+    if (formPassword.length < 8) {
+      showError("Password must be at least 8 characters.");
+      return;
+    }
 
     void submitPasswordSignUp({
       event: e,
@@ -226,15 +221,12 @@ export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
       <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign up with Google" />
       <AuthMethodDivider />
       <form onSubmit={handleSubmit} data-testid={TEST_IDS.AUTH.FORM}>
-        {hydrated ? (
-          <span data-testid={TEST_IDS.AUTH.FORM_HYDRATED} hidden aria-hidden="true" />
-        ) : null}
-        {formReady ? (
+        {/* E2E readiness markers — always present in SPA (no SSR hydration delay) */}
+        <span data-testid={TEST_IDS.AUTH.FORM_HYDRATED} hidden aria-hidden="true" />
+        {showEmailForm ? (
           <span data-testid={TEST_IDS.AUTH.FORM_READY} hidden aria-hidden="true" />
         ) : null}
         <SignUpEmailButton
-          formReady={formReady}
-          hydrated={hydrated}
           password={password}
           showEmailForm={showEmailForm}
           submitting={submitting}

@@ -120,7 +120,7 @@ The authentication pages handle user sign-in and sign-up with email/password and
 | 2 | The progressive disclosure animation uses `max-h-48` / `max-h-64` arbitrary values for expand/collapse | styling | LOW |
 | 3 | SSO discovery fires a query on every keystroke as the user types their email domain | performance | LOW |
 | 4 | The AuthShowcasePanel left-column content (Capture/Coordinate/Deliver rail points) is static marketing copy that may not match the current product | content | LOW |
-| 5 | Both sign-in and sign-up forms use a complex `hydrated` + `formReady` two-phase approach to handle SSR/CSR timing -- this is fragile | architecture | MEDIUM |
+| ~~5~~ | ~~Fragile hydrated + formReady two-phase approach~~ **Fixed** — removed both states and microtask scheduling. FORM_HYDRATED always renders (SPA, no SSR). FORM_READY renders when email form is visible (synchronous). Validation moved to submit handler. | ~~architecture~~ | ~~MEDIUM~~ |
 | 6 | Error messages from `submitPasswordSignIn` are generic ("Could not sign in. Please check your credentials.") -- no specific guidance for common failures | UX | LOW |
 | 7 | The `ssr: false` route option disables server-side rendering entirely for auth pages | performance | LOW |
 
