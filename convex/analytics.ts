@@ -622,8 +622,11 @@ export const getRecentActivity = projectQuery({
  * Uses per-project index-based counting (no bulk issue loading).
  */
 export const getOrgAnalytics = authenticatedQuery({
-  args: { organizationId: v.id("organizations") },
-  handler: async (ctx, { organizationId }) => {
+  args: {
+    organizationId: v.id("organizations"),
+    sinceDate: v.optional(v.number()),
+  },
+  handler: async (ctx, { organizationId, sinceDate }) => {
     const isMember = await isOrganizationMember(ctx, organizationId, ctx.userId);
     if (!isMember) throw new Error("Not a member of this organization");
 
@@ -652,6 +655,8 @@ export const getOrgAnalytics = authenticatedQuery({
     const issueTypes = ["task", "bug", "story", "epic", "subtask"] as const;
     const priorities = ["lowest", "low", "medium", "high", "highest"] as const;
 
+    // Helper: count issues with optional date filter
+    // When sinceDate is set, uses .take() + .length since .filter() changes the type
     const perProject = await Promise.all(
       projects.map(async (project) => {
         const pid = project._id;
@@ -659,7 +664,40 @@ export const getOrgAnalytics = authenticatedQuery({
           project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
         );
 
-        // Parallel index counts for this project
+        // When date filtering, load all project issues once and count in memory
+        // (more efficient than N separate filtered queries)
+        if (sinceDate) {
+          const issues = await ctx.db
+            .query("issues")
+            .withIndex("by_project_deleted", (q) => q.eq("projectId", pid).lt("isDeleted", true))
+            .filter((q) => q.gte(q.field("_creationTime"), sinceDate))
+            .take(MAX_SPRINT_ISSUES);
+
+          let unassigned = 0;
+          const typeCounts: Record<string, number> = {};
+          const priorityCounts: Record<string, number> = {};
+          let completed = 0;
+
+          for (const issue of issues) {
+            if (!issue.assigneeId) unassigned++;
+            typeCounts[issue.type] = (typeCounts[issue.type] ?? 0) + 1;
+            priorityCounts[issue.priority] = (priorityCounts[issue.priority] ?? 0) + 1;
+            if (doneStateIds.has(issue.status)) completed++;
+          }
+
+          return {
+            projectId: pid,
+            name: project.name,
+            key: project.key,
+            total: issues.length,
+            unassigned,
+            completed,
+            types: Object.fromEntries(issueTypes.map((t) => [t, typeCounts[t] ?? 0])),
+            priorities: Object.fromEntries(priorities.map((p) => [p, priorityCounts[p] ?? 0])),
+          };
+        }
+
+        // All-time path: use efficient index counting (no date filter)
         const [total, unassigned, typeEntries, priorityEntries, doneEntries] = await Promise.all([
           efficientCount(
             ctx.db
@@ -707,7 +745,6 @@ export const getOrgAnalytics = authenticatedQuery({
                 ] as const,
             ),
           ),
-          // Count completed: sum across done workflow states
           Promise.all(
             [...doneStateIds].map(async (stateId) =>
               efficientCount(

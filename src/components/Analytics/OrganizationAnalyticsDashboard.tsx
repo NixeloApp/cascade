@@ -47,6 +47,7 @@ export interface OrganizationAnalyticsData {
 
 interface OrganizationAnalyticsDashboardProps {
   analytics: OrganizationAnalyticsData;
+  headerActions?: React.ReactNode;
 }
 
 function ProjectBreakdownSection({
@@ -85,7 +86,10 @@ function ProjectBreakdownSection({
 }
 
 /** Organization-wide analytics dashboard aligned to the shared analytics shell. */
-export function OrganizationAnalyticsDashboard({ analytics }: OrganizationAnalyticsDashboardProps) {
+export function OrganizationAnalyticsDashboard({
+  analytics,
+  headerActions,
+}: OrganizationAnalyticsDashboardProps) {
   const typeChartData = [
     { label: "Task", value: analytics.issuesByType.task },
     { label: "Bug", value: analytics.issuesByType.bug },
@@ -114,6 +118,7 @@ export function OrganizationAnalyticsDashboard({ analytics }: OrganizationAnalyt
           title="Analytics"
           description="Organization-wide issue metrics and project health."
           spacing="stack"
+          actions={headerActions}
         />
 
         {analytics.isProjectsTruncated ? (
