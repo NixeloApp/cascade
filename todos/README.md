@@ -10,7 +10,7 @@
 
 **Goal: every baseline at 0, every inline exemption list empty.**
 
-#### CI Baselines (10 with debt, 8 already clean)
+#### CI Baselines (7 with debt, 12 already clean)
 
 | Baseline | Current | What it tracks |
 |----------|---------|----------------|
@@ -21,9 +21,7 @@
 | oversized-cva-variant-axis | 8 axes over limit | CVA variants with too many options (Card has 227 recipes!) |
 | e2e-quality (UNSCOPED_FIRST) | 50 | E2E selectors using .first() without scoping |
 | global-css-page-class | 3 selectors | Page-specific CSS that should be component-scoped |
-| e2e-hard-rules | 7 timeouts + 1 sleep | Hardcoded waits in screenshot tooling |
-
-Already clean: e2e-catch-swallows, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
+Already clean (12): e2e-catch-swallows, e2e-hard-rules, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
 
 #### Inline Exemptions in Validators
 
@@ -64,7 +62,7 @@ Already clean: e2e-catch-swallows, feature-class-string-style-bundle-penalty, fe
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| CI baselines with debt | 10 of 18 |
+| CI baselines with debt | 7 of 18 |
 | Inline exemption lists | 3 validators |
 | Unit tests | 4472 pass |
 | E2E tests | 164 pass |

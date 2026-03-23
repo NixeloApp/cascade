@@ -844,20 +844,23 @@ async function waitForDuplicateDetectionSearchReady(
   query: string,
   timeoutMs = 30000,
 ): Promise<void> {
-  const startedAt = Date.now();
-
-  while (Date.now() - startedAt < timeoutMs) {
-    const result = await testUserService.checkProjectIssueDuplicates(orgSlug, projectKey, query);
-    if (result.success && (result.matchCount ?? 0) > 0) {
-      return;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-
-  throw new Error(
-    `Duplicate search not ready for ${projectKey} in ${orgSlug} after ${timeoutMs}ms`,
-  );
+  await expect
+    .poll(
+      async () => {
+        const result = await testUserService.checkProjectIssueDuplicates(
+          orgSlug,
+          projectKey,
+          query,
+        );
+        return result.success && (result.matchCount ?? 0) > 0;
+      },
+      {
+        timeout: timeoutMs,
+        intervals: [1000, 2000, 3000],
+        message: `Duplicate search not ready for ${projectKey} in ${orgSlug}`,
+      },
+    )
+    .toBe(true);
 }
 
 function isCrashLikeError(message: string): boolean {
