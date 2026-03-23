@@ -45,8 +45,16 @@ export interface OrganizationAnalyticsData {
   isProjectsTruncated: boolean;
 }
 
+interface TrendData {
+  currentPeriod: { created: number; completed: number };
+  previousPeriod: { created: number; completed: number };
+  createdChange: number;
+  completedChange: number;
+}
+
 interface OrganizationAnalyticsDashboardProps {
   analytics: OrganizationAnalyticsData;
+  trend?: TrendData;
   headerActions?: React.ReactNode;
 }
 
@@ -86,8 +94,51 @@ function ProjectBreakdownSection({
 }
 
 /** Organization-wide analytics dashboard aligned to the shared analytics shell. */
+function TrendSection({ trend }: { trend: TrendData }) {
+  const formatChange = (change: number) => {
+    if (change > 0) return `+${change}%`;
+    if (change < 0) return `${change}%`;
+    return "0%";
+  };
+
+  return (
+    <AnalyticsSection title="Period Comparison" description="Current period vs previous period.">
+      <Grid cols={2} colsMd={4} gap="lg">
+        <MetricCard
+          title="Created (current)"
+          value={trend.currentPeriod.created}
+          icon={TrendingUp}
+          testId="trend-created-current"
+        />
+        <MetricCard
+          title="Created (previous)"
+          value={trend.previousPeriod.created}
+          subtitle={formatChange(trend.createdChange)}
+          icon={TrendingUp}
+          testId="trend-created-previous"
+        />
+        <MetricCard
+          title="Completed (current)"
+          value={trend.currentPeriod.completed}
+          icon={CheckCircle}
+          testId="trend-completed-current"
+        />
+        <MetricCard
+          title="Completed (previous)"
+          value={trend.previousPeriod.completed}
+          subtitle={formatChange(trend.completedChange)}
+          icon={CheckCircle}
+          testId="trend-completed-previous"
+        />
+      </Grid>
+    </AnalyticsSection>
+  );
+}
+
+/** Organization-wide analytics dashboard with metrics, charts, trends, and project breakdown. */
 export function OrganizationAnalyticsDashboard({
   analytics,
+  trend,
   headerActions,
 }: OrganizationAnalyticsDashboardProps) {
   const typeChartData = [
@@ -159,6 +210,8 @@ export function OrganizationAnalyticsDashboard({
             <BarChart data={projectChartData} color="bg-accent" />
           </ChartCard>
         ) : null}
+
+        {trend && <TrendSection trend={trend} />}
 
         <ProjectBreakdownSection projectBreakdown={analytics.projectBreakdown} />
       </PageStack>

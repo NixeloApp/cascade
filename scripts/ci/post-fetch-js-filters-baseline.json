@@ -1,7 +1,7 @@
 {
   "postFetchJsFiltersByFile": {
     "convex/ai/queries.ts": 3,
-    "convex/analytics.ts": 1,
+    "convex/analytics.ts": 2,
     "convex/apiKeys.ts": 2,
     "convex/automationRules.ts": 1,
     "convex/calendarEvents.ts": 2,

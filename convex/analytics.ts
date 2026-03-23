@@ -815,6 +815,91 @@ export const getOrgAnalytics = authenticatedQuery({
 });
 
 /**
+ * Period-over-period trend comparison for org analytics.
+ * Compares issue counts between current period and previous period
+ * (e.g., this week vs last week, this month vs last month).
+ */
+export const getOrgAnalyticsTrend = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    periodDays: v.number(), // e.g., 7 for weekly, 30 for monthly
+  },
+  returns: v.object({
+    currentPeriod: v.object({
+      created: v.number(),
+      completed: v.number(),
+    }),
+    previousPeriod: v.object({
+      created: v.number(),
+      completed: v.number(),
+    }),
+    createdChange: v.number(), // percentage change
+    completedChange: v.number(), // percentage change
+  }),
+  handler: async (ctx, { organizationId, periodDays }) => {
+    const isMember = await isOrganizationMember(ctx, organizationId, ctx.userId);
+    if (!isMember) throw new Error("Not a member of this organization");
+
+    const now = Date.now();
+    const periodMs = periodDays * DAY;
+    const currentStart = now - periodMs;
+    const previousStart = currentStart - periodMs;
+
+    // Get accessible projects
+    const orgProjects = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+      .take(MAX_PAGE_SIZE);
+    const projects = orgProjects.filter((p) => !p.isDeleted);
+
+    // Count issues created and completed in each period
+    let currentCreated = 0;
+    let currentCompleted = 0;
+    let previousCreated = 0;
+    let previousCompleted = 0;
+
+    await Promise.all(
+      projects.map(async (project) => {
+        const doneStateIds = new Set(
+          project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
+        );
+
+        // Fetch recent issues (both periods)
+        const issues = await ctx.db
+          .query("issues")
+          .withIndex("by_project_deleted", (q) =>
+            q.eq("projectId", project._id).lt("isDeleted", true),
+          )
+          .filter((q) => q.gte(q.field("_creationTime"), previousStart))
+          .take(MAX_PAGE_SIZE);
+
+        for (const issue of issues) {
+          if (issue._creationTime >= currentStart) {
+            currentCreated++;
+            if (doneStateIds.has(issue.status)) currentCompleted++;
+          } else if (issue._creationTime >= previousStart) {
+            previousCreated++;
+            if (doneStateIds.has(issue.status)) previousCompleted++;
+          }
+        }
+      }),
+    );
+
+    const pctChange = (current: number, previous: number) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    return {
+      currentPeriod: { created: currentCreated, completed: currentCompleted },
+      previousPeriod: { created: previousCreated, completed: previousCompleted },
+      createdChange: pctChange(currentCreated, previousCreated),
+      completedChange: pctChange(currentCompleted, previousCompleted),
+    };
+  },
+});
+
+/**
  * Get cycle time and lead time stats for a project.
  *
  * Cycle time: median time from first "inprogress" status to "done" status.

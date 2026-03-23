@@ -72,7 +72,7 @@ The org analytics dashboard provides a high-level view of issue metrics, project
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | ~~1~~ | ~~No date range filtering~~ **Fixed** — time period selector (7d/30d/90d/all) filters all issue counts server-side via `sinceDate` parameter | ~~functionality~~ | ~~MEDIUM~~ |
-| 2 | No trend data or historical comparison (e.g., issues created this week vs last week) | functionality | MEDIUM |
+| ~~2~~ | ~~No trend data~~ **Fixed** — `getOrgAnalyticsTrend` compares current vs previous period (created/completed counts with % change) | ~~functionality~~ | ~~MEDIUM~~ |
 | 3 | Bar charts are custom `BarChart` components without tooltips or hover states | interactivity | LOW |
 | 4 | Project breakdown section has no link to individual projects | navigation | LOW |
 | 5 | The route is extremely thin (21 lines) with all layout in the dashboard component, creating an inconsistency with other routes that own their `PageLayout` | architecture | LOW |

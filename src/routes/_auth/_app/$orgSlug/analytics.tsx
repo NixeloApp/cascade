@@ -28,29 +28,32 @@ const TIME_PERIODS: { value: TimePeriod; label: string }[] = [
   { value: "all", label: "All time" },
 ];
 
+const PERIOD_DAYS: Record<TimePeriod, number | undefined> = {
+  "7d": 7,
+  "30d": 30,
+  "90d": 90,
+  all: undefined,
+};
+
 function getSinceDate(period: TimePeriod): number | undefined {
-  const now = Date.now();
-  switch (period) {
-    case "7d":
-      return now - 7 * DAY;
-    case "30d":
-      return now - 30 * DAY;
-    case "90d":
-      return now - 90 * DAY;
-    default:
-      return undefined;
-  }
+  const days = PERIOD_DAYS[period];
+  return days ? Date.now() - days * DAY : undefined;
 }
 
 function AnalyticsPage() {
   const { organizationId } = useOrganization();
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>("all");
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("30d");
 
   const sinceDate = getSinceDate(timePeriod);
+  const periodDays = PERIOD_DAYS[timePeriod];
   const analytics = useAuthenticatedQuery(api.analytics.getOrgAnalytics, {
     organizationId,
     sinceDate,
   });
+  const trend = useAuthenticatedQuery(
+    api.analytics.getOrgAnalyticsTrend,
+    periodDays ? { organizationId, periodDays } : "skip",
+  );
 
   if (analytics === undefined) {
     return <PageContent isLoading>{null}</PageContent>;
@@ -59,6 +62,7 @@ function AnalyticsPage() {
   return (
     <OrganizationAnalyticsDashboard
       analytics={analytics}
+      trend={trend ?? undefined}
       headerActions={
         <Flex align="center" gap="sm">
           <Select value={timePeriod} onValueChange={(v) => setTimePeriod(v as TimePeriod)}>
