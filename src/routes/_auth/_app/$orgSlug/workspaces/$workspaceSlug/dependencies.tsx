@@ -61,7 +61,7 @@ function WorkspaceDependenciesPage() {
       ].sort()
     : [];
 
-  if (workspace === undefined || workspaceTeams === undefined || dependencies === undefined) {
+  if (workspace === undefined) {
     return <PageContent isLoading>{null}</PageContent>;
   }
 
@@ -72,6 +72,10 @@ function WorkspaceDependenciesPage() {
         message={`The workspace "${workspaceSlug}" doesn't exist or you don't have access to it.`}
       />
     );
+  }
+
+  if (workspaceTeams === undefined || dependencies === undefined) {
+    return <PageContent isLoading>{null}</PageContent>;
   }
 
   if (dependencies.length === 0) {

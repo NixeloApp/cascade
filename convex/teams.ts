@@ -616,6 +616,14 @@ export const getOrganizationTeams = organizationQuery({
   handler: async (ctx, args) => {
     // organizationQuery handles auth + org membership check
 
+    // Verify workspace belongs to this organization if provided
+    if (args.workspaceId) {
+      const workspace = await ctx.db.get(args.workspaceId);
+      if (!workspace || workspace.organizationId !== ctx.organizationId) {
+        return [];
+      }
+    }
+
     const teams = args.workspaceId
       ? await ctx.db
           .query("teams")

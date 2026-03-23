@@ -33,7 +33,7 @@ function WorkspaceCalendarPage() {
     workspace ? { organizationId, workspaceId: workspace._id } : "skip",
   );
 
-  if (workspace === undefined || workspaceTeams === undefined) {
+  if (workspace === undefined) {
     return <PageContent isLoading>{null}</PageContent>;
   }
 
@@ -65,7 +65,7 @@ function WorkspaceCalendarPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All teams</SelectItem>
-            {workspaceTeams.map((team) => (
+            {(workspaceTeams ?? []).map((team) => (
               <SelectItem key={team._id} value={team._id}>
                 {team.name}
               </SelectItem>

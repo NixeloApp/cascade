@@ -60,7 +60,7 @@ export function run() {
             reportError(
               filePath,
               opening,
-              `Card inside Card is banned. Use InsetPanel or a div for inner surfaces.`,
+              `Card inside Card is banned. Use CardSection or a div for inner surfaces.`,
             );
           }
 
@@ -80,7 +80,7 @@ export function run() {
           reportError(
             filePath,
             node,
-            `Card inside Card is banned. Use InsetPanel or a div for inner surfaces.`,
+            `Card inside Card is banned. Use CardSection or a div for inner surfaces.`,
           );
         }
       }

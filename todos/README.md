@@ -8,9 +8,9 @@
 
 ### Phase 0: Zero Validator Exceptions
 
-**Goal: every baseline at 0, every inline exemption list empty.**
+**Goal: reduce all baselines toward 0. Some (oversized CVA, legitimate client filters) are at their architectural floor.**
 
-#### CI Baselines (6 with debt, 13 already clean)
+#### CI Baselines (6 with debt, 12 already clean)
 
 | Baseline | Current | Status |
 |----------|---------|--------|
@@ -21,7 +21,7 @@
 | multi-filter-query-results | 9 / 8 files | Union of post-fetch + client. Tracks with above. |
 | oversized-cva-variant-axis | 8 axes | Architectural — primitive UI components legitimately large |
 
-Already clean (13): e2e-catch-swallows, e2e-hard-rules, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, global-css-page-class, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
+Already clean (12): e2e-catch-swallows, e2e-hard-rules, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, global-css-page-class, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
 
 #### Inline Exemptions in Validators
 
@@ -62,7 +62,7 @@ Already clean (13): e2e-catch-swallows, e2e-hard-rules, feature-class-string-sty
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| CI baselines clean | 13 of 18 (was 8) |
+| CI baselines clean | 12 of 18 (was 8) |
 | Unit tests | 4471 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
