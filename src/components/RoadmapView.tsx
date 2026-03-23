@@ -132,6 +132,7 @@ import {
   getRoadmapDateBadgeLabel,
   getRoadmapStatusLabel,
   getRoadmapSubtaskCaption,
+  getStickyHeaderColumnClassName,
   getStickyIssueColumnClassName,
   getSummaryCompletionLabel,
   getSummaryCompletionPercentage,
@@ -303,7 +304,7 @@ function RoadmapTimelineContainer({
                   <Flex>
                     <FlexItem
                       shrink={false}
-                      className="sticky left-0 z-30 w-sidebar shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4"
+                      className={getStickyHeaderColumnClassName()}
                       data-testid={TEST_IDS.ROADMAP.ISSUE_HEADER}
                     >
                       <Typography variant="label">Issue</Typography>

@@ -20,6 +20,7 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Progress } from "../ui/Progress";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import type {
   GroupBy,
@@ -41,6 +42,7 @@ import {
   getRoadmapDateBadgeLabel,
   getRoadmapStatusLabel,
   getRoadmapSubtaskCaption,
+  getStickyGroupColumnClassName,
   getStickyIssueColumnClassName,
   getSummaryCompletionLabel,
   getSummaryCompletionPercentage,
@@ -72,7 +74,7 @@ export function RoadmapTimelineBar({
   if (isMilestone) {
     return (
       <div
-        className="absolute h-6"
+        className="absolute h-roadmap-bar"
         style={{
           left: `${left}%`,
           width: `${width}%`,
@@ -104,7 +106,7 @@ export function RoadmapTimelineBar({
     <div
       className={cn(
         getCardRecipeClassName(isActive ? "roadmapTimelineBarActive" : "roadmapTimelineBar"),
-        "group absolute h-6",
+        "group absolute h-roadmap-bar",
         getPriorityColor(issue.priority, "bg"),
       )}
       style={{
@@ -121,7 +123,7 @@ export function RoadmapTimelineBar({
             onMouseDown={(e) => onResizeStart(e, issue._id, "left", issue.startDate, issue.dueDate)}
             title="Drag to change start date"
           >
-            <div className="h-3 w-0.5 bg-ui-text-tertiary" />
+            <div className="h-roadmap-grip w-roadmap-grip bg-ui-text-tertiary" />
           </Button>
         ) : null}
 
@@ -151,7 +153,7 @@ export function RoadmapTimelineBar({
             }
             title="Drag to change due date"
           >
-            <div className="h-3 w-0.5 bg-ui-text-tertiary" />
+            <div className="h-roadmap-grip w-roadmap-grip bg-ui-text-tertiary" />
           </Button>
         ) : null}
       </Flex>
@@ -184,10 +186,7 @@ export function RoadmapGroupRow({
       data-testid={`roadmap-group-${group.key}`}
     >
       <Flex align="center">
-        <FlexItem
-          flex="none"
-          className="sticky left-0 z-20 w-sidebar border-r border-ui-border/70 bg-ui-bg-secondary/80 pr-4"
-        >
+        <FlexItem flex="none" className={getStickyGroupColumnClassName()}>
           <Flex align="center" justify="between" className="h-full">
             <Flex align="center" gap="sm">
               <Icon
@@ -213,12 +212,12 @@ export function RoadmapGroupRow({
           </Flex>
         </FlexItem>
 
-        <FlexItem flex="1" className="relative h-8">
+        <FlexItem flex="1" className="relative h-roadmap-row">
           {group.startDate !== undefined && epicSummaryDueDate !== undefined ? (
             <div
               className={cn(
                 getCardRecipeClassName("roadmapTimelineBar"),
-                "absolute top-2 h-4 border border-accent-border bg-accent-subtle text-accent-active opacity-90",
+                "absolute top-2 h-roadmap-summary border border-accent-border bg-accent-subtle px-2 text-accent-active opacity-90",
               )}
               style={{
                 left: `${getBarLeft(group.startDate, epicSummaryDueDate, getPositionOnTimeline)}%`,
@@ -230,7 +229,7 @@ export function RoadmapGroupRow({
                 className="absolute inset-y-0 left-0 rounded-full bg-accent-active/20"
                 style={{ width: `${epicCompletionPercentage}%` }}
               />
-              <Flex align="center" justify="center" className="h-full px-2">
+              <Flex align="center" justify="center" className="h-full">
                 <Typography variant="caption" className="relative truncate">
                   {group.value}
                 </Typography>
@@ -276,12 +275,12 @@ export function RoadmapIssueIdentity({
       {isNestedSubtask ? (
         <>
           <div className="absolute top-1 bottom-3 left-2 w-px bg-ui-border/80" />
-          <div className="absolute top-4 left-2 h-px w-3 bg-ui-border/80" />
+          <div className="absolute top-4 left-2 h-px w-roadmap-tree-connector bg-ui-border/80" />
         </>
       ) : null}
 
-      <div className={cn(isNestedSubtask && "pl-6")}>
-        <Flex align="center" gap="sm" className="mb-1">
+      <Stack gap="xs" className={cn(isNestedSubtask && "pl-roadmap-subtask-indent")}>
+        <Flex align="center" gap="sm">
           {hasChildren ? (
             <Button
               type="button"
@@ -314,7 +313,7 @@ export function RoadmapIssueIdentity({
         <Typography variant="caption" className="truncate">
           {issue.title}
         </Typography>
-        <Flex align="center" gap="xs" wrap className="mt-2">
+        <Flex align="center" gap="xs" wrap>
           <Badge shape="pill" statusTone={getStatusBadgeTone(issue.status)}>
             {statusLabel}
           </Badge>
@@ -330,7 +329,7 @@ export function RoadmapIssueIdentity({
             </Badge>
           ) : null}
         </Flex>
-      </div>
+      </Stack>
     </div>
   );
 }
@@ -350,7 +349,7 @@ export function RoadmapSummaryBar({
     <div
       className={cn(
         getCardRecipeClassName("roadmapTimelineBar"),
-        "absolute top-2 h-4 border border-accent-border bg-accent-subtle text-accent-active opacity-90",
+        "absolute top-2 h-roadmap-summary border border-accent-border bg-accent-subtle px-2 text-accent-active opacity-90",
       )}
       style={{
         left: `${getBarLeft(startDate, dueDate, getPositionOnTimeline)}%`,
@@ -362,7 +361,7 @@ export function RoadmapSummaryBar({
         className="absolute inset-y-0 left-0 rounded-full bg-accent-active/20"
         style={{ width: `${completionPercentage}%` }}
       />
-      <Flex align="center" justify="center" className="h-full px-2">
+      <Flex align="center" justify="center" className="h-full">
         <Typography variant="caption" className="relative truncate">
           Rollup
         </Typography>
@@ -427,7 +426,7 @@ export function RoadmapIssueRow({
           />
         </FlexItem>
 
-        <FlexItem flex="1" className="relative h-8" ref={timelineRef}>
+        <FlexItem flex="1" className="relative h-roadmap-row" ref={timelineRef}>
           {issue.dueDate ? (
             <RoadmapTimelineBar
               canEdit={canEdit}

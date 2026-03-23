@@ -676,6 +676,14 @@ export function getTimelineGroupBadgeTone(group: TimelineGroup) {
   return { statusTone: "neutral" } as const;
 }
 
+export function getStickyHeaderColumnClassName() {
+  return "sticky left-0 z-30 w-sidebar shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4";
+}
+
+export function getStickyGroupColumnClassName() {
+  return "sticky left-0 z-20 w-sidebar border-r border-ui-border/70 bg-ui-bg-secondary/80 pr-4";
+}
+
 export function getStickyIssueColumnClassName(selected: boolean) {
   return cn(
     "sticky left-0 z-20 w-sidebar shrink-0 border-r border-ui-border/70 pr-4",

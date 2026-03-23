@@ -6,6 +6,7 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Skeleton } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
+import { getStickyGroupColumnClassName } from "./utils";
 
 /** Shimmer skeleton matching the roadmap layout while data loads. */
 export function RoadmapLoadingState() {
@@ -44,16 +45,16 @@ export function RoadmapLoadingState() {
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div key={i} className="border-b border-ui-border">
                   <Flex align="center">
-                    <FlexItem shrink={false} className="w-sidebar pr-4">
+                    <FlexItem shrink={false} className={getStickyGroupColumnClassName()}>
                       <Flex align="center" gap="sm">
                         <Skeleton className="size-4 rounded-full" />
                         <Skeleton className="h-4 w-16" />
                       </Flex>
                       <Skeleton className="h-3 w-32" />
                     </FlexItem>
-                    <FlexItem flex="1" className="relative h-8">
+                    <FlexItem flex="1" className="relative h-roadmap-row">
                       <div
-                        className="absolute h-6"
+                        className="absolute h-roadmap-bar"
                         style={{
                           left: `${(i * 13) % 70}%`,
                           width: `${10 + ((i * 3) % 10)}%`,
