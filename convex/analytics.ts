@@ -278,6 +278,144 @@ export const getSprintBurndown = sprintQuery({
 });
 
 /**
+ * Compare burndown curves across the last N completed sprints.
+ * Each sprint's progress is normalized to 0-100% of total days so
+ * sprints of different lengths can be overlaid on the same chart.
+ * Includes per-sprint velocity (completed points) for trend analysis.
+ */
+export const getSprintBurndownComparison = projectQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  returns: v.object({
+    sprints: v.array(
+      v.object({
+        sprintId: v.id("sprints"),
+        name: v.string(),
+        totalPoints: v.number(),
+        completedPoints: v.number(),
+        totalDays: v.number(),
+        /** Normalized burndown: progress at each 10% interval (0%, 10%, ... 100%) */
+        normalizedBurndown: v.array(
+          v.object({
+            percent: v.number(),
+            remainingRatio: v.number(),
+          }),
+        ),
+      }),
+    ),
+    averageCompletionRate: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const sprintLimit = clampLimit(args.limit, MAX_VELOCITY_SPRINTS);
+    const project = ctx.project;
+    if (!project) return { sprints: [], averageCompletionRate: 0 };
+
+    const doneStates = getDoneStates(project.workflowStates);
+
+    // Fetch completed sprints with dates
+    const completedSprints = await ctx.db
+      .query("sprints")
+      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "completed"),
+          q.neq(q.field("startDate"), undefined),
+          q.neq(q.field("endDate"), undefined),
+        ),
+      )
+      .order("desc")
+      .take(sprintLimit);
+
+    if (completedSprints.length === 0) {
+      return { sprints: [], averageCompletionRate: 0 };
+    }
+
+    // Batch fetch issues and activity for all sprints
+    const sprintData = await Promise.all(
+      completedSprints.map(async (sprint) => {
+        const issues = await ctx.db
+          .query("issues")
+          .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
+          .filter(notDeleted)
+          .take(MAX_SPRINT_ISSUES);
+
+        // Get status change activities for done transitions
+        const doneTransitions = await Promise.all(
+          issues.map(async (issue) => {
+            if (!doneStates.has(issue.status)) return null;
+            const activities = await ctx.db
+              .query("issueActivity")
+              .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+              .filter((q) =>
+                q.and(q.eq(q.field("action"), "updated"), q.eq(q.field("field"), "status")),
+              )
+              .take(50);
+            // Find when it entered done
+            const doneActivity = [...activities]
+              .reverse()
+              .find((a) => a.newValue && doneStates.has(a.newValue));
+            return {
+              points: issue.storyPoints || issue.estimatedHours || 0,
+              doneAt: doneActivity?._creationTime ?? issue.updatedAt,
+            };
+          }),
+        );
+
+        let totalPoints = 0;
+        let completedPoints = 0;
+        for (const issue of issues) {
+          const pts = issue.storyPoints || issue.estimatedHours || 0;
+          totalPoints += pts;
+          if (doneStates.has(issue.status)) completedPoints += pts;
+        }
+
+        const startDate = sprint.startDate!;
+        const endDate = sprint.endDate!;
+        const totalDays = Math.max(1, Math.ceil((endDate - startDate) / DAY));
+
+        // Build normalized burndown: what % of points remained at each 10% time interval
+        const intervals = 11; // 0%, 10%, 20%, ... 100%
+        const normalizedBurndown: Array<{ percent: number; remainingRatio: number }> = [];
+
+        for (let i = 0; i < intervals; i++) {
+          const pct = i * 10;
+          const cutoffTime = startDate + (totalDays * DAY * pct) / 100;
+          // Count points completed by this time
+          let completedByTime = 0;
+          for (const t of doneTransitions) {
+            if (t && t.doneAt <= cutoffTime) completedByTime += t.points;
+          }
+          const remainingRatio =
+            totalPoints > 0 ? (totalPoints - completedByTime) / totalPoints : 1;
+          normalizedBurndown.push({ percent: pct, remainingRatio: Math.max(0, remainingRatio) });
+        }
+
+        return {
+          sprintId: sprint._id,
+          name: sprint.name,
+          totalPoints,
+          completedPoints,
+          totalDays,
+          normalizedBurndown,
+        };
+      }),
+    );
+
+    const totalCompletion = sprintData.reduce((sum, s) => {
+      return sum + (s.totalPoints > 0 ? s.completedPoints / s.totalPoints : 0);
+    }, 0);
+    const averageCompletionRate =
+      sprintData.length > 0 ? Math.round((totalCompletion / sprintData.length) * 100) : 0;
+
+    return {
+      sprints: sprintData.reverse(), // oldest first for chart
+      averageCompletionRate,
+    };
+  },
+});
+
+/**
  * Get sprint assignee breakdown
  * Shows workload distribution by assignee for a sprint
  */

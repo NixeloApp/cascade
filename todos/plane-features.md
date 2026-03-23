@@ -10,7 +10,7 @@ Remaining evaluation items. Core features (stickies, auto-archive, offline, vers
 
 ### Advanced Analytics
 
-- [ ] **Velocity trends** — project-level velocity, burndown comparison across sprints
+- [x] ~~**Velocity trends**~~ — **Shipped** (getSprintBurndownComparison query with normalized burndown curves and completion rates across sprints)
 - [x] ~~**Cycle/lead time depth**~~ — **Shipped** (getTimeMetricsBreakdown query with per-assignee and per-label grouping)
 
 ### Notification Channels

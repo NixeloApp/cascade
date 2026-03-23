@@ -764,6 +764,75 @@ describe("Analytics", () => {
     });
   });
 
+  describe("getSprintBurndownComparison", () => {
+    it("should return normalized burndown curves for completed sprints", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t, { name: "User" });
+      const projectId = await createTestProject(t, userId);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const project = await asUser.query(api.projects.getProject, { id: projectId });
+      const doneState = project?.workflowStates.find(
+        (s: { category: string }) => s.category === "done",
+      );
+
+      const now = Date.now();
+      // Create a completed sprint
+      const sprintId = await t.run(async (ctx) => {
+        return await ctx.db.insert("sprints", {
+          projectId,
+          name: "Sprint 1",
+          status: "completed",
+          startDate: now - 14 * 86400000,
+          endDate: now,
+          createdBy: userId,
+          updatedAt: now,
+        });
+      });
+
+      // Create issues in the sprint
+      const issue1 = await createTestIssue(t, projectId, userId, {
+        title: "Done issue",
+        sprintId,
+      });
+      await t.run(async (ctx) => {
+        await ctx.db.patch(issue1, {
+          status: doneState!.id,
+          storyPoints: 3,
+        });
+      });
+
+      const result = await asUser.query(api.analytics.getSprintBurndownComparison, {
+        projectId,
+      });
+
+      expect(result.sprints).toHaveLength(1);
+      expect(result.sprints[0].name).toBe("Sprint 1");
+      expect(result.sprints[0].totalPoints).toBe(3);
+      expect(result.sprints[0].completedPoints).toBe(3);
+      // Normalized burndown should have 11 intervals (0%, 10%, ... 100%)
+      expect(result.sprints[0].normalizedBurndown).toHaveLength(11);
+      // At 0%, all points should remain
+      expect(result.sprints[0].normalizedBurndown[0].remainingRatio).toBe(1);
+      expect(result.averageCompletionRate).toBe(100);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should return empty for projects with no completed sprints", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t, { name: "User" });
+      const projectId = await createTestProject(t, userId);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const result = await asUser.query(api.analytics.getSprintBurndownComparison, {
+        projectId,
+      });
+
+      expect(result.sprints).toHaveLength(0);
+      expect(result.averageCompletionRate).toBe(0);
+    });
+  });
+
   describe("getTimeMetricsBreakdown", () => {
     it("should return per-assignee cycle/lead time breakdowns", async () => {
       const t = convexTest(schema, modules);
