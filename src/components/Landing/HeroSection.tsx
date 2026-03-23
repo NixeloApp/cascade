@@ -20,23 +20,7 @@ const heroSignals = [
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-ui-bg-hero">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 78% 55% at 50% 0%, color-mix(in oklab, var(--color-landing-accent) 18%, transparent), color-mix(in oklab, var(--color-landing-accent-teal) 10%, transparent) 42%, transparent 74%)",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.045] dark:opacity-[0.05]"
-          style={{
-            backgroundImage:
-              "linear-gradient(color-mix(in oklab, var(--color-ui-border) 44%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--color-ui-border) 44%, transparent) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-          }}
-        />
-      </div>
+      <div className="absolute inset-0 bg-ui-bg-hero" />
 
       <Container
         size="lg"
