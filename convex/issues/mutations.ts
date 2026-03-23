@@ -655,6 +655,38 @@ export const bulkAddLabels = authenticatedMutation({
 });
 
 /**
+ * Bulk remove labels from multiple issues.
+ *
+ * Removes the specified labels from each issue's label array.
+ * Skips issues that don't have the labels or that the user can't edit.
+ */
+export const bulkRemoveLabels = authenticatedMutation({
+  args: {
+    issueIds: v.array(v.id("issues")),
+    labels: v.array(v.string()),
+  },
+  returns: v.object({ updated: v.number() }),
+  handler: async (ctx, args) => {
+    const labelsToRemove = new Set(args.labels);
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      const updatedLabels = issue.labels.filter((l) => !labelsToRemove.has(l));
+      if (updatedLabels.length === issue.labels.length) {
+        return null; // No labels to remove, skip
+      }
+      return {
+        patch: { labels: updatedLabels },
+        activity: {
+          action: "updated",
+          field: "labels",
+          oldValue: issue.labels.join(", "),
+          newValue: updatedLabels.join(", "),
+        },
+      };
+    });
+  },
+});
+
+/**
  * Bulk move multiple issues to a sprint.
  *
  * - Updates the sprint ID of each issue.

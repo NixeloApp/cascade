@@ -152,8 +152,8 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         gap="lg"
       >
         <FlexItem flex="1" className="w-full sm:w-auto">
-          <Stack gap="xs">
-            <Flex wrap align="center" gap="sm" className="mb-2">
+          <Stack gap="sm">
+            <Flex wrap align="center" gap="sm">
               <Typography variant="h5">{sprint.name}</Typography>
               <Badge size="md" statusTone={getStatusBadgeTone(sprint.status)}>
                 {sprint.status}
@@ -163,14 +163,14 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
               </Badge>
             </Flex>
             {sprint.goal && (
-              <Typography variant="small" color="secondary" className="mb-2">
+              <Typography variant="small" color="secondary">
                 {sprint.goal}
               </Typography>
             )}
 
             {/* Progress bar for active sprints - issue-based */}
             {sprint.status === "active" && (
-              <Stack gap="xs" className="mt-3 mb-2">
+              <Stack gap="xs">
                 <Flex justify="between">
                   <Typography variant="caption">
                     {sprint.completedCount} of {sprint.issueCount} completed

@@ -219,7 +219,7 @@ Run `node scripts/validate.js` to check 28 validators including:
 4. **Query issues** — N+1 queries, unbounded `.collect()`, missing indexes
 5. **Arbitrary Tailwind** — flags bracket syntax; allowlist in `ALLOWED_PATTERNS`
 6. **Type safety** — `as any`, `@ts-ignore`, `biome-ignore` usage
-7. **Raw Tailwind** — detects gap classes in className when gap prop should be used
+7. **Raw styling** — detects raw className utilities and inline style props that should use design tokens
 8. **Convex patterns** — envelope pattern, RBAC checks, membership validation
 
 Run this after UI changes. Target: 0 errors.

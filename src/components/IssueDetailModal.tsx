@@ -19,6 +19,7 @@ import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Dialog } from "./ui/Dialog";
 import { Icon } from "./ui/Icon";
+import { Skeleton } from "./ui/Skeleton";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
@@ -50,10 +51,10 @@ export function IssueDetailModal({
       >
         <Stack as="output" aria-live="polite" aria-busy="true" gap="lg" className="block">
           <span className="sr-only">Loading...</span>
-          <div className="animate-pulse bg-ui-bg-tertiary rounded h-8 w-3/4" />
+          <Skeleton className="w-3/4" />
           <Stack gap="xs">
-            <div className="animate-pulse bg-ui-bg-tertiary rounded h-4 w-full" />
-            <div className="animate-pulse bg-ui-bg-tertiary rounded h-4 w-2/3" />
+            <Skeleton className="w-full" />
+            <Skeleton className="w-2/3" />
           </Stack>
         </Stack>
       </Dialog>

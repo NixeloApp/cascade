@@ -36,6 +36,7 @@ import {
 import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
+import { Input } from "./ui/Input";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
@@ -107,6 +108,7 @@ const STATUS_CONFIG = {
 export function InboxList({ projectId }: InboxListProps) {
   const [activeTab, setActiveTab] = useState<"open" | "closed">("open");
   const [selectedIds, setSelectedIds] = useState<Set<Id<"inboxIssues">>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
 
   const inboxIssues = useAuthenticatedQuery(api.inbox.list, {
     projectId,
@@ -141,8 +143,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
   // Select all items
   const handleSelectAll = () => {
-    if (!inboxIssues) return;
-    const triageable = inboxIssues.filter(
+    const triageable = filteredIssues.filter(
       (item) => item.status === "pending" || item.status === "snoozed",
     );
     setSelectedIds(new Set(triageable.map((item) => item._id)));
@@ -192,13 +193,23 @@ export function InboxList({ projectId }: InboxListProps) {
 
   if (inboxIssues === undefined || counts === undefined) {
     return (
-      <Flex align="center" justify="center" className="h-64">
+      <Flex align="center" justify="center" className="h-full">
         <LoadingSpinner size="lg" />
       </Flex>
     );
   }
 
-  const triageableCount = inboxIssues.filter(
+  // Client-side search filtering
+  const query = searchQuery.trim().toLowerCase();
+  const filteredIssues = query
+    ? inboxIssues.filter(
+        (item) =>
+          item.issue.title.toLowerCase().includes(query) ||
+          item.issue.key.toLowerCase().includes(query),
+      )
+    : inboxIssues;
+
+  const triageableCount = filteredIssues.filter(
     (item) => item.status === "pending" || item.status === "snoozed",
   ).length;
 
@@ -210,8 +221,16 @@ export function InboxList({ projectId }: InboxListProps) {
           {counts.open > 0 && <Badge variant="secondary">{counts.open} to review</Badge>}
         </Flex>
 
+        <Input
+          placeholder="Search inbox..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="search"
+          aria-label="Search inbox issues"
+        />
+
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="mb-4">
+          <TabsList>
             <TabsTrigger value="open">
               Open
               {counts.open > 0 && (
@@ -232,7 +251,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
           {/* Bulk Actions Bar */}
           {activeTab === "open" && triageableCount > 0 && (
-            <div className="p-3 bg-ui-bg-soft">
+            <Card variant="section" padding="sm" className="bg-ui-bg-soft">
               <Flex align="center" gap="md">
                 <Checkbox
                   checked={selectedIds.size === triageableCount && triageableCount > 0}
@@ -269,19 +288,23 @@ export function InboxList({ projectId }: InboxListProps) {
                   </Typography>
                 )}
               </Flex>
-            </div>
+            </Card>
           )}
 
           <TabsContent value="open" className="overflow-auto">
-            {inboxIssues.length === 0 ? (
+            {filteredIssues.length === 0 ? (
               <EmptyState
                 icon={Inbox}
-                title="No pending items"
-                description="All inbox issues have been triaged. New submissions will appear here."
+                title={query ? "No matching items" : "No pending items"}
+                description={
+                  query
+                    ? "Try a different search term."
+                    : "All inbox issues have been triaged. New submissions will appear here."
+                }
               />
             ) : (
               <InboxIssueList
-                items={inboxIssues}
+                items={filteredIssues}
                 projectId={projectId}
                 selectedIds={selectedIds}
                 onToggleSelect={handleToggleSelect}
@@ -290,15 +313,19 @@ export function InboxList({ projectId }: InboxListProps) {
           </TabsContent>
 
           <TabsContent value="closed" className="overflow-auto">
-            {inboxIssues.length === 0 ? (
+            {filteredIssues.length === 0 ? (
               <EmptyState
                 icon={CheckCircle2}
-                title="No closed items"
-                description="Accepted, declined, and duplicate issues will appear here."
+                title={query ? "No matching items" : "No closed items"}
+                description={
+                  query
+                    ? "Try a different search term."
+                    : "Accepted, declined, and duplicate issues will appear here."
+                }
               />
             ) : (
               <InboxIssueList
-                items={inboxIssues}
+                items={filteredIssues}
                 projectId={projectId}
                 selectedIds={selectedIds}
                 onToggleSelect={handleToggleSelect}
@@ -516,13 +543,11 @@ function InboxIssueRow({
             {isOpen && (
               <>
                 {item.status === "snoozed" ? (
-                  <DropdownMenuItem onClick={handleUnsnooze}>
-                    <Icon icon={Clock} size="sm" className="mr-2" />
+                  <DropdownMenuItem onClick={handleUnsnooze} icon={<Icon icon={Clock} size="sm" />}>
                     Unsnooze
                   </DropdownMenuItem>
                 ) : (
-                  <DropdownMenuItem onClick={handleSnooze}>
-                    <Icon icon={Clock} size="sm" className="mr-2" />
+                  <DropdownMenuItem onClick={handleSnooze} icon={<Icon icon={Clock} size="sm" />}>
                     Snooze 1 day
                   </DropdownMenuItem>
                 )}
@@ -532,8 +557,10 @@ function InboxIssueRow({
 
             {!isOpen && (
               <>
-                <DropdownMenuItem onClick={handleReopen}>
-                  <Icon icon={AlertTriangle} size="sm" className="mr-2" />
+                <DropdownMenuItem
+                  onClick={handleReopen}
+                  icon={<Icon icon={AlertTriangle} size="sm" />}
+                >
                   Reopen
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

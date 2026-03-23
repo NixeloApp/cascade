@@ -116,12 +116,12 @@ export function DocumentTree({
   }
 
   return (
-    <Flex direction="column" className="overflow-y-auto">
+    <Stack gap="sm" className="overflow-y-auto">
       {onCreateDocument && (
         <Button
           variant="ghost"
           size="sm"
-          className="mx-2 mb-2 justify-start"
+          className="mx-2 justify-start"
           onClick={() => onCreateDocument()}
           leftIcon={<Icon icon={Plus} size="sm" />}
         >
@@ -131,7 +131,7 @@ export function DocumentTree({
 
       {/* Favorites Section */}
       {favorites && favorites.length > 0 && (
-        <div className="mb-2">
+        <div>
           <Button
             chrome="documentTreeSection"
             chromeSize="documentTreeSection"
@@ -196,7 +196,7 @@ export function DocumentTree({
 
       {/* Archived Section */}
       {archived && archived.length > 0 && (
-        <div className="mt-4 border-t border-ui-border">
+        <div className="border-t border-ui-border">
           <Button
             chrome="documentTreeSectionMuted"
             chromeSize="documentTreeSection"
@@ -249,7 +249,7 @@ export function DocumentTree({
           )}
         </div>
       )}
-    </Flex>
+    </Stack>
   );
 }
 

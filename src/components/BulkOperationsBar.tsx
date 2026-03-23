@@ -49,6 +49,7 @@ export function BulkOperationsBar({
   const assigneeId = useId();
   const sprintId = useId();
   const labelId = useId();
+  const removeLabelId = useId();
   const startDateId = useId();
   const dueDateId = useId();
 
@@ -62,6 +63,7 @@ export function BulkOperationsBar({
   const { mutate: bulkArchive } = useAuthenticatedMutation(api.issues.bulkArchive);
   const { mutate: bulkDelete } = useAuthenticatedMutation(api.issues.bulkDelete);
   const { mutate: bulkAddLabels } = useAuthenticatedMutation(api.issues.bulkAddLabels);
+  const { mutate: bulkRemoveLabels } = useAuthenticatedMutation(api.issues.bulkRemoveLabels);
   const { mutate: bulkUpdateStartDate } = useAuthenticatedMutation(api.issues.bulkUpdateStartDate);
   const { mutate: bulkUpdateDueDate } = useAuthenticatedMutation(api.issues.bulkUpdateDueDate);
 
@@ -125,6 +127,15 @@ export function BulkOperationsBar({
       showSuccess(`Added label to ${result.updated} issue(s)`);
     } catch (error) {
       showError(error, "Failed to add label");
+    }
+  };
+
+  const handleRemoveLabel = async (labelName: string) => {
+    try {
+      const result = await bulkRemoveLabels({ issueIds, labels: [labelName] });
+      showSuccess(`Removed label from ${result.updated} issue(s)`);
+    } catch (error) {
+      showError(error, "Failed to remove label");
     }
   };
 
@@ -250,7 +261,7 @@ export function BulkOperationsBar({
 
           {showActions && (
             <div className={getCardRecipeClassName("bulkActionDetails")}>
-              <Grid cols={1} colsSm={2} colsMd={3} colsLg={7} gap="md">
+              <Grid cols={1} colsSm={2} colsMd={4} colsLg={8} gap="md">
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={statusId} variant="label" color="secondary">
                     Status
@@ -331,6 +342,24 @@ export function BulkOperationsBar({
                   </Typography>
                   <Select onValueChange={handleAddLabel}>
                     <SelectTrigger id={labelId}>
+                      <SelectValue placeholder="Select label..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {labels?.map((label) => (
+                        <SelectItem key={label._id} value={label.name}>
+                          {label.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Stack>
+
+                <Stack gap="xs">
+                  <Typography as="label" htmlFor={removeLabelId} variant="label" color="secondary">
+                    Remove Label
+                  </Typography>
+                  <Select onValueChange={handleRemoveLabel}>
+                    <SelectTrigger id={removeLabelId}>
                       <SelectValue placeholder="Select label..." />
                     </SelectTrigger>
                     <SelectContent>

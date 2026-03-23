@@ -115,7 +115,7 @@ export function IpRestrictionsSettings() {
           </Badge>
         }
       >
-        <Flex justify="center" align="center" className="min-h-32">
+        <Flex justify="center" align="center" className="min-h-content-block">
           <LoadingSpinner />
         </Flex>
       </SettingsSection>

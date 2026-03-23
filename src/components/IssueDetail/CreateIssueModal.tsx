@@ -212,7 +212,7 @@ function CreateIssueAiAction({
   onGenerateSuggestions,
 }: CreateIssueAiActionProps) {
   return (
-    <Flex align="center" gap="sm" className="pb-2">
+    <Flex align="center" gap="sm">
       <Button
         type="button"
         onClick={onGenerateSuggestions}
@@ -307,27 +307,29 @@ function CreateIssueLabelsSection({
           <PopoverTrigger asChild>
             <Button type="button" variant="outline" size="xs" aria-label="Create new label">
               <Icon icon={Plus} size="sm" />
-              <span className="ml-1">New</span>
+              New
             </Button>
           </PopoverTrigger>
           <PopoverContent align="start" padding="none" className="w-64">
             <PopoverHeader>
               <PopoverTitle>Create Label</PopoverTitle>
             </PopoverHeader>
-            <PopoverBody className="space-y-3">
-              <Input
-                placeholder="Label name"
-                value={newLabelName}
-                onChange={(e) => onNewLabelNameChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    onCreateLabel();
-                  }
-                }}
-                autoFocus
-              />
-              <ColorPicker value={newLabelColor} onChange={onNewLabelColorChange} label="Color" />
+            <PopoverBody>
+              <Stack gap="md">
+                <Input
+                  placeholder="Label name"
+                  value={newLabelName}
+                  onChange={(e) => onNewLabelNameChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      onCreateLabel();
+                    }
+                  }}
+                  autoFocus
+                />
+                <ColorPicker value={newLabelColor} onChange={onNewLabelColorChange} label="Color" />
+              </Stack>
             </PopoverBody>
             <PopoverFooter>
               <Button

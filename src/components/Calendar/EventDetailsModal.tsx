@@ -143,7 +143,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
 
         <Stack gap="lg">
           <Flex gap="md" align="start">
-            <Icon icon={Calendar} size="md" tone="tertiary" className="mt-0.5" />
+            <Icon icon={Calendar} size="md" tone="tertiary" className="shrink-0" />
             <Stack gap="xs">
               <Typography variant="label">
                 {formatDate(event.startTime, {
@@ -172,7 +172,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
               email={event.organizerEmail}
               size="xs"
               variant="brand"
-              className="mt-0.5"
+              className="shrink-0"
             />
             <Stack gap="xs">
               <Typography variant="caption">Organizer</Typography>
@@ -197,7 +197,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
           {event.location && (
             <Card recipe="eventDetailSection">
               <Flex gap="md" align="start">
-                <Icon icon={MapPin} size="md" tone="tertiary" className="mt-0.5" />
+                <Icon icon={MapPin} size="md" tone="tertiary" className="shrink-0" />
                 <Stack gap="xs">
                   <Typography variant="caption">Location</Typography>
                   <Typography variant="label">{event.location}</Typography>
@@ -209,7 +209,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
           {event.meetingUrl && (
             <Card recipe="eventDetailSection">
               <Flex gap="md" align="start">
-                <Icon icon={LinkIcon} size="md" tone="tertiary" className="mt-0.5" />
+                <Icon icon={LinkIcon} size="md" tone="tertiary" className="shrink-0" />
                 <Stack gap="xs" align="start">
                   <Typography variant="caption">Meeting Link</Typography>
                   <Button asChild variant="link" size="none">
@@ -273,7 +273,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                           )}
                           {attendee.status === "absent" && <Icon icon={X} size="sm" tone="error" />}
                           {!attendee.status && (
-                            <Icon icon={Clock} size="sm" className="opacity-0" aria-hidden="true" />
+                            <Icon icon={Clock} size="sm" className="invisible" aria-hidden="true" />
                           )}
 
                           <Typography as="span" variant="label">

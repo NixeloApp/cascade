@@ -12,6 +12,8 @@ import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
+import { useTeamLayout } from "./route";
+
 export const Route = createFileRoute(
   "/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki",
 )({
@@ -19,32 +21,17 @@ export const Route = createFileRoute(
 });
 
 function TeamWikiPage() {
-  const { organizationId, orgSlug } = useOrganization();
-  const { workspaceSlug, teamSlug } = Route.useParams();
+  const { orgSlug } = useOrganization();
+  const { teamId } = useTeamLayout();
 
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
-    organizationId,
-    slug: workspaceSlug,
+  const documentsResult = useAuthenticatedQuery(api.documents.listByTeam, {
+    teamId,
+    limit: 50,
   });
 
-  const team = useAuthenticatedQuery(
-    api.teams.getBySlug,
-    workspace ? { workspaceId: workspace._id, slug: teamSlug } : "skip",
-  );
-
-  const documentsResult = useAuthenticatedQuery(
-    api.documents.listByTeam,
-    team ? { teamId: team._id, limit: 50 } : "skip",
-  );
-
-  const isLoading = workspace === undefined || team === undefined || documentsResult === undefined;
   const documents = documentsResult?.documents ?? [];
 
-  if (workspace === null || team === null) {
-    return <Typography variant="h3">Team not found</Typography>;
-  }
-
-  if (isLoading) {
+  if (documentsResult === undefined) {
     return (
       <Flex align="center" justify="center" className="py-20">
         <LoadingSpinner size="lg" />
@@ -76,7 +63,7 @@ function TeamWikiPage() {
             <Flex direction="column" gap="md">
               <Flex justify="between" align="start" gap="md">
                 <Flex align="center" gap="md">
-                  <IconCircle size="md" tone="secondary" variant="muted" className="w-10 h-10">
+                  <IconCircle size="md" tone="secondary" variant="muted" className="size-10">
                     <FileText size={20} />
                   </IconCircle>
                   <Typography variant="wikiCardTitle">{doc.title || "Untitled"}</Typography>

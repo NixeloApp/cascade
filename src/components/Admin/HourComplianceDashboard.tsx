@@ -383,7 +383,7 @@ function ComplianceRecordsList({
 }) {
   if (!records) {
     return (
-      <Flex justify="center" align="center" className="min-h-32">
+      <Flex justify="center" align="center" className="min-h-content-block">
         <Typography variant="small" color="secondary">
           Loading...
         </Typography>

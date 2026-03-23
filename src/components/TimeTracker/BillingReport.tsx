@@ -3,7 +3,7 @@
  *
  * Financial reporting view for time tracking data.
  * Shows billable hours, revenue, team utilization, and project breakdowns.
- * Supports date range filtering and CSV export.
+ * Supports date range filtering and CSV/PDF export.
  */
 
 import { api } from "@convex/_generated/api";
@@ -12,10 +12,17 @@ import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
-import { showSuccess } from "@/lib/toast";
+import { formatDate } from "@/lib/formatting";
+import { Clock, DollarSign, Download, FileText, TrendingUp, Users } from "@/lib/icons";
+import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card, CardBody } from "../ui/Card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/DropdownMenu";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
@@ -195,6 +202,77 @@ function exportBillingCsv(
   URL.revokeObjectURL(url);
 }
 
+/** Export billing data as PDF with summary and team breakdown table. */
+async function exportBillingPdf(
+  projectName: string,
+  dateRange: string,
+  billing: { totalRevenue: number; totalHours: number; billableHours: number; entries: number },
+  users: [string, BillingStats][],
+  utilizationRate: number,
+  averageRate: number,
+): Promise<void> {
+  const { default: jsPDF } = await import("jspdf");
+  const { default: autoTable } = await import("jspdf-autotable");
+
+  const doc = new jsPDF();
+  const dateLabel =
+    dateRange === "week" ? "Last 7 Days" : dateRange === "month" ? "Last 30 Days" : "All Time";
+  const timestamp = formatDate(Date.now(), { year: "numeric", month: "long", day: "numeric" });
+
+  // Title
+  doc.setFontSize(18);
+  doc.text(`${projectName} — Billing Report`, 14, 20);
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`${dateLabel} | Generated ${timestamp}`, 14, 28);
+
+  // Summary section
+  doc.setFontSize(12);
+  doc.setTextColor(0);
+  doc.text("Summary", 14, 40);
+
+  autoTable(doc, {
+    startY: 44,
+    head: [["Metric", "Value"]],
+    body: [
+      ["Total Revenue", formatCurrency(billing.totalRevenue)],
+      ["Total Hours", formatHours(billing.totalHours)],
+      ["Billable Hours", formatHours(billing.billableHours)],
+      ["Utilization Rate", `${utilizationRate.toFixed(0)}%`],
+      ["Avg Hourly Rate", formatCurrency(averageRate)],
+      ["Time Entries", String(billing.entries)],
+    ],
+    theme: "grid",
+    headStyles: { fillColor: [59, 130, 246] },
+    styles: { fontSize: 9 },
+    columnStyles: { 0: { fontStyle: "bold" } },
+  });
+
+  // Team breakdown
+  const finalY =
+    (doc as typeof doc & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? 100;
+  doc.setFontSize(12);
+  doc.text("Team Breakdown", 14, finalY + 12);
+
+  autoTable(doc, {
+    startY: finalY + 16,
+    head: [["Team Member", "Total Hours", "Billable Hours", "Utilization %", "Cost", "Revenue"]],
+    body: users.map(([, stats]) => [
+      stats.name,
+      formatHours(stats.hours),
+      formatHours(stats.billableHours),
+      stats.hours > 0 ? `${Math.round((stats.billableHours / stats.hours) * 100)}%` : "0%",
+      formatCurrency(stats.cost),
+      formatCurrency(stats.revenue),
+    ]),
+    theme: "striped",
+    headStyles: { fillColor: [59, 130, 246] },
+    styles: { fontSize: 8 },
+  });
+
+  doc.save(`billing-${projectName.toLowerCase().replace(/\s+/g, "-")}-${dateRange}.pdf`);
+}
+
 /** Time tracking billing report with exportable member time summaries. */
 export function BillingReport({ projectId }: BillingReportProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("month");
@@ -255,15 +333,42 @@ export function BillingReport({ projectId }: BillingReportProps) {
               <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            leftIcon={<Icon icon={Download} size="sm" />}
-            onClick={() => {
-              exportBillingCsv(project.name, dateRange, billing, sortedUsers);
-              showSuccess("Billing report exported");
-            }}
-          >
-            Export
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button leftIcon={<Icon icon={Download} size="sm" />}>Export</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onSelect={() => {
+                  exportBillingCsv(project.name, dateRange, billing, sortedUsers);
+                  showSuccess("CSV exported");
+                }}
+              >
+                <Icon icon={Download} size="sm" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={async () => {
+                  try {
+                    await exportBillingPdf(
+                      project.name,
+                      dateRange,
+                      billing,
+                      sortedUsers,
+                      utilizationRate,
+                      averageRate,
+                    );
+                    showSuccess("PDF exported");
+                  } catch (error) {
+                    showError(error, "PDF export failed");
+                  }
+                }}
+              >
+                <Icon icon={FileText} size="sm" />
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </Flex>
       </Flex>
 

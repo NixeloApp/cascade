@@ -7,7 +7,7 @@
  *   3. API calls            — validates api.X.Y calls match Convex exports
  *   4. Query issues         — N+1 queries, unbounded .collect(), missing indexes
  *   5. Arbitrary Tailwind      — arbitrary values like h-[50px]
- *   6. Raw Tailwind            — generic raw utility misuse outside approved areas
+ *   6. Raw styling             — raw className utilities + inline style props outside approved areas
  *   7. Surface shells         — reusable rounded/bg/border/shadow shells must use owned recipes
  *   8. Design-system ownership — recipe/chrome APIs required in high-drift surfaces
  *   9. Layout prop usage       — JSX should use Flex/Stack props instead of className hacks
@@ -136,8 +136,8 @@ const checks = [
     modulePath: new URL("./validate/check-arbitrary-tw.js", import.meta.url).href,
   },
   {
-    name: "Raw Tailwind",
-    modulePath: new URL("./validate/check-raw-tailwind.js", import.meta.url).href,
+    name: "Raw styling",
+    modulePath: new URL("./validate/check-raw-styling.js", import.meta.url).href,
   },
   {
     name: "Surface shells",

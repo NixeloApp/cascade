@@ -111,7 +111,7 @@ export function OrganizationSettings() {
         description="Configure organization identity, default time policy, and billing behavior."
         icon={Building2}
       >
-        <Flex justify="center" align="center" className="min-h-32">
+        <Flex justify="center" align="center" className="min-h-content-block">
           <LoadingSpinner />
         </Flex>
       </SettingsSection>

@@ -10,12 +10,14 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
+import { BarChart3 } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDurationHuman } from "@/lib/formatting";
 import { PageControls, PageControlsGroup, PageControlsRow, PageStack } from "../layout";
 import { Card } from "../ui/Card";
+import { EmptyState } from "../ui/EmptyState";
 import { Label } from "../ui/Label";
 import { OverviewBand } from "../ui/OverviewBand";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
@@ -314,29 +316,11 @@ function TimeTrackingContent({
 
   if (canSeeSensitiveTabs && activeTab === "burn-rate" && selectedProject === "all") {
     return (
-      <Card variant="soft" className="text-center">
-        <svg
-          className="mx-auto size-12 text-ui-text-tertiary"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          role="img"
-          aria-label="Chart icon"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-        </svg>
-        <Typography variant="label" className="mt-2">
-          Select a project
-        </Typography>
-        <Typography variant="small" color="tertiary" className="mt-1">
-          Choose a project to view burn rate and cost analysis
-        </Typography>
-      </Card>
+      <EmptyState
+        icon={BarChart3}
+        title="Select a project"
+        description="Choose a project from the filter above to view burn rate and cost analysis."
+      />
     );
   }
 
@@ -345,11 +329,11 @@ function TimeTrackingContent({
   }
 
   return projectId ? null : (
-    <Card variant="soft" className="text-center">
-      <Typography variant="small" color="secondary">
-        Select a project to continue.
-      </Typography>
-    </Card>
+    <EmptyState
+      icon={BarChart3}
+      title="Select a project"
+      description="Choose a project from the filter above to continue."
+    />
   );
 }
 

@@ -478,6 +478,7 @@ export const getBySlug = authenticatedQuery({
 export const getTeams = authenticatedQuery({
   args: {
     organizationId: v.id("organizations"),
+    workspaceId: v.optional(v.id("workspaces")),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
@@ -486,13 +487,17 @@ export const getTeams = authenticatedQuery({
 
     let results: PaginationResult<Doc<"teams">> | PaginationResult<Doc<"teamMembers">>;
     if (isAdmin) {
-      // Admins see all teams in the organization
+      // Admins see all teams — scoped to workspace if provided
       results = await fetchPaginatedQuery<Doc<"teams">>(ctx, {
         paginationOpts: args.paginationOpts,
         buildQuery: (db) =>
-          db
-            .query("teams")
-            .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId)),
+          args.workspaceId
+            ? db
+                .query("teams")
+                .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
+            : db
+                .query("teams")
+                .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId)),
       });
     } else {
       // Non-admins see only teams they are a member of
@@ -506,10 +511,12 @@ export const getTeams = authenticatedQuery({
       const teamIds = membershipResults.page.map((m) => m.teamId);
       const teams = await batchFetchTeams(ctx, teamIds);
 
-      // Filter out teams from other organizations
+      // Filter to matching organization (and workspace if provided)
       const filteredPage = membershipResults.page.filter((m) => {
         const t = teams.get(m.teamId);
-        return t && t.organizationId === args.organizationId;
+        if (!t || t.organizationId !== args.organizationId) return false;
+        if (args.workspaceId && t.workspaceId !== args.workspaceId) return false;
+        return true;
       });
 
       results = {

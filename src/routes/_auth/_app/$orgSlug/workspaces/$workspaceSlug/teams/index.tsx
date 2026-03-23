@@ -25,12 +25,15 @@ function TeamsList() {
     slug: workspaceSlug,
   });
 
-  // For now, teams are organization-wide, but we'll filter by workspace later
   const {
     results: teams,
     status,
     loadMore,
-  } = usePaginatedQuery(api.teams.getTeams, { organizationId }, { initialNumItems: 20 });
+  } = usePaginatedQuery(
+    api.teams.getTeams,
+    workspace?._id ? { organizationId, workspaceId: workspace._id } : { organizationId },
+    { initialNumItems: 20 },
+  );
 
   return (
     <PageLayout>

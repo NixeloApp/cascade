@@ -1,11 +1,12 @@
 /**
  * AI Assistant Page
  *
- * Management interface for AI assistant configuration and prompts.
- * Shows usage stats, active chats, and allows customizing AI behavior.
- * Supports multiple AI modes and conversation history.
+ * Management interface for AI assistant configuration and usage stats.
+ * Shows real usage metrics from backend, active provider info, and
+ * configuration controls.
  */
 
+import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
@@ -17,77 +18,93 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
-import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
-import { Textarea } from "@/components/ui/Textarea";
 import { Typography } from "@/components/ui/Typography";
-import { Bot, CheckCircle, MessageSquare, Sparkles, Zap } from "@/lib/icons";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { formatDate } from "@/lib/formatting";
+import { Bot, CheckCircle, DollarSign, MessageSquare, Sparkles, Zap } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/assistant")({
   component: AssistantPage,
 });
 
+function formatCost(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString();
+}
+
 function AssistantStats() {
-  const stats = [
+  const stats = useAuthenticatedQuery(api.ai.queries.getUsageStats, {});
+
+  if (stats === undefined) {
+    return (
+      <Grid cols={1} colsMd={3} gap="lg">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="min-h-content-block">
+            <CardBody>
+              <Flex align="center" justify="center" className="min-h-content-block">
+                <LoadingSpinner size="sm" />
+              </Flex>
+            </CardBody>
+          </Card>
+        ))}
+      </Grid>
+    );
+  }
+
+  const statCards = [
     {
-      label: "Spend",
-      value: "$42.50",
-      trend: "+12%",
-      trendDirection: "up",
-      icon: Zap,
+      label: "Total Spend",
+      value: formatCost(stats.totalCost),
+      sub: `${formatNumber(stats.totalTokens)} tokens used`,
+      icon: DollarSign,
+      tone: "success" as const,
     },
     {
-      label: "Questions",
-      value: "1,240",
-      trend: "+5%",
-      trendDirection: "up",
+      label: "AI Requests",
+      value: formatNumber(stats.totalRequests),
+      sub: `${Math.round(stats.avgResponseTime)}ms avg response`,
       icon: MessageSquare,
+      tone: "brand" as const,
     },
     {
-      label: "Answered",
-      value: "1,180",
-      trend: "95%",
-      sub: "Success Rate",
+      label: "Success Rate",
+      value: stats.totalRequests > 0 ? `${Math.round(stats.successRate)}%` : "N/A",
+      sub:
+        stats.totalRequests > 0
+          ? `${formatNumber(Math.round((stats.totalRequests * stats.successRate) / 100))} successful`
+          : "No requests yet",
       icon: CheckCircle,
+      tone: stats.successRate >= 90 ? ("success" as const) : ("warning" as const),
     },
   ];
 
   return (
-    <Grid cols={1} colsMd={3} gap="lg" className="mb-8">
-      {stats.map((stat) => (
-        <Card key={stat.label} className="card-subtle relative overflow-hidden group">
-          {/* Green left border accent for active feel */}
-          <div className="absolute left-0 top-0 h-full w-1 bg-status-success" />
-          <CardBody className="p-5 pl-6">
-            <Flex justify="between" align="start" className="mb-2">
-              <Typography variant="eyebrow" color="tertiary">
-                {stat.label}
+    <Grid cols={1} colsMd={3} gap="lg">
+      {statCards.map((stat) => (
+        <Card key={stat.label}>
+          <CardBody>
+            <Stack gap="sm">
+              <Flex justify="between" align="center">
+                <Typography variant="eyebrow" color="tertiary">
+                  {stat.label}
+                </Typography>
+                <Icon icon={stat.icon} size="sm" tone="tertiary" />
+              </Flex>
+              <Typography variant="h2" color={stat.tone}>
+                {stat.value}
               </Typography>
-              <Icon icon={stat.icon} size="sm" tone="tertiary" />
-            </Flex>
-            <Flex align="baseline" gap="xs">
-              <Typography variant="dashboardStatValueStrong">{stat.value}</Typography>
-              {stat.trend && (
-                <Badge variant="success" size="sm" className="ml-2">
-                  {stat.trend}
-                </Badge>
-              )}
-            </Flex>
-            {stat.sub && (
-              <Typography variant="meta" className="mt-1">
+              <Typography variant="caption" color="tertiary">
                 {stat.sub}
               </Typography>
-            )}
+            </Stack>
           </CardBody>
         </Card>
       ))}
@@ -95,183 +112,216 @@ function AssistantStats() {
   );
 }
 
-function AssistantConfig() {
-  const [activeTab, setActiveTab] = useState("general");
-  const [enabled, setEnabled] = useState(true);
-  const [showHelpButton, setShowHelpButton] = useState(true);
-  const [model, setModel] = useState("gpt-4o");
+function OperationBreakdown() {
+  const stats = useAuthenticatedQuery(api.ai.queries.getUsageStats, {});
+
+  if (!stats || stats.totalRequests === 0) return null;
+
+  const operations = [
+    { key: "chat", label: "Chat", count: stats.byOperation.chat },
+    { key: "suggestion", label: "Suggestions", count: stats.byOperation.suggestion },
+    { key: "automation", label: "Automation", count: stats.byOperation.automation },
+    { key: "analysis", label: "Analysis", count: stats.byOperation.analysis },
+  ].filter((op) => op.count > 0);
+
+  const providers = [
+    { key: "anthropic", label: "Anthropic", tokens: stats.byProvider.anthropic },
+    { key: "openai", label: "OpenAI", tokens: stats.byProvider.openai },
+  ].filter((p) => p.tokens > 0);
 
   return (
-    <div>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-        </TabsList>
+    <Grid cols={1} colsMd={2} gap="lg">
+      <Card>
+        <CardHeader>
+          <CardTitle>By Operation</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <Stack gap="sm">
+            {operations.map((op) => (
+              <Flex key={op.key} justify="between" align="center">
+                <Typography variant="label">{op.label}</Typography>
+                <Badge variant="neutral" size="sm">
+                  {formatNumber(op.count)}
+                </Badge>
+              </Flex>
+            ))}
+            {operations.length === 0 && (
+              <Typography variant="small" color="tertiary">
+                No operations recorded
+              </Typography>
+            )}
+          </Stack>
+        </CardBody>
+      </Card>
 
-        <TabsContent value="general" className="space-y-6 animate-fade-in">
-          {/* Status Section */}
-          <Card className="card-subtle">
-            <CardBody className="p-6">
-              <Flex justify="between" align="center">
-                <Flex gap="md" align="center">
-                  <IconCircle
-                    variant={enabled ? "success" : "muted"}
-                    className={cn(
-                      "size-10 transition-colors",
-                      enabled ? "text-status-success" : "text-ui-text-tertiary",
-                    )}
-                  >
-                    <Icon icon={Bot} size="md" />
-                  </IconCircle>
+      <Card>
+        <CardHeader>
+          <CardTitle>By Provider</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <Stack gap="sm">
+            {providers.map((p) => (
+              <Flex key={p.key} justify="between" align="center">
+                <Typography variant="label">{p.label}</Typography>
+                <Badge variant="neutral" size="sm">
+                  {formatNumber(p.tokens)} tokens
+                </Badge>
+              </Flex>
+            ))}
+            {providers.length === 0 && (
+              <Typography variant="small" color="tertiary">
+                No provider usage recorded
+              </Typography>
+            )}
+          </Stack>
+        </CardBody>
+      </Card>
+    </Grid>
+  );
+}
+
+function AssistantStatus() {
+  const [enabled, setEnabled] = useState(true);
+
+  return (
+    <Card>
+      <CardBody>
+        <Flex justify="between" align="center">
+          <Flex gap="md" align="center">
+            <IconCircle
+              variant={enabled ? "success" : "muted"}
+              className={cn(
+                "size-10 transition-colors",
+                enabled ? "text-status-success" : "text-ui-text-tertiary",
+              )}
+            >
+              <Icon icon={Bot} size="md" />
+            </IconCircle>
+            <Stack gap="xs">
+              <Typography variant="h5">Assistant Status</Typography>
+              <Typography variant="small" color="secondary">
+                {enabled
+                  ? "AI features are active across the workspace."
+                  : "AI features are currently disabled."}
+              </Typography>
+            </Stack>
+          </Flex>
+          <Flex align="center" gap="md">
+            {enabled && (
+              <Badge variant="success" shape="pill">
+                <Flex align="center" gap="xs">
+                  <Dot size="xs" color="success" pulse />
+                  <span>Active</span>
+                </Flex>
+              </Badge>
+            )}
+            <Switch checked={enabled} onCheckedChange={setEnabled} />
+          </Flex>
+        </Flex>
+      </CardBody>
+    </Card>
+  );
+}
+
+function RecentChats() {
+  const chats = useAuthenticatedQuery(api.ai.queries.getUserChats, {});
+
+  if (chats === undefined) {
+    return (
+      <Card>
+        <CardBody>
+          <Flex align="center" justify="center" className="min-h-content-block">
+            <LoadingSpinner size="sm" />
+          </Flex>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <Flex justify="between" align="center">
+          <CardTitle>Recent Conversations</CardTitle>
+          <Badge variant="neutral" size="sm">
+            {chats.length}
+          </Badge>
+        </Flex>
+      </CardHeader>
+      <CardBody>
+        {chats.length === 0 ? (
+          <Flex
+            align="center"
+            justify="center"
+            direction="column"
+            gap="sm"
+            className="min-h-content-block"
+          >
+            <Icon icon={MessageSquare} size="lg" tone="tertiary" />
+            <Typography variant="small" color="tertiary">
+              No conversations yet. Start chatting with the AI assistant in any project.
+            </Typography>
+          </Flex>
+        ) : (
+          <Stack gap="sm">
+            {chats.slice(0, 10).map((chat) => (
+              <Card key={chat._id} variant="section" padding="sm">
+                <Flex justify="between" align="center">
                   <Stack gap="xs">
-                    <Typography variant="h5">Assistant Status</Typography>
-                    <Typography variant="small" color="secondary">
-                      {enabled
-                        ? "Your assistant is active and answering questions."
-                        : "Assistant is currently disabled."}
+                    <Typography variant="label">{chat.title || "Untitled Chat"}</Typography>
+                    <Typography variant="caption" color="tertiary">
+                      {chat.projectId ? "Project chat" : "General chat"}
                     </Typography>
                   </Stack>
-                </Flex>
-                <Flex align="center" gap="md">
-                  {enabled && (
-                    <Badge variant="success" shape="pill">
-                      <Flex align="center" gap="xs">
-                        <Dot size="xs" color="success" pulse />
-                        <span>Active</span>
-                      </Flex>
-                    </Badge>
-                  )}
-                  <Switch checked={enabled} onCheckedChange={setEnabled} />
-                </Flex>
-              </Flex>
-            </CardBody>
-          </Card>
-
-          {/* Configuration Form */}
-          <Card
-            className={cn(
-              "card-subtle transition-opacity duration-medium",
-              !enabled && "opacity-60 pointer-events-none",
-            )}
-          >
-            <CardHeader className="pb-4 border-b border-ui-border">
-              <CardTitle>Configuration</CardTitle>
-            </CardHeader>
-            <CardBody className="p-6 space-y-6">
-              {/* System Prompt */}
-              <div className="space-y-3">
-                <Flex justify="between">
-                  <Typography variant="label">System Prompt</Typography>
-                  <Typography variant="meta" color="tertiary">
-                    Max 2000 chars
+                  <Typography variant="caption" color="tertiary">
+                    {formatDate(chat.updatedAt)}
                   </Typography>
                 </Flex>
-                <Textarea
-                  variant="surfaceMono"
-                  placeholder="You are a helpful assistant for..."
-                  defaultValue="You are a helpful documentation assistant. Answer questions based on the provided context."
-                />
-                <Typography variant="meta" color="tertiary">
-                  Instructions for how the assistant should behave and answer questions.
-                </Typography>
-              </div>
-
-              <Grid cols={1} colsMd={2} gap="xl">
-                {/* Model Selection */}
-                <div className="space-y-3">
-                  <Typography variant="label">Model</Typography>
-                  <Select value={model} onValueChange={setModel}>
-                    <SelectTrigger className="bg-ui-bg">
-                      <SelectValue placeholder="Select model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gpt-4o">GPT-4o (Recommended)</SelectItem>
-                      <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                      <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Support Email */}
-                <div className="space-y-3">
-                  <Typography variant="label">Support Email</Typography>
-                  <Input variant="surface" type="email" placeholder="support@example.com" />
-                </div>
-              </Grid>
-
-              {/* Show Help Button Toggle */}
-              <Flex
-                align="center"
-                justify="between"
-                className="pt-4 border-t border-ui-border-secondary"
-              >
-                <div className="space-y-1">
-                  <Typography variant="label">Show Help Button</Typography>
-                  <Typography variant="meta" color="tertiary">
-                    Display a floating help button on your documentation pages.
-                  </Typography>
-                </div>
-                <Switch checked={showHelpButton} onCheckedChange={setShowHelpButton} />
-              </Flex>
-            </CardBody>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="billing" className="animate-fade-in">
-          <Card className="card-subtle border-brand-subtle bg-brand-subtle/10 mb-6">
-            <CardBody className="p-6">
-              <Flex gap="md" align="start">
-                <IconCircle size="sm" variant="brand">
-                  <Icon icon={Sparkles} size="md" />
-                </IconCircle>
-                <div>
-                  <Typography variant="h5" className="mb-1 text-brand-foreground">
-                    Upgrade to Pro
-                  </Typography>
-                  <Typography variant="p" className="mb-4 text-ui-text-secondary max-w-lg">
-                    Get access to advanced models (GPT-4o), custom system prompts, and higher usage
-                    limits.
-                  </Typography>
-                  <Button variant="brandSolid">Upgrade Plan</Button>
-                </div>
-              </Flex>
-            </CardBody>
-          </Card>
-
-          <Card className="card-subtle">
-            <CardHeader>
-              <CardTitle>Usage</CardTitle>
-            </CardHeader>
-            <CardBody className="p-6">
-              <Flex
-                align="center"
-                justify="center"
-                className="h-48 bg-ui-bg-tertiary border border-dashed border-ui-border-secondary"
-              >
-                <Typography variant="small" color="tertiary">
-                  Usage chart placeholder
-                </Typography>
-              </Flex>
-            </CardBody>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+              </Card>
+            ))}
+          </Stack>
+        )}
+      </CardBody>
+    </Card>
   );
 }
 
 function AssistantPage() {
+  const [activeTab, setActiveTab] = useState("overview");
+
   return (
     <PageLayout maxWidth="xl">
       <PageHeader
         title="Assistant"
-        description="Manage your AI assistant settings and view usage metrics."
+        description="AI usage metrics and configuration for your workspace."
+        actions={
+          <Badge variant="brand" shape="pill">
+            <Flex align="center" gap="xs">
+              <Icon icon={Sparkles} size="xs" />
+              Powered by AI
+            </Flex>
+          </Badge>
+        }
       />
 
-      <AssistantStats />
-      <AssistantConfig />
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="conversations">Conversations</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <Stack gap="xl">
+            <AssistantStats />
+            <AssistantStatus />
+            <OperationBreakdown />
+          </Stack>
+        </TabsContent>
+
+        <TabsContent value="conversations">
+          <RecentChats />
+        </TabsContent>
+      </Tabs>
     </PageLayout>
   );
 }

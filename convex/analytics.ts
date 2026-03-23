@@ -278,6 +278,144 @@ export const getSprintBurndown = sprintQuery({
 });
 
 /**
+ * Compare burndown curves across the last N completed sprints.
+ * Each sprint's progress is normalized to 0-100% of total days so
+ * sprints of different lengths can be overlaid on the same chart.
+ * Includes per-sprint velocity (completed points) for trend analysis.
+ */
+export const getSprintBurndownComparison = projectQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  returns: v.object({
+    sprints: v.array(
+      v.object({
+        sprintId: v.id("sprints"),
+        name: v.string(),
+        totalPoints: v.number(),
+        completedPoints: v.number(),
+        totalDays: v.number(),
+        /** Normalized burndown: progress at each 10% interval (0%, 10%, ... 100%) */
+        normalizedBurndown: v.array(
+          v.object({
+            percent: v.number(),
+            remainingRatio: v.number(),
+          }),
+        ),
+      }),
+    ),
+    averageCompletionRate: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const sprintLimit = clampLimit(args.limit, MAX_VELOCITY_SPRINTS);
+    const project = ctx.project;
+    if (!project) return { sprints: [], averageCompletionRate: 0 };
+
+    const doneStates = getDoneStates(project.workflowStates);
+
+    // Fetch completed sprints with dates
+    const completedSprints = await ctx.db
+      .query("sprints")
+      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "completed"),
+          q.neq(q.field("startDate"), undefined),
+          q.neq(q.field("endDate"), undefined),
+        ),
+      )
+      .order("desc")
+      .take(sprintLimit);
+
+    if (completedSprints.length === 0) {
+      return { sprints: [], averageCompletionRate: 0 };
+    }
+
+    // Batch fetch issues and activity for all sprints
+    const sprintData = await Promise.all(
+      completedSprints.map(async (sprint) => {
+        const issues = await ctx.db
+          .query("issues")
+          .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
+          .filter(notDeleted)
+          .take(MAX_SPRINT_ISSUES);
+
+        // Get status change activities for done transitions
+        const doneTransitions = await Promise.all(
+          issues.map(async (issue) => {
+            if (!doneStates.has(issue.status)) return null;
+            const activities = await ctx.db
+              .query("issueActivity")
+              .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+              .filter((q) =>
+                q.and(q.eq(q.field("action"), "updated"), q.eq(q.field("field"), "status")),
+              )
+              .take(50);
+            // Find when it entered done
+            const doneActivity = [...activities]
+              .reverse()
+              .find((a) => a.newValue && doneStates.has(a.newValue));
+            return {
+              points: issue.storyPoints || issue.estimatedHours || 0,
+              doneAt: doneActivity?._creationTime ?? issue.updatedAt,
+            };
+          }),
+        );
+
+        let totalPoints = 0;
+        let completedPoints = 0;
+        for (const issue of issues) {
+          const pts = issue.storyPoints || issue.estimatedHours || 0;
+          totalPoints += pts;
+          if (doneStates.has(issue.status)) completedPoints += pts;
+        }
+
+        const startDate = sprint.startDate!;
+        const endDate = sprint.endDate!;
+        const totalDays = Math.max(1, Math.ceil((endDate - startDate) / DAY));
+
+        // Build normalized burndown: what % of points remained at each 10% time interval
+        const intervals = 11; // 0%, 10%, 20%, ... 100%
+        const normalizedBurndown: Array<{ percent: number; remainingRatio: number }> = [];
+
+        for (let i = 0; i < intervals; i++) {
+          const pct = i * 10;
+          const cutoffTime = startDate + (totalDays * DAY * pct) / 100;
+          // Count points completed by this time
+          let completedByTime = 0;
+          for (const t of doneTransitions) {
+            if (t && t.doneAt <= cutoffTime) completedByTime += t.points;
+          }
+          const remainingRatio =
+            totalPoints > 0 ? (totalPoints - completedByTime) / totalPoints : 1;
+          normalizedBurndown.push({ percent: pct, remainingRatio: Math.max(0, remainingRatio) });
+        }
+
+        return {
+          sprintId: sprint._id,
+          name: sprint.name,
+          totalPoints,
+          completedPoints,
+          totalDays,
+          normalizedBurndown,
+        };
+      }),
+    );
+
+    const totalCompletion = sprintData.reduce((sum, s) => {
+      return sum + (s.totalPoints > 0 ? s.completedPoints / s.totalPoints : 0);
+    }, 0);
+    const averageCompletionRate =
+      sprintData.length > 0 ? Math.round((totalCompletion / sprintData.length) * 100) : 0;
+
+    return {
+      sprints: sprintData.reverse(), // oldest first for chart
+      averageCompletionRate,
+    };
+  },
+});
+
+/**
  * Get sprint assignee breakdown
  * Shows workload distribution by assignee for a sprint
  */
@@ -484,8 +622,11 @@ export const getRecentActivity = projectQuery({
  * Uses per-project index-based counting (no bulk issue loading).
  */
 export const getOrgAnalytics = authenticatedQuery({
-  args: { organizationId: v.id("organizations") },
-  handler: async (ctx, { organizationId }) => {
+  args: {
+    organizationId: v.id("organizations"),
+    sinceDate: v.optional(v.number()),
+  },
+  handler: async (ctx, { organizationId, sinceDate }) => {
     const isMember = await isOrganizationMember(ctx, organizationId, ctx.userId);
     if (!isMember) throw new Error("Not a member of this organization");
 
@@ -514,6 +655,8 @@ export const getOrgAnalytics = authenticatedQuery({
     const issueTypes = ["task", "bug", "story", "epic", "subtask"] as const;
     const priorities = ["lowest", "low", "medium", "high", "highest"] as const;
 
+    // Helper: count issues with optional date filter
+    // When sinceDate is set, uses .take() + .length since .filter() changes the type
     const perProject = await Promise.all(
       projects.map(async (project) => {
         const pid = project._id;
@@ -521,7 +664,40 @@ export const getOrgAnalytics = authenticatedQuery({
           project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
         );
 
-        // Parallel index counts for this project
+        // When date filtering, load all project issues once and count in memory
+        // (more efficient than N separate filtered queries)
+        if (sinceDate) {
+          const issues = await ctx.db
+            .query("issues")
+            .withIndex("by_project_deleted", (q) => q.eq("projectId", pid).lt("isDeleted", true))
+            .filter((q) => q.gte(q.field("_creationTime"), sinceDate))
+            .take(MAX_SPRINT_ISSUES);
+
+          let unassigned = 0;
+          const typeCounts: Record<string, number> = {};
+          const priorityCounts: Record<string, number> = {};
+          let completed = 0;
+
+          for (const issue of issues) {
+            if (!issue.assigneeId) unassigned++;
+            typeCounts[issue.type] = (typeCounts[issue.type] ?? 0) + 1;
+            priorityCounts[issue.priority] = (priorityCounts[issue.priority] ?? 0) + 1;
+            if (doneStateIds.has(issue.status)) completed++;
+          }
+
+          return {
+            projectId: pid,
+            name: project.name,
+            key: project.key,
+            total: issues.length,
+            unassigned,
+            completed,
+            types: Object.fromEntries(issueTypes.map((t) => [t, typeCounts[t] ?? 0])),
+            priorities: Object.fromEntries(priorities.map((p) => [p, priorityCounts[p] ?? 0])),
+          };
+        }
+
+        // All-time path: use efficient index counting (no date filter)
         const [total, unassigned, typeEntries, priorityEntries, doneEntries] = await Promise.all([
           efficientCount(
             ctx.db
@@ -569,7 +745,6 @@ export const getOrgAnalytics = authenticatedQuery({
                 ] as const,
             ),
           ),
-          // Count completed: sum across done workflow states
           Promise.all(
             [...doneStateIds].map(async (stateId) =>
               efficientCount(
@@ -635,6 +810,91 @@ export const getOrgAnalytics = authenticatedQuery({
       issuesByPriority: buildIssuesByPriority(priorityCounts),
       projectBreakdown,
       isProjectsTruncated: orgProjects.length >= MAX_PAGE_SIZE,
+    };
+  },
+});
+
+/**
+ * Period-over-period trend comparison for org analytics.
+ * Compares issue counts between current period and previous period
+ * (e.g., this week vs last week, this month vs last month).
+ */
+export const getOrgAnalyticsTrend = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    periodDays: v.number(), // e.g., 7 for weekly, 30 for monthly
+  },
+  returns: v.object({
+    currentPeriod: v.object({
+      created: v.number(),
+      completed: v.number(),
+    }),
+    previousPeriod: v.object({
+      created: v.number(),
+      completed: v.number(),
+    }),
+    createdChange: v.number(), // percentage change
+    completedChange: v.number(), // percentage change
+  }),
+  handler: async (ctx, { organizationId, periodDays }) => {
+    const isMember = await isOrganizationMember(ctx, organizationId, ctx.userId);
+    if (!isMember) throw new Error("Not a member of this organization");
+
+    const now = Date.now();
+    const periodMs = periodDays * DAY;
+    const currentStart = now - periodMs;
+    const previousStart = currentStart - periodMs;
+
+    // Get accessible projects
+    const orgProjects = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+      .take(MAX_PAGE_SIZE);
+    const projects = orgProjects.filter((p) => !p.isDeleted);
+
+    // Count issues created and completed in each period
+    let currentCreated = 0;
+    let currentCompleted = 0;
+    let previousCreated = 0;
+    let previousCompleted = 0;
+
+    await Promise.all(
+      projects.map(async (project) => {
+        const doneStateIds = new Set(
+          project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
+        );
+
+        // Fetch recent issues (both periods)
+        const issues = await ctx.db
+          .query("issues")
+          .withIndex("by_project_deleted", (q) =>
+            q.eq("projectId", project._id).lt("isDeleted", true),
+          )
+          .filter((q) => q.gte(q.field("_creationTime"), previousStart))
+          .take(MAX_PAGE_SIZE);
+
+        for (const issue of issues) {
+          if (issue._creationTime >= currentStart) {
+            currentCreated++;
+            if (doneStateIds.has(issue.status)) currentCompleted++;
+          } else if (issue._creationTime >= previousStart) {
+            previousCreated++;
+            if (doneStateIds.has(issue.status)) previousCompleted++;
+          }
+        }
+      }),
+    );
+
+    const pctChange = (current: number, previous: number) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    return {
+      currentPeriod: { created: currentCreated, completed: currentCompleted },
+      previousPeriod: { created: previousCreated, completed: previousCompleted },
+      createdChange: pctChange(currentCreated, previousCreated),
+      completedChange: pctChange(currentCompleted, previousCompleted),
     };
   },
 });
@@ -736,5 +996,156 @@ export const getTimeMetrics = projectQuery({
       cycleTimeData: cycleTimeDays.slice(0, 20), // Last 20 for sparkline
       leadTimeData: leadTimeDays.slice(0, 20),
     };
+  },
+});
+
+/**
+ * Get cycle/lead time breakdowns per assignee and per label.
+ * Extends getTimeMetrics with dimensional grouping so teams can
+ * identify which assignees or label categories are slower.
+ */
+export const getTimeMetricsBreakdown = projectQuery({
+  args: {
+    groupBy: v.union(v.literal("assignee"), v.literal("label")),
+  },
+  returns: v.object({
+    groups: v.array(
+      v.object({
+        key: v.string(),
+        label: v.string(),
+        cycleTimeMedianDays: v.union(v.number(), v.null()),
+        leadTimeMedianDays: v.union(v.number(), v.null()),
+        issueCount: v.number(),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const project = ctx.project;
+    if (!project) return { groups: [] };
+
+    const doneStatusIds = new Set(
+      project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
+    );
+    const inProgressStatusIds = new Set(
+      project.workflowStates.filter((s) => s.category === "inprogress").map((s) => s.id),
+    );
+
+    if (doneStatusIds.size === 0) return { groups: [] };
+
+    // Fetch completed issues
+    const allIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
+      .filter((q) =>
+        q.and(q.neq(q.field("isDeleted"), true), q.eq(q.field("archivedAt"), undefined)),
+      )
+      .order("desc")
+      .take(MAX_PAGE_SIZE);
+
+    const doneIssues = allIssues.filter((issue) => doneStatusIds.has(issue.status));
+
+    if (doneIssues.length === 0) return { groups: [] };
+
+    // Batch fetch activity for cycle time calculation
+    const activityByIssue = new Map<Id<"issues">, Doc<"issueActivity">[]>();
+    await Promise.all(
+      doneIssues.map(async (issue) => {
+        const activities = await ctx.db
+          .query("issueActivity")
+          .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+          .filter((q) =>
+            q.and(q.eq(q.field("action"), "updated"), q.eq(q.field("field"), "status")),
+          )
+          .take(50);
+        activityByIssue.set(issue._id, activities);
+      }),
+    );
+
+    // Calculate times and group keys for each issue
+    type IssueWithTimes = {
+      leadTimeDays: number;
+      cycleTimeDays: number | null;
+      groupKeys: string[];
+    };
+
+    const issuesWithTimes: IssueWithTimes[] = doneIssues.map((issue) => {
+      const leadTimeDays = Math.round(((issue.updatedAt - issue._creationTime) / DAY) * 10) / 10;
+
+      const activities = activityByIssue.get(issue._id) ?? [];
+      const inProgressActivity = activities.find(
+        (a) => a.newValue && inProgressStatusIds.has(a.newValue),
+      );
+      const cycleTimeDays = inProgressActivity
+        ? Math.round(((issue.updatedAt - inProgressActivity._creationTime) / DAY) * 10) / 10
+        : null;
+
+      let groupKeys: string[];
+      if (args.groupBy === "assignee") {
+        groupKeys = [issue.assigneeId ?? "unassigned"];
+      } else {
+        groupKeys = issue.labels.length > 0 ? issue.labels : ["unlabeled"];
+      }
+
+      return { leadTimeDays, cycleTimeDays, groupKeys };
+    });
+
+    // Aggregate into groups
+    const groupMap = new Map<
+      string,
+      { leadTimes: number[]; cycleTimes: number[]; count: number }
+    >();
+
+    for (const item of issuesWithTimes) {
+      for (const key of item.groupKeys) {
+        const group = groupMap.get(key) ?? { leadTimes: [], cycleTimes: [], count: 0 };
+        if (item.leadTimeDays >= 0) group.leadTimes.push(item.leadTimeDays);
+        if (item.cycleTimeDays !== null && item.cycleTimeDays >= 0)
+          group.cycleTimes.push(item.cycleTimeDays);
+        group.count++;
+        groupMap.set(key, group);
+      }
+    }
+
+    const median = (arr: number[]) => {
+      if (arr.length === 0) return null;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    };
+
+    if (args.groupBy === "assignee") {
+      const userIds = [...groupMap.keys()]
+        .filter((k) => k !== "unassigned")
+        .map((k) => k as Id<"users">);
+      const userMap = await batchFetchUsers(ctx, userIds);
+
+      const groups = [...groupMap.entries()]
+        .map(([key, data]) => ({
+          key,
+          label:
+            key === "unassigned"
+              ? "Unassigned"
+              : (getUserName(userMap.get(key as Id<"users">)) ?? "Unknown"),
+          cycleTimeMedianDays: median(data.cycleTimes),
+          leadTimeMedianDays: median(data.leadTimes),
+          issueCount: data.count,
+        }))
+        .sort((a, b) => b.issueCount - a.issueCount);
+
+      return { groups };
+    }
+
+    // Label grouping
+    const groups = [...groupMap.entries()]
+      .map(([key, data]) => ({
+        key,
+        label: key === "unlabeled" ? "Unlabeled" : key,
+        cycleTimeMedianDays: median(data.cycleTimes),
+        leadTimeMedianDays: median(data.leadTimes),
+        issueCount: data.count,
+      }))
+      .sort((a, b) => b.issueCount - a.issueCount);
+
+    return { groups };
   },
 });

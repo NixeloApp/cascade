@@ -97,7 +97,7 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
 
       {/* Fields List */}
       {!customFields ? (
-        <Flex align="center" justify="center" className="min-h-32">
+        <Flex align="center" justify="center" className="min-h-content-block">
           <LoadingSpinner />
         </Flex>
       ) : customFields.length === 0 ? (

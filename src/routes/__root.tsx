@@ -106,7 +106,7 @@ function RootComponent() {
               <Flex direction="column" align="center" className="max-w-md text-center px-6">
                 {/* Subtle icon */}
                 <IconCircle size="xl" variant="soft" className="mb-8">
-                  <CloudOff className="h-10 w-10 text-ui-text-tertiary" />
+                  <CloudOff className="size-10 text-ui-text-tertiary" />
                 </IconCircle>
 
                 {/* Large error code with tight tracking */}

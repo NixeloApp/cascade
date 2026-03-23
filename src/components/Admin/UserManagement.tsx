@@ -227,7 +227,7 @@ function InvitationsPanel({
     <Card>
       <CardBody>
         {!invites ? (
-          <Flex justify="center" align="center" className="min-h-32">
+          <Flex justify="center" align="center" className="min-h-content-block">
             <LoadingSpinner />
           </Flex>
         ) : invites.length === 0 ? (
@@ -341,7 +341,7 @@ function UsersPanel({
     <Card>
       <CardBody>
         {!users ? (
-          <Flex justify="center" align="center" className="min-h-32">
+          <Flex justify="center" align="center" className="min-h-content-block">
             <LoadingSpinner />
           </Flex>
         ) : users.length === 0 ? (

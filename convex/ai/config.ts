@@ -89,6 +89,32 @@ export function getAIConfig(): AIConfig {
 }
 
 /**
+ * Get fallback AI config when the primary provider fails.
+ * Returns the other provider if configured, or null if only one is available.
+ */
+export function getFallbackAIConfig(failedProvider: AIProvider): AIConfig | null {
+  if (failedProvider === "anthropic" && isOpenAIConfigured()) {
+    return {
+      provider: "openai",
+      apiKey: getOpenAIApiKey() as string,
+      model: getOpenAIModel(),
+      temperature: 0.7,
+      maxTokens: 4096,
+    };
+  }
+  if (failedProvider === "openai" && isAnthropicConfigured()) {
+    return {
+      provider: "anthropic",
+      apiKey: getAnthropicApiKey(),
+      model: getAnthropicModel(),
+      temperature: 0.7,
+      maxTokens: 4096,
+    };
+  }
+  return null;
+}
+
+/**
  * Check if any AI provider is configured
  */
 export function isAIConfigured(): boolean {

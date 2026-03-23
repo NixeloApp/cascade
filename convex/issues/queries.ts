@@ -26,6 +26,7 @@ import {
   enrichComments,
   enrichIssue,
   enrichIssues,
+  enrichIssuesForList,
   fetchPaginatedIssues,
 } from "../lib/issueHelpers";
 import { notDeleted } from "../lib/softDeleteHelpers";
@@ -385,16 +386,6 @@ export const listRoadmapIssues = authenticatedQuery({
       );
     }
 
-    // Apply memory filters for safety/completeness
-    if (args.excludeEpics) {
-      issues = issues.filter((i) => i.type !== "epic");
-    }
-    if (args.epicId) {
-      issues = issues.filter((i) => i.epicId === args.epicId);
-    }
-    if (args.hasDueDate) {
-      issues = issues.filter((i) => i.dueDate !== undefined);
-    }
     if (args.includeSubtasks) {
       issues = await includeRoadmapParentContextIssues(
         ctx,
@@ -562,6 +553,9 @@ export const listProjectIssues = authenticatedQuery({
 export const listOrganizationIssues = organizationQuery({
   args: {
     status: v.optional(v.string()),
+    priority: v.optional(v.string()),
+    type: v.optional(v.string()),
+    assigneeId: v.optional(v.id("users")),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
@@ -569,22 +563,64 @@ export const listOrganizationIssues = organizationQuery({
     return await fetchPaginatedIssues(ctx, {
       paginationOpts: args.paginationOpts,
       buildQuery: (db) => {
-        if (args.status) {
-          return db
-            .query("issues")
-            .withIndex("by_organization_status", (q) =>
-              q.eq("organizationId", ctx.organizationId).eq("status", args.status as string),
-            )
-            .order("desc");
+        const base = args.status
+          ? db
+              .query("issues")
+              .withIndex("by_organization_status", (idx) =>
+                idx.eq("organizationId", ctx.organizationId).eq("status", args.status as string),
+              )
+          : db
+              .query("issues")
+              .withIndex("by_organization_deleted", (idx) =>
+                idx.eq("organizationId", ctx.organizationId).lt("isDeleted", true),
+              );
+
+        // Apply additional server-side filters
+        let filtered = base;
+        if (args.priority) {
+          filtered = filtered.filter((f) => f.eq(f.field("priority"), args.priority));
         }
-        return db
-          .query("issues")
-          .withIndex("by_organization_deleted", (q) =>
-            q.eq("organizationId", ctx.organizationId).lt("isDeleted", true),
-          )
-          .order("desc");
+        if (args.type) {
+          filtered = filtered.filter((f) => f.eq(f.field("type"), args.type));
+        }
+        if (args.assigneeId) {
+          filtered = filtered.filter((f) => f.eq(f.field("assigneeId"), args.assigneeId));
+        }
+
+        return filtered.order("desc");
       },
     });
+  },
+});
+
+/**
+ * Full-text search across organization issues using the search index.
+ * Returns up to 50 matching issues, enriched with project/user details.
+ */
+export const searchOrganizationIssues = organizationQuery({
+  args: {
+    query: v.string(),
+    status: v.optional(v.string()),
+    priority: v.optional(v.string()),
+    type: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    if (!args.query.trim()) return [];
+
+    const searchQuery = ctx.db
+      .query("issues")
+      .withSearchIndex("search_title", (q) => {
+        let sq = q.search("searchContent", args.query).eq("organizationId", ctx.organizationId);
+        if (args.status) sq = sq.eq("status", args.status);
+        if (args.priority) sq = sq.eq("priority", args.priority as never);
+        if (args.type) sq = sq.eq("type", args.type as never);
+        return sq;
+      })
+      .filter(notDeleted);
+
+    const issues = await safeCollect(searchQuery, 50, "org issue search");
+
+    return enrichIssuesForList(ctx, issues);
   },
 });
 

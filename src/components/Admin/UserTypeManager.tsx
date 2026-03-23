@@ -364,7 +364,7 @@ export function UserTypeManager() {
         />
         <CardBody>
           {!configs ? (
-            <Flex justify="center" align="center" className="min-h-32">
+            <Flex justify="center" align="center" className="min-h-content-block">
               <Typography variant="small" color="tertiary">
                 Loading...
               </Typography>
@@ -496,7 +496,7 @@ export function UserTypeManager() {
 
           {/* Assigned users */}
           {!profiles ? (
-            <Flex justify="center" align="center" className="min-h-32">
+            <Flex justify="center" align="center" className="min-h-content-block">
               <Typography variant="small" color="tertiary">
                 Loading...
               </Typography>

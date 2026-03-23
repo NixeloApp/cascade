@@ -131,7 +131,7 @@ function OnboardingPage() {
           <IconCircle
             size="md"
             variant="brand"
-            className="h-10 w-10 bg-brand-indigo-bg shadow-lg shadow-brand-indigo-bg/20 transition-transform group-hover:scale-110 active:scale-95"
+            className="size-10 bg-brand-indigo-bg shadow-lg shadow-brand-indigo-bg/20 transition-transform group-hover:scale-110 active:scale-95"
           >
             <Typography variant="h4" as="span" className="text-brand-foreground">
               N

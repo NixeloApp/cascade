@@ -1,13 +1,14 @@
 /**
- * CHECK: Raw Tailwind
- * Flags generic raw Tailwind usage outside the owned primitive boundary.
+ * CHECK: Raw Styling
+ * Flags raw styling outside the owned primitive boundary — both className
+ * (Tailwind utilities) and inline style props (hardcoded CSS values).
  *
  * This check is intentionally narrow:
  * - generic raw utility policing lives here
  * - design-system ownership lives in check-design-system-ownership.js
  * - JSX prop misuse lives in check-layout-prop-usage.js
  *
- * NOTE: This validator has been tightened. New violations are blocked,
+ * NOTE: This validator is ratcheted. New violations are blocked,
  * but existing violations are baselined and tracked for gradual cleanup.
  */
 
@@ -69,6 +70,121 @@ const RAW_TW_ESCAPE_HATCHES = [
   "tabsTriggerVariants(",
   "tabsListVariants(",
 ];
+
+/**
+ * Inline style CSS properties that map to the same design-system concerns
+ * as the raw Tailwind patterns. Only hardcoded literal values are flagged;
+ * dynamic/computed values (variables, template literals, expressions) are OK.
+ */
+const INLINE_STYLE_PATTERNS = [
+  {
+    props: ["width", "height", "minWidth", "maxWidth", "minHeight", "maxHeight"],
+    replacement: "component prop or design token",
+  },
+  {
+    props: [
+      "padding",
+      "paddingLeft",
+      "paddingRight",
+      "paddingTop",
+      "paddingBottom",
+      "paddingInline",
+      "paddingBlock",
+    ],
+    replacement: "component padding prop or design token",
+  },
+  {
+    props: [
+      "margin",
+      "marginLeft",
+      "marginRight",
+      "marginTop",
+      "marginBottom",
+      "marginInline",
+      "marginBlock",
+    ],
+    replacement: "component spacing or design token",
+  },
+  { props: ["gap"], replacement: "gap prop on Flex/Stack/Grid" },
+  {
+    props: ["fontSize", "fontWeight"],
+    replacement: "Typography component",
+  },
+  { props: ["borderRadius"], replacement: "Card or design token" },
+  { props: ["opacity"], replacement: "opacity token" },
+];
+
+/**
+ * Build a combined regex that matches any flagged CSS property name as an
+ * object key in a JSX style prop: `propName:` or `propName :`.
+ */
+const INLINE_STYLE_PROP_REGEX = new RegExp(
+  `\\b(${INLINE_STYLE_PATTERNS.flatMap((p) => p.props).join("|")})\\s*:`,
+);
+
+/**
+ * Collect the full style={{ ... }} span starting from a line that contains
+ * `style=`. Returns the concatenated text and the ending line index.
+ */
+function collectStyleSpan(lines, startIndex) {
+  const startCol = lines[startIndex].indexOf("style=");
+  if (startCol === -1) return { span: "", endIndex: startIndex };
+
+  let span = lines[startIndex].slice(startCol);
+  let endIndex = startIndex;
+  let braces = 0;
+  let started = false;
+
+  for (const ch of span) {
+    if (ch === "{") {
+      braces++;
+      started = true;
+    }
+    if (ch === "}") braces--;
+    if (started && braces <= 0) return { span, endIndex };
+  }
+
+  // Multiline — keep reading until braces balance
+  for (let j = startIndex + 1; j < Math.min(lines.length, startIndex + 30); j++) {
+    span += ` ${lines[j]}`;
+    endIndex = j;
+    for (const ch of lines[j]) {
+      if (ch === "{") braces++;
+      if (ch === "}") braces--;
+    }
+    if (braces <= 0) break;
+  }
+
+  return { span, endIndex };
+}
+
+/**
+ * Check whether a style value for a given property is a hardcoded literal
+ * (string, number) rather than a dynamic expression.
+ *
+ * We flag: `width: 0`, `width: 64`, `width: "16rem"`, `height: "100%"`
+ * We skip: `width: someVar`, `left: \`${offset}px\``, `width: x + 10`
+ */
+function isHardcodedStyleValue(span, propName) {
+  // Find the property in the span
+  const propRegex = new RegExp(`\\b${propName}\\s*:`);
+  const match = propRegex.exec(span);
+  if (!match) return false;
+
+  const afterColon = span.slice(match.index + match[0].length).trim();
+
+  // Number literal (including negative): 0, 64, -1, 0.5, 600
+  if (/^-?\d+(\.\d+)?[,}\s]/.test(afterColon)) return true;
+
+  // String literal: "16rem", "100%", "1.5rem", "0.5rem"
+  if (/^["']/.test(afterColon)) {
+    // But skip if it contains var() — that's a token reference
+    const stringMatch = afterColon.match(/^["']([^"']*?)["']/);
+    if (stringMatch && !stringMatch[1].includes("var(")) return true;
+  }
+
+  return false;
+}
 
 function normalizeClassNameLiteral(value) {
   return value.trim().replace(/\s+/g, " ");
@@ -212,70 +328,124 @@ export function run() {
 
     for (let index = 0; index < lines.length; index++) {
       const line = lines[index];
-      if (!/\bclassName\s*=/.test(line)) continue;
 
-      // Collect full className span for multiline attributes
-      const { span, endIndex } = collectClassNameSpan(lines, index);
+      // ── className violations (existing logic) ──
+      if (/\bclassName\s*=/.test(line)) {
+        // Collect full className span for multiline attributes
+        const { span, endIndex } = collectClassNameSpan(lines, index);
 
-      // Get the opening tag to check for escape hatches
-      const tagText = findOpeningTag(lines, index);
+        // Get the opening tag to check for escape hatches
+        const tagText = findOpeningTag(lines, index);
 
-      // Skip if using design system APIs (recipe, chrome, variant props or variant calls)
-      if (RAW_TW_ESCAPE_HATCHES.some((token) => span.includes(token) || tagText.includes(token))) {
-        index = endIndex;
-        continue;
-      }
-
-      // Skip tag-based structural allowlist entries (e.g., Skeleton components)
-      if (
-        RAW_TAILWIND_STRUCTURAL_ALLOWLIST.some(
-          (allow) => allow.source.startsWith("^<") && allow.test(tagText.trim()),
-        )
-      ) {
-        index = endIndex;
-        continue;
-      }
-
-      // Resolve className={CONST_VAR} references to their string value
-      let resolvedSpan = span;
-      let isConstRef = false;
-      const varRefMatch = span.match(/className\s*=\s*\{([A-Za-z_]\w*)\}/);
-      if (varRefMatch) {
-        const entry = constStringMap.get(varRefMatch[1]);
-        if (entry) {
-          resolvedSpan = `className="${entry.value}"`;
-          isConstRef = true;
+        // Skip if using design system APIs (recipe, chrome, variant props or variant calls)
+        if (
+          RAW_TW_ESCAPE_HATCHES.some((token) => span.includes(token) || tagText.includes(token))
+        ) {
+          index = endIndex;
+          continue;
         }
-      }
 
-      // Strip structurally-allowed tokens (per-token, not per-attribute)
-      // so that e.g. "min-w-0 p-4" only strips min-w-0 and still flags p-4.
-      const classBasedAllowlist = RAW_TAILWIND_STRUCTURAL_ALLOWLIST.filter(
-        (allow) => !allow.source.startsWith("^<"),
-      );
-      let filteredSpan = resolvedSpan;
-      if (classBasedAllowlist.length > 0) {
-        filteredSpan = resolvedSpan.replace(/(?<=["'\s])(\S+)/g, (token) =>
-          classBasedAllowlist.some((allow) => allow.test(token)) ? "" : token,
+        // Skip tag-based structural allowlist entries (e.g., Skeleton components)
+        if (
+          RAW_TAILWIND_STRUCTURAL_ALLOWLIST.some(
+            (allow) => allow.source.startsWith("^<") && allow.test(tagText.trim()),
+          )
+        ) {
+          index = endIndex;
+          continue;
+        }
+
+        // Resolve className={CONST_VAR} references to their string value
+        let resolvedSpan = span;
+        let isConstRef = false;
+        const varRefMatch = span.match(/className\s*=\s*\{([A-Za-z_]\w*)\}/);
+        if (varRefMatch) {
+          const entry = constStringMap.get(varRefMatch[1]);
+          if (entry) {
+            resolvedSpan = `className="${entry.value}"`;
+            isConstRef = true;
+          }
+        }
+
+        // Strip structurally-allowed tokens (per-token, not per-attribute)
+        // so that e.g. "min-w-0 p-4" only strips min-w-0 and still flags p-4.
+        const classBasedAllowlist = RAW_TAILWIND_STRUCTURAL_ALLOWLIST.filter(
+          (allow) => !allow.source.startsWith("^<"),
         );
+        let filteredSpan = resolvedSpan;
+        if (classBasedAllowlist.length > 0) {
+          filteredSpan = resolvedSpan.replace(/(?<=["'\s])(\S+)/g, (token) =>
+            classBasedAllowlist.some((allow) => allow.test(token)) ? "" : token,
+          );
+        }
+
+        for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
+          if (!pattern.test(filteredSpan)) continue;
+
+          const suffix = isConstRef ? " (hidden in const — still raw styling)" : "";
+          const violation = {
+            line: index + 1,
+            replacement: `${replacement}${suffix}`,
+          };
+          const bucket = violationsByFile[rel] ?? [];
+          bucket.push(violation);
+          violationsByFile[rel] = bucket;
+          break;
+        }
+
+        // Skip past multiline spans to avoid double-counting
+        index = endIndex;
+        continue;
       }
 
-      for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
-        if (!pattern.test(filteredSpan)) continue;
+      // ── Inline style violations ──
+      if (/\bstyle\s*=\s*\{/.test(line)) {
+        const tagText = findOpeningTag(lines, index);
 
-        const suffix = isConstRef ? " (hidden in const — still raw Tailwind)" : "";
-        const violation = {
-          line: index + 1,
-          replacement: `${replacement}${suffix}`,
-        };
-        const bucket = violationsByFile[rel] ?? [];
-        bucket.push(violation);
-        violationsByFile[rel] = bucket;
-        break;
+        // Same escape hatches apply — design system components can use inline styles
+        if (RAW_TW_ESCAPE_HATCHES.some((token) => tagText.includes(token))) {
+          continue;
+        }
+
+        // Skip Skeleton components
+        if (
+          RAW_TAILWIND_STRUCTURAL_ALLOWLIST.some(
+            (allow) => allow.source.startsWith("^<") && allow.test(tagText.trim()),
+          )
+        ) {
+          continue;
+        }
+
+        const { span: styleSpan, endIndex } = collectStyleSpan(lines, index);
+
+        // Only flag if the span contains a property we care about
+        if (!INLINE_STYLE_PROP_REGEX.test(styleSpan)) {
+          index = endIndex;
+          continue;
+        }
+
+        // Check each pattern group for hardcoded values
+        for (const { props, replacement } of INLINE_STYLE_PATTERNS) {
+          let found = false;
+          for (const prop of props) {
+            const propRegex = new RegExp(`\\b${prop}\\s*:`);
+            if (propRegex.test(styleSpan) && isHardcodedStyleValue(styleSpan, prop)) {
+              const violation = {
+                line: index + 1,
+                replacement: `${replacement} (inline style "${prop}")`,
+              };
+              const bucket = violationsByFile[rel] ?? [];
+              bucket.push(violation);
+              violationsByFile[rel] = bucket;
+              found = true;
+              break;
+            }
+          }
+          if (found) break;
+        }
+
+        index = endIndex;
       }
-
-      // Skip past multiline spans to avoid double-counting
-      index = endIndex;
     }
 
     // Report class-map hiding as separate violations
@@ -311,7 +481,7 @@ export function run() {
   }
 
   const fileViolationRatchet = analyzeCountRatchet(violationsByFile, fileViolationsBaseline);
-  const rawTailwindOverages = Object.entries(fileViolationRatchet.overagesByKey)
+  const rawStylingOverages = Object.entries(fileViolationRatchet.overagesByKey)
     .map(([file, overage]) => ({
       file,
       baselineCount: overage.baselineCount,
@@ -322,12 +492,12 @@ export function run() {
 
   const messages = [];
 
-  if (rawTailwindOverages.length > 0) {
+  if (rawStylingOverages.length > 0) {
     messages.push(
-      `${c.red}Raw Tailwind violations are ratcheted by file:${c.reset} shrink existing debt instead of keeping files on a permanent allowlist.`,
+      `${c.red}Raw styling violations are ratcheted by file:${c.reset} shrink existing debt instead of keeping files on a permanent allowlist.`,
     );
 
-    for (const item of rawTailwindOverages) {
+    for (const item of rawStylingOverages) {
       messages.push(
         `  ${c.bold}${item.file}${c.reset} baseline ${item.baselineCount} → current ${item.currentCount}`,
       );
@@ -401,20 +571,18 @@ export function run() {
 
   return {
     passed:
-      rawTailwindOverages.length === 0 &&
+      rawStylingOverages.length === 0 &&
       crossFileClusterViolations.length === 0 &&
       routeClusterViolations.length === 0,
     errors:
-      rawTailwindOverages.length +
-      crossFileClusterViolations.length +
-      routeClusterViolations.length,
+      rawStylingOverages.length + crossFileClusterViolations.length + routeClusterViolations.length,
     detail:
-      rawTailwindOverages.length > 0 ||
+      rawStylingOverages.length > 0 ||
       crossFileClusterViolations.length > 0 ||
       routeClusterViolations.length > 0
         ? [
-            rawTailwindOverages.length > 0
-              ? `${rawTailwindOverages.length} file(s) exceed raw Tailwind baseline`
+            rawStylingOverages.length > 0
+              ? `${rawStylingOverages.length} file(s) exceed raw styling baseline`
               : null,
             crossFileClusterViolations.length > 0
               ? `${crossFileClusterViolations.length} repeated cross-file class cluster(s)`
@@ -431,7 +599,7 @@ export function run() {
   };
 }
 
-// Standalone audit mode: node scripts/validate/check-raw-tailwind.js --audit
+// Standalone audit mode: node scripts/validate/check-raw-styling.js --audit
 if (process.argv.includes("--audit")) {
   const result = run();
   const ratchetable = result.ratchetableBaselineFiles ?? [];

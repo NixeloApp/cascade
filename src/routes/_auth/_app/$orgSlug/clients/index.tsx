@@ -1,17 +1,24 @@
 import { api } from "@convex/_generated/api";
-import type { Doc } from "@convex/_generated/dataModel";
+import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
-import { anyApi } from "convex/server";
-import { Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -22,10 +29,8 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/clients/")({
   component: ClientsListPage,
 });
 
-const clientPortalApi = anyApi.clientPortal;
-
 type ClientPortalTokenRow = {
-  _id: string;
+  _id: Id<"clientPortalTokens">;
   isRevoked: boolean;
   expiresAt?: number;
   lastAccessedAt?: number;
@@ -37,8 +42,8 @@ function PortalTokenDetails({
   onRevokePortalToken,
   tokens,
 }: {
-  clientId: string;
-  onRevokePortalToken: (clientId: string, tokenId: string) => void;
+  clientId: Id<"clients">;
+  onRevokePortalToken: (clientId: Id<"clients">, tokenId: Id<"clientPortalTokens">) => void;
   tokens: ClientPortalTokenRow[];
 }) {
   return tokens.map((token) => (
@@ -75,6 +80,11 @@ function PortalTokenDetails({
   ));
 }
 
+interface ProjectOption {
+  _id: string;
+  name: string;
+}
+
 function ClientCard({
   client,
   generatedPortalLink,
@@ -82,21 +92,25 @@ function ClientCard({
   onRefreshPortalTokens,
   onRevokePortalToken,
   portalTokens,
+  projects,
 }: {
   client: Doc<"clients">;
   generatedPortalLink?: string;
-  onGeneratePortalLink: (clientId: string) => void;
-  onRefreshPortalTokens: (clientId: string) => void;
-  onRevokePortalToken: (clientId: string, tokenId: string) => void;
+  onGeneratePortalLink: (clientId: Id<"clients">, projectId: string) => void;
+  onRefreshPortalTokens: (clientId: Id<"clients">) => void;
+  onRevokePortalToken: (clientId: Id<"clients">, tokenId: Id<"clientPortalTokens">) => void;
   portalTokens: ClientPortalTokenRow[];
+  projects: ProjectOption[];
 }) {
+  const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?._id ?? "");
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{client.name}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Stack gap="xs" className="pt-4">
+        <Stack gap="sm">
           <Typography variant="small">{client.email}</Typography>
           {client.company ? (
             <Typography variant="small" color="secondary">
@@ -106,9 +120,27 @@ function ClientCard({
           <Typography variant="small" color="secondary">
             Default rate: ${client.hourlyRate?.toFixed(2) ?? "0.00"}
           </Typography>
-          <div className="pt-2">
-            <Flex wrap gap="sm">
-              <Button variant="secondary" onClick={() => onGeneratePortalLink(client._id)}>
+          <Stack gap="sm">
+            <Flex wrap gap="sm" align="end">
+              {projects.length > 1 ? (
+                <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((p) => (
+                      <SelectItem key={p._id} value={p._id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : null}
+              <Button
+                variant="secondary"
+                disabled={!selectedProjectId}
+                onClick={() => onGeneratePortalLink(client._id, selectedProjectId)}
+              >
                 Generate portal link
               </Button>
               <Button variant="ghost" onClick={() => onRefreshPortalTokens(client._id)}>
@@ -116,7 +148,7 @@ function ClientCard({
               </Button>
             </Flex>
             {generatedPortalLink ? (
-              <Typography variant="caption" className="mt-2 block text-brand">
+              <Typography variant="caption" className="text-brand">
                 {generatedPortalLink}
               </Typography>
             ) : null}
@@ -125,7 +157,7 @@ function ClientCard({
               onRevokePortalToken={onRevokePortalToken}
               tokens={portalTokens}
             />
-          </div>
+          </Stack>
         </Stack>
       </CardContent>
     </Card>
@@ -139,10 +171,13 @@ function ClientsListPage() {
     | undefined;
   const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
   const { mutate: createClient } = useAuthenticatedMutation(api.clients.create);
-  const generatePortalToken = useMutation(clientPortalApi.generateToken);
-  const listPortalTokens = useMutation(clientPortalApi.listTokensByClient);
-  const revokePortalToken = useMutation(clientPortalApi.revokeToken);
+  const { mutate: generatePortalToken } = useAuthenticatedMutation(api.clientPortal.generateToken);
+  const { mutate: listPortalTokens } = useAuthenticatedMutation(
+    api.clientPortal.listTokensByClient,
+  );
+  const { mutate: revokePortalToken } = useAuthenticatedMutation(api.clientPortal.revokeToken);
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -165,29 +200,24 @@ function ClientsListPage() {
       setEmail("");
       setCompany("");
       setHourlyRate("0");
+      setShowCreateModal(false);
       showSuccess("Client created");
     } catch (error) {
       showError(error, "Failed to create client");
     }
   };
 
-  const handleGeneratePortalLink = async (clientId: string) => {
+  const handleGeneratePortalLink = async (clientId: Id<"clients">, projectId: string) => {
     try {
-      const scopedProject = projects?.page.find(
-        (project: { organizationId: string }) => project.organizationId === organizationId,
-      );
-      if (!scopedProject) {
-        showError(
-          "No project available",
-          "Create at least one project before generating a portal link",
-        );
+      if (!projectId) {
+        showError("Select a project to scope the portal link");
         return;
       }
 
       const response = await generatePortalToken({
         organizationId,
         clientId,
-        projectIds: [scopedProject._id],
+        projectIds: [projectId as Id<"projects">],
         permissions: {
           viewIssues: true,
           viewDocuments: false,
@@ -206,7 +236,7 @@ function ClientsListPage() {
     }
   };
 
-  const handleRefreshPortalTokens = async (clientId: string) => {
+  const handleRefreshPortalTokens = async (clientId: Id<"clients">) => {
     try {
       const tokens = await listPortalTokens({
         organizationId,
@@ -221,7 +251,10 @@ function ClientsListPage() {
     }
   };
 
-  const handleRevokePortalToken = async (clientId: string, tokenId: string) => {
+  const handleRevokePortalToken = async (
+    clientId: Id<"clients">,
+    tokenId: Id<"clientPortalTokens">,
+  ) => {
     try {
       await revokePortalToken({
         organizationId,
@@ -240,54 +273,77 @@ function ClientsListPage() {
 
   return (
     <PageLayout>
-      <PageHeader title="Clients" description="Manage billing contacts and default rates." />
+      <PageHeader
+        title="Clients"
+        description="Manage billing contacts and default rates."
+        actions={
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            leftIcon={<Icon icon={Plus} size="sm" />}
+          >
+            New Client
+          </Button>
+        }
+      />
+
+      <Dialog
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        title="New Client"
+        description="Add a new billing contact to your organization."
+        size="md"
+      >
+        <Stack gap="md">
+          <Grid cols={1} colsMd={2} gap="sm">
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Client name"
+            />
+            <Input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="client@example.com"
+            />
+            <Input
+              value={company}
+              onChange={(event) => setCompany(event.target.value)}
+              placeholder="Company"
+            />
+            <Input
+              type="number"
+              min={0}
+              step={0.01}
+              value={hourlyRate}
+              onChange={(event) => setHourlyRate(event.target.value)}
+              placeholder="Hourly rate"
+            />
+          </Grid>
+          <Flex justify="end" gap="sm">
+            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateClient} disabled={!name.trim() || !email.trim()}>
+              Create Client
+            </Button>
+          </Flex>
+        </Stack>
+      </Dialog>
 
       <Stack gap="md">
-        <Card>
-          <CardHeader>
-            <CardTitle>New Client</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Stack gap="md">
-              <Grid cols={1} colsLg={4} gap="sm" className="pt-4">
-                <Input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Client name"
-                />
-                <Input
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="client@example.com"
-                />
-                <Input
-                  value={company}
-                  onChange={(event) => setCompany(event.target.value)}
-                  placeholder="Company"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={hourlyRate}
-                  onChange={(event) => setHourlyRate(event.target.value)}
-                  placeholder="Hourly rate"
-                />
-              </Grid>
-              <div>
-                <Button onClick={handleCreateClient} disabled={!name.trim() || !email.trim()}>
-                  Create client
-                </Button>
-              </div>
-            </Stack>
-          </CardContent>
-        </Card>
-
         {clients.length === 0 ? (
           <EmptyState
             icon={Users}
             title="No clients yet"
-            description="Add your first billing contact above to get started."
+            description="Click 'New Client' to add your first billing contact."
+            action={
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                leftIcon={<Icon icon={Plus} size="sm" />}
+              >
+                New Client
+              </Button>
+            }
           />
         ) : (
           <Grid cols={1} colsLg={2} gap="md">
@@ -300,6 +356,14 @@ function ClientsListPage() {
                 onRefreshPortalTokens={handleRefreshPortalTokens}
                 onRevokePortalToken={handleRevokePortalToken}
                 portalTokens={portalTokensByClient[client._id] || []}
+                projects={
+                  projects?.page
+                    .filter((p: { organizationId: string }) => p.organizationId === organizationId)
+                    .map((p: { _id: string; name: string }) => ({
+                      _id: p._id,
+                      name: p.name,
+                    })) ?? []
+                }
               />
             ))}
           </Grid>

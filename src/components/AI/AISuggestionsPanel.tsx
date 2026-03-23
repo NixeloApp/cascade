@@ -158,25 +158,25 @@ function SuggestionCard({ suggestion, onAccept, onDismiss }: SuggestionCardProps
       <Flex align="start" gap="md">
         <Icon icon={metadata?.icon || Lightbulb} size="lg" className="shrink-0" />
         <FlexItem flex="1" className="min-w-0">
-          <Flex align="center" gap="sm" className="mb-2">
-            <Badge variant="brand" shape="pill">
-              {metadata?.label || suggestion.suggestionType}
-            </Badge>
-            <MetadataTimestamp date={suggestion._creationTime} format="absolute" />
-          </Flex>
-          <Typography variant="p" className="whitespace-pre-wrap break-words">
-            {suggestion.suggestion}
-          </Typography>
-          {suggestion.reasoning && (
-            <Typography variant="caption" className="mt-2">
-              <Typography variant="label" as="span">
-                Reasoning:
-              </Typography>{" "}
-              {suggestion.reasoning}
+          <Stack gap="sm">
+            <Flex align="center" gap="sm">
+              <Badge variant="brand" shape="pill">
+                {metadata?.label || suggestion.suggestionType}
+              </Badge>
+              <MetadataTimestamp date={suggestion._creationTime} format="absolute" />
+            </Flex>
+            <Typography variant="p" className="whitespace-pre-wrap break-words">
+              {suggestion.suggestion}
             </Typography>
-          )}
-          {suggestion.confidence !== undefined && (
-            <div className="mt-2">
+            {suggestion.reasoning && (
+              <Typography variant="caption">
+                <Typography variant="label" as="span">
+                  Reasoning:
+                </Typography>{" "}
+                {suggestion.reasoning}
+              </Typography>
+            )}
+            {suggestion.confidence !== undefined && (
               <Flex align="center" gap="sm">
                 <Typography variant="caption" color="tertiary">
                   Confidence:
@@ -188,44 +188,40 @@ function SuggestionCard({ suggestion, onAccept, onDismiss }: SuggestionCardProps
                   {Math.round(suggestion.confidence * 100)}%
                 </Typography>
               </Flex>
-            </div>
-          )}
-          {!(suggestion.accepted || suggestion.dismissed) && (
-            <Flex gap="sm" className="mt-3">
-              <Button
-                variant="success"
-                size="sm"
-                onClick={() => onAccept(suggestion._id)}
-                className="flex-1 sm:flex-none"
-                leftIcon={<Icon icon={Check} size="sm" />}
-              >
-                Accept
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onDismiss(suggestion._id)}
-                className="flex-1 sm:flex-none"
-                leftIcon={<Icon icon={X} size="sm" />}
-              >
-                Dismiss
-              </Button>
-            </Flex>
-          )}
-          {suggestion.accepted && (
-            <div className="mt-3">
+            )}
+            {!(suggestion.accepted || suggestion.dismissed) && (
+              <Flex gap="sm">
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={() => onAccept(suggestion._id)}
+                  className="flex-1 sm:flex-none"
+                  leftIcon={<Icon icon={Check} size="sm" />}
+                >
+                  Accept
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onDismiss(suggestion._id)}
+                  className="flex-1 sm:flex-none"
+                  leftIcon={<Icon icon={X} size="sm" />}
+                >
+                  Dismiss
+                </Button>
+              </Flex>
+            )}
+            {suggestion.accepted && (
               <Badge variant="success" size="sm">
                 <Icon icon={Check} size="xs" inline /> Accepted
               </Badge>
-            </div>
-          )}
-          {suggestion.dismissed && (
-            <div className="mt-3">
+            )}
+            {suggestion.dismissed && (
               <Badge variant="neutral" size="sm">
                 <Icon icon={X} size="xs" inline /> Dismissed
               </Badge>
-            </div>
-          )}
+            )}
+          </Stack>
         </FlexItem>
       </Flex>
     </Card>

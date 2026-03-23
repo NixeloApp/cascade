@@ -262,7 +262,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
 
         <CardBody>
           {labelGroups === undefined ? (
-            <Flex justify="center" align="center" className="min-h-32">
+            <Flex justify="center" align="center" className="min-h-content-block">
               <LoadingSpinner size="lg" />
             </Flex>
           ) : labelGroups.length === 0 && totalLabels === 0 ? (

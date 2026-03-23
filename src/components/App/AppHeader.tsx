@@ -21,6 +21,7 @@ import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Dot";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Separator } from "@/components/ui/Separator";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { useOfflineQueue, useOnlineStatus } from "@/hooks/useOffline";
@@ -109,7 +110,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
             </Flex>
 
             {/* Visual separator between groups (desktop only) */}
-            <div className="hidden h-5 w-px bg-ui-border/50 sm:block" aria-hidden="true" />
+            <Separator orientation="vertical" className="hidden sm:block" />
 
             {/* Connectivity indicator — offline or syncing queued changes */}
             {!isOnline && (
@@ -133,7 +134,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
             <NotificationCenter />
 
             {/* Visual separator before identity (desktop only) */}
-            <div className="hidden h-5 w-px bg-ui-border/50 sm:block" aria-hidden="true" />
+            <Separator orientation="vertical" className="hidden sm:block" />
 
             {/* Group 3: Identity (user menu) */}
             <UserMenu />

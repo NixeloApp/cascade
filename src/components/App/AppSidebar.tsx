@@ -23,6 +23,7 @@ import { Icon as AppIcon, type IconSize } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { NavItem as NavItemBase } from "@/components/ui/NavItem";
+import { Separator } from "@/components/ui/Separator";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip, TooltipProvider } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -330,7 +331,9 @@ function DocumentsSectionContent({
           icon={Copy}
         />
       </li>
-      <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+      <li className="list-none mx-2" aria-hidden="true">
+        <Separator spacing="sm" />
+      </li>
       {favorites.length > 0 && (
         <>
           <li className="list-none px-3 pt-1">
@@ -351,7 +354,9 @@ function DocumentsSectionContent({
               />
             </li>
           ))}
-          <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+          <li className="list-none mx-2" aria-hidden="true">
+            <Separator spacing="sm" />
+          </li>
         </>
       )}
       {showSearch && (
@@ -621,7 +626,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
         data-testid={TEST_IDS.NAV.SIDEBAR}
         className={cn(
           "fixed lg:relative z-50 lg:z-auto h-screen transition-default",
-          isCollapsed ? "w-64 lg:w-16" : "w-64",
+          isCollapsed ? "w-sidebar lg:w-sidebar-collapsed" : "w-sidebar",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >

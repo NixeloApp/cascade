@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 
 const CalendarView = lazy(() =>
@@ -18,16 +18,49 @@ import {
 } from "@/components/ui/Select";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+
+interface CalendarSearchParams {
+  workspace?: string;
+  team?: string;
+}
+
 export const Route = createFileRoute("/_auth/_app/$orgSlug/calendar")({
   component: OrganizationCalendarPage,
+  validateSearch: (search: Record<string, unknown>): CalendarSearchParams => ({
+    workspace: typeof search.workspace === "string" ? search.workspace : undefined,
+    team: typeof search.team === "string" ? search.team : undefined,
+  }),
 });
 
 function OrganizationCalendarPage() {
   const { organizationId } = useOrganization();
+  const { workspace: workspaceParam, team: teamParam } = Route.useSearch();
+  const navigate = Route.useNavigate();
+
   const workspaces = useAuthenticatedQuery(api.workspaces.list, { organizationId });
   const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, { organizationId });
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<Id<"workspaces"> | "all">("all");
-  const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | "all">("all");
+
+  const selectedWorkspaceId: Id<"workspaces"> | "all" =
+    (workspaceParam as Id<"workspaces">) || "all";
+  const selectedTeamId: Id<"teams"> | "all" = (teamParam as Id<"teams">) || "all";
+
+  const setSelectedWorkspaceId = (value: Id<"workspaces"> | "all") => {
+    navigate({
+      search: {
+        workspace: value === "all" ? undefined : value,
+        team: undefined, // reset team when workspace changes
+      },
+    });
+  };
+
+  const setSelectedTeamId = (value: Id<"teams"> | "all") => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        team: value === "all" ? undefined : value,
+      }),
+    });
+  };
 
   if (workspaces === undefined || teams === undefined) {
     return <PageContent isLoading>{null}</PageContent>;
@@ -55,10 +88,7 @@ function OrganizationCalendarPage() {
           <Flex gap="sm" className="w-full sm:w-auto">
             <Select
               value={selectedWorkspaceId}
-              onValueChange={(value) => {
-                setSelectedWorkspaceId(value as Id<"workspaces"> | "all");
-                setSelectedTeamId("all");
-              }}
+              onValueChange={(value) => setSelectedWorkspaceId(value as Id<"workspaces"> | "all")}
             >
               <SelectTrigger className="w-full sm:w-56">
                 <SelectValue placeholder="All workspaces" />

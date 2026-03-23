@@ -448,7 +448,7 @@ describe("AppSidebar Accessibility", () => {
       // Sidebar should have correct classes for mobile width override
       const aside = screen.getByRole("complementary"); // AppSidebar renders <aside>
 
-      expect(aside).toHaveClass("lg:w-16", "w-64");
+      expect(aside).toHaveClass("lg:w-sidebar-collapsed", "w-sidebar");
 
       // Items should be expanded (text visible)
       // "Dashboard" text should be visible (getByText throws if not found)

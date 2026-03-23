@@ -389,7 +389,7 @@ function GenerateKeyModal({
               description="Choose the minimum scopes needed for this client or automation."
             >
               <Label required>Permissions (Scopes)</Label>
-              <Stack gap="sm" className="max-h-64 overflow-y-auto">
+              <Stack gap="sm" className="max-h-dropdown overflow-y-auto">
                 {availableScopes.map((scope) => (
                   <label
                     key={scope.value}
@@ -516,7 +516,13 @@ function UsageStatsModal({
     >
       {!stats ? (
         <SettingsSectionInset>
-          <Flex direction="column" gap="sm" align="center" justify="center" className="min-h-32">
+          <Flex
+            direction="column"
+            gap="sm"
+            align="center"
+            justify="center"
+            className="min-h-content-block"
+          >
             <LoadingSpinner size="lg" />
             <Typography variant="small" color="tertiary">
               Loading statistics...
@@ -567,7 +573,7 @@ function UsageStatsModal({
                 </Flex>
               </Card>
             ) : (
-              <Stack gap="sm" className="max-h-64 overflow-y-auto">
+              <Stack gap="sm" className="max-h-dropdown overflow-y-auto">
                 {stats.recentLogs.map((log: UsageLog) => (
                   <Card padding="sm" key={`${log.endpoint}-${log.createdAt}`} variant="flat">
                     <Stack gap="xs">

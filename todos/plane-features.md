@@ -10,8 +10,8 @@ Remaining evaluation items. Core features (stickies, auto-archive, offline, vers
 
 ### Advanced Analytics
 
-- [ ] **Velocity trends** — project-level velocity, burndown comparison across sprints
-- [ ] **Cycle/lead time depth** — per-assignee and per-label breakdowns beyond the current aggregate
+- [x] ~~**Velocity trends**~~ — **Shipped** (getSprintBurndownComparison query with normalized burndown curves and completion rates across sprints)
+- [x] ~~**Cycle/lead time depth**~~ — **Shipped** (getTimeMetricsBreakdown query with per-assignee and per-label grouping)
 
 ### Notification Channels
 
@@ -19,5 +19,5 @@ Remaining evaluation items. Core features (stickies, auto-archive, offline, vers
 
 ## Low Priority
 
-- [ ] **Model fallbacks** — AI provider resilience/fallback when primary is down
-- [ ] **Bulk label operations** — only remaining bulk operation type not shipped
+- [x] ~~**Model fallbacks**~~ — **Shipped** (runtime fallback in callAI: transient errors trigger secondary provider if configured)
+- [x] ~~**Bulk label operations**~~ — **Shipped** (bulkAddLabels + bulkRemoveLabels)

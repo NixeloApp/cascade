@@ -101,7 +101,7 @@ export function AssigneeSearchDropdown({
               onClick={() => onChange(null)}
               aria-label="Clear assignee"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <title>Clear</title>
                 <path
                   strokeLinecap="round"
