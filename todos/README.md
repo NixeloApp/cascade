@@ -10,11 +10,11 @@
 
 | Item | Detail |
 |------|--------|
-| AI slop cleanup | Redundant shells, panel-in-panel layouts (needs visual review with dev server) |
+| AI slop cleanup | Card variant="subtle" added; worst offenders fixed (OfflineTab 11→0, NotificationsTab 8→2, UserTypeManager 5→2). Remaining visual review items need dev server. |
 | Mobile/tablet coverage | Backfill responsive gaps (needs visual review) |
 | Icon visual consistency | Sizing, stroke-weight rhythm, tone drift (needs visual review) |
 | Shell discipline | Composition pattern drift (needs visual review) |
-| Raw styling cleanup | 99 files / 186 violations (structural patterns, diminishing returns) |
+| Raw styling cleanup | 102 files / 162 violations (long tail: 58 files at 1, 32 at 2; mostly margins and widths) |
 
 ### Phase 2: Screenshot Baselines
 
@@ -38,11 +38,12 @@
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Raw styling violations | 99 files / 186 baselined (was 276) |
+| Raw styling violations | 102 files / 162 baselined (was 276) |
 | Fixed size drift | 0 |
 | RoadmapView | 775 lines (was 2671, 71% reduction via Roadmap/ directory) |
 | Icon imports | 100% via @/lib/icons barrel |
-| Unit tests | 4436+ pass |
+| Card variant="section" usage | 94 → 69 (25 converted to subtle or removed) |
+| Unit tests | 4458 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | HIGH severity issues | 1 remaining (meeting-to-doc) |
