@@ -25,7 +25,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { formatDate, formatDateForInput } from "@/lib/formatting";
+import { formatCurrency, formatDate, formatDateForInput } from "@/lib/formatting";
 import { FileText } from "@/lib/icons";
 import { DAY, WEEK } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
@@ -34,10 +34,6 @@ type InvoiceStatusFilter = "all" | "draft" | "sent" | "paid" | "overdue";
 type InvoiceListItem = FunctionReturnType<typeof api.invoices.list>[number];
 
 const NO_CLIENT = "__none__";
-
-function formatCurrency(amount: number): string {
-  return `$${amount.toFixed(2)}`;
-}
 
 function getStatusBadgeVariant(status: string) {
   switch (status) {

@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { formatCurrency } from "@/lib/formatting";
 import { DollarSign } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -80,13 +81,6 @@ export function UserRatesManagement() {
     } catch (error) {
       showError(error, "Failed to save rate");
     }
-  };
-
-  const formatCurrency = (amount: number, curr: string) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: curr || "USD",
-    }).format(amount);
   };
 
   if (!currentUser) {

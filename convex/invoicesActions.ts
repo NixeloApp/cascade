@@ -12,14 +12,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { action } from "./_generated/server";
 import { conflict, forbidden } from "./lib/errors";
-
-function formatCurrency(amount: number): string {
-  // Invoice amounts are stored in dollars (not cents), so no division needed
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
+import { formatCurrency } from "./lib/formatting";
 
 function buildInvoiceSummaryText(invoice: {
   number: string;

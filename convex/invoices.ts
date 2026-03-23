@@ -11,6 +11,7 @@ import { internalMutation, internalQuery, type QueryCtx } from "./_generated/ser
 import { organizationAdminMutation, organizationQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
+import { formatCurrency } from "./lib/formatting";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 
 const invoiceStatusValidator = v.union(
@@ -74,10 +75,6 @@ function calculateTotals(lineItems: NormalizedLineItem[], tax?: number) {
     subtotal,
     total: subtotal + taxAmount,
   };
-}
-
-function formatCurrency(amount: number): string {
-  return `$${amount.toFixed(2)}`;
 }
 
 type InvoiceSummary = Pick<

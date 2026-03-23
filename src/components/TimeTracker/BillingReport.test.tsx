@@ -27,9 +27,13 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
 globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
 globalThis.URL.revokeObjectURL = vi.fn();
 
-vi.mock("@/lib/formatting", () => ({
-  formatDate: () => "March 23, 2026",
-}));
+vi.mock("@/lib/formatting", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/formatting")>();
+  return {
+    ...actual,
+    formatDate: () => "March 23, 2026",
+  };
+});
 
 vi.mock("@/lib/icons", () => ({
   Clock: () => <span data-testid="clock-icon" />,
