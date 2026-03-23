@@ -26,6 +26,7 @@ import {
   enrichComments,
   enrichIssue,
   enrichIssues,
+  enrichIssuesForList,
   fetchPaginatedIssues,
 } from "../lib/issueHelpers";
 import { notDeleted } from "../lib/softDeleteHelpers";
@@ -589,6 +590,37 @@ export const listOrganizationIssues = organizationQuery({
         return filtered.order("desc");
       },
     });
+  },
+});
+
+/**
+ * Full-text search across organization issues using the search index.
+ * Returns up to 50 matching issues, enriched with project/user details.
+ */
+export const searchOrganizationIssues = organizationQuery({
+  args: {
+    query: v.string(),
+    status: v.optional(v.string()),
+    priority: v.optional(v.string()),
+    type: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    if (!args.query.trim()) return [];
+
+    const searchQuery = ctx.db
+      .query("issues")
+      .withSearchIndex("search_title", (q) => {
+        let sq = q.search("searchContent", args.query).eq("organizationId", ctx.organizationId);
+        if (args.status) sq = sq.eq("status", args.status);
+        if (args.priority) sq = sq.eq("priority", args.priority as never);
+        if (args.type) sq = sq.eq("type", args.type as never);
+        return sq;
+      })
+      .filter(notDeleted);
+
+    const issues = await safeCollect(searchQuery, 50, "org issue search");
+
+    return enrichIssuesForList(ctx, issues);
   },
 });
 

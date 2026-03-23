@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { createFileRoute } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { CreateIssueModal, IssueCard } from "@/components/IssueDetail";
 import { IssueDetailViewer } from "@/components/IssueDetailViewer";
 import { ViewModeToggle } from "@/components/Kanban/ViewModeToggle";
@@ -62,13 +62,18 @@ export function AllIssuesPage() {
     organizationId ? { organizationId } : "skip",
   );
 
+  // Debounce search query to avoid hammering the server on every keystroke
+  const deferredSearch = useDeferredValue(searchQuery.trim());
+  const isSearching = !!deferredSearch;
+
+  // Paginated browse (when not searching)
   const {
-    results: issues,
+    results: paginatedIssues,
     status,
     loadMore,
   } = usePaginatedQuery(
     api.issues.listOrganizationIssues,
-    organizationId
+    organizationId && !isSearching
       ? {
           organizationId,
           status: statusFilter,
@@ -79,18 +84,24 @@ export function AllIssuesPage() {
     { initialNumItems: 20 },
   );
 
-  const isLoading = status === "LoadingFirstPage";
-  const hasActiveFilters = !!(statusFilter || priorityFilter || typeFilter || searchQuery.trim());
+  // Server-side search (when search query is active)
+  const searchResults = useAuthenticatedQuery(
+    api.issues.searchOrganizationIssues,
+    organizationId && isSearching
+      ? {
+          organizationId,
+          query: deferredSearch,
+          status: statusFilter,
+          priority: priorityFilter,
+          type: typeFilter,
+        }
+      : "skip",
+  );
 
-  // Client-side search filtering (on already server-filtered results)
-  const filteredIssues = useMemo(() => {
-    if (!searchQuery.trim()) return issues;
-    const query = searchQuery.toLowerCase();
-    return issues.filter(
-      (issue) =>
-        issue.title.toLowerCase().includes(query) || issue.key.toLowerCase().includes(query),
-    );
-  }, [issues, searchQuery]);
+  const isLoading = isSearching ? searchResults === undefined : status === "LoadingFirstPage";
+  const hasActiveFilters = !!(statusFilter || priorityFilter || typeFilter || deferredSearch);
+
+  const filteredIssues = isSearching ? (searchResults ?? []) : paginatedIssues;
 
   const handleClearFilters = () => {
     setStatusFilter(undefined);
@@ -224,7 +235,7 @@ export function AllIssuesPage() {
           </Grid>
         </PageContent>
 
-        {status === "CanLoadMore" && (
+        {!isSearching && status === "CanLoadMore" && (
           <Flex justify="center">
             <Button variant="secondary" onClick={() => loadMore(20)}>
               Load More
