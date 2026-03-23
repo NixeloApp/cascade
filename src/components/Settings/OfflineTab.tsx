@@ -379,7 +379,7 @@ export function OfflineTab() {
           <Typography variant="h3">Current Verified Capabilities</Typography>
           <Stack gap="lg">
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={Check} size="sm" className="shrink-0 text-status-success" />
               <Stack gap="xs">
                 <Typography variant="label">Connectivity Tracking</Typography>
                 <Typography variant="small" color="secondary">
@@ -389,7 +389,7 @@ export function OfflineTab() {
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={Check} size="sm" className="shrink-0 text-status-success" />
               <Stack gap="xs">
                 <Typography variant="label">Offline Mutation Replay</Typography>
                 <Typography variant="small" color="secondary">
@@ -399,7 +399,7 @@ export function OfflineTab() {
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={Check} size="sm" className="shrink-0 text-status-success" />
               <Stack gap="xs">
                 <Typography variant="label">Fallback Offline Page</Typography>
                 <Typography variant="small" color="secondary">
@@ -409,7 +409,7 @@ export function OfflineTab() {
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={Check} size="sm" className="shrink-0 text-status-success" />
               <Stack gap="xs">
                 <Typography variant="label">Smart Retry Policy</Typography>
                 <Typography variant="small" color="secondary">

@@ -223,57 +223,59 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
 
                 <Card recipe="commentThreadItem" padding="md" hoverable>
                   <FlexItem flex="1" className="min-w-0">
-                    <Flex align="center" gap="sm" className="mb-2">
-                      <Typography variant="label">
-                        {comment.author?.name || "Unknown User"}
-                      </Typography>
-                      <Typography as="time" variant="caption" color="tertiary">
-                        {formatRelativeTime(comment._creationTime)}
-                      </Typography>
-                      {comment.updatedAt > comment._creationTime && (
-                        <Typography variant="caption" color="tertiary" className="italic">
-                          (edited)
+                    <Stack gap="sm">
+                      <Flex align="center" gap="sm">
+                        <Typography variant="label">
+                          {comment.author?.name || "Unknown User"}
                         </Typography>
-                      )}
-                    </Flex>
+                        <Typography as="time" variant="caption" color="tertiary">
+                          {formatRelativeTime(comment._creationTime)}
+                        </Typography>
+                        {comment.updatedAt > comment._creationTime && (
+                          <Typography variant="caption" color="tertiary" className="italic">
+                            (edited)
+                          </Typography>
+                        )}
+                      </Flex>
 
-                    <CommentRenderer content={comment.content} />
-                    {(comment.attachments?.length || 0) > 0 && (
-                      <Stack gap="xs" className="mt-3">
-                        <Typography variant="caption" color="tertiary">
-                          Attachments
-                        </Typography>
+                      <CommentRenderer content={comment.content} />
+                      {(comment.attachments?.length || 0) > 0 && (
                         <Stack gap="xs">
-                          {comment.attachments?.map((storageId) => (
-                            <CommentAttachmentLink
-                              key={storageId}
-                              issueId={issueId}
-                              storageId={storageId}
-                            />
-                          ))}
+                          <Typography variant="caption" color="tertiary">
+                            Attachments
+                          </Typography>
+                          <Stack gap="xs">
+                            {comment.attachments?.map((storageId) => (
+                              <CommentAttachmentLink
+                                key={storageId}
+                                issueId={issueId}
+                                storageId={storageId}
+                              />
+                            ))}
+                          </Stack>
                         </Stack>
-                      </Stack>
-                    )}
+                      )}
 
-                    <CommentReactions
-                      commentId={comment._id}
-                      reactions={comment.reactions || []}
-                      currentUserId={currentUser?._id}
-                    />
+                      <CommentReactions
+                        commentId={comment._id}
+                        reactions={comment.reactions || []}
+                        currentUserId={currentUser?._id}
+                      />
+                    </Stack>
                   </FlexItem>
                 </Card>
               </Flex>
             ))}
 
             {status === "CanLoadMore" && (
-              <Flex justify="center" className="pt-2">
+              <Flex justify="center">
                 <Button variant="secondary" onClick={() => loadMore(50)}>
                   Load More Comments
                 </Button>
               </Flex>
             )}
             {status === "LoadingMore" && (
-              <Typography variant="small" color="tertiary" className="text-center pt-2">
+              <Typography variant="small" color="tertiary" className="text-center">
                 Loading...
               </Typography>
             )}

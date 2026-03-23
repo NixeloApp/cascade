@@ -135,116 +135,118 @@ export function MemberManagement({
   return (
     <>
       <Card variant="outline" padding="md" className="sm:p-6">
-        <Flex justify="between" align="center" className="mb-4 sm:mb-6">
-          <Stack gap="xs">
-            <Typography variant="h4">Members</Typography>
-            <Typography variant="small" color="secondary">
-              {members.length} member{members.length !== 1 ? "s" : ""} with access
-            </Typography>
-          </Stack>
-          {!showAddForm && (
-            <Button variant="secondary" size="sm" onClick={() => setShowAddForm(true)}>
-              Add Member
-            </Button>
-          )}
-        </Flex>
-
-        {showAddForm && (
-          <Stack gap="lg" className="p-4 mb-5 bg-ui-bg">
-            <Typography variant="label">Add New Member</Typography>
-            <Stack gap="md">
-              <Input
-                label="Email Address"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@example.com"
-              />
-              <Select
-                label="Role"
-                value={role}
-                onChange={(e) => setRole(e.target.value as "admin" | "editor" | "viewer")}
-                options={ROLE_OPTIONS}
-              />
-              <Flex gap="sm" className="pt-1">
-                <Button
-                  onClick={handleAddMember}
-                  disabled={isAdding}
-                  size="sm"
-                  isLoading={isAdding}
-                >
-                  Add Member
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setEmail("");
-                    setRole("editor");
-                  }}
-                  disabled={isAdding}
-                >
-                  Cancel
-                </Button>
-              </Flex>
+        <Stack gap="lg">
+          <Flex justify="between" align="center">
+            <Stack gap="xs">
+              <Typography variant="h4">Members</Typography>
+              <Typography variant="small" color="secondary">
+                {members.length} member{members.length !== 1 ? "s" : ""} with access
+              </Typography>
             </Stack>
+            {!showAddForm && (
+              <Button variant="secondary" size="sm" onClick={() => setShowAddForm(true)}>
+                Add Member
+              </Button>
+            )}
+          </Flex>
+
+          {showAddForm && (
+            <Card variant="section" padding="md" className="bg-ui-bg">
+              <Typography variant="label">Add New Member</Typography>
+              <Stack gap="md">
+                <Input
+                  label="Email Address"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="user@example.com"
+                />
+                <Select
+                  label="Role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as "admin" | "editor" | "viewer")}
+                  options={ROLE_OPTIONS}
+                />
+                <Flex gap="sm">
+                  <Button
+                    onClick={handleAddMember}
+                    disabled={isAdding}
+                    size="sm"
+                    isLoading={isAdding}
+                  >
+                    Add Member
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setEmail("");
+                      setRole("editor");
+                    }}
+                    disabled={isAdding}
+                  >
+                    Cancel
+                  </Button>
+                </Flex>
+              </Stack>
+            </Card>
+          )}
+
+          <Stack gap="sm">
+            {members.map((member) => (
+              <Card key={member._id} variant="section" padding="sm" className="bg-ui-bg">
+                <Flex align="center" justify="between">
+                  <Flex gap="md" align="center">
+                    <Avatar src={member.image} name={member.name} email={member.email} size="sm" />
+                    <Stack gap="none">
+                      <Flex gap="sm" align="center">
+                        <Typography variant="label">{member.name}</Typography>
+                        {isOwner(member._id) && (
+                          <Badge variant="primary" size="sm">
+                            Owner
+                          </Badge>
+                        )}
+                      </Flex>
+                      <Typography variant="small" color="secondary">
+                        {member.email || "No email"}
+                      </Typography>
+                    </Stack>
+                  </Flex>
+
+                  <Flex gap="sm" align="center">
+                    {isOwner(member._id) ? (
+                      <Badge variant={ROLE_BADGE_VARIANTS[member.role]} size="sm">
+                        {member.role}
+                      </Badge>
+                    ) : (
+                      <>
+                        <Select
+                          value={member.role}
+                          onChange={(e) =>
+                            handleRoleChange(
+                              member._id,
+                              e.target.value as "admin" | "editor" | "viewer",
+                            )
+                          }
+                          options={ROLE_OPTIONS}
+                          disabled={changingRoleFor === member._id}
+                          className="w-28"
+                        />
+                        <Button
+                          variant="ghostDanger"
+                          size="sm"
+                          onClick={() => setMemberToRemove(member)}
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    )}
+                  </Flex>
+                </Flex>
+              </Card>
+            ))}
           </Stack>
-        )}
-
-        <Stack gap="sm">
-          {members.map((member) => (
-            <div key={member._id} className="p-3 bg-ui-bg">
-              <Flex align="center" justify="between">
-                <Flex gap="md" align="center">
-                  <Avatar src={member.image} name={member.name} email={member.email} size="sm" />
-                  <Stack gap="none">
-                    <Flex gap="sm" align="center">
-                      <Typography variant="label">{member.name}</Typography>
-                      {isOwner(member._id) && (
-                        <Badge variant="primary" size="sm">
-                          Owner
-                        </Badge>
-                      )}
-                    </Flex>
-                    <Typography variant="small" color="secondary">
-                      {member.email || "No email"}
-                    </Typography>
-                  </Stack>
-                </Flex>
-
-                <Flex gap="sm" align="center">
-                  {isOwner(member._id) ? (
-                    <Badge variant={ROLE_BADGE_VARIANTS[member.role]} size="sm">
-                      {member.role}
-                    </Badge>
-                  ) : (
-                    <>
-                      <Select
-                        value={member.role}
-                        onChange={(e) =>
-                          handleRoleChange(
-                            member._id,
-                            e.target.value as "admin" | "editor" | "viewer",
-                          )
-                        }
-                        options={ROLE_OPTIONS}
-                        disabled={changingRoleFor === member._id}
-                        className="w-28"
-                      />
-                      <Button
-                        variant="ghostDanger"
-                        size="sm"
-                        onClick={() => setMemberToRemove(member)}
-                      >
-                        Remove
-                      </Button>
-                    </>
-                  )}
-                </Flex>
-              </Flex>
-            </div>
-          ))}
         </Stack>
       </Card>
 

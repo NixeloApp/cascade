@@ -17,7 +17,7 @@ All 21 page specs rewritten to production quality — ASCII diagrams, screenshot
 | AI slop cleanup | Nested cards, redundant shells, panel-in-panel layouts, inconsistent control groupings |
 | Mobile/tablet coverage | Backfill responsive gaps — many pages are desktop-first only |
 | Icon consistency | Sizing, stroke-weight rhythm, tone/color drift across surfaces |
-| Raw styling cleanup | 106 files / 249 violations baselined (was 276) — fix padding/margin utilities |
+| Raw styling cleanup | 106 files / 233 violations baselined (was 276) — fix padding/margin utilities |
 | Shell discipline | Stop accidental card nesting and composition pattern drift |
 
 ### Phase 2: Screenshot Baselines
@@ -59,7 +59,7 @@ All 21 page specs rewritten to production quality — ASCII diagrams, screenshot
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Raw styling violations | 106 files / 249 violations (was 276) |
+| Raw styling violations | 106 files / 233 violations (was 276) |
 | Backend query debt | 0 |
 | Unresolved PR comments | 0 |
 | Unit tests | 4431 pass |
