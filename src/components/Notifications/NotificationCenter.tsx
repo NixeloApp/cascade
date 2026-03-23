@@ -100,10 +100,14 @@ export function NotificationCenter() {
 
   // Filter by type on the backend for proper pagination
   const typeFilter = FILTER_TYPE_MAP[filter];
-  const { results: notificationsRaw } = usePaginatedQuery(
+  const {
+    results: notificationsRaw,
+    status: paginationStatus,
+    loadMore,
+  } = usePaginatedQuery(
     api.notifications.list,
     canAct ? { types: typeFilter ?? undefined } : "skip",
-    { initialNumItems: 50 },
+    { initialNumItems: 25 },
   );
   const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
@@ -293,6 +297,14 @@ export function NotificationCenter() {
               </Stack>
             )}
           </PopoverBody>
+
+          {paginationStatus === "CanLoadMore" && (
+            <Flex justify="center">
+              <Button variant="ghost" size="sm" onClick={() => loadMore(25)}>
+                Load more
+              </Button>
+            </Flex>
+          )}
 
           {/* Footer - View All Link */}
           {orgContext?.orgSlug && (
