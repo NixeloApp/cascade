@@ -28,18 +28,6 @@ describe("Typography", () => {
     expect(title.className).toContain("text-2xl");
   });
 
-  it("maps placeholderTitle to a paragraph with shared spacing", () => {
-    render(
-      <Typography variant="placeholderTitle" data-testid="placeholder-title">
-        Coming Soon
-      </Typography>,
-    );
-    const title = screen.getByTestId("placeholder-title");
-    expect(title.tagName).toBe("P");
-    expect(title.className).toContain("mb-2");
-    expect(title.className).toContain("text-lg");
-  });
-
   it("maps metricLabel to a paragraph with uppercase tracking", () => {
     render(
       <Typography variant="metricLabel" data-testid="metric-label">

@@ -29,8 +29,6 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
       neutral: "bg-ui-bg-soft text-ui-text-secondary border border-ui-border",
       brand: "bg-brand-subtle text-brand-active border border-brand-border",
       accent: "bg-accent-subtle text-accent-active border border-accent-border",
-      commandCenter:
-        "bg-ui-bg-soft text-ui-text-tertiary border border-ui-border shadow-soft backdrop-blur-sm",
       dashboardTag:
         "bg-ui-bg-tertiary/60 text-ui-text-secondary border border-ui-border/50 uppercase",
       issueKey: "bg-ui-bg-tertiary/60 text-ui-text-secondary border border-ui-border/50 font-mono",
