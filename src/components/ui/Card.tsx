@@ -75,8 +75,6 @@ const cardRecipeVariants = cva("", {
       // Page layout surfaces
       pageHeader:
         "rounded-container border-ui-border-secondary/82 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
-      pageHeaderIndicator:
-        "h-1.5 w-1.5 rounded-full border-transparent bg-brand shadow-brand-halo ring-2 ring-brand/8 sm:h-2 sm:w-2",
       documentHeaderShell:
         "border-x-0 border-t-0 rounded-none border-ui-border-secondary/85 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft",
       documentSidebarShell:
@@ -225,17 +223,8 @@ const cardRecipeVariants = cva("", {
         "group relative rounded-2xl border border-ui-border/40 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/50 p-6 shadow-soft backdrop-blur-md transition-all duration-medium hover:-translate-y-1 hover:border-brand-teal-text/40 hover:shadow-xl hover:shadow-brand-teal-text/20",
       landingFeatureCardAmber:
         "group relative rounded-2xl border border-ui-border/40 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/50 p-6 shadow-soft backdrop-blur-md transition-all duration-medium hover:-translate-y-1 hover:border-status-warning/40 hover:shadow-xl hover:shadow-status-warning/20",
-      landingPricingCard:
-        "rounded-2xl border border-ui-border/40 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40 p-6 shadow-soft transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
-      landingPricingCardFeatured:
-        "rounded-2xl border border-brand-ring bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40 p-6 shadow-lg shadow-brand-ring/20 transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
       landingStoryCard:
         "rounded-3xl border-ui-border/50 bg-ui-bg-secondary/80 p-6 shadow-soft transition-all duration-medium hover:-translate-y-1 hover:border-ui-border-secondary",
-      landingFinalFeatureCard: "rounded-2xl border-ui-border/50 bg-ui-bg-soft/80 p-5 shadow-soft",
-      landingLogoChip:
-        "rounded-full border border-ui-border/40 bg-ui-bg-soft px-4 py-2 text-ui-text-tertiary shadow-none",
-
-      // Header control surfaces
       controlRail:
         "rounded-full border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-soft/90 shadow-card backdrop-blur-xl",
       controlStrip:
@@ -247,14 +236,6 @@ const cardRecipeVariants = cva("", {
       roadmapTimelineBar: "rounded-full border-transparent shadow-none opacity-80",
       roadmapTimelineBarActive:
         "rounded-full border-transparent shadow-none opacity-100 ring-2 ring-brand-ring",
-      roadmapTimelineBarSprint:
-        "rounded-full border-transparent bg-accent-ring px-2 text-xs font-medium text-brand-foreground shadow-none",
-      roadmapTimelineBarHigh:
-        "rounded-full border-transparent bg-status-error px-2 text-xs font-medium text-brand-foreground shadow-none",
-      roadmapTimelineBarMedium:
-        "rounded-full border-transparent bg-status-warning px-2 text-xs font-medium text-brand-foreground shadow-none",
-      roadmapTimelineBarLow:
-        "rounded-full border-transparent bg-brand-ring px-2 text-xs font-medium text-brand-foreground shadow-none",
       roadmapMonthHeaderCell:
         "rounded-none border-y-0 border-r-0 border-l border-ui-border bg-transparent px-2 py-0 shadow-none",
       notificationRow:
@@ -333,7 +314,6 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-ui-bg-secondary shadow-none",
       commentThreadItem:
         "rounded-container border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-soft/96 via-ui-bg-soft/92 to-ui-bg-elevated/94 shadow-none hover:border-ui-border-secondary hover:bg-ui-bg-hover",
-      pendingAttachmentRow: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
       attachmentRow: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
       invoiceEditorLine: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
       invoicePreviewSection:
@@ -358,17 +338,13 @@ const cardRecipeVariants = cva("", {
         "h-24 rounded-none border-x-0 border-t-0 border-b border-ui-border bg-transparent shadow-none hover:bg-ui-bg-hover/30 sm:h-32",
       calendarDayEventsPanel: "rounded-none border-transparent bg-transparent shadow-none",
       calendarDayEventsHeader: "rounded-none border-transparent bg-transparent shadow-none",
-      calendarDayEmptyStateIcon:
-        "flex items-center justify-center rounded-full border border-ui-border bg-ui-bg-tertiary shadow-none",
       calendarBodyHeaderBar:
         "sticky top-0 z-10 rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       calendarTimeMarginRail:
         "sticky left-0 z-10 w-10 rounded-none border-transparent bg-ui-bg shadow-none sm:w-12",
       calendarTimeMarginSpacer:
         "sticky top-0 left-0 z-20 h-calendar-day-margin rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
-      calendarDayLayoutShell: "rounded-none border-transparent bg-ui-bg shadow-none",
       calendarDayMainPanel: "rounded-none border-transparent bg-transparent shadow-none",
-      calendarDayScrollRail: "rounded-none border-transparent bg-transparent shadow-none",
       calendarDayContentRail:
         "rounded-none border-x-0 border-r-0 border-t-0 border-b-0 border-l border-ui-border bg-transparent shadow-none",
       calendarDaySidebarShell:
@@ -381,8 +357,6 @@ const cardRecipeVariants = cva("", {
       calendarEventDay: "rounded-lg border-transparent px-3 py-1.5 shadow-none",
       calendarEventMonthLayout: "w-full flex-col items-start gap-0.5",
       calendarEventDayLayout: "w-full items-center justify-between gap-2",
-      calendarViewSwitcherBar:
-        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       calendarHeaderShell:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg px-1 py-1 shadow-none sm:px-4 sm:py-4",
       calendarHeaderDateIcon:
@@ -391,21 +365,6 @@ const cardRecipeVariants = cva("", {
         "h-4 w-full rounded-none border-transparent bg-brand px-0 py-0 shadow-none sm:h-6",
       calendarHeaderDateIconDay:
         "w-full flex-1 rounded-none border-transparent bg-transparent px-0 py-0 shadow-none",
-      calendarRoadmapShell: "h-full rounded-none border-transparent bg-ui-bg shadow-none",
-      calendarRoadmapHeader:
-        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
-      calendarRoadmapTimelineHeader:
-        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary shadow-none",
-      calendarRoadmapItemHeader:
-        "w-40 shrink-0 rounded-none border-y-0 border-l-0 border-r border-ui-border bg-transparent px-2 py-2 shadow-none sm:w-48 sm:px-3 sm:py-3 md:w-64",
-      calendarRoadmapDateHeader:
-        "rounded-none border-y-0 border-r border-l-0 border-ui-border bg-transparent px-2 py-2 shadow-none sm:px-3 sm:py-3",
-      calendarRoadmapItemInfo:
-        "w-40 shrink-0 rounded-none border-y-0 border-l-0 border-r border-ui-border bg-transparent px-2 py-2 shadow-none sm:w-48 sm:px-3 sm:py-3 md:w-64",
-      calendarRoadmapTimelineCell:
-        "h-full rounded-none border-y-0 border-r border-l-0 border-ui-border bg-transparent shadow-none",
-      calendarRoadmapBarLane:
-        "absolute inset-y-0 rounded-none border-transparent bg-transparent px-2 shadow-none",
       kanbanColumnShell:
         "overflow-hidden rounded-container border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft",
       kanbanColumnCollapsedShell:
@@ -426,8 +385,6 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary bg-transparent shadow-none hover:bg-ui-bg-secondary",
       sprintWorkloadRowBordered:
         "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent shadow-none hover:bg-ui-bg-secondary",
-      issueDetailLayoutShell: "rounded-lg border-ui-border bg-ui-bg-elevated shadow-card",
-      issueMetadataRow: "rounded-none border-transparent bg-transparent px-0 py-1 shadow-none",
       eventDetailSection:
         "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent pt-4 shadow-none",
       eventAttendanceRow: "rounded-md border-transparent bg-ui-bg-secondary p-2 shadow-none",
@@ -455,8 +412,6 @@ const cardRecipeVariants = cva("", {
       versionHistoryEntrySelected:
         "rounded-container border-brand-ring bg-brand-subtle shadow-soft",
       versionHistoryDiffPane: "rounded-xl border-ui-border-secondary/70 bg-ui-bg shadow-none",
-      mentionMenu:
-        "overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
       mentionInputMenu:
         "absolute left-0 top-full z-50 mt-1 min-w-52 max-w-xs overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
       floatingWidget: "overflow-hidden rounded-container border-ui-border bg-ui-bg shadow-elevated",
