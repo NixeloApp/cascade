@@ -56,51 +56,44 @@ interface RoadmapViewProps {
   canEdit?: boolean;
 }
 
-type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
-type RoadmapEpic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
-
-/** Timeline span options in months */
-type TimelineSpan = 1 | 3 | 6 | 12;
-type ViewMode = "months" | "weeks";
-type GroupBy = "none" | "status" | "assignee" | "priority" | "epic";
-type TimelineZoom = "compact" | "standard" | "expanded";
-
-const ISSUE_INFO_COLUMN_WIDTH = 256;
-const ROADMAP_ROW_HEIGHT = 56;
-
-const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
-  { value: 1, label: "1 Month" },
-  { value: 3, label: "3 Months" },
-  { value: 6, label: "6 Months" },
-  { value: 12, label: "1 Year" },
-];
-
-const TIMELINE_ZOOM_OPTIONS: { label: string; value: TimelineZoom }[] = [
-  { label: "Compact", value: "compact" },
-  { label: "Standard", value: "standard" },
-  { label: "Expanded", value: "expanded" },
-];
-
-const TIMELINE_BUCKET_WIDTH: Record<ViewMode, Record<TimelineZoom, number>> = {
-  months: {
-    compact: 128,
-    standard: 176,
-    expanded: 224,
-  },
-  weeks: {
-    compact: 88,
-    standard: 120,
-    expanded: 152,
-  },
-};
-
-const GROUP_BY_OPTIONS: { label: string; value: GroupBy }[] = [
-  { label: "No grouping", value: "none" },
-  { label: "Epic", value: "epic" },
-  { label: "Status", value: "status" },
-  { label: "Assignee", value: "assignee" },
-  { label: "Priority", value: "priority" },
-];
+import type {
+  DependencyLine,
+  DependencyLineBuildArgs,
+  DragComputationArgs,
+  DragState,
+  GroupBy,
+  HierarchyIssueRow,
+  ResizeComputationArgs,
+  ResizeState,
+  RoadmapBarIssue,
+  RoadmapDependencyItem,
+  RoadmapEpic,
+  RoadmapIssue,
+  RoadmapTimelineIssue,
+  TimelineGeometryArgs,
+  TimelineGroup,
+  TimelineHeaderCell,
+  TimelineRow,
+  TimelineSpan,
+  TimelineZoom,
+  ViewMode,
+} from "./Roadmap/types";
+import {
+  ACTIVE_DEPENDENCY_OPACITY,
+  ACTIVE_DEPENDENCY_STROKE_WIDTH,
+  DEFAULT_DEPENDENCY_OPACITY,
+  DEFAULT_DEPENDENCY_STROKE_WIDTH,
+  DIMMED_DEPENDENCY_OPACITY,
+  DIMMED_DEPENDENCY_STROKE_WIDTH,
+  GROUP_BY_OPTIONS,
+  ISSUE_INFO_COLUMN_WIDTH,
+  PRIORITY_ORDER,
+  ROADMAP_DEPENDENCY_TARGET_NONE,
+  ROADMAP_ROW_HEIGHT,
+  TIMELINE_BUCKET_WIDTH,
+  TIMELINE_SPANS,
+  TIMELINE_ZOOM_OPTIONS,
+} from "./Roadmap/types";
 
 const PRIORITY_SORT_ORDER: Record<string, number> = {
   highest: 0,
@@ -109,93 +102,6 @@ const PRIORITY_SORT_ORDER: Record<string, number> = {
   low: 3,
   lowest: 4,
 };
-/** Dependency line data for rendering SVG arrows */
-interface DependencyLine {
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  fromIssueId: string;
-  toIssueId: string;
-}
-
-const ACTIVE_DEPENDENCY_STROKE_WIDTH = 3;
-const DEFAULT_DEPENDENCY_STROKE_WIDTH = 2;
-const DIMMED_DEPENDENCY_STROKE_WIDTH = 1.5;
-const ACTIVE_DEPENDENCY_OPACITY = 1;
-const DEFAULT_DEPENDENCY_OPACITY = 0.7;
-const DIMMED_DEPENDENCY_OPACITY = 0.18;
-const ROADMAP_DEPENDENCY_TARGET_NONE = "none";
-
-interface RoadmapTimelineIssue {
-  _id: Id<"issues">;
-  assignee?: { name?: string | null } | null;
-  startDate?: number;
-  dueDate?: number;
-  priority: string;
-  status: string;
-}
-
-interface RoadmapDependencyItem {
-  issue: RoadmapIssue;
-  linkId: Id<"issueLinks">;
-}
-
-interface ResizeState {
-  issueId: Id<"issues">;
-  edge: "left" | "right";
-  startX: number;
-  originalStartDate?: number;
-  originalDueDate?: number;
-}
-
-interface DragState {
-  issueId: Id<"issues">;
-  startX: number;
-  originalStartDate?: number;
-  originalDueDate?: number;
-}
-
-interface ResizeComputationArgs {
-  resizing: ResizeState;
-  clientX: number;
-  containerWidth: number;
-  getPositionOnTimeline: (date: number) => number;
-  getDateFromPosition: (percent: number) => number;
-}
-
-interface DragComputationArgs {
-  dragging: DragState;
-  clientX: number;
-  containerWidth: number;
-  totalDays: number;
-}
-
-interface TimelineGeometryArgs {
-  issue: RoadmapTimelineIssue;
-  getPositionOnTimeline: (date: number) => number;
-}
-
-interface DependencyLineBuildArgs {
-  issueById: Map<string, RoadmapTimelineIssue>;
-  issueRowIndexMap: Map<string, number>;
-  link: {
-    fromIssueId: string;
-    toIssueId: string;
-  };
-  rowHeight: number;
-  getPositionOnTimeline: (date: number) => number;
-}
-
-interface RoadmapBarIssue {
-  _id: Id<"issues">;
-  assignee?: { name?: string | null } | null;
-  dueDate: number;
-  key: string;
-  priority: string;
-  startDate?: number;
-  title: string;
-}
 
 interface RoadmapTimelineBarProps {
   canEdit: boolean;
@@ -219,56 +125,9 @@ interface RoadmapTimelineBarProps {
   resizingIssueId?: Id<"issues">;
 }
 
-interface TimelineHeaderCell {
-  key: string;
-  label: string;
-}
-
 interface RoadmapTodayMarkerProps {
   offsetPx: number;
   variant: "body" | "header";
-}
-
-interface TimelineGroup {
-  collapsed: boolean;
-  completedCount: number;
-  count: number;
-  dueDate?: number;
-  kind: Exclude<GroupBy, "none">;
-  key: string;
-  label: string;
-  startDate?: number;
-  value: string;
-}
-
-type TimelineRow =
-  | {
-      type: "group";
-      group: TimelineGroup;
-    }
-  | {
-      childCount: number;
-      childrenCollapsed: boolean;
-      depth: 0 | 1;
-      hasChildren: boolean;
-      summaryCompletedCount: number;
-      type: "issue";
-      issue: RoadmapIssue;
-      parentIssueId?: Id<"issues">;
-      summaryDueDate?: number;
-      summaryStartDate?: number;
-    };
-
-interface HierarchyIssueRow {
-  childCount: number;
-  childrenCollapsed: boolean;
-  depth: 0 | 1;
-  hasChildren: boolean;
-  issue: RoadmapIssue;
-  parentIssueId?: Id<"issues">;
-  summaryCompletedCount: number;
-  summaryDueDate?: number;
-  summaryStartDate?: number;
 }
 
 function getBarWidth(
