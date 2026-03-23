@@ -19,5 +19,5 @@ Remaining evaluation items. Core features (stickies, auto-archive, offline, vers
 
 ## Low Priority
 
-- [ ] **Model fallbacks** — AI provider resilience/fallback when primary is down
+- [x] ~~**Model fallbacks**~~ — **Shipped** (runtime fallback in callAI: transient errors trigger secondary provider if configured)
 - [x] ~~**Bulk label operations**~~ — **Shipped** (bulkAddLabels + bulkRemoveLabels)
