@@ -192,7 +192,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
   if (inboxIssues === undefined || counts === undefined) {
     return (
-      <Flex align="center" justify="center" className="h-64">
+      <Flex align="center" justify="center" className="h-full">
         <LoadingSpinner size="lg" />
       </Flex>
     );
@@ -211,7 +211,7 @@ export function InboxList({ projectId }: InboxListProps) {
         </Flex>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="mb-4">
+          <TabsList>
             <TabsTrigger value="open">
               Open
               {counts.open > 0 && (
@@ -232,7 +232,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
           {/* Bulk Actions Bar */}
           {activeTab === "open" && triageableCount > 0 && (
-            <div className="p-3 bg-ui-bg-soft">
+            <Card variant="section" padding="sm" className="bg-ui-bg-soft">
               <Flex align="center" gap="md">
                 <Checkbox
                   checked={selectedIds.size === triageableCount && triageableCount > 0}
@@ -269,7 +269,7 @@ export function InboxList({ projectId }: InboxListProps) {
                   </Typography>
                 )}
               </Flex>
-            </div>
+            </Card>
           )}
 
           <TabsContent value="open" className="overflow-auto">
@@ -516,13 +516,11 @@ function InboxIssueRow({
             {isOpen && (
               <>
                 {item.status === "snoozed" ? (
-                  <DropdownMenuItem onClick={handleUnsnooze}>
-                    <Icon icon={Clock} size="sm" className="mr-2" />
+                  <DropdownMenuItem onClick={handleUnsnooze} icon={<Icon icon={Clock} size="sm" />}>
                     Unsnooze
                   </DropdownMenuItem>
                 ) : (
-                  <DropdownMenuItem onClick={handleSnooze}>
-                    <Icon icon={Clock} size="sm" className="mr-2" />
+                  <DropdownMenuItem onClick={handleSnooze} icon={<Icon icon={Clock} size="sm" />}>
                     Snooze 1 day
                   </DropdownMenuItem>
                 )}
@@ -532,8 +530,10 @@ function InboxIssueRow({
 
             {!isOpen && (
               <>
-                <DropdownMenuItem onClick={handleReopen}>
-                  <Icon icon={AlertTriangle} size="sm" className="mr-2" />
+                <DropdownMenuItem
+                  onClick={handleReopen}
+                  icon={<Icon icon={AlertTriangle} size="sm" />}
+                >
                   Reopen
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

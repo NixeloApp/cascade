@@ -123,99 +123,108 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
           <Stack gap="sm">
             {executions.map((execution) => (
               <Card key={execution._id} padding="md" hoverable>
-                {/* Header */}
-                <Flex justify="between" align="center" className="mb-3">
-                  <Metadata gap="md">
-                    {getStatusBadge(execution.status)}
-                    <MetadataItem className="text-ui-text">{execution.event}</MetadataItem>
-                    {execution.responseStatus && (
-                      <MetadataItem>HTTP {String(execution.responseStatus)}</MetadataItem>
-                    )}
-                  </Metadata>
-                  <Metadata gap="md">
-                    <MetadataItem>{formatDate(execution._creationTime)}</MetadataItem>
-                    {execution.status === "failed" && (
-                      <Button variant="ghost" size="sm" onClick={() => handleRetry(execution._id)}>
-                        Retry
+                <Stack gap="md">
+                  {/* Header */}
+                  <Flex justify="between" align="center">
+                    <Metadata gap="md">
+                      {getStatusBadge(execution.status)}
+                      <MetadataItem className="text-ui-text">{execution.event}</MetadataItem>
+                      {execution.responseStatus && (
+                        <MetadataItem>HTTP {String(execution.responseStatus)}</MetadataItem>
+                      )}
+                    </Metadata>
+                    <Metadata gap="md">
+                      <MetadataItem>{formatDate(execution._creationTime)}</MetadataItem>
+                      {execution.status === "failed" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRetry(execution._id)}
+                        >
+                          Retry
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setSelectedExecution(
+                            selectedExecution === execution._id ? null : execution._id,
+                          )
+                        }
+                      >
+                        {selectedExecution === execution._id ? "Hide Details" : "Show Details"}
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setSelectedExecution(
-                          selectedExecution === execution._id ? null : execution._id,
-                        )
-                      }
+                    </Metadata>
+                  </Flex>
+
+                  {/* Metadata */}
+                  <Grid cols={3} gap="lg">
+                    <Typography variant="meta">
+                      <Typography variant="label" as="span" className="text-ui-text">
+                        Attempts:
+                      </Typography>{" "}
+                      {execution.attempts}
+                    </Typography>
+                    <Typography variant="meta">
+                      <Typography variant="label" as="span" className="text-ui-text">
+                        Duration:
+                      </Typography>{" "}
+                      {formatDuration(execution._creationTime, execution.completedAt)}
+                    </Typography>
+                    <Typography variant="meta">
+                      <Typography variant="label" as="span" className="text-ui-text">
+                        Status:
+                      </Typography>{" "}
+                      {String(execution.status)}
+                    </Typography>
+                  </Grid>
+
+                  {/* Error message */}
+                  {execution.error && (
+                    <Card
+                      variant="section"
+                      padding="sm"
+                      className="border border-status-error/30 bg-status-error-bg"
                     >
-                      {selectedExecution === execution._id ? "Hide Details" : "Show Details"}
-                    </Button>
-                  </Metadata>
-                </Flex>
-
-                {/* Metadata */}
-                <Grid cols={3} gap="lg" className="mb-2">
-                  <Typography variant="meta">
-                    <Typography variant="label" as="span" className="text-ui-text">
-                      Attempts:
-                    </Typography>{" "}
-                    {execution.attempts}
-                  </Typography>
-                  <Typography variant="meta">
-                    <Typography variant="label" as="span" className="text-ui-text">
-                      Duration:
-                    </Typography>{" "}
-                    {formatDuration(execution._creationTime, execution.completedAt)}
-                  </Typography>
-                  <Typography variant="meta">
-                    <Typography variant="label" as="span" className="text-ui-text">
-                      Status:
-                    </Typography>{" "}
-                    {String(execution.status)}
-                  </Typography>
-                </Grid>
-
-                {/* Error message */}
-                {execution.error && (
-                  <Stack
-                    gap="xs"
-                    className="mt-3 border border-status-error/30 bg-status-error-bg p-3"
-                  >
-                    <Typography variant="caption" className="text-status-error-text">
-                      Error:
-                    </Typography>
-                    <Typography variant="mono" className="text-status-error-text/90">
-                      {String(execution.error)}
-                    </Typography>
-                  </Stack>
-                )}
-
-                {/* Expandable Details */}
-                {selectedExecution === execution._id && (
-                  <Stack gap="sm" className="mt-3 pt-3 border-t border-ui-border">
-                    {/* Request Payload */}
-                    <Stack gap="xs">
-                      <Typography variant="label">Request Payload:</Typography>
-                      <div className="overflow-x-auto bg-ui-bg-secondary p-3">
-                        <Typography as="pre" variant="mono">
-                          {formatJson(execution.requestPayload)}
-                        </Typography>
-                      </div>
-                    </Stack>
-
-                    {/* Response Body */}
-                    {execution.responseBody && (
                       <Stack gap="xs">
-                        <Typography variant="label">Response Body:</Typography>
-                        <div className="max-h-48 overflow-x-auto bg-ui-bg-secondary p-3">
-                          <Typography as="pre" variant="mono">
-                            {execution.responseBody}
-                          </Typography>
-                        </div>
+                        <Typography variant="caption" className="text-status-error-text">
+                          Error:
+                        </Typography>
+                        <Typography variant="mono" className="text-status-error-text/90">
+                          {String(execution.error)}
+                        </Typography>
                       </Stack>
-                    )}
-                  </Stack>
-                )}
+                    </Card>
+                  )}
+
+                  {/* Expandable Details */}
+                  {selectedExecution === execution._id && (
+                    <Stack gap="sm" className="border-t border-ui-border pt-ui-card-padding">
+                      {/* Request Payload */}
+                      <Stack gap="xs">
+                        <Typography variant="label">Request Payload:</Typography>
+                        <Card variant="section" padding="sm" className="overflow-x-auto">
+                          <Typography as="pre" variant="mono">
+                            {formatJson(execution.requestPayload)}
+                          </Typography>
+                        </Card>
+                      </Stack>
+
+                      {/* Response Body */}
+                      {execution.responseBody && (
+                        <Stack gap="xs">
+                          <Typography variant="label">Response Body:</Typography>
+                          <Card variant="section" padding="sm" className="max-h-48 overflow-x-auto">
+                            <Typography as="pre" variant="mono">
+                              {execution.responseBody}
+                            </Typography>
+                          </Card>
+                        </Stack>
+                      )}
+                    </Stack>
+                  )}
+                </Stack>
               </Card>
             ))}
           </Stack>
