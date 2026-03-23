@@ -41,7 +41,7 @@ These are already backed by validators or review workflow:
 
 - `check-standards.js` — raw typography tags, raw form elements, raw flex/grid, font styles on raw elements
 - `check-colors.js` — semantic token discipline
-- `check-raw-tailwind.js` — drift audit for generic utility buildup
+- `check-raw-styling.js` — drift audit for raw className utilities and inline style props
 - `check-surface-shells.js` and `check-recipe-drift.js` — repeated shell enforcement
 - `check-layout-prop-usage.js` and `check-page-layout.js` — layout consistency
 - `check-nested-cards.js` and `check-border-radius.js` — surface/chrome cohesion
