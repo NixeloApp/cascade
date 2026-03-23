@@ -229,7 +229,7 @@ export function Timesheet() {
 
         {/* Empty state */}
         {timesheet.totalHours === 0 && (
-          <CardSection size="lg">
+          <CardSection size="xl">
             <Stack gap="md" align="center">
               <Calendar className="size-12 text-ui-text-tertiary" />
               <Typography color="secondary">

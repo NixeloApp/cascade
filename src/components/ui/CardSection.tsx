@@ -21,6 +21,7 @@ const cardSectionVariants = cva(
         compact: "px-3 py-2",
         md: "p-4",
         lg: "p-6",
+        xl: "p-8",
       },
       hoverable: {
         true: "cursor-pointer hover:bg-ui-bg-hover transition-default",

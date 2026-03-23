@@ -347,10 +347,12 @@ describe("Users", () => {
         });
       });
 
+      const SEARCH_LIMIT = 50;
+
       // Without exclude: should find both users
       const allResults = await asUser.query(api.users.searchUsers, {
         query: "",
-        limit: 50,
+        limit: SEARCH_LIMIT,
       });
       const allIds = allResults.map((u) => u._id);
       expect(allIds).toContain(userId);
@@ -359,7 +361,7 @@ describe("Users", () => {
       // With exclude: should not find the excluded user
       const filtered = await asUser.query(api.users.searchUsers, {
         query: "",
-        limit: 50,
+        limit: SEARCH_LIMIT,
         excludeUserId: userId,
       });
       const filteredIds = filtered.map((u) => u._id);

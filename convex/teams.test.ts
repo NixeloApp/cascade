@@ -192,9 +192,12 @@ describe("Teams", () => {
         isPrivate: false,
       });
 
-      // Without filter: should see all teams (default + Other Team)
+      const EXPECTED_MIN_ALL_TEAMS = 2; // default team + Other Team
+      const EXPECTED_WS2_TEAMS = 1;
+
+      // Without filter: should see all teams
       const allTeams = await asUser.query(api.teams.getOrganizationTeams, { organizationId });
-      expect(allTeams.length).toBeGreaterThanOrEqual(2);
+      expect(allTeams.length).toBeGreaterThanOrEqual(EXPECTED_MIN_ALL_TEAMS);
 
       // With workspace filter: should see only teams in workspace 1
       const ws1Teams = await asUser.query(api.teams.getOrganizationTeams, {
@@ -210,7 +213,7 @@ describe("Teams", () => {
         organizationId,
         workspaceId: workspace2Id,
       });
-      expect(ws2Teams).toHaveLength(1);
+      expect(ws2Teams).toHaveLength(EXPECTED_WS2_TEAMS);
       expect(ws2Teams[0].name).toBe("Other Team");
 
       await t.finishInProgressScheduledFunctions();
