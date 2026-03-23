@@ -300,41 +300,56 @@ export const list = organizationQuery({
     const clientId = args.clientId;
     const status = args.status;
 
+    let invoices: Doc<"invoices">[];
+
     if (clientId && status) {
-      return await ctx.db
+      invoices = await ctx.db
         .query("invoices")
         .withIndex("by_organization_client_status", (q) =>
           q.eq("organizationId", ctx.organizationId).eq("clientId", clientId).eq("status", status),
         )
         .order("desc")
         .take(BOUNDED_LIST_LIMIT);
-    }
-
-    if (clientId) {
-      return await ctx.db
+    } else if (clientId) {
+      invoices = await ctx.db
         .query("invoices")
         .withIndex("by_organization_client", (q) =>
           q.eq("organizationId", ctx.organizationId).eq("clientId", clientId),
         )
         .order("desc")
         .take(BOUNDED_LIST_LIMIT);
-    }
-
-    if (status) {
-      return await ctx.db
+    } else if (status) {
+      invoices = await ctx.db
         .query("invoices")
         .withIndex("by_status", (q) =>
           q.eq("organizationId", ctx.organizationId).eq("status", status),
         )
         .order("desc")
         .take(BOUNDED_LIST_LIMIT);
+    } else {
+      invoices = await ctx.db
+        .query("invoices")
+        .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
+        .order("desc")
+        .take(BOUNDED_LIST_LIMIT);
     }
 
-    return await ctx.db
-      .query("invoices")
-      .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
-      .order("desc")
-      .take(BOUNDED_LIST_LIMIT);
+    // Batch-fetch client data for all invoices that have a clientId
+    const uniqueClientIds = [
+      ...new Set(invoices.map((inv) => inv.clientId).filter(Boolean)),
+    ] as Id<"clients">[];
+    const clientDocs = await Promise.all(uniqueClientIds.map((id) => ctx.db.get(id)));
+    const clientMap = new Map<string, { name: string; company?: string }>();
+    for (const doc of clientDocs) {
+      if (doc) {
+        clientMap.set(doc._id, { name: doc.name, company: doc.company });
+      }
+    }
+
+    return invoices.map((invoice) => ({
+      ...invoice,
+      client: invoice.clientId ? (clientMap.get(invoice.clientId) ?? null) : null,
+    }));
   },
 });
 

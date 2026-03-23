@@ -1,13 +1,15 @@
 import { api } from "@convex/_generated/api";
-import type { Doc } from "@convex/_generated/dataModel";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import {
   Select,
   SelectContent,
@@ -25,14 +27,61 @@ import { WEEK } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
 
 type InvoiceStatusFilter = "all" | "draft" | "sent" | "paid" | "overdue";
-
-export const Route = createFileRoute("/_auth/_app/$orgSlug/invoices/")({
-  component: InvoicesListPage,
-});
+type InvoiceListItem = FunctionReturnType<typeof api.invoices.list>[number];
 
 function formatCurrency(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
+
+function getStatusBadgeVariant(status: string) {
+  switch (status) {
+    case "paid":
+      return "success" as const;
+    case "sent":
+      return "info" as const;
+    case "overdue":
+      return "error" as const;
+    default:
+      return "secondary" as const;
+  }
+}
+
+function InvoiceCard({ invoice, orgSlug }: { invoice: InvoiceListItem; orgSlug: string }) {
+  return (
+    <Link to={ROUTES.invoices.detail.path} params={{ orgSlug, invoiceId: invoice._id }}>
+      <Card hoverable>
+        <CardHeader>
+          <Flex align="center" justify="between">
+            <CardTitle>{invoice.number}</CardTitle>
+            <Badge variant={getStatusBadgeVariant(invoice.status)} shape="pill">
+              {invoice.status}
+            </Badge>
+          </Flex>
+        </CardHeader>
+        <CardContent>
+          <Flex direction="column" gap="sm">
+            {invoice.client ? (
+              <Typography variant="label">{invoice.client.name}</Typography>
+            ) : (
+              <Typography variant="small" color="tertiary">
+                No client assigned
+              </Typography>
+            )}
+            <Typography variant="h4">{formatCurrency(invoice.total)}</Typography>
+            <Metadata>
+              <MetadataItem>Due {formatDate(invoice.dueDate, { timeZone: "UTC" })}</MetadataItem>
+              <MetadataTimestamp date={invoice.issueDate} prefix="Issued" />
+            </Metadata>
+          </Flex>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+export const Route = createFileRoute("/_auth/_app/$orgSlug/invoices/")({
+  component: InvoicesListPage,
+});
 
 function InvoicesListPage() {
   const { orgSlug, organizationId } = useOrganization();
@@ -42,7 +91,7 @@ function InvoicesListPage() {
   const invoices = useAuthenticatedQuery(api.invoices.list, {
     organizationId,
     status: status === "all" ? undefined : status,
-  }) as Doc<"invoices">[] | undefined;
+  });
 
   const handleCreateDraft = async () => {
     try {
@@ -105,27 +154,9 @@ function InvoicesListPage() {
           }
         />
       ) : (
-        <Grid cols={1} gap="md" className="lg:grid-cols-2">
-          {invoices.map((invoice: Doc<"invoices">) => (
-            <Card key={invoice._id}>
-              <CardHeader>
-                <CardTitle>{invoice.number}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-4">
-                <Typography variant="small">Status: {invoice.status}</Typography>
-                <Typography variant="small">Total: {formatCurrency(invoice.total)}</Typography>
-                <Typography variant="small" color="secondary">
-                  Due: {formatDate(invoice.dueDate, { timeZone: "UTC" })}
-                </Typography>
-                <Link
-                  to={ROUTES.invoices.detail.path}
-                  params={{ orgSlug, invoiceId: invoice._id }}
-                  className="text-brand underline text-sm"
-                >
-                  Open invoice
-                </Link>
-              </CardContent>
-            </Card>
+        <Grid cols={1} colsLg={2} gap="md">
+          {invoices.map((invoice) => (
+            <InvoiceCard key={invoice._id} invoice={invoice} orgSlug={orgSlug} />
           ))}
         </Grid>
       )}
