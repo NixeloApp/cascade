@@ -12,25 +12,26 @@
 
 #### CI Baselines (6 with debt, 13 already clean)
 
-| Baseline | Current | What it tracks |
-|----------|---------|----------------|
-| raw-tailwind-violations | 162 violations / 102 files | Raw className utilities that should use design system |
-| post-fetch-js-filters | 28 filters / 16 files | Convex queries filtering in JS instead of index |
-| client-query-filters | 13 filters / 11 files | Frontend filtering data that backend should filter |
-| multi-filter-query-results | 9 queries / 8 files | Queries with multiple chained .filter() calls |
-| oversized-cva-variant-axis | 8 axes over limit | CVA variants with too many options (Card has 227 recipes!) |
-| e2e-quality (UNSCOPED_FIRST) | 50 | E2E selectors using .first() without scoping |
+| Baseline | Current | Status |
+|----------|---------|--------|
+| raw-tailwind-violations | 162 / 102 files | Long tail (58 at 1, 32 at 2). Diminishing returns. |
+| e2e-quality (UNSCOPED_FIRST) | 50 | Mechanical — scope E2E selectors |
+| post-fetch-js-filters | 28 / 16 files | Backend queries filtering in JS after fetch |
+| client-query-filters | 7 / 5 files | At floor — remaining are legitimate (text search, local grouping) |
+| multi-filter-query-results | 9 / 8 files | Union of post-fetch + client. Tracks with above. |
+| oversized-cva-variant-axis | 8 axes | Architectural — primitive UI components legitimately large |
+
 Already clean (13): e2e-catch-swallows, e2e-hard-rules, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, global-css-page-class, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
 
 #### Inline Exemptions in Validators
 
 | Validator | Exemptions | What they are |
 |-----------|-----------|---------------|
-| check-border-radius | 17 files | Files allowed to use raw rounded-* classes |
+| check-border-radius | 17 files | Progress bars, decorative elements, drag handles — mostly legitimate |
 | check-component-naming | 3 product skips | RoadmapRows (multi-component), Icons.tsx, InlinePropertyEdit |
 | check-tech-debt | MAX_ALLOWED=10 | Allows up to 10 tech debt markers |
 
-### Phase 1: Visual Review (needs screenshots)
+### Phase 1: Visual Review
 
 | Item | Detail |
 |------|--------|
@@ -61,21 +62,20 @@ Already clean (13): e2e-catch-swallows, e2e-hard-rules, feature-class-string-sty
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| CI baselines with debt | 6 of 18 |
-| Inline exemption lists | 3 validators |
-| Unit tests | 4472 pass |
+| CI baselines clean | 13 of 18 (was 8) |
+| Unit tests | 4471 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | Spec issues fixed | 41 total |
-| HIGH severity issues | 1 remaining (meeting-to-doc) |
-| MEDIUM severity issues | 22 remaining |
 
 ### What's been fixed
 
 Architecture: RoadmapView decomposition (2671→768 lines), ClientCard extraction, WorkspaceCard extraction, WikiDocumentGrid dedup, ProjectTimesheet dead code removal, useEffect→beforeLoad redirects (2 routes), auth hydrated/formReady removal, formatCurrency consolidation (6 duplicates→2 shared modules).
 
-Backend: Invoice list with client join, reactive portal tokens, archived notification pagination, admin-scoped token query.
+Backend: Invoice list with client join, reactive portal tokens, archived notification pagination, admin-scoped token query, workspaceId team filter, excludeUserId search filter.
 
-Frontend: Invoice draft dialog, portal admin gating, footer link wiring, icon barrel migration (82 files), design tokens (roadmap + sidebar).
+Frontend: Invoice draft dialog, portal admin gating, footer link wiring, icon barrel migration (82 files), design tokens (roadmap + sidebar), 6 client-side filters eliminated.
 
 Card architecture: Banned all nested Cards (no exemptions). Introduced `CardSection` as the designated inner surface (58 replacements across 21 files). Card = outer container, CardSection = inner grouping. Validator enforces the ban.
+
+Validator cleanup: 4 dead CVA variants removed, e2e-hard-rules zeroed (Promise sleep → expect.poll), fixed-size-drift zeroed (stale entries), global-css-page-class zeroed (dead CSS + inline hero backgrounds).
