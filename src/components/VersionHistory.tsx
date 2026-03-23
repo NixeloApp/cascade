@@ -208,7 +208,7 @@ export function VersionHistory({
                           <div
                             className={cn(
                               getCardRecipeClassName("versionHistoryDiffPane"),
-                              "max-h-64 overflow-auto p-3",
+                              "max-h-dropdown overflow-auto p-3",
                             )}
                           >
                             <Typography as="pre" variant="caption">
@@ -223,7 +223,7 @@ export function VersionHistory({
                           <div
                             className={cn(
                               getCardRecipeClassName("versionHistoryDiffPane"),
-                              "max-h-64 overflow-auto p-3",
+                              "max-h-dropdown overflow-auto p-3",
                             )}
                           >
                             <Typography as="pre" variant="caption">

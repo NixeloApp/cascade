@@ -47,7 +47,7 @@ export function SprintWorkload({ sprintId }: SprintWorkloadProps) {
             {breakdown.totalIssues} issues in sprint
           </Typography>
         </Card>
-        <Stack gap="none" className="max-h-64 overflow-y-auto">
+        <Stack gap="none" className="max-h-dropdown overflow-y-auto">
           {breakdown.assignees.map((assignee) => (
             <Card key={assignee.id} recipe="sprintWorkloadRow" padding="sm">
               <Flex align="center" gap="sm">

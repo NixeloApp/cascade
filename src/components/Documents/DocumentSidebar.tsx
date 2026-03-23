@@ -272,7 +272,7 @@ export function DocumentSidebar({
     <Card
       recipe="documentSidebarShell"
       padding="none"
-      className="h-full w-64 shrink-0 overflow-y-auto"
+      className="h-full w-sidebar shrink-0 overflow-y-auto"
     >
       {/* Close button */}
       <div className={cn(getCardRecipeClassName("documentSidebarHeader"), "p-2")}>

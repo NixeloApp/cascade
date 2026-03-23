@@ -102,7 +102,7 @@ export function AutomationRulesManager({ projectId }: AutomationRulesManagerProp
       {rules === undefined ? (
         <Card>
           <CardBody>
-            <Flex justify="center" align="center" className="min-h-32">
+            <Flex justify="center" align="center" className="min-h-content-block">
               <LoadingSpinner size="lg" />
             </Flex>
           </CardBody>

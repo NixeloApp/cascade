@@ -888,7 +888,7 @@ function getTimelineGroupBadgeTone(group: TimelineGroup) {
 
 function getStickyIssueColumnClassName(selected: boolean) {
   return cn(
-    "sticky left-0 z-20 w-64 shrink-0 border-r border-ui-border/70 pr-4",
+    "sticky left-0 z-20 w-sidebar shrink-0 border-r border-ui-border/70 pr-4",
     selected ? "bg-brand-subtle/50" : "bg-ui-bg group-hover:bg-ui-bg-secondary",
   );
 }
@@ -1080,7 +1080,7 @@ function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: Road
       <Flex align="center">
         <FlexItem
           flex="none"
-          className="sticky left-0 z-20 w-64 border-r border-ui-border/70 bg-ui-bg-secondary/80 pr-4"
+          className="sticky left-0 z-20 w-sidebar border-r border-ui-border/70 bg-ui-bg-secondary/80 pr-4"
         >
           <Flex align="center" justify="between" className="h-full">
             <Flex align="center" gap="sm">
@@ -1904,7 +1904,7 @@ function RoadmapLoadingState() {
         <Card variant="default" padding="none" className="flex-1 overflow-hidden">
           <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
             <Flex>
-              <FlexItem shrink={false} className="w-64">
+              <FlexItem shrink={false} className="w-sidebar">
                 <Skeleton className="h-5 w-24" />
               </FlexItem>
               <FlexItem flex="1">
@@ -1922,7 +1922,7 @@ function RoadmapLoadingState() {
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div key={i} className="border-b border-ui-border">
                   <Flex align="center">
-                    <FlexItem shrink={false} className="w-64 pr-4">
+                    <FlexItem shrink={false} className="w-sidebar pr-4">
                       <Flex align="center" gap="sm">
                         <Skeleton className="size-4 rounded-full" />
                         <Skeleton className="h-4 w-16" />
@@ -2170,7 +2170,7 @@ function RoadmapTimelineContainer({
                   <Flex>
                     <FlexItem
                       shrink={false}
-                      className="sticky left-0 z-30 w-64 shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4"
+                      className="sticky left-0 z-30 w-sidebar shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4"
                       data-testid={TEST_IDS.ROADMAP.ISSUE_HEADER}
                     >
                       <Typography variant="label">Issue</Typography>
