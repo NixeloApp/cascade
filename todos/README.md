@@ -8,18 +8,32 @@
 
 ### Phase 0: Zero Validator Exceptions
 
-**Goal: 0 baselined violations across all validators.**
+**Goal: every baseline at 0, every inline exemption list empty.**
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Raw styling violations | 162 across 102 files | 0 |
-| Files with 5 violations | 1 | 0 |
-| Files with 4 violations | 2 | 0 |
-| Files with 3 violations | 9 | 0 |
-| Files with 2 violations | 32 | 0 |
-| Files with 1 violation | 58 | 0 |
+#### CI Baselines (10 with debt, 8 already clean)
 
-### Phase 1: Visual Review (needs dev server + screenshots)
+| Baseline | Current | What it tracks |
+|----------|---------|----------------|
+| raw-tailwind-violations | 162 violations / 102 files | Raw className utilities that should use design system |
+| post-fetch-js-filters | 28 filters / 16 files | Convex queries filtering in JS instead of index |
+| client-query-filters | 13 filters / 11 files | Frontend filtering data that backend should filter |
+| multi-filter-query-results | 9 queries / 8 files | Queries with multiple chained .filter() calls |
+| oversized-cva-variant-axis | 8 axes over limit | CVA variants with too many options (Card has 227 recipes!) |
+| e2e-quality (UNSCOPED_FIRST) | 50 | E2E selectors using .first() without scoping |
+| global-css-page-class | 3 selectors | Page-specific CSS that should be component-scoped |
+| e2e-hard-rules | 7 timeouts + 1 sleep | Hardcoded waits in screenshot tooling |
+
+Already clean: e2e-catch-swallows, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
+
+#### Inline Exemptions in Validators
+
+| Validator | Exemptions | What they are |
+|-----------|-----------|---------------|
+| check-border-radius | 17 files | Files allowed to use raw rounded-* classes |
+| check-component-naming | 3 product skips | RoadmapRows (multi-component), Icons.tsx, InlinePropertyEdit |
+| check-tech-debt | MAX_ALLOWED=10 | Allows up to 10 tech debt markers |
+
+### Phase 1: Visual Review (needs screenshots)
 
 | Item | Detail |
 |------|--------|
@@ -50,14 +64,12 @@
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Raw styling violations | 102 files / 162 baselined (was 276) |
-| Fixed size drift | 0 |
-| RoadmapView | 768 lines (was 2671, 71% reduction) |
-| Icon imports | 100% via @/lib/icons barrel |
+| CI baselines with debt | 10 of 18 |
+| Inline exemption lists | 3 validators |
 | Unit tests | 4472 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
-| Spec issues fixed | 41 total (across all severities) |
+| Spec issues fixed | 41 total |
 | HIGH severity issues | 1 remaining (meeting-to-doc) |
 | MEDIUM severity issues | 22 remaining |
 
