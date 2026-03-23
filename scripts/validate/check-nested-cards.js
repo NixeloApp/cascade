@@ -49,11 +49,6 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
-    /** No Card variants are exempt — Cards inside Cards is always banned. */
-    function isSectionVariant(_element) {
-      return false;
-    }
-
     function visit(node, cardDepth = 0) {
       // Handle JsxElement (opening + children + closing)
       if (ts.isJsxElement(node)) {
@@ -61,12 +56,11 @@ export function run() {
         const tagName = opening.tagName.getText();
 
         if (tagName === "Card") {
-          // variant="section" Cards are exempt — they're intentional inner sections
-          if (cardDepth > 0 && !isSectionVariant(opening)) {
+          if (cardDepth > 0) {
             reportError(
               filePath,
               opening,
-              `Card inside Card is banned. Use a div with appropriate styling instead.`,
+              `Card inside Card is banned. Use InsetPanel or a div for inner surfaces.`,
             );
           }
 
@@ -82,11 +76,11 @@ export function run() {
       if (ts.isJsxSelfClosingElement(node)) {
         const tagName = node.tagName.getText();
 
-        if (tagName === "Card" && cardDepth > 0 && !isSectionVariant(node)) {
+        if (tagName === "Card" && cardDepth > 0) {
           reportError(
             filePath,
             node,
-            `Card inside Card is banned. Use a div with appropriate styling instead.`,
+            `Card inside Card is banned. Use InsetPanel or a div for inner surfaces.`,
           );
         }
       }
