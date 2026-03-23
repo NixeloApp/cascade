@@ -137,7 +137,7 @@ The workspace detail page is the primary operating surface for a single workspac
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Teams list (`teams/index.tsx`) uses `api.teams.getTeams` (org-wide) instead of a workspace-scoped query -- shows all org teams regardless of workspace | correctness | HIGH |
+| ~~1~~ | ~~Teams list uses org-wide query~~ **Fixed** — `getTeams` accepts optional `workspaceId`, uses `by_workspace` index for admins | ~~correctness~~ | ~~HIGH~~ |
 | 2 | Index route (`index.tsx`) uses `useEffect` + `navigate` for redirect instead of TanStack Router's `redirect` in route config | architecture | LOW |
 | 3 | Settings form initializes state with a `if (workspace && !initialized)` pattern inside render -- should use `useEffect` or form library | architecture | LOW |
 | 4 | Backlog and sprints tabs show flat card lists without any grouping, sorting, or filtering | functionality | MEDIUM |
