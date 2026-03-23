@@ -76,11 +76,17 @@ export async function fetchPaginatedQuery<T extends GenericDocument>(
 
 export function isInvalidCursorError(error: unknown): boolean {
   if (error instanceof Error) {
-    return error.message.includes("InvalidCursor");
+    if (error.message.includes("InvalidCursor")) return true;
   }
-  if (typeof error === "object" && error !== null && "data" in error) {
-    const data = (error as { data: unknown }).data;
-    return typeof data === "string" && data.includes("InvalidCursor");
+  if (typeof error === "object" && error !== null) {
+    // ConvexError stores the error info in .data (string or object)
+    if ("data" in error) {
+      const data = (error as { data: unknown }).data;
+      if (typeof data === "string" && data.includes("InvalidCursor")) return true;
+    }
+    // Some Convex errors put it in .message on the serialized form
+    const str = String(error);
+    if (str.includes("InvalidCursor")) return true;
   }
   return false;
 }
