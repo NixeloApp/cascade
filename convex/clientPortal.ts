@@ -380,12 +380,15 @@ export const listTokensByClient = organizationAdminMutation({
   },
 });
 
-/** Reactive query version of listTokensByClient. Auto-updates when tokens change. */
+/** Reactive query version of listTokensByClient. Admin-scoped, auto-updates when tokens change. */
 export const listTokensByClientReactive = organizationQuery({
   args: {
     clientId: v.id("clients"),
   },
   handler: async (ctx, args) => {
+    if (ctx.organizationRole !== "admin" && ctx.organizationRole !== "owner") {
+      throw forbidden("admin", "Only admins can view portal tokens");
+    }
     await assertClientForOrganization(ctx.db, ctx.organizationId, args.clientId);
 
     const MAX_PORTAL_TOKENS = 100;

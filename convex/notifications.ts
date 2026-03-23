@@ -288,7 +288,8 @@ export const listArchived = authenticatedQuery({
       buildQuery: (db) =>
         db
           .query("notifications")
-          .withIndex("by_user_archived", (q) => q.eq("userId", ctx.userId).eq("isArchived", true)),
+          .withIndex("by_user_archived", (q) => q.eq("userId", ctx.userId).eq("isArchived", true))
+          .order("desc"),
     });
   },
 });

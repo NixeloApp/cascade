@@ -49,8 +49,8 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
-    /** Variants allowed inside another Card (inner sections/surfaces) */
-    const INNER_CARD_VARIANTS = new Set(["section", "subtle"]);
+    /** Variants allowed inside another Card (inner sections only) */
+    const INNER_CARD_VARIANTS = new Set(["section"]);
 
     /** Check if a JSX opening or self-closing element has an inner-card-safe variant */
     function isSectionVariant(element) {

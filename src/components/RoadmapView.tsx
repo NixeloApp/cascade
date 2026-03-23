@@ -152,14 +152,6 @@ import {
   shouldRenderEpicSummaryBar,
 } from "./Roadmap/utils";
 
-const PRIORITY_SORT_ORDER: Record<string, number> = {
-  highest: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-  lowest: 4,
-};
-
 /** Build a map of issue ID to issue for O(1) lookups */
 
 type RoadmapRowData = {

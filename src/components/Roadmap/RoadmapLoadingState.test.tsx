@@ -3,8 +3,9 @@ import { render } from "@/test/custom-render";
 import { RoadmapLoadingState } from "./RoadmapLoadingState";
 
 describe("RoadmapLoadingState", () => {
-  it("renders without crashing", () => {
+  it("renders skeleton layout", () => {
     const { container } = render(<RoadmapLoadingState />);
-    expect(container.innerHTML.length).toBeGreaterThan(0);
+    expect(container.firstChild).toBeInTheDocument();
+    expect(container.firstChild).not.toBeEmptyDOMElement();
   });
 });

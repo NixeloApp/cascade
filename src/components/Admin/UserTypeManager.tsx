@@ -463,7 +463,7 @@ export function UserTypeManager() {
           {/* Users without profiles */}
           {usersWithoutProfiles && usersWithoutProfiles.length > 0 && (
             <Card
-              variant="subtle"
+              variant="section"
               padding="md"
               className="mb-6 border-status-warning bg-status-warning-bg"
             >
@@ -473,7 +473,7 @@ export function UserTypeManager() {
                 </Typography>
                 <Stack gap="sm">
                   {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
-                    <Card key={user._id} variant="subtle" padding="sm">
+                    <Card key={user._id} variant="section" padding="sm">
                       <Flex justify="between" align="center">
                         <Typography variant="small">
                           {user.name || user.email || "Unknown User"}
@@ -875,7 +875,7 @@ export function UserTypeManager() {
                       />
 
                       <Card
-                        variant="subtle"
+                        variant="section"
                         padding="sm"
                         className="border-brand-border bg-brand-subtle"
                       >

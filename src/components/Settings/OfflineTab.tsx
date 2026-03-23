@@ -97,7 +97,7 @@ function getVisibleQueueItems(queue: OfflineMutation[], showAll: boolean): Offli
 
 function ConnectionStatusCell({ isOnline }: { isOnline: boolean }) {
   return (
-    <Card variant="subtle" padding="md">
+    <Card variant="section" padding="md">
       <Flex gap="md" align="center">
         <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
           {isOnline ? (
@@ -296,7 +296,7 @@ export function OfflineTab() {
       <Card padding="lg" data-testid={TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD}>
         <Grid cols={1} colsLg={5} gap="lg" className="items-stretch">
           <ConnectionStatusCell isOnline={isOnline} />
-          <Card variant="subtle" padding="md">
+          <Card variant="section" padding="md">
             <Stack gap="xs">
               <Typography variant="small" color="secondary">
                 Queued Items
@@ -304,7 +304,7 @@ export function OfflineTab() {
               <Typography variant="h2">{isLoading ? "..." : count}</Typography>
             </Stack>
           </Card>
-          <Card variant="subtle" padding="md">
+          <Card variant="section" padding="md">
             <Stack gap="xs">
               <Typography variant="small" color="secondary">
                 Sync Status
@@ -314,7 +314,7 @@ export function OfflineTab() {
               </Typography>
             </Stack>
           </Card>
-          <Card variant="subtle" padding="md">
+          <Card variant="section" padding="md">
             <Stack gap="xs">
               <Typography variant="small" color="secondary">
                 Last Successful Replay
@@ -324,7 +324,7 @@ export function OfflineTab() {
               </Typography>
             </Stack>
           </Card>
-          <Card variant="subtle" padding="md">
+          <Card variant="section" padding="md">
             <Stack gap="xs">
               <Typography variant="small" color="secondary">
                 Storage
@@ -343,7 +343,7 @@ export function OfflineTab() {
             End-to-end replay, install prompts, and service-worker ownership are still under audit.
           </Typography>
           <Grid cols={1} colsSm={2} gap="md">
-            <Card variant="subtle" padding="md">
+            <Card variant="section" padding="md">
               <Stack gap="xs">
                 <Typography variant="small" color="secondary">
                   Service Worker Support
@@ -353,7 +353,7 @@ export function OfflineTab() {
                 </Typography>
               </Stack>
             </Card>
-            <Card variant="subtle" padding="md">
+            <Card variant="section" padding="md">
               <Stack gap="xs">
                 <Typography variant="small" color="secondary">
                   Background Sync Support
@@ -457,7 +457,7 @@ export function OfflineTab() {
               </Flex>
             )}
             <Grid cols={1} colsSm={3} gap="md">
-              <Card variant="subtle" padding="sm">
+              <Card variant="section" padding="sm">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Pending
@@ -465,7 +465,7 @@ export function OfflineTab() {
                   <Typography variant="label">{pendingCount}</Typography>
                 </Stack>
               </Card>
-              <Card variant="subtle" padding="sm">
+              <Card variant="section" padding="sm">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Syncing
@@ -473,7 +473,7 @@ export function OfflineTab() {
                   <Typography variant="label">{syncingCount}</Typography>
                 </Stack>
               </Card>
-              <Card variant="subtle" padding="sm">
+              <Card variant="section" padding="sm">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Failed

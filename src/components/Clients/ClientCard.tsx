@@ -58,7 +58,7 @@ function PortalTokenDetails({ clientId, organizationId }: PortalTokenDetailsProp
         {tokens.length} {tokens.length === 1 ? "token" : "tokens"}
       </Typography>
       {tokens.map((token) => (
-        <div key={token._id} className="border-t border-ui-border pt-2">
+        <div key={token._id} className="border-t border-ui-border">
           <Flex align="center" justify="between" gap="sm">
             <Stack gap="xs">
               <Flex align="center" gap="sm">
@@ -144,7 +144,7 @@ export function ClientCard({ client, projects }: ClientCardProps) {
             <Flex wrap gap="sm" align="end">
               {projects.length > 1 ? (
                 <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                   <SelectContent>
