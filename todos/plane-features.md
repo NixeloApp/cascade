@@ -20,4 +20,4 @@ Remaining evaluation items. Core features (stickies, auto-archive, offline, vers
 ## Low Priority
 
 - [ ] **Model fallbacks** — AI provider resilience/fallback when primary is down
-- [ ] **Bulk label operations** — only remaining bulk operation type not shipped
+- [x] ~~**Bulk label operations**~~ — **Shipped** (bulkAddLabels + bulkRemoveLabels)

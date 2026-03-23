@@ -734,6 +734,67 @@ describe("Issue Mutations", () => {
       });
     });
 
+    describe("bulkRemoveLabels", () => {
+      it("should remove labels from multiple issues", async () => {
+        const t = convexTest(schema, modules);
+        const { userId, organizationId, asUser } = await createTestContext(t);
+
+        const projectId = await createProjectInOrganization(t, userId, organizationId, {
+          name: "Bulk Remove Labels Project",
+          key: "BRMVL",
+        });
+
+        const issue1 = await createTestIssue(t, projectId, userId, { title: "Issue 1" });
+        const issue2 = await createTestIssue(t, projectId, userId, { title: "Issue 2" });
+
+        // Patch labels directly onto the issues
+        await t.run(async (ctx) => {
+          await ctx.db.patch(issue1, { labels: ["bug", "urgent", "review"] });
+          await ctx.db.patch(issue2, { labels: ["bug", "feature"] });
+        });
+
+        await asUser.mutation(api.issues.bulkRemoveLabels, {
+          issueIds: [issue1, issue2],
+          labels: ["bug", "urgent"],
+        });
+
+        const updated1 = await asUser.query(api.issues.getIssue, { id: issue1 });
+        const updated2 = await asUser.query(api.issues.getIssue, { id: issue2 });
+        const labels1 = updated1?.labels.map((l: { name: string }) => l.name) ?? [];
+        const labels2 = updated2?.labels.map((l: { name: string }) => l.name) ?? [];
+        expect(labels1).toEqual(["review"]);
+        expect(labels2).toEqual(["feature"]);
+        await t.finishInProgressScheduledFunctions();
+      });
+
+      it("should skip issues that don't have the specified labels", async () => {
+        const t = convexTest(schema, modules);
+        const { userId, organizationId, asUser } = await createTestContext(t);
+
+        const projectId = await createProjectInOrganization(t, userId, organizationId, {
+          name: "Skip Remove Labels Project",
+          key: "SKPRL",
+        });
+
+        const issueId = await createTestIssue(t, projectId, userId, { title: "No Match" });
+        await t.run(async (ctx) => {
+          await ctx.db.patch(issueId, { labels: ["unrelated"] });
+        });
+
+        const result = await asUser.mutation(api.issues.bulkRemoveLabels, {
+          issueIds: [issueId],
+          labels: ["nonexistent"],
+        });
+
+        expect(result.updated).toBe(0);
+
+        const updated = await asUser.query(api.issues.getIssue, { id: issueId });
+        const labelNames = updated?.labels.map((l: { name: string }) => l.name) ?? [];
+        expect(labelNames).toEqual(["unrelated"]);
+        await t.finishInProgressScheduledFunctions();
+      });
+    });
+
     describe("bulkDelete", () => {
       it("should delete multiple issues", async () => {
         const t = convexTest(schema, modules);
