@@ -333,11 +333,11 @@ export function Dashboard() {
   );
 }
 
-function getDisplayIssues<T>(
+function getDisplayIssues<A, C>(
   filter: IssueFilter,
-  assigned: T[] | undefined,
-  created: T[] | undefined,
-): T[] | undefined {
+  assigned: A[] | undefined,
+  created: C[] | undefined,
+): (A | C)[] | undefined {
   if (filter === "assigned") return assigned;
   if (filter === "created") return created;
   return [...(assigned || []), ...(created || [])];

@@ -1,28 +1,71 @@
 import { api } from "@convex/_generated/api";
+import { WEEK } from "@convex/lib/timeUtils";
+import type { ISSUE_PRIORITIES } from "@convex/validators";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { formatDate } from "@/lib/formatting";
+import { getPriorityBadgeTone } from "@/lib/issue-utils";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/my-issues")({
   component: MyIssuesBoardPage,
 });
 
 type GroupBy = "status" | "project";
+type PriorityFilter = "all" | (typeof ISSUE_PRIORITIES)[number];
+type DueDateFilter = "all" | "has-date" | "overdue" | "this-week" | "no-date";
+
+const PRIORITY_OPTIONS: { value: PriorityFilter; label: string }[] = [
+  { value: "all", label: "All Priorities" },
+  { value: "highest", label: "Highest" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+  { value: "lowest", label: "Lowest" },
+];
+
+const DUE_DATE_OPTIONS: { value: DueDateFilter; label: string }[] = [
+  { value: "all", label: "All Dates" },
+  { value: "overdue", label: "Overdue" },
+  { value: "this-week", label: "Due This Week" },
+  { value: "has-date", label: "Has Due Date" },
+  { value: "no-date", label: "No Due Date" },
+];
+
+function matchesDueDateFilter(dueDate: number | undefined, filter: DueDateFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "no-date") return dueDate === undefined;
+  if (filter === "has-date") return dueDate !== undefined;
+  if (dueDate === undefined) return false;
+  const now = Date.now();
+  if (filter === "overdue") return dueDate < now;
+  if (filter === "this-week") return dueDate >= now && dueDate <= now + WEEK;
+  return true;
+}
 
 function MyIssuesBoardPage() {
   const { orgSlug } = useOrganization();
   const [groupBy, setGroupBy] = useState<GroupBy>("status");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+  const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>("all");
 
   // Server-side group counts — always reflect the full dataset
   const groupCounts = useAuthenticatedQuery(api.dashboard.getMyIssueGroupCounts, { groupBy });
@@ -34,9 +77,21 @@ function MyIssuesBoardPage() {
     { initialNumItems: 100 },
   );
 
-  // Group loaded issues by the selected key
-  const issuesByGroup = new Map<string, typeof results>();
-  for (const issue of results) {
+  const hasActiveFilters = priorityFilter !== "all" || dueDateFilter !== "all";
+
+  // Apply client-side filters
+  const filteredResults = useMemo(() => {
+    if (!hasActiveFilters) return results;
+    return results.filter((issue) => {
+      if (priorityFilter !== "all" && issue.priority !== priorityFilter) return false;
+      if (!matchesDueDateFilter(issue.dueDate, dueDateFilter)) return false;
+      return true;
+    });
+  }, [results, priorityFilter, dueDateFilter, hasActiveFilters]);
+
+  // Group filtered issues by the selected key
+  const issuesByGroup = new Map<string, typeof filteredResults>();
+  for (const issue of filteredResults) {
     const key = groupBy === "status" ? issue.status : issue.projectKey;
     const existing = issuesByGroup.get(key);
     if (existing) {
@@ -72,15 +127,68 @@ function MyIssuesBoardPage() {
       <PageHeader
         title="My Issues"
         actions={
-          <SegmentedControl
-            value={groupBy}
-            onValueChange={(value: string) => value && setGroupBy(value as GroupBy)}
-          >
-            <SegmentedControlItem value="status">By Status</SegmentedControlItem>
-            <SegmentedControlItem value="project">By Project</SegmentedControlItem>
-          </SegmentedControl>
+          <Flex gap="sm" align="center" wrap>
+            <Select
+              value={priorityFilter}
+              onValueChange={(v) => setPriorityFilter(v as PriorityFilter)}
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRIORITY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={dueDateFilter}
+              onValueChange={(v) => setDueDateFilter(v as DueDateFilter)}
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DUE_DATE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setPriorityFilter("all");
+                  setDueDateFilter("all");
+                }}
+              >
+                Clear filters
+              </Button>
+            )}
+
+            <SegmentedControl
+              value={groupBy}
+              onValueChange={(value: string) => value && setGroupBy(value as GroupBy)}
+            >
+              <SegmentedControlItem value="status">By Status</SegmentedControlItem>
+              <SegmentedControlItem value="project">By Project</SegmentedControlItem>
+            </SegmentedControl>
+          </Flex>
         }
       />
+
+      {hasActiveFilters && (
+        <Typography variant="caption" color="tertiary">
+          Showing {filteredResults.length} of {results.length} loaded issues
+        </Typography>
+      )}
 
       <Flex gap="md" className="overflow-x-auto pb-2">
         {columns.map((column) => (
@@ -95,9 +203,11 @@ function MyIssuesBoardPage() {
               <Flex justify="between" align="center">
                 <Typography variant="label">{column.label}</Typography>
                 <Badge variant="neutral" size="sm">
-                  {column.issues.length < column.totalCount
-                    ? `${column.issues.length} / ${column.totalCount}`
-                    : String(column.totalCount)}
+                  {hasActiveFilters
+                    ? `${column.issues.length} filtered`
+                    : column.issues.length < column.totalCount
+                      ? `${column.issues.length} / ${column.totalCount}`
+                      : String(column.totalCount)}
                 </Badge>
               </Flex>
               <Stack gap="sm">
@@ -109,22 +219,36 @@ function MyIssuesBoardPage() {
                   >
                     <Card variant="section" padding="sm" hoverable>
                       <Stack gap="xs">
-                        <Typography variant="small" color="secondary">
-                          {issue.key} · {issue.projectKey}
-                        </Typography>
+                        <Flex justify="between" align="center">
+                          <Typography variant="small" color="secondary">
+                            {issue.key} · {issue.projectKey}
+                          </Typography>
+                          {issue.dueDate && (
+                            <Badge
+                              variant={issue.dueDate < Date.now() ? "error" : "neutral"}
+                              size="sm"
+                            >
+                              {formatDate(issue.dueDate, { month: "short", day: "numeric" })}
+                            </Badge>
+                          )}
+                        </Flex>
                         <Typography variant="label" className="line-clamp-2">
                           {issue.title}
                         </Typography>
-                        <Typography variant="caption" color="tertiary">
+                        <Badge
+                          size="sm"
+                          shape="pill"
+                          priorityTone={getPriorityBadgeTone(issue.priority)}
+                        >
                           {issue.priority}
-                        </Typography>
+                        </Badge>
                       </Stack>
                     </Card>
                   </Link>
                 ))}
                 {column.issues.length === 0 && (
                   <Typography variant="caption" color="tertiary" className="text-center">
-                    No issues loaded
+                    {hasActiveFilters ? "No matching issues" : "No issues loaded"}
                   </Typography>
                 )}
               </Stack>

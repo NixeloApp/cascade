@@ -10,9 +10,9 @@
 
 ~~Grouping happens client-side on 100 items.~~ Server-side `getMyIssueGroupCounts` query returns complete counts across the full dataset. Column headers show "loaded / total" when not all issues are loaded.
 
-### 2. Priority and date filters (LOW)
+### ~~2. Priority and date filters~~ *(shipped)*
 
-No filters beyond group-by. Adding priority and due date filters would help triage.
+~~No filters beyond group-by.~~ Priority dropdown and due date filter (overdue, this week, has/no date) added with clear-filters button. Issue cards now show due date badges with overdue highlighting.
 
 ---
 
@@ -25,4 +25,4 @@ No filters beyond group-by. Adding priority and due date filters would help tria
 ## Acceptance Criteria
 
 - [x] Group counts reflect the full dataset, not just loaded page
-- [ ] Priority filter narrows the visible set
+- [x] Priority filter narrows the visible set
