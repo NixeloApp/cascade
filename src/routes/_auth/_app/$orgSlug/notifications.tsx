@@ -108,8 +108,15 @@ export function NotificationsPage() {
   );
   const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
-  // Archived notifications
-  const archivedNotifications = useAuthenticatedQuery(api.notifications.listArchived, {});
+  // Archived notifications (paginated)
+  const {
+    results: archivedNotificationsRaw,
+    loadMore: loadMoreArchived,
+    status: archivedStatus,
+  } = usePaginatedQuery(api.notifications.listArchived, canAct ? {} : "skip", {
+    initialNumItems: 25,
+  });
+  const archivedNotifications = (archivedNotificationsRaw ?? []) as NotificationWithActor[];
 
   // Unread count
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
@@ -364,10 +371,14 @@ export function NotificationsPage() {
                 </TabsContent>
 
                 <TabsContent value="archived" className="mt-0">
-                  {renderNotificationList(
-                    (archivedNotifications as NotificationWithActor[]) || [],
-                    true,
-                  )}
+                  {renderNotificationList(archivedNotifications, true)}
+                  {archivedStatus === "CanLoadMore" ? (
+                    <Flex justify="center" className="py-4">
+                      <Button variant="ghost" size="sm" onClick={() => loadMoreArchived(25)}>
+                        Load more archived
+                      </Button>
+                    </Flex>
+                  ) : null}
                 </TabsContent>
               </Card>
             </PageStack>

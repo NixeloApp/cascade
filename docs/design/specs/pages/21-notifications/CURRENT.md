@@ -185,7 +185,7 @@ category filtering, bulk actions, and an archive tab that the popover does not.
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | ~~1~~ | ~~Large initial page size, no pagination~~ **Fixed** — reduced to 25 items with "Load more" button (loads 25 more each click) | ~~performance~~ | ~~MEDIUM~~ |
-| 2 | Archived notifications query (`listArchived`) loads all at once, no pagination. | performance | MEDIUM |
+| ~~2~~ | ~~Archived notifications load all at once~~ **Fixed** — converted to `fetchPaginatedQuery` with `paginationOpts`; frontend uses `usePaginatedQuery` with 25 items initially and "Load more archived" button | ~~performance~~ | ~~MEDIUM~~ |
 | 3 | No search within notifications — must use filter pills or scan visually. | UX | LOW |
 | 4 | Snooze duration options are in a popover but the interaction is not captured in the canonical screenshots. | screenshot gap | LOW |
 
