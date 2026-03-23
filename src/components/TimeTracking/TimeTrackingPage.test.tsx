@@ -287,7 +287,9 @@ describe("TimeTrackingPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Burn Rate & Costs" }));
     expect(screen.getByText("Select a project")).toBeInTheDocument();
     expect(
-      screen.getByText("Choose a project to view burn rate and cost analysis"),
+      screen.getByText(
+        "Choose a project from the filter above to view burn rate and cost analysis.",
+      ),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Core Platform" }));
