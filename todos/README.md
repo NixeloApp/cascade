@@ -14,7 +14,8 @@
 | Mobile/tablet coverage | Backfill responsive gaps |
 | Icon consistency | Sizing, stroke-weight rhythm, tone drift |
 | Shell discipline | Card nesting, composition pattern drift |
-| Raw styling cleanup | 100 files / 197 violations (structural patterns, diminishing returns) |
+| Raw styling cleanup | 99 files / 186 violations (mostly structural — sidebar padding, timeline positioning, border separators). Diminishing returns. |
+| RoadmapView decomposition | 1761 lines remaining. Types + 48 utilities extracted. Next: extract React sub-components (RoadmapTimelineBar, RoadmapGroupRow, etc.) |
 
 ### Phase 2: Screenshot Baselines
 
@@ -38,7 +39,7 @@
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Raw styling violations | 100 files / 197 baselined |
+| Raw styling violations | 99 files / 186 baselined (was 276) |
 | Fixed size drift | 0 |
 | Ratcheted query debt | ~39 issues |
 | Backend query debt | 0 |
@@ -46,7 +47,7 @@
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | HIGH severity issues | 1 remaining (meeting-to-doc) |
-| MEDIUM severity issues | 34 remaining |
+| MEDIUM severity issues | ~34 remaining |
 
 ### Consistency Scorecard
 
@@ -58,5 +59,5 @@
 | Typography | 95%+ |
 | Dividers | 85% |
 | Width/height tokens | 90% |
-| Animations | 95% |
+| Animations | 95%+ |
 | Fixed sizing | 100% |
