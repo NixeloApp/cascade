@@ -392,9 +392,15 @@ export const recordSendResult = internalMutation({
 
     if (args.success) {
       await recordSuccessfulSend(ctx, args);
-      // Store Gmail thread ID for reply correlation
+      // Append Gmail thread ID for reply correlation (each step may start a new thread)
       if (args.gmailThreadId) {
-        await ctx.db.patch(args.enrollmentId, { gmailThreadId: args.gmailThreadId });
+        const enrollment = await ctx.db.get(args.enrollmentId);
+        const existing = enrollment?.gmailThreadIds ?? [];
+        if (!existing.includes(args.gmailThreadId)) {
+          await ctx.db.patch(args.enrollmentId, {
+            gmailThreadIds: [...existing, args.gmailThreadId],
+          });
+        }
       }
     } else {
       await recordFailedSend(ctx, { ...args, error: args.error });

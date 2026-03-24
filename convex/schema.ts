@@ -1912,7 +1912,7 @@ const applicationTables = {
     lastOpenedAt: v.optional(v.number()),
     lastClickedAt: v.optional(v.number()),
     lastRepliedAt: v.optional(v.number()),
-    gmailThreadId: v.optional(v.string()), // For reply correlation
+    gmailThreadIds: v.optional(v.array(v.string())), // All Gmail thread IDs for reply correlation
   })
     .index("by_sequence", ["sequenceId"])
     .index("by_contact", ["contactId"])

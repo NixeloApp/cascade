@@ -389,9 +389,12 @@ export const checkReplies = internalAction({
         if (!pageToken) break;
       }
 
-      await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
-        mailboxId: args.mailboxId,
-      });
+      // Only advance watermark if we successfully processed at least one page
+      if (totalChecked > 0) {
+        await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
+          mailboxId: args.mailboxId,
+        });
+      }
       return { checked: totalChecked, replies };
     } catch (e) {
       logger.warn("Gmail reply polling failed", {
@@ -519,10 +522,10 @@ export const findEnrollmentForReply = internalMutation({
       (e) => e.status === "active" || e.status === "paused",
     );
 
-    // Require exact thread match when threadId is available — don't fall
-    // back to arbitrary enrollment to avoid stopping the wrong sequence.
+    // Require thread match when threadId is available — check against all
+    // stored thread IDs since each step may create a new Gmail thread.
     const activeEnrollment = args.gmailThreadId
-      ? activeEnrollments.find((e) => e.gmailThreadId === args.gmailThreadId)
+      ? activeEnrollments.find((e) => e.gmailThreadIds?.includes(args.gmailThreadId!))
       : activeEnrollments[0];
 
     if (!activeEnrollment) return { matched: false };
