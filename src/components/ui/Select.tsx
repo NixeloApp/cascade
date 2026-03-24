@@ -28,16 +28,14 @@ const selectTriggerVariants = cva(
           "h-8 border-transparent bg-transparent px-2 py-1 hover:bg-ui-bg-hover hover:border-ui-border focus:bg-ui-bg focus:border-ui-border",
       },
       width: {
+        /** Full-width (default) — fills parent container */
         full: "w-full",
-        "28": "w-28",
-        "32": "w-32",
-        "36": "w-36",
-        "40": "w-40",
-        "44": "w-44",
-        "48": "w-48",
-        "52": "w-52",
-        "56": "w-56",
-        "64": "w-64",
+        /** Compact filter selects — status, priority, sort dropdowns */
+        sm: "w-36",
+        /** Medium controls — category selects, roadmap controls */
+        md: "w-48",
+        /** Wide selects — epic filters, grouping selects */
+        lg: "w-56",
       },
     },
     defaultVariants: {

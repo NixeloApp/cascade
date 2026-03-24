@@ -133,7 +133,7 @@ function MyIssuesBoardPage() {
               value={priorityFilter}
               onValueChange={(v) => setPriorityFilter(v as PriorityFilter)}
             >
-              <SelectTrigger width="36">
+              <SelectTrigger width="sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -149,7 +149,7 @@ function MyIssuesBoardPage() {
               value={dueDateFilter}
               onValueChange={(v) => setDueDateFilter(v as DueDateFilter)}
             >
-              <SelectTrigger width="36">
+              <SelectTrigger width="sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

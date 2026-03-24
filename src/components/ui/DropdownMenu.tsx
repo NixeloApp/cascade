@@ -61,14 +61,17 @@ const DropdownMenuSubContent = React.forwardRef<
 ));
 DropdownMenuSubContent.displayName = DropdownMenuPrimitive.SubContent.displayName;
 
-type DropdownMenuWidth = "auto" | "40" | "44" | "48" | "56";
+type DropdownMenuWidth = "auto" | "sm" | "md" | "lg";
 
 const dropdownMenuWidthClasses: Record<DropdownMenuWidth, string> = {
+  /** Auto width — sizes to content (default) */
   auto: "",
-  "40": "w-40",
-  "44": "w-44",
-  "48": "w-48",
-  "56": "w-56",
+  /** Compact menus — context actions, small dropdowns */
+  sm: "w-40",
+  /** Medium menus — document actions, filter dropdowns */
+  md: "w-48",
+  /** Wide menus — user menu, settings dropdowns */
+  lg: "w-56",
 };
 
 const DropdownMenuContent = React.forwardRef<

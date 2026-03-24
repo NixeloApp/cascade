@@ -279,7 +279,7 @@ function MembersSection({ teamId, members, canEdit }: MembersSectionProps) {
                         onValueChange={(value) => handleRoleChange(member.userId, value)}
                         disabled={changingRoleFor === member.userId}
                       >
-                        <SelectTrigger width="28">
+                        <SelectTrigger width="sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

@@ -299,7 +299,7 @@ function InvoicesListPage() {
               value={status}
               onValueChange={(value) => setStatus(value as InvoiceStatusFilter)}
             >
-              <SelectTrigger width="36" aria-label="Invoice status filter">
+              <SelectTrigger width="sm" aria-label="Invoice status filter">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>

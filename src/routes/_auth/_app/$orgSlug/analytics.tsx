@@ -66,7 +66,7 @@ function AnalyticsPage() {
       headerActions={
         <Flex align="center" gap="sm">
           <Select value={timePeriod} onValueChange={(v) => setTimePeriod(v as TimePeriod)}>
-            <SelectTrigger width="36">
+            <SelectTrigger width="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

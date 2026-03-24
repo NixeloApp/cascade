@@ -196,7 +196,7 @@ export function RoadmapDependencyPanel({
                   )
                 }
               >
-                <SelectTrigger width="64">
+                <SelectTrigger width="lg">
                   <SelectValue placeholder="Issue this blocks" />
                 </SelectTrigger>
                 <SelectContent>

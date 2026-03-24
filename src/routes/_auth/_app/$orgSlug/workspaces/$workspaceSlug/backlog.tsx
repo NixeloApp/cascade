@@ -120,7 +120,7 @@ function WorkspaceBacklogPage() {
               value={priorityFilter}
               onValueChange={(v) => setPriorityFilter(v as PriorityFilter)}
             >
-              <SelectTrigger width="36" aria-label="Filter by priority">
+              <SelectTrigger width="sm" aria-label="Filter by priority">
                 <SelectValue placeholder="All priorities" />
               </SelectTrigger>
               <SelectContent>
@@ -133,7 +133,7 @@ function WorkspaceBacklogPage() {
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortField)}>
-              <SelectTrigger width="36" aria-label="Sort by">
+              <SelectTrigger width="sm" aria-label="Sort by">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

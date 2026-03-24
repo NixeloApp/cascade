@@ -371,7 +371,7 @@ function TreeNodeItem({
                   <Icon icon={MoreHorizontal} size="sm" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" width="48">
+              <DropdownMenuContent align="end" width="md">
                 {onCreateDocument && (
                   <DropdownMenuItem
                     onClick={(e) => {

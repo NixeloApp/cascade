@@ -65,7 +65,7 @@ function WorkspaceSprintsPage() {
             {filtered.length} {filtered.length === 1 ? "sprint" : "sprints"}
           </Typography>
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-            <SelectTrigger width="36" aria-label="Filter by status">
+            <SelectTrigger width="sm" aria-label="Filter by status">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
