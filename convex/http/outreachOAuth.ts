@@ -258,7 +258,8 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
     expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * SECOND : undefined,
   };
 
-  return new Response(renderOutreachSuccessPageHtml(userInfo.email, connectionData), {
+  const siteUrl = process.env.SITE_URL ?? "http://localhost:5555";
+  return new Response(renderOutreachSuccessPageHtml(userInfo.email, connectionData, siteUrl), {
     status: 200,
     headers: {
       "Content-Type": "text/html",
@@ -281,6 +282,7 @@ function renderOutreachSuccessPageHtml(
     refreshToken: string;
     expiresAt: number | undefined;
   },
+  targetOrigin: string,
 ): string {
   // The success page sends the connection data back to the parent window
   // via postMessage, then the frontend calls the createMailbox mutation
@@ -298,7 +300,7 @@ function renderOutreachSuccessPageHtml(
     (function() {
       var data = ${safeData};
       if (window.opener) {
-        window.opener.postMessage({ type: 'outreach-mailbox-connected', data: data }, '*');
+        window.opener.postMessage({ type: 'outreach-mailbox-connected', data: data }, '${targetOrigin}');
         setTimeout(function() { window.close(); }, 1500);
       } else {
         document.body.innerHTML += '<p>Please close this window and refresh the app.</p>';

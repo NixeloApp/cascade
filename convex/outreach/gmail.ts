@@ -62,6 +62,7 @@ function extractSenderEmail(headers: Array<{ name: string; value: string }>): st
 interface GmailSendResult {
   success: boolean;
   messageId?: string;
+  threadId?: string;
   error?: string;
 }
 
@@ -140,7 +141,7 @@ async function sendViaGmail(
     }
 
     const data = (await response.json()) as { id: string; threadId: string };
-    return { success: true, messageId: data.id };
+    return { success: true, messageId: data.id, threadId: data.threadId };
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     logger.error("Gmail send exception", { error: message });
@@ -361,6 +362,7 @@ export const checkReplies = internalAction({
         const matchResult = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForReply, {
           senderEmail,
           mailboxId: args.mailboxId,
+          gmailThreadId: msg.threadId,
         });
         if (matchResult.matched) replies++;
       }
@@ -467,6 +469,7 @@ export const findEnrollmentForReply = internalMutation({
   args: {
     senderEmail: v.string(),
     mailboxId: v.id("outreachMailboxes"),
+    gmailThreadId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Find the mailbox's organization
@@ -489,9 +492,16 @@ export const findEnrollmentForReply = internalMutation({
       .withIndex("by_contact", (q) => q.eq("contactId", contact._id))
       .take(BOUNDED_LIST_LIMIT);
 
-    const activeEnrollment = enrollments.find(
+    // Prefer thread-correlated match: only stop the enrollment whose
+    // Gmail thread matches the reply, preventing unrelated emails from
+    // stopping the wrong sequence.
+    const activeEnrollments = enrollments.filter(
       (e) => e.status === "active" || e.status === "paused",
     );
+    const activeEnrollment = args.gmailThreadId
+      ? (activeEnrollments.find((e) => e.gmailThreadId === args.gmailThreadId) ??
+        activeEnrollments[0])
+      : activeEnrollments[0];
 
     if (!activeEnrollment) return { matched: false };
 

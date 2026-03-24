@@ -23,9 +23,10 @@ import { isSuppressed } from "./contacts";
 import { advanceEnrollment } from "./enrollments";
 import {
   buildComplianceFooter,
-  injectClickTracking,
+  extractTrackableUrls,
   injectOpenTrackingPixel,
   renderTemplate,
+  rewriteUrlsWithTrackingIds,
 } from "./helpers";
 
 // =============================================================================
@@ -112,6 +113,7 @@ export const processDueEnrollments = internalAction({
         mailboxId: checkResult.mailboxId,
         success: sendResult.success,
         error: sendResult.error,
+        gmailThreadId: sendResult.gmailThreadId,
       });
 
       if (sendResult.success) {
@@ -180,26 +182,19 @@ export const checkPreSend = internalMutation({
 
     const trackingDomain = sequence.trackingDomain ?? "track.nixelo.com";
 
-    // Inject click tracking (rewrite URLs)
-    const { html: bodyWithClickTracking, links } = injectClickTracking(
-      renderedBody,
-      enrollment.currentStep,
-      trackingDomain,
-      () => crypto.randomUUID(),
-    );
-    renderedBody = bodyWithClickTracking;
-
-    // Persist tracking links so the redirect endpoint can look them up
-    await Promise.all(
-      links.map((link) =>
-        ctx.db.insert("outreachTrackingLinks", {
-          enrollmentId: enrollment._id,
-          step: link.step,
-          originalUrl: link.originalUrl,
-          createdAt: Date.now(),
-        }),
-      ),
-    );
+    // Click tracking: extract URLs, persist tracking links, rewrite HTML
+    const trackableUrls = extractTrackableUrls(renderedBody);
+    const urlToTrackingId = new Map<string, string>();
+    for (const url of trackableUrls) {
+      const linkId = await ctx.db.insert("outreachTrackingLinks", {
+        enrollmentId: enrollment._id,
+        step: enrollment.currentStep,
+        originalUrl: url,
+        createdAt: Date.now(),
+      });
+      urlToTrackingId.set(url, linkId);
+    }
+    renderedBody = rewriteUrlsWithTrackingIds(renderedBody, urlToTrackingId, trackingDomain);
 
     // Add compliance footer (before open pixel — pixel should be last)
     const footer = buildComplianceFooter(sequence.physicalAddress, enrollment._id, trackingDomain);
@@ -238,7 +233,10 @@ export const sendSequenceEmail = internalAction({
     fromEmail: v.string(),
     fromName: v.string(),
   },
-  handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ success: boolean; error?: string; gmailThreadId?: string }> => {
     // Delegate to Gmail sender (Microsoft Graph can be added later)
     const result = await ctx.runAction(internal.outreach.gmail.sendViaGmailAction, {
       mailboxId: args.mailboxId,
@@ -250,7 +248,7 @@ export const sendSequenceEmail = internalAction({
       fromName: args.fromName,
     });
 
-    return { success: result.success, error: result.error };
+    return { success: result.success, error: result.error, gmailThreadId: result.threadId };
   },
 });
 
@@ -360,6 +358,7 @@ export const recordSendResult = internalMutation({
     mailboxId: v.id("outreachMailboxes"),
     success: v.boolean(),
     error: v.optional(v.string()),
+    gmailThreadId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     if (args.error === "EMAIL_NOT_IMPLEMENTED") {
@@ -369,6 +368,10 @@ export const recordSendResult = internalMutation({
 
     if (args.success) {
       await recordSuccessfulSend(ctx, args);
+      // Store Gmail thread ID for reply correlation
+      if (args.gmailThreadId) {
+        await ctx.db.patch(args.enrollmentId, { gmailThreadId: args.gmailThreadId });
+      }
     } else {
       await recordFailedSend(ctx, args);
     }

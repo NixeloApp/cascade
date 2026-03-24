@@ -57,26 +57,35 @@ export interface TrackingLink {
  *
  * Skips mailto: links and unsubscribe links (already tracked separately).
  */
-export function injectClickTracking(
-  html: string,
-  step: number,
-  trackingDomain: string,
-  generateId: () => string,
-): { html: string; links: Array<{ id: string; originalUrl: string; step: number }> } {
-  const links: Array<{ id: string; originalUrl: string; step: number }> = [];
-
-  const rewritten = html.replace(/href="(https?:\/\/[^"]+)"/gi, (fullMatch, url: string) => {
-    // Don't rewrite mailto links
+/**
+ * Extract trackable URLs from HTML (phase 1 of click tracking).
+ * Returns the list of URLs that should be tracked. Does NOT rewrite the HTML.
+ */
+export function extractTrackableUrls(html: string): string[] {
+  const urls: string[] = [];
+  html.replace(/href="(https?:\/\/[^"]+)"/gi, (fullMatch, url: string) => {
     if (url.startsWith("mailto:")) return fullMatch;
-    // Don't rewrite unsubscribe links (already tracked via /t/u/)
     if (url.includes("/t/u/")) return fullMatch;
-
-    const id = generateId();
-    links.push({ id, originalUrl: url, step });
-    return `href="https://${trackingDomain}/t/c/${id}"`;
+    urls.push(url);
+    return fullMatch;
   });
+  return urls;
+}
 
-  return { html: rewritten, links };
+/**
+ * Rewrite trackable URLs in HTML with tracking redirect links (phase 2).
+ * Takes a map of originalUrl -> trackingId (the persisted document _id).
+ */
+export function rewriteUrlsWithTrackingIds(
+  html: string,
+  urlToTrackingId: Map<string, string>,
+  trackingDomain: string,
+): string {
+  return html.replace(/href="(https?:\/\/[^"]+)"/gi, (fullMatch, url: string) => {
+    const trackingId = urlToTrackingId.get(url);
+    if (!trackingId) return fullMatch;
+    return `href="https://${trackingDomain}/t/c/${trackingId}"`;
+  });
 }
 
 /**

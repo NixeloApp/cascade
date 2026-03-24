@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   buildComplianceFooter,
-  injectClickTracking,
+  extractTrackableUrls,
   injectOpenTrackingPixel,
   isAutoReply,
   renderTemplate,
+  rewriteUrlsWithTrackingIds,
 } from "./helpers";
 
 describe("outreach helpers", () => {
@@ -63,54 +64,57 @@ describe("outreach helpers", () => {
     });
   });
 
-  describe("injectClickTracking", () => {
-    let idCounter = 0;
-    const generateId = () => `link-${++idCounter}`;
-
-    it("rewrites http links", () => {
-      idCounter = 0;
+  describe("extractTrackableUrls", () => {
+    it("extracts http links", () => {
       const html = '<a href="https://example.com">Click</a>';
-      const { html: result, links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
-
-      expect(result).toBe('<a href="https://t.nixelo.com/t/c/link-1">Click</a>');
-      expect(links).toHaveLength(1);
-      expect(links[0].originalUrl).toBe("https://example.com");
-      expect(links[0].id).toBe("link-1");
-      expect(links[0].step).toBe(0);
+      const urls = extractTrackableUrls(html);
+      expect(urls).toEqual(["https://example.com"]);
     });
 
-    it("rewrites multiple links", () => {
-      idCounter = 0;
+    it("extracts multiple links", () => {
       const html = '<a href="https://a.com">A</a> <a href="https://b.com">B</a>';
-      const { links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
-      expect(links).toHaveLength(2);
+      const urls = extractTrackableUrls(html);
+      expect(urls).toEqual(["https://a.com", "https://b.com"]);
     });
 
     it("skips mailto links", () => {
-      idCounter = 0;
       const html = '<a href="mailto:test@test.com">Email</a>';
-      const { html: result, links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
-
-      expect(result).toBe(html); // Unchanged
-      expect(links).toHaveLength(0);
+      expect(extractTrackableUrls(html)).toEqual([]);
     });
 
     it("skips unsubscribe links", () => {
-      idCounter = 0;
       const html = '<a href="https://t.nixelo.com/t/u/enr1">Unsub</a>';
-      const { html: result, links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
-
-      expect(result).toBe(html); // Unchanged
-      expect(links).toHaveLength(0);
+      expect(extractTrackableUrls(html)).toEqual([]);
     });
 
-    it("handles html with no links", () => {
-      idCounter = 0;
-      const html = "<p>No links here</p>";
-      const { html: result, links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
+    it("returns empty for no links", () => {
+      expect(extractTrackableUrls("<p>No links</p>")).toEqual([]);
+    });
+  });
 
+  describe("rewriteUrlsWithTrackingIds", () => {
+    it("rewrites URLs using tracking ID map", () => {
+      const html = '<a href="https://example.com">Click</a>';
+      const map = new Map([["https://example.com", "doc-id-123"]]);
+      const result = rewriteUrlsWithTrackingIds(html, map, "t.nixelo.com");
+      expect(result).toBe('<a href="https://t.nixelo.com/t/c/doc-id-123">Click</a>');
+    });
+
+    it("leaves unmapped URLs unchanged", () => {
+      const html = '<a href="https://example.com">Click</a>';
+      const result = rewriteUrlsWithTrackingIds(html, new Map(), "t.nixelo.com");
       expect(result).toBe(html);
-      expect(links).toHaveLength(0);
+    });
+
+    it("rewrites multiple URLs independently", () => {
+      const html = '<a href="https://a.com">A</a> <a href="https://b.com">B</a>';
+      const map = new Map([
+        ["https://a.com", "id-a"],
+        ["https://b.com", "id-b"],
+      ]);
+      const result = rewriteUrlsWithTrackingIds(html, map, "t.nixelo.com");
+      expect(result).toContain('href="https://t.nixelo.com/t/c/id-a"');
+      expect(result).toContain('href="https://t.nixelo.com/t/c/id-b"');
     });
   });
 
