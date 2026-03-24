@@ -381,14 +381,19 @@ async function pollGmailReplies(
   authHeaders: Record<string, string>,
   query: string,
   mailboxId: Id<"outreachMailboxes">,
-): Promise<{ checked: number; replies: number }> {
+): Promise<{ checked: number; replies: number; completedCleanly: boolean }> {
   let replies = 0;
   let totalChecked = 0;
   let pageToken: string | undefined;
+  let completedCleanly = true;
 
   for (let page = 0; page < 5; page++) {
     const pageResult = await fetchMessagePage(authHeaders, query, pageToken);
-    if (!pageResult) break;
+    if (!pageResult) {
+      // null on first page = empty inbox (clean). null on later pages = API error (dirty).
+      if (page > 0) completedCleanly = false;
+      break;
+    }
 
     replies += await processMessageBatch(ctx, pageResult.messages, authHeaders, mailboxId);
     totalChecked += pageResult.messages.length;
@@ -396,7 +401,7 @@ async function pollGmailReplies(
     if (!pageToken) break;
   }
 
-  return { checked: totalChecked, replies };
+  return { checked: totalChecked, replies, completedCleanly };
 }
 
 export const checkReplies = internalAction({
@@ -419,13 +424,15 @@ export const checkReplies = internalAction({
     try {
       const result = await pollGmailReplies(ctx, authHeaders, query, args.mailboxId);
 
-      // Always advance watermark on successful poll (even if inbox was empty)
-      // so quiet mailboxes don't re-query the full 24h window every time.
-      // Only exceptions (caught below) skip the watermark update.
-      await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
-        mailboxId: args.mailboxId,
-      });
-      return result;
+      // Advance watermark only when the poll completed cleanly (all pages
+      // processed or inbox was empty). Partial failures (API error mid-page)
+      // don't advance to avoid skipping unprocessed messages.
+      if (result.completedCleanly) {
+        await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
+          mailboxId: args.mailboxId,
+        });
+      }
+      return { checked: result.checked, replies: result.replies };
     } catch (e) {
       logger.warn("Gmail reply polling failed", {
         error: e instanceof Error ? e.message : "unknown",

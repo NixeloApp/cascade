@@ -139,6 +139,12 @@ export const createMailboxFromOAuth = internalMutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Verify the user and organization exist before creating the mailbox
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw validation("userId", "User not found");
+    const org = await ctx.db.get(args.organizationId);
+    if (!org) throw validation("organizationId", "Organization not found");
+
     const existing = await ctx.db
       .query("outreachMailboxes")
       .withIndex("by_user_provider", (q) =>
