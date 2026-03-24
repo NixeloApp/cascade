@@ -41,7 +41,6 @@ import {
   MARKDOWN_IMPORT_PREVIEW,
   MARKDOWN_RICH_CONTENT,
   MODAL_SPECS_BASE_DIR,
-  PAGE_TO_SPEC_FOLDER,
   SCREENSHOT_STAGING_BASE_DIR,
   SCREENSHOT_USER,
   SEARCH_SHORTCUT,
@@ -50,6 +49,7 @@ import {
   VIEWPORTS,
   type ViewportName,
 } from "./screenshot-lib/config";
+import { getGeneratedSpecFolders, resolveCaptureTarget } from "./screenshot-lib/routing";
 import { injectAuthTokens } from "./utils/auth-helpers";
 import {
   getLocatorAttribute,
@@ -134,193 +134,6 @@ function nextIndex(prefix: string): number {
 // ---------------------------------------------------------------------------
 // Screenshot helpers
 // ---------------------------------------------------------------------------
-
-// Dynamic page patterns that map to spec folders
-// Pattern: [regex to match pageId, spec folder, filename suffix]
-const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
-  // Public pages with suffixes to avoid overwriting base spec screenshots
-  [/^public-verify-2fa$/, "02-signin", "-verify-2fa"],
-  [/^public-signup-verify$/, "03-signup", "-verify"],
-  [/^public-forgot-password-reset$/, "04-forgot-password", "-reset"],
-  [/^filled-dashboard-omnibox$/, "04-dashboard", "-omnibox"],
-  [/^filled-dashboard-customize-modal$/, "04-dashboard", "-customize-modal"],
-  [/^filled-dashboard-advanced-search-modal$/, "04-dashboard", "-advanced-search-modal"],
-  [/^filled-dashboard-shortcuts-modal$/, "04-dashboard", "-shortcuts-modal"],
-  [/^filled-dashboard-time-entry-modal$/, "04-dashboard", "-time-entry-modal"],
-  [/^filled-dashboard-loading-skeletons$/, "04-dashboard", "-loading-skeletons"],
-  [/^filled-projects-create-project-modal$/, "05-projects", "-create-project-modal"],
-  [/^filled-issues-side-panel$/, "19-issues", "-side-panel"],
-  // Workspace modals
-  [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
-  [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
-  [/^filled-time-tracking-manual-entry-modal$/, "22-time-tracking", "-manual-entry-modal"],
-  [/^filled-settings-profile-avatar-upload-modal$/, "12-settings", "-profile-avatar-upload-modal"],
-  [/^filled-settings-profile-cover-upload-modal$/, "12-settings", "-profile-cover-upload-modal"],
-  [/^filled-settings-integrations$/, "12-settings", "-integrations"],
-  [/^filled-settings-admin$/, "12-settings", "-admin"],
-  [/^filled-settings-notifications$/, "12-settings", "-notifications"],
-  [/^filled-settings-security$/, "12-settings", "-security"],
-  [/^filled-settings-apikeys$/, "12-settings", "-api-keys"],
-  [/^filled-settings-preferences$/, "12-settings", "-preferences"],
-  [/^filled-settings-offline$/, "12-settings", "-offline"],
-  [
-    /^filled-settings-notifications-permission-denied$/,
-    "12-settings",
-    "-notifications-permission-denied",
-  ],
-  [/^filled-notification-popover$/, "21-notifications", "-popover"],
-  [/^filled-notification-snooze-popover$/, "21-notifications", "-snooze-popover"],
-  [/^filled-notifications-archived$/, "21-notifications", "-archived"],
-  [/^filled-notifications-filter-active$/, "21-notifications", "-filter-active"],
-  [/^filled-meetings-detail$/, "30-meetings", "-detail"],
-  [/^filled-meetings-transcript-search$/, "30-meetings", "-transcript-search"],
-  [/^filled-meetings-memory-lens$/, "30-meetings", "-memory-lens"],
-  [/^filled-project-tree$/, "29-team-detail", "-project-tree"],
-  [/^filled-mobile-hamburger$/, "04-dashboard", "-mobile-hamburger"],
-  // Project board: filled-project-xxx-board → 06-board
-  [/^filled-project-.+-board$/, "06-board", ""],
-  [/^filled-project-.+-create-issue-modal$/, "06-board", "-create-issue-modal"],
-  [
-    /^filled-project-.+-create-issue-draft-restoration$/,
-    "06-board",
-    "-create-issue-draft-restoration",
-  ],
-  // Project backlog: filled-project-xxx-backlog → 07-backlog
-  [/^filled-project-.+-backlog$/, "07-backlog", ""],
-  // Project sprints: filled-project-xxx-sprints → 18-sprints
-  [/^filled-project-.+-sprints$/, "18-sprints", ""],
-  [/^filled-project-.+-sprints-burndown$/, "18-sprints", "-burndown"],
-  [/^filled-project-.+-sprints-burnup$/, "18-sprints", "-burnup"],
-  [/^filled-project-.+-sprints-completion-modal$/, "18-sprints", "-completion-modal"],
-  [/^filled-project-.+-sprints-date-overlap-warning$/, "18-sprints", "-date-overlap-warning"],
-  [/^filled-project-.+-sprints-workload$/, "18-sprints", "-workload"],
-  // Issue detail: filled-issue-xxx → 08-issue
-  [/^filled-issue-/, "08-issue", ""],
-  [/^filled-project-.+-issue-detail-modal$/, "08-issue", "-detail-modal"],
-  [
-    /^filled-project-.+-issue-detail-modal-inline-editing$/,
-    "08-issue",
-    "-detail-modal-inline-editing",
-  ],
-  [/^filled-project-.+-import-export-modal$/, "06-board", "-import-export-modal"],
-  [/^filled-project-.+-import-export-modal-import$/, "06-board", "-import-export-modal-import"],
-  // Board interactive states
-  [/^filled-project-.+-board-swimlane-(\w+)$/, "06-board", "-swimlane-$1"],
-  [/^filled-project-.+-board-column-collapsed$/, "06-board", "-column-collapsed"],
-  [/^filled-project-.+-board-empty-column$/, "06-board", "-empty-column"],
-  [/^filled-project-.+-board-wip-limit-warning$/, "06-board", "-wip-limit-warning"],
-  [/^filled-project-.+-board-filter-active$/, "06-board", "-filter-active"],
-  [/^filled-project-.+-board-display-properties$/, "06-board", "-display-properties"],
-  [/^filled-project-.+-board-peek-mode$/, "06-board", "-peek-mode"],
-  [/^filled-project-.+-board-sprint-selector$/, "06-board", "-sprint-selector"],
-  [
-    /^filled-project-.+-create-issue-duplicate-detection$/,
-    "06-board",
-    "-create-issue-duplicate-detection",
-  ],
-  [/^filled-project-.+-create-issue-create-another$/, "06-board", "-create-issue-create-another"],
-  [/^filled-project-.+-create-issue-validation$/, "06-board", "-create-issue-validation"],
-  [/^filled-project-.+-create-issue-success-toast$/, "06-board", "-create-issue-success-toast"],
-  // Document editor: filled-document-editor → 10-editor
-  [/^filled-document-editor$/, "10-editor", ""],
-  [/^filled-document-editor-move-dialog$/, "10-editor", "-move-dialog"],
-  [/^filled-document-editor-markdown-preview-modal$/, "10-editor", "-markdown-preview-modal"],
-  [/^filled-document-editor-favorite$/, "10-editor", "-favorite"],
-  [/^filled-document-editor-sidebar-favorites$/, "10-editor", "-sidebar-favorites"],
-  [/^filled-document-editor-locked$/, "10-editor", "-locked"],
-  [/^filled-document-editor-rich-blocks$/, "10-editor", "-rich-blocks"],
-  [/^filled-document-editor-color-picker$/, "10-editor", "-color-picker"],
-  [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
-  [/^filled-document-editor-floating-toolbar$/, "10-editor", "-floating-toolbar"],
-  [/^filled-document-editor-mention-popover$/, "10-editor", "-mention-popover"],
-  // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
-  [/^filled-project-.+-calendar$/, "11-calendar", ""],
-  [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
-  [/^filled-calendar-event-modal$/, "11-calendar", "-event-modal"],
-  [/^filled-calendar-create-event-modal$/, "11-calendar", "-create-event-modal"],
-  [/^filled-calendar-drag-and-drop$/, "11-calendar", "-drag-and-drop"],
-  [/^filled-calendar-quick-add$/, "11-calendar", "-quick-add"],
-  // Project analytics: filled-project-xxx-analytics → 13-analytics
-  [/^filled-project-.+-analytics$/, "13-analytics", ""],
-  // Project members: filled-project-xxx-members → 17-members
-  [/^filled-project-.+-members$/, "17-members", ""],
-  [/^filled-project-.+-members-confirm-dialog$/, "17-members", "-confirm-dialog"],
-  // Project settings: filled-project-xxx-settings → 12-settings
-  [
-    /^filled-project-.+-settings-delete-alert-dialog$/,
-    "12-settings",
-    "-project-delete-alert-dialog",
-  ],
-  [/^filled-project-.+-settings$/, "12-settings", "-project"],
-  // Workspace pages: filled-workspace-xxx-{tab} → 28-workspace-detail (specific patterns first)
-  [/^filled-workspace-.+-backlog$/, "28-workspace-detail", "-backlog"],
-  [/^filled-workspace-.+-calendar$/, "28-workspace-detail", "-calendar"],
-  [/^filled-workspace-.+-sprints$/, "28-workspace-detail", "-sprints"],
-  [/^filled-workspace-.+-dependencies$/, "28-workspace-detail", "-dependencies"],
-  [/^filled-workspace-.+-wiki$/, "28-workspace-detail", "-wiki"],
-  [/^filled-workspace-.+-settings$/, "28-workspace-detail", "-settings"],
-  // Bare workspace detail (catch-all, must come after suffixed patterns)
-  [/^filled-workspace-.+$/, "28-workspace-detail", ""],
-  // Team pages: filled-team-xxx-{tab} → 29-team-detail (specific patterns first)
-  [/^filled-team-.+-board$/, "29-team-detail", "-board"],
-  [/^filled-team-.+-calendar$/, "29-team-detail", "-calendar"],
-  [/^filled-team-.+-wiki$/, "29-team-detail", "-wiki"],
-  [/^filled-team-.+-settings$/, "29-team-detail", "-settings"],
-  // Bare team (catch-all, must come after suffixed patterns)
-  [/^filled-team-.+$/, "29-team-detail", ""],
-  // Project roadmap: filled-project-xxx-roadmap → 35-roadmap
-  [/^filled-project-.+-roadmap$/, "35-roadmap", ""],
-  [/^filled-project-.+-roadmap-timeline-selector$/, "35-roadmap", "-timeline-selector"],
-  // Project activity: filled-project-xxx-activity → 36-activity
-  [/^filled-project-.+-activity$/, "36-activity", ""],
-  // Project billing: filled-project-xxx-billing → 37-billing
-  [/^filled-project-.+-billing$/, "37-billing", ""],
-  // Project timesheet: filled-project-xxx-timesheet → 38-timesheet
-  [/^filled-project-.+-timesheet$/, "38-timesheet", ""],
-  // Project inbox: filled-project-xxx-inbox → 39-project-inbox
-  [/^filled-project-.+-inbox$/, "39-project-inbox", ""],
-];
-
-const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
-  [/^filled-settings-profile-avatar-upload-modal$/, "avatar-upload"],
-  [/^filled-settings-profile-cover-upload-modal$/, "cover-image-upload"],
-  [/^filled-project-.+-settings-delete-alert-dialog$/, "alert-dialog"],
-  [/^filled-dashboard-omnibox$/, "command-palette"],
-  [/^filled-project-.+-members-confirm-dialog$/, "confirm-dialog"],
-  [/^filled-dashboard-customize-modal$/, "dashboard-customize"],
-  [/^filled-document-editor-move-dialog$/, "move-document"],
-  [/^filled-document-editor-markdown-preview-modal$/, "markdown-preview"],
-  [/^filled-project-.+-create-issue-modal$/, "create-issue"],
-  [/^filled-calendar-create-event-modal$/, "create-event"],
-];
-
-function resolveCaptureTarget(prefix: string, name: string): CaptureTarget {
-  const pageId = `${prefix}-${name}`;
-
-  let specFolder = PAGE_TO_SPEC_FOLDER[pageId] ?? null;
-  let filenameSuffix = "";
-
-  if (!specFolder) {
-    for (const [pattern, folder, suffix] of DYNAMIC_PAGE_PATTERNS) {
-      if (pattern.test(pageId)) {
-        specFolder = folder;
-        const match = pageId.match(pattern);
-        filenameSuffix = suffix.replace("$1", match?.[1] ?? "");
-        break;
-      }
-    }
-  }
-
-  let modalSpecSlug: string | null = null;
-  for (const [pattern, slug] of MODAL_SPEC_PATTERNS) {
-    if (pattern.test(pageId)) {
-      modalSpecSlug = slug;
-      break;
-    }
-  }
-
-  return { pageId, specFolder, filenameSuffix, modalSpecSlug };
-}
 
 function matchesSpecFilters(target: CaptureTarget): boolean {
   if (cliOptions.specFilters.length === 0) {
@@ -442,15 +255,6 @@ function getStagedScreenshotPath(finalPath: string): string {
   const stagedPath = path.join(ensureStagingRoot(), relativePath);
   fs.mkdirSync(path.dirname(stagedPath), { recursive: true });
   return stagedPath;
-}
-
-function getGeneratedSpecFolders(): string[] {
-  return [
-    ...new Set([
-      ...Object.values(PAGE_TO_SPEC_FOLDER),
-      ...DYNAMIC_PAGE_PATTERNS.map(([, folder]) => folder),
-    ]),
-  ];
 }
 
 function getStagedOutputSummary(): Map<string, number> {
