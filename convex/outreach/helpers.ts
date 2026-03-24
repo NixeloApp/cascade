@@ -26,10 +26,11 @@ export function renderTemplate(template: string, contact: TemplateContact): stri
   result = result.replace(/\{\{lastName\}\}/gi, contact.lastName ?? "");
   result = result.replace(/\{\{company\}\}/gi, contact.company ?? "");
 
-  // Custom fields
+  // Custom fields — escape regex metacharacters in key names
   if (contact.customFields) {
     for (const [key, value] of Object.entries(contact.customFields)) {
-      const pattern = new RegExp(`\\{\\{${key}\\}\\}`, "gi");
+      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(`\\{\\{${escapedKey}\\}\\}`, "gi");
       result = result.replace(pattern, value);
     }
   }

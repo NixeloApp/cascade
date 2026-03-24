@@ -91,6 +91,6 @@ Page objects created:
 
 - [ ] `screenshot-pages.ts` under 500 lines
 - [ ] 0 private readiness functions in screenshot tool
-- [ ] TEST_IDs coverage: 250+ (currently 197)
+- [ ] TEST_IDs coverage: 250+ (currently 207)
 - [ ] Screenshot capture completes for all 4 configs
 - [ ] E2E specs and screenshots share identical page objects

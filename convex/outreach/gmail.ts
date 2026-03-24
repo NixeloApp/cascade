@@ -83,13 +83,20 @@ async function sendViaGmail(
     unsubscribeUrl: string;
   },
 ): Promise<GmailSendResult> {
+  // Sanitize header values — strip CR/LF to prevent header injection
+  const sanitize = (v: string) => v.replace(/[\r\n]/g, "");
+  const safeFromName = sanitize(params.fromName);
+  const safeFrom = sanitize(params.from);
+  const safeTo = sanitize(params.to);
+  const safeSubject = sanitize(params.subject);
+
   // Build RFC 2822 email message
   const boundary = `boundary_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
   const rawMessage = [
-    `From: ${params.fromName} <${params.from}>`,
-    `To: ${params.to}`,
-    `Subject: ${params.subject}`,
+    `From: ${safeFromName} <${safeFrom}>`,
+    `To: ${safeTo}`,
+    `Subject: ${safeSubject}`,
     `MIME-Version: 1.0`,
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     // RFC 8058 one-click unsubscribe headers (required by Google/Yahoo since 2024)
@@ -347,35 +354,42 @@ export const checkReplies = internalAction({
     const query = `in:inbox after:${sinceEpoch}`;
 
     try {
-      const response = await fetchWithTimeout(
-        `${GMAIL_API_BASE}/messages?q=${encodeURIComponent(query)}&maxResults=50`,
-        { headers: authHeaders },
-        15000,
-      );
-      if (!response.ok) return { checked: 0, replies: 0 };
-
-      const data = (await response.json()) as {
-        messages?: Array<{ id: string; threadId: string }>;
-      };
-      if (!data.messages?.length) return { checked: 0, replies: 0 };
-
       let replies = 0;
-      for (const msg of data.messages) {
-        const senderEmail = await fetchAndFilterMessage(msg.id, authHeaders);
-        if (!senderEmail) continue;
+      let totalChecked = 0;
+      let pageToken: string | undefined;
+      const MAX_PAGES = 5; // Cap pagination to avoid unbounded API calls
 
-        const matchResult = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForReply, {
-          senderEmail,
-          mailboxId: args.mailboxId,
-          gmailThreadId: msg.threadId,
-        });
-        if (matchResult.matched) replies++;
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const pageUrl = `${GMAIL_API_BASE}/messages?q=${encodeURIComponent(query)}&maxResults=50${pageToken ? `&pageToken=${pageToken}` : ""}`;
+        const response = await fetchWithTimeout(pageUrl, { headers: authHeaders }, 15000);
+        if (!response.ok) break;
+
+        const data = (await response.json()) as {
+          messages?: Array<{ id: string; threadId: string }>;
+          nextPageToken?: string;
+        };
+        if (!data.messages?.length) break;
+
+        for (const msg of data.messages) {
+          const senderEmail = await fetchAndFilterMessage(msg.id, authHeaders);
+          if (!senderEmail) continue;
+
+          const matchResult = await ctx.runMutation(
+            internal.outreach.gmail.findEnrollmentForReply,
+            { senderEmail, mailboxId: args.mailboxId, gmailThreadId: msg.threadId },
+          );
+          if (matchResult.matched) replies++;
+        }
+
+        totalChecked += data.messages.length;
+        pageToken = data.nextPageToken;
+        if (!pageToken) break;
       }
 
       await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
         mailboxId: args.mailboxId,
       });
-      return { checked: data.messages.length, replies };
+      return { checked: totalChecked, replies };
     } catch (e) {
       logger.warn("Gmail reply polling failed", {
         error: e instanceof Error ? e.message : "unknown",
@@ -498,15 +512,14 @@ export const findEnrollmentForReply = internalMutation({
       .withIndex("by_contact", (q) => q.eq("contactId", contact._id))
       .take(BOUNDED_LIST_LIMIT);
 
-    // Prefer thread-correlated match: only stop the enrollment whose
-    // Gmail thread matches the reply, preventing unrelated emails from
-    // stopping the wrong sequence.
     const activeEnrollments = enrollments.filter(
       (e) => e.status === "active" || e.status === "paused",
     );
+
+    // Require exact thread match when threadId is available — don't fall
+    // back to arbitrary enrollment to avoid stopping the wrong sequence.
     const activeEnrollment = args.gmailThreadId
-      ? (activeEnrollments.find((e) => e.gmailThreadId === args.gmailThreadId) ??
-        activeEnrollments[0])
+      ? activeEnrollments.find((e) => e.gmailThreadId === args.gmailThreadId)
       : activeEnrollments[0];
 
     if (!activeEnrollment) return { matched: false };

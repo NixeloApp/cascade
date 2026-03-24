@@ -321,28 +321,52 @@ async function recordSuccessfulSend(ctx: MutationCtx, args: SendResultArgs) {
   }
 }
 
-async function recordFailedSend(ctx: MutationCtx, args: SendResultArgs) {
-  await ctx.db.insert("outreachEvents", {
-    enrollmentId: args.enrollmentId,
-    sequenceId: args.sequenceId,
-    contactId: args.contactId,
-    organizationId: args.organizationId,
-    type: "bounced",
-    step: args.step,
-    metadata: { bounceType: "hard" },
-    createdAt: Date.now(),
-  });
+/** Patterns indicating a permanent delivery failure (not a transient error). */
+const HARD_BOUNCE_PATTERNS = [
+  /invalid.*address/i,
+  /user.*not.*found/i,
+  /mailbox.*not.*found/i,
+  /does not exist/i,
+  /550\b/,
+  /553\b/,
+  /disabled.*account/i,
+];
 
-  await ctx.db.patch(args.enrollmentId, {
-    status: "bounced",
-    completedAt: Date.now(),
-    nextSendAt: undefined,
-  });
+function isHardBounce(error: string | undefined): boolean {
+  if (!error) return false;
+  return HARD_BOUNCE_PATTERNS.some((p) => p.test(error));
+}
 
-  const sequence = await ctx.db.get(args.sequenceId);
-  if (sequence?.stats) {
-    await ctx.db.patch(args.sequenceId, {
-      stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
+async function recordFailedSend(ctx: MutationCtx, args: SendResultArgs & { error?: string }) {
+  if (isHardBounce(args.error)) {
+    // Permanent failure — mark as bounced and stop the enrollment
+    await ctx.db.insert("outreachEvents", {
+      enrollmentId: args.enrollmentId,
+      sequenceId: args.sequenceId,
+      contactId: args.contactId,
+      organizationId: args.organizationId,
+      type: "bounced",
+      step: args.step,
+      metadata: { bounceType: "hard" },
+      createdAt: Date.now(),
+    });
+
+    await ctx.db.patch(args.enrollmentId, {
+      status: "bounced",
+      completedAt: Date.now(),
+      nextSendAt: undefined,
+    });
+
+    const sequence = await ctx.db.get(args.sequenceId);
+    if (sequence?.stats) {
+      await ctx.db.patch(args.sequenceId, {
+        stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
+      });
+    }
+  } else {
+    // Transient failure (OAuth, rate limit, timeout) — defer and retry later
+    await ctx.db.patch(args.enrollmentId, {
+      nextSendAt: Date.now() + 15 * MINUTE,
     });
   }
 }
@@ -373,7 +397,7 @@ export const recordSendResult = internalMutation({
         await ctx.db.patch(args.enrollmentId, { gmailThreadId: args.gmailThreadId });
       }
     } else {
-      await recordFailedSend(ctx, args);
+      await recordFailedSend(ctx, { ...args, error: args.error });
     }
   },
 });
