@@ -140,7 +140,7 @@ function BoardPage() {
               <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
               {project.boardType === "scrum" && sprints && (
                 <Select value={selectedSprint?._id || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger width="48">
                     <SelectValue placeholder="Active Sprint" />
                   </SelectTrigger>
                   <SelectContent>

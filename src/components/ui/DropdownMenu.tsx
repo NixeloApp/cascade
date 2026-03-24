@@ -61,10 +61,22 @@ const DropdownMenuSubContent = React.forwardRef<
 ));
 DropdownMenuSubContent.displayName = DropdownMenuPrimitive.SubContent.displayName;
 
+type DropdownMenuWidth = "auto" | "40" | "44" | "48" | "56";
+
+const dropdownMenuWidthClasses: Record<DropdownMenuWidth, string> = {
+  auto: "",
+  "40": "w-40",
+  "44": "w-44",
+  "48": "w-48",
+  "56": "w-56",
+};
+
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content> & {
+    width?: DropdownMenuWidth;
+  }
+>(({ className, sideOffset = 4, width = "auto", ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
     <DropdownMenuPrimitive.Content
       ref={ref}
@@ -72,6 +84,7 @@ const DropdownMenuContent = React.forwardRef<
       className={cn(
         "z-50 min-w-32 overflow-hidden rounded-lg border border-ui-border bg-ui-bg-elevated p-1 text-ui-text shadow-elevated",
         "data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        dropdownMenuWidthClasses[width],
         className,
       )}
       {...props}

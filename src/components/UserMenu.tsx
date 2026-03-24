@@ -46,7 +46,7 @@ export function UserMenu() {
           <Avatar name={user.name} email={user.email} src={user.image} size="md" variant="brand" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end">
+      <DropdownMenuContent width="56" align="end">
         <DropdownMenuLabel weight="normal">
           <Stack gap="xs">
             <Typography variant="label">{user.name || "User"}</Typography>

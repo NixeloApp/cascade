@@ -152,7 +152,7 @@ function InviteFormDialog({
               value={role}
               onValueChange={(value) => onRoleChange(value as "user" | "superAdmin")}
             >
-              <SelectTrigger className="w-full" data-testid={TEST_IDS.INVITE.ROLE_SELECT}>
+              <SelectTrigger data-testid={TEST_IDS.INVITE.ROLE_SELECT}>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
