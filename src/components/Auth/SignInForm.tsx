@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
@@ -78,8 +78,14 @@ export function SignInForm() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState("");
 
-  // Public query - SSO discovery must work on sign-in page before auth
-  const emailDomain = getEmailDomain(email);
+  // Debounce SSO discovery to avoid querying on every keystroke
+  const [debouncedEmail, setDebouncedEmail] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedEmail(email), 300);
+    return () => clearTimeout(timer);
+  }, [email]);
+
+  const emailDomain = getEmailDomain(debouncedEmail);
   const ssoConnection = usePublicQuery(
     api.sso.getForDomain,
     emailDomain
