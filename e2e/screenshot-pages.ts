@@ -1529,46 +1529,6 @@ async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void
   await waitForSpinnersHidden(page);
 }
 
-async function waitForTimeTrackingReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByRole("tab", { name: /time entries/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await waitForSpinnersHidden(page);
-}
-
-async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
-  await page.getByRole("navigation", { name: /workspace sections/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByRole("button", { name: /create team/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await waitForSpinnersHidden(page);
-}
-
-async function waitForWorkspaceSettingsReady(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: /workspace settings/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByRole("button", { name: /save changes/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await waitForSpinnersHidden(page);
-}
-
 async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
   // Wait for actual backlog content - empty state text OR board column (issues present)
   await page
@@ -1580,18 +1540,6 @@ async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
 
 async function waitForTeamDetailReady(page: Page): Promise<void> {
   await waitForBoardReady(page);
-}
-
-async function waitForTeamSettingsReady(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: /team settings/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByText(/coming soon|manage team members and preferences/i).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await waitForSpinnersHidden(page);
 }
 
 async function waitForIssueDetailReady(page: Page): Promise<void> {
@@ -1638,30 +1586,6 @@ async function waitForDocumentEditorReady(page: Page): Promise<void> {
   await waitForSpinnersHidden(page);
 }
 
-async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByRole("button", { name: /new template/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await waitForSpinnersHidden(page);
-}
-
-async function waitForActivityReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page
-    .getByTestId(TEST_IDS.ACTIVITY.FEED)
-    .or(page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE))
-    .waitFor({ state: "visible", timeout: 12000 });
-  await waitForSpinnersHidden(page);
-}
-
 async function waitForAnalyticsReady(page: Page): Promise<void> {
   await page.getByTestId(TEST_IDS.ANALYTICS.PAGE_HEADER).waitFor({
     state: "visible",
@@ -1673,36 +1597,6 @@ async function waitForAnalyticsReady(page: Page): Promise<void> {
   });
   await waitForSpinnersHidden(page);
   await waitForLoadingSkeletonsToClear(page, 5000);
-}
-
-async function waitForTimesheetReady(page: Page): Promise<void> {
-  await page.getByRole("tab", { name: /time entries/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByText(/track time with enough context to understand cost/i).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await waitForSpinnersHidden(page);
-}
-
-async function waitForSprintsReady(page: Page): Promise<void> {
-  await page.getByText(/sprint management/i).waitFor({ state: "visible", timeout: 12000 });
-  await page.getByRole("button", { name: /create sprint|\+ sprint/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await waitForSpinnersHidden(page);
-}
-
-async function waitForProjectMembersReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", { name: /^members$/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 });
-  await page.getByText(/members? with access/i).waitFor({ state: "visible", timeout: 12000 });
-  await waitForSpinnersHidden(page);
 }
 
 async function scrollSectionNearViewportTop(
@@ -1750,11 +1644,6 @@ async function waitForRoadmapReady(page: Page): Promise<void> {
   await waitForSpinnersHidden(page);
 }
 
-async function waitForBillingReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({ state: "visible", timeout: 12000 });
-  await waitForSpinnersHidden(page);
-}
-
 async function waitForExpectedContent(
   page: Page,
   url: string,
@@ -1788,17 +1677,6 @@ async function waitForExpectedContent(
 
   if (URL.projectBoard.test(url) || URL.projectBacklog.test(url)) {
     await waitForBoardReady(page);
-    return;
-  }
-
-  if (URL.projectSettings.test(url)) {
-    await page.getByRole("heading", { name: "Project Settings" }).waitFor({
-      state: "visible",
-      timeout: 12000,
-    });
-    if (/^project-[^-]+-members$/.test(name)) {
-      await waitForProjectMembersReady(page);
-    }
     return;
   }
 
@@ -1856,35 +1734,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (name === "authentication" || /\/authentication\/?$/.test(url)) {
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForSpinnersHidden(page);
-    return;
-  }
-
-  if (name === "add-ons" || /\/add-ons\/?$/.test(url)) {
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    return;
-  }
-
-  if (name === "assistant" || /\/assistant\/?$/.test(url)) {
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForSpinnersHidden(page);
-    return;
-  }
-
-  if (name === "mcp-server" || /\/mcp-server\/?$/.test(url)) {
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    return;
-  }
+  // --- Pages with unique readiness logic ---
 
   if (URL.projects.test(url) || name === "projects") {
     await waitForProjectsReady(page, prefix);
@@ -1901,71 +1751,6 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (URL.timeTracking.test(url) || name === "time-tracking") {
-    await waitForTimeTrackingReady(page);
-    return;
-  }
-
-  if (URL.workspaceDetail.test(url) || /^workspace-[^-]+$/.test(name)) {
-    await waitForWorkspaceDetailReady(page);
-    return;
-  }
-
-  if (URL.workspaceSettings.test(url) || /^workspace-[^-]+-settings$/.test(name)) {
-    await waitForWorkspaceSettingsReady(page);
-    return;
-  }
-
-  if (URL.workspaceBacklog.test(url)) {
-    await waitForWorkspaceBacklogReady(page);
-    return;
-  }
-
-  if (URL.workspaceSprints.test(url) || /^workspace-[^-]+-sprints$/.test(name)) {
-    await waitForSprintsReady(page);
-    return;
-  }
-
-  if (URL.workspaceDependencies.test(url) || /^workspace-[^-]+-dependencies$/.test(name)) {
-    await page
-      .getByRole("heading", { name: /^dependencies$/i })
-      .or(page.getByText(/no dependencies/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForSpinnersHidden(page);
-    return;
-  }
-
-  if (URL.workspaceWiki.test(url) || /^workspace-[^-]+-wiki$/.test(name)) {
-    await page
-      .getByText(/no workspace docs yet/i)
-      .or(page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForSpinnersHidden(page);
-    return;
-  }
-
-  if (URL.teamSettings.test(url) || /^team-[^-]+-settings$/.test(name)) {
-    await waitForTeamSettingsReady(page);
-    return;
-  }
-
-  if (URL.teamDetail.test(url) || URL.teamBoard.test(url) || /^team-[^-]+-board$/.test(name)) {
-    await waitForTeamDetailReady(page);
-    return;
-  }
-
-  if (URL.teamWiki.test(url) || /^team-[^-]+-wiki$/.test(name)) {
-    await page
-      .getByText(/no workspace docs yet/i)
-      .or(page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForSpinnersHidden(page);
-    return;
-  }
-
   if (URL.issueDetail.test(url)) {
     await waitForIssueDetailReady(page);
     return;
@@ -1976,33 +1761,13 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (URL.documentTemplates.test(url) || name === "documents-templates") {
-    await waitForDocumentTemplatesReady(page);
-    return;
-  }
-
   if (URL.documentEditor.test(url) || name === "document-editor") {
     await waitForDocumentEditorReady(page);
     return;
   }
 
-  if (URL.projectActivity.test(url)) {
-    await waitForActivityReady(page);
-    return;
-  }
-
-  if (URL.projectAnalytics.test(url)) {
+  if (URL.projectAnalytics.test(url) || name === "org-analytics") {
     await waitForAnalyticsReady(page);
-    return;
-  }
-
-  if (URL.projectTimesheet.test(url)) {
-    await waitForTimesheetReady(page);
-    return;
-  }
-
-  if (URL.projectSprints.test(url)) {
-    await waitForSprintsReady(page);
     return;
   }
 
@@ -2011,36 +1776,17 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (URL.projectBilling.test(url)) {
-    await waitForBillingReady(page);
-    return;
-  }
-
-  if (URL.projectInbox.test(url) || name === "inbox") {
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .or(page.getByText(/no items in inbox/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForSpinnersHidden(page);
-    return;
-  }
-
   if (URL.notifications.test(url) || name === "notifications") {
     await waitForDashboardReady(page);
-    const notificationsHeading = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
+    const headerTitle = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
     const inboxTab = page.getByRole("tab", { name: /inbox/i });
     const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
     const emptyState = page.getByText(/no notifications/i);
     const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
     await expect
       .poll(
-        async () =>
-          (await isLocatorVisible(notificationsHeading)) || (await isLocatorVisible(inboxTab)),
-        {
-          timeout: 12000,
-          message: "Expected notifications page heading or inbox tab to become visible",
-        },
+        async () => (await isLocatorVisible(headerTitle)) || (await isLocatorVisible(inboxTab)),
+        { timeout: 12000 },
       )
       .toBe(true);
     await waitForSpinnersHidden(page);
@@ -2050,25 +1796,39 @@ async function waitForExpectedContent(
           const mentionsVisible = await isLocatorVisible(mentionsFilter);
           const itemCount = await getLocatorCount(notificationItems);
           const emptyVisible = await isLocatorVisible(emptyState);
-
           return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
         },
-        {
-          timeout: 10000,
-          message: "Expected notifications content or empty state to become visible",
-        },
+        { timeout: 10000 },
       )
       .toBe("ready");
     return;
   }
 
-  if (URL.myIssues.test(url) || name === "my-issues") {
+  if (URL.meetings.test(url) || name === "meetings") {
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .or(page.getByText(/no issues assigned/i))
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page
+      .getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION)
+      .or(page.getByText(/no meeting recordings yet/i))
       .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
+    return;
+  }
+
+  // --- Calendar pages (project, workspace, team, org) ---
+
+  if (
+    URL.projectCalendar.test(url) ||
+    URL.workspaceCalendar.test(url) ||
+    URL.teamCalendar.test(url) ||
+    name === "calendar-event-modal" ||
+    /^calendar-(day|week|month)$/.test(name)
+  ) {
+    await waitForCalendarReady(page);
+    await waitForCalendarEvents(page, 5000);
+    await focusCalendarTimedContentForCapture(page);
     return;
   }
 
@@ -2081,50 +1841,63 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (URL.invoices.test(url) || name === "invoices") {
+  // --- Board pages (project, workspace backlog, team) ---
+
+  if (URL.workspaceBacklog.test(url)) {
+    await waitForWorkspaceBacklogReady(page);
+    return;
+  }
+
+  if (URL.teamDetail.test(url) || URL.teamBoard.test(url) || /^team-[^-]+-board$/.test(name)) {
+    await waitForTeamDetailReady(page);
+    return;
+  }
+
+  // --- Settings sub-tab pages ---
+
+  if (URL.settings.test(url) || name === "settings" || name === "settings-profile") {
+    await page.waitForURL(
+      (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
+      { timeout: 12000 },
+    );
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
+    await page
+      .getByRole("tab", { name: /^profile$/i })
+      .waitFor({ state: "visible", timeout: 12000 });
+
+    // Wait for specific sub-tab content when navigated to a settings sub-section
+    const settingsSubTabTestIds: Record<string, string> = {
+      "settings-notifications": TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION,
+      "settings-security": TEST_IDS.SETTINGS.TWO_FACTOR_SECTION,
+      "settings-apikeys": TEST_IDS.SETTINGS.API_KEYS_SECTION,
+      "settings-integrations": TEST_IDS.SETTINGS.GITHUB_INTEGRATION,
+      "settings-admin": TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION,
+      "settings-offline": TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD,
+    };
+    const subTabTestId = settingsSubTabTestIds[name];
+    if (subTabTestId) {
+      await page.getByTestId(subTabTestId).waitFor({ state: "visible", timeout: 12000 });
+    }
+
     await waitForSpinnersHidden(page);
     return;
   }
 
-  if (name === "org-analytics") {
-    await waitForAnalyticsReady(page);
-    return;
-  }
-
-  if (URL.clients.test(url) || name === "clients") {
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForSpinnersHidden(page);
-    return;
-  }
-
-  if (URL.meetings.test(url) || name === "meetings") {
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/meeting memory/i)
-      .or(page.getByText(/no meeting recordings yet/i))
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForSpinnersHidden(page);
-    return;
-  }
-
-  if (
-    URL.projectCalendar.test(url) ||
-    URL.workspaceCalendar.test(url) ||
-    URL.teamCalendar.test(url) ||
-    name === "calendar-event-modal" ||
-    /^calendar-(day|week|month)$/.test(name)
-  ) {
-    await waitForCalendarReady(page);
-    await waitForCalendarEvents(page, 5000);
-    await focusCalendarTimedContentForCapture(page);
-  }
+  // --- Default fallback: wait for page header + spinners ---
+  // Covers: authentication, add-ons, assistant, mcp-server, invoices,
+  // clients, my-issues, inbox, time-tracking, workspace detail,
+  // workspace settings, workspace sprints, workspace dependencies,
+  // workspace wiki, team settings, team wiki, document templates,
+  // project activity, project timesheet, project sprints, project
+  // billing, project settings, project members
+  await page
+    .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
+    .or(page.getByText(/no .+yet|nothing here yet/i))
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | null> {
