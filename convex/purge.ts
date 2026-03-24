@@ -100,6 +100,14 @@ export const TABLES: TableNames[] = [
   "authVerificationCodes",
   "authVerifiers",
   "authRateLimits",
+  // Outreach
+  "outreachMailboxes",
+  "outreachContacts",
+  "outreachSuppressions",
+  "outreachSequences",
+  "outreachEnrollments",
+  "outreachEvents",
+  "outreachTrackingLinks",
 ];
 
 /** Purges all data from the database in batches, requires confirmation parameter. */

@@ -4,6 +4,7 @@
 
 import { v } from "convex/values";
 import { authenticatedQuery } from "../customFunctions";
+import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { notFound } from "../lib/errors";
 
 // =============================================================================
@@ -11,7 +12,7 @@ import { notFound } from "../lib/errors";
 // =============================================================================
 
 /** Get stats for a single sequence (uses cached stats) */
-export const sequenceStats = authenticatedQuery({
+export const getSequenceStats = authenticatedQuery({
   args: { sequenceId: v.id("outreachSequences") },
   handler: async (ctx, args) => {
     const sequence = await ctx.db.get(args.sequenceId);
@@ -34,7 +35,7 @@ export const sequenceStats = authenticatedQuery({
 });
 
 /** Get per-step funnel for a sequence (how many contacts reach each step) */
-export const sequenceFunnel = authenticatedQuery({
+export const getSequenceFunnel = authenticatedQuery({
   args: { sequenceId: v.id("outreachSequences") },
   handler: async (ctx, args) => {
     const sequence = await ctx.db.get(args.sequenceId);
@@ -44,7 +45,7 @@ export const sequenceFunnel = authenticatedQuery({
     const events = await ctx.db
       .query("outreachEvents")
       .withIndex("by_sequence", (q) => q.eq("sequenceId", args.sequenceId))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     const funnel = sequence.steps.map((step, index) => {
       const stepEvents = events.filter((e) => e.step === index);
@@ -66,7 +67,7 @@ export const sequenceFunnel = authenticatedQuery({
 });
 
 /** Get enrollment timeline for a specific contact (all events in order) */
-export const contactTimeline = authenticatedQuery({
+export const getContactTimeline = authenticatedQuery({
   args: { enrollmentId: v.id("outreachEnrollments") },
   handler: async (ctx, args) => {
     const enrollment = await ctx.db.get(args.enrollmentId);
@@ -75,7 +76,7 @@ export const contactTimeline = authenticatedQuery({
     const events = await ctx.db
       .query("outreachEvents")
       .withIndex("by_enrollment", (q) => q.eq("enrollmentId", args.enrollmentId))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     // Sort chronologically
     events.sort((a, b) => a.createdAt - b.createdAt);
@@ -92,7 +93,7 @@ export const contactTimeline = authenticatedQuery({
 // =============================================================================
 
 /** Get overview stats across all sequences in the organization */
-export const organizationOverview = authenticatedQuery({
+export const getOrganizationOverview = authenticatedQuery({
   args: {},
   handler: async (ctx) => {
     const user = await ctx.db.get(ctx.userId);
@@ -101,7 +102,7 @@ export const organizationOverview = authenticatedQuery({
     const sequences = await ctx.db
       .query("outreachSequences")
       .withIndex("by_organization", (q) => q.eq("organizationId", user.defaultOrganizationId!))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     const totals = {
       sequences: sequences.length,
@@ -140,13 +141,13 @@ export const organizationOverview = authenticatedQuery({
 });
 
 /** Get mailbox health (send counts, remaining capacity today) */
-export const mailboxHealth = authenticatedQuery({
+export const getMailboxHealth = authenticatedQuery({
   args: {},
   handler: async (ctx) => {
     const mailboxes = await ctx.db
       .query("outreachMailboxes")
       .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     return mailboxes.map((m) => {
       const today = new Date().toISOString().slice(0, 10);

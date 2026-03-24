@@ -18,6 +18,8 @@ export function run() {
     "src/components/ui/ColorPicker.test.tsx",
     "src/index.css",
     "convex/shared/colors.ts", // Shared runtime color constants for DB/payload usage
+    "convex/outreach/sendEngine.ts", // Email HTML templates require inline colors
+    "emails/", // Email templates
     "*.test.ts",
     "*.test.tsx",
   ];

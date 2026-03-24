@@ -434,6 +434,7 @@ export const seedProviders = internalMutation({
         notes: "Tier 1. 1 hr/month free, resets monthly. Includes diarization (2 speakers).",
       },
       // --- Tier 2: One-time credits ---
+      // TODO: Enable when API keys are added. Sign up at deepgram.com and assemblyai.com
       {
         serviceType: "transcription" as const,
         provider: "deepgram",
@@ -443,7 +444,7 @@ export const seedProviders = internalMutation({
         oneTimeUnitsRemaining: 42000, // ~700 hrs ($200 credit at $0.0077/min)
         costPerUnit: 0.77, // $0.0077/min = 0.77 cents (Nova-3)
         unitType: "minute",
-        isEnabled: true,
+        isEnabled: false, // TODO: Set to true when DEEPGRAM_API_KEY is configured
         isConfigured: false,
         priority: 5,
         notes:
@@ -458,7 +459,7 @@ export const seedProviders = internalMutation({
         oneTimeUnitsRemaining: 11100, // 185 hrs = 11100 min
         costPerUnit: 3.5, // $0.21/hr = $0.035/min = 3.5 cents (Universal-3 Pro)
         unitType: "minute",
-        isEnabled: true,
+        isEnabled: false, // TODO: Set to true when ASSEMBLYAI_API_KEY is configured
         isConfigured: false,
         priority: 6,
         notes: "Tier 2. 185 hrs one-time credit. Includes diarization + language detection.",

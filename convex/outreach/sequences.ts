@@ -132,7 +132,7 @@ export const update = authenticatedMutation({
 });
 
 /** Activate a draft/paused sequence (starts sending) */
-export const activateSequence = authenticatedMutation({
+export const updateSequenceStatus = authenticatedMutation({
   args: { sequenceId: v.id("outreachSequences") },
   handler: async (ctx, args) => {
     const sequence = await ctx.db.get(args.sequenceId);

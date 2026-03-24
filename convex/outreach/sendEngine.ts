@@ -204,7 +204,8 @@ export const sendSequenceEmail = internalAction({
     fromEmail: v.string(),
     fromName: v.string(),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    void ctx; // Will use for SMTP auth lookup
     // TODO: Implement actual SMTP sending via user's OAuth credentials
     //
     // This will use:
@@ -320,7 +321,10 @@ export const recordSendResult = internalMutation({
 export const resetDailySendCounts = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const mailboxes = await ctx.db.query("outreachMailboxes").take(BOUNDED_LIST_LIMIT);
+    const mailboxes = await ctx.db
+      .query("outreachMailboxes")
+      .withIndex("by_active")
+      .take(BOUNDED_LIST_LIMIT);
 
     const toReset = mailboxes.filter((m) => m.todaySendCount > 0);
     await Promise.all(
