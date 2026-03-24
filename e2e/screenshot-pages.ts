@@ -1791,9 +1791,11 @@ async function autoLogin(page: Page): Promise<string | null> {
     return null;
   }
 
+  // Navigate to signin first so we have a page context for localStorage injection
   await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
   await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
-  await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
+  // Navigate to /app — the auth redirect picks up injected tokens from localStorage
+  await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "load" });
 
   try {
     await page.waitForURL((u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname), {
