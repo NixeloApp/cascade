@@ -327,7 +327,7 @@ export const resetDailySendCounts = internalMutation({
   handler: async (ctx) => {
     const mailboxes = await ctx.db
       .query("outreachMailboxes")
-      .withIndex("by_active")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
       .take(BOUNDED_LIST_LIMIT);
 
     const toReset = mailboxes.filter((m) => m.todaySendCount > 0);
@@ -339,6 +339,8 @@ export const resetDailySendCounts = internalMutation({
         }),
       ),
     );
+    // Note: bounded to BOUNDED_LIST_LIMIT mailboxes per reset cycle.
+    // Sufficient for current scale (< 100 active mailboxes).
   },
 });
 
