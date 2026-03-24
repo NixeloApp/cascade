@@ -29,10 +29,17 @@ const DEFAULT_DAILY_SEND_LIMIT = 50;
 export const list = authenticatedQuery({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
+    const mailboxes = await ctx.db
       .query("outreachMailboxes")
       .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
       .take(BOUNDED_LIST_LIMIT);
+
+    // Strip tokens from response (never send to client)
+    return mailboxes.map((m) => ({
+      ...m,
+      accessToken: "[redacted]",
+      refreshToken: m.refreshToken ? "[redacted]" : undefined,
+    }));
   },
 });
 

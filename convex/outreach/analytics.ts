@@ -18,6 +18,10 @@ export const getSequenceStats = authenticatedQuery({
     const sequence = await ctx.db.get(args.sequenceId);
     if (!sequence) throw notFound("sequence", args.sequenceId);
 
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
+
     return {
       name: sequence.name,
       status: sequence.status,
@@ -40,6 +44,10 @@ export const getSequenceFunnel = authenticatedQuery({
   handler: async (ctx, args) => {
     const sequence = await ctx.db.get(args.sequenceId);
     if (!sequence) throw notFound("sequence", args.sequenceId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
 
     // Get all events for this sequence grouped by step
     const events = await ctx.db
@@ -72,6 +80,10 @@ export const getContactTimeline = authenticatedQuery({
   handler: async (ctx, args) => {
     const enrollment = await ctx.db.get(args.enrollmentId);
     if (!enrollment) throw notFound("enrollment", args.enrollmentId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (enrollment.organizationId !== user?.defaultOrganizationId)
+      throw notFound("enrollment", args.enrollmentId);
 
     const events = await ctx.db
       .query("outreachEvents")

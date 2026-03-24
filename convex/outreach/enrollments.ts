@@ -29,6 +29,13 @@ export const listBySequence = authenticatedQuery({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const sequence = await ctx.db.get(args.sequenceId);
+    if (!sequence) throw notFound("sequence", args.sequenceId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
+
     if (args.status) {
       return await ctx.db
         .query("outreachEnrollments")
@@ -63,6 +70,13 @@ export const getByContact = authenticatedQuery({
     contactId: v.id("outreachContacts"),
   },
   handler: async (ctx, args) => {
+    const sequence = await ctx.db.get(args.sequenceId);
+    if (!sequence) throw notFound("sequence", args.sequenceId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
+
     const enrollments = await ctx.db
       .query("outreachEnrollments")
       .withIndex("by_sequence", (q) => q.eq("sequenceId", args.sequenceId))
@@ -195,6 +209,10 @@ export const cancelEnrollment = authenticatedMutation({
   handler: async (ctx, args) => {
     const enrollment = await ctx.db.get(args.enrollmentId);
     if (!enrollment) throw notFound("enrollment", args.enrollmentId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (enrollment.organizationId !== user?.defaultOrganizationId)
+      throw notFound("enrollment", args.enrollmentId);
 
     if (enrollment.status !== "active" && enrollment.status !== "paused") {
       throw conflict("Enrollment is already in a terminal state");

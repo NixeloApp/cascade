@@ -218,8 +218,8 @@ export const sendSequenceEmail = internalAction({
       `[OUTREACH] Would send email: from=${args.fromEmail} to=${args.to} subject="${args.subject}" step=${args.step}`,
     );
 
-    // Placeholder — replace with actual send logic
-    return { success: true, error: undefined as string | undefined };
+    // Fail closed — do not send until real implementation is built
+    return { success: false, error: "Email sending not implemented" };
   },
 });
 

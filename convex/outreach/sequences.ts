@@ -9,6 +9,7 @@ import { v } from "convex/values";
 import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { conflict, notFound, validation } from "../lib/errors";
+import { MINUTE } from "../lib/timeUtils";
 import { outreachSequenceStep } from "../validators";
 
 // =============================================================================
@@ -44,6 +45,11 @@ export const get = authenticatedQuery({
   handler: async (ctx, args) => {
     const sequence = await ctx.db.get(args.sequenceId);
     if (!sequence) throw notFound("sequence", args.sequenceId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
+
     return sequence;
   },
 });
@@ -108,6 +114,10 @@ export const update = authenticatedMutation({
     const sequence = await ctx.db.get(args.sequenceId);
     if (!sequence) throw notFound("sequence", args.sequenceId);
 
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
+
     if (sequence.status === "active") {
       throw conflict("Cannot edit an active sequence. Pause it first.");
     }
@@ -139,6 +149,10 @@ export const updateSequenceStatus = authenticatedMutation({
     const sequence = await ctx.db.get(args.sequenceId);
     if (!sequence) throw notFound("sequence", args.sequenceId);
 
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
+
     if (sequence.status === "active") return; // Already active
     if (sequence.status === "completed") throw conflict("Cannot reactivate a completed sequence");
 
@@ -169,6 +183,7 @@ export const updateSequenceStatus = authenticatedMutation({
       pausedEnrollments.map((enrollment) =>
         ctx.db.patch(enrollment._id, {
           status: "active",
+          nextSendAt: Date.now() + 5 * MINUTE,
         }),
       ),
     );
@@ -181,6 +196,10 @@ export const pause = authenticatedMutation({
   handler: async (ctx, args) => {
     const sequence = await ctx.db.get(args.sequenceId);
     if (!sequence) throw notFound("sequence", args.sequenceId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
 
     if (sequence.status !== "active") throw conflict("Can only pause an active sequence");
 
@@ -209,6 +228,10 @@ export const remove = authenticatedMutation({
   handler: async (ctx, args) => {
     const sequence = await ctx.db.get(args.sequenceId);
     if (!sequence) throw notFound("sequence", args.sequenceId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
 
     if (sequence.status === "active") {
       throw conflict("Cannot delete an active sequence. Pause it first.");

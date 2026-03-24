@@ -227,6 +227,9 @@ export const processUnsubscribe = internalMutation({
     const enrollment = await ctx.db.get(args.enrollmentId);
     if (!enrollment) return;
 
+    // Idempotent: skip if enrollment is already in a terminal state
+    if (enrollment.status !== "active" && enrollment.status !== "paused") return;
+
     const contact = await ctx.db.get(enrollment.contactId);
     if (!contact) return;
 

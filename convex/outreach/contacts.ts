@@ -45,6 +45,11 @@ export const get = authenticatedQuery({
   handler: async (ctx, args) => {
     const contact = await ctx.db.get(args.contactId);
     if (!contact) throw notFound("contact", args.contactId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (contact.organizationId !== user?.defaultOrganizationId)
+      throw notFound("contact", args.contactId);
+
     return contact;
   },
 });
@@ -184,6 +189,10 @@ export const update = authenticatedMutation({
     const contact = await ctx.db.get(args.contactId);
     if (!contact) throw notFound("contact", args.contactId);
 
+    const user = await ctx.db.get(ctx.userId);
+    if (contact.organizationId !== user?.defaultOrganizationId)
+      throw notFound("contact", args.contactId);
+
     const { contactId, ...updates } = args;
     // Filter out undefined values
     const patch: Record<string, unknown> = {};
@@ -201,6 +210,11 @@ export const remove = authenticatedMutation({
   handler: async (ctx, args) => {
     const contact = await ctx.db.get(args.contactId);
     if (!contact) throw notFound("contact", args.contactId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (contact.organizationId !== user?.defaultOrganizationId)
+      throw notFound("contact", args.contactId);
+
     await ctx.db.delete(args.contactId);
   },
 });
