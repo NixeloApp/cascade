@@ -548,6 +548,13 @@ export const TEST_IDS = {
     ENTRY_FORM: "time-entry-form",
     /** @see src/routes/_app.$orgSlug.time-tracking.tsx */
     CONTENT: "time-tracking-content",
+    /** @see src/components/TimeTracker.tsx */
+    ENTRIES_LIST: "time-tracking-entries-list",
+  },
+
+  NOTIFICATIONS: {
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    CONTENT: "notifications-content",
   },
 
   // ============================================================

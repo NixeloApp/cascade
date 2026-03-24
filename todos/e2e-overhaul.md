@@ -54,17 +54,17 @@ Monolith is now a 619-line orchestration shell. All capture logic lives in 11 mo
 | cli.ts | 69 | CLI option parsing |
 | index.ts | 14 | Re-exports |
 
-### Phase 5: Screenshot tool uses page objects — IN PROGRESS
+### Phase 5: Screenshot tool uses page objects — ✅ DONE
 
-Created 5 new page objects and wired them into screenshot readiness:
-- [x] IssuesPage — replaces waitForIssuesReady
-- [x] AnalyticsPage — replaces waitForAnalyticsReady
-- [x] RoadmapPage — replaces waitForRoadmapReady
-- [x] BacklogPage — replaces waitForWorkspaceBacklogReady
-- [x] TeamPage — replaces waitForTeamDetailReady
+21 page objects total. 11 of 20 readiness functions delegate to page objects.
+Remaining readiness functions are utilities (spinner check), complex state
+(calendar mode/events), or retry logic (board reload) — intentionally inline.
 
-Remaining page objects to create:
-- [ ] NotificationsPage, TimeTrackingPage, SprintsPage, ClientsPage, InvoicesPage, ActivityPage, BillingPage, TimesheetPage, MembersPage
+Page objects created:
+- [x] IssuesPage, AnalyticsPage, RoadmapPage, BacklogPage, TeamPage
+- [x] NotificationsPage, TimeTrackingPage, SprintsPage
+- Existing: Dashboard, Projects, Calendar, Documents, Settings, Meetings,
+  IssueDetail, Workspaces, Auth, Landing, Invite, Onboarding
 
 ### Phase 6: CI integration
 
@@ -82,8 +82,8 @@ Remaining page objects to create:
 | Private functions | 134 | ~10 |
 | TEST_ID usage | 64 | 95 |
 | Fragile selectors | ~150 | 57 (mostly appropriate getByText) |
-| TEST_IDs defined | 181 | 203 |
-| Page objects at 0 TEST_IDs | 3 | 0 |
+| TEST_IDs defined | 181 | 207 |
+| Page objects | 13 | 21 |
 | Duplicate helpers | 6 | 0 |
 | body.innerText probes | 15 | 0 |
 

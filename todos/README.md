@@ -8,10 +8,10 @@
 
 ### Infrastructure
 
-- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing ratchet (86 files / 127 violations)
+- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing ratchet (86 files / 127 violations, diminishing returns)
 - [ ] [validator-strengthening.md](./validator-strengthening.md) — Validator framework improvements — 6 items
-- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Monolith split done (5,292→619 lines). Remaining: page objects for page types, CI integration.
-- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven visual cleanup — 19 items
+- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Monolith split done (5,292→619). Phase 5 done (21 page objects). Remaining: CI integration.
+- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven visual cleanup — 19 items (needs human review)
 
 ### Features (need product decisions)
 
@@ -32,6 +32,8 @@
 | Unit tests | 4550 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
-| TEST_IDs | 201 defined, 18 page objects |
+| TEST_IDs | 207 defined, 21 page objects |
 | Biome warnings | 0 |
 | MEDIUM page spec issues | 0 |
+| Screenshot monolith | 619 lines (was 5,292) |
+| Raw styling debt | 86 files / 127 violations |
