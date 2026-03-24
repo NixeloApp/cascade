@@ -8,6 +8,11 @@
 
 import { expect, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { AnalyticsPage } from "../pages/analytics.page";
+import { BacklogPage } from "../pages/backlog.page";
+import { IssuesPage } from "../pages/issues.page";
+import { RoadmapPage } from "../pages/roadmap.page";
+import { TeamPage } from "../pages/team.page";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import {
   waitForAnimation,
@@ -16,6 +21,13 @@ import {
   waitForScreenshotReady,
 } from "../utils/wait-helpers";
 import { URL_PATTERNS as URL } from "./routing";
+
+/**
+ * Placeholder orgSlug used when constructing page objects purely for
+ * waitUntilReady() calls (no navigation). The screenshot tool already
+ * navigated to the page — we just need the readiness check.
+ */
+const READINESS_ONLY_SLUG = "__readiness__";
 
 export async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> {
   try {
@@ -451,32 +463,8 @@ export async function waitForProjectsReady(page: Page, prefix?: string): Promise
   }
 }
 
-export async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByRole("button", { name: /create issue/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await expect
-    .poll(
-      async () => {
-        if (prefix === "empty") {
-          return (await isLocatorVisible(page.getByText(/no issues found/i))) ? "empty" : "pending";
-        }
-
-        const issueCardCount = await getLocatorCount(page.getByTestId(TEST_IDS.ISSUE.CARD));
-        if (issueCardCount > 0) {
-          return "ready";
-        }
-
-        return (await isLocatorVisible(page.getByText(/no issues found/i))) ? "empty" : "pending";
-      },
-      { timeout: 12000 },
-    )
-    .not.toBe("pending");
+export async function waitForIssuesReady(page: Page): Promise<void> {
+  await new IssuesPage(page, READINESS_ONLY_SLUG).waitUntilReady();
   await waitForSpinnersHidden(page);
 }
 
@@ -548,16 +536,12 @@ export async function waitForWorkspacesReady(page: Page, prefix?: string): Promi
 }
 
 export async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
-  // Wait for actual backlog content - empty state text OR board column (issues present)
-  await page
-    .getByText(/backlog is empty/i)
-    .or(page.getByTestId(TEST_IDS.BOARD.COLUMN))
-    .waitFor({ state: "visible", timeout: 12000 });
+  await new BacklogPage(page, READINESS_ONLY_SLUG).waitUntilReady();
   await waitForSpinnersHidden(page);
 }
 
 export async function waitForTeamDetailReady(page: Page): Promise<void> {
-  await waitForBoardReady(page);
+  await new TeamPage(page, READINESS_ONLY_SLUG).waitUntilReady();
 }
 
 export async function waitForIssueDetailReady(page: Page): Promise<void> {
@@ -611,16 +595,8 @@ export async function waitForDocumentEditorReady(page: Page): Promise<void> {
 }
 
 export async function waitForAnalyticsReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.ANALYTICS.PAGE_HEADER).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
+  await new AnalyticsPage(page, READINESS_ONLY_SLUG).waitUntilReady();
   await waitForSpinnersHidden(page);
-  await waitForLoadingSkeletonsToClear(page, 5000);
 }
 
 export async function scrollSectionNearViewportTop(
@@ -652,19 +628,7 @@ export async function scrollSectionNearViewportTop(
 }
 
 export async function waitForRoadmapReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({ state: "visible", timeout: 12000 });
-  // Wait for timeline canvas or empty state
-  await expect
-    .poll(
-      async () => {
-        if (await isLocatorVisible(page.getByTestId(TEST_IDS.ROADMAP.TIMELINE_CANVAS)))
-          return "ready";
-        if (await isLocatorVisible(page.getByText(/no issues with target dates/i))) return "empty";
-        return "pending";
-      },
-      { timeout: 12000 },
-    )
-    .not.toBe("pending");
+  await new RoadmapPage(page, READINESS_ONLY_SLUG).waitUntilReady();
   await waitForSpinnersHidden(page);
 }
 
@@ -766,7 +730,7 @@ export async function waitForExpectedContent(
   }
 
   if (URL.issues.test(url) || name === "issues") {
-    await waitForIssuesReady(page, prefix);
+    await waitForIssuesReady(page);
     return;
   }
 

@@ -54,10 +54,17 @@ Monolith is now a 619-line orchestration shell. All capture logic lives in 11 mo
 | cli.ts | 69 | CLI option parsing |
 | index.ts | 14 | Re-exports |
 
-### Phase 5: Screenshot tool uses page objects
+### Phase 5: Screenshot tool uses page objects — IN PROGRESS
 
-- [ ] Replace screenshot readiness functions with page object `waitUntilReady()` calls
-- [ ] Create missing page objects: InvoicesPage, ClientsPage, TimeTrackingPage, AnalyticsPage, NotificationsPage, RoadmapPage, ActivityPage, BillingPage, TimesheetPage, MembersPage, BacklogPage, SprintsPage
+Created 5 new page objects and wired them into screenshot readiness:
+- [x] IssuesPage — replaces waitForIssuesReady
+- [x] AnalyticsPage — replaces waitForAnalyticsReady
+- [x] RoadmapPage — replaces waitForRoadmapReady
+- [x] BacklogPage — replaces waitForWorkspaceBacklogReady
+- [x] TeamPage — replaces waitForTeamDetailReady
+
+Remaining page objects to create:
+- [ ] NotificationsPage, TimeTrackingPage, SprintsPage, ClientsPage, InvoicesPage, ActivityPage, BillingPage, TimesheetPage, MembersPage
 
 ### Phase 6: CI integration
 
