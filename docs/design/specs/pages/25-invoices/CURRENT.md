@@ -74,7 +74,7 @@ The invoices page provides agency-style invoice management for billing clients. 
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Invoice cards use `Card` > `CardHeader` > `CardContent` pattern which may feel heavy for a list view; a table or compact list might be more scannable | UX | MEDIUM |
+| ~~1~~ | ~~Heavy Card-based list~~ **Fixed** — replaced 2-column Card grid with a Table (Invoice, Client, Status, Total, Due columns). More scannable, hoverable rows link to detail. | ~~UX~~ | ~~MEDIUM~~ |
 | ~~2~~ | ~~formatCurrency defined inline~~ **Fixed** — consolidated 6 duplicate formatCurrency definitions across frontend (4 files) and backend (2 files) to use `@/lib/formatting` and `convex/lib/formatting.ts` respectively. All now use Intl.NumberFormat with proper thousand separators. | ~~architecture~~ | ~~LOW~~ |
 | ~~3~~ | ~~No pagination~~ **Already fixed** — query uses `.take(BOUNDED_LIST_LIMIT)`, not `.collect()`. Bounded at 100 items. | ~~scalability~~ | ~~MEDIUM~~ |
 | ~~4~~ | ~~"New draft" creates $0 invoice immediately~~ **Fixed** — opens a dialog with client selector, issue/due dates, and first line item description + rate. Navigates to detail page after creation. | ~~UX~~ | ~~MEDIUM~~ |

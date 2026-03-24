@@ -20,6 +20,55 @@ send <50/day, and track results. Scale features (warmup, rotation) deferred to p
 
 ---
 
+### Libraries to Evaluate
+
+> No full cold-email OSS tool exists. The value is in the building blocks — we assemble
+> them with sequence logic on top of Convex.
+
+**Sending & Mailbox:**
+
+| Library | What | Why | Status in Cascade |
+|:--------|:-----|:----|:------------------|
+| `nodemailer` | Send emails via SMTP/OAuth2 | Connects to user's Gmail/Outlook, handles auth, attachments, HTML | ✅ Already installed |
+| `react-email` | Email template components | Build sequence emails with React, already used elsewhere | ✅ Already installed |
+| `googleapis` (gmail) | Gmail API client | OAuth2 send + read for Gmail (alternative to raw IMAP) | Evaluate |
+| `@microsoft/microsoft-graph-client` | Outlook API client | OAuth2 send + read for Outlook/365 | Evaluate |
+
+**Reply Detection & Inbox Reading:**
+
+| Library | What | Why | Status |
+|:--------|:-----|:----|:-------|
+| `imapflow` | Modern IMAP client | Read inbox, detect replies, poll for new messages. Handles Gmail IMAP well. | Evaluate |
+| `mailparser` / `postal-mime` | Parse email MIME | Extract reply body, detect auto-replies (OOO), parse bounce DSN messages | Evaluate |
+
+**Validation & Deliverability:**
+
+| Library | What | Why | Status |
+|:--------|:-----|:----|:-------|
+| `deep-email-validator` | Verify email addresses | Syntax + MX + SMTP check before sending. Reduces bounces. | Evaluate |
+| `mailcheck` | Typo suggestions | "Did you mean gmail.com?" — catches obvious typos in imported lists | Evaluate |
+| `email-reply-parser` | Extract reply text | Strip quoted text from replies, get just the new content | Evaluate |
+
+**Tracking:**
+
+| Library | What | Why | Status |
+|:--------|:-----|:----|:-------|
+| None needed | Open pixel | 10-line HTTP handler returns 1x1 transparent GIF, logs the open | Build |
+| None needed | Click redirect | URL rewrite + 302 redirect handler, logs the click | Build |
+
+**Queue & Scheduling:**
+
+| Library | What | Why | Status |
+|:--------|:-----|:----|:-------|
+| Convex scheduled functions | Job scheduling | Schedule sequence steps (send email 2 in 3 days). Native to our stack. | ✅ Already available |
+| `bullmq` | Job queue (alternative) | Only if Convex scheduled functions hit limits at scale | Fallback |
+
+**Key takeaway:** The hard part isn't finding libraries — it's wiring them into a
+sequence engine with proper state management (who replied, who bounced, who's on step
+2, etc.). That's the product logic we build on Convex.
+
+---
+
 ### Phase 1: MVP — Lightweight Sequence Engine (~4-6 weeks)
 
 **Mailbox Connection:**

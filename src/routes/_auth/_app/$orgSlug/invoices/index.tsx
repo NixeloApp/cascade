@@ -6,13 +6,12 @@ import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
 import { Grid } from "@/components/ui/Grid";
-import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import {
   Select,
   SelectContent,
@@ -21,6 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/Table";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -48,36 +55,56 @@ function getStatusBadgeVariant(status: string) {
   }
 }
 
-function InvoiceCard({ invoice, orgSlug }: { invoice: InvoiceListItem; orgSlug: string }) {
+function InvoiceTable({ invoices, orgSlug }: { invoices: InvoiceListItem[]; orgSlug: string }) {
   return (
-    <Link to={ROUTES.invoices.detail.path} params={{ orgSlug, invoiceId: invoice._id }}>
-      <Card hoverable>
-        <CardHeader>
-          <Flex align="center" justify="between">
-            <CardTitle>{invoice.number}</CardTitle>
-            <Badge variant={getStatusBadgeVariant(invoice.status)} shape="pill">
-              {invoice.status}
-            </Badge>
-          </Flex>
-        </CardHeader>
-        <CardContent>
-          <Flex direction="column" gap="sm">
-            {invoice.client ? (
-              <Typography variant="label">{invoice.client.name}</Typography>
-            ) : (
-              <Typography variant="small" color="tertiary">
-                No client assigned
-              </Typography>
-            )}
-            <Typography variant="h4">{formatCurrency(invoice.total)}</Typography>
-            <Metadata>
-              <MetadataItem>Due {formatDate(invoice.dueDate, { timeZone: "UTC" })}</MetadataItem>
-              <MetadataTimestamp date={invoice.issueDate} prefix="Issued" />
-            </Metadata>
-          </Flex>
-        </CardContent>
-      </Card>
-    </Link>
+    <Card padding="none">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Invoice</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-right">Due</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invoices.map((invoice) => (
+            <TableRow key={invoice._id} className="cursor-pointer hover:bg-ui-bg-hover">
+              <TableCell>
+                <Link to={ROUTES.invoices.detail.path} params={{ orgSlug, invoiceId: invoice._id }}>
+                  <Typography variant="label" className="text-brand">
+                    {invoice.number}
+                  </Typography>
+                </Link>
+              </TableCell>
+              <TableCell>
+                {invoice.client ? (
+                  <Typography variant="small">{invoice.client.name}</Typography>
+                ) : (
+                  <Typography variant="small" color="tertiary">
+                    —
+                  </Typography>
+                )}
+              </TableCell>
+              <TableCell>
+                <Badge variant={getStatusBadgeVariant(invoice.status)} shape="pill" size="sm">
+                  {invoice.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <Typography variant="label">{formatCurrency(invoice.total)}</Typography>
+              </TableCell>
+              <TableCell className="text-right">
+                <Typography variant="small" color="secondary">
+                  {formatDate(invoice.dueDate, { timeZone: "UTC" })}
+                </Typography>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
   );
 }
 
@@ -312,11 +339,7 @@ function InvoicesListPage() {
           }
         />
       ) : (
-        <Grid cols={1} colsLg={2} gap="md">
-          {invoices.map((invoice) => (
-            <InvoiceCard key={invoice._id} invoice={invoice} orgSlug={orgSlug} />
-          ))}
-        </Grid>
+        <InvoiceTable invoices={invoices} orgSlug={orgSlug} />
       )}
     </PageLayout>
   );
