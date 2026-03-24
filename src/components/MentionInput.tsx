@@ -19,6 +19,7 @@ import { Command, CommandItem, CommandList } from "./ui/Command";
 import { Flex } from "./ui/Flex";
 import { IconButton } from "./ui/IconButton";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
+import { Stack } from "./ui/Stack";
 import { Textarea } from "./ui/Textarea";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
@@ -188,10 +189,10 @@ export function MentionInput({
   };
 
   return (
-    <div className="relative">
+    <Stack gap="sm" className="relative">
       {/* Write/Preview Toggle */}
       {enablePreview && (
-        <Flex justify="between" align="center" className="mb-2">
+        <Flex justify="between" align="center">
           <Flex gap="xs">
             <Button
               variant={isPreviewMode ? "ghost" : "secondary"}
@@ -296,6 +297,6 @@ export function MentionInput({
           ? "Supports **bold**, *italic*, `code`, ~~strikethrough~~, and [links](url)"
           : "Type @ to mention team members. Supports markdown formatting."}
       </Typography>
-    </div>
+    </Stack>
   );
 }

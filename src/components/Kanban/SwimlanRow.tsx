@@ -78,7 +78,7 @@ export function SwimlanRow({
   const swimlaneTitleClassName = !swimlaneTitleStyle && config.color ? config.color : undefined;
 
   return (
-    <Stack gap="sm" className="mb-4">
+    <Stack gap="sm">
       <Button
         onClick={handleToggle}
         variant="unstyled"

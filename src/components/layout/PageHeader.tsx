@@ -45,50 +45,52 @@ export function PageHeader({
       padding="md"
       className={cn(spacing === "standalone" && "mb-4 sm:mb-5", className)}
     >
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <Breadcrumb className="mb-2">
-          <BreadcrumbList>
-            {breadcrumbs.map((crumb, i) => (
-              <React.Fragment key={crumb.label}>
-                {i > 0 && <BreadcrumbSeparator />}
-                <BreadcrumbItem>
-                  {crumb.to ? (
-                    <BreadcrumbLink asChild>
-                      <Link to={crumb.to}>{crumb.label}</Link>
-                    </BreadcrumbLink>
-                  ) : (
-                    <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                  )}
-                </BreadcrumbItem>
-              </React.Fragment>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
-      )}
-      <Flex
-        justify="between"
-        align="start"
-        alignSm="end"
-        gap="md"
-        direction="column"
-        directionSm="row"
-      >
-        <Stack gap="xs" className="min-w-0">
-          <Flex align="center" gap="xs" className="mb-0.5">
-            <Dot size="md" halo />
-            <Typography variant="pageHeaderEyebrow">Workspace view</Typography>
-          </Flex>
-          <Typography variant="pageHeaderTitle" as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
-            {title}
-          </Typography>
-          {description && <Typography variant="pageHeaderDescription">{description}</Typography>}
-        </Stack>
-        {actions && (
-          <Flex gap="sm" align="center" className="w-full shrink-0 sm:w-auto">
-            {actions}
-          </Flex>
+      <Stack gap="sm">
+        {breadcrumbs && breadcrumbs.length > 0 && (
+          <Breadcrumb>
+            <BreadcrumbList>
+              {breadcrumbs.map((crumb, i) => (
+                <React.Fragment key={crumb.label}>
+                  {i > 0 && <BreadcrumbSeparator />}
+                  <BreadcrumbItem>
+                    {crumb.to ? (
+                      <BreadcrumbLink asChild>
+                        <Link to={crumb.to}>{crumb.label}</Link>
+                      </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                </React.Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
         )}
-      </Flex>
+        <Flex
+          justify="between"
+          align="start"
+          alignSm="end"
+          gap="md"
+          direction="column"
+          directionSm="row"
+        >
+          <Stack gap="xs" className="min-w-0">
+            <Flex align="center" gap="xs" className="mb-0.5">
+              <Dot size="md" halo />
+              <Typography variant="pageHeaderEyebrow">Workspace view</Typography>
+            </Flex>
+            <Typography variant="pageHeaderTitle" as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
+              {title}
+            </Typography>
+            {description && <Typography variant="pageHeaderDescription">{description}</Typography>}
+          </Stack>
+          {actions && (
+            <Flex gap="sm" align="center" className="w-full shrink-0 sm:w-auto">
+              {actions}
+            </Flex>
+          )}
+        </Flex>
+      </Stack>
     </Card>
   );
 }

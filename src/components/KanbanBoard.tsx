@@ -38,6 +38,7 @@ import { KanbanColumn } from "./Kanban/KanbanColumn";
 import { SwimlanRow } from "./Kanban/SwimlanRow";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { SkeletonKanbanCard, SkeletonText } from "./ui/Skeleton";
+import { Stack } from "./ui/Stack";
 
 interface KanbanBoardProps {
   projectId?: Id<"projects">;
@@ -418,28 +419,30 @@ export function KanbanBoard({
       ) : (
         /* Swimlane view */
         <Card ref={boardContainerRef} variant="ghost" recipe="kanbanSwimlaneWrapper">
-          {swimlaneConfigs.map((config) => (
-            <SwimlanRow
-              key={config.id}
-              config={config}
-              issuesByStatus={swimlaneIssues[config.id] || {}}
-              workflowStates={workflowStates}
-              isCollapsed={collapsedSwimlanes.has(config.id)}
-              onToggleCollapse={handleToggleSwimlanCollapse}
-              selectionMode={selectionMode}
-              selectedIssueIds={selectedIssueIds}
-              focusedIssueId={focusedIssueId}
-              canEdit={canEdit}
-              onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
-              onIssueClick={setSelectedIssue}
-              onToggleSelect={handleToggleSelect}
-              statusCounts={statusCounts}
-              onLoadMore={loadMoreDone}
-              isLoadingMore={isLoadingMore}
-              onIssueDrop={handleIssueDrop}
-              onIssueReorder={handleIssueReorder}
-            />
-          ))}
+          <Stack gap="md">
+            {swimlaneConfigs.map((config) => (
+              <SwimlanRow
+                key={config.id}
+                config={config}
+                issuesByStatus={swimlaneIssues[config.id] || {}}
+                workflowStates={workflowStates}
+                isCollapsed={collapsedSwimlanes.has(config.id)}
+                onToggleCollapse={handleToggleSwimlanCollapse}
+                selectionMode={selectionMode}
+                selectedIssueIds={selectedIssueIds}
+                focusedIssueId={focusedIssueId}
+                canEdit={canEdit}
+                onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
+                onIssueClick={setSelectedIssue}
+                onToggleSelect={handleToggleSelect}
+                statusCounts={statusCounts}
+                onLoadMore={loadMoreDone}
+                isLoadingMore={isLoadingMore}
+                onIssueDrop={handleIssueDrop}
+                onIssueReorder={handleIssueReorder}
+              />
+            ))}
+          </Stack>
         </Card>
       )}
 

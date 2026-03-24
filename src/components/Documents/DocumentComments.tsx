@@ -89,23 +89,25 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
 
                 {/* Comment Content */}
                 <FlexItem flex="1" className="min-w-0">
-                  {/* Author and Date */}
-                  <Metadata size="sm" className="mb-2">
-                    <MetadataItem className="text-ui-text">
-                      {comment.authorName || "Unknown User"}
-                    </MetadataItem>
-                    <MetadataTimestamp date={comment._creationTime} />
-                    {comment.updatedAt > comment._creationTime && (
-                      <Typography variant="caption" color="tertiary" as="span" className="italic">
-                        (edited)
-                      </Typography>
-                    )}
-                  </Metadata>
+                  <Stack gap="sm">
+                    {/* Author and Date */}
+                    <Metadata size="sm">
+                      <MetadataItem className="text-ui-text">
+                        {comment.authorName || "Unknown User"}
+                      </MetadataItem>
+                      <MetadataTimestamp date={comment._creationTime} />
+                      {comment.updatedAt > comment._creationTime && (
+                        <Typography variant="caption" color="tertiary" as="span" className="italic">
+                          (edited)
+                        </Typography>
+                      )}
+                    </Metadata>
 
-                  {/* Comment Text */}
-                  <Typography variant="p" className="whitespace-pre-wrap">
-                    {comment.content}
-                  </Typography>
+                    {/* Comment Text */}
+                    <Typography variant="p" className="whitespace-pre-wrap">
+                      {comment.content}
+                    </Typography>
+                  </Stack>
                 </FlexItem>
               </Flex>
             </Card>

@@ -284,7 +284,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
 
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <Flex gap="sm" justify="end" className="mt-4">
+            <Flex gap="sm" justify="end">
               <Button
                 type="button"
                 variant="secondary"
