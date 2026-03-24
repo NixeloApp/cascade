@@ -1492,11 +1492,11 @@ async function waitForCalendarMonthGrid(
 async function waitForBoardReady(page: Page): Promise<boolean> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      await page.getByTestId(TEST_IDS.BOARD.COLUMN).waitFor({
+      await page.getByTestId(TEST_IDS.BOARD.ROOT).waitFor({
         state: "visible",
         timeout: 10000,
       });
-      await page.getByText(/delivery board|kanban board|sprint board/i).waitFor({
+      await page.getByTestId(TEST_IDS.BOARD.COLUMN).waitFor({
         state: "visible",
         timeout: 6000,
       });
@@ -1515,7 +1515,7 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
 }
 
 async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> {
-  await page.getByRole("heading", { name: /^projects$/i }).waitFor({
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -1559,7 +1559,7 @@ async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> 
 }
 
 async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
-  await page.getByRole("heading", { name: /^issues$/i }).waitFor({
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -1630,7 +1630,7 @@ async function getCalendarDragState(page: Page): Promise<CalendarDragState> {
 }
 
 async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void> {
-  await page.getByRole("heading", { name: /^workspaces$/i }).waitFor({
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -1661,7 +1661,7 @@ async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void
 }
 
 async function waitForTimeTrackingReady(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: /^time tracking$/i }).waitFor({
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -1689,7 +1689,7 @@ async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.getByRole("heading", { name: /^teams$/i }).waitFor({
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -1820,7 +1820,7 @@ async function waitForDocumentEditorReady(page: Page): Promise<void> {
 }
 
 async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: /document templates/i }).waitFor({
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -1844,7 +1844,7 @@ async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
 }
 
 async function waitForActivityReady(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: /project activity/i }).waitFor({
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -1855,11 +1855,8 @@ async function waitForActivityReady(page: Page): Promise<void> {
   await waitForSpinnersHidden(page);
 }
 
-async function waitForAnalyticsReady(
-  page: Page,
-  titlePattern: RegExp = /analytics/i,
-): Promise<void> {
-  await page.getByRole("heading", { name: titlePattern }).waitFor({
+async function waitForAnalyticsReady(page: Page): Promise<void> {
+  await page.getByTestId(TEST_IDS.ANALYTICS.PAGE_HEADER).waitFor({
     state: "visible",
     timeout: 12000,
   });
@@ -1893,14 +1890,10 @@ async function waitForSprintsReady(page: Page): Promise<void> {
 }
 
 async function waitForProjectMembersReady(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: /^project settings$/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByRole("heading", { name: /^members$/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
+  await page
+    .getByRole("heading", { name: /^members$/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 });
   await page.getByText(/members? with access/i).waitFor({ state: "visible", timeout: 12000 });
   await waitForSpinnersHidden(page);
 }
@@ -1982,7 +1975,7 @@ async function waitForExpectedContent(
       .waitFor({ state: "visible", timeout: 30000 });
     // Wait for dashboard heading (confirms route rendered)
     await page
-      .getByRole("heading", { name: /^dashboard$/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 15000 });
     // Wait for actual dashboard content to appear
     await page.waitForFunction(
@@ -2028,62 +2021,46 @@ async function waitForExpectedContent(
       },
     );
     await page
-      .getByRole("heading", { name: /^settings$/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByRole("tab", { name: /^profile$/i })
       .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/manage your account, integrations, and preferences/i)
-      .waitFor({ state: "visible", timeout: 12000 });
-
-    if (name === "settings-preferences") {
-      await page.getByRole("heading", { name: /^appearance$/i }).waitFor({
-        state: "visible",
-        timeout: 12000,
-      });
-    }
 
     if (name === "settings-notifications") {
-      await page.getByRole("heading", { name: /^push notifications$/i }).waitFor({
-        state: "visible",
-        timeout: 12000,
-      });
+      await page
+        .getByTestId(TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION)
+        .waitFor({ state: "visible", timeout: 12000 });
     }
 
     if (name === "settings-security") {
-      await page.getByRole("heading", { name: /^two-factor authentication$/i }).waitFor({
-        state: "visible",
-        timeout: 12000,
-      });
+      await page
+        .getByTestId(TEST_IDS.SETTINGS.TWO_FACTOR_SECTION)
+        .waitFor({ state: "visible", timeout: 12000 });
     }
 
     if (name === "settings-apikeys") {
-      await page.getByRole("heading", { name: /^api keys$/i }).waitFor({
-        state: "visible",
-        timeout: 12000,
-      });
+      await page
+        .getByTestId(TEST_IDS.SETTINGS.API_KEYS_SECTION)
+        .waitFor({ state: "visible", timeout: 12000 });
     }
 
     if (name === "settings-integrations") {
-      await page.getByRole("heading", { name: /^github$/i }).waitFor({
-        state: "visible",
-        timeout: 12000,
-      });
+      await page
+        .getByTestId(TEST_IDS.SETTINGS.GITHUB_INTEGRATION)
+        .waitFor({ state: "visible", timeout: 12000 });
     }
 
     if (name === "settings-admin") {
-      await page.getByRole("heading", { name: /^organization settings$/i }).waitFor({
-        state: "visible",
-        timeout: 12000,
-      });
+      await page
+        .getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION)
+        .waitFor({ state: "visible", timeout: 12000 });
     }
 
     if (name === "settings-offline") {
-      await page.getByRole("heading", { name: /^connection status$/i }).waitFor({
-        state: "visible",
-        timeout: 12000,
-      });
+      await page
+        .getByTestId(TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD)
+        .waitFor({ state: "visible", timeout: 12000 });
     }
 
     await waitForSpinnersHidden(page);
@@ -2092,7 +2069,7 @@ async function waitForExpectedContent(
 
   if (name === "authentication" || /\/authentication\/?$/.test(url)) {
     await page
-      .getByRole("heading", { name: /^authentication$/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
     return;
@@ -2100,14 +2077,14 @@ async function waitForExpectedContent(
 
   if (name === "add-ons" || /\/add-ons\/?$/.test(url)) {
     await page
-      .getByRole("heading", { name: /^add-ons$/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
     return;
   }
 
   if (name === "assistant" || /\/assistant\/?$/.test(url)) {
     await page
-      .getByRole("heading", { name: /^assistant$/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
     return;
@@ -2115,7 +2092,7 @@ async function waitForExpectedContent(
 
   if (name === "mcp-server" || /\/mcp-server\/?$/.test(url)) {
     await page
-      .getByRole("heading", { name: /^mcp server$/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
     return;
   }
@@ -2172,8 +2149,9 @@ async function waitForExpectedContent(
 
   if (isWorkspaceWikiUrl(url) || /^workspace-[^-]+-wiki$/.test(name)) {
     await page
-      .getByRole("heading", { name: /wiki/i })
-      .or(page.getByText(/no pages/i))
+      .getByText(/no workspace docs yet/i)
+      .or(page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE))
+      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
     return;
@@ -2191,8 +2169,9 @@ async function waitForExpectedContent(
 
   if (isTeamWikiUrl(url) || /^team-[^-]+-wiki$/.test(name)) {
     await page
-      .getByRole("heading", { name: /wiki/i })
-      .or(page.getByText(/no pages/i))
+      .getByText(/no workspace docs yet/i)
+      .or(page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE))
+      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
     return;
@@ -2250,8 +2229,9 @@ async function waitForExpectedContent(
 
   if (isProjectInboxUrl(url) || name === "inbox") {
     await page
-      .getByRole("heading", { name: /inbox/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .or(page.getByText(/no items in inbox/i))
+      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
     return;
@@ -2259,7 +2239,7 @@ async function waitForExpectedContent(
 
   if (isNotificationsUrl(url) || name === "notifications") {
     await waitForDashboardReady(page);
-    const notificationsHeading = page.getByRole("heading", { name: /^notifications$/i });
+    const notificationsHeading = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
     const inboxTab = page.getByRole("tab", { name: /inbox/i });
     const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
     const emptyState = page.getByText(/no notifications/i);
@@ -2295,8 +2275,9 @@ async function waitForExpectedContent(
 
   if (isMyIssuesUrl(url) || name === "my-issues") {
     await page
-      .getByRole("heading", { name: /my issues/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .or(page.getByText(/no issues assigned/i))
+      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
     return;
@@ -2310,22 +2291,20 @@ async function waitForExpectedContent(
 
   if (isInvoicesUrl(url) || name === "invoices") {
     await page
-      .getByRole("heading", { name: /invoices/i })
-      .first()
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
     return;
   }
 
   if (name === "org-analytics") {
-    await waitForAnalyticsReady(page, /^analytics$/i);
+    await waitForAnalyticsReady(page);
     return;
   }
 
   if (isClientsUrl(url) || name === "clients") {
     await page
-      .getByRole("heading", { name: /clients/i })
-      .or(page.getByText(/no clients/i))
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForSpinnersHidden(page);
     return;
@@ -2333,7 +2312,7 @@ async function waitForExpectedContent(
 
   if (isMeetingsUrl(url) || name === "meetings") {
     await page
-      .getByRole("heading", { name: /^meetings$/i })
+      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/meeting memory/i)
