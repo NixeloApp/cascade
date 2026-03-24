@@ -5,4 +5,5 @@
 export * from "./capture";
 export * from "./cli";
 export * from "./config";
+export * from "./dialog-helpers";
 export * from "./routing";

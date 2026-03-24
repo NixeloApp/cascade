@@ -55,11 +55,19 @@ import {
   MARKDOWN_RICH_CONTENT,
   SCREENSHOT_STAGING_BASE_DIR,
   SCREENSHOT_USER,
-  SEARCH_SHORTCUT,
   VIEWPORTS,
   type ViewportName,
 } from "./screenshot-lib/config";
-import { getGeneratedSpecFolders } from "./screenshot-lib/routing";
+import {
+  getUploadDialogReadyLocator,
+  openMobileSidebarMenu,
+  openOmnibox,
+  openStableAlertDialog,
+  openStableDialog,
+  waitForCreateIssueModalScreenshotReady,
+  waitForDashboardCustomizeDialogReady,
+} from "./screenshot-lib/dialog-helpers";
+import { getGeneratedSpecFolders, URL_PATTERNS as URL } from "./screenshot-lib/routing";
 import { injectAuthTokens } from "./utils/auth-helpers";
 import {
   getLocatorAttribute,
@@ -67,8 +75,7 @@ import {
   isLocatorVisible,
   waitForLocatorVisible,
 } from "./utils/locator-state";
-import { routePattern } from "./utils/routes";
-// Screenshot hash guards are now used internally by capture.ts
+// routePattern and screenshot hash guards are now used internally by capture.ts/routing.ts
 import {
   type E2EWorkflowState,
   type SeedScreenshotResult,
@@ -136,180 +143,6 @@ async function waitForDuplicateDetectionSearchReady(
     )
     .toBe(true);
 }
-
-async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
-  await dismissAllDialogs(page);
-
-  if (await isLocatorVisible(trigger)) {
-    await trigger.click();
-  } else {
-    await page.keyboard.press(SEARCH_SHORTCUT);
-  }
-
-  await dialog.waitFor({ state: "visible", timeout: 5000 });
-  await page.getByRole("heading", { name: /search and commands/i }).waitFor({
-    state: "visible",
-    timeout: 5000,
-  });
-  await page.getByTestId(TEST_IDS.SEARCH.INPUT).waitFor({ state: "visible", timeout: 5000 });
-  await waitForAnimation(page);
-  await waitForScreenshotReady(page);
-}
-
-async function openStableAlertDialog(
-  page: Page,
-  trigger: Locator,
-  readyLocator: Locator,
-  attempts = 3,
-): Promise<Locator> {
-  let dialog = page.getByRole("alertdialog").first();
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    try {
-      await dismissAllDialogs(page);
-      await trigger.scrollIntoViewIfNeeded();
-      await trigger.click();
-      dialog = await waitForDialogOpen(page);
-      await readyLocator.waitFor({ state: "visible", timeout: 3000 });
-      await waitForAnimation(page);
-      await readyLocator.waitFor({ state: "visible", timeout: 1000 });
-      return dialog;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      await dismissAllDialogs(page);
-    }
-  }
-
-  throw new Error(`Alert dialog did not remain open: ${lastError?.message ?? "unknown error"}`);
-}
-
-async function openStableDialog(
-  page: Page,
-  trigger: Locator,
-  dialog: Locator,
-  readyLocator: Locator,
-  dialogLabel: string,
-  attempts = 2,
-): Promise<Locator> {
-  let lastError: Error | null = null;
-
-  await trigger.waitFor({ state: "visible", timeout: 5000 });
-
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    try {
-      await dismissAllDialogs(page);
-      await trigger.scrollIntoViewIfNeeded();
-      await trigger.click();
-      await waitForDialogOpen(page);
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
-      await readyLocator.waitFor({ state: "visible", timeout: 5000 });
-      await waitForAnimation(page);
-      await waitForScreenshotReady(page);
-      return dialog;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      await dismissAllDialogs(page);
-    }
-  }
-
-  throw new Error(
-    `${dialogLabel} dialog did not become ready: ${lastError?.message ?? "unknown error"}`,
-  );
-}
-
-function getUploadDialogReadyLocator(dialog: Locator): Locator {
-  return dialog.getByRole("button", { name: /^upload$/i });
-}
-
-async function waitForDashboardCustomizeDialogReady(page: Page): Promise<Locator> {
-  const dialog = page.getByRole("dialog", { name: /dashboard customization/i });
-  await dialog.waitFor({ state: "visible", timeout: 5000 });
-  await dialog
-    .getByText("Quick Stats", { exact: true })
-    .waitFor({ state: "visible", timeout: 5000 });
-  await dialog
-    .getByText("Recent Activity", { exact: true })
-    .waitFor({ state: "visible", timeout: 5000 });
-  await dialog
-    .getByText("My Workspaces", { exact: true })
-    .waitFor({ state: "visible", timeout: 5000 });
-  await waitForAnimation(page);
-  await waitForScreenshotReady(page);
-  return dialog;
-}
-
-async function openMobileSidebarMenu(page: Page): Promise<void> {
-  const trigger = page.getByRole("button", { name: /toggle sidebar menu/i });
-  const sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR);
-  const closeButton = sidebar.getByLabel("Close sidebar");
-
-  await trigger.waitFor({ state: "visible", timeout: 5000 });
-  await trigger.click();
-  await closeButton.waitFor({ state: "visible", timeout: 5000 });
-  await expect
-    .poll(async () => (await getLocatorAttribute(sidebar, "class")) ?? "", {
-      timeout: 5000,
-      intervals: [100, 200, 500],
-    })
-    .toContain("translate-x-0");
-  await waitForAnimation(page);
-}
-
-async function waitForCreateIssueModalScreenshotReady(
-  page: Page,
-  projectsPage: ProjectsPage,
-): Promise<void> {
-  await projectsPage.createIssueModal.waitFor({ state: "visible", timeout: 5000 });
-  await projectsPage.issueTitleInput.waitFor({ state: "visible", timeout: 5000 });
-  await page.getByLabel(/create another/i).waitFor({ state: "visible", timeout: 5000 });
-  await waitForAnimation(page);
-  await waitForScreenshotReady(page);
-}
-
-// Pre-compiled URL patterns derived from ROUTES. Each converts the route path
-// (e.g. "/$orgSlug/projects/$key/board") into a regex that matches URLs with
-// concrete segments in place of dynamic params.
-const URL = {
-  projectBoard: routePattern(ROUTES.projects.board.path, "$"),
-  projectBacklog: routePattern(ROUTES.projects.backlog.path, "$"),
-  projectCalendar: routePattern(ROUTES.projects.calendar.path, "$"),
-  projectActivity: routePattern(ROUTES.projects.activity.path, "$"),
-  projectAnalytics: routePattern(ROUTES.projects.analytics.path, "$"),
-  projectTimesheet: routePattern(ROUTES.projects.timesheet.path, "$"),
-  projectSprints: routePattern(ROUTES.projects.sprints.path, "$"),
-  projectRoadmap: routePattern(ROUTES.projects.roadmap.path, "$"),
-  projectBilling: routePattern(ROUTES.projects.billing.path, "$"),
-  projectSettings: routePattern(ROUTES.projects.settings.path, "$"),
-  projectInbox: routePattern(ROUTES.projects.inbox.path, "$"),
-  dashboard: routePattern(ROUTES.dashboard.path, "$"),
-  settings: routePattern(ROUTES.settings.profile.path, "$"),
-  projects: routePattern(ROUTES.projects.list.path, "\\/?$"),
-  issues: routePattern(ROUTES.issues.list.path, "\\/?$"),
-  issueDetail: routePattern(ROUTES.issues.detail.path, "$"),
-  workspaces: routePattern(ROUTES.workspaces.list.path, "\\/?$"),
-  timeTracking: routePattern(ROUTES.timeTracking.path, "$"),
-  notifications: routePattern(ROUTES.notifications.path, "\\/?$"),
-  myIssues: routePattern(ROUTES.myIssues.path, "\\/?$"),
-  orgCalendar: routePattern(ROUTES.calendar.path, "\\/?$"),
-  invoices: routePattern(ROUTES.invoices.list.path, "\\/?$"),
-  clients: routePattern(ROUTES.clients.list.path, "\\/?$"),
-  meetings: routePattern(ROUTES.meetings.path, "\\/?$"),
-  workspaceDetail: routePattern(ROUTES.workspaces.detail.path, "\\/?$"),
-  workspaceSettings: routePattern(ROUTES.workspaces.settings.path, "$"),
-  workspaceBacklog: routePattern(ROUTES.workspaces.backlog.path, "$"),
-  workspaceCalendar: routePattern(ROUTES.workspaces.calendar.path, "$"),
-  workspaceSprints: routePattern(ROUTES.workspaces.sprints.path, "$"),
-  workspaceDependencies: routePattern(ROUTES.workspaces.dependencies.path, "$"),
-  workspaceWiki: routePattern(ROUTES.workspaces.wiki.path, "$"),
-  teamDetail: routePattern(ROUTES.workspaces.teams.detail.path, "\\/?$"),
-  teamBoard: routePattern(ROUTES.workspaces.teams.board.path, "$"),
-  teamCalendar: routePattern(ROUTES.workspaces.teams.calendar.path, "$"),
-  teamSettings: routePattern(ROUTES.workspaces.teams.settings.path, "$"),
-  teamWiki: routePattern(ROUTES.workspaces.teams.wiki.path, "$"),
-  documentEditor: routePattern(ROUTES.documents.detail.path, "$"),
-  documentTemplates: routePattern(ROUTES.documents.templates.path, "$"),
-};
 
 async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "landing") {
