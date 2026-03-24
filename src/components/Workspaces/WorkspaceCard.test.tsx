@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 describe("WorkspaceCard", () => {
-  it("exports all components and types", async () => {
+  it("exports the component", async () => {
     const mod = await import("./WorkspaceCard");
     expect(typeof mod.WorkspaceCard).toBe("function");
   });
 
-  it("WorkspaceCardProps interface includes compact flag", async () => {
-    // Type-level check — if this compiles, the interface is correct
+  it("WorkspaceCardProps accepts required fields", async () => {
     const mod = await import("./WorkspaceCard");
     const props: Parameters<typeof mod.WorkspaceCard>[0] = {
       orgSlug: "acme",
@@ -22,8 +21,7 @@ describe("WorkspaceCard", () => {
         updatedAt: Date.now(),
         createdBy: "user1" as never,
       },
-      compact: true,
     };
-    expect(props.compact).toBe(true);
+    expect(props.orgSlug).toBe("acme");
   });
 });

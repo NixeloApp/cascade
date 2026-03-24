@@ -82,7 +82,7 @@ The workspaces list page is the top-level organizational view for departments an
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | ~~1~~ | ~~`WorkspaceCard` is 146 lines inline in route~~ **Fixed** — extracted to `src/components/Workspaces/WorkspaceCard.tsx` with sub-components and tests | ~~architecture~~ | ~~MEDIUM~~ |
-| 2 | The compact vs standard layout logic produces two different page structures | complexity | MEDIUM |
+| ~~2~~ | ~~Compact vs standard layout complexity~~ **Fixed** — unified to single layout: OverviewBand on top, responsive card grid below. Removed `compact` prop and dual render paths from WorkspaceCard. | ~~complexity~~ | ~~MEDIUM~~ |
 | ~~3~~ | ~~AI coaching copy in OverviewBand aside~~ **Fixed** — removed "Recommended next step" / "Design principle" AI filler text | ~~content~~ | ~~MEDIUM~~ |
 | ~~4~~ | ~~Compact card over-designed with redundant badges~~ **Fixed** — removed "Workspace" badge, kept only slug badge and team count | ~~information density~~ | ~~MEDIUM~~ |
 | 5 | `IconCircle` uses `className="h-12 w-12"` arbitrary sizing alongside `size="md"` prop -- mixed sizing approaches | styling | LOW |
