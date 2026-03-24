@@ -162,12 +162,33 @@ export const initiateGmailAuth = httpAction(async (ctx, request) => {
   });
 });
 
+/** Safely decode a URI component, returning undefined on malformed input. */
+function safeDecode(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Build an OAuth error response that clears the state cookie. */
+function oauthErrorResponse(title: string, message: string, status = 400): Response {
+  return new Response(renderOAuthErrorPageHtml(title, message), {
+    status,
+    headers: {
+      "Content-Type": "text/html",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+    },
+  });
+}
+
 /**
  * Handle Gmail OAuth callback
  * GET /outreach/google/callback?code=xxx&state=xxx
  */
 export const handleGmailCallback = httpAction(async (ctx, request) => {
-  void ctx; // Will be used when callback saves tokens to DB
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
@@ -180,16 +201,7 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
       invalid_scope: "Required Gmail permissions were not granted.",
     };
     const userMessage = messages[error] ?? `Google returned an error: ${error}`;
-    return new Response(
-      renderOAuthErrorPageHtml("Gmail Connection - Error", escapeHtml(userMessage)),
-      {
-        status: 400,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
-        },
-      },
-    );
+    return oauthErrorResponse("Gmail Connection - Error", escapeHtml(userMessage));
   }
 
   // Validate CSRF state
@@ -201,27 +213,12 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
     .slice(1)
     .join("=")
     ?.trim();
-  let storedState: string | undefined;
-  try {
-    storedState = rawCookie ? decodeURIComponent(rawCookie) : undefined;
-  } catch {
-    // Malformed percent-encoding in cookie — treat as missing state
-    storedState = undefined;
-  }
+  const storedState = safeDecode(rawCookie);
 
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
-    return new Response(
-      renderOAuthErrorPageHtml(
-        "Gmail Connection - Error",
-        "Invalid state or missing authorization code. Please try again.",
-      ),
-      {
-        status: 400,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
-        },
-      },
+    return oauthErrorResponse(
+      "Gmail Connection - Error",
+      "Invalid state or missing authorization code. Please try again.",
     );
   }
 
