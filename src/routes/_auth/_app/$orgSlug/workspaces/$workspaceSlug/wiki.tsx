@@ -4,37 +4,27 @@ import { WikiDocumentGrid } from "@/components/Documents/WikiDocumentGrid";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { FileText } from "@/lib/icons";
+import { useWorkspaceLayout } from "./route";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki")({
   component: WorkspaceWikiPage,
 });
 
 function WorkspaceWikiPage() {
-  const { organizationId, orgSlug } = useOrganization();
-  const { workspaceSlug } = Route.useParams();
+  const { orgSlug } = useOrganization();
+  const { workspaceId } = useWorkspaceLayout();
 
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
-    organizationId,
-    slug: workspaceSlug,
+  const documentsResult = useAuthenticatedQuery(api.documents.listByWorkspace, {
+    workspaceId,
+    limit: 50,
   });
 
-  const documentsResult = useAuthenticatedQuery(
-    api.documents.listByWorkspace,
-    workspace ? { workspaceId: workspace._id, limit: 50 } : "skip",
-  );
-
-  const isLoading = workspace === undefined || documentsResult === undefined;
   const documents = documentsResult?.documents ?? [];
 
-  if (workspace === null) {
-    return <Typography variant="h3">Workspace not found</Typography>;
-  }
-
-  if (isLoading) {
+  if (documentsResult === undefined) {
     return (
       <Flex align="center" justify="center" className="py-20">
         <LoadingSpinner size="lg" />

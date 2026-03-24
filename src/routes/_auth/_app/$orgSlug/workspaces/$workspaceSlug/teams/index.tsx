@@ -9,9 +9,9 @@ import { Grid } from "@/components/ui/Grid";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Users } from "@/lib/icons";
+import { useWorkspaceLayout } from "../route";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/")({
   component: TeamsList,
 });
@@ -19,11 +19,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspace
 function TeamsList() {
   const { organizationId, orgSlug } = useOrganization();
   const { workspaceSlug } = Route.useParams();
-
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
-    organizationId,
-    slug: workspaceSlug,
-  });
+  const { workspaceId } = useWorkspaceLayout();
 
   const {
     results: teams,
@@ -31,7 +27,7 @@ function TeamsList() {
     loadMore,
   } = usePaginatedQuery(
     api.teams.getTeams,
-    workspace?._id ? { organizationId, workspaceId: workspace._id } : { organizationId },
+    { organizationId, workspaceId },
     { initialNumItems: 20 },
   );
 
@@ -44,7 +40,7 @@ function TeamsList() {
       />
 
       <PageContent
-        isLoading={!(workspace && teams)}
+        isLoading={teams === undefined}
         isEmpty={teams !== undefined && teams.length === 0}
         emptyState={{
           icon: Users,

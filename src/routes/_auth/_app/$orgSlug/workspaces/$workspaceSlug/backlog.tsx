@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { PageContent, PageError } from "@/components/layout";
+import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -21,6 +21,7 @@ import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { SearchX } from "@/lib/icons";
 import { getPriorityBadgeTone, getStatusBadgeTone, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { useWorkspaceLayout } from "./route";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog")({
   component: WorkspaceBacklogPage,
@@ -79,20 +80,12 @@ function BacklogIssueRow({ issue, orgSlug }: { issue: BacklogIssue; orgSlug: str
 }
 
 function WorkspaceBacklogPage() {
-  const { organizationId, orgSlug } = useOrganization();
-  const { workspaceSlug } = Route.useParams();
+  const { orgSlug } = useOrganization();
+  const { workspaceId } = useWorkspaceLayout();
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
   const [sortBy, setSortBy] = useState<SortField>("priority");
 
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
-    organizationId,
-    slug: workspaceSlug,
-  });
-
-  const backlogIssues = useAuthenticatedQuery(
-    api.workspaces.getBacklogIssues,
-    workspace ? { workspaceId: workspace._id } : "skip",
-  );
+  const backlogIssues = useAuthenticatedQuery(api.workspaces.getBacklogIssues, { workspaceId });
 
   const filteredAndSorted = useMemo(() => {
     if (!backlogIssues) return [];
@@ -102,19 +95,6 @@ function WorkspaceBacklogPage() {
         : backlogIssues.filter((issue) => issue.priority === priorityFilter);
     return sortIssues(filtered, sortBy);
   }, [backlogIssues, priorityFilter, sortBy]);
-
-  if (workspace === undefined) {
-    return <PageContent isLoading>{null}</PageContent>;
-  }
-
-  if (!workspace) {
-    return (
-      <PageError
-        title="Workspace Not Found"
-        message={`The workspace "${workspaceSlug}" doesn't exist or you don't have access to it.`}
-      />
-    );
-  }
 
   if (backlogIssues === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

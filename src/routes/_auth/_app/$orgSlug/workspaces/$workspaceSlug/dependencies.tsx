@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageContent, PageError } from "@/components/layout";
+import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -18,6 +18,7 @@ import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { LinkIcon } from "@/lib/icons";
+import { useWorkspaceLayout } from "./route";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies")(
   {
     component: WorkspaceDependenciesPage,
@@ -26,30 +27,21 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspace
 
 function WorkspaceDependenciesPage() {
   const { organizationId } = useOrganization();
-  const { workspaceSlug } = Route.useParams();
+  const { workspaceId } = useWorkspaceLayout();
   const [teamId, setTeamId] = useState<Id<"teams"> | "all">("all");
   const [status, setStatus] = useState<string>("all");
   const [priority, setPriority] = useState<string>("all");
 
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
+  const workspaceTeams = useAuthenticatedQuery(api.teams.getOrganizationTeams, {
     organizationId,
-    slug: workspaceSlug,
+    workspaceId,
   });
-  const workspaceTeams = useAuthenticatedQuery(
-    api.teams.getOrganizationTeams,
-    workspace ? { organizationId, workspaceId: workspace._id } : "skip",
-  );
-  const dependencies = useAuthenticatedQuery(
-    api.workspaces.getCrossTeamDependencies,
-    workspace
-      ? {
-          workspaceId: workspace._id,
-          teamId: teamId === "all" ? undefined : teamId,
-          status: status === "all" ? undefined : status,
-          priority: priority === "all" ? undefined : priority,
-        }
-      : "skip",
-  );
+  const dependencies = useAuthenticatedQuery(api.workspaces.getCrossTeamDependencies, {
+    workspaceId,
+    teamId: teamId === "all" ? undefined : teamId,
+    status: status === "all" ? undefined : status,
+    priority: priority === "all" ? undefined : priority,
+  });
 
   const statusOptions = dependencies
     ? [...new Set(dependencies.flatMap((dep) => [dep.fromIssue.status, dep.toIssue.status]))].sort()
@@ -60,19 +52,6 @@ function WorkspaceDependenciesPage() {
         ...new Set(dependencies.flatMap((dep) => [dep.fromIssue.priority, dep.toIssue.priority])),
       ].sort()
     : [];
-
-  if (workspace === undefined) {
-    return <PageContent isLoading>{null}</PageContent>;
-  }
-
-  if (!workspace) {
-    return (
-      <PageError
-        title="Workspace Not Found"
-        message={`The workspace "${workspaceSlug}" doesn't exist or you don't have access to it.`}
-      />
-    );
-  }
 
   if (workspaceTeams === undefined || dependencies === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

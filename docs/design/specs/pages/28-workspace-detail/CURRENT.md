@@ -144,7 +144,7 @@ The workspace detail page is the primary operating surface for a single workspac
 | ~~5~~ | ~~Wiki page uses raw div instead of Card~~ **Fixed** — wiki pages now use shared `WikiDocumentGrid` with `Card variant="subtle" hoverable` | ~~consistency~~ | ~~LOW~~ |
 | 6 | Dependencies page has no visual graph or timeline -- only a flat list of blocker relationships | functionality | MEDIUM |
 | 7 | Settings has no "Archive workspace" or "Delete workspace" action | functionality | LOW |
-| 8 | The layout shell re-fetches `workspace` data that each child route also fetches independently (duplicate queries) | performance | LOW |
+| ~~8~~ | ~~Duplicate workspace queries~~ **Fixed** — added `WorkspaceLayoutContext` in parent route. Child routes use `useWorkspaceLayout()` for `workspaceId` instead of re-querying `getBySlug`. Eliminates 7 duplicate queries. | ~~performance~~ | ~~LOW~~ |
 
 ---
 

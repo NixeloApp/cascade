@@ -3,7 +3,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { CalendarView } from "@/components/Calendar/CalendarView";
-import { PageContent, PageError } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import {
   Select,
@@ -15,36 +14,20 @@ import {
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { useWorkspaceLayout } from "./route";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar")({
   component: WorkspaceCalendarPage,
 });
 
 function WorkspaceCalendarPage() {
   const { organizationId } = useOrganization();
-  const { workspaceSlug } = Route.useParams();
+  const { workspaceId } = useWorkspaceLayout();
   const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | "all">("all");
 
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
+  const workspaceTeams = useAuthenticatedQuery(api.teams.getOrganizationTeams, {
     organizationId,
-    slug: workspaceSlug,
+    workspaceId,
   });
-  const workspaceTeams = useAuthenticatedQuery(
-    api.teams.getOrganizationTeams,
-    workspace ? { organizationId, workspaceId: workspace._id } : "skip",
-  );
-
-  if (workspace === undefined) {
-    return <PageContent isLoading>{null}</PageContent>;
-  }
-
-  if (!workspace) {
-    return (
-      <PageError
-        title="Workspace Not Found"
-        message={`The workspace "${workspaceSlug}" doesn't exist or you don't have access to it.`}
-      />
-    );
-  }
 
   return (
     <Flex direction="column" className="h-full">
@@ -74,7 +57,7 @@ function WorkspaceCalendarPage() {
         </Select>
       </Flex>
       <CalendarView
-        workspaceId={workspace._id}
+        workspaceId={workspaceId}
         teamId={selectedTeamId === "all" ? undefined : selectedTeamId}
         colorByScope={selectedTeamId === "all" ? "team" : undefined}
       />

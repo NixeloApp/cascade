@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageContent, PageError } from "@/components/layout";
+import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -16,9 +16,9 @@ import {
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDate } from "@/lib/formatting";
 import { Calendar } from "@/lib/icons";
+import { useWorkspaceLayout } from "./route";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints")({
   component: WorkspaceSprintsPage,
@@ -38,32 +38,10 @@ function getSprintStatusVariant(status: string) {
 }
 
 function WorkspaceSprintsPage() {
-  const { organizationId } = useOrganization();
-  const { workspaceSlug } = Route.useParams();
+  const { workspaceId } = useWorkspaceLayout();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
-    organizationId,
-    slug: workspaceSlug,
-  });
-
-  const activeSprints = useAuthenticatedQuery(
-    api.workspaces.getActiveSprints,
-    workspace ? { workspaceId: workspace._id } : "skip",
-  );
-
-  if (workspace === undefined) {
-    return <PageContent isLoading>{null}</PageContent>;
-  }
-
-  if (!workspace) {
-    return (
-      <PageError
-        title="Workspace Not Found"
-        message={`The workspace "${workspaceSlug}" doesn't exist or you don't have access to it.`}
-      />
-    );
-  }
+  const activeSprints = useAuthenticatedQuery(api.workspaces.getActiveSprints, { workspaceId });
 
   if (activeSprints === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

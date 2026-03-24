@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageContent, PageError } from "@/components/layout";
+import { PageContent } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -20,8 +20,8 @@ import { Switch } from "@/components/ui/Switch";
 import { Textarea } from "@/components/ui/Textarea";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
+import { useWorkspaceLayout } from "./route";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings")({
   component: WorkspaceSettings,
 });
@@ -30,12 +30,8 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspace
 const WORKSPACE_ICONS = ["🏢", "🏗️", "💼", "🎯", "🚀", "💡", "🔧", "📊", "🎨", "📱", "🌐", "⚡"];
 
 function WorkspaceSettings() {
-  const { organizationId } = useOrganization();
-  const { workspaceSlug } = Route.useParams();
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
-    organizationId,
-    slug: workspaceSlug,
-  });
+  const { workspaceId } = useWorkspaceLayout();
+  const workspace = useAuthenticatedQuery(api.workspaces.getWorkspace, { id: workspaceId });
   const { mutate: updateWorkspace } = useAuthenticatedMutation(api.workspaces.updateWorkspace);
 
   const [name, setName] = useState("");
@@ -61,12 +57,7 @@ function WorkspaceSettings() {
   }
 
   if (!workspace) {
-    return (
-      <PageError
-        title="Workspace Not Found"
-        message={`The workspace "${workspaceSlug}" doesn't exist or you don't have access to it.`}
-      />
-    );
+    return <PageContent isLoading>{null}</PageContent>;
   }
 
   const handleSave = async () => {
