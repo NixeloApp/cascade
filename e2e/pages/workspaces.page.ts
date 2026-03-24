@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { isLocatorVisible } from "../utils/locator-state";
+import { TEST_IDS } from "../../src/lib/test-ids";
+import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
@@ -64,6 +65,22 @@ export class WorkspacesPage extends BasePage {
   async goto() {
     await this.navigateToWorkspacesRoute();
     await this.expectWorkspacesView();
+  }
+
+  async waitUntilReady(): Promise<void> {
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
+    await expect
+      .poll(
+        async () => {
+          const cardCount = await getLocatorCount(this.page.getByTestId(TEST_IDS.WORKSPACE.CARD));
+          if (cardCount > 0) return "ready";
+          return (await isLocatorVisible(this.page.getByText(/no workspaces yet/i)))
+            ? "ready"
+            : "pending";
+        },
+        { timeout: 12000 },
+      )
+      .toBe("ready");
   }
 
   async createWorkspace(name: string, description?: string) {

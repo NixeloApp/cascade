@@ -315,6 +315,27 @@ export class ProjectsPage extends BasePage {
     await this.expectProjectsView();
   }
 
+  async waitUntilReady(): Promise<void> {
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
+    await this.page.getByRole("button", { name: /create project/i }).waitFor({
+      state: "visible",
+      timeout: 12000,
+    });
+    await expect
+      .poll(
+        async () => {
+          const cardCount = await this.page.getByTestId(TEST_IDS.PROJECT.CARD).count();
+          if (cardCount > 0) return "ready";
+          const emptyVisible = await this.page
+            .getByTestId(TEST_IDS.PROJECT.EMPTY_STATE)
+            .isVisible();
+          return emptyVisible ? "ready" : "pending";
+        },
+        { timeout: 12000 },
+      )
+      .toBe("ready");
+  }
+
   async gotoProjectBoard(projectKey: string) {
     await this.gotoPath(ROUTES.projects.board.build(this.orgSlug, projectKey));
     await this.waitForLoad();

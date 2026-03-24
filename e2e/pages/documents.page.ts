@@ -93,6 +93,21 @@ export class DocumentsPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async waitUntilReady(): Promise<void> {
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
+    await expect
+      .poll(
+        async () => {
+          const cardCount = await this.page.getByTestId(TEST_IDS.DOCUMENT.CARD).count();
+          if (cardCount > 0) return "ready";
+          const emptyVisible = await this.page.getByText(/no documents/i).isVisible();
+          return emptyVisible ? "ready" : "pending";
+        },
+        { timeout: 12000 },
+      )
+      .not.toBe("pending");
+  }
+
   async gotoDocument(documentId: string) {
     await this.page.goto(ROUTES.documents.detail.build(this.orgSlug, documentId));
     await this.waitForLoad();

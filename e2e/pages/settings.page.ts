@@ -251,6 +251,13 @@ export class SettingsPage extends BasePage {
     }
   }
 
+  async waitUntilReady(): Promise<void> {
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
+    await this.page
+      .getByRole("tab", { name: /^profile$/i })
+      .waitFor({ state: "visible", timeout: 12000 });
+  }
+
   async switchToTab(
     tab: "integrations" | "apiKeys" | "offline" | "preferences" | "admin" | "devTools",
   ) {

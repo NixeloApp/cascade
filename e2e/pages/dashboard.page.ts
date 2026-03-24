@@ -258,6 +258,10 @@ export class DashboardPage extends BasePage {
     await this.expectDashboardReady();
   }
 
+  async waitUntilReady(): Promise<void> {
+    await waitForDashboardReady(this.page);
+  }
+
   private async expectDashboardReady(timeout = 15000) {
     const currentUrl = this.page.url();
     if (this.isOutsideOrgShell(currentUrl)) {
