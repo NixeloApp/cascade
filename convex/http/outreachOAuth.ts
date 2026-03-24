@@ -201,7 +201,13 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
     .slice(1)
     .join("=")
     ?.trim();
-  const storedState = rawCookie ? decodeURIComponent(rawCookie) : undefined;
+  let storedState: string | undefined;
+  try {
+    storedState = rawCookie ? decodeURIComponent(rawCookie) : undefined;
+  } catch {
+    // Malformed percent-encoding in cookie — treat as missing state
+    storedState = undefined;
+  }
 
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
     return new Response(
