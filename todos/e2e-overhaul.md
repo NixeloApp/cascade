@@ -197,19 +197,20 @@ Some pages don't have page objects yet:
 
 1. ~~**Phase 1** (dedup utils)~~ ✅ DONE
 2. ~~**Phase 3.2** (fix empty state race)~~ ✅ DONE
-3. **Phase 2.1** (readiness in page objects) — biggest remaining impact, ~2-3 sessions
+3. ~~**Phase 2.1** (readiness in page objects)~~ ✅ DONE — waitUntilReady() on all 10 page objects
 4. ~~**Phase 4** (TEST_IDs expansion)~~ ✅ DONE (197 IDs, all body text probes eliminated)
 5. ~~**Phase 2.2** (URL patterns)~~ ✅ DONE
-6. **Phase 3.1** (split monolith) — depends on Phase 2.1, ~1-2 sessions
-7. **Phase 5** (screenshot uses page objects) — depends on Phase 2.1+3.1, ~2 sessions
+6. **Phase 3.1** (split monolith) — IN PROGRESS, extracted config/cli/routing modules
+7. ~~**Phase 5** (consolidate readiness)~~ ✅ DONE — default fallback, 10 private functions deleted
 8. **Phase 6** (CI) — polish, ~30 min
 
 ## Current Stats (updated 2026-03-25)
 
 | Metric | Before | After | Change |
 |--------|--------|-------|--------|
-| Private functions | 134 | ~96 | -38 |
-| File lines | 5,292 | 5,146 | -146 |
+| Private functions | 134 | ~76 | -58 |
+| File lines | 5,292 | 4,544 | -748 |
+| Extracted to modules | 0 | 439 | +439 (config/cli/routing) |
 | TEST_ID count | 181 | 197 | +16 |
 | TEST_ID usage in screenshot tool | 64 | 87+ | +23 |
 | body.innerText probes | 15 | 0 | -15 |
@@ -218,6 +219,7 @@ Some pages don't have page objects yet:
 | getByRole("status") spinners | 33 | 0 | -33 |
 | Heading selectors | 53 | 23 | -30 |
 | Duplicate helpers | 6 | 0 | -6 |
+| Private readiness functions | 27 | 17 | -10 |
 
 ---
 
