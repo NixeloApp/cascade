@@ -15,7 +15,6 @@ import {
   waitForLoadingSkeletonsToClear,
   waitForScreenshotReady,
 } from "../utils/wait-helpers";
-import { captureState } from "./capture";
 import { URL_PATTERNS as URL } from "./routing";
 
 export async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> {
@@ -39,8 +38,6 @@ export async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise
     // Spinner may have cleared between polls — non-critical
   }
 }
-
-// State is managed by captureState (from ./screenshot-lib/capture)
 
 export async function waitForDuplicateDetectionSearchReady(
   orgSlug: string,
