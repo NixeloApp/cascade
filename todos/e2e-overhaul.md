@@ -36,18 +36,23 @@ All 3 page objects migrated to TEST_IDs:
 - ~~`invite.page.ts`~~ — now uses INVITE.STATE_SCREEN + INVITE.LOADING
 - ~~`workspaces.page.ts`~~ — now uses WORKSPACE.CARD + LOADING.SPINNER + PAGE.HEADER_TITLE
 
-### Phase 3.1: Split monolith (4,544 lines → target <500)
+### Phase 3.1: Split monolith — ✅ DONE (5,292 → 619 lines)
 
-Extracted so far: config (159) + cli (69) + routing (267) + capture (447) + dialog-helpers (161) + readiness (928) = 2,031 lines.
+Monolith is now a 619-line orchestration shell. All capture logic lives in 11 modules under `e2e/screenshot-lib/` totaling ~4,710 lines.
 
-- [x] Extract `takeScreenshot`, hash guards, staging logic into `capture.ts`
-- [x] Extract dialog/modal helpers into `dialog-helpers.ts`
-- [x] Extract URL pattern map into `routing.ts`
-- [x] Extract manifest diff/approve — already in separate `scripts/screenshot-diff.js`
-- [x] Extract page readiness helpers + `waitForExpectedContent` into `readiness.ts`
-- [ ] Extract `screenshotPublicPages` / `screenshotEmptyStates`
-- [ ] Extract `screenshotFilledStates` (1,350 lines — largest remaining block)
-- [ ] Extract modal/interactive screenshot captures
+| Module | Lines | Contents |
+|--------|-------|----------|
+| filled-states.ts | 1,427 | Main screenshot pass through all authenticated pages |
+| readiness.ts | 928 | 26 page readiness functions + waitForExpectedContent |
+| interactive-captures.ts | 802 | Modal, dialog, and interactive state captures |
+| capture.ts | 447 | Capture state, filtering, staging, takeScreenshot |
+| helpers.ts | 320 | Discovery, document editing, issue drafts, auth |
+| routing.ts | 267 | Spec folder mapping, URL patterns |
+| dialog-helpers.ts | 161 | openOmnibox, openStableDialog, modal helpers |
+| config.ts | 159 | Constants, types, viewport/theme configs |
+| public-pages.ts | 116 | Public pages and empty state captures |
+| cli.ts | 69 | CLI option parsing |
+| index.ts | 14 | Re-exports |
 
 ### Phase 5: Screenshot tool uses page objects
 
@@ -66,8 +71,8 @@ Extracted so far: config (159) + cli (69) + routing (267) + capture (447) + dial
 
 | Metric | Before | After |
 |--------|--------|-------|
-| File lines | 5,292 | 3,203 |
-| Private functions | 134 | ~50 |
+| File lines | 5,292 | 619 |
+| Private functions | 134 | ~10 |
 | TEST_ID usage | 64 | 95 |
 | Fragile selectors | ~150 | 57 (mostly appropriate getByText) |
 | TEST_IDs defined | 181 | 203 |
