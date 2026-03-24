@@ -22,31 +22,31 @@
 > Research completed 2026-03-23. See `docs/ai/voice/ARCHITECTURE.md` for full analysis.
 
 - [x] Document current runtime reality -- custom bot-service, Google Meet-first, richer backend than UI
-- [ ] **Decision needed:** choose capture path (see options below)
+- [x] Research build-vs-buy options (completed 2026-03-23)
+- [ ] **Decision needed:** what's our expected monthly meeting volume? This determines the path:
 
-**Option A — Stay custom + self-host transcription (recommended Phase 1):**
-- [ ] Deploy WhisperX (faster-whisper + pyannote.audio) on a GPU instance
-- [ ] Replace 4 paid provider rotation with WhisperX — eliminates 22hr/month free-tier ceiling
-- [ ] Speaker identification comes free with WhisperX (pyannote.audio bundled)
-- [ ] Keep existing Playwright bot for Google Meet untouched
-- [ ] Estimated cost: ~$50-150/month GPU instance for unlimited transcription
+| Monthly Hours | Best Path | Cost/mo |
+|---------------|-----------|---------|
+| <50 hrs | Stay current (free tiers) | $0 |
+| 50-170 hrs | Skribby API ($0.35/hr) | $18-60 |
+| 170+ hrs | Self-host WhisperX on Hetzner GEX44 | ~$200 flat |
 
-**Option B — Adopt OSS meeting bot for multi-platform (recommended Phase 2):**
-- [ ] Pilot Vexa (Apache-2.0, ~1,800 stars) in parallel with our Playwright bot for 2-4 weeks
-  - All 3 platforms (Meet, Zoom, Teams)
-  - Built-in Whisper transcription + real-time WebSocket streaming
-  - MCP server for AI agents (aligns with agent-layer roadmap)
-  - Self-hosted, no license restrictions
-- [ ] Fallback: Attendee (~522 stars, 3,766 commits, 30 contributors) if Vexa is too rough
-  - Django app, single Docker image, more battle-tested
-  - Per-participant audio streams
-- [ ] If OSS bots work → retire our custom Playwright bot
+> Detailed task breakdown in `human-todos/ai-recording-todos.md`
 
-**Option C — Buy commercial API (only if enterprise demands it):**
-- Skribby: $0.35/hr, cheapest, single REST endpoint, 10+ transcription models
-- MeetingBaaS: $0.066/hr self-hosted (BSL license), source-available
-- Recall.ai: $0.50+$0.15/hr, market leader, 6 platforms, SOC-2/HIPAA
-- [ ] Revisit only if enterprise customers demand compliance certs or niche platforms (Webex/Slack/GoTo)
+**Phase 1A — Skribby (if <170 hrs/month):**
+- [ ] Add Skribby as a transcription provider ($0.35/hr, includes speaker ID, no infra)
+
+**Phase 1B — Self-host WhisperX (if 170+ hrs/month):**
+- [ ] Rent Hetzner GEX44 (RTX 4000 SFF Ada, 20 GB VRAM, ~$200/mo)
+- [ ] Build + deploy WhisperX service (Python/FastAPI, CUDA 12.8)
+- [ ] Add WhisperX as primary transcription provider
+
+**Phase 2 — Multi-platform (after Phase 1):**
+- [ ] Pilot Vexa (Apache-2.0) for Zoom + Teams support
+- [ ] Fallback: Attendee if Vexa is too rough
+
+**Phase 3 — Buy premium (only if enterprise demands it):**
+- [ ] Recall.ai for SOC-2/HIPAA or niche platforms — revisit only when someone asks
 
 ### Platform Breadth
 
@@ -57,14 +57,15 @@
   - Recall.ai offers a Desktop Recording SDK (invisible, no bot joins meeting)
   - No good OSS equivalent for desktop capture yet
 
-### Speaker Identification (currently missing)
+### Speaker Identification (partially addressed)
 
-> Transcripts today are a wall of text with no way to tell who said what. Only Gladia and Google Cloud STT return partial speaker data. This makes summaries and action items less useful.
+> Deepgram and AssemblyAI (tier 2 providers, now integrated) both return speaker labels. Gladia and Google Cloud STT (tier 1) also return partial speaker data. Speechmatics and Azure do not.
 
-- [ ] **Phase 1 fix:** WhisperX self-hosted adds pyannote.audio speaker identification to all transcripts
-- [ ] **Quick fix (if WhisperX is delayed):** Enable Speechmatics speaker identification in our existing code (it supports it, we just didn't turn it on)
+- [x] Add providers with speaker identification (Deepgram, AssemblyAI)
+- [ ] Enable Speechmatics speaker identification in our existing code (it supports it, we just didn't turn it on)
 - [ ] Update transcript UI to show speaker labels
 - [ ] Update summary prompt to use speaker names for action item attribution
+- [ ] **Future:** WhisperX self-hosted adds speaker ID to ALL transcripts regardless of provider
 
 ### Agent Layer
 

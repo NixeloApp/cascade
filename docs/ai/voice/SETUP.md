@@ -61,19 +61,27 @@ railway up
 
 ### Transcription Provider Keys
 
-At least one transcription provider is required. The system rotates between providers based on remaining free-tier usage (~22 hrs/month total across all providers).
+At least one transcription provider is required. The system uses a 3-tier fallback: recurring free tiers first, then one-time credits, then paid.
+
+**Tier 1 — Recurring monthly free tiers (~24 hrs/month):**
 
 | Variable | Provider | Free Tier | Cost After Free |
 |----------|----------|-----------|-----------------|
 | `SPEECHMATICS_API_KEY` | Speechmatics | 8 hrs/month | ~$0.005/min |
-| `GLADIA_API_KEY` | Gladia | 8 hrs/month | ~$0.005/min |
+| `GLADIA_API_KEY` | Gladia | 10 hrs/month | ~$0.01/min |
 | `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION` | Azure Speech | 5 hrs/month | ~$0.017/min |
 | `GOOGLE_CLOUD_API_KEY` or `GOOGLE_CLOUD_PROJECT_ID` | Google Cloud STT | 1 hr/month | $0.024/min |
 
-**Not included (and why):**
-- OpenAI Whisper — no free tier ($0.006/min from dollar one)
-- AssemblyAI — 100 hrs one-time credit only, not renewable monthly
-- Deepgram — $200 one-time credit only, not renewable monthly
+**Tier 2 — One-time credits (~885 hrs, burned after tier 1 exhausted):**
+
+| Variable | Provider | Free Credit | Cost After Credit |
+|----------|----------|-------------|-------------------|
+| `DEEPGRAM_API_KEY` | Deepgram | ~700 hrs ($200 credit) | $0.0077/min |
+| `ASSEMBLYAI_API_KEY` | AssemblyAI | 185 hrs | $0.035/min |
+
+**Tier 3 — Paid fallback:** When all free/credits exhausted, Deepgram continues at $0.0077/min (cheapest option).
+
+**Not included:** OpenAI Whisper — no free tier ($0.006/min from dollar one)
 
 ### Optional Variables
 
@@ -98,7 +106,7 @@ SITE_URL=https://your-app.com
 
 ## Transcription Providers
 
-### Speechmatics (Priority 1 — best free tier)
+### Speechmatics (Tier 1 — Priority 1)
 
 1. Sign up at [Speechmatics](https://www.speechmatics.com/)
 2. Get API key from dashboard
@@ -112,7 +120,7 @@ SPEECHMATICS_API_KEY=xxxxx
 - Uses "enhanced" model for better accuracy
 - Speaker identification supported but not currently enabled in our code
 
-### Gladia (Priority 2)
+### Gladia (Tier 1 — Priority 2)
 
 1. Sign up at [Gladia](https://www.gladia.io/)
 2. Get API key from dashboard
@@ -121,12 +129,12 @@ SPEECHMATICS_API_KEY=xxxxx
 GLADIA_API_KEY=xxxxx
 ```
 
-- 8 hrs/month free, resets monthly
+- 10 hrs/month free, resets monthly (verified 2026-03-23)
 - Two-step process: upload file, then start transcription
 - Speaker identification enabled by default — returns speaker-attributed segments
 - Returns `speakerCount` in results
 
-### Azure Speech Services (Priority 3)
+### Azure Speech Services (Tier 1 — Priority 3)
 
 1. Create Speech resource in [Azure Portal](https://portal.azure.com/)
 2. Get key and region from resource
@@ -140,7 +148,7 @@ AZURE_SPEECH_REGION=eastus  # or your region
 - REST API, sends raw audio buffer
 - No speaker identification in current implementation
 
-### Google Cloud Speech-to-Text (Priority 4 — smallest free tier)
+### Google Cloud Speech-to-Text (Tier 1 — Priority 4)
 
 1. Create project in [Google Cloud Console](https://console.cloud.google.com/)
 2. Enable Speech-to-Text API
@@ -157,29 +165,84 @@ GOOGLE_CLOUD_PROJECT_ID=your-project-id
 - Speaker identification enabled (hardcoded to 2 speakers)
 - Uses `latest_long` model, WEBM_OPUS encoding, 48kHz sample rate
 
-### Provider Rotation
+### Deepgram (Tier 2 — one-time credit + cheapest paid)
 
-The system automatically picks the provider with the most free-tier hours remaining each month. Priority order when free tiers are equal: Speechmatics → Gladia → Azure → Google.
-
-Configure multiple providers for maximum free coverage:
+1. Sign up at [Deepgram](https://deepgram.com/)
+2. Get API key from console — $200 free credit is auto-applied
 
 ```bash
-# All four = ~22 hrs/month free
-SPEECHMATICS_API_KEY=xxxxx        # 8 hrs
-GLADIA_API_KEY=xxxxx              # 8 hrs
-AZURE_SPEECH_KEY=xxxxx            # 5 hrs
-AZURE_SPEECH_REGION=eastus
-GOOGLE_CLOUD_API_KEY=xxxxx        # 1 hr
+DEEPGRAM_API_KEY=xxxxx
 ```
 
-## Self-Hosted Transcription (Future — Not Yet Implemented)
+- $200 one-time credit (~700 hours with Nova-3 model)
+- After credit: $0.0077/min (cheapest paid option across all providers)
+- Speaker identification via `diarize=true`
+- Single API call (no upload step, send audio directly)
+- Max 2 GB file size, 100 concurrent requests
 
-> See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full build-vs-buy analysis.
+### AssemblyAI (Tier 2 — one-time credit)
 
-These are the leading self-hosted options we plan to evaluate. Self-hosting eliminates
-the 22hr/month free-tier ceiling and can add speaker identification to all transcripts.
+1. Sign up at [AssemblyAI](https://www.assemblyai.com/)
+2. Get API key from dashboard — 185 hrs free credit auto-applied
 
-### WhisperX (Recommended — All-in-One)
+```bash
+ASSEMBLYAI_API_KEY=xxxxx
+```
+
+- 185 hrs one-time credit for pre-recorded audio
+- After credit: $0.21/hr ($0.035/min) with Universal-3 Pro
+- Speaker identification via `speaker_labels: true`
+- Two-step process: upload file, then start transcription, then poll
+- Includes automatic language detection
+
+### Provider Rotation
+
+The system uses a 3-tier fallback. Within each tier, it picks the provider with the most free capacity remaining.
+
+**Tier 1 (recurring):** Speechmatics → Gladia → Azure → Google (resets monthly)
+**Tier 2 (one-time):** Deepgram → AssemblyAI (burned only after tier 1 exhausted)
+**Tier 3 (paid):** Deepgram at $0.0077/min (cheapest, used after all credits gone)
+
+Configure all providers for maximum free coverage:
+
+```bash
+# Tier 1: ~24 hrs/month recurring
+SPEECHMATICS_API_KEY=xxxxx        # 8 hrs/month
+GLADIA_API_KEY=xxxxx              # 10 hrs/month
+AZURE_SPEECH_KEY=xxxxx            # 5 hrs/month
+AZURE_SPEECH_REGION=eastus
+GOOGLE_CLOUD_API_KEY=xxxxx        # 1 hr/month
+
+# Tier 2: ~885 hrs one-time
+DEEPGRAM_API_KEY=xxxxx            # ~700 hrs ($200 credit)
+ASSEMBLYAI_API_KEY=xxxxx          # 185 hrs
+```
+
+## Scaling Beyond Free Tiers
+
+> See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full build-vs-buy analysis and cost comparison.
+
+When free-tier hours aren't enough, there are two paths depending on volume:
+
+### Path A: Skribby (low volume, <170 hrs/month)
+
+Commercial transcription API at $0.35/hr. No infrastructure to manage.
+
+- Single REST endpoint, 10+ transcription models (bring your own key)
+- Includes speaker identification
+- Meet, Zoom, Teams support
+- Best for: getting started, proving demand before investing in infra
+
+```bash
+# Would be added as a new provider in bot-service
+SKRIBBY_API_KEY=xxxxx
+```
+
+### Path B: Self-Hosted WhisperX (high volume, 170+ hrs/month)
+
+At 170+ hrs/month, a dedicated GPU server is cheaper than any per-hour API. Flat ~$200/mo for unlimited hours.
+
+#### What WhisperX Is
 
 Bundles three things in one package:
 1. **faster-whisper** — transcription (same accuracy as OpenAI Whisper, 4x faster)
@@ -188,44 +251,78 @@ Bundles three things in one package:
 
 - GitHub: https://github.com/m-bain/whisperX (~20,900 stars)
 - License: BSD-2-Clause
-- Requires: GPU for practical speed (CPU works but slow)
 - Languages: 5+ with alignment models, 99+ for base transcription
-- Estimated cost: ~$50-150/month for a GPU instance (unlimited hours)
+
+#### Hardware: Hetzner GEX44
+
+| Spec | Value |
+|------|-------|
+| GPU | NVIDIA RTX 4000 SFF Ada, **20 GB VRAM** |
+| CPU | Intel i5-13500 (14 cores) |
+| RAM | 64 GB DDR4 |
+| Storage | 2x 1.92 TB NVMe (RAID 1) |
+| Price | EUR 184/mo (~$200 USD), EUR 212.30/mo from April 2026 |
+| Setup fee | EUR 79 one-time |
+
+#### VRAM Budget
+
+WhisperX runs stages sequentially (models unloaded between stages):
+
+| Stage | Peak VRAM |
+|-------|-----------|
+| Transcription (faster-whisper large-v3, int8) | ~3-5 GB |
+| Alignment (wav2vec2) | ~0.5-1 GB |
+| Speaker ID (pyannote.audio 4.0) | ~9.5 GB (known v4.0 regression, was 1.6 GB in v3.3) |
+| **Peak at any one time** | **~9.5 GB** |
+
+20 GB VRAM = comfortable headroom. Monitor pyannote upstream for VRAM fix.
+
+#### Processing Speed
+
+- **~3-6 minutes per hour of audio** (transcription + alignment + speaker ID)
+- Can handle ~12 meetings/hour back-to-back
+- Queuing only needed if 10+ meetings end at the exact same time
+
+#### Audio Format Compatibility
+
+Our Playwright bot outputs **WebM/Opus at 48kHz**. WhisperX uses ffmpeg internally to decode any format — WebM/Opus works directly, no conversion step needed.
+
+#### Licensing (all commercial-friendly)
+
+| Component | License | Notes |
+|-----------|---------|-------|
+| WhisperX | BSD-2-Clause | Commercial OK |
+| faster-whisper | MIT | Commercial OK |
+| pyannote.audio library | MIT | Commercial OK |
+| pyannote speaker model | CC-BY-4.0 | Commercial OK, requires attribution |
+
+pyannote requires a free HuggingFace account and accepting model terms (just clicks a button, shares your email). No paid license needed.
+
+#### Python/CUDA Requirements
+
+| Requirement | Version |
+|-------------|---------|
+| Python | >=3.10, <3.14 |
+| CUDA Toolkit | 12.8 |
+| PyTorch | ~=2.8.0 (with cu128) |
+| ffmpeg | System dependency (must be installed separately) |
+
+Use a Docker container with CUDA 12.8 base image to avoid dependency conflicts.
 
 ```bash
-# Example setup (not yet integrated)
+# Example usage (not yet integrated into our pipeline)
 pip install whisperx
-whisperx audio.wav --model large-v3 --diarize --language en
+whisperx audio.webm --model large-v3 --diarize --language en
 ```
 
-### faster-whisper (Transcription Only)
+### Other Self-Hosted Engines (reference)
 
-If you don't need speaker identification or want to add it separately.
-
-- GitHub: https://github.com/SYSTRAN/faster-whisper (~21,500 stars)
-- License: MIT
-- 4x faster than OpenAI Whisper with identical accuracy
-- Runs on CPU (quantized int8) or GPU
-- Large-v3 model needs ~4-6GB VRAM on GPU
-
-### whisper.cpp (Lightweight / Edge)
-
-Pure C/C++ port. Runs on anything — Raspberry Pi, mobile, browsers (WASM).
-
-- GitHub: https://github.com/ggml-org/whisper.cpp (~47,500 stars)
-- License: MIT
-- Most resource-efficient option
-- No speaker identification
-- Best for: edge deployment, mobile apps, offline scenarios
-
-### NVIDIA Parakeet / Canary (Best Accuracy)
-
-Bleeding-edge accuracy if you have NVIDIA GPUs.
-
-- Parakeet TDT 1.1B: **1.8% WER** (best in class), 2000x+ realtime speed
-- Canary Qwen 2.5B: 5.6% WER, 418x realtime, multi-language
-- Available via NVIDIA NeMo toolkit (Apache-2.0)
-- Less community tooling than Whisper ecosystem
+| Engine | Stars | Accuracy | Speaker ID | Best For |
+|--------|-------|----------|------------|---------|
+| **faster-whisper** | ~21,500 | ~7-8% WER | No | Transcription-only, lighter than WhisperX |
+| **whisper.cpp** | ~47,500 | ~7-8% WER | No | Edge/mobile, runs on Raspberry Pi |
+| **NVIDIA Parakeet** | N/A | **1.8% WER** | No | Best accuracy, NVIDIA GPUs only, early ecosystem |
+| **Vosk** | ~14,400 | 10-15% WER | Basic | Real-time streaming, too inaccurate for us |
 
 ### Speaker Identification: pyannote.audio
 

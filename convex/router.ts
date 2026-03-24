@@ -49,6 +49,12 @@ import {
   initiateAuth as initiateSlackAuth,
 } from "./http/slackOAuth";
 import { handleUnfurl } from "./http/slackUnfurl";
+import {
+  handleClickRedirect,
+  handleOpenPixel,
+  handleUnsubscribeGet,
+  handleUnsubscribePost,
+} from "./outreach/tracking";
 
 const http = httpRouter();
 
@@ -145,6 +151,31 @@ http.route({
   path: "/auth/request-reset",
   method: "OPTIONS",
   handler: securePasswordResetPreflight,
+});
+
+// Outreach tracking routes (open pixel, click redirect, unsubscribe)
+http.route({
+  path: "/t/o",
+  method: "GET",
+  handler: handleOpenPixel,
+});
+
+http.route({
+  path: "/t/c",
+  method: "GET",
+  handler: handleClickRedirect,
+});
+
+http.route({
+  path: "/t/u",
+  method: "GET",
+  handler: handleUnsubscribeGet,
+});
+
+http.route({
+  path: "/t/u",
+  method: "POST",
+  handler: handleUnsubscribePost,
 });
 
 // E2E testing routes

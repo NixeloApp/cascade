@@ -135,7 +135,7 @@ the filtered, success, and failure behaviors directly.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | The route still only has canonical route screenshots; there is no reviewed capture for filtered search, blank library, or template-heavy states | screenshot coverage | MEDIUM |
+| 1 | Empty state now captured. Filtered search and template-heavy states still missing (need new E2E screenshot specs). | screenshot coverage | LOW |
 | 2 | The summary band is useful, but in light mode the top workspace card can still feel a touch broader and flatter than the denser recent-doc list beneath it | route composition | LOW |
 | 3 | The library side rail is operationally correct, but the visual difference between "recent docs" and "library" could be stronger in first-glance screenshots | hierarchy | LOW |
 

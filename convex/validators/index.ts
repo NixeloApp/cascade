@@ -175,6 +175,62 @@ export const customFieldTypes = literals(
   "user",
 );
 
+// Email Outreach
+export const outreachMailboxProviders = literals("google", "microsoft");
+export const outreachContactSources = literals("csv_import", "manual", "api");
+export const outreachSuppressionReasons = literals(
+  "hard_bounce",
+  "unsubscribe",
+  "complaint",
+  "manual",
+);
+export const outreachSequenceStatuses = literals("draft", "active", "paused", "completed");
+export const outreachEnrollmentStatuses = literals(
+  "active",
+  "paused",
+  "replied",
+  "bounced",
+  "unsubscribed",
+  "completed",
+);
+export const outreachEventTypes = literals(
+  "sent",
+  "opened",
+  "clicked",
+  "replied",
+  "bounced",
+  "unsubscribed",
+);
+
+/** Sequence step definition (stored as array inside outreachSequences) */
+export const outreachSequenceStep = v.object({
+  order: v.number(),
+  subject: v.string(),
+  body: v.string(), // HTML with {{variable}} placeholders
+  delayDays: v.number(), // Business days before this step fires (0 for first step)
+});
+
+/** Cached stats for sequence dashboard (denormalized for fast reads) */
+export const outreachSequenceStats = v.object({
+  enrolled: v.number(),
+  sent: v.number(),
+  opened: v.number(),
+  replied: v.number(),
+  bounced: v.number(),
+  unsubscribed: v.number(),
+});
+
+/** Optional metadata on outreach events (varies by event type) */
+export const outreachEventMetadata = v.optional(
+  v.object({
+    bounceType: v.optional(v.string()), // "hard" | "soft"
+    replyContent: v.optional(v.string()), // Extracted reply text
+    linkUrl: v.optional(v.string()), // Clicked URL
+    userAgent: v.optional(v.string()),
+    ip: v.optional(v.string()),
+  }),
+);
+
 // Meeting Bot
 export const meetingPlatforms = literals("google_meet", "zoom", "teams", "other");
 export const meetingStatuses = literals(
@@ -480,3 +536,14 @@ export type BookerAnswers = Infer<typeof bookerAnswers>;
 export type MeetingPlatform = Infer<typeof meetingPlatforms>;
 export type MeetingStatus = Infer<typeof meetingStatuses>;
 export type BotJobStatus = Infer<typeof botJobStatuses>;
+
+// Email Outreach types
+export type OutreachMailboxProvider = Infer<typeof outreachMailboxProviders>;
+export type OutreachContactSource = Infer<typeof outreachContactSources>;
+export type OutreachSuppressionReason = Infer<typeof outreachSuppressionReasons>;
+export type OutreachSequenceStatus = Infer<typeof outreachSequenceStatuses>;
+export type OutreachEnrollmentStatus = Infer<typeof outreachEnrollmentStatuses>;
+export type OutreachEventType = Infer<typeof outreachEventTypes>;
+export type OutreachSequenceStep = Infer<typeof outreachSequenceStep>;
+export type OutreachSequenceStats = Infer<typeof outreachSequenceStats>;
+export type OutreachEventMetadata = Infer<typeof outreachEventMetadata>;

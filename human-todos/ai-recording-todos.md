@@ -1,67 +1,65 @@
-# AI Recording: Self-Hosted Transcription (WhisperX on Hetzner)
+# AI Recording: Transcription Upgrade Plan
 
 > **Priority:** P1
-> **Status:** Planning
+> **Status:** In Progress
 > **Last Updated:** 2026-03-23
 > **Context:** See `docs/ai/voice/ARCHITECTURE.md` for full build-vs-buy research
 
-## Goal
+## What's Done
 
-Replace the 4 paid transcription providers (Speechmatics, Gladia, Azure, Google Cloud STT) with a self-hosted WhisperX instance on Hetzner (~$40-60/mo). Gets us unlimited transcription hours + speaker identification (who said what) on every transcript.
+- [x] 3-tier provider system built and integrated
+- [x] Deepgram provider (`deepgram.ts`) — $200 one-time credit (~700 hrs), speaker ID, Nova-3 model
+- [x] AssemblyAI provider (`assemblyai.ts`) — 185 hrs one-time credit, speaker ID, language detection
+- [x] Provider registry updated with 6 providers in 3 tiers
+- [x] Convex seed data updated (Gladia corrected to 10hrs/month, Deepgram + AssemblyAI added)
+- [x] Docs updated (ARCHITECTURE.md, SETUP.md, meeting-intelligence.md)
 
-## Open Questions
+## Current Capacity
 
-- [ ] WhisperX service: own top-level directory (`transcription-service/`) or inside `bot-service/`?
-- [ ] Keep paid providers as fallback if GPU box goes down, or rip them out?
-- [ ] Hetzner GPU tier — A10G vs something smaller? Need to benchmark VRAM requirements for WhisperX large-v3
+**Tier 1 — Recurring monthly:** ~24 hrs/month
+| Provider | Free | Speaker ID |
+|----------|------|------------|
+| Speechmatics | 8 hrs/month | No (not enabled) |
+| Gladia | 10 hrs/month | Yes |
+| Azure | 5 hrs/month | No |
+| Google Cloud STT | 1 hr/month | Yes (2 speakers) |
 
-## Tasks
+**Tier 2 — One-time credits:** ~885 hrs total
+| Provider | Credit | Speaker ID |
+|----------|--------|------------|
+| Deepgram | ~700 hrs ($200) | Yes |
+| AssemblyAI | 185 hrs | Yes |
 
-### 1. Design WhisperX service API
-- Define endpoints (POST audio file → get transcript back)
-- Request/response format (match existing `TranscriptionResult` interface)
-- How it connects to bot-service (HTTP? same box? separate?)
-- Health check endpoint
+**Tier 3 — Paid fallback:** Deepgram at $0.0077/min after credits run out
 
-### 2. Write the WhisperX service
-- Dockerfile (Python, CUDA, WhisperX + pyannote.audio dependencies)
-- API server (FastAPI or Flask)
-- WhisperX transcription pipeline: audio in → transcript + speaker labels + timestamps out
-- Model preloading (large-v3 model loaded at startup, not per-request)
-- HuggingFace token for pyannote model access
+**At 50 hrs/month, the one-time credits alone last ~17 months before touching paid tier.**
 
-### 3. New transcription provider in bot-service
-- `whisperx.ts` in `bot-service/src/services/transcription-providers/`
-- Calls self-hosted WhisperX API
-- Maps response to existing `TranscriptionResult` / `TranscriptSegment` interface
-- Include speaker labels in `TranscriptSegment.speaker` field
+## What's Left
 
-### 4. Update provider priority
-- WhisperX becomes primary (Priority 0)
-- Paid providers become fallback (or get removed — decision pending)
-- Update `index.ts` provider registry
+### Human tasks (you)
+- [ ] Sign up for Deepgram, get API key, add `DEEPGRAM_API_KEY` to bot-service `.env`
+- [ ] Sign up for AssemblyAI, get API key, add `ASSEMBLYAI_API_KEY` to bot-service `.env`
+- [ ] Run Convex seed to register new providers: `npx convex run serviceRotation:seedProviders`
+- [ ] Test: record a short meeting, verify Deepgram/AssemblyAI transcription works
 
-### 5. Speaker labels through the stack
-- Verify `TranscriptSegment.speaker` field flows to Convex `meetingTranscripts` table
-- Update transcript UI to display speaker labels
-- Update Claude summary prompt to leverage speaker names for better action item attribution ("Sarah volunteered to..." instead of "someone said...")
+### Code tasks (remaining)
+- [ ] Enable Speechmatics speaker ID in existing code (it supports it, not turned on)
+- [ ] Update transcript UI to show speaker labels
+- [ ] Update Claude summary prompt to use speaker names for action item attribution
 
-### 6. Hetzner deployment
-- Rent GPU server (A10G or equivalent)
-- Docker compose setup (WhisperX service + any dependencies)
-- Systemd service or similar for auto-restart
-- Firewall: only allow traffic from bot-service IP
-- SSL/TLS for API endpoint
-- Basic monitoring (health check, disk space for temp audio files)
+## Future: Self-Host WhisperX (when volume justifies ~$200/mo)
 
-### 7. Update docs
-- `docs/ai/voice/SETUP.md` — add WhisperX setup section, Hetzner config
-- `docs/ai/voice/ARCHITECTURE.md` — update diagram to show WhisperX as primary provider
-- `todos/meeting-intelligence.md` — mark relevant items as done
+Only relevant at 170+ hrs/month. See `docs/ai/voice/ARCHITECTURE.md` for full specs.
 
-## Not In Scope (for now)
+- Hetzner GEX44: RTX 4000 SFF Ada (20 GB VRAM), EUR 184/mo
+- WhisperX: transcription + speaker ID + word timestamps, all in one
+- ~3-6 min processing per hour of audio
+- WebM/Opus from our bot works directly (no conversion)
 
-- Replacing the Playwright bot with Vexa/Attendee (Phase 2, separate effort)
-- Zoom/Teams support (depends on Phase 2)
-- Desktop capture
-- NVIDIA Parakeet/Canary (wait for ecosystem to mature)
+## Future: Multi-Platform (Vexa/Attendee)
+
+Swap our Playwright bot for Vexa (Apache-2.0) to get Zoom + Teams. Separate effort.
+
+## Future: Buy Premium (Recall.ai)
+
+Only if enterprise customers demand SOC-2/HIPAA or niche platforms.

@@ -29,14 +29,21 @@
 │                                                            │ Audio file     │
 │                                                            ▼                │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                    Transcription Service                             │   │
+│  │                    Transcription Service (3-tier fallback)           │   │
+│  │                                                                      │   │
+│  │  Tier 1 — Recurring monthly:                                        │   │
 │  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐               │   │
-│  │  │Speechm- │  │ Gladia  │  │  Azure  │  │ Google  │               │   │
-│  │  │atics    │  │         │  │ Speech  │  │ Speech  │               │   │
-│  │  │ 8hr/mo  │  │ 8hr/mo  │  │ 5hr/mo  │  │ 1hr/mo  │               │   │
+│  │  │Speechm. │  │ Gladia  │  │  Azure  │  │ Google  │               │   │
+│  │  │ 8hr/mo  │  │ 10hr/mo │  │ 5hr/mo  │  │ 1hr/mo  │               │   │
 │  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘               │   │
 │  │                                                                      │   │
-│  │  Provider rotation based on free tier usage (~22 hrs/month total)   │   │
+│  │  Tier 2 — One-time credits:                                         │   │
+│  │  ┌──────────────┐  ┌──────────────┐                                 │   │
+│  │  │ Deepgram     │  │ AssemblyAI   │                                 │   │
+│  │  │ ~700hrs 1x   │  │ 185hrs 1x    │                                 │   │
+│  │  └──────────────┘  └──────────────┘                                 │   │
+│  │                                                                      │   │
+│  │  Tier 3 — Paid: Deepgram Nova-3 @ $0.0077/min                      │   │
 │  └──────────────────────────────────┬──────────────────────────────────┘   │
 │                                     │                                       │
 │                                     │ Transcript                            │
@@ -172,19 +179,25 @@ interface TranscriptionResult {
 }
 ```
 
-**Current Providers (free-tier rotation)**
+**3-Tier Provider System**
 
-| Provider | Free Tier | Cost After | Speaker ID | Notes |
-|----------|-----------|------------|------------|-------|
-| Speechmatics | 8 hrs/month | ~$0.005/min | No (supports it, not enabled) | Async job API, "enhanced" model |
-| Gladia | 8 hrs/month | ~$0.005/min | Yes | Upload-then-transcribe flow, utterance-level segments |
-| Azure Speech | 5 hrs/month | ~$0.017/min | No | REST API, raw audio buffer |
-| Google Cloud STT | 1 hr/month | $0.024/min | Yes (hardcoded 2 speakers) | Smart routing: sync for <1min, async for longer |
+Providers are tried in order: recurring free tiers first, then one-time credits, then paid.
 
-**Excluded providers (documented in code):**
-- OpenAI Whisper — no free tier ($0.006/min)
-- AssemblyAI — 100 hrs one-time only (not renewable)
-- Deepgram — $200 one-time credit only
+| Tier | Provider | Free Tier | Cost After | Speaker ID | Notes |
+|------|----------|-----------|------------|------------|-------|
+| 1 | Speechmatics | 8 hrs/month | ~$0.005/min | No (supports it, not enabled) | Async job API, "enhanced" model |
+| 1 | Gladia | 10 hrs/month | ~$0.01/min | Yes | Upload-then-transcribe, utterance-level segments |
+| 1 | Azure Speech | 5 hrs/month | ~$0.017/min | No | REST API, raw audio buffer |
+| 1 | Google Cloud STT | 1 hr/month | $0.024/min | Yes (hardcoded 2 speakers) | Smart routing: sync for <1min, async for longer |
+| 2 | Deepgram | ~700 hrs one-time ($200 credit) | $0.0077/min | Yes | Nova-3 model, cheapest paid rate |
+| 2 | AssemblyAI | 185 hrs one-time | $0.035/min | Yes | Universal-3 Pro, language detection |
+
+**Totals:**
+- Tier 1 (recurring): ~24 hrs/month
+- Tier 2 (one-time): ~885 hrs (lasts months at normal usage)
+- Tier 3 (paid): Deepgram at $0.0077/min after one-time credits run out
+
+**Not included:** OpenAI Whisper (no free tier, $0.006/min)
 
 **Provider Selection**
 1. Query Convex for provider with most free tier remaining
@@ -357,34 +370,57 @@ Speaker identification = figuring out "who said what" in a recording. Without it
 
 ### Recommended Strategy
 
-**Don't rip-and-replace. Layer improvements incrementally:**
+**The right approach depends on volume. Don't overspend on infra before you have the meetings to justify it.**
 
-#### Phase 1 — Self-host transcription (immediate win, low risk)
-Deploy **WhisperX** → eliminates all 4 paid providers, adds speaker identification, removes the 22hr/month free-tier ceiling.
-- Cost: one GPU instance (~$50-150/month) for unlimited transcription
-- Keeps our existing Playwright bot untouched
-- Adds speaker identification to transcripts immediately
+#### Volume-Based Decision Guide
 
-#### Phase 2 — Evaluate OSS meeting bots (2-4 week pilot)
+| Monthly Meeting Hours | Best Path | Monthly Cost | Why |
+|-----------------------|-----------|-------------|-----|
+| **<50 hrs** | Stay current (free tiers) | $0 | 22 free hrs covers most of it, not worth paying yet |
+| **50-170 hrs** | **Skribby** (commercial API) | $18-60 | Cheapest per-hour option, no infra, includes speaker ID |
+| **170+ hrs** | **Self-host WhisperX** on Hetzner | ~$200 flat | Breakeven vs paid APIs; unlimited hours from here |
+| **500+ hrs** | Self-host WhisperX | ~$200 flat | $0.40/hr effective cost and dropping. Clear winner |
+
+#### Phase 1 — Start with Skribby (low volume, no infra)
+Use **Skribby** ($0.35/hr) as the transcription provider. Single REST endpoint, 10+ transcription models (bring your own key), includes speaker identification. No servers to manage.
+- Swap in as a new provider in `bot-service/src/services/transcription-providers/`
+- Keep existing free-tier providers as fallback
+- Get speaker identification immediately
+- Evaluate real meeting volume over 1-2 months
+
+#### Phase 2 — Self-host when volume justifies it (170+ hrs/month)
+Deploy **WhisperX** on **Hetzner GEX44** → flat $200/mo for unlimited hours.
+- **Server:** Hetzner GEX44 — RTX 4000 SFF Ada (20 GB VRAM), i5-13500, 64 GB RAM, 2x 1.92 TB NVMe
+- **Price:** EUR 184/mo (~$200 USD), EUR 79 one-time setup fee (goes to EUR 212.30/mo from April 2026)
+- **Processing speed:** ~3-6 minutes per hour of audio (transcription + alignment + speaker ID)
+- **Capacity:** ~12 meetings/hour back-to-back. Queuing only needed if 10+ meetings end simultaneously
+- **Audio format:** Our WebM/Opus at 48kHz works directly — WhisperX uses ffmpeg internally, no conversion needed
+- **VRAM budget:** Peak ~9.5 GB (pyannote 4.0 speaker ID is the bottleneck). 20 GB gives comfortable headroom
+- **Licensing:** All MIT/CC-BY-4.0, commercial use OK. pyannote needs free HuggingFace account + model terms acceptance (just clicks a button)
+
+#### Phase 3 — Evaluate OSS meeting bots for multi-platform
 Run **Vexa** in parallel with our Playwright bot.
 - If Vexa handles Meet reliably → adopt it, get Zoom + Teams for free
 - If too rough → fall back to **Attendee** (more mature) or keep custom bot for Meet
 
-#### Phase 3 — Buy only if needed (enterprise demand)
-Commercial APIs (Recall/Skribby) make sense only if:
+#### Phase 4 — Buy premium only if needed (enterprise demand)
+Commercial bot APIs (Recall.ai) make sense only if:
 - Enterprise customers demand SOC-2/HIPAA compliance
 - We need Webex/Slack/GoTo platform coverage
 - Self-hosted infra becomes a burden at scale
 
-#### Cost Comparison (estimated 200 hrs meetings/month)
+#### Cost at Scale
 
-| Approach | Monthly Cost | Platforms | Speaker ID |
-|----------|-------------|-----------|------------|
-| **Current** (paid providers, 22hr free) | $0 for 22hrs, then ~$1-3/hr | Meet only | Partial (Gladia/Google only) |
-| **Phase 1** (WhisperX self-hosted) | ~$100-150 (GPU instance) | Meet only | Yes |
-| **Phase 1+2** (WhisperX + Vexa) | ~$150-200 (GPU + hosting) | Meet, Zoom, Teams | Yes |
-| **Buy: Skribby** | ~$70 | Meet, Zoom, Teams | Depends on model |
-| **Buy: Recall.ai** | ~$130 | 6 platforms | Yes |
+| Monthly Hours | Current (paid APIs) | Skribby ($0.35/hr) | Self-host ($200 flat) |
+|---------------|---------------------|---------------------|----------------------|
+| 22 hrs | $0 (free tier) | $8 | $200 |
+| 50 hrs | ~$42 | $18 | $200 |
+| 100 hrs | ~$120 | $35 | $200 |
+| 200 hrs | ~$270 | $70 | **$200** |
+| 500 hrs | ~$720 | $175 | **$200** |
+| 1,000 hrs | ~$1,500 | $350 | **$200** |
+
+**Breakeven: self-hosting beats paid APIs at ~170 hrs/month. Below that, Skribby wins.**
 
 ### Why Not LiveKit?
 
