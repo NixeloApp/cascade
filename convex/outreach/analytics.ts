@@ -49,11 +49,14 @@ export const getSequenceFunnel = authenticatedQuery({
     if (sequence.organizationId !== user?.defaultOrganizationId)
       throw notFound("sequence", args.sequenceId);
 
-    // Get all events for this sequence grouped by step
+    // Load events for funnel computation. Uses a higher limit than
+    // BOUNDED_LIST_LIMIT since sequences can accumulate many events
+    // across all steps and enrolled contacts.
+    const MAX_FUNNEL_EVENTS = 2000;
     const events = await ctx.db
       .query("outreachEvents")
       .withIndex("by_sequence", (q) => q.eq("sequenceId", args.sequenceId))
-      .take(BOUNDED_LIST_LIMIT);
+      .take(MAX_FUNNEL_EVENTS);
 
     const funnel = sequence.steps.map((step, index) => {
       const stepEvents = events.filter((e) => e.step === index);

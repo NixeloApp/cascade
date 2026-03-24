@@ -176,12 +176,14 @@ export const recordOpen = internalMutation({
       await ctx.db.patch(args.enrollmentId, { lastOpenedAt: Date.now() });
     }
 
-    // Update sequence stats
-    const sequence = await ctx.db.get(enrollment.sequenceId);
-    if (sequence?.stats) {
-      await ctx.db.patch(enrollment.sequenceId, {
-        stats: { ...sequence.stats, opened: sequence.stats.opened + 1 },
-      });
+    // Increment sequence opened stats only on first open per enrollment
+    if (!enrollment.lastOpenedAt) {
+      const sequence = await ctx.db.get(enrollment.sequenceId);
+      if (sequence?.stats) {
+        await ctx.db.patch(enrollment.sequenceId, {
+          stats: { ...sequence.stats, opened: sequence.stats.opened + 1 },
+        });
+      }
     }
   },
 });
@@ -212,7 +214,7 @@ export const recordClick = internalMutation({
       contactId: enrollment.contactId,
       organizationId: enrollment.organizationId,
       type: "clicked",
-      step: enrollment.currentStep,
+      step: link?.step ?? enrollment.currentStep,
       trackingLinkId: args.trackingLinkId,
       metadata: link ? { linkUrl: link.originalUrl } : undefined,
       createdAt: Date.now(),

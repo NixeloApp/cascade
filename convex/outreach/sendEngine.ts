@@ -259,9 +259,12 @@ export const recordSendResult = internalMutation({
     error: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Skip recording entirely when sender is not implemented —
-    // enrollment stays in its current state, no events logged.
-    if (args.error === "EMAIL_NOT_IMPLEMENTED") return;
+    // When sender is not implemented, defer the enrollment so it doesn't
+    // monopolize the batch on every cron cycle. No event is recorded.
+    if (args.error === "EMAIL_NOT_IMPLEMENTED") {
+      await ctx.db.patch(args.enrollmentId, { nextSendAt: Date.now() + 60 * MINUTE });
+      return;
+    }
 
     if (args.success) {
       // Log sent event
