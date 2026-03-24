@@ -10,9 +10,10 @@ import { Component, type ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
-import { AlertTriangle } from "@/lib/icons";
+import { AlertTriangle, Home, RotateCcw } from "@/lib/icons";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
+import { Icon } from "./ui/Icon";
 import { Typography } from "./ui/Typography";
 
 interface Props {
@@ -24,23 +25,28 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: React.ErrorInfo | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Keep uncaught render failures at error severity for observability.
     console.error("[ErrorBoundary] Uncaught error:", error, errorInfo);
+    this.setState({ errorInfo });
     this.props.onError?.(error, errorInfo);
   }
+
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null });
+  };
 
   render() {
     if (this.state.hasError) {
@@ -89,15 +95,35 @@ export class ErrorBoundary extends Component<Props, State> {
                   <div className="mt-2 overflow-auto max-h-40 rounded bg-ui-bg-soft p-4">
                     <Typography as="pre" variant="mono" color="secondary">
                       {this.state.error.message}
+                      {this.state.errorInfo?.componentStack
+                        ? `\n\nComponent stack:${this.state.errorInfo.componentStack}`
+                        : ""}
                     </Typography>
                   </div>
                 </details>
               )}
 
-              {/* Reload button */}
-              <Button onClick={() => window.location.reload()} size="lg">
-                Reload page
-              </Button>
+              {/* Recovery actions */}
+              <Flex gap="sm" wrap justify="center">
+                <Button
+                  onClick={this.handleRetry}
+                  size="lg"
+                  variant="primary"
+                  leftIcon={<Icon icon={RotateCcw} size="sm" />}
+                >
+                  Try again
+                </Button>
+                <Button
+                  onClick={() => {
+                    window.location.href = "/";
+                  }}
+                  size="lg"
+                  variant="secondary"
+                  leftIcon={<Icon icon={Home} size="sm" />}
+                >
+                  Go to dashboard
+                </Button>
+              </Flex>
             </Stack>
           </Card>
         </Flex>
