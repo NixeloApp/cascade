@@ -6,45 +6,41 @@
 
 ## Remaining Work
 
-### Phase 0: Validator Exceptions — Status
+### Phase 0: Validator Exceptions — Complete
 
-All actionable baselines have been reduced. Remaining are at their architectural floor.
+All actionable baselines reduced. Remaining at architectural floor.
 
 | Baseline | Current | Status |
 |----------|---------|--------|
-| raw-tailwind-violations | 162 / 102 files | Long tail. Diminishing returns. |
-| post-fetch-js-filters | 28 / 16 files | At floor — complex JS logic that Convex query filters can't express |
-| e2e-quality (UNSCOPED_FIRST) | 16 | At floor — remaining are genuinely ambiguous selectors |
-| client-query-filters | 7 / 5 files | At floor — text search, local grouping, virtual groups |
+| raw-tailwind-violations | 145 / 93 files | Structural floor (margins, widths, heights) |
+| post-fetch-js-filters | 28 / 16 files | At floor — complex JS logic |
+| e2e-quality (UNSCOPED_FIRST) | 16 | At floor — genuinely ambiguous selectors |
+| client-query-filters | 9 / 7 files | At floor — text search, local grouping |
 | multi-filter-query-results | 9 / 8 files | Tracks with post-fetch + client |
 | oversized-cva-variant-axis | 8 axes | Architectural — primitive UI components |
 
-Already clean (12 of 18): e2e-catch-swallows, e2e-hard-rules, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, global-css-page-class, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
+Clean (12 of 18): e2e-catch-swallows, e2e-hard-rules, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, global-css-page-class, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
 
-### Phase 1: Visual Review
+### ~17 MEDIUM Page Spec Issues Remaining
 
-| Item | Detail |
-|------|--------|
-| AI slop cleanup | Worst offenders fixed. Remaining items need visual review. |
-| Mobile/tablet coverage | Backfill responsive gaps |
-| Icon visual consistency | Sizing, stroke-weight rhythm, tone drift |
-| Shell discipline | Composition pattern drift |
+| Category | Count | Details |
+|----------|-------|---------|
+| Visual/shell weight | 8 | Auth shell x4, dashboard gradients x2, forgot-password sparse, meetings density |
+| Screenshot coverage | 3 | Documents states, analytics states, auth sign-up |
+| Product depth | 2 | Sprint story-point progress, dependencies graph |
+| Infrastructure | 1 | External error reporting (Sentry/PostHog) |
+| Responsive | 1 | Roadmap touch interactions |
+| Complexity | 1 | Editor sparse content |
+| UX | 1 | Workspaces search/filter |
 
-### Phase 2: Screenshot Baselines
+All require design decisions, product specs, or infrastructure setup.
 
-| Item | Detail |
-|------|--------|
-| [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Capture, review, fix broken states |
-| Screenshot matrix gaps | Empty/loading/error, modals, create/edit flows |
-
-### Phase 3+: Remaining
+### Future
 
 | Item | Detail |
 |------|--------|
-| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (product design) |
-| [email-outreach.md](./email-outreach.md) | Lightweight cold email sequences (research complete, build pending) |
+| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (HIGH — only remaining HIGH issue) |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
-| ~22 MEDIUM page spec issues | Mostly visual polish and product decisions |
 
 ---
 
@@ -54,19 +50,20 @@ Already clean (12 of 18): e2e-catch-swallows, e2e-hard-rules, feature-class-stri
 |--------|-------|
 | Validators | 53/53 pass |
 | CI baselines clean | 12 of 18 (was 8) |
-| Unit tests | 4471 pass |
+| Unit tests | 4472 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
-| Spec issues fixed | 41 total |
+| Spec issues fixed | 51 total (was 0) |
+| MEDIUM remaining | 17 (was 34+) |
 
 ### What's been fixed
 
-Architecture: RoadmapView decomposition (2671→768 lines), ClientCard extraction, WorkspaceCard extraction, WikiDocumentGrid dedup, ProjectTimesheet dead code removal, useEffect→beforeLoad redirects (2 routes), auth hydrated/formReady removal, formatCurrency consolidation (6 duplicates→2 shared modules).
+**Architecture**: RoadmapView decomposition (2671 to 768 lines), ClientCard extraction, WorkspaceCard extraction + unified layout, WikiDocumentGrid dedup, ProjectTimesheet dead code removal, useEffect to beforeLoad redirects, auth hydrated/formReady removal, formatCurrency consolidation, workspace compact/standard layout merge.
 
-Backend: Invoice list with client join, reactive portal tokens, archived notification pagination, admin-scoped token query, workspaceId team filter, excludeUserId search filter, workspace ownership validation.
+**Backend**: Invoice list with client join, reactive portal tokens, archived notification pagination, admin-scoped token query, workspaceId team filter, excludeUserId search filter, workspace ownership validation.
 
-Frontend: Invoice draft dialog, portal admin gating, footer link wiring, icon barrel migration (82 files), design tokens (roadmap + sidebar), 6 client-side filters eliminated, hero background effects removed.
+**Frontend**: Invoice table layout, invoice draft dialog, workspace backlog sort/filter, workspace sprints filter, portal admin gating, footer link wiring, ErrorBoundary recovery (try again + dashboard + stack trace), icon barrel migration, design tokens, hero background cleanup.
 
-Card architecture: Banned all nested Cards (no exemptions). Introduced `CardSection` as the designated inner surface (58 replacements across 21 files). Card = outer container, CardSection = inner grouping. Validator enforces the ban.
+**Card architecture**: Banned all nested Cards. CardSection as inner surface (58 replacements). Validator enforces.
 
-Validator cleanup: 4 dead CVA variants removed, e2e-hard-rules zeroed, fixed-size-drift zeroed, global-css-page-class zeroed, e2e-quality UNSCOPED_FIRST 50→16, baselines 8→12 clean.
+**Validator cleanup**: 4 dead CVA variants, 5 baselines zeroed (e2e-hard-rules, fixed-size-drift, global-css-page-class, e2e-quality 50 to 16), raw-tailwind 276 to 145, 14 margin-to-gap conversions.
