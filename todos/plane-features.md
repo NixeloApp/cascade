@@ -1,23 +1,8 @@
 # Plane Features To Evaluate
 
 > **Priority:** P3
-> **Status:** Evaluation only
-> **Source:** Plane repo at `github.com/makeplane/plane` (pulled 2026-03-18)
+> **Status:** 1 item remaining
 
-Remaining evaluation items. Core features (stickies, auto-archive, offline, version history, Gantt, intake, deploy boards, automation, multi-provider AI, bulk ops) are all shipped.
-
-## Medium Priority
-
-### Advanced Analytics
-
-- [x] ~~**Velocity trends**~~ — **Shipped** (getSprintBurndownComparison query with normalized burndown curves and completion rates across sprints)
-- [x] ~~**Cycle/lead time depth**~~ — **Shipped** (getTimeMetricsBreakdown query with per-assignee and per-label grouping)
-
-### Notification Channels
+## Remaining
 
 - [ ] **External notification routing** — Slack/Pumble/webhook notifications wired to the notification preference system
-
-## Low Priority
-
-- [x] ~~**Model fallbacks**~~ — **Shipped** (runtime fallback in callAI: transient errors trigger secondary provider if configured)
-- [x] ~~**Bulk label operations**~~ — **Shipped** (bulkAddLabels + bulkRemoveLabels)
