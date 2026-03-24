@@ -8,10 +8,10 @@
 
 ### Infrastructure
 
+- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing ratchet (86 files / 127 violations)
+- [ ] [validator-strengthening.md](./validator-strengthening.md) — Validator framework improvements — 6 items
 - [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Data-testid migration ~75% complete. Page objects done. Monolith split and CI integration remain.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven visual cleanup — 19 items
-- [ ] [validator-strengthening.md](./validator-strengthening.md) — Validator framework improvements — 6 items
-- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing ratchet (86 files / 129 violations)
 
 ### Features (need product decisions)
 

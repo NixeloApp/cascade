@@ -238,6 +238,8 @@ const cardRecipeVariants = cva("", {
       roadmapTimelineBar: "rounded-full border-transparent shadow-none opacity-80",
       roadmapTimelineBarActive:
         "rounded-full border-transparent shadow-none opacity-100 ring-2 ring-brand-ring",
+      roadmapTimelineHeaderStrip:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4 shadow-none",
       roadmapMonthHeaderCell:
         "rounded-none border-y-0 border-r-0 border-l border-ui-border bg-transparent px-2 py-0 shadow-none",
       notificationRow:

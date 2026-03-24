@@ -1,7 +1,7 @@
 /** Loading skeleton for the roadmap Gantt chart. */
 
 import { PageLayout } from "@/components/layout";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Skeleton } from "../ui/Skeleton";
@@ -25,7 +25,7 @@ export function RoadmapLoadingState() {
         </Flex>
 
         <Card variant="default" padding="none" className="flex-1 overflow-hidden">
-          <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
+          <div className={getCardRecipeClassName("roadmapTimelineHeaderStrip")}>
             <Flex>
               <FlexItem shrink={false} className="w-sidebar">
                 <Skeleton className="h-5 w-24" />
