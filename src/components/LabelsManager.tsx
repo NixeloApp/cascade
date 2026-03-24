@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader, getCardRecipeClassName } from "./ui/Card";
+import { CardSection } from "./ui/CardSection";
 import { ColorPicker } from "./ui/ColorPicker";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Dialog } from "./ui/Dialog";
@@ -407,7 +408,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
 
                     {/* Empty Group State */}
                     {!isCollapsed && group.labels.length === 0 && (
-                      <div className="p-4 text-center">
+                      <CardSection size="md" className="text-center">
                         <Typography variant="small" color="secondary">
                           No labels in this group.{" "}
                           <Button
@@ -418,7 +419,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                             Add one
                           </Button>
                         </Typography>
-                      </div>
+                      </CardSection>
                     )}
                   </div>
                 );
