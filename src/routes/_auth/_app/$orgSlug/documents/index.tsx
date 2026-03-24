@@ -21,6 +21,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { FileText, Globe, Lock, Plus, Search, Sparkles } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/documents/")({
@@ -265,6 +266,7 @@ export function DocumentsListPage() {
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     aria-label="Search documents"
+                    data-testid={TEST_IDS.DOCUMENT.SEARCH_INPUT}
                   />
 
                   {filteredDocuments.length === 0 ? (

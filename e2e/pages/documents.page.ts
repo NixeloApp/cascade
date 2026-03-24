@@ -51,10 +51,8 @@ export class DocumentsPage extends BasePage {
 
     // Sidebar
     this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
-    this.searchInput = page.getByPlaceholder(/search.*document/i);
-    this.newDocumentButton = page
-      .getByRole("button", { name: /new.*document|\+ new|add/i })
-      .first();
+    this.searchInput = page.getByTestId(TEST_IDS.DOCUMENT.SEARCH_INPUT);
+    this.newDocumentButton = page.getByTestId(TEST_IDS.DOCUMENT.NEW_BUTTON);
     this.templateButton = page.getByRole("button", { name: /template|📄/i });
     this.documentList = page
       .getByTestId(TEST_IDS.NAV.DOCUMENT_LIST)

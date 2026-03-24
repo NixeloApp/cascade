@@ -38,6 +38,7 @@ import {
   Plus,
   Star,
 } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
@@ -124,6 +125,7 @@ export function DocumentTree({
           className="mx-2 justify-start"
           onClick={() => onCreateDocument()}
           leftIcon={<Icon icon={Plus} size="sm" />}
+          data-testid={TEST_IDS.DOCUMENT.NEW_BUTTON}
         >
           New Document
         </Button>

@@ -529,6 +529,14 @@ export const TEST_IDS = {
     HEADING_ANCHOR: "document-heading-anchor",
     /** @see src/routes/_app.$orgSlug.documents.templates.tsx */
     TEMPLATES_CONTENT: "document-templates-content",
+    /** @see src/components/Documents/DocumentSidebar.tsx */
+    NEW_BUTTON: "document-new-button",
+    /** @see src/components/Documents/DocumentSidebar.tsx */
+    TEMPLATE_BUTTON: "document-template-button",
+    /** @see src/components/Documents/DocumentSidebar.tsx */
+    SEARCH_INPUT: "document-search-input",
+    /** @see src/components/Documents/DocumentSidebar.tsx */
+    TEMPLATE_MODAL: "document-template-modal",
   },
 
   // ============================================================
