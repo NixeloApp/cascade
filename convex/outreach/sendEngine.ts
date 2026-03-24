@@ -101,6 +101,7 @@ export const processDueEnrollments = internalAction({
         body: checkResult.renderedBody,
         fromEmail: checkResult.fromEmail,
         fromName: checkResult.fromName,
+        trackingDomain: checkResult.trackingDomain,
       });
 
       // Record result (mutation — updates DB)
@@ -211,6 +212,7 @@ export const checkPreSend = internalMutation({
       renderedBody,
       fromEmail: mailbox.email,
       fromName: mailbox.displayName,
+      trackingDomain,
     };
   },
 });
@@ -232,6 +234,7 @@ export const sendSequenceEmail = internalAction({
     body: v.string(),
     fromEmail: v.string(),
     fromName: v.string(),
+    trackingDomain: v.string(),
   },
   handler: async (
     ctx,
@@ -246,6 +249,7 @@ export const sendSequenceEmail = internalAction({
       body: args.body,
       fromEmail: args.fromEmail,
       fromName: args.fromName,
+      trackingDomain: args.trackingDomain,
     });
 
     return { success: result.success, error: result.error, gmailThreadId: result.threadId };

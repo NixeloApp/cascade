@@ -227,6 +227,7 @@ export const sendViaGmailAction = internalAction({
     body: v.string(),
     fromEmail: v.string(),
     fromName: v.string(),
+    trackingDomain: v.string(),
   },
   handler: async (ctx, args) => {
     // Get mailbox tokens
@@ -267,9 +268,8 @@ export const sendViaGmailAction = internalAction({
       accessToken = refreshed.accessToken;
     }
 
-    // Build unsubscribe URL
-    const trackingDomain = "track.nixelo.com"; // TODO: make configurable per sequence
-    const unsubscribeUrl = `https://${trackingDomain}/t/u/${args.enrollmentId}`;
+    // Build unsubscribe URL using the sequence's tracking domain
+    const unsubscribeUrl = `https://${args.trackingDomain}/t/u/${args.enrollmentId}`;
 
     // Send via Gmail API
     const result = await sendViaGmail(accessToken, {
