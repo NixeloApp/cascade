@@ -559,17 +559,10 @@ export const findEnrollmentForReply = internalMutation({
       (e) => e.status === "active" || e.status === "paused",
     );
 
-    // Require thread match when threadId is available — check against all
-    // stored thread IDs since each step may create a new Gmail thread.
-    // Also check legacy gmailThreadId (string) for pre-migration enrollments.
+    // Require thread match when threadId is available
     const threadId = args.gmailThreadId;
     const activeEnrollment = threadId
-      ? activeEnrollments.find((e) => {
-          if (e.gmailThreadIds?.includes(threadId)) return true;
-          // Legacy: pre-migration enrollments may have singular gmailThreadId
-          const legacy = (e as Record<string, unknown>).gmailThreadId;
-          return typeof legacy === "string" && legacy === threadId;
-        })
+      ? activeEnrollments.find((e) => e.gmailThreadIds?.includes(threadId))
       : activeEnrollments[0];
 
     if (!activeEnrollment) return { matched: false };

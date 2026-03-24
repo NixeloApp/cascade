@@ -91,7 +91,7 @@ const paddingTopClasses: Record<SpacingSize, string> = {
   xs: "pt-1",
   sm: "pt-2",
   md: "pt-4",
-  lg: "pt-5",
+  lg: "pt-6",
   xl: "pt-8",
   "2xl": "pt-12",
 };
