@@ -164,7 +164,7 @@ export const createEnrollments = authenticatedMutation({
       const contactId = args.contactIds[i];
       const contact = contacts[i];
 
-      if (!contact) {
+      if (!contact || contact.organizationId !== sequence.organizationId) {
         skipped++;
         continue;
       }

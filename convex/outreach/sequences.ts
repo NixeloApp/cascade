@@ -168,7 +168,6 @@ export const updateSequenceStatus = authenticatedMutation({
 
     // Resume ALL paused enrollments so the send engine picks them up.
     // Process in pages to handle sequences with more than BOUNDED_LIST_LIMIT enrollments.
-    let resumed = 0;
     const MAX_RESUME_PAGES = 10;
     for (let page = 0; page < MAX_RESUME_PAGES; page++) {
       const query = ctx.db
@@ -198,7 +197,6 @@ export const updateSequenceStatus = authenticatedMutation({
           }),
         ),
       );
-      resumed += batch.length;
       if (batch.length < BOUNDED_LIST_LIMIT) break;
     }
   },
@@ -217,16 +215,18 @@ export const pause = authenticatedMutation({
 
     if (sequence.status !== "active") throw conflict("Can only pause an active sequence");
 
-    // Pause all active enrollments
-    const enrollments = await ctx.db
-      .query("outreachEnrollments")
-      .withIndex("by_sequence_status", (q) =>
-        q.eq("sequenceId", args.sequenceId).eq("status", "active"),
-      )
-      .take(BOUNDED_LIST_LIMIT);
-
-    for (const enrollment of enrollments) {
-      await ctx.db.patch(enrollment._id, { status: "paused" });
+    // Pause ALL active enrollments (paginated to handle large sequences)
+    const MAX_PAUSE_PAGES = 10;
+    for (let page = 0; page < MAX_PAUSE_PAGES; page++) {
+      const batch = await ctx.db
+        .query("outreachEnrollments")
+        .withIndex("by_sequence_status", (q) =>
+          q.eq("sequenceId", args.sequenceId).eq("status", "active"),
+        )
+        .take(BOUNDED_LIST_LIMIT);
+      if (batch.length === 0) break;
+      await Promise.all(batch.map((e) => ctx.db.patch(e._id, { status: "paused" })));
+      if (batch.length < BOUNDED_LIST_LIMIT) break;
     }
 
     await ctx.db.patch(args.sequenceId, {

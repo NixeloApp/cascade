@@ -215,6 +215,16 @@ export const remove = authenticatedMutation({
     if (contact.organizationId !== user?.defaultOrganizationId)
       throw notFound("contact", args.contactId);
 
+    // Prevent deleting contacts with active enrollments
+    const activeEnrollment = await ctx.db
+      .query("outreachEnrollments")
+      .withIndex("by_contact", (q) => q.eq("contactId", args.contactId))
+      .filter((q) => q.or(q.eq(q.field("status"), "active"), q.eq(q.field("status"), "paused")))
+      .first();
+    if (activeEnrollment) {
+      throw conflict("Cannot delete a contact with active enrollments. Cancel them first.");
+    }
+
     await ctx.db.delete(args.contactId);
   },
 });

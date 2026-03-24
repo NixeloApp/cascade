@@ -14,6 +14,11 @@ import { httpAction, internalMutation, internalQuery } from "../_generated/serve
 import { suppress } from "./contacts";
 import { stopEnrollment } from "./enrollments";
 
+/** Validate that a string looks like a Convex document ID (alphanumeric, reasonable length). */
+function isValidConvexId(value: string): boolean {
+  return /^[a-zA-Z0-9_]{10,40}$/.test(value);
+}
+
 // =============================================================================
 // 1x1 Transparent GIF (pre-computed)
 // =============================================================================
@@ -34,7 +39,7 @@ export const handleOpenPixel = httpAction(async (ctx, request) => {
   const parts = url.pathname.split("/");
   const enrollmentId = parts[parts.length - 1];
 
-  if (enrollmentId) {
+  if (enrollmentId && isValidConvexId(enrollmentId)) {
     // Record open event asynchronously (don't block the pixel response)
     try {
       await ctx.runMutation(internal.outreach.tracking.recordOpen, {
@@ -62,7 +67,7 @@ export const handleClickRedirect = httpAction(async (ctx, request) => {
   const parts = url.pathname.split("/");
   const linkId = parts[parts.length - 1];
 
-  if (!linkId) {
+  if (!linkId || !isValidConvexId(linkId)) {
     return new Response("Not found", { status: 404 });
   }
 
@@ -97,7 +102,7 @@ export const handleUnsubscribeGet = httpAction(async (ctx, request) => {
   const parts = url.pathname.split("/");
   const enrollmentId = parts[parts.length - 1];
 
-  if (!enrollmentId) {
+  if (!enrollmentId || !isValidConvexId(enrollmentId)) {
     return new Response("Not found", { status: 404 });
   }
 
@@ -130,7 +135,7 @@ export const handleUnsubscribePost = httpAction(async (ctx, request) => {
   const parts = url.pathname.split("/");
   const enrollmentId = parts[parts.length - 1];
 
-  if (!enrollmentId) {
+  if (!enrollmentId || !isValidConvexId(enrollmentId)) {
     return new Response("Not found", { status: 404 });
   }
 
