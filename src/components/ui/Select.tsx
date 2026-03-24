@@ -30,6 +30,8 @@ const selectTriggerVariants = cva(
       width: {
         /** Full-width (default) — fills parent container */
         full: "w-full",
+        /** Tiny value selects — currency codes, units */
+        xs: "w-24",
         /** Compact filter selects — status, priority, sort dropdowns */
         sm: "w-36",
         /** Medium controls — category selects, roadmap controls */

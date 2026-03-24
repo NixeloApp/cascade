@@ -36,4 +36,4 @@
 | Biome warnings | 0 |
 | MEDIUM page spec issues | 0 |
 | Screenshot monolith | 619 lines (was 5,292) |
-| Raw styling debt | 86 files / 127 violations |
+| Raw styling debt | 79 files / 115 violations |

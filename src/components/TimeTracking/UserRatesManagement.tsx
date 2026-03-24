@@ -257,7 +257,7 @@ export function UserRatesManagement() {
             <Stack gap="xs">
               <Label htmlFor="rate-currency">Currency</Label>
               <Select value={currency} onValueChange={(value) => setCurrency(value)}>
-                <SelectTrigger id="rate-currency" className="w-24">
+                <SelectTrigger id="rate-currency" width="xs">
                   <SelectValue placeholder="Currency" />
                 </SelectTrigger>
                 <SelectContent>

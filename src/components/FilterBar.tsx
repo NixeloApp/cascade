@@ -186,7 +186,7 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
           {isActive && " (1)"}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-56">
+      <DropdownMenuContent align="start" minWidth="lg">
         <Card padding="sm" radius="none" variant="ghost">
           <Stack gap="sm">
             <FormInput
@@ -246,7 +246,7 @@ function SavedFiltersDropdown({
           <span className="hidden sm:inline">Saved Filters</span> ({savedFilters.length})
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-dropdown overflow-y-auto min-w-48">
+      <DropdownMenuContent align="start" minWidth="md" className="max-h-dropdown overflow-y-auto">
         {savedFilters.map((filter) => (
           <DropdownMenuItem key={filter._id} onSelect={() => onLoadFilter(filter)}>
             <Flex align="center" justify="between" className="w-full">
