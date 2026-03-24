@@ -9,6 +9,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ChevronLeft } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/$key")({
   component: IssuePage,
 });
@@ -88,7 +89,12 @@ function IssuePageContent({
             }
             actions={
               !detail.isEditing ? (
-                <Button variant="outline" size="sm" onClick={detail.handleEdit}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={detail.handleEdit}
+                  data-testid={TEST_IDS.ISSUE.EDIT_BUTTON}
+                >
                   Edit Issue
                 </Button>
               ) : undefined

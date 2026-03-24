@@ -43,11 +43,17 @@ export class IssueDetailPage extends BasePage {
       timeout: 12000,
     });
     await this.page
-      .getByRole("button", { name: /edit issue|save changes/i })
+      .getByTestId(TEST_IDS.ISSUE.EDIT_BUTTON)
+      .or(this.page.getByTestId(TEST_IDS.ISSUE.SAVE_BUTTON))
       .waitFor({ state: "visible", timeout: 12000 });
-    await this.page.getByText("Loading comments...").waitFor({ state: "hidden", timeout: 12000 });
+    // Comments loading indicator may clear before we check, or never appear
+    // at all for cached/fast responses — absence is expected, not an error.
+    const commentsLoading = this.page.getByTestId(TEST_IDS.COMMENTS.LOADING);
+    if (await commentsLoading.isVisible().catch(() => false)) {
+      await commentsLoading.waitFor({ state: "hidden", timeout: 12000 });
+    }
     await this.page
-      .getByRole("button", { name: /add comment/i })
+      .getByTestId(TEST_IDS.COMMENTS.ADD_BUTTON)
       .waitFor({ state: "visible", timeout: 12000 });
   }
 

@@ -58,6 +58,19 @@ export const TEST_IDS = {
     DESCRIPTION_CONTENT: "issue-description-content",
     /** @see src/routes/_app.$orgSlug.issues.index.tsx */
     EMPTY_STATE: "issue-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/$key.tsx */
+    EDIT_BUTTON: "issue-edit-button",
+    /** @see src/components/IssueDetail/IssueDetailContent.tsx */
+    SAVE_BUTTON: "issue-save-button",
+  },
+
+  COMMENTS: {
+    /** @see src/components/IssueComments.tsx */
+    LOADING: "comments-loading",
+    /** @see src/components/IssueComments.tsx */
+    ADD_BUTTON: "comments-add-button",
+    /** @see src/components/IssueComments.tsx */
+    SUBMIT_BUTTON: "comments-submit-button",
   },
 
   BOARD: {
