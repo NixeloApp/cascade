@@ -16,6 +16,31 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
+
+/** Sign a state string with HMAC-SHA256 using the Google client secret as key. */
+async function signState(payload: string): Promise<string> {
+  const secret = getGoogleClientSecret();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  const hex = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `${payload}.${hex}`;
+}
+
+/** Verify and extract the payload from a signed state string. */
+async function verifyState(signed: string): Promise<string | null> {
+  const lastDot = signed.lastIndexOf(".");
+  if (lastDot === -1) return null;
+  const payload = signed.substring(0, lastDot);
+  const expected = await signState(payload);
+  return constantTimeEqual(signed, expected) ? payload : null;
+}
+
 import {
   getConvexSiteUrl,
   getGoogleClientId,
@@ -113,25 +138,26 @@ export const initiateGmailAuth = httpAction(async (ctx, request) => {
   }
 
   const config = getGmailOAuthConfig();
-  // Encode user context in the state parameter (CSRF nonce + user identity)
+  // Sign the state with HMAC so the callback can verify it wasn't forged.
+  // An attacker can't create a valid state without the server's secret.
   const nonce = crypto.randomUUID();
-  const state = `${nonce}:${userId}:${organizationId}`;
+  const payload = `${nonce}:${userId}:${organizationId}`;
+  const state = await signState(payload);
 
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   authUrl.searchParams.set("client_id", config.clientId);
   authUrl.searchParams.set("redirect_uri", config.redirectUri);
   authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("scope", config.scopes);
-  authUrl.searchParams.set("access_type", "offline"); // Get refresh token
-  authUrl.searchParams.set("prompt", "consent"); // Force consent to always get refresh token
+  authUrl.searchParams.set("access_type", "offline");
+  authUrl.searchParams.set("prompt", "consent");
   authUrl.searchParams.set("state", state);
 
   return new Response(null, {
     status: 302,
     headers: {
       Location: authUrl.toString(),
-      // Store full state in cookie for CSRF verification on callback
-      "Set-Cookie": `outreach-oauth-state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
+      "Set-Cookie": `outreach-oauth-state=${encodeURIComponent(state)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
     },
   });
 });
@@ -168,10 +194,14 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
 
   // Validate CSRF state
   const cookieHeader = request.headers.get("Cookie");
-  const storedState = cookieHeader
+  const rawCookie = cookieHeader
     ?.split(";")
     .find((c) => c.trim().startsWith("outreach-oauth-state="))
-    ?.split("=")[1];
+    ?.split("=")
+    .slice(1)
+    .join("=")
+    ?.trim();
+  const storedState = rawCookie ? decodeURIComponent(rawCookie) : undefined;
 
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
     return new Response(
@@ -265,8 +295,20 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
     );
   }
 
-  // Extract user identity from the state parameter (nonce:userId:organizationId)
-  const stateParts = state.split(":");
+  // Verify HMAC signature on state to prevent forged userId/organizationId
+  const verifiedPayload = await verifyState(state);
+  if (!verifiedPayload) {
+    return new Response(
+      renderOAuthErrorPageHtml(
+        "Gmail Connection - Error",
+        "Invalid OAuth state signature. Please try connecting again.",
+      ),
+      { status: 400, headers: { "Content-Type": "text/html" } },
+    );
+  }
+
+  // Extract user identity from the verified payload (nonce:userId:organizationId)
+  const stateParts = verifiedPayload.split(":");
   const userId = stateParts[1] as Id<"users"> | undefined;
   const organizationId = stateParts[2] as Id<"organizations"> | undefined;
 

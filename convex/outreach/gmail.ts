@@ -418,11 +418,12 @@ export const checkReplies = internalAction({
     try {
       const result = await pollGmailReplies(ctx, authHeaders, query, args.mailboxId);
 
-      if (result.checked > 0) {
-        await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
-          mailboxId: args.mailboxId,
-        });
-      }
+      // Always advance watermark on successful poll (even if inbox was empty)
+      // so quiet mailboxes don't re-query the full 24h window every time.
+      // Only exceptions (caught below) skip the watermark update.
+      await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
+        mailboxId: args.mailboxId,
+      });
       return result;
     } catch (e) {
       logger.warn("Gmail reply polling failed", {
@@ -552,9 +553,15 @@ export const findEnrollmentForReply = internalMutation({
 
     // Require thread match when threadId is available — check against all
     // stored thread IDs since each step may create a new Gmail thread.
+    // Also check legacy gmailThreadId (string) for pre-migration enrollments.
     const threadId = args.gmailThreadId;
     const activeEnrollment = threadId
-      ? activeEnrollments.find((e) => e.gmailThreadIds?.includes(threadId))
+      ? activeEnrollments.find((e) => {
+          if (e.gmailThreadIds?.includes(threadId)) return true;
+          // Legacy: pre-migration enrollments may have singular gmailThreadId
+          const legacy = (e as Record<string, unknown>).gmailThreadId;
+          return typeof legacy === "string" && legacy === threadId;
+        })
       : activeEnrollments[0];
 
     if (!activeEnrollment) return { matched: false };
