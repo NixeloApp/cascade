@@ -12,6 +12,8 @@
  * Microsoft Outlook flow follows the same pattern with Microsoft endpoints.
  */
 
+import { internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import { httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import {
@@ -89,7 +91,8 @@ const getGmailOAuthConfig = () => {
  * Initiate Gmail OAuth flow
  * GET /outreach/google/auth
  */
-export const initiateGmailAuth = httpAction(async () => {
+export const initiateGmailAuth = httpAction(async (ctx, request) => {
+  void ctx; // HTTP actions require ctx parameter but initiation doesn't use it
   if (!isGoogleOAuthConfigured()) {
     return new Response(JSON.stringify({ error: "Google OAuth not configured" }), {
       status: 500,
@@ -97,8 +100,22 @@ export const initiateGmailAuth = httpAction(async () => {
     });
   }
 
+  // Frontend must pass userId and organizationId so the callback can create
+  // the mailbox server-side without tokens ever reaching the browser.
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+  const organizationId = url.searchParams.get("organizationId");
+  if (!userId || !organizationId) {
+    return new Response(JSON.stringify({ error: "userId and organizationId are required" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const config = getGmailOAuthConfig();
-  const state = crypto.randomUUID();
+  // Encode user context in the state parameter (CSRF nonce + user identity)
+  const nonce = crypto.randomUUID();
+  const state = `${nonce}:${userId}:${organizationId}`;
 
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   authUrl.searchParams.set("client_id", config.clientId);
@@ -113,6 +130,7 @@ export const initiateGmailAuth = httpAction(async () => {
     status: 302,
     headers: {
       Location: authUrl.toString(),
+      // Store full state in cookie for CSRF verification on callback
       "Set-Cookie": `outreach-oauth-state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
     },
   });
@@ -247,19 +265,35 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
     );
   }
 
-  // Return success page that posts data back to the frontend
-  // The frontend will call createMailbox mutation with these tokens
-  const connectionData = {
-    provider: "google" as const,
+  // Extract user identity from the state parameter (nonce:userId:organizationId)
+  const stateParts = state.split(":");
+  const userId = stateParts[1] as Id<"users"> | undefined;
+  const organizationId = stateParts[2] as Id<"organizations"> | undefined;
+
+  if (!userId || !organizationId) {
+    return new Response(
+      renderOAuthErrorPageHtml(
+        "Gmail Connection - Error",
+        "Invalid OAuth state: missing user context.",
+      ),
+      { status: 400, headers: { "Content-Type": "text/html" } },
+    );
+  }
+
+  // Store tokens and create mailbox server-side — tokens never reach the browser
+  const mailboxId = await ctx.runMutation(internal.outreach.mailboxes.createMailboxFromOAuth, {
+    userId,
+    organizationId,
+    provider: "google",
     email: userInfo.email,
     displayName: userInfo.name ?? userInfo.email.split("@")[0],
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token,
     expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * SECOND : undefined,
-  };
+  });
 
   const siteUrl = process.env.SITE_URL ?? "http://localhost:5555";
-  return new Response(renderOutreachSuccessPageHtml(userInfo.email, connectionData, siteUrl), {
+  return new Response(renderOutreachSuccessPageHtml(userInfo.email, mailboxId, siteUrl), {
     status: 200,
     headers: {
       "Content-Type": "text/html",
@@ -276,20 +310,12 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
 
 function renderOutreachSuccessPageHtml(
   email: string,
-  connectionData: {
-    provider: "google" | "microsoft";
-    email: string;
-    displayName: string;
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: number | undefined;
-  },
+  mailboxId: string,
   targetOrigin: string,
 ): string {
-  // The success page sends the connection data back to the parent window
-  // via postMessage, then the frontend calls the createMailbox mutation
+  // Tokens are stored server-side — only the mailbox ID is sent to the browser
   const safeEmail = escapeHtml(email);
-  const safeData = JSON.stringify(connectionData).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+  const safeMailboxId = escapeHtml(mailboxId);
 
   return `<!DOCTYPE html>
 <html>
@@ -300,9 +326,8 @@ function renderOutreachSuccessPageHtml(
   <p>This window will close automatically...</p>
   <script>
     (function() {
-      var data = ${safeData};
       if (window.opener) {
-        window.opener.postMessage({ type: 'outreach-mailbox-connected', data: data }, '${targetOrigin}');
+        window.opener.postMessage({ type: 'outreach-mailbox-connected', mailboxId: '${safeMailboxId}' }, '${targetOrigin}');
         setTimeout(function() { window.close(); }, 1500);
       } else {
         document.body.innerHTML += '<p>Please close this window and refresh the app.</p>';
