@@ -32,6 +32,50 @@ import {
   waitForFormReady,
 } from "./wait-helpers";
 
+/**
+ * Inject Convex auth tokens into the browser's localStorage.
+ * Clears stale auth keys first to avoid conflicts after sign-out.
+ * Used by both E2E tests and the screenshot capture tool.
+ */
+export async function injectAuthTokens(
+  page: Page,
+  token: string,
+  refreshToken: string | null,
+): Promise<void> {
+  const convexUrl = process.env.VITE_CONVEX_URL;
+  await page.evaluate(
+    ({ token: jwt, refreshToken: refresh, convexUrl: url }) => {
+      // Clear any stale auth tokens first
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes("convexAuth") || key.includes("__convexAuth"))) {
+          keysToRemove.push(key);
+        }
+      }
+      for (const key of keysToRemove) {
+        localStorage.removeItem(key);
+      }
+
+      // Legacy keys
+      localStorage.setItem("convexAuthToken", jwt);
+      if (refresh) {
+        localStorage.setItem("convexAuthRefreshToken", refresh);
+      }
+
+      // @convex-dev/auth namespaced keys
+      if (url) {
+        const namespace = url.replace(/[^a-zA-Z0-9]/g, "");
+        localStorage.setItem(`__convexAuthJWT_${namespace}`, jwt);
+        if (refresh) {
+          localStorage.setItem(`__convexAuthRefreshToken_${namespace}`, refresh);
+        }
+      }
+    },
+    { token, refreshToken, convexUrl },
+  );
+}
+
 async function waitForLocatorVisible(locator: Locator, timeout: number): Promise<boolean> {
   try {
     await locator.waitFor({ state: "visible", timeout });
@@ -672,50 +716,8 @@ export async function trySignInUser(
   user: TestUser,
   autoCompleteOnboarding = true,
 ): Promise<boolean> {
-  const injectAuthTokens = async (token: string, refreshToken?: string): Promise<void> => {
-    const convexUrl = process.env.VITE_CONVEX_URL;
-    if (!convexUrl) {
-      console.log("  ⚠️ VITE_CONVEX_URL not set, token injection may fail");
-    }
-
-    await page.evaluate(
-      ({ token: jwt, refreshToken: refresh, convexUrl: url }) => {
-        // Clear any stale auth tokens first (important after sign-out)
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && (key.includes("convexAuth") || key.includes("__convexAuth"))) {
-            keysToRemove.push(key);
-          }
-        }
-        for (const key of keysToRemove) {
-          localStorage.removeItem(key);
-        }
-
-        // Legacy keys (for ConvexReactClient direct usage)
-        localStorage.setItem("convexAuthToken", jwt);
-        if (refresh) {
-          localStorage.setItem("convexAuthRefreshToken", refresh);
-        }
-
-        // @convex-dev/auth keys (namespaced by convex URL)
-        if (url) {
-          const namespace = url.replace(/[^a-zA-Z0-9]/g, "");
-          const jwtKey = `__convexAuthJWT_${namespace}`;
-          const refreshKey = `__convexAuthRefreshToken_${namespace}`;
-
-          localStorage.setItem(jwtKey, jwt);
-          if (refresh) {
-            localStorage.setItem(refreshKey, refresh);
-          }
-        }
-      },
-      {
-        token,
-        refreshToken,
-        convexUrl: convexUrl,
-      },
-    );
+  const injectTokens = async (token: string, refreshToken?: string): Promise<void> => {
+    await injectAuthTokens(page, token, refreshToken ?? null);
   };
 
   const tryNavigateToAppGateway = async (): Promise<boolean> => {
@@ -850,7 +852,7 @@ export async function trySignInUser(
 
     if (loginResult.success && loginResult.token) {
       console.log("  ✓ API login successful. Injecting tokens...");
-      await injectAuthTokens(loginResult.token, loginResult.refreshToken);
+      await injectTokens(loginResult.token, loginResult.refreshToken);
 
       try {
         if (await tryNavigateToAppGateway()) {

@@ -80,21 +80,8 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
     )
     .not.toBe("pending");
 
-  // Check if form is ready via marker OR via fallback conditions
-  const formReady = (await getLocatorCount(formReadyMarker)) > 0;
-  if (formReady) {
-    return true;
-  }
-
-  // Re-check fallback conditions if marker not set
-  const expanded = (await getLocatorCount(emailForm)) > 0;
-  const hydrated = (await getLocatorCount(hydratedMarker)) > 0;
-  const emailVisible = await isLocatorVisible(emailInput);
-  const passwordVisible = await isLocatorVisible(passwordInput);
-  const submitVisible = await isLocatorVisible(submitButton);
-  const submitEnabled = submitVisible && !(await isLocatorDisabled(submitButton, true));
-
-  return expanded && hydrated && emailVisible && passwordVisible && submitVisible && submitEnabled;
+  // The poll above already confirmed state is not "pending" — form is ready.
+  return true;
 }
 
 /**

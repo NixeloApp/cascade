@@ -200,9 +200,11 @@ Providers are tried in order: recurring free tiers first, then one-time credits,
 **Not included:** OpenAI Whisper (no free tier, $0.006/min)
 
 **Provider Selection**
-1. Query Convex for provider with most free tier remaining
+1. Query Convex for provider with most free tier remaining (tier 1 → tier 2 → tier 3)
 2. Fall back to first configured provider
 3. Record usage after transcription
+
+**Considered and rejected: smart routing by context** (e.g. route 2-speaker calls to Google Cloud STT, noisy audio to Speechmatics). Not worth it — we can't reliably know speaker count or audio quality before the meeting starts. Calendar attendees don't predict who actually joins. Audio quality detection requires processing first, defeating the purpose. The 3-tier rotation maximizes free usage automatically without user input.
 
 ### 5. Summary Service
 

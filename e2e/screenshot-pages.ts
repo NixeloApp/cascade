@@ -31,6 +31,7 @@ import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
 import { ProjectsPage } from "./pages";
+import { injectAuthTokens } from "./utils/auth-helpers";
 import {
   getLocatorAttribute,
   getLocatorCount,
@@ -61,7 +62,6 @@ import {
 // ---------------------------------------------------------------------------
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:5555";
-const CONVEX_URL = process.env.VITE_CONVEX_URL || "";
 const SPECS_BASE_DIR = path.join(process.cwd(), "docs", "design", "specs", "pages");
 const MODAL_SPECS_BASE_DIR = path.join(
   process.cwd(),
@@ -178,29 +178,6 @@ const DEFAULT_SCREENSHOT_PROJECT_WORKFLOW_STATES: E2EWorkflowState[] = [
 ];
 
 /** Inject Convex auth tokens into the page's localStorage. */
-async function injectAuthTokens(
-  page: Page,
-  token: string,
-  refreshToken: string | null,
-): Promise<void> {
-  await page.evaluate(
-    ({ token, refreshToken, convexUrl }) => {
-      localStorage.setItem("convexAuthToken", token);
-      if (refreshToken) {
-        localStorage.setItem("convexAuthRefreshToken", refreshToken);
-      }
-      if (convexUrl) {
-        const ns = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
-        localStorage.setItem(`__convexAuthJWT_${ns}`, token);
-        if (refreshToken) {
-          localStorage.setItem(`__convexAuthRefreshToken_${ns}`, refreshToken);
-        }
-      }
-    },
-    { token, refreshToken, convexUrl: CONVEX_URL },
-  );
-}
-
 interface CliOptions {
   headless: boolean;
   dryRun: boolean;
