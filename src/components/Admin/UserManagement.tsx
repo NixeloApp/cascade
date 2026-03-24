@@ -200,7 +200,9 @@ function UserManagementControls({
 
         {activeTab === "invites" ? (
           <PageControlsGroup className="sm:justify-end">
-            <Button onClick={onInviteClick}>Invite User</Button>
+            <Button onClick={onInviteClick} data-testid={TEST_IDS.SETTINGS.INVITE_BUTTON}>
+              Invite User
+            </Button>
           </PageControlsGroup>
         ) : null}
       </PageControlsRow>

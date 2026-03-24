@@ -412,6 +412,18 @@ export const TEST_IDS = {
   SETTINGS: {
     /** @see src/routes/_app.$orgSlug.settings.tsx */
     ORG_TAB: "settings-org-tab",
+    /** @see src/components/Settings.tsx — settings tab trigger prefix, suffixed with tab value */
+    TAB_PROFILE: "settings-tab-profile",
+    TAB_SECURITY: "settings-tab-security",
+    TAB_NOTIFICATIONS: "settings-tab-notifications",
+    TAB_INTEGRATIONS: "settings-tab-integrations",
+    TAB_APIKEYS: "settings-tab-apikeys",
+    TAB_OFFLINE: "settings-tab-offline",
+    TAB_PREFERENCES: "settings-tab-preferences",
+    TAB_ADMIN: "settings-tab-admin",
+    TAB_DEVELOPER: "settings-tab-developer",
+    /** @see src/components/Admin/UserManagement.tsx */
+    INVITE_BUTTON: "settings-invite-button",
     /** @see src/components/Admin/OrganizationSettings.tsx */
     TIME_APPROVAL_SWITCH: "settings-time-approval-switch",
     /** @see src/components/Admin/OrganizationSettings.tsx */

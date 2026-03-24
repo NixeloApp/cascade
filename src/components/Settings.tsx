@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { ComponentType } from "react";
 import { useEffect } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { PageControls, PageStack } from "./layout";
 import { AdminTab } from "./Settings/AdminTab";
 import { ApiKeysManager } from "./Settings/ApiKeysManager";
@@ -53,6 +54,18 @@ const SETTINGS_TAB_CONTENT = {
   developer: DevToolsTab,
 } satisfies Record<SettingsTabValue, ComponentType>;
 
+const SETTINGS_TAB_TESTIDS: Record<SettingsTabValue, string> = {
+  profile: TEST_IDS.SETTINGS.TAB_PROFILE,
+  security: TEST_IDS.SETTINGS.TAB_SECURITY,
+  notifications: TEST_IDS.SETTINGS.TAB_NOTIFICATIONS,
+  integrations: TEST_IDS.SETTINGS.TAB_INTEGRATIONS,
+  apikeys: TEST_IDS.SETTINGS.TAB_APIKEYS,
+  offline: TEST_IDS.SETTINGS.TAB_OFFLINE,
+  preferences: TEST_IDS.SETTINGS.TAB_PREFERENCES,
+  admin: TEST_IDS.SETTINGS.TAB_ADMIN,
+  developer: TEST_IDS.SETTINGS.TAB_DEVELOPER,
+};
+
 interface SettingsProps {
   activeTab: SettingsTabValue;
   onTabChange: (tab: SettingsTabValue) => void;
@@ -93,7 +106,13 @@ export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps
         <PageControls padding="sm" gap="sm" spacing="stack">
           <TabsList size="compact" layout="settings" aria-label="Settings sections">
             {visibleTabs.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                size="compact"
+                width="responsive"
+                data-testid={SETTINGS_TAB_TESTIDS[tab.value]}
+              >
                 <span className="lg:hidden">{tab.shortLabel ?? tab.label}</span>
                 <span className="hidden lg:inline">{tab.label}</span>
               </TabsTrigger>
