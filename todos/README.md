@@ -6,15 +6,39 @@
 
 ## Remaining Work
 
-### Phase 1: Code Quality & Consistency
+### Phase 0: Zero Validator Exceptions
+
+**Goal: reduce all baselines toward 0. Some (oversized CVA, legitimate client filters) are at their architectural floor.**
+
+#### CI Baselines (6 with debt, 12 already clean)
+
+| Baseline | Current | Status |
+|----------|---------|--------|
+| raw-tailwind-violations | 162 / 102 files | Long tail (58 at 1, 32 at 2). Diminishing returns. |
+| e2e-quality (UNSCOPED_FIRST) | 50 | Mechanical — scope E2E selectors |
+| post-fetch-js-filters | 28 / 16 files | Backend queries filtering in JS after fetch |
+| client-query-filters | 7 / 5 files | At floor — remaining are legitimate (text search, local grouping) |
+| multi-filter-query-results | 9 / 8 files | Union of post-fetch + client. Tracks with above. |
+| oversized-cva-variant-axis | 8 axes | Architectural — primitive UI components legitimately large |
+
+Already clean (12): e2e-catch-swallows, e2e-hard-rules, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, global-css-page-class, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
+
+#### Inline Exemptions in Validators
+
+| Validator | Exemptions | What they are |
+|-----------|-----------|---------------|
+| check-border-radius | 17 files | Progress bars, decorative elements, drag handles — mostly legitimate |
+| check-component-naming | 3 product skips | RoadmapRows (multi-component), Icons.tsx, InlinePropertyEdit |
+| check-tech-debt | MAX_ALLOWED=10 | Allows up to 10 tech debt markers |
+
+### Phase 1: Visual Review
 
 | Item | Detail |
 |------|--------|
-| AI slop cleanup | Card variant="subtle" added; worst offenders fixed (OfflineTab 11→0, NotificationsTab 8→2, UserTypeManager 5→2). Remaining visual review items need dev server. |
-| Mobile/tablet coverage | Backfill responsive gaps (needs visual review) |
-| Icon visual consistency | Sizing, stroke-weight rhythm, tone drift (needs visual review) |
-| Shell discipline | Composition pattern drift (needs visual review) |
-| Raw styling cleanup | 102 files / 162 violations (long tail: 58 files at 1, 32 at 2; mostly margins and widths) |
+| AI slop cleanup | Worst offenders fixed. Remaining items need visual review. |
+| Mobile/tablet coverage | Backfill responsive gaps |
+| Icon visual consistency | Sizing, stroke-weight rhythm, tone drift |
+| Shell discipline | Composition pattern drift |
 
 ### Phase 2: Screenshot Baselines
 
@@ -29,7 +53,7 @@
 |------|--------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (product design) |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
-| ~22 MEDIUM page spec issues | Mostly visual polish and product decisions (17 spec issues fixed total across all severities: extractions, redirects, dedup, reactivity, formatting, dead code) |
+| ~22 MEDIUM page spec issues | Mostly visual polish and product decisions |
 
 ---
 
@@ -38,27 +62,20 @@
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Raw styling violations | 102 files / 162 baselined (was 276) |
-| Fixed size drift | 0 |
-| RoadmapView | 775 lines (was 2671, 71% reduction via Roadmap/ directory) |
-| Icon imports | 100% via @/lib/icons barrel |
-| Card variant="section" usage | 94 → 69 (25 converted to subtle or removed) |
-| Unit tests | 4468 pass |
+| CI baselines clean | 12 of 18 (was 8) |
+| Unit tests | 4471 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
-| HIGH severity issues | 1 remaining (meeting-to-doc) |
-| MEDIUM severity issues | ~22 remaining |
+| Spec issues fixed | 41 total |
 
-### Consistency Scorecard
+### What's been fixed
 
-| Layer | Score |
-|-------|-------|
-| Spacing | 95% |
-| Card padding | 98% |
-| Colors | 100% |
-| Typography | 95%+ |
-| Dividers | 85% |
-| Width/height tokens | 90% |
-| Animations | 95%+ |
-| Fixed sizing | 100% |
-| Icon imports | 100% |
+Architecture: RoadmapView decomposition (2671→768 lines), ClientCard extraction, WorkspaceCard extraction, WikiDocumentGrid dedup, ProjectTimesheet dead code removal, useEffect→beforeLoad redirects (2 routes), auth hydrated/formReady removal, formatCurrency consolidation (6 duplicates→2 shared modules).
+
+Backend: Invoice list with client join, reactive portal tokens, archived notification pagination, admin-scoped token query, workspaceId team filter, excludeUserId search filter.
+
+Frontend: Invoice draft dialog, portal admin gating, footer link wiring, icon barrel migration (82 files), design tokens (roadmap + sidebar), 6 client-side filters eliminated.
+
+Card architecture: Banned all nested Cards (no exemptions). Introduced `CardSection` as the designated inner surface (58 replacements across 21 files). Card = outer container, CardSection = inner grouping. Validator enforces the ban.
+
+Validator cleanup: 4 dead CVA variants removed, e2e-hard-rules zeroed (Promise sleep → expect.poll), fixed-size-drift zeroed (stale entries), global-css-page-class zeroed (dead CSS + inline hero backgrounds).

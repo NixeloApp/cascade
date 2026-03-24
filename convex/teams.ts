@@ -607,18 +607,34 @@ export const getTeams = authenticatedQuery({
 });
 
 /**
- * Get all teams in an organization
+ * Get teams in an organization, optionally filtered by workspace.
  */
 export const getOrganizationTeams = organizationQuery({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    workspaceId: v.optional(v.id("workspaces")),
+  },
+  handler: async (ctx, args) => {
     // organizationQuery handles auth + org membership check
 
-    const teams = await ctx.db
-      .query("teams")
-      .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
-      .filter(notDeleted)
-      .take(MAX_TEAMS_PER_ORG);
+    // Verify workspace belongs to this organization if provided
+    if (args.workspaceId) {
+      const workspace = await ctx.db.get(args.workspaceId);
+      if (!workspace || workspace.organizationId !== ctx.organizationId) {
+        return [];
+      }
+    }
+
+    const teams = args.workspaceId
+      ? await ctx.db
+          .query("teams")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
+          .filter(notDeleted)
+          .take(MAX_TEAMS_PER_ORG)
+      : await ctx.db
+          .query("teams")
+          .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
+          .filter(notDeleted)
+          .take(MAX_TEAMS_PER_ORG);
 
     const isAdmin = ctx.organizationRole === "admin" || ctx.organizationRole === "owner";
 

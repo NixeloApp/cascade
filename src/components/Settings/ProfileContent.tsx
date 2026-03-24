@@ -26,6 +26,7 @@ import { UserActivityFeed } from "../UserActivityFeed";
 import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Input } from "../ui/form";
 import { IconButton } from "../ui/IconButton";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -113,14 +114,14 @@ export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: num
       </Stack>
       <Stack gap="sm">
         {rows.map((row) => (
-          <Card key={row.label} variant="section" padding="sm">
+          <CardSection key={row.label}>
             <Grid cols={1} colsSm={2} gap="xs">
               <Typography variant="label" color="secondary">
                 {row.label}
               </Typography>
               {row.value}
             </Grid>
-          </Card>
+          </CardSection>
         ))}
       </Stack>
     </Card>
@@ -319,7 +320,7 @@ function LoadedProfileContent({
         </MediaPreviewFrame>
       )}
 
-      <Card padding="md" radius="none" variant="section">
+      <CardSection size="md">
         <Stack gap="md">
           <Grid
             cols={1}
@@ -328,7 +329,7 @@ function LoadedProfileContent({
             style={isOwnProfile ? { marginTop: "-0.375rem" } : undefined}
           >
             <GridItem colSpanLg={showAccountInfo ? 3 : undefined}>
-              <Card variant="section" padding="lg">
+              <CardSection size="lg">
                 <ProfileHeader
                   user={viewUser}
                   isOwnProfile={isOwnProfile}
@@ -346,7 +347,7 @@ function LoadedProfileContent({
                   onCancel={onCancel}
                   onAvatarClick={onAvatarClick}
                 />
-              </Card>
+              </CardSection>
             </GridItem>
 
             {showAccountInfo && (
@@ -372,14 +373,14 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <Card padding="md" variant="section">
+          <CardSection size="md">
             <Stack gap="sm">
               <Typography variant="h5">Recent Activity</Typography>
               <UserActivityFeed userId={viewUser._id} limit={10} />
             </Stack>
-          </Card>
+          </CardSection>
         </Stack>
-      </Card>
+      </CardSection>
     </Card>
   );
 }

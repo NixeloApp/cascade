@@ -7,13 +7,13 @@ import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid, GridItem } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Input } from "@/components/ui/Input";
-import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -177,13 +177,13 @@ export function DocumentsListPage() {
                   </Flex>
 
                   <Grid cols={1} colsSm={3} gap="md">
-                    <InsetPanel>
+                    <CardSection>
                       <Typography variant="meta" color="secondary">
                         Total documents
                       </Typography>
                       <Typography variant="h3">{overview.totalCount}</Typography>
-                    </InsetPanel>
-                    <InsetPanel>
+                    </CardSection>
+                    <CardSection>
                       <Typography variant="meta" color="secondary">
                         Private vs shared
                       </Typography>
@@ -191,19 +191,19 @@ export function DocumentsListPage() {
                       <Typography variant="small" color="secondary">
                         {overview.sharedCount} shared
                       </Typography>
-                    </InsetPanel>
-                    <InsetPanel>
+                    </CardSection>
+                    <CardSection>
                       <Typography variant="meta" color="secondary">
                         Active contributors
                       </Typography>
                       <Typography variant="h3">{overview.creatorCount}</Typography>
-                    </InsetPanel>
+                    </CardSection>
                   </Grid>
                 </Stack>
               </GridItem>
 
               <GridItem colSpanLg={4}>
-                <Card variant="section" padding="lg" className="h-full">
+                <CardSection size="lg" className="h-full">
                   <Stack gap="md" className="h-full">
                     <Flex align="center" gap="sm">
                       <IconCircle size="sm" tone="brand" variant="muted">
@@ -216,7 +216,7 @@ export function DocumentsListPage() {
                       without hunting through the full tree.
                     </Typography>
                     {overview.latestDocument ? (
-                      <InsetPanel size="compact">
+                      <CardSection size="compact">
                         <Stack gap="xs">
                           <Typography variant="small" color="secondary">
                             Latest updated document
@@ -229,7 +229,7 @@ export function DocumentsListPage() {
                             <MetadataTimestamp date={overview.latestDocument.updatedAt} />
                           </Metadata>
                         </Stack>
-                      </InsetPanel>
+                      </CardSection>
                     ) : null}
                     <Button asChild variant="secondary" className="mt-auto">
                       <Link to={ROUTES.documents.templates.path} params={{ orgSlug }}>
@@ -237,7 +237,7 @@ export function DocumentsListPage() {
                       </Link>
                     </Button>
                   </Stack>
-                </Card>
+                </CardSection>
               </GridItem>
             </Grid>
           </Card>
@@ -268,13 +268,13 @@ export function DocumentsListPage() {
                   />
 
                   {filteredDocuments.length === 0 ? (
-                    <InsetPanel>
+                    <CardSection>
                       <EmptyState
                         icon={Search}
                         title="No documents match this search"
                         description="Try a title or owner name, or clear the search to see the full library."
                       />
-                    </InsetPanel>
+                    </CardSection>
                   ) : (
                     <Stack gap="sm">
                       {filteredDocuments.map((document) => (

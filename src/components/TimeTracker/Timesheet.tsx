@@ -15,6 +15,7 @@ import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Card } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -156,10 +157,8 @@ export function Timesheet() {
             );
 
             return (
-              <Card
+              <CardSection
                 key={day.dayKey}
-                padding="sm"
-                variant="section"
                 className={cn(isToday && "border-brand-ring bg-brand-subtle")}
               >
                 <Stack gap="sm">
@@ -181,12 +180,7 @@ export function Timesheet() {
                   {/* Time entries */}
                   <Stack gap="sm">
                     {day.entries.map((entry: TimeEntryWithHours) => (
-                      <Card
-                        key={entry._id}
-                        padding="sm"
-                        variant="section"
-                        className="bg-ui-bg-secondary"
-                      >
+                      <CardSection key={entry._id} className="bg-ui-bg-secondary">
                         <Flex justify="between" align="start" className="mb-1">
                           <FlexItem flex="1" className="min-w-0">
                             <Typography variant="mono" className="truncate block">
@@ -224,25 +218,25 @@ export function Timesheet() {
                             {entry.description}
                           </Typography>
                         )}
-                      </Card>
+                      </CardSection>
                     ))}
                   </Stack>
                 </Stack>
-              </Card>
+              </CardSection>
             );
           })}
         </Grid>
 
         {/* Empty state */}
         {timesheet.totalHours === 0 && (
-          <Card padding="xl" variant="section">
+          <CardSection size="xl">
             <Stack gap="md" align="center">
               <Calendar className="size-12 text-ui-text-tertiary" />
               <Typography color="secondary">
                 No time entries this week. Start a timer to begin tracking!
               </Typography>
             </Stack>
-          </Card>
+          </CardSection>
         )}
 
         <ConfirmDialog

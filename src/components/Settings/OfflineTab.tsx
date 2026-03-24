@@ -18,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
@@ -97,7 +98,7 @@ function getVisibleQueueItems(queue: OfflineMutation[], showAll: boolean): Offli
 
 function ConnectionStatusCell({ isOnline }: { isOnline: boolean }) {
   return (
-    <Card variant="section" padding="md">
+    <CardSection size="md">
       <Flex gap="md" align="center">
         <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
           {isOnline ? (
@@ -120,7 +121,7 @@ function ConnectionStatusCell({ isOnline }: { isOnline: boolean }) {
           </Typography>
         </Stack>
       </Flex>
-    </Card>
+    </CardSection>
   );
 }
 
@@ -145,7 +146,7 @@ function QueueItemList({
   return (
     <Stack gap="sm">
       {visible.map((item) => (
-        <Card key={item.id} variant="section" padding="sm">
+        <CardSection key={item.id}>
           <Stack gap="sm">
             <Flex justify="between" align="center">
               <Stack gap="none">
@@ -190,7 +191,7 @@ function QueueItemList({
               </Flex>
             )}
           </Stack>
-        </Card>
+        </CardSection>
       ))}
       {hiddenCount > 0 && (
         <Button variant="ghost" size="sm" onClick={onToggleShowAll} className="mx-auto">
@@ -296,15 +297,15 @@ export function OfflineTab() {
       <Card padding="lg" data-testid={TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD}>
         <Grid cols={1} colsLg={5} gap="lg" className="items-stretch">
           <ConnectionStatusCell isOnline={isOnline} />
-          <Card variant="section" padding="md">
+          <CardSection size="md">
             <Stack gap="xs">
               <Typography variant="small" color="secondary">
                 Queued Items
               </Typography>
               <Typography variant="h2">{isLoading ? "..." : count}</Typography>
             </Stack>
-          </Card>
-          <Card variant="section" padding="md">
+          </CardSection>
+          <CardSection size="md">
             <Stack gap="xs">
               <Typography variant="small" color="secondary">
                 Sync Status
@@ -313,8 +314,8 @@ export function OfflineTab() {
                 {getQueueStatusSummary(isOnline, syncingCount, failedCount, pendingCount)}
               </Typography>
             </Stack>
-          </Card>
-          <Card variant="section" padding="md">
+          </CardSection>
+          <CardSection size="md">
             <Stack gap="xs">
               <Typography variant="small" color="secondary">
                 Last Successful Replay
@@ -323,15 +324,15 @@ export function OfflineTab() {
                 {formatLastSuccessfulReplay(lastSuccessfulReplayAt)}
               </Typography>
             </Stack>
-          </Card>
-          <Card variant="section" padding="md">
+          </CardSection>
+          <CardSection size="md">
             <Stack gap="xs">
               <Typography variant="small" color="secondary">
                 Storage
               </Typography>
               <Typography variant="h2">IndexedDB</Typography>
             </Stack>
-          </Card>
+          </CardSection>
         </Grid>
       </Card>
 
@@ -343,7 +344,7 @@ export function OfflineTab() {
             End-to-end replay, install prompts, and service-worker ownership are still under audit.
           </Typography>
           <Grid cols={1} colsSm={2} gap="md">
-            <Card variant="section" padding="md">
+            <CardSection size="md">
               <Stack gap="xs">
                 <Typography variant="small" color="secondary">
                   Service Worker Support
@@ -352,8 +353,8 @@ export function OfflineTab() {
                   {hasServiceWorkerSupport ? "Detected" : "Unavailable"}
                 </Typography>
               </Stack>
-            </Card>
-            <Card variant="section" padding="md">
+            </CardSection>
+            <CardSection size="md">
               <Stack gap="xs">
                 <Typography variant="small" color="secondary">
                   Background Sync Support
@@ -362,7 +363,7 @@ export function OfflineTab() {
                   {hasBackgroundSyncSupport ? "Detected" : "Unavailable"}
                 </Typography>
               </Stack>
-            </Card>
+            </CardSection>
           </Grid>
           {capabilityLimitCopy && (
             <Alert variant="warning">
@@ -457,30 +458,30 @@ export function OfflineTab() {
               </Flex>
             )}
             <Grid cols={1} colsSm={3} gap="md">
-              <Card variant="section" padding="sm">
+              <CardSection>
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Pending
                   </Typography>
                   <Typography variant="label">{pendingCount}</Typography>
                 </Stack>
-              </Card>
-              <Card variant="section" padding="sm">
+              </CardSection>
+              <CardSection>
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Syncing
                   </Typography>
                   <Typography variant="label">{syncingCount}</Typography>
                 </Stack>
-              </Card>
-              <Card variant="section" padding="sm">
+              </CardSection>
+              <CardSection>
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Failed
                   </Typography>
                   <Typography variant="label">{failedCount}</Typography>
                 </Stack>
-              </Card>
+              </CardSection>
             </Grid>
             <QueueItemList
               queue={queue}

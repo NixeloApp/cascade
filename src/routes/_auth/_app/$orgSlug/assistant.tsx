@@ -13,6 +13,7 @@ import { PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -265,7 +266,7 @@ function RecentChats() {
         ) : (
           <Stack gap="sm">
             {chats.slice(0, 10).map((chat) => (
-              <Card key={chat._id} variant="section" padding="sm">
+              <CardSection key={chat._id} size="compact">
                 <Flex justify="between" align="center">
                   <Stack gap="xs">
                     <Typography variant="label">{chat.title || "Untitled Chat"}</Typography>
@@ -277,7 +278,7 @@ function RecentChats() {
                     {formatDate(chat.updatedAt)}
                   </Typography>
                 </Flex>
-              </Card>
+              </CardSection>
             ))}
           </Stack>
         )}

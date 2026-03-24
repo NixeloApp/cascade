@@ -51,18 +51,6 @@ describe("Button", () => {
       expect(btn.className).toContain("bg-ui-bg");
     });
 
-    it("applies brandSolid variant", () => {
-      render(
-        <Button variant="brandSolid" data-testid="btn">
-          Upgrade
-        </Button>,
-      );
-      const btn = screen.getByTestId("btn");
-      expect(btn.className).toContain("bg-brand");
-      expect(btn.className).toContain("shadow-brand/20");
-      expect(btn.className).toContain("hover:bg-brand-hover");
-    });
-
     it("applies ghost variant", () => {
       render(
         <Button variant="ghost" data-testid="btn">

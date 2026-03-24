@@ -159,8 +159,6 @@ describe("AIAssistantPanel", () => {
       chats: [],
       suggestions: [
         { _id: "suggestion_1" as Id<"aiSuggestions">, accepted: false, dismissed: false },
-        { _id: "suggestion_2" as Id<"aiSuggestions">, accepted: true, dismissed: false },
-        { _id: "suggestion_3" as Id<"aiSuggestions">, accepted: false, dismissed: true },
       ],
     });
 

@@ -17,6 +17,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
@@ -382,7 +383,7 @@ export function UserTypeManager() {
           ) : (
             <Grid cols={1} colsMd={3} gap="lg">
               {configs.map((config: EmploymentTypeConfig) => (
-                <Card key={config.type} padding="md" variant="section" hoverable>
+                <CardSection key={config.type} size="md" hoverable>
                   <Stack gap="sm">
                     <Flex justify="between" align="start">
                       <Flex align="center" gap="sm">
@@ -446,7 +447,7 @@ export function UserTypeManager() {
                       Edit Configuration
                     </Button>
                   </Stack>
-                </Card>
+                </CardSection>
               ))}
             </Grid>
           )}
@@ -462,18 +463,14 @@ export function UserTypeManager() {
         <CardBody>
           {/* Users without profiles */}
           {usersWithoutProfiles && usersWithoutProfiles.length > 0 && (
-            <Card
-              variant="section"
-              padding="md"
-              className="mb-6 border-status-warning bg-status-warning-bg"
-            >
+            <CardSection size="md" className="mb-6 border-status-warning bg-status-warning-bg">
               <Stack gap="sm">
                 <Typography variant="label" className="text-status-warning-text">
                   Unassigned Users ({usersWithoutProfiles.length})
                 </Typography>
                 <Stack gap="sm">
                   {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
-                    <Card key={user._id} variant="section" padding="sm">
+                    <CardSection key={user._id}>
                       <Flex justify="between" align="center">
                         <Typography variant="small">
                           {user.name || user.email || "Unknown User"}
@@ -482,7 +479,7 @@ export function UserTypeManager() {
                           Assign Type
                         </Button>
                       </Flex>
-                    </Card>
+                    </CardSection>
                   ))}
                   {usersWithoutProfiles.length > 5 && (
                     <Typography variant="caption">
@@ -491,7 +488,7 @@ export function UserTypeManager() {
                   )}
                 </Stack>
               </Stack>
-            </Card>
+            </CardSection>
           )}
 
           {/* Assigned users */}
@@ -510,7 +507,7 @@ export function UserTypeManager() {
           ) : (
             <Stack gap="sm">
               {profiles.map((profile: UserProfileWithUser) => (
-                <Card key={profile._id} padding="md" variant="section" hoverable>
+                <CardSection key={profile._id} size="md" hoverable>
                   <Flex justify="between" align="start" gap="md">
                     <FlexItem flex="1">
                       <Stack gap="sm">
@@ -597,7 +594,7 @@ export function UserTypeManager() {
                       </Button>
                     </Flex>
                   </Flex>
-                </Card>
+                </CardSection>
               ))}
             </Stack>
           )}
@@ -874,20 +871,16 @@ export function UserTypeManager() {
                         rows={2}
                       />
 
-                      <Card
-                        variant="section"
-                        padding="sm"
-                        className="border-brand-border bg-brand-subtle"
-                      >
+                      <CardSection className="border-brand-border bg-brand-subtle">
                         <Flex align="start" gap="sm" className="text-brand-hover">
-                          <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
+                          <Icon icon={Lightbulb} size="sm" className="shrink-0" />
                           <Typography variant="small">
                             Tip: Equity hours are non-paid hours compensated with equity. Set
                             required hours/week OR hours/month (not both). Max hours/week prevents
                             overwork.
                           </Typography>
                         </Flex>
-                      </Card>
+                      </CardSection>
                     </Stack>
                   )}
                 </Stack>

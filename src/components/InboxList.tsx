@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card, getCardRecipeClassName } from "./ui/Card";
+import { CardSection } from "./ui/CardSection";
 import { Checkbox } from "./ui/Checkbox";
 import {
   DropdownMenu,
@@ -251,7 +252,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
           {/* Bulk Actions Bar */}
           {activeTab === "open" && triageableCount > 0 && (
-            <Card variant="section" padding="sm" className="bg-ui-bg-soft">
+            <CardSection className="bg-ui-bg-soft">
               <Flex align="center" gap="md">
                 <Checkbox
                   checked={selectedIds.size === triageableCount && triageableCount > 0}
@@ -288,7 +289,7 @@ export function InboxList({ projectId }: InboxListProps) {
                   </Typography>
                 )}
               </Flex>
-            </Card>
+            </CardSection>
           )}
 
           <TabsContent value="open" className="overflow-auto">

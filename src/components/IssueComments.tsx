@@ -11,10 +11,10 @@ import type { Id } from "@convex/_generated/dataModel";
 import { usePaginatedQuery } from "convex/react";
 import { useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
-import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Separator } from "@/components/ui/Separator";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -310,7 +310,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
           {commentAttachments.length > 0 && (
             <Stack gap="xs">
               {commentAttachments.map((attachment) => (
-                <InsetPanel key={attachment.storageId} size="compact">
+                <CardSection key={attachment.storageId} size="compact">
                   <Flex align="center" justify="between" gap="sm">
                     <Flex align="center" gap="sm" className="min-w-0">
                       <Icon icon={Paperclip} size="sm" tone="secondary" className="shrink-0" />
@@ -327,7 +327,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                       <Icon icon={X} size="sm" />
                     </Button>
                   </Flex>
-                </InsetPanel>
+                </CardSection>
               ))}
             </Stack>
           )}

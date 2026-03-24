@@ -112,17 +112,6 @@ describe("Badge", () => {
       expect(badge.className).toContain("uppercase");
     });
 
-    it("applies commandCenter variant", () => {
-      render(
-        <Badge variant="commandCenter" data-testid="badge">
-          Command
-        </Badge>,
-      );
-      const badge = screen.getByTestId("badge");
-      expect(badge.className).toContain("backdrop-blur-sm");
-      expect(badge.className).toContain("shadow-soft");
-    });
-
     it("applies issueKey variant", () => {
       render(
         <Badge variant="issueKey" data-testid="badge">

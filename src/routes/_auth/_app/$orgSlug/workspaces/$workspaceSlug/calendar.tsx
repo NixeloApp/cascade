@@ -28,9 +28,12 @@ function WorkspaceCalendarPage() {
     organizationId,
     slug: workspaceSlug,
   });
-  const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, { organizationId });
+  const workspaceTeams = useAuthenticatedQuery(
+    api.teams.getOrganizationTeams,
+    workspace ? { organizationId, workspaceId: workspace._id } : "skip",
+  );
 
-  if (workspace === undefined || teams === undefined) {
+  if (workspace === undefined) {
     return <PageContent isLoading>{null}</PageContent>;
   }
 
@@ -42,8 +45,6 @@ function WorkspaceCalendarPage() {
       />
     );
   }
-
-  const workspaceTeams = teams.filter((team) => team.workspaceId === workspace._id);
 
   return (
     <Flex direction="column" className="h-full">
@@ -64,7 +65,7 @@ function WorkspaceCalendarPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All teams</SelectItem>
-            {workspaceTeams.map((team) => (
+            {(workspaceTeams ?? []).map((team) => (
               <SelectItem key={team._id} value={team._id}>
                 {team.name}
               </SelectItem>

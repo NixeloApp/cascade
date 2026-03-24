@@ -49,36 +49,6 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
-    /** Variants allowed inside another Card (inner sections only) */
-    const INNER_CARD_VARIANTS = new Set(["section"]);
-
-    /** Check if a JSX opening or self-closing element has an inner-card-safe variant */
-    function isSectionVariant(element) {
-      const attrs = element.attributes;
-      if (!attrs || !ts.isJsxAttributes(attrs)) return false;
-      for (const prop of attrs.properties) {
-        if (ts.isJsxAttribute(prop) && prop.name.getText() === "variant" && prop.initializer) {
-          // variant="section" / variant="subtle"
-          if (
-            ts.isStringLiteral(prop.initializer) &&
-            INNER_CARD_VARIANTS.has(prop.initializer.text)
-          ) {
-            return true;
-          }
-          // variant={"section"} / variant={"subtle"}
-          if (
-            ts.isJsxExpression(prop.initializer) &&
-            prop.initializer.expression &&
-            ts.isStringLiteral(prop.initializer.expression) &&
-            INNER_CARD_VARIANTS.has(prop.initializer.expression.text)
-          ) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
     function visit(node, cardDepth = 0) {
       // Handle JsxElement (opening + children + closing)
       if (ts.isJsxElement(node)) {
@@ -86,12 +56,11 @@ export function run() {
         const tagName = opening.tagName.getText();
 
         if (tagName === "Card") {
-          // variant="section" Cards are exempt — they're intentional inner sections
-          if (cardDepth > 0 && !isSectionVariant(opening)) {
+          if (cardDepth > 0) {
             reportError(
               filePath,
               opening,
-              `Card inside Card is banned. Use variant="section" for inner sections or a div with appropriate styling.`,
+              `Card inside Card is banned. Use CardSection or a div for inner surfaces.`,
             );
           }
 
@@ -107,11 +76,11 @@ export function run() {
       if (ts.isJsxSelfClosingElement(node)) {
         const tagName = node.tagName.getText();
 
-        if (tagName === "Card" && cardDepth > 0 && !isSectionVariant(node)) {
+        if (tagName === "Card" && cardDepth > 0) {
           reportError(
             filePath,
             node,
-            `Card inside Card is banned. Use variant="section" for inner sections or a div with appropriate styling.`,
+            `Card inside Card is banned. Use CardSection or a div for inner surfaces.`,
           );
         }
       }

@@ -1,9 +1,9 @@
 import { ChartCard } from "@/components/Analytics/ChartCard";
 import { MetricCard } from "@/components/Analytics/MetricCard";
 import { PageHeader, PageLayout, PageStack } from "@/components/layout";
+import { CardSection } from "@/components/ui/CardSection";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
-import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { CheckCircle, FolderKanban, TrendingUp, Users } from "@/lib/icons";
@@ -74,7 +74,7 @@ function ProjectBreakdownSection({
     >
       <Stack gap="sm">
         {projectBreakdown.map((project) => (
-          <InsetPanel key={project.projectId} size="compact">
+          <CardSection key={project.projectId} size="compact">
             <Flex align="center" justify="between" gap="md">
               <FlexItem flex="1">
                 <Stack gap="none">
@@ -86,7 +86,7 @@ function ProjectBreakdownSection({
               </FlexItem>
               <Typography variant="h4">{project.issueCount}</Typography>
             </Flex>
-          </InsetPanel>
+          </CardSection>
         ))}
       </Stack>
     </AnalyticsSection>
@@ -173,14 +173,14 @@ export function OrganizationAnalyticsDashboard({
         />
 
         {analytics.isProjectsTruncated ? (
-          <InsetPanel
+          <CardSection
             size="compact"
             className="border-status-warning/20 bg-status-warning-bg/70 text-status-warning-text"
           >
             <Typography variant="small">
               Showing approximate counts. Project data is capped at 100 projects.
             </Typography>
-          </InsetPanel>
+          </CardSection>
         ) : null}
 
         <Grid cols={2} colsLg={4} gap="md">

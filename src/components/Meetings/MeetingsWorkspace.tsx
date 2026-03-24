@@ -15,6 +15,7 @@ import { PageContent } from "@/components/layout";
 import { Badge, type BadgeProps } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -800,7 +801,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                       segmentRefs.current[segmentKey] = element;
                     }}
                   >
-                    <Card variant="section" padding="sm">
+                    <CardSection size="compact">
                       <Stack gap="xs">
                         <Flex justify="between" align="start" gap="sm" wrap>
                           <Flex gap="xs" wrap>
@@ -816,7 +817,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                           {segment.text}
                         </Typography>
                       </Stack>
-                    </Card>
+                    </CardSection>
                   </li>
                 );
               })}
@@ -925,7 +926,7 @@ function ActionItemCard({
         {actionItem.issueCreated ? (
           <LinkedIssueDetails issueId={actionItem.issueCreated} />
         ) : (
-          <Card variant="section" padding="sm">
+          <CardSection size="compact">
             <Stack gap="xs">
               <Typography variant="caption" color="secondary">
                 Turn this follow-up into a tracked issue.
@@ -971,7 +972,7 @@ function ActionItemCard({
                 </Flex>
               )}
             </Stack>
-          </Card>
+          </CardSection>
         )}
       </Stack>
     </Card>
@@ -1248,14 +1249,14 @@ function RecordingDetailPanel({
           </Metadata>
 
           {recording.errorMessage && (
-            <Card variant="section" padding="sm">
+            <CardSection size="compact">
               <Flex gap="sm" align="start">
                 <Icon icon={XCircle} size="sm" tone="error" />
                 <Typography variant="caption" color="secondary">
                   {recording.errorMessage}
                 </Typography>
               </Flex>
-            </Card>
+            </CardSection>
           )}
         </Stack>
       </Card>

@@ -18,11 +18,13 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Metadata, MetadataItem } from "../ui/Metadata";
+import { ScrollArea } from "../ui/ScrollArea";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -182,9 +184,8 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
                   {/* Error message */}
                   {execution.error && (
-                    <Card
-                      variant="section"
-                      padding="sm"
+                    <CardSection
+                      size="compact"
                       className="border border-status-error/30 bg-status-error-bg"
                     >
                       <Stack gap="xs">
@@ -195,7 +196,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                           {String(execution.error)}
                         </Typography>
                       </Stack>
-                    </Card>
+                    </CardSection>
                   )}
 
                   {/* Expandable Details */}
@@ -204,22 +205,24 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                       {/* Request Payload */}
                       <Stack gap="xs">
                         <Typography variant="label">Request Payload:</Typography>
-                        <Card variant="section" padding="sm" className="overflow-x-auto">
+                        <CardSection size="compact" className="overflow-x-auto">
                           <Typography as="pre" variant="mono">
                             {formatJson(execution.requestPayload)}
                           </Typography>
-                        </Card>
+                        </CardSection>
                       </Stack>
 
                       {/* Response Body */}
                       {execution.responseBody && (
                         <Stack gap="xs">
                           <Typography variant="label">Response Body:</Typography>
-                          <Card variant="section" padding="sm" className="max-h-48 overflow-x-auto">
-                            <Typography as="pre" variant="mono">
-                              {execution.responseBody}
-                            </Typography>
-                          </Card>
+                          <CardSection size="compact" className="overflow-x-auto">
+                            <ScrollArea size="contentSm">
+                              <Typography as="pre" variant="mono">
+                                {execution.responseBody}
+                              </Typography>
+                            </ScrollArea>
+                          </CardSection>
                         </Stack>
                       )}
                     </Stack>

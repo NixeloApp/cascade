@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -707,7 +708,7 @@ function EditorCanvas({
 
             <Grid cols={1} colsMd={3} gap="md">
               {DOCUMENT_STARTER_SECTIONS.map((section) => (
-                <Card key={section.title} variant="section" padding="md" className="h-full">
+                <CardSection key={section.title} size="md" className="h-full">
                   <Stack gap="sm">
                     <Badge variant="outline" shape="pill" className="w-fit">
                       <Flex as="span" align="center" gap="xs">
@@ -719,7 +720,7 @@ function EditorCanvas({
                       {section.description}
                     </Typography>
                   </Stack>
-                </Card>
+                </CardSection>
               ))}
             </Grid>
           </Stack>

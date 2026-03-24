@@ -780,15 +780,6 @@ body {
   border: 2px dashed var(--color-ui-text-tertiary);
 }
 
-/* Onboarding spotlight effect */
-.onboarding-spotlight {
-  position: relative;
-  z-index: 45;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 0 9999px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
 /* ============================================================
  * MINTLIFY-INSPIRED UTILITY CLASSES
  * ============================================================ */
@@ -987,28 +978,6 @@ body {
 
 .scrollbar-subtle::-webkit-scrollbar-thumb:hover {
   background: var(--color-scrollbar-thumb-hover);
-}
-
-/* Hero section background effects (radial glow + grid pattern) */
-.hero-radial-bg {
-  background: radial-gradient(
-    ellipse 78% 55% at 50% 0%,
-    color-mix(in oklab, var(--color-landing-accent) 18%, transparent),
-    color-mix(in oklab, var(--color-landing-accent-teal) 10%, transparent) 42%,
-    transparent 74%
-  );
-}
-
-.hero-grid-bg {
-  background-image:
-    linear-gradient(color-mix(in oklab, var(--color-ui-border) 44%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklab, var(--color-ui-border) 44%, transparent) 1px, transparent 1px);
-  background-size: 64px 64px;
-  opacity: 0.045;
-}
-
-:is(.dark, [data-theme="dark"]) .hero-grid-bg {
-  opacity: 0.05;
 }
 
 /* Typography utilities with tight letter-spacing */

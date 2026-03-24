@@ -59,7 +59,6 @@ const typographyVariants = cva("", {
         "text-xs font-semibold uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]",
       authTitle: "text-xl font-semibold tracking-tight text-ui-text",
       authBody: "text-sm text-ui-text-secondary",
-      dashboardHeroTitle: "text-4xl font-extrabold tracking-tight text-ui-text md:text-5xl",
       dashboardStatValue: "text-display-sm font-semibold tracking-tight text-ui-text",
       dashboardStatValueStrong: "text-3xl font-extrabold tracking-tight text-ui-text",
       errorCodeDisplay: "text-8xl font-bold tracking-tightest text-ui-text",
@@ -96,7 +95,6 @@ const typographyVariants = cva("", {
       pageHeaderTitle: "text-xl leading-tight text-ui-text sm:text-2xl lg:text-3xl",
       pageHeaderDescription: "max-w-3xl text-xs leading-5 text-ui-text-tertiary sm:text-sm",
       projectHeaderTitle: "truncate text-sm font-semibold tracking-tight text-ui-text sm:text-2xl",
-      placeholderTitle: "mb-2 text-lg font-semibold tracking-tight text-ui-text",
       wikiCardTitle: "line-clamp-1 text-2xl font-semibold tracking-tight text-ui-text",
       metricLabel: "text-xs font-medium uppercase tracking-wide text-ui-text-secondary",
 
@@ -155,7 +153,6 @@ Typography.displayName = "Typography";
 function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType {
   switch (variant) {
     case "h1":
-    case "dashboardHeroTitle":
     case "errorCodeDisplay":
       return "h1";
     case "h2":
@@ -193,7 +190,6 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "boardColumnTitle":
     case "boardColumnTitleCompact":
     case "projectHeaderTitle":
-    case "placeholderTitle":
     case "metricLabel":
     case "fieldSectionLabel":
     case "searchTriggerLabel":

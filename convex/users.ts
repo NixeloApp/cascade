@@ -229,6 +229,7 @@ export const searchUsers = authenticatedQuery({
   args: {
     query: v.string(),
     limit: v.optional(v.number()),
+    excludeUserId: v.optional(v.id("users")),
   },
   returns: v.array(
     v.object({
@@ -241,7 +242,10 @@ export const searchUsers = authenticatedQuery({
   handler: async (ctx, args) => {
     const searchLimit = args.limit ?? 10;
     const searchQuery = args.query.toLowerCase().trim();
-    const userIds = await getSearchableUserIds(ctx);
+    let userIds = await getSearchableUserIds(ctx);
+    if (args.excludeUserId) {
+      userIds = userIds.filter((id) => id !== args.excludeUserId);
+    }
     if (userIds.length === 0) {
       return [];
     }

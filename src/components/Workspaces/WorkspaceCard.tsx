@@ -11,10 +11,10 @@ import type { FunctionReturnType } from "convex/server";
 import { ROUTES } from "@/config/routes";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { IconCircle } from "../ui/IconCircle";
-import { InsetPanel } from "../ui/InsetPanel";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -49,25 +49,25 @@ function WorkspaceMetrics({
 }) {
   return (
     <Grid cols={2} gap="sm">
-      <InsetPanel>
+      <CardSection>
         <Stack gap="sm">
           <Typography variant="metricLabel">Teams</Typography>
           <Typography variant="h5">{teamCount}</Typography>
         </Stack>
-      </InsetPanel>
-      <InsetPanel>
+      </CardSection>
+      <CardSection>
         <Stack gap="sm">
           <Typography variant="metricLabel">Projects</Typography>
           <Typography variant="h5">{projectCount}</Typography>
         </Stack>
-      </InsetPanel>
+      </CardSection>
     </Grid>
   );
 }
 
 function WorkspaceFooter({ workspace }: { workspace: WorkspaceListItem }) {
   return (
-    <InsetPanel size="compact">
+    <CardSection size="compact">
       <Flex align="center" justify="between" gap="md">
         <Metadata size="sm">
           <MetadataItem>
@@ -81,7 +81,7 @@ function WorkspaceFooter({ workspace }: { workspace: WorkspaceListItem }) {
           Open workspace
         </Badge>
       </Flex>
-    </InsetPanel>
+    </CardSection>
   );
 }
 

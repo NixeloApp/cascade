@@ -20,10 +20,7 @@ const heroSignals = [
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-ui-bg-hero">
-        <div className="absolute inset-0 hero-radial-bg" />
-        <div className="absolute inset-0 hero-grid-bg" />
-      </div>
+      <div className="absolute inset-0 bg-ui-bg-hero" />
 
       <Container
         size="lg"

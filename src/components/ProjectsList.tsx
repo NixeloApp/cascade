@@ -19,6 +19,7 @@ import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -347,11 +348,11 @@ function SingleProjectWorkspaceOverview({
               </div>
 
               <div className="lg:col-span-4">
-                <Card recipe="overlayInset" variant="section" padding="md">
+                <CardSection size="md">
                   <Stack gap="md">
                     <Typography variant="label">Workspace snapshot</Typography>
                     <Grid cols={2} gap="md">
-                      <Card recipe="overlayInset" variant="section" padding="sm">
+                      <CardSection>
                         <Stack gap="xs">
                           <Typography variant="eyebrowWide">Issues</Typography>
                           <Typography variant="h4">{project.issueCount || 0}</Typography>
@@ -359,8 +360,8 @@ function SingleProjectWorkspaceOverview({
                             Active work tied to this project.
                           </Typography>
                         </Stack>
-                      </Card>
-                      <Card recipe="overlayInset" variant="section" padding="sm">
+                      </CardSection>
+                      <CardSection>
                         <Stack gap="xs">
                           <Typography variant="eyebrowWide">Workflow</Typography>
                           <Typography variant="h4">
@@ -370,14 +371,14 @@ function SingleProjectWorkspaceOverview({
                             Delivery model used across the hub.
                           </Typography>
                         </Stack>
-                      </Card>
+                      </CardSection>
                     </Grid>
                     <Typography variant="small" color="secondary">
                       The first project should already feel like a complete workspace surface, not a
                       sparse list page waiting for filler cards.
                     </Typography>
                   </Stack>
-                </Card>
+                </CardSection>
               </div>
             </Grid>
           </div>

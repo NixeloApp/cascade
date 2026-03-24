@@ -5,6 +5,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { Flex } from "@/components/ui/Flex";
 import { Input, Select, Textarea } from "@/components/ui/form";
 import { Stack } from "@/components/ui/Stack";
@@ -87,13 +88,11 @@ function buildDelegateOptions({
   status: ReturnType<typeof useAuthenticatedQuery<typeof api.outOfOffice.getCurrent>>;
 }) {
   const delegateOptions =
-    searchableUsers
-      ?.filter((user) => user._id !== currentUserId)
-      .map((user) => ({
-        _id: user._id,
-        name: user.name ?? user.email ?? "Unknown",
-        image: user.image,
-      })) ?? [];
+    searchableUsers?.map((user) => ({
+      _id: user._id,
+      name: user.name ?? user.email ?? "Unknown",
+      image: user.image,
+    })) ?? [];
 
   const delegateId = status?.delegate?._id ?? status?.delegateUserId;
   const shouldIncludeDelegate = delegateId && delegateId !== currentUserId;
@@ -166,7 +165,10 @@ async function saveOutOfOfficeStatus({
 export function OutOfOfficeSettings() {
   const status = useAuthenticatedQuery(api.outOfOffice.getCurrent, {});
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
-  const searchableUsers = useAuthenticatedQuery(api.users.searchUsers, { query: "", limit: 50 });
+  const searchableUsers = useAuthenticatedQuery(
+    api.users.searchUsers,
+    currentUser ? { query: "", limit: 50, excludeUserId: currentUser._id } : "skip",
+  );
   const { mutate: saveOutOfOffice } = useAuthenticatedMutation(api.outOfOffice.upsert);
   const { mutate: clearOutOfOffice } = useAuthenticatedMutation(api.outOfOffice.clear);
 
@@ -223,7 +225,7 @@ export function OutOfOfficeSettings() {
         </Stack>
 
         {status ? (
-          <Card padding="md" variant="section">
+          <CardSection size="md">
             <Stack gap="xs">
               <Flex align="center" gap="sm">
                 <Badge variant={status.isActive ? "warning" : "info"}>
@@ -251,7 +253,7 @@ export function OutOfOfficeSettings() {
                 </Flex>
               ) : null}
             </Stack>
-          </Card>
+          </CardSection>
         ) : null}
 
         <Flex direction="column" directionSm="row" gap="md">

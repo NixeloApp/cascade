@@ -8,6 +8,7 @@ import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { Flex } from "@/components/ui/Flex";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import {
@@ -217,7 +218,7 @@ function MyIssuesBoardPage() {
                     to={ROUTES.issues.detail.path}
                     params={{ orgSlug, key: issue.key }}
                   >
-                    <Card variant="section" padding="sm" hoverable>
+                    <CardSection size="compact" hoverable>
                       <Stack gap="xs">
                         <Flex justify="between" align="center">
                           <Typography variant="small" color="secondary">
@@ -243,7 +244,7 @@ function MyIssuesBoardPage() {
                           {issue.priority}
                         </Badge>
                       </Stack>
-                    </Card>
+                    </CardSection>
                   </Link>
                 ))}
                 {column.issues.length === 0 && (
