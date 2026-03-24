@@ -27,8 +27,8 @@ BOT_SERVICE_API_KEY=your-secret-key-here
 # Convex Connection
 CONVEX_URL=https://your-deployment.convex.cloud
 
-# Transcription (at least one required)
-OPENAI_API_KEY=sk-proj-xxxxx              # For Whisper
+# Transcription (at least one required — see "Transcription Providers" below)
+SPEECHMATICS_API_KEY=xxxxx
 
 # Summarization (required)
 ANTHROPIC_API_KEY=sk-ant-xxxxx            # For Claude
@@ -61,15 +61,19 @@ railway up
 
 ### Transcription Provider Keys
 
-At least one transcription provider is required:
+At least one transcription provider is required. The system rotates between providers based on remaining free-tier usage (~22 hrs/month total across all providers).
 
-| Variable | Provider | Free Tier |
-|----------|----------|-----------|
-| `OPENAI_API_KEY` | OpenAI Whisper | Pay per use ($0.006/min) |
-| `SPEECHMATICS_API_KEY` | Speechmatics | Limited free tier |
-| `GOOGLE_SPEECH_CREDENTIALS` | Google Speech-to-Text | 60 min/month |
-| `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION` | Azure Speech | 5 hrs/month |
-| `GLADIA_API_KEY` | Gladia | Limited free tier |
+| Variable | Provider | Free Tier | Cost After Free |
+|----------|----------|-----------|-----------------|
+| `SPEECHMATICS_API_KEY` | Speechmatics | 8 hrs/month | ~$0.005/min |
+| `GLADIA_API_KEY` | Gladia | 8 hrs/month | ~$0.005/min |
+| `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION` | Azure Speech | 5 hrs/month | ~$0.017/min |
+| `GOOGLE_CLOUD_API_KEY` or `GOOGLE_CLOUD_PROJECT_ID` | Google Cloud STT | 1 hr/month | $0.024/min |
+
+**Not included (and why):**
+- OpenAI Whisper — no free tier ($0.006/min from dollar one)
+- AssemblyAI — 100 hrs one-time credit only, not renewable monthly
+- Deepgram — $200 one-time credit only, not renewable monthly
 
 ### Optional Variables
 
@@ -92,31 +96,37 @@ BOT_SERVICE_API_KEY=your-secret-key-here  # Same as bot service
 SITE_URL=https://your-app.com
 ```
 
-## Transcription Provider Setup
+## Transcription Providers
 
-### OpenAI Whisper (Recommended)
+### Speechmatics (Priority 1 — best free tier)
 
-1. Get API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Set `OPENAI_API_KEY` in bot service
-
-```bash
-OPENAI_API_KEY=sk-proj-xxxxx
-```
-
-### Google Speech-to-Text
-
-1. Create project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable Speech-to-Text API
-3. Create service account and download credentials JSON
-4. Set environment variable:
+1. Sign up at [Speechmatics](https://www.speechmatics.com/)
+2. Get API key from dashboard
 
 ```bash
-GOOGLE_SPEECH_CREDENTIALS={"type":"service_account",...}
-# Or path to credentials file:
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
+SPEECHMATICS_API_KEY=xxxxx
 ```
 
-### Azure Speech Services
+- 8 hrs/month free, resets monthly
+- Async job-based API (creates job, polls for completion)
+- Uses "enhanced" model for better accuracy
+- Speaker identification supported but not currently enabled in our code
+
+### Gladia (Priority 2)
+
+1. Sign up at [Gladia](https://www.gladia.io/)
+2. Get API key from dashboard
+
+```bash
+GLADIA_API_KEY=xxxxx
+```
+
+- 8 hrs/month free, resets monthly
+- Two-step process: upload file, then start transcription
+- Speaker identification enabled by default — returns speaker-attributed segments
+- Returns `speakerCount` in results
+
+### Azure Speech Services (Priority 3)
 
 1. Create Speech resource in [Azure Portal](https://portal.azure.com/)
 2. Get key and region from resource
@@ -126,39 +136,107 @@ AZURE_SPEECH_KEY=xxxxx
 AZURE_SPEECH_REGION=eastus  # or your region
 ```
 
-### Speechmatics
+- 5 hrs/month free, resets monthly
+- REST API, sends raw audio buffer
+- No speaker identification in current implementation
 
-1. Sign up at [Speechmatics](https://www.speechmatics.com/)
-2. Get API key from dashboard
+### Google Cloud Speech-to-Text (Priority 4 — smallest free tier)
+
+1. Create project in [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable Speech-to-Text API
+3. Get API key or set up project ID
 
 ```bash
-SPEECHMATICS_API_KEY=xxxxx
+GOOGLE_CLOUD_API_KEY=xxxxx
+# Or:
+GOOGLE_CLOUD_PROJECT_ID=your-project-id
 ```
 
-### Gladia
+- 1 hr/month free (60 minutes), resets monthly
+- Smart routing: synchronous for files under ~1 minute, async for longer
+- Speaker identification enabled (hardcoded to 2 speakers)
+- Uses `latest_long` model, WEBM_OPUS encoding, 48kHz sample rate
 
-1. Sign up at [Gladia](https://www.gladia.io/)
-2. Get API key from dashboard
+### Provider Rotation
 
-```bash
-GLADIA_API_KEY=xxxxx
-```
+The system automatically picks the provider with the most free-tier hours remaining each month. Priority order when free tiers are equal: Speechmatics → Gladia → Azure → Google.
 
-## Provider Rotation
-
-The system automatically rotates between transcription providers based on free tier usage. Configure multiple providers for cost optimization:
+Configure multiple providers for maximum free coverage:
 
 ```bash
-# Primary (used first)
-OPENAI_API_KEY=sk-proj-xxxxx
-
-# Secondary (fallback)
-GOOGLE_SPEECH_CREDENTIALS={"type":"service_account",...}
-
-# Tertiary
-AZURE_SPEECH_KEY=xxxxx
+# All four = ~22 hrs/month free
+SPEECHMATICS_API_KEY=xxxxx        # 8 hrs
+GLADIA_API_KEY=xxxxx              # 8 hrs
+AZURE_SPEECH_KEY=xxxxx            # 5 hrs
 AZURE_SPEECH_REGION=eastus
+GOOGLE_CLOUD_API_KEY=xxxxx        # 1 hr
 ```
+
+## Self-Hosted Transcription (Future — Not Yet Implemented)
+
+> See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full build-vs-buy analysis.
+
+These are the leading self-hosted options we plan to evaluate. Self-hosting eliminates
+the 22hr/month free-tier ceiling and can add speaker identification to all transcripts.
+
+### WhisperX (Recommended — All-in-One)
+
+Bundles three things in one package:
+1. **faster-whisper** — transcription (same accuracy as OpenAI Whisper, 4x faster)
+2. **pyannote.audio** — speaker identification (who said what)
+3. **Word-level timestamps** — via wav2vec2 forced alignment
+
+- GitHub: https://github.com/m-bain/whisperX (~20,900 stars)
+- License: BSD-2-Clause
+- Requires: GPU for practical speed (CPU works but slow)
+- Languages: 5+ with alignment models, 99+ for base transcription
+- Estimated cost: ~$50-150/month for a GPU instance (unlimited hours)
+
+```bash
+# Example setup (not yet integrated)
+pip install whisperx
+whisperx audio.wav --model large-v3 --diarize --language en
+```
+
+### faster-whisper (Transcription Only)
+
+If you don't need speaker identification or want to add it separately.
+
+- GitHub: https://github.com/SYSTRAN/faster-whisper (~21,500 stars)
+- License: MIT
+- 4x faster than OpenAI Whisper with identical accuracy
+- Runs on CPU (quantized int8) or GPU
+- Large-v3 model needs ~4-6GB VRAM on GPU
+
+### whisper.cpp (Lightweight / Edge)
+
+Pure C/C++ port. Runs on anything — Raspberry Pi, mobile, browsers (WASM).
+
+- GitHub: https://github.com/ggml-org/whisper.cpp (~47,500 stars)
+- License: MIT
+- Most resource-efficient option
+- No speaker identification
+- Best for: edge deployment, mobile apps, offline scenarios
+
+### NVIDIA Parakeet / Canary (Best Accuracy)
+
+Bleeding-edge accuracy if you have NVIDIA GPUs.
+
+- Parakeet TDT 1.1B: **1.8% WER** (best in class), 2000x+ realtime speed
+- Canary Qwen 2.5B: 5.6% WER, 418x realtime, multi-language
+- Available via NVIDIA NeMo toolkit (Apache-2.0)
+- Less community tooling than Whisper ecosystem
+
+### Speaker Identification: pyannote.audio
+
+The standard for figuring out "who said what" in audio.
+
+- GitHub: https://github.com/pyannote/pyannote-audio (~9,400 stars)
+- License: MIT
+- Bundled in WhisperX (easiest path)
+- Can also be used standalone with any transcription engine
+- Requires HuggingFace token and model terms agreement
+- 11-19% error rate on standard benchmarks
 
 ## Deployment Options
 
@@ -178,7 +256,7 @@ railway init
 # Set environment variables
 railway variables set BOT_SERVICE_API_KEY=your-key
 railway variables set CONVEX_URL=https://your-deployment.convex.cloud
-railway variables set OPENAI_API_KEY=sk-proj-xxxxx
+railway variables set SPEECHMATICS_API_KEY=xxxxx
 railway variables set ANTHROPIC_API_KEY=sk-ant-xxxxx
 
 # Deploy
@@ -248,6 +326,7 @@ curl http://localhost:3001/api/jobs/job-id \
    - Use strong, unique API keys
    - Rotate keys periodically
    - Never commit keys to version control
+   - Bot service uses constant-time comparison to prevent timing attacks
 
 2. **Network Security**
    - Use HTTPS in production
@@ -264,7 +343,7 @@ curl http://localhost:3001/api/jobs/job-id \
 
 1. Check all required environment variables are set
 2. Check Playwright is installed: `npx playwright install`
-3. Check Node version (requires 18+)
+3. Check Node version (requires 20+)
 
 ### Can't connect to Convex
 
@@ -275,8 +354,9 @@ curl http://localhost:3001/api/jobs/job-id \
 ### Transcription fails
 
 1. Check at least one transcription provider is configured
-2. Verify API keys are valid
-3. Check provider-specific requirements (credentials format, etc.)
+2. Verify API keys are valid and free tier not exhausted
+3. Check provider-specific requirements (credentials format, region, etc.)
+4. Check Convex `serviceUsage` table for provider usage stats
 
 ### Bot can't join meeting
 
@@ -290,6 +370,10 @@ curl http://localhost:3001/api/jobs/job-id \
 1. Check Playwright browser permissions
 2. Verify audio elements are present
 3. Check browser console for errors
+
+### Speaker identification missing from transcript
+
+Only Gladia and Google Cloud STT currently return speaker information. Speechmatics and Azure do not have it enabled in our code (even though Speechmatics supports it). Self-hosted WhisperX will solve this for all transcripts — see ARCHITECTURE.md.
 
 ## Monitoring
 
@@ -308,7 +392,8 @@ pnpm dev  # Logs to console
 - Job success rate
 - Transcription duration
 - Summary generation time
-- Provider usage (for cost tracking)
+- Provider usage and remaining free-tier hours
+- Speaker identification coverage (which providers returned speaker data)
 
 ---
 
@@ -319,4 +404,4 @@ pnpm dev  # Logs to console
 
 ---
 
-*Last Updated: 2025-11-27*
+*Last Updated: 2026-03-23*

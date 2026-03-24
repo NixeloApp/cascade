@@ -181,43 +181,41 @@ export function Timesheet() {
                   <Stack gap="sm">
                     {day.entries.map((entry: TimeEntryWithHours) => (
                       <CardSection key={entry._id} className="bg-ui-bg-secondary">
-                        <Flex justify="between" align="start" className="mb-1">
-                          <FlexItem flex="1" className="min-w-0">
-                            <Typography variant="mono" className="truncate block">
-                              {entry.projectKey}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="secondary"
-                              className="truncate block"
+                        <Stack gap="xs">
+                          <Flex justify="between" align="start">
+                            <FlexItem flex="1" className="min-w-0">
+                              <Typography variant="mono" className="truncate block">
+                                {entry.projectKey}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="secondary"
+                                className="truncate block"
+                              >
+                                {entry.issueKey}
+                              </Typography>
+                            </FlexItem>
+                            {entry.billable && (
+                              <DollarSign className="size-3 text-status-success shrink-0" />
+                            )}
+                          </Flex>
+                          <Flex justify="between" align="center">
+                            <Typography variant="label">{formatHours(entry.hours)}h</Typography>
+                            <IconButton
+                              variant="danger"
+                              size="xs"
+                              onClick={() => handleDeleteClick(entry._id)}
+                              aria-label="Delete entry"
                             >
-                              {entry.issueKey}
+                              <Icon icon={Trash2} size="xs" />
+                            </IconButton>
+                          </Flex>
+                          {entry.description && (
+                            <Typography variant="caption" color="tertiary" className="line-clamp-1">
+                              {entry.description}
                             </Typography>
-                          </FlexItem>
-                          {entry.billable && (
-                            <DollarSign className="size-3 text-status-success shrink-0" />
                           )}
-                        </Flex>
-                        <Flex justify="between" align="center">
-                          <Typography variant="label">{formatHours(entry.hours)}h</Typography>
-                          <IconButton
-                            variant="danger"
-                            size="xs"
-                            onClick={() => handleDeleteClick(entry._id)}
-                            aria-label="Delete entry"
-                          >
-                            <Icon icon={Trash2} size="xs" />
-                          </IconButton>
-                        </Flex>
-                        {entry.description && (
-                          <Typography
-                            variant="caption"
-                            color="tertiary"
-                            className="mt-1 line-clamp-1"
-                          >
-                            {entry.description}
-                          </Typography>
-                        )}
+                        </Stack>
                       </CardSection>
                     ))}
                   </Stack>

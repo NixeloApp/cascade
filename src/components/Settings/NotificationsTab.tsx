@@ -137,15 +137,17 @@ function PushNotificationsBlocked() {
     <Alert variant="warning">
       <AlertTitle>Browser notifications blocked</AlertTitle>
       <AlertDescription>
-        <Typography variant="small">
-          Notification permission is denied for this site. Re-enable notifications in your browser
-          settings to receive push alerts.
-        </Typography>
-        <div className="mt-3">
-          <Button variant="secondary" size="sm" disabled>
-            Blocked
-          </Button>
-        </div>
+        <Stack gap="md">
+          <Typography variant="small">
+            Notification permission is denied for this site. Re-enable notifications in your browser
+            settings to receive push alerts.
+          </Typography>
+          <div>
+            <Button variant="secondary" size="sm" disabled>
+              Blocked
+            </Button>
+          </div>
+        </Stack>
       </AlertDescription>
     </Alert>
   );
