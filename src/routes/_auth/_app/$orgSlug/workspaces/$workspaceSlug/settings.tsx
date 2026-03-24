@@ -32,25 +32,6 @@ const WORKSPACE_ICONS = ["🏢", "🏗️", "💼", "🎯", "🚀", "💡", "�
 function WorkspaceSettings() {
   const { workspaceId } = useWorkspaceLayout();
   const workspace = useAuthenticatedQuery(api.workspaces.getWorkspace, { id: workspaceId });
-  const { mutate: updateWorkspace } = useAuthenticatedMutation(api.workspaces.updateWorkspace);
-
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [icon, setIcon] = useState("");
-  const [defaultProjectVisibility, setDefaultProjectVisibility] = useState(true);
-  const [allowExternalSharing, setAllowExternalSharing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [initialized, setInitialized] = useState(false);
-
-  // Initialize form state when workspace data loads
-  if (workspace && !initialized) {
-    setName(workspace.name);
-    setDescription(workspace.description ?? "");
-    setIcon(workspace.icon ?? "🏢");
-    setDefaultProjectVisibility(workspace.settings?.defaultProjectVisibility ?? true);
-    setAllowExternalSharing(workspace.settings?.allowExternalSharing ?? false);
-    setInitialized(true);
-  }
 
   if (workspace === undefined) {
     return <PageContent isLoading>{null}</PageContent>;
@@ -59,6 +40,31 @@ function WorkspaceSettings() {
   if (!workspace) {
     return <PageContent isLoading>{null}</PageContent>;
   }
+
+  // Key on workspace _id so React remounts the form when workspace changes,
+  // resetting all useState to initialValues without setState-during-render hacks.
+  return <WorkspaceSettingsForm key={workspace._id} workspace={workspace} />;
+}
+
+interface WorkspaceSettingsFormProps {
+  workspace: NonNullable<
+    ReturnType<typeof useAuthenticatedQuery<typeof api.workspaces.getWorkspace>>
+  >;
+}
+
+function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps) {
+  const { mutate: updateWorkspace } = useAuthenticatedMutation(api.workspaces.updateWorkspace);
+
+  const [name, setName] = useState(workspace.name);
+  const [description, setDescription] = useState(workspace.description ?? "");
+  const [icon, setIcon] = useState(workspace.icon ?? "🏢");
+  const [defaultProjectVisibility, setDefaultProjectVisibility] = useState(
+    workspace.settings?.defaultProjectVisibility ?? true,
+  );
+  const [allowExternalSharing, setAllowExternalSharing] = useState(
+    workspace.settings?.allowExternalSharing ?? false,
+  );
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
