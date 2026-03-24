@@ -524,8 +524,9 @@ export const findEnrollmentForReply = internalMutation({
 
     // Require thread match when threadId is available — check against all
     // stored thread IDs since each step may create a new Gmail thread.
-    const activeEnrollment = args.gmailThreadId
-      ? activeEnrollments.find((e) => e.gmailThreadIds?.includes(args.gmailThreadId!))
+    const threadId = args.gmailThreadId;
+    const activeEnrollment = threadId
+      ? activeEnrollments.find((e) => e.gmailThreadIds?.includes(threadId))
       : activeEnrollments[0];
 
     if (!activeEnrollment) return { matched: false };
