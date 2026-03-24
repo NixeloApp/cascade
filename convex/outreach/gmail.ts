@@ -12,13 +12,11 @@
 
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { logger } from "../lib/logger";
 import { DAY, MINUTE } from "../lib/timeUtils";
-import { suppress } from "./contacts";
 import { stopEnrollment } from "./enrollments";
 
 // =============================================================================

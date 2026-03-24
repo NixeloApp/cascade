@@ -12,7 +12,6 @@
  * Microsoft Outlook flow follows the same pattern with Microsoft endpoints.
  */
 
-import { internal } from "../_generated/api";
 import { httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import {
@@ -124,6 +123,7 @@ export const initiateGmailAuth = httpAction(async () => {
  * GET /outreach/google/callback?code=xxx&state=xxx
  */
 export const handleGmailCallback = httpAction(async (ctx, request) => {
+  void ctx; // Will be used when callback saves tokens to DB
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
