@@ -14,6 +14,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import type { MutationCtx } from "../_generated/server";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { logger } from "../lib/logger";
@@ -241,6 +242,85 @@ export const updateEnrollmentNextSend = internalMutation({
 // Step 4: Record result (internal mutation — updates DB state)
 // =============================================================================
 
+type SendResultArgs = {
+  enrollmentId: Id<"outreachEnrollments">;
+  sequenceId: Id<"outreachSequences">;
+  contactId: Id<"outreachContacts">;
+  organizationId: Id<"organizations">;
+  step: number;
+  mailboxId: Id<"outreachMailboxes">;
+};
+
+async function recordSuccessfulSend(ctx: MutationCtx, args: SendResultArgs) {
+  await ctx.db.insert("outreachEvents", {
+    enrollmentId: args.enrollmentId,
+    sequenceId: args.sequenceId,
+    contactId: args.contactId,
+    organizationId: args.organizationId,
+    type: "sent",
+    step: args.step,
+    createdAt: Date.now(),
+  });
+
+  await ctx.db.patch(args.enrollmentId, { lastSentAt: Date.now() });
+
+  const mailbox = await ctx.db.get(args.mailboxId);
+  if (mailbox) {
+    const today = new Date().toISOString().slice(0, 10);
+    const resetDate = new Date(mailbox.todayResetAt).toISOString().slice(0, 10);
+    const currentCount = today === resetDate ? mailbox.todaySendCount : 0;
+    await ctx.db.patch(args.mailboxId, {
+      todaySendCount: currentCount + 1,
+      todayResetAt: today === resetDate ? mailbox.todayResetAt : Date.now(),
+    });
+  }
+
+  const sequence = await ctx.db.get(args.sequenceId);
+  if (sequence) {
+    await advanceEnrollment(
+      ctx,
+      args.enrollmentId,
+      sequence.steps.length,
+      sequence.steps[args.step + 1]?.delayDays,
+    );
+    const stats = sequence.stats ?? {
+      enrolled: 0,
+      sent: 0,
+      opened: 0,
+      replied: 0,
+      bounced: 0,
+      unsubscribed: 0,
+    };
+    await ctx.db.patch(args.sequenceId, { stats: { ...stats, sent: stats.sent + 1 } });
+  }
+}
+
+async function recordFailedSend(ctx: MutationCtx, args: SendResultArgs) {
+  await ctx.db.insert("outreachEvents", {
+    enrollmentId: args.enrollmentId,
+    sequenceId: args.sequenceId,
+    contactId: args.contactId,
+    organizationId: args.organizationId,
+    type: "bounced",
+    step: args.step,
+    metadata: { bounceType: "hard" },
+    createdAt: Date.now(),
+  });
+
+  await ctx.db.patch(args.enrollmentId, {
+    status: "bounced",
+    completedAt: Date.now(),
+    nextSendAt: undefined,
+  });
+
+  const sequence = await ctx.db.get(args.sequenceId);
+  if (sequence?.stats) {
+    await ctx.db.patch(args.sequenceId, {
+      stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
+    });
+  }
+}
+
 /** Record a send result and advance enrollment */
 export const recordSendResult = internalMutation({
   args: {
@@ -254,89 +334,15 @@ export const recordSendResult = internalMutation({
     error: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // When sender is not implemented, defer the enrollment so it doesn't
-    // monopolize the batch on every cron cycle. No event is recorded.
     if (args.error === "EMAIL_NOT_IMPLEMENTED") {
       await ctx.db.patch(args.enrollmentId, { nextSendAt: Date.now() + 60 * MINUTE });
       return;
     }
 
     if (args.success) {
-      // Log sent event
-      await ctx.db.insert("outreachEvents", {
-        enrollmentId: args.enrollmentId,
-        sequenceId: args.sequenceId,
-        contactId: args.contactId,
-        organizationId: args.organizationId,
-        type: "sent",
-        step: args.step,
-        createdAt: Date.now(),
-      });
-
-      // Update enrollment timestamp
-      await ctx.db.patch(args.enrollmentId, { lastSentAt: Date.now() });
-
-      // Increment mailbox daily send count
-      const mailbox = await ctx.db.get(args.mailboxId);
-      if (mailbox) {
-        const today = new Date().toISOString().slice(0, 10);
-        const resetDate = new Date(mailbox.todayResetAt).toISOString().slice(0, 10);
-        const currentCount = today === resetDate ? mailbox.todaySendCount : 0;
-
-        await ctx.db.patch(args.mailboxId, {
-          todaySendCount: currentCount + 1,
-          todayResetAt: today === resetDate ? mailbox.todayResetAt : Date.now(),
-        });
-      }
-
-      // Advance to next step (or mark completed)
-      const sequence = await ctx.db.get(args.sequenceId);
-      if (sequence) {
-        const nextStepIndex = args.step + 1;
-        const nextStep = sequence.steps[nextStepIndex];
-
-        await advanceEnrollment(ctx, args.enrollmentId, sequence.steps.length, nextStep?.delayDays);
-
-        // Update sequence stats
-        const currentStats = sequence.stats ?? {
-          enrolled: 0,
-          sent: 0,
-          opened: 0,
-          replied: 0,
-          bounced: 0,
-          unsubscribed: 0,
-        };
-        await ctx.db.patch(args.sequenceId, {
-          stats: { ...currentStats, sent: currentStats.sent + 1 },
-        });
-      }
+      await recordSuccessfulSend(ctx, args);
     } else {
-      // Send failed — log bounce event
-      await ctx.db.insert("outreachEvents", {
-        enrollmentId: args.enrollmentId,
-        sequenceId: args.sequenceId,
-        contactId: args.contactId,
-        organizationId: args.organizationId,
-        type: "bounced",
-        step: args.step,
-        metadata: { bounceType: "hard" },
-        createdAt: Date.now(),
-      });
-
-      // Stop enrollment on hard failure
-      await ctx.db.patch(args.enrollmentId, {
-        status: "bounced",
-        completedAt: Date.now(),
-        nextSendAt: undefined,
-      });
-
-      // Increment sequence bounce stats
-      const sequence = await ctx.db.get(args.sequenceId);
-      if (sequence?.stats) {
-        await ctx.db.patch(args.sequenceId, {
-          stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
-        });
-      }
+      await recordFailedSend(ctx, args);
     }
   },
 });

@@ -12,6 +12,7 @@
 
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
@@ -24,6 +25,38 @@ import { stopEnrollment } from "./enrollments";
 // =============================================================================
 
 const GMAIL_API_BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
+
+/** Try to refresh an expiring access token. Returns the new token or null. */
+async function tryRefreshToken(
+  mailbox: { expiresAt?: number; refreshToken?: string },
+  ctx: Pick<import("../_generated/server").ActionCtx, "runMutation">,
+  mailboxId: Id<"outreachMailboxes">,
+): Promise<string | null> {
+  if (!mailbox.expiresAt || mailbox.expiresAt >= Date.now() + 5 * MINUTE || !mailbox.refreshToken) {
+    return null;
+  }
+  const clientId = process.env.AUTH_GOOGLE_ID;
+  const clientSecret = process.env.AUTH_GOOGLE_SECRET;
+  if (!clientId || !clientSecret) return null;
+
+  const refreshed = await refreshAccessToken(mailbox.refreshToken, clientId, clientSecret);
+  if (!refreshed) return null;
+
+  await ctx.runMutation(internal.outreach.gmail.updateMailboxTokens, {
+    mailboxId,
+    accessToken: refreshed.accessToken,
+    expiresAt: refreshed.expiresAt,
+  });
+  return refreshed.accessToken;
+}
+
+/** Extract sender email from a Gmail message's From header. */
+function extractSenderEmail(headers: Array<{ name: string; value: string }>): string | null {
+  const fromHeader = headers.find((h) => h.name === "From");
+  if (!fromHeader?.value) return null;
+  const match = fromHeader.value.match(/<([^>]+)>/);
+  return (match?.[1] ?? fromHeader.value).toLowerCase().trim() || null;
+}
 
 interface GmailSendResult {
   success: boolean;
@@ -260,99 +293,53 @@ export const checkReplies = internalAction({
     const mailbox = await ctx.runQuery(internal.outreach.gmail.getMailboxTokens, {
       mailboxId: args.mailboxId,
     });
-
     if (!mailbox?.accessToken) return { checked: 0, replies: 0 };
 
-    let { accessToken } = mailbox;
+    const refreshed = await tryRefreshToken(mailbox, ctx, args.mailboxId);
+    const accessToken = refreshed ?? mailbox.accessToken;
+    const authHeaders = { Authorization: `Bearer ${accessToken}` };
 
-    // Refresh if needed
-    if (mailbox.expiresAt && mailbox.expiresAt < Date.now() + 5 * MINUTE && mailbox.refreshToken) {
-      const clientId = process.env.AUTH_GOOGLE_ID;
-      const clientSecret = process.env.AUTH_GOOGLE_SECRET;
-      if (clientId && clientSecret) {
-        const refreshed = await refreshAccessToken(mailbox.refreshToken, clientId, clientSecret);
-        if (refreshed) {
-          await ctx.runMutation(internal.outreach.gmail.updateMailboxTokens, {
-            mailboxId: args.mailboxId,
-            accessToken: refreshed.accessToken,
-            expiresAt: refreshed.expiresAt,
-          });
-          accessToken = refreshed.accessToken;
-        }
-      }
-    }
-
-    // List recent inbox messages (last 24 hours, unread)
     const oneDayAgo = Math.floor((Date.now() - DAY) / 1000);
     const query = `in:inbox is:unread after:${oneDayAgo}`;
 
     try {
       const response = await fetchWithTimeout(
         `${GMAIL_API_BASE}/messages?q=${encodeURIComponent(query)}&maxResults=50`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        },
+        { headers: authHeaders },
         15000,
       );
-
-      if (!response.ok) {
-        logger.warn(`Gmail list messages failed: ${response.status}`);
-        return { checked: 0, replies: 0 };
-      }
+      if (!response.ok) return { checked: 0, replies: 0 };
 
       const data = (await response.json()) as {
         messages?: Array<{ id: string; threadId: string }>;
       };
-
-      if (!data.messages || data.messages.length === 0) {
-        return { checked: 0, replies: 0 };
-      }
+      if (!data.messages?.length) return { checked: 0, replies: 0 };
 
       let replies = 0;
-
       for (const msg of data.messages) {
-        // Fetch full message to check headers
         const msgResponse = await fetchWithTimeout(
-          `${GMAIL_API_BASE}/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=In-Reply-To&metadataHeaders=X-Nixelo-Enrollment`,
-          {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          },
+          `${GMAIL_API_BASE}/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=In-Reply-To`,
+          { headers: authHeaders },
           10000,
         );
-
         if (!msgResponse.ok) continue;
 
         const msgData = (await msgResponse.json()) as {
-          id: string;
-          threadId: string;
-          payload: {
-            headers: Array<{ name: string; value: string }>;
-          };
+          payload: { headers: Array<{ name: string; value: string }> };
         };
-
-        // Check if this thread contains an outreach email
-        // Look for In-Reply-To or check if we have an enrollment for the sender
-        const fromHeader = msgData.payload.headers.find((h) => h.name === "From");
-        const senderEmail = fromHeader?.value?.match(/<([^>]+)>/)?.[1] ?? fromHeader?.value;
-
+        const senderEmail = extractSenderEmail(msgData.payload.headers);
         if (!senderEmail) continue;
 
-        // Check if this sender is an active outreach contact
         const matchResult = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForReply, {
-          senderEmail: senderEmail.toLowerCase().trim(),
+          senderEmail,
           mailboxId: args.mailboxId,
         });
-
-        if (matchResult.matched) {
-          replies++;
-        }
+        if (matchResult.matched) replies++;
       }
 
-      // Update last health check
       await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
         mailboxId: args.mailboxId,
       });
-
       return { checked: data.messages.length, replies };
     } catch (e) {
       logger.warn("Gmail reply polling failed", {
