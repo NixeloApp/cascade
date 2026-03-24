@@ -17,6 +17,7 @@ import type { Id } from "../_generated/dataModel";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { logger } from "../lib/logger";
+import { MINUTE } from "../lib/timeUtils";
 import { isSuppressed } from "./contacts";
 import { advanceEnrollment } from "./enrollments";
 
@@ -71,6 +72,11 @@ export const processDueEnrollments = internalAction({
       });
 
       if (!checkResult.canSend) {
+        // Defer the enrollment so it's retried in the next cron cycle
+        // instead of being stuck at the same nextSendAt forever.
+        await ctx.runMutation(internal.outreach.sendEngine.updateEnrollmentNextSend, {
+          enrollmentId: enrollment._id,
+        });
         skipped++;
         continue;
       }
@@ -221,6 +227,18 @@ export const sendSequenceEmail = internalAction({
     // Fail closed — return skipped so the cron does not record a send
     // or bounce event. The enrollment stays in its current state.
     return { success: false, error: "EMAIL_NOT_IMPLEMENTED" };
+  },
+});
+
+/** Defer an enrollment by pushing nextSendAt forward (retry next cron cycle) */
+export const updateEnrollmentNextSend = internalMutation({
+  args: { enrollmentId: v.id("outreachEnrollments") },
+  handler: async (ctx, args) => {
+    const enrollment = await ctx.db.get(args.enrollmentId);
+    if (!enrollment || enrollment.status !== "active") return;
+    await ctx.db.patch(args.enrollmentId, {
+      nextSendAt: Date.now() + 15 * MINUTE,
+    });
   },
 });
 

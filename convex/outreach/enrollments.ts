@@ -77,12 +77,13 @@ export const getByContact = authenticatedQuery({
     if (sequence.organizationId !== user?.defaultOrganizationId)
       throw notFound("sequence", args.sequenceId);
 
-    const enrollments = await ctx.db
+    // Use by_contact index and filter by sequence — avoids truncation
+    // when a sequence has more than BOUNDED_LIST_LIMIT enrollments.
+    return await ctx.db
       .query("outreachEnrollments")
-      .withIndex("by_sequence", (q) => q.eq("sequenceId", args.sequenceId))
-      .take(BOUNDED_LIST_LIMIT);
-
-    return enrollments.find((e) => e.contactId === args.contactId) ?? null;
+      .withIndex("by_contact", (q) => q.eq("contactId", args.contactId))
+      .filter((q) => q.eq(q.field("sequenceId"), args.sequenceId))
+      .first();
   },
 });
 
