@@ -189,6 +189,10 @@ export const TEST_IDS = {
     NAME_INPUT: "project-name-input",
     /** @see src/components/CreateProjectFromTemplate.tsx */
     KEY_INPUT: "project-key-input",
+    /** @see src/components/ProjectsList.tsx */
+    CARD: "project-card",
+    /** @see src/components/ProjectsList.tsx */
+    EMPTY_STATE: "project-empty-state",
   },
 
   // ============================================================

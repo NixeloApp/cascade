@@ -1524,38 +1524,24 @@ async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> 
     timeout: 12000,
   });
   await waitForSpinnersHidden(page);
-  await page.waitForFunction(
-    (capturePrefix) => {
-      const text = document.body.innerText || "";
-      if (capturePrefix === "empty") {
-        return text.includes("No projects yet");
-      }
 
-      if (text.includes("Client Operations Hub")) {
-        return true;
-      }
-
-      if (text.includes("Primary workspace project") && text.includes("Connected surfaces")) {
-        return true;
-      }
-
-      const hasProjectLink = Array.from(document.querySelectorAll("a[href]")).some((link) => {
-        const href = link.getAttribute("href") || "";
-        return /\/projects\/[^/]+\/board$/.test(href);
-      });
-
-      if (hasProjectLink) {
-        return true;
-      }
-
-      // The page header, primary action, and loading-status guards above already
-      // ensure the route is stable enough to capture. Do not require one specific
-      // seeded project name or card layout for authenticated projects screenshots.
-      return capturePrefix !== "empty";
-    },
-    prefix,
-    { timeout: 12000 },
-  );
+  if (prefix === "empty") {
+    await page.getByTestId(TEST_IDS.PROJECT.EMPTY_STATE).waitFor({
+      state: "visible",
+      timeout: 12000,
+    });
+  } else {
+    // Wait for at least one project card or the empty state
+    await expect
+      .poll(
+        async () => {
+          const cardCount = await page.getByTestId(TEST_IDS.PROJECT.CARD).count();
+          return cardCount > 0 ? "ready" : "pending";
+        },
+        { timeout: 12000 },
+      )
+      .toBe("ready");
+  }
 }
 
 async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
@@ -1570,9 +1556,8 @@ async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
   await expect
     .poll(
       async () => {
-        const text = (await page.locator("body").textContent()) || "";
         if (prefix === "empty") {
-          return text.includes("No issues found") ? "empty" : "pending";
+          return (await isLocatorVisible(page.getByText(/no issues found/i))) ? "empty" : "pending";
         }
 
         const issueCardCount = await getLocatorCount(page.getByTestId(TEST_IDS.ISSUE.CARD));
@@ -1580,7 +1565,7 @@ async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
           return "ready";
         }
 
-        return text.includes("No issues found") ? "empty" : "pending";
+        return (await isLocatorVisible(page.getByText(/no issues found/i))) ? "empty" : "pending";
       },
       { timeout: 12000 },
     )
@@ -1638,25 +1623,20 @@ async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void
     state: "visible",
     timeout: 12000,
   });
-  await page.waitForFunction(
-    (capturePrefix) => {
-      const text = document.body.innerText || "";
-      if (capturePrefix === "empty") {
-        return text.includes("No workspaces yet");
-      }
-
-      return (
-        text.includes("Workspace map") ||
-        text.includes("Operating structure") ||
-        Array.from(document.querySelectorAll("a[href]")).some((link) => {
-          const href = link.getAttribute("href") || "";
-          return /\/workspaces\/[^/]+/.test(href);
-        })
-      );
-    },
-    prefix,
-    { timeout: 12000 },
-  );
+  await expect
+    .poll(
+      async () => {
+        if (prefix === "empty") {
+          return (await isLocatorVisible(page.getByText(/no workspaces yet/i)))
+            ? "ready"
+            : "pending";
+        }
+        const cardCount = await getLocatorCount(page.getByTestId(TEST_IDS.WORKSPACE.CARD));
+        return cardCount > 0 ? "ready" : "pending";
+      },
+      { timeout: 12000 },
+    )
+    .toBe("ready");
   await waitForSpinnersHidden(page);
 }
 
@@ -1669,18 +1649,6 @@ async function waitForTimeTrackingReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.waitForFunction(
-    () => {
-      const text = document.body.innerText || "";
-      return (
-        text.includes("Track time with enough context to understand cost") ||
-        text.includes("Select a project to continue.") ||
-        text.includes("Choose a project to view burn rate and cost analysis")
-      );
-    },
-    undefined,
-    { timeout: 12000 },
-  );
   await waitForSpinnersHidden(page);
 }
 
@@ -1697,21 +1665,6 @@ async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.waitForFunction(
-    () => {
-      const text = document.body.innerText || "";
-      return (
-        text.includes("Organize your workspace into focused teams") &&
-        (text.includes("No teams yet") ||
-          Array.from(document.querySelectorAll("a[href]")).some((link) => {
-            const href = link.getAttribute("href") || "";
-            return /\/teams\/[^/]+$/.test(href);
-          }))
-      );
-    },
-    undefined,
-    { timeout: 12000 },
-  );
   await waitForSpinnersHidden(page);
 }
 
@@ -1738,19 +1691,6 @@ async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
 
 async function waitForTeamDetailReady(page: Page): Promise<void> {
   await waitForBoardReady(page);
-  await page.waitForFunction(
-    () => {
-      const text = document.body.innerText || "";
-      return (
-        text.includes("Projects") &&
-        (text.includes("Delivery board") ||
-          text.includes("Kanban board") ||
-          text.includes("Sprint board"))
-      );
-    },
-    undefined,
-    { timeout: 12000 },
-  );
 }
 
 async function waitForTeamSettingsReady(page: Page): Promise<void> {
@@ -1779,21 +1719,21 @@ async function waitForIssueDetailReady(page: Page): Promise<void> {
 }
 
 async function waitForDocumentsReady(page: Page): Promise<void> {
-  await page.waitForFunction(
-    () => {
-      const text = document.body.innerText || "";
-      if (!/documents/i.test(text)) {
-        return false;
-      }
-
-      return Array.from(document.querySelectorAll("a[href]")).some((link) => {
-        const href = link.getAttribute("href") || "";
-        return /\/documents\/[^/?#]+$/.test(href) && !href.endsWith("/templates");
-      });
-    },
-    undefined,
-    { timeout: 12000 },
-  );
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  // Wait for document cards to render or empty state
+  await expect
+    .poll(
+      async () => {
+        const cardCount = await getLocatorCount(page.getByTestId(TEST_IDS.DOCUMENT.CARD));
+        if (cardCount > 0) return "ready";
+        return (await isLocatorVisible(page.getByText(/no documents/i))) ? "empty" : "pending";
+      },
+      { timeout: 12000 },
+    )
+    .not.toBe("pending");
   await waitForSpinnersHidden(page);
 }
 
@@ -1802,20 +1742,10 @@ async function waitForDocumentEditorReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.waitForFunction(
-    () => {
-      const text = document.body.innerText || "";
-      return (
-        text.includes("The team closed the auth refresh") ||
-        text.includes("Teams can move from specs to execution") ||
-        text.includes("Keep Tailwind for static layout") ||
-        text.includes("Hydrate the editor from saved document versions") ||
-        document.querySelector("[contenteditable='true']") !== null
-      );
-    },
-    undefined,
-    { timeout: 12000 },
-  );
+  await page.getByTestId(TEST_IDS.EDITOR.PLATE).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
   await waitForSpinnersHidden(page);
 }
 
@@ -1828,18 +1758,6 @@ async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.waitForFunction(
-    () => {
-      const text = document.body.innerText || "";
-      return (
-        text.includes("Built-in Templates") ||
-        text.includes("Custom Templates") ||
-        text.includes("No templates yet")
-      );
-    },
-    undefined,
-    { timeout: 12000 },
-  );
   await waitForSpinnersHidden(page);
 }
 
@@ -1927,32 +1845,24 @@ async function scrollSectionNearViewportTop(
 }
 
 async function waitForRoadmapReady(page: Page): Promise<void> {
-  await page.getByText(/^roadmap$/i).waitFor({ state: "visible", timeout: 12000 });
-  await page.waitForFunction(
-    () => {
-      const text = document.body.innerText || "";
-      return (
-        text.includes("Roadmap is ready for planning") ||
-        text.includes("Timeline") ||
-        text.includes("No issues with target dates")
-      );
-    },
-    undefined,
-    { timeout: 12000 },
-  );
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({ state: "visible", timeout: 12000 });
+  // Wait for timeline canvas or empty state
+  await expect
+    .poll(
+      async () => {
+        if (await isLocatorVisible(page.getByTestId(TEST_IDS.ROADMAP.TIMELINE_CANVAS)))
+          return "ready";
+        if (await isLocatorVisible(page.getByText(/no issues with target dates/i))) return "empty";
+        return "pending";
+      },
+      { timeout: 12000 },
+    )
+    .not.toBe("pending");
   await waitForSpinnersHidden(page);
 }
 
 async function waitForBillingReady(page: Page): Promise<void> {
-  await page.getByText(/billing report/i).waitFor({ state: "visible", timeout: 12000 });
-  await page.waitForFunction(
-    () => {
-      const text = document.body.innerText || "";
-      return text.includes("Billable Hours") || text.includes("Revenue") || text.includes("Rate");
-    },
-    undefined,
-    { timeout: 12000 },
-  );
+  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({ state: "visible", timeout: 12000 });
   await waitForSpinnersHidden(page);
 }
 
@@ -1977,21 +1887,11 @@ async function waitForExpectedContent(
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 15000 });
-    // Wait for actual dashboard content to appear
-    await page.waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("DEMO-") ||
-          text.includes("My Issues") ||
-          text.includes("Recent Activity") ||
-          text.includes("Explore Projects") ||
-          text.includes("No projects yet")
-        );
-      },
-      undefined,
-      { timeout: 20000 },
-    );
+    // Wait for dashboard shell to render
+    await page.getByTestId(TEST_IDS.DASHBOARD.CONTENT).waitFor({
+      state: "visible",
+      timeout: 20000,
+    });
     await waitForSpinnersHidden(page);
     await waitForLoadingSkeletonsToClear(page, 4000);
     return;

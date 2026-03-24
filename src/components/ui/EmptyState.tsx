@@ -40,6 +40,8 @@ interface EmptyStateProps {
   className?: string;
   /** Optional additional content below the description */
   children?: ReactNode;
+  /** Optional data-testid for E2E testing */
+  "data-testid"?: string;
 }
 
 const EMPTY_STATE_ICON_COLOR_CLASS: Record<EmptyStateVariant, string> = {
@@ -143,6 +145,7 @@ export function EmptyState({
   surface = "default",
   className,
   children,
+  "data-testid": dataTestId,
 }: EmptyStateProps) {
   const iconColorClass = EMPTY_STATE_ICON_COLOR_CLASS[variant];
   const sizeClass = EMPTY_STATE_SIZE_CLASS[size];
@@ -151,6 +154,7 @@ export function EmptyState({
 
   return (
     <section
+      data-testid={dataTestId}
       className={cn(
         "mx-auto flex w-full flex-col justify-center animate-fade-in",
         isBare
