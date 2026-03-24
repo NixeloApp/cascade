@@ -24,7 +24,7 @@ All require design decisions, product specs, or infrastructure setup.
 
 | Item | Detail |
 |------|--------|
-| [e2e-overhaul.md](./e2e-overhaul.md) | E2E overhaul — Phase 1/2.2/3.2/4 DONE. Remaining: Phase 2.1 (page object readiness), 3.1 (split monolith), 5 (screenshot uses page objects) |
+| [e2e-overhaul.md](./e2e-overhaul.md) | E2E overhaul — Phase 1/2/3.2/4/5 DONE. Remaining: Phase 3.1 (continue splitting monolith, 4,737 lines), 6 (CI validators) |
 
 ### Features
 

@@ -28,9 +28,28 @@ import * as path from "node:path";
 import { type Browser, chromium, expect, type Locator, type Page } from "@playwright/test";
 import { ROUTES } from "../convex/shared/routes";
 import { TEST_IDS } from "../src/lib/test-ids";
-import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
 import { ProjectsPage } from "./pages";
+import { parseCliOptions, printUsage } from "./screenshot-lib/cli";
+import {
+  BASE_URL,
+  type CaptureTarget,
+  type CliOptions,
+  CONFIGS,
+  DEFAULT_SCREENSHOT_PROJECT_WORKFLOW_STATES,
+  FALLBACK_SCREENSHOT_DIR,
+  MARKDOWN_IMPORT_PREVIEW,
+  MARKDOWN_RICH_CONTENT,
+  MODAL_SPECS_BASE_DIR,
+  PAGE_TO_SPEC_FOLDER,
+  SCREENSHOT_STAGING_BASE_DIR,
+  SCREENSHOT_USER,
+  SEARCH_SHORTCUT,
+  SPECS_BASE_DIR,
+  type ThemeName,
+  VIEWPORTS,
+  type ViewportName,
+} from "./screenshot-lib/config";
 import { injectAuthTokens } from "./utils/auth-helpers";
 import {
   getLocatorAttribute,
@@ -58,12 +77,6 @@ import {
   waitForScreenshotReady,
 } from "./utils/wait-helpers";
 
-// ---------------------------------------------------------------------------
-// Configuration
-// ---------------------------------------------------------------------------
-
-const BASE_URL = process.env.BASE_URL || "http://localhost:5555";
-
 /**
  * Wait for loading spinners to disappear using data-testid instead of
  * the brittle `role="status"` selector (which also matches alert banners).
@@ -88,137 +101,6 @@ async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> 
   } catch {
     // Spinner may have cleared between polls — non-critical
   }
-}
-const SPECS_BASE_DIR = path.join(process.cwd(), "docs", "design", "specs", "pages");
-const MODAL_SPECS_BASE_DIR = path.join(
-  process.cwd(),
-  "docs",
-  "design",
-  "specs",
-  "modals",
-  "screenshots",
-);
-const FALLBACK_SCREENSHOT_DIR = path.join(process.cwd(), "e2e", "screenshots");
-const SCREENSHOT_STAGING_BASE_DIR = path.join(process.cwd(), ".tmp", "screenshot-staging");
-
-// Map page identifiers to their spec folder names
-// Pages with specs get screenshots in their spec folder
-// Pages without specs go to the fallback directory
-const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
-  // Public pages
-  "public-landing": "01-landing",
-  "public-signin": "02-signin",
-  "public-signup": "03-signup",
-  "public-forgot-password": "04-forgot-password",
-  "public-verify-email": "14-verify-email",
-  "public-invite": "15-invite",
-  "public-unsubscribe": "16-unsubscribe",
-
-  // Workspace-level pages (empty states)
-  "empty-dashboard": "04-dashboard",
-  "empty-projects": "05-projects",
-  "empty-documents": "09-documents",
-  "empty-settings": "12-settings",
-  "empty-issues": "19-issues",
-  "empty-notifications": "21-notifications",
-  "empty-my-issues": "20-my-issues",
-  "empty-invoices": "25-invoices",
-  "empty-clients": "26-clients",
-  "empty-meetings": "30-meetings",
-
-  // Workspace-level pages (filled states)
-  "filled-dashboard": "04-dashboard",
-  "filled-projects": "05-projects",
-  "filled-documents": "09-documents",
-  "filled-workspaces": "27-workspaces",
-  "filled-settings": "12-settings",
-  "filled-issues": "19-issues",
-  "filled-notifications": "21-notifications",
-  "filled-my-issues": "20-my-issues",
-  "filled-org-calendar": "23-org-calendar",
-  "filled-org-analytics": "24-org-analytics",
-  "filled-invoices": "25-invoices",
-  "filled-clients": "26-clients",
-  "filled-meetings": "30-meetings",
-  "filled-time-tracking": "22-time-tracking",
-  "filled-sidebar-collapsed": "04-dashboard",
-  "filled-404-page": "40-error",
-  "filled-authentication": "31-authentication",
-  "filled-add-ons": "32-add-ons",
-  "filled-assistant": "33-assistant",
-  "filled-mcp-server": "34-mcp-server",
-
-  // Project sub-pages (filled states) - these use dynamic keys
-  // Pattern: filled-project-{key}-{tab}
-  // We'll handle these with a prefix match below
-};
-
-const VIEWPORTS = {
-  desktop: { width: 1920, height: 1080 },
-  tablet: { width: 768, height: 1024 },
-  mobile: { width: 390, height: 844 },
-} as const;
-
-// Desktop captures both themes, tablet/mobile light only
-const CONFIGS: Array<{ viewport: keyof typeof VIEWPORTS; theme: "dark" | "light" }> = [
-  { viewport: "desktop", theme: "dark" },
-  { viewport: "desktop", theme: "light" },
-  { viewport: "tablet", theme: "light" },
-  { viewport: "mobile", theme: "light" },
-];
-
-type ViewportName = keyof typeof VIEWPORTS;
-type ThemeName = "dark" | "light";
-
-const SCREENSHOT_USER = {
-  email: TEST_USERS.teamLead.email.replace("@", "-screenshots@"),
-  password: TEST_USERS.teamLead.password,
-};
-const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";
-const MARKDOWN_IMPORT_PREVIEW = `# Imported Product Brief
-
-- Align launch copy
-- Finalize onboarding checklist
-
-\`\`\`ts
-export const launchReady = true;
-\`\`\`
-`;
-const MARKDOWN_RICH_CONTENT = `# Release Readiness
-
-Use this document to confirm the final handoff details before launch.
-
-| Milestone | Owner | Status |
-| --- | --- | --- |
-| QA signoff | Maya | Ready |
-| Launch copy | Eli | Review |
-
-\`\`\`ts
-export const shipWindow = "2026-03-25";
-\`\`\`
-`;
-const DEFAULT_SCREENSHOT_PROJECT_WORKFLOW_STATES: E2EWorkflowState[] = [
-  { id: "todo", name: "To Do", category: "todo", order: 0 },
-  { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
-  { id: "in-review", name: "In Review", category: "inprogress", order: 2 },
-  { id: "done", name: "Done", category: "done", order: 3 },
-];
-
-/** Inject Convex auth tokens into the page's localStorage. */
-interface CliOptions {
-  headless: boolean;
-  dryRun: boolean;
-  configFilters: Set<string> | null;
-  specFilters: string[];
-  matchFilters: string[];
-  help: boolean;
-}
-
-interface CaptureTarget {
-  pageId: string;
-  specFolder: string | null;
-  filenameSuffix: string;
-  modalSpecSlug: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -411,70 +293,6 @@ const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
   [/^filled-project-.+-create-issue-modal$/, "create-issue"],
   [/^filled-calendar-create-event-modal$/, "create-event"],
 ];
-
-function parseCsvValues(rawValues: string[]): string[] {
-  return rawValues
-    .flatMap((value) => value.split(","))
-    .map((value) => value.trim())
-    .filter((value) => value.length > 0);
-}
-
-function collectFlagValues(args: string[], flag: string): string[] {
-  const values: string[] = [];
-
-  for (let index = 0; index < args.length; index++) {
-    const current = args[index];
-    if (current === flag) {
-      const next = args[index + 1];
-      if (next && !next.startsWith("--")) {
-        values.push(next);
-        index++;
-      }
-      continue;
-    }
-
-    if (current.startsWith(`${flag}=`)) {
-      values.push(current.slice(flag.length + 1));
-    }
-  }
-
-  return parseCsvValues(values);
-}
-
-function parseCliOptions(args: string[]): CliOptions {
-  const configFilters = collectFlagValues(args, "--config");
-  const specFilters = collectFlagValues(args, "--spec").map((value) => value.toLowerCase());
-  const matchFilters = collectFlagValues(args, "--match").map((value) => value.toLowerCase());
-
-  return {
-    headless: !args.includes("--headed"),
-    dryRun: args.includes("--dry-run"),
-    configFilters: configFilters.length > 0 ? new Set(configFilters) : null,
-    specFilters,
-    matchFilters,
-    help: args.includes("--help"),
-  };
-}
-
-function printUsage(): void {
-  console.log("Usage:");
-  console.log("  pnpm screenshots");
-  console.log("  pnpm screenshots -- --headed");
-  console.log("  pnpm screenshots -- --spec 11-calendar --config mobile-light");
-  console.log(
-    "  pnpm screenshots -- --spec calendar --match event --config desktop-light,mobile-light",
-  );
-  console.log("");
-  console.log("Flags:");
-  console.log("  --headed              Run the browser visibly");
-  console.log("  --config <list>       Filter configs, e.g. desktop-light,mobile-light");
-  console.log("  --spec <list>         Filter spec folders or names, e.g. 11-calendar,settings");
-  console.log(
-    "  --match <list>        Filter by page id/name/spec substring, e.g. calendar,event-modal",
-  );
-  console.log("  --dry-run             List what would be captured without launching a browser");
-  console.log("  --help                Show this help");
-}
 
 function resolveCaptureTarget(prefix: string, name: string): CaptureTarget {
   const pageId = `${prefix}-${name}`;
