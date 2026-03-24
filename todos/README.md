@@ -46,4 +46,5 @@
 | Page spec docs | 21/21 complete |
 | Spec issues fixed | 53 total |
 | TEST_IDs | 197 |
+| Biome lint warnings | 2 (cognitive complexity only) |
 | MEDIUM remaining | 13 |
