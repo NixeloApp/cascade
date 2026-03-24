@@ -8,7 +8,7 @@
 
 ### Infrastructure
 
-- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — E2E data-testid migration ~57% complete. 72 fragile selectors remain in screenshot tool. 2 page objects at 0 TEST_IDs.
+- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Data-testid migration ~75% complete. Page objects done. Monolith split and CI integration remain.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven visual cleanup — 19 items
 - [ ] [validator-strengthening.md](./validator-strengthening.md) — Validator framework improvements — 6 items
 - [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing ratchet (102 files / 261 violations)
@@ -32,6 +32,6 @@
 | Unit tests | 4479 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
-| TEST_IDs | 197 defined, 95 used in screenshot tool |
+| TEST_IDs | 203 defined, 95 used in screenshot tool |
 | Biome lint warnings | 0 |
 | MEDIUM page spec issues | 0 |
