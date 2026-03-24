@@ -352,7 +352,7 @@ export const getActiveSprints = workspaceQuery({
         const sprints = await ctx.db
           .query("sprints")
           .withIndex("by_project", (q) => q.eq("projectId", project._id))
-          .filter((q) => q.eq(q.field("status"), "active"))
+          .filter(notDeleted)
           .take(BOUNDED_LIST_LIMIT);
 
         const enriched = await Promise.all(
