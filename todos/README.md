@@ -11,7 +11,7 @@
 - [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Data-testid migration ~75% complete. Page objects done. Monolith split and CI integration remain.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven visual cleanup — 19 items
 - [ ] [validator-strengthening.md](./validator-strengthening.md) — Validator framework improvements — 6 items
-- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing ratchet (102 files / 261 violations)
+- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing ratchet (86 files / 129 violations)
 
 ### Features (need product decisions)
 
@@ -29,7 +29,7 @@
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Unit tests | 4479 pass |
+| Unit tests | 4550 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | TEST_IDs | 203 defined, 95 used in screenshot tool |

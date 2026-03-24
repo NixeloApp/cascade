@@ -21,6 +21,12 @@ import { logger } from "../lib/logger";
 import { MINUTE } from "../lib/timeUtils";
 import { isSuppressed } from "./contacts";
 import { advanceEnrollment } from "./enrollments";
+import {
+  buildComplianceFooter,
+  injectClickTracking,
+  injectOpenTrackingPixel,
+  renderTemplate,
+} from "./helpers";
 
 // =============================================================================
 // Constants
@@ -170,22 +176,45 @@ export const checkPreSend = internalMutation({
 
     // Render template
     const renderedSubject = renderTemplate(step.subject, contact);
-    const renderedBody = renderTemplate(step.body, contact);
+    let renderedBody = renderTemplate(step.body, contact);
 
-    // Add compliance footer
-    const footer = buildComplianceFooter(
-      sequence.physicalAddress,
+    const trackingDomain = sequence.trackingDomain ?? "track.nixelo.com";
+
+    // Inject click tracking (rewrite URLs)
+    const { html: bodyWithClickTracking, links } = injectClickTracking(
+      renderedBody,
       enrollment._id,
-      sequence.trackingDomain,
+      enrollment.currentStep,
+      trackingDomain,
+      () => crypto.randomUUID(),
     );
-    const fullBody = renderedBody + footer;
+    renderedBody = bodyWithClickTracking;
+
+    // Persist tracking links so the redirect endpoint can look them up
+    await Promise.all(
+      links.map((link) =>
+        ctx.db.insert("outreachTrackingLinks", {
+          enrollmentId: enrollment._id,
+          step: link.step,
+          originalUrl: link.originalUrl,
+          createdAt: Date.now(),
+        }),
+      ),
+    );
+
+    // Add compliance footer (before open pixel — pixel should be last)
+    const footer = buildComplianceFooter(sequence.physicalAddress, enrollment._id, trackingDomain);
+    renderedBody = renderedBody + footer;
+
+    // Inject open tracking pixel (always last in the body)
+    renderedBody = injectOpenTrackingPixel(renderedBody, enrollment._id, trackingDomain);
 
     return {
       canSend: true as const,
       mailboxId: sequence.mailboxId,
       contactEmail: contact.email,
       renderedSubject,
-      renderedBody: fullBody,
+      renderedBody,
       fromEmail: mailbox.email,
       fromName: mailbox.displayName,
     };
@@ -373,56 +402,3 @@ export const resetDailySendCounts = internalMutation({
     // Sufficient for current scale (< 100 active mailboxes).
   },
 });
-
-// =============================================================================
-// Template Rendering
-// =============================================================================
-
-/** Replace {{variable}} placeholders with contact data */
-function renderTemplate(
-  template: string,
-  contact: {
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    company?: string;
-    customFields?: Record<string, string>;
-  },
-): string {
-  let result = template;
-
-  // Standard variables
-  result = result.replace(/\{\{email\}\}/gi, contact.email);
-  result = result.replace(/\{\{firstName\}\}/gi, contact.firstName ?? "");
-  result = result.replace(/\{\{lastName\}\}/gi, contact.lastName ?? "");
-  result = result.replace(/\{\{company\}\}/gi, contact.company ?? "");
-
-  // Custom fields
-  if (contact.customFields) {
-    for (const [key, value] of Object.entries(contact.customFields)) {
-      const pattern = new RegExp(`\\{\\{${key}\\}\\}`, "gi");
-      result = result.replace(pattern, value);
-    }
-  }
-
-  // Clean up any remaining unresolved variables
-  result = result.replace(/\{\{[^}]+\}\}/g, "");
-
-  return result;
-}
-
-/** Build the compliance footer (unsubscribe link + physical address) */
-function buildComplianceFooter(
-  physicalAddress: string,
-  enrollmentId: Id<"outreachEnrollments">,
-  trackingDomain?: string,
-): string {
-  const domain = trackingDomain ?? "track.nixelo.com";
-  const unsubUrl = `https://${domain}/t/u/${enrollmentId}`;
-
-  return `
-<div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e5e5;font-size:11px;color:#888;line-height:1.4;">
-  <p>${physicalAddress}</p>
-  <p><a href="${unsubUrl}" style="color:#888;">Unsubscribe</a></p>
-</div>`;
-}

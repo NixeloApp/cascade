@@ -19,6 +19,7 @@ import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { logger } from "../lib/logger";
 import { DAY, MINUTE } from "../lib/timeUtils";
 import { stopEnrollment } from "./enrollments";
+import { isAutoReply } from "./helpers";
 
 // =============================================================================
 // Gmail API Helpers
@@ -317,16 +318,37 @@ export const checkReplies = internalAction({
 
       let replies = 0;
       for (const msg of data.messages) {
+        // Request auto-reply headers alongside sender info for OOO filtering
+        const headerParams = [
+          "From",
+          "Subject",
+          "In-Reply-To",
+          "Auto-Submitted",
+          "X-Auto-Response-Suppress",
+          "X-Autoreply",
+          "X-Autorespond",
+          "Precedence",
+        ]
+          .map((h) => `metadataHeaders=${h}`)
+          .join("&");
+
         const msgResponse = await fetchWithTimeout(
-          `${GMAIL_API_BASE}/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=In-Reply-To`,
+          `${GMAIL_API_BASE}/messages/${msg.id}?format=metadata&${headerParams}`,
           { headers: authHeaders },
           10000,
         );
         if (!msgResponse.ok) continue;
 
         const msgData = (await msgResponse.json()) as {
+          snippet?: string;
           payload: { headers: Array<{ name: string; value: string }> };
         };
+
+        // Skip auto-replies (OOO, bounce notifications, auto-responders)
+        if (isAutoReply(msgData.payload.headers, msgData.snippet)) {
+          continue;
+        }
+
         const senderEmail = extractSenderEmail(msgData.payload.headers);
         if (!senderEmail) continue;
 

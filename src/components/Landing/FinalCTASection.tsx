@@ -86,10 +86,7 @@ const closingSignals = [
 export function FinalCTASection() {
   return (
     <section id="final-cta">
-      <Container
-        size="lg"
-        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}
-      >
+      <Container size="lg" padding="section">
         <Card recipe="showcaseShell" padding="xl">
           <Stack gap="2xl">
             <SectionIntro
@@ -190,7 +187,7 @@ function LaunchStepCard({
     <CardSection size="md" className={getCardRecipeClassName("overlayInset")}>
       <Stack gap="md">
         <Flex align="center" justify="between" gap="sm" wrap>
-          <Flex align="center" gap="sm" style={{ minWidth: 0 }}>
+          <Flex align="center" gap="sm" className="min-w-0">
             <IconCircle size="sm" variant="soft">
               <Icon icon={icon} size="sm" tone={iconTone} />
             </IconCircle>

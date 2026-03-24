@@ -57,10 +57,7 @@ const features: FeatureCardData[] = [
 export function FeaturesSection() {
   return (
     <section id="features">
-      <Container
-        size="lg"
-        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}
-      >
+      <Container size="lg" padding="section">
         <Stack gap="2xl">
           <SectionIntro
             align="center"

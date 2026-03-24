@@ -141,6 +141,7 @@ import type * as outreach_analytics from "../outreach/analytics.js";
 import type * as outreach_contacts from "../outreach/contacts.js";
 import type * as outreach_enrollments from "../outreach/enrollments.js";
 import type * as outreach_gmail from "../outreach/gmail.js";
+import type * as outreach_helpers from "../outreach/helpers.js";
 import type * as outreach_mailboxes from "../outreach/mailboxes.js";
 import type * as outreach_sendEngine from "../outreach/sendEngine.js";
 import type * as outreach_sequences from "../outreach/sequences.js";
@@ -329,6 +330,7 @@ declare const fullApi: ApiFromModules<{
   "outreach/contacts": typeof outreach_contacts;
   "outreach/enrollments": typeof outreach_enrollments;
   "outreach/gmail": typeof outreach_gmail;
+  "outreach/helpers": typeof outreach_helpers;
   "outreach/mailboxes": typeof outreach_mailboxes;
   "outreach/sendEngine": typeof outreach_sendEngine;
   "outreach/sequences": typeof outreach_sequences;

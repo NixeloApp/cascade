@@ -184,7 +184,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                       {Math.round(issueProgress)}%
                     </Typography>
                   </Flex>
-                  <Progress value={issueProgress} className="h-1.5" />
+                  <Progress value={issueProgress} size="sm" />
                 </Stack>
 
                 {/* Story point progress (only shown when issues have points) */}
@@ -198,7 +198,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                         {Math.round(pointProgress)}%
                       </Typography>
                     </Flex>
-                    <Progress value={pointProgress} className="h-1.5" />
+                    <Progress value={pointProgress} size="sm" />
                   </Stack>
                 )}
               </Stack>

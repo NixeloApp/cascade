@@ -12,6 +12,19 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+const progressVariants = cva("relative w-full overflow-hidden rounded-full bg-ui-bg-tertiary", {
+  variants: {
+    size: {
+      sm: "h-1.5",
+      md: "h-2",
+      lg: "h-3",
+    },
+  },
+  defaultVariants: {
+    size: "md",
+  },
+});
+
 const progressIndicatorVariants = cva(
   "h-full w-full flex-1 rounded-full transition-transform duration-default ease-out",
   {
@@ -32,7 +45,8 @@ const progressIndicatorVariants = cva(
 
 interface ProgressProps
   extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>,
-    VariantProps<typeof progressIndicatorVariants> {
+    VariantProps<typeof progressIndicatorVariants>,
+    VariantProps<typeof progressVariants> {
   indicatorClassName?: string;
 }
 
@@ -50,13 +64,10 @@ interface ProgressProps
  * <Progress value={25} variant="error" />
  */
 const Progress = React.forwardRef<React.ElementRef<typeof ProgressPrimitive.Root>, ProgressProps>(
-  ({ className, value, variant, indicatorClassName, ...props }, ref) => (
+  ({ className, value, variant, size, indicatorClassName, ...props }, ref) => (
     <ProgressPrimitive.Root
       ref={ref}
-      className={cn(
-        "relative h-2 w-full overflow-hidden rounded-full bg-ui-bg-tertiary",
-        className,
-      )}
+      className={cn(progressVariants({ size }), className)}
       {...props}
     >
       <ProgressPrimitive.Indicator

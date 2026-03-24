@@ -61,7 +61,7 @@ export function SprintWorkload({ sprintId }: SprintWorkloadProps) {
                       <Progress
                         value={assignee.percent}
                         variant={assignee.percent === 100 ? "success" : "default"}
-                        className="h-1.5"
+                        size="sm"
                         aria-label={`${assignee.name} workload completion`}
                       />
                     </FlexItem>
