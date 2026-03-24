@@ -134,13 +134,10 @@ interface SprintCardProps {
 }
 
 function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: SprintCardProps) {
-  // Calculate progress percentage based on completed issues
-  const getProgressPercentage = () => {
-    if (sprint.issueCount === 0) return 0;
-    return (sprint.completedCount / sprint.issueCount) * 100;
-  };
-
-  const progress = sprint.status === "active" ? getProgressPercentage() : 0;
+  const issueProgress =
+    sprint.issueCount > 0 ? (sprint.completedCount / sprint.issueCount) * 100 : 0;
+  const hasPoints = sprint.totalPoints > 0;
+  const pointProgress = hasPoints ? (sprint.completedPoints / sprint.totalPoints) * 100 : 0;
 
   return (
     <Card padding="md" className="animate-fade-in">
@@ -162,6 +159,11 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
               <Badge variant="neutral" size="sm">
                 {sprint.issueCount} issues
               </Badge>
+              {hasPoints && (
+                <Badge variant="neutral" size="sm">
+                  {sprint.totalPoints} pts
+                </Badge>
+              )}
             </Flex>
             {sprint.goal && (
               <Typography variant="small" color="secondary">
@@ -169,18 +171,36 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
               </Typography>
             )}
 
-            {/* Progress bar for active sprints - issue-based */}
-            {sprint.status === "active" && (
-              <Stack gap="xs">
-                <Flex justify="between">
-                  <Typography variant="caption">
-                    {sprint.completedCount} of {sprint.issueCount} completed
-                  </Typography>
-                  <Typography variant="caption" color="brand">
-                    {Math.round(progress)}%
-                  </Typography>
-                </Flex>
-                <Progress value={progress} className="h-1.5" />
+            {/* Progress bars for active/completed sprints */}
+            {(sprint.status === "active" || sprint.status === "completed") && (
+              <Stack gap="sm">
+                {/* Issue progress */}
+                <Stack gap="xs">
+                  <Flex justify="between">
+                    <Typography variant="caption">
+                      {sprint.completedCount} of {sprint.issueCount} issues
+                    </Typography>
+                    <Typography variant="caption" color="brand">
+                      {Math.round(issueProgress)}%
+                    </Typography>
+                  </Flex>
+                  <Progress value={issueProgress} className="h-1.5" />
+                </Stack>
+
+                {/* Story point progress (only shown when issues have points) */}
+                {hasPoints && (
+                  <Stack gap="xs">
+                    <Flex justify="between">
+                      <Typography variant="caption">
+                        {sprint.completedPoints} of {sprint.totalPoints} story points
+                      </Typography>
+                      <Typography variant="caption" color="brand">
+                        {Math.round(pointProgress)}%
+                      </Typography>
+                    </Flex>
+                    <Progress value={pointProgress} className="h-1.5" />
+                  </Stack>
+                )}
               </Stack>
             )}
 

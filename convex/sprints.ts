@@ -14,7 +14,6 @@ import {
   sprintMutation,
   sprintQuery,
 } from "./customFunctions";
-import { efficientCount } from "./lib/boundedQueries";
 import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY } from "./lib/timeUtils";
@@ -94,60 +93,44 @@ export const listByProject = projectQuery({
     const doneStatusIds =
       project?.workflowStates.filter((s) => s.category === "done").map((s) => s.id) || [];
 
-    // Fetch issues per sprint using index (more efficient than loading all issues)
-    // OPTIMIZATION: Reduced from N+1 queries per sprint (1 total + N per done status)
-    // to just 2 queries per sprint (1 total + 1 completed with filter)
+    // Fetch issues per sprint to compute counts and story point totals.
+    // Loading issues once per sprint is efficient (bounded by MAX_SPRINT_ISSUES)
+    // and lets us derive both issue counts and point sums in a single pass.
+    const doneStatusSet = new Set(doneStatusIds);
     const sprintIds = sprints.map((s) => s._id);
-    const issueStatsPromises = sprintIds.map(async (sprintId) => {
-      const totalPromise = efficientCount(
-        ctx.db
+    const issueStats = await Promise.all(
+      sprintIds.map(async (sprintId) => {
+        const issues = await ctx.db
           .query("issues")
           .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
-          .filter(notDeleted),
-        MAX_SPRINT_ISSUES,
-      );
-
-      // Count completed issues using the index to avoid scanning all sprint issues
-      // This issues parallel queries for each done status, which is much faster for active sprints
-      // where most issues are not done (avoiding scan of non-done issues).
-      const completedPromise =
-        doneStatusIds.length > 0
-          ? Promise.all(
-              doneStatusIds.map((status) =>
-                efficientCount(
-                  ctx.db
-                    .query("issues")
-                    .withIndex("by_project_sprint_status", (q) =>
-                      q
-                        .eq("projectId", ctx.projectId)
-                        .eq("sprintId", sprintId)
-                        .eq("status", status),
-                    )
-                    .filter(notDeleted),
-                  MAX_SPRINT_ISSUES,
-                ),
-              ),
-            ).then((counts) => counts.reduce((a, b) => a + b, 0))
-          : Promise.resolve(0);
-
-      const [count, completedCount] = await Promise.all([totalPromise, completedPromise]);
-      return { sprintId, count, completedCount };
-    });
-    const issueStats = await Promise.all(issueStatsPromises);
+          .filter(notDeleted)
+          .take(MAX_SPRINT_ISSUES);
+        return issues.reduce(
+          (acc, issue) => {
+            const pts = issue.storyPoints ?? 0;
+            const done = doneStatusSet.has(issue.status);
+            return {
+              sprintId,
+              count: acc.count + 1,
+              completedCount: acc.completedCount + (done ? 1 : 0),
+              totalPoints: acc.totalPoints + pts,
+              completedPoints: acc.completedPoints + (done ? pts : 0),
+            };
+          },
+          { sprintId, count: 0, completedCount: 0, totalPoints: 0, completedPoints: 0 },
+        );
+      }),
+    );
 
     // Build stats map from results
     const issueStatsBySprint = new Map(
-      issueStats.map(({ sprintId, count, completedCount }) => [
-        sprintId.toString(),
-        { count, completedCount },
-      ]),
+      issueStats.map((stats) => [stats.sprintId.toString(), stats]),
     );
 
+    const defaultStats = { count: 0, completedCount: 0, totalPoints: 0, completedPoints: 0 };
+
     return sprints.map((sprint) => {
-      const stats = issueStatsBySprint.get(sprint._id.toString()) ?? {
-        count: 0,
-        completedCount: 0,
-      };
+      const stats = issueStatsBySprint.get(sprint._id.toString()) ?? defaultStats;
       return {
         _id: sprint._id,
         _creationTime: sprint._creationTime,
@@ -159,6 +142,8 @@ export const listByProject = projectQuery({
         projectId: sprint.projectId,
         issueCount: stats.count,
         completedCount: stats.completedCount,
+        totalPoints: stats.totalPoints,
+        completedPoints: stats.completedPoints,
       };
     });
   },

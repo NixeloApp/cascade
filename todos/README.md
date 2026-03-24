@@ -12,7 +12,7 @@
 |----------|-------|---------|
 | Visual/shell weight | 8 | Auth shell x4, dashboard gradients x2, forgot-password sparse, meetings density |
 | Screenshot coverage | 3 | Documents states, analytics states, auth sign-up |
-| Product depth | 2 | Sprint story-point progress, dependencies graph |
+| Product depth | 2 | ~~Sprint story-point progress~~ **Fixed** — dual progress bars (issues + points), dependencies graph |
 | Infrastructure | 1 | External error reporting (Sentry/PostHog) |
 | Responsive | 1 | Roadmap touch interactions |
 | Complexity | 1 | Editor sparse content |
@@ -45,4 +45,4 @@ All require design decisions, product specs, or infrastructure setup.
 | Page spec docs | 21/21 complete |
 | Spec issues fixed | 51 total |
 | TEST_IDs | 197 |
-| MEDIUM remaining | 16 |
+| MEDIUM remaining | 15 |
