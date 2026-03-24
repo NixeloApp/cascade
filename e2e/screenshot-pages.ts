@@ -374,7 +374,7 @@ async function takeScreenshot(
   const startTime = performance.now();
 
   try {
-    await page.goto(`${BASE_URL}${url}`, { waitUntil: "domcontentloaded", timeout: 15000 });
+    await page.goto(`${BASE_URL}${url}`, { waitUntil: "load", timeout: 30000 });
   } catch {
     // Navigation timeout is acceptable -- page may still be usable
   }
@@ -1182,19 +1182,24 @@ async function waitForDocumentsReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 20000,
   });
-  // Wait for document cards to render or empty state.
-  // Convex auth + query can take 10-15s on first load after token injection.
+  // Wait for document cards, empty state, OR loading to finish.
+  // The page may show a loading spinner while Convex auth settles.
+  await waitForSpinnersHidden(page, 15000);
   await expect
     .poll(
       async () => {
         const cardCount = await getLocatorCount(page.getByTestId(TEST_IDS.DOCUMENT.CARD));
         if (cardCount > 0) return "ready";
-        return (await isLocatorVisible(page.getByText(/no documents/i))) ? "empty" : "pending";
+        // Check for any empty state text (various phrasings across the app)
+        const emptyVisible =
+          (await isLocatorVisible(page.getByText(/no documents/i))) ||
+          (await isLocatorVisible(page.getByText(/nothing here yet/i))) ||
+          (await isLocatorVisible(page.getByText(/create.*document/i)));
+        return emptyVisible ? "empty" : "pending";
       },
-      { timeout: 20000 },
+      { timeout: 25000 },
     )
     .not.toBe("pending");
-  await waitForSpinnersHidden(page);
 }
 
 async function waitForDocumentEditorReady(page: Page): Promise<void> {
@@ -1389,10 +1394,13 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (URL.projectAnalytics.test(url) || name === "org-analytics") {
+  if (URL.projectAnalytics.test(url)) {
     await waitForAnalyticsReady(page);
     return;
   }
+
+  // Org analytics uses PageHeader (not the project analytics component)
+  // so it falls through to the default fallback below
 
   if (URL.projectRoadmap.test(url)) {
     await waitForRoadmapReady(page);
