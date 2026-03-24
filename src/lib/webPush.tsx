@@ -54,10 +54,6 @@ const WebPushContext = createContext<WebPushContextValue | null>(null);
 // ============================================================================
 
 /**
- * Convert VAPID public key from base64 to Uint8Array
- * Required by PushManager.subscribe()
- */
-/**
  * Attempt to recover a push subscription that the browser lost (e.g. after SW
  * replacement). Only runs when the server still has a record and the browser
  * has granted permission.
@@ -84,7 +80,12 @@ async function recoverLostSubscription(
 
   const p256dh = recovered.getKey("p256dh");
   const auth = recovered.getKey("auth");
-  if (!p256dh || !auth) return recovered;
+  if (!p256dh || !auth) {
+    // Keys missing — unsubscribe to avoid inconsistent state where
+    // the browser has a subscription but the server doesn't know about it.
+    await recovered.unsubscribe();
+    return null;
+  }
 
   await subscribeMutation({
     endpoint: recovered.endpoint,
