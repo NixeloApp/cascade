@@ -16,7 +16,7 @@
 | Infrastructure | 1 | External error reporting (Sentry/PostHog) |
 | Responsive | 1 | Roadmap touch interactions |
 | Complexity | 1 | Editor sparse content |
-| UX | 1 | Workspaces search/filter |
+| ~~UX~~ | ~~1~~ | ~~Workspaces search/filter~~ **Fixed** — search bar with name/description/slug filtering |
 
 All require design decisions, product specs, or infrastructure setup.
 
@@ -45,4 +45,4 @@ All require design decisions, product specs, or infrastructure setup.
 | Page spec docs | 21/21 complete |
 | Spec issues fixed | 51 total |
 | TEST_IDs | 197 |
-| MEDIUM remaining | 17 |
+| MEDIUM remaining | 16 |
