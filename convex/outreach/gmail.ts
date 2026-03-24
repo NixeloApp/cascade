@@ -268,8 +268,9 @@ export const sendViaGmailAction = internalAction({
       accessToken = refreshed.accessToken;
     }
 
-    // Build unsubscribe URL using the sequence's tracking domain
-    const unsubscribeUrl = `https://${args.trackingDomain}/t/u/${args.enrollmentId}`;
+    // Sanitize tracking domain — strip anything that could break RFC 2822 headers
+    const safeTrackingDomain = args.trackingDomain.replace(/[\r\n\s/]/g, "");
+    const unsubscribeUrl = `https://${safeTrackingDomain}/t/u/${args.enrollmentId}`;
 
     // Send via Gmail API
     const result = await sendViaGmail(accessToken, {
