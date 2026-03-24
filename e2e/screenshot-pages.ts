@@ -32,7 +32,6 @@ import { E2E_TIMEZONE } from "./constants";
 import { ProjectsPage } from "./pages";
 import {
   captureCurrentView,
-  captureScreenshotBuffer,
   captureState,
   getCurrentConfigUnsubscribeToken,
   getStagedOutputSummary,
@@ -69,10 +68,7 @@ import {
   waitForLocatorVisible,
 } from "./utils/locator-state";
 import { routePattern } from "./utils/routes";
-import {
-  assertScreenshotHashIsNotLoadingState,
-  getScreenshotHash,
-} from "./utils/screenshot-hash-guards";
+// Screenshot hash guards are now used internally by capture.ts
 import {
   type E2EWorkflowState,
   type SeedScreenshotResult,
