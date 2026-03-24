@@ -1180,9 +1180,10 @@ async function waitForIssueDetailReady(page: Page): Promise<void> {
 async function waitForDocumentsReady(page: Page): Promise<void> {
   await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
     state: "visible",
-    timeout: 12000,
+    timeout: 20000,
   });
-  // Wait for document cards to render or empty state
+  // Wait for document cards to render or empty state.
+  // Convex auth + query can take 10-15s on first load after token injection.
   await expect
     .poll(
       async () => {
@@ -1190,7 +1191,7 @@ async function waitForDocumentsReady(page: Page): Promise<void> {
         if (cardCount > 0) return "ready";
         return (await isLocatorVisible(page.getByText(/no documents/i))) ? "empty" : "pending";
       },
-      { timeout: 12000 },
+      { timeout: 20000 },
     )
     .not.toBe("pending");
   await waitForSpinnersHidden(page);
@@ -1518,7 +1519,7 @@ async function waitForExpectedContent(
     .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
     .or(page.getByText(/no .+yet|nothing here yet/i))
     .first()
-    .waitFor({ state: "visible", timeout: 12000 });
+    .waitFor({ state: "visible", timeout: 20000 });
   await waitForSpinnersHidden(page);
 }
 
@@ -4050,6 +4051,11 @@ async function authenticateAndNavigate(page: Page, orgSlug: string): Promise<boo
   }
 
   await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
+
+  // Warm the Convex auth session — the seed call authenticates server-side,
+  // ensuring the WebSocket connection will be accepted when the client connects.
+  await testUserService.seedScreenshotData(SCREENSHOT_USER.email, { orgSlug });
+
   await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
   await waitForDashboardReady(page);
   return true;
