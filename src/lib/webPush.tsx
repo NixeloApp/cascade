@@ -57,6 +57,50 @@ const WebPushContext = createContext<WebPushContextValue | null>(null);
  * Convert VAPID public key from base64 to Uint8Array
  * Required by PushManager.subscribe()
  */
+/**
+ * Attempt to recover a push subscription that the browser lost (e.g. after SW
+ * replacement). Only runs when the server still has a record and the browser
+ * has granted permission.
+ */
+async function recoverLostSubscription(
+  pushManager: PushManager,
+  vapidPublicKey: string,
+  subscribeMutation: (args: {
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    expirationTime?: number;
+    userAgent: string;
+  }) => Promise<unknown>,
+): Promise<PushSubscription | null> {
+  if (getBrowserNotificationPermission() !== "granted") return null;
+
+  console.info("[push] Subscription lost after SW update, re-subscribing...");
+  const keyArray = urlBase64ToUint8Array(vapidPublicKey);
+  const recovered = await pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: keyArray.buffer as ArrayBuffer,
+  });
+
+  const p256dh = recovered.getKey("p256dh");
+  const auth = recovered.getKey("auth");
+  if (!p256dh || !auth) return recovered;
+
+  await subscribeMutation({
+    endpoint: recovered.endpoint,
+    p256dh: btoa(String.fromCharCode(...new Uint8Array(p256dh))),
+    auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
+    expirationTime: recovered.expirationTime ?? undefined,
+    userAgent: navigator.userAgent,
+  });
+  console.info("[push] Subscription recovered successfully");
+  return recovered;
+}
+
+/**
+ * Convert VAPID public key from base64 to Uint8Array
+ * Required by PushManager.subscribe()
+ */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -138,42 +182,20 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
     const initServiceWorker = async () => {
       try {
         const registration = await navigator.serviceWorker.ready;
-        if ("pushManager" in registration) {
-          setPushManager(registration.pushManager);
+        if (!("pushManager" in registration)) return;
 
-          // Check for existing subscription
-          const subscription = await registration.pushManager.getSubscription();
-          setCurrentSubscription(subscription);
+        setPushManager(registration.pushManager);
+        const subscription = await registration.pushManager.getSubscription();
+        setCurrentSubscription(subscription);
 
-          // Recovery: server thinks we have a subscription but browser lost it
-          // (can happen after SW replacement on some browsers)
-          if (
-            !subscription &&
-            serverHasSubscription &&
-            vapidPublicKey &&
-            getBrowserNotificationPermission() === "granted"
-          ) {
-            console.info("[push] Subscription lost after SW update, re-subscribing...");
-            const keyArray = urlBase64ToUint8Array(vapidPublicKey);
-            const recovered = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: keyArray.buffer as ArrayBuffer,
-            });
-            setCurrentSubscription(recovered);
-
-            const p256dh = recovered.getKey("p256dh");
-            const auth = recovered.getKey("auth");
-            if (p256dh && auth) {
-              await subscribeMutation({
-                endpoint: recovered.endpoint,
-                p256dh: btoa(String.fromCharCode(...new Uint8Array(p256dh))),
-                auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
-                expirationTime: recovered.expirationTime ?? undefined,
-                userAgent: navigator.userAgent,
-              });
-              console.info("[push] Subscription recovered successfully");
-            }
-          }
+        // Recovery: server thinks we have a subscription but browser lost it
+        if (!subscription && serverHasSubscription && vapidPublicKey) {
+          const recovered = await recoverLostSubscription(
+            registration.pushManager,
+            vapidPublicKey,
+            subscribeMutation,
+          );
+          if (recovered) setCurrentSubscription(recovered);
         }
       } catch (error) {
         console.info("[push] Failed to initialize push manager:", error);

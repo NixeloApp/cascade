@@ -87,6 +87,30 @@ export const getEvents = authenticatedQuery({
 // Mutations
 // =============================================================================
 
+/** Check if a contact is eligible for enrollment (not already enrolled, not suppressed). */
+async function isContactEligible(
+  ctx: MutationCtx,
+  contactId: Id<"outreachContacts">,
+  email: string,
+  sequenceId: Id<"outreachSequences">,
+  organizationId: Id<"organizations">,
+): Promise<boolean> {
+  const existingEnrollment = await ctx.db
+    .query("outreachEnrollments")
+    .withIndex("by_contact", (q) => q.eq("contactId", contactId))
+    .filter((q) =>
+      q.and(
+        q.eq(q.field("sequenceId"), sequenceId),
+        q.or(q.eq(q.field("status"), "active"), q.eq(q.field("status"), "paused")),
+      ),
+    )
+    .first();
+
+  if (existingEnrollment) return false;
+  if (await isSuppressed(ctx, organizationId, email)) return false;
+  return true;
+}
+
 /** Enroll contacts into a sequence (batch) */
 export const createEnrollments = authenticatedMutation({
   args: {
@@ -107,51 +131,37 @@ export const createEnrollments = authenticatedMutation({
 
     let enrolled = 0;
     let skipped = 0;
-
-    // Batch-fetch contacts upfront, check enrollment per-contact via index
+    const isActive = sequence.status === "active";
     const contacts = await Promise.all(args.contactIds.map((id) => ctx.db.get(id)));
 
     for (let i = 0; i < args.contactIds.length; i++) {
       const contactId = args.contactIds[i];
       const contact = contacts[i];
+
       if (!contact) {
         skipped++;
         continue;
       }
 
-      // Check if already enrolled — scan by contact index, filter to this sequence + active/paused
-      const existingEnrollment = await ctx.db
-        .query("outreachEnrollments")
-        .withIndex("by_contact", (q) => q.eq("contactId", contactId))
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("sequenceId"), args.sequenceId),
-            q.or(q.eq(q.field("status"), "active"), q.eq(q.field("status"), "paused")),
-          ),
-        )
-        .first();
-
-      if (existingEnrollment) {
+      const eligible = await isContactEligible(
+        ctx,
+        contactId,
+        contact.email,
+        args.sequenceId,
+        sequence.organizationId,
+      );
+      if (!eligible) {
         skipped++;
         continue;
       }
-
-      // Skip if suppressed
-      if (await isSuppressed(ctx, sequence.organizationId, contact.email)) {
-        skipped++;
-        continue;
-      }
-
-      // Calculate first send time
-      const nextSendAt = sequence.status === "active" ? calculateNextSendTime(0) : undefined;
 
       await ctx.db.insert("outreachEnrollments", {
         sequenceId: args.sequenceId,
         contactId,
         organizationId: sequence.organizationId,
         currentStep: 0,
-        status: sequence.status === "active" ? "active" : "paused",
-        nextSendAt,
+        status: isActive ? "active" : "paused",
+        nextSendAt: isActive ? calculateNextSendTime(0) : undefined,
         enrolledAt: Date.now(),
       });
 
