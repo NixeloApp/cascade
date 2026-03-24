@@ -154,24 +154,17 @@ export function getFinalScreenshotPaths(prefix: string, name: string): string[] 
     ? `${captureState.currentConfigPrefix}${target.filenameSuffix}.png`
     : `${captureState.currentConfigPrefix}.png`;
 
+  // Compute paths only — directory creation is deferred to getStagedScreenshotPath
+  // so that --dry-run doesn't modify the filesystem.
   if (target.specFolder) {
     const specScreenshotDir = path.join(SPECS_BASE_DIR, target.specFolder, "screenshots");
-    if (!fs.existsSync(specScreenshotDir)) {
-      fs.mkdirSync(specScreenshotDir, { recursive: true });
-    }
     finalPaths.push(path.join(specScreenshotDir, filename));
   } else {
     const fallbackFilename = `${captureState.currentConfigPrefix}-${prefix}-${name}.png`;
-    if (!fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
-      fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
-    }
     finalPaths.push(path.join(FALLBACK_SCREENSHOT_DIR, fallbackFilename));
   }
 
   if (target.modalSpecSlug) {
-    if (!fs.existsSync(MODAL_SPECS_BASE_DIR)) {
-      fs.mkdirSync(MODAL_SPECS_BASE_DIR, { recursive: true });
-    }
     finalPaths.push(
       path.join(
         MODAL_SPECS_BASE_DIR,

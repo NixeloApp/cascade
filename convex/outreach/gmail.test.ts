@@ -48,10 +48,8 @@ describe("outreach gmail", () => {
     });
   });
 
-  describe("findEnrollmentForReply", () => {
-    // This tests the reply matching logic which is the core of reply detection
-
-    it("module is well-formed with all expected exports", async () => {
+  describe("module completeness", () => {
+    it("exports at least 7 public functions", async () => {
       const mod = await import("./gmail");
       expect(Object.keys(mod).length).toBeGreaterThanOrEqual(7);
     });

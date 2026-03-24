@@ -35,14 +35,12 @@ describe("outreach sendEngine", () => {
     });
   });
 
-  describe("template rendering", () => {
-    it("replaces standard variables in templates", async () => {
-      // Access the private renderTemplate via the module's buildComplianceFooter behavior
-      // Since renderTemplate is not exported, test it indirectly through preSendCheck
-      // or test the compliance footer which uses known patterns
+  describe("module completeness", () => {
+    it("exports expected send engine functions", async () => {
       const mod = await import("./sendEngine");
-      // The module exists and has the expected shape
-      expect(typeof mod).toBe("object");
+      expect(typeof mod.processDueEnrollments).toBe("function");
+      expect(typeof mod.recordSendResult).toBe("function");
+      expect(typeof mod.sendSequenceEmail).toBe("function");
     });
   });
 });

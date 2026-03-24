@@ -5,7 +5,7 @@
 
 ## Current State
 
-86 files / 127 violations baselined (was 102 / 146 → was 148 / 436). Validator catches new violations via ratchet.
+83 files / 120 violations baselined. History: 148/436 → 102/146 → 86/127 → 83/120. Validator ratchet blocks new violations.
 
 Improvements this round:
 - Added `size` prop to `Progress` component (sm/md/lg) — eliminated 4 h-1.5 violations

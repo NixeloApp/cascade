@@ -187,7 +187,10 @@ async function refreshAccessToken(
       accessToken: data.access_token,
       expiresAt: Date.now() + data.expires_in * 1000,
     };
-  } catch {
+  } catch (e) {
+    logger.warn("OAuth token refresh failed", {
+      error: e instanceof Error ? e.message : "unknown",
+    });
     return null;
   }
 }

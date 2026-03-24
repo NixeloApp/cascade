@@ -495,20 +495,23 @@ export async function screenshotFilledStates(
         await clearIssueDrafts(page);
         await seedIssueDraft(page, projectId, draftTitle);
 
-        const projectsPage = new ProjectsPage(page, orgSlug);
-        await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-        await page
-          .getByText(/you have an unsaved draft/i)
-          .waitFor({ state: "visible", timeout: 8000 });
-        await waitForScreenshotReady(page);
-        await captureCurrentView(
-          page,
-          p,
-          `project-${normalizedProjectKey}-create-issue-draft-restoration`,
-        );
-        await dismissIfOpen(page, projectsPage.createIssueModal);
-        await clearIssueDrafts(page);
+        try {
+          const projectsPage = new ProjectsPage(page, orgSlug);
+          await projectsPage.openCreateIssueModal();
+          await waitForCreateIssueModalScreenshotReady(page, projectsPage);
+          await page
+            .getByText(/you have an unsaved draft/i)
+            .waitFor({ state: "visible", timeout: 8000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(
+            page,
+            p,
+            `project-${normalizedProjectKey}-create-issue-draft-restoration`,
+          );
+          await dismissIfOpen(page, projectsPage.createIssueModal);
+        } finally {
+          await clearIssueDrafts(page);
+        }
       });
     }
 
