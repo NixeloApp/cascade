@@ -339,19 +339,23 @@ async function fetchAndFilterMessage(
  */
 type GmailMessageRef = { id: string; threadId: string };
 
-/** Fetch a single page of Gmail messages. Returns null on failure or empty result. */
+type FetchPageResult =
+  | { status: "ok"; messages: GmailMessageRef[]; nextPageToken?: string }
+  | { status: "empty" }
+  | { status: "error" };
+
+/** Fetch a single page of Gmail messages with explicit success/empty/error states. */
 async function fetchMessagePage(
   authHeaders: Record<string, string>,
   query: string,
   pageToken?: string,
-): Promise<{ messages: GmailMessageRef[]; nextPageToken?: string } | null> {
+): Promise<FetchPageResult> {
   const url = `${GMAIL_API_BASE}/messages?q=${encodeURIComponent(query)}&maxResults=50${pageToken ? `&pageToken=${pageToken}` : ""}`;
   const response = await fetchWithTimeout(url, { headers: authHeaders }, 15000);
-  if (!response.ok) return null;
+  if (!response.ok) return { status: "error" };
   const data = (await response.json()) as { messages?: GmailMessageRef[]; nextPageToken?: string };
-  return data.messages?.length
-    ? { messages: data.messages, nextPageToken: data.nextPageToken }
-    : null;
+  if (!data.messages?.length) return { status: "empty" };
+  return { status: "ok", messages: data.messages, nextPageToken: data.nextPageToken };
 }
 
 /** Process a batch of Gmail messages, matching replies to enrollments. */
@@ -389,11 +393,11 @@ async function pollGmailReplies(
 
   for (let page = 0; page < 5; page++) {
     const pageResult = await fetchMessagePage(authHeaders, query, pageToken);
-    if (!pageResult) {
-      // null on first page = empty inbox (clean). null on later pages = API error (dirty).
-      if (page > 0) completedCleanly = false;
+    if (pageResult.status === "error") {
+      completedCleanly = false;
       break;
     }
+    if (pageResult.status === "empty") break;
 
     replies += await processMessageBatch(ctx, pageResult.messages, authHeaders, mailboxId);
     totalChecked += pageResult.messages.length;
