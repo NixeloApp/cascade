@@ -63,7 +63,7 @@ function DashboardOverview({
 
       {showStats && (
         <GridItem colSpanLg={5}>
-          <DashboardPanel className="h-full">
+          <DashboardPanel className="h-full" data-testid={TEST_IDS.DASHBOARD.QUICK_STATS}>
             <DashboardPanelHeader
               title="Overview"
               description="Weekly capacity, throughput, and pressure stay visible without leaving the command surface."

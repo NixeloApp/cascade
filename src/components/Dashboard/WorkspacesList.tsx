@@ -12,6 +12,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Folder } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -62,7 +63,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
   const workspacesLabel = count === 1 ? "project" : "projects";
 
   return (
-    <DashboardPanel surface="inset">
+    <DashboardPanel surface="inset" data-testid={TEST_IDS.DASHBOARD.WORKSPACES_LIST}>
       <DashboardPanelHeader title="Workspaces" description={`${count} active ${workspacesLabel}`} />
       <DashboardPanelBody>
         {!projects ? (

@@ -32,6 +32,6 @@
 | Unit tests | 4550 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
-| TEST_IDs | 203 defined, 95 used in screenshot tool |
+| TEST_IDs | 186 defined, 18 page objects |
 | Biome warnings | 0 |
 | MEDIUM page spec issues | 0 |

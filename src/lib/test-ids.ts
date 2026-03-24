@@ -316,6 +316,12 @@ export const TEST_IDS = {
     CREATE_FORM: "sprint-create-form",
     /** @see src/routes/_app.$orgSlug.projects.$key.sprints.tsx */
     CONTENT: "sprints-content",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    PAGE_HEADER: "sprints-page-header",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    CREATE_BUTTON: "sprints-create-button",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    EMPTY_STATE: "sprints-empty-state",
   },
 
   ROADMAP: {
@@ -478,6 +484,12 @@ export const TEST_IDS = {
     FEED_HEADING: "dashboard-feed-heading",
     /** @see src/routes/_app.$orgSlug.dashboard.tsx */
     CONTENT: "dashboard-content",
+    /** @see src/components/Dashboard/QuickStats.tsx */
+    QUICK_STATS: "dashboard-quick-stats",
+    /** @see src/components/Dashboard/RecentActivity.tsx */
+    RECENT_ACTIVITY: "dashboard-recent-activity",
+    /** @see src/components/Dashboard/WorkspacesList.tsx */
+    WORKSPACES_LIST: "dashboard-workspaces-list",
   },
 
   // ============================================================
