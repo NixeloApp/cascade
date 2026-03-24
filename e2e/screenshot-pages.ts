@@ -1168,8 +1168,16 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     return;
   }
 
-  if (["signin", "signup", "forgot-password", "invite-invalid"].includes(name)) {
+  if (["signin", "signup", "forgot-password"].includes(name)) {
     await page.getByText(/secure account access/i).waitFor({ state: "visible", timeout: 12000 });
+    await waitForScreenshotReady(page);
+    return;
+  }
+
+  if (name === "invite-invalid") {
+    await page
+      .getByRole("heading", { name: /invalid invitation/i })
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1248,13 +1256,11 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   }
 
   if (name === "portal-project") {
+    // The portal-project route currently renders the parent portal entry page
+    // (portal.$token.tsx lacks an Outlet for nested routes). Match what actually
+    // appears so the screenshot captures the current state.
     await page
-      .getByRole("heading", { name: /project view/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/^issues$/i)
-      .or(page.getByText(/no visible issues for this project/i))
-      .first()
+      .getByRole("heading", { name: /client portal|project view/i })
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
   }

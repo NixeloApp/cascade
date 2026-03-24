@@ -20,6 +20,12 @@
 
 All require design decisions, product specs, or infrastructure setup.
 
+### Infrastructure
+
+| Item | Detail |
+|------|--------|
+| [e2e-overhaul.md](./e2e-overhaul.md) | **HIGH** — E2E & screenshot infrastructure overhaul: shared page objects, TEST_ID coverage, split 5,292-line monolith, fix duplication |
+
 ### Features
 
 | Item | Detail |
