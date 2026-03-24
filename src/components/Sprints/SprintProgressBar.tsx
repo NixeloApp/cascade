@@ -61,7 +61,6 @@ export function SprintProgressBar({ projectId, sprintId, className }: SprintProg
           <Progress
             value={progress.percent}
             variant={progress.percent === 100 ? "success" : "default"}
-            className="h-2"
             aria-label="Sprint progress"
           />
         </FlexItem>

@@ -123,6 +123,16 @@ crons.interval(
 );
 
 /**
+ * Outreach: Poll connected mailboxes for replies
+ * Runs every 5 minutes to detect when contacts reply to outreach emails
+ */
+crons.interval(
+  "poll outreach replies",
+  { minutes: 5 },
+  internal.outreach.gmail.checkAllMailboxReplies,
+);
+
+/**
  * Outreach: Reset daily mailbox send counters
  * Runs daily at midnight UTC
  */

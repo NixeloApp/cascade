@@ -76,6 +76,7 @@ const SKIP_TESTID_CHECK_DIRS = [
 const SKIP_FIRST_CHECK_DIRS = [
   "/pages/", // Page object selectors are intentionally defined with .first()
   "/utils/", // Utility helpers handle edge cases with .first()
+  "/screenshot-lib/", // Screenshot infrastructure uses scoped .first() for readiness checks
 ];
 
 export function run() {

@@ -110,7 +110,7 @@ export function RoadmapHeaderControls({
             onFilterEpicChange(value === "all" ? "all" : (value as Id<"issues">))
           }
         >
-          <SelectTrigger className="w-48">
+          <SelectTrigger width="md">
             <SelectValue placeholder="All Epics" />
           </SelectTrigger>
           <SelectContent>
@@ -127,7 +127,7 @@ export function RoadmapHeaderControls({
           value={String(timelineSpan)}
           onValueChange={(value) => onTimelineSpanChange(Number(value) as TimelineSpan)}
         >
-          <SelectTrigger className="w-32">
+          <SelectTrigger width="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -140,7 +140,7 @@ export function RoadmapHeaderControls({
         </Select>
 
         <Select value={groupBy} onValueChange={(value) => onGroupByChange(value as GroupBy)}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger width="md">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

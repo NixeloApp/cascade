@@ -22,11 +22,7 @@ export function HeroSection() {
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-ui-bg-hero" />
 
-      <Container
-        size="lg"
-        className="relative text-center"
-        style={{ paddingInline: "1.5rem", paddingTop: "5rem", paddingBottom: "1rem" }}
-      >
+      <Container size="lg" padding="sectionCompact" className="relative text-center">
         <Stack gap="lg">
           <Container size="md">
             <Stack gap="md">

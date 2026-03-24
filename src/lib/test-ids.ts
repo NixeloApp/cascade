@@ -58,6 +58,19 @@ export const TEST_IDS = {
     DESCRIPTION_CONTENT: "issue-description-content",
     /** @see src/routes/_app.$orgSlug.issues.index.tsx */
     EMPTY_STATE: "issue-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/$key.tsx */
+    EDIT_BUTTON: "issue-edit-button",
+    /** @see src/components/IssueDetail/IssueDetailContent.tsx */
+    SAVE_BUTTON: "issue-save-button",
+  },
+
+  COMMENTS: {
+    /** @see src/components/IssueComments.tsx */
+    LOADING: "comments-loading",
+    /** @see src/components/IssueComments.tsx */
+    ADD_BUTTON: "comments-add-button",
+    /** @see src/components/IssueComments.tsx */
+    SUBMIT_BUTTON: "comments-submit-button",
   },
 
   BOARD: {
@@ -244,6 +257,16 @@ export const TEST_IDS = {
   CALENDAR: {
     /** @see src/components/Calendar/CalendarView.tsx */
     ROOT: "calendar-root",
+    /** @see src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx */
+    TODAY_BUTTON: "calendar-today-button",
+    /** @see src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx */
+    PREV_BUTTON: "calendar-prev-button",
+    /** @see src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx */
+    NEXT_BUTTON: "calendar-next-button",
+    /** @see src/components/Calendar/CreateEventModal.tsx */
+    CREATE_EVENT_MODAL: "calendar-create-event-modal",
+    /** @see src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-add.tsx */
+    CREATE_EVENT_BUTTON: "calendar-create-event-button",
     /** @see src/components/Calendar/shadcn-calendar/body/calendar-body.tsx */
     GRID: "calendar-grid",
     /** @see src/components/Calendar/shadcn-calendar/calendar-event.tsx */
@@ -303,6 +326,12 @@ export const TEST_IDS = {
     CREATE_FORM: "sprint-create-form",
     /** @see src/routes/_app.$orgSlug.projects.$key.sprints.tsx */
     CONTENT: "sprints-content",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    PAGE_HEADER: "sprints-page-header",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    CREATE_BUTTON: "sprints-create-button",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    EMPTY_STATE: "sprints-empty-state",
   },
 
   ROADMAP: {
@@ -383,6 +412,18 @@ export const TEST_IDS = {
   SETTINGS: {
     /** @see src/routes/_app.$orgSlug.settings.tsx */
     ORG_TAB: "settings-org-tab",
+    /** @see src/components/Settings.tsx — settings tab trigger prefix, suffixed with tab value */
+    TAB_PROFILE: "settings-tab-profile",
+    TAB_SECURITY: "settings-tab-security",
+    TAB_NOTIFICATIONS: "settings-tab-notifications",
+    TAB_INTEGRATIONS: "settings-tab-integrations",
+    TAB_APIKEYS: "settings-tab-apikeys",
+    TAB_OFFLINE: "settings-tab-offline",
+    TAB_PREFERENCES: "settings-tab-preferences",
+    TAB_ADMIN: "settings-tab-admin",
+    TAB_DEVELOPER: "settings-tab-developer",
+    /** @see src/components/Admin/UserManagement.tsx */
+    INVITE_BUTTON: "settings-invite-button",
     /** @see src/components/Admin/OrganizationSettings.tsx */
     TIME_APPROVAL_SWITCH: "settings-time-approval-switch",
     /** @see src/components/Admin/OrganizationSettings.tsx */
@@ -428,6 +469,10 @@ export const TEST_IDS = {
     TABLE: "invite-table",
     /** @see src/components/Admin/UserManagement.tsx - Invite row in table */
     ROW: "invite-row",
+    /** @see src/routes/invite.$token.tsx - Public invite state screen wrapper */
+    STATE_SCREEN: "invite-state-screen",
+    /** @see src/routes/invite.$token.tsx - Loading state */
+    LOADING: "invite-loading",
   },
 
   // ============================================================
@@ -461,6 +506,12 @@ export const TEST_IDS = {
     FEED_HEADING: "dashboard-feed-heading",
     /** @see src/routes/_app.$orgSlug.dashboard.tsx */
     CONTENT: "dashboard-content",
+    /** @see src/components/Dashboard/QuickStats.tsx */
+    QUICK_STATS: "dashboard-quick-stats",
+    /** @see src/components/Dashboard/RecentActivity.tsx */
+    RECENT_ACTIVITY: "dashboard-recent-activity",
+    /** @see src/components/Dashboard/WorkspacesList.tsx */
+    WORKSPACES_LIST: "dashboard-workspaces-list",
   },
 
   // ============================================================
@@ -478,6 +529,14 @@ export const TEST_IDS = {
     HEADING_ANCHOR: "document-heading-anchor",
     /** @see src/routes/_app.$orgSlug.documents.templates.tsx */
     TEMPLATES_CONTENT: "document-templates-content",
+    /** @see src/components/Documents/DocumentSidebar.tsx */
+    NEW_BUTTON: "document-new-button",
+    /** @see src/components/Documents/DocumentSidebar.tsx */
+    TEMPLATE_BUTTON: "document-template-button",
+    /** @see src/components/Documents/DocumentSidebar.tsx */
+    SEARCH_INPUT: "document-search-input",
+    /** @see src/components/Documents/DocumentSidebar.tsx */
+    TEMPLATE_MODAL: "document-template-modal",
   },
 
   // ============================================================
@@ -489,6 +548,13 @@ export const TEST_IDS = {
     ENTRY_FORM: "time-entry-form",
     /** @see src/routes/_app.$orgSlug.time-tracking.tsx */
     CONTENT: "time-tracking-content",
+    /** @see src/components/TimeTracker.tsx */
+    ENTRIES_LIST: "time-tracking-entries-list",
+  },
+
+  NOTIFICATIONS: {
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    CONTENT: "notifications-content",
   },
 
   // ============================================================
@@ -504,6 +570,14 @@ export const TEST_IDS = {
     MEMORY_SECTION: "meetings-memory-section",
     /** @see src/routes/_app.$orgSlug.meetings.tsx */
     RECORDING_CARD: "meetings-recording-card",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - empty state */
+    EMPTY_STATE: "meetings-empty-state",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - search input */
+    SEARCH_INPUT: "meetings-search-input",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - transcript search */
+    TRANSCRIPT_SEARCH: "meetings-transcript-search",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - action items section */
+    ACTION_ITEMS_SECTION: "meetings-action-items-section",
   },
 
   // ============================================================

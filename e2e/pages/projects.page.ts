@@ -220,9 +220,9 @@ export class ProjectsPage extends BasePage {
     this.analyticsTab = this.projectTabs.getByRole("link", { name: /^Analytics$/ });
     this.settingsTab = this.projectTabs.getByRole("link", { name: /^Settings$/ });
     this.timesheetEntriesTab = page.getByRole("tab", { name: /time entries/i });
-    this.sprintsPageHeader = page.getByRole("heading", { name: /sprint management/i });
-    this.createSprintButton = page.getByRole("button", { name: /^create sprint$/i }).first();
-    this.sprintsEmptyState = page.getByText(/no sprints yet/i);
+    this.sprintsPageHeader = page.getByTestId(TEST_IDS.SPRINT.PAGE_HEADER);
+    this.createSprintButton = page.getByTestId(TEST_IDS.SPRINT.CREATE_BUTTON);
+    this.sprintsEmptyState = page.getByTestId(TEST_IDS.SPRINT.EMPTY_STATE);
     this.sprintCards = page.getByTestId(TEST_IDS.SPRINT.CARD);
 
     // Activity feed

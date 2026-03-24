@@ -175,7 +175,7 @@ function OwnerDocumentActions({
             <Icon icon={Menu} size="sm" aria-hidden="true" />
           </IconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" width="lg">
           <DocumentLockAction lockStatus={lockStatus} onToggleLock={onToggleLock} />
 
           {onMoveToProject && (

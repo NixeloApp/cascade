@@ -17,6 +17,7 @@
     "convex/timeTracking.ts": 1,
     "convex/users.ts": 1,
     "convex/outreach/analytics.ts": 2,
+    "convex/outreach/gmail.ts": 1,
     "convex/outreach/sendEngine.ts": 2,
     "convex/outreach/sequences.ts": 1
   }

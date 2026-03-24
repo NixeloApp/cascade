@@ -761,6 +761,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Filter transcript segments"
             aria-label="Search transcript"
+            data-testid={TEST_IDS.MEETINGS.TRANSCRIPT_SEARCH}
           />
 
           <Stack gap="xs">
@@ -1044,7 +1045,7 @@ function ActionItemsSection({
   if (summary.actionItems.length === 0) return null;
 
   return (
-    <Section title="Action Items" gap="sm">
+    <Section title="Action Items" gap="sm" data-testid={TEST_IDS.MEETINGS.ACTION_ITEMS_SECTION}>
       <List gap="sm">
         {summary.actionItems.map((item, index) => (
           <li key={`${item.description}-${item.assignee ?? ""}-${item.dueDate ?? ""}`}>
@@ -1610,6 +1611,7 @@ export function MeetingsWorkspace() {
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search transcript text"
                 aria-label="Search meetings"
+                data-testid={TEST_IDS.MEETINGS.SEARCH_INPUT}
               />
 
               <Grid cols={1} colsSm={2} colsXl={4} gap="sm">

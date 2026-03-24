@@ -5,6 +5,8 @@
  * (spec folder, filename suffix, modal spec slug) based on the page ID.
  */
 
+import { ROUTES } from "../../convex/shared/routes";
+import { routePattern } from "../utils/routes";
 import type { CaptureTarget } from "./config";
 import { PAGE_TO_SPEC_FOLDER } from "./config";
 
@@ -213,3 +215,53 @@ export function getGeneratedSpecFolders(): string[] {
     ]),
   ];
 }
+
+// ---------------------------------------------------------------------------
+// Pre-compiled URL patterns for readiness dispatch
+// ---------------------------------------------------------------------------
+
+/**
+ * Pre-compiled URL patterns derived from ROUTES. Each converts the route path
+ * (e.g. "/$orgSlug/projects/$key/board") into a regex that matches URLs with
+ * concrete segments in place of dynamic params.
+ */
+export const URL_PATTERNS = {
+  projectBoard: routePattern(ROUTES.projects.board.path, "$"),
+  projectBacklog: routePattern(ROUTES.projects.backlog.path, "$"),
+  projectCalendar: routePattern(ROUTES.projects.calendar.path, "$"),
+  projectActivity: routePattern(ROUTES.projects.activity.path, "$"),
+  projectAnalytics: routePattern(ROUTES.projects.analytics.path, "$"),
+  projectTimesheet: routePattern(ROUTES.projects.timesheet.path, "$"),
+  projectSprints: routePattern(ROUTES.projects.sprints.path, "$"),
+  projectRoadmap: routePattern(ROUTES.projects.roadmap.path, "$"),
+  projectBilling: routePattern(ROUTES.projects.billing.path, "$"),
+  projectSettings: routePattern(ROUTES.projects.settings.path, "$"),
+  projectInbox: routePattern(ROUTES.projects.inbox.path, "$"),
+  dashboard: routePattern(ROUTES.dashboard.path, "$"),
+  settings: routePattern(ROUTES.settings.profile.path, "$"),
+  projects: routePattern(ROUTES.projects.list.path, "\\/?$"),
+  issues: routePattern(ROUTES.issues.list.path, "\\/?$"),
+  issueDetail: routePattern(ROUTES.issues.detail.path, "$"),
+  workspaces: routePattern(ROUTES.workspaces.list.path, "\\/?$"),
+  timeTracking: routePattern(ROUTES.timeTracking.path, "$"),
+  notifications: routePattern(ROUTES.notifications.path, "\\/?$"),
+  myIssues: routePattern(ROUTES.myIssues.path, "\\/?$"),
+  orgCalendar: routePattern(ROUTES.calendar.path, "\\/?$"),
+  invoices: routePattern(ROUTES.invoices.list.path, "\\/?$"),
+  clients: routePattern(ROUTES.clients.list.path, "\\/?$"),
+  meetings: routePattern(ROUTES.meetings.path, "\\/?$"),
+  workspaceDetail: routePattern(ROUTES.workspaces.detail.path, "\\/?$"),
+  workspaceSettings: routePattern(ROUTES.workspaces.settings.path, "$"),
+  workspaceBacklog: routePattern(ROUTES.workspaces.backlog.path, "$"),
+  workspaceCalendar: routePattern(ROUTES.workspaces.calendar.path, "$"),
+  workspaceSprints: routePattern(ROUTES.workspaces.sprints.path, "$"),
+  workspaceDependencies: routePattern(ROUTES.workspaces.dependencies.path, "$"),
+  workspaceWiki: routePattern(ROUTES.workspaces.wiki.path, "$"),
+  teamDetail: routePattern(ROUTES.workspaces.teams.detail.path, "\\/?$"),
+  teamBoard: routePattern(ROUTES.workspaces.teams.board.path, "$"),
+  teamCalendar: routePattern(ROUTES.workspaces.teams.calendar.path, "$"),
+  teamSettings: routePattern(ROUTES.workspaces.teams.settings.path, "$"),
+  teamWiki: routePattern(ROUTES.workspaces.teams.wiki.path, "$"),
+  documentEditor: routePattern(ROUTES.documents.detail.path, "$"),
+  documentTemplates: routePattern(ROUTES.documents.templates.path, "$"),
+};

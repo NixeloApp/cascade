@@ -213,7 +213,7 @@ function RoadmapTimelineContainer({
               className="min-w-full"
               style={{ width: `${timelineLayoutWidth}px` }}
             >
-              <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
+              <div className={getCardRecipeClassName("roadmapTimelineHeaderStrip")}>
                 <div className="relative">
                   {renderRoadmapTodayMarker(todayMarkerOffsetPx, "header")}
                   <Flex>

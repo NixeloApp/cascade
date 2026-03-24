@@ -1,4 +1,5 @@
 import { TrendingUp } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
@@ -28,7 +29,7 @@ interface RecentActivityProps {
  */
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <DashboardPanel surface="inset">
+    <DashboardPanel surface="inset" data-testid={TEST_IDS.DASHBOARD.RECENT_ACTIVITY}>
       <DashboardPanelHeader
         title="Recent activity"
         description="Latest updates across projects and teammates"

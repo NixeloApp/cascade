@@ -21,6 +21,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { useOfflineAddComment } from "@/hooks/useOfflineAddComment";
 import { formatRelativeTime } from "@/lib/formatting";
 import { MessageCircle, Paperclip, X } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { CommentReactions } from "./CommentReactions";
 import { CommentRenderer } from "./CommentRenderer";
@@ -189,7 +190,12 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
 
   if (status === "LoadingFirstPage") {
     return (
-      <Card padding="lg" variant="flat" className="text-center">
+      <Card
+        padding="lg"
+        variant="flat"
+        className="text-center"
+        data-testid={TEST_IDS.COMMENTS.LOADING}
+      >
         <Typography color="secondary">Loading comments...</Typography>
       </Card>
     );
@@ -283,7 +289,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
         )}
       </Stack>
 
-      <Card padding="md" variant="flat">
+      <Card padding="md" variant="flat" data-testid={TEST_IDS.COMMENTS.ADD_BUTTON}>
         <Stack gap="md">
           <Stack gap="xs">
             <Typography variant="label">Add Comment</Typography>
@@ -346,6 +352,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
               onClick={handleSubmit}
               isLoading={isSubmitting}
               disabled={!newComment.trim() || isUploadingAttachment}
+              data-testid={TEST_IDS.COMMENTS.SUBMIT_BUTTON}
             >
               Add Comment
             </Button>

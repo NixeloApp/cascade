@@ -23,11 +23,16 @@ export interface AIAssistantButtonProps {
   keyboardShortcut?: string;
 }
 
-const SIZE_CLASSES = {
-  sm: "size-12 text-xl",
-  md: "size-14 sm:size-16 text-2xl sm:text-3xl",
-  lg: "size-16 sm:size-20 text-3xl sm:text-4xl",
-} as const;
+function getFabSizeClasses(size: "sm" | "md" | "lg"): string {
+  switch (size) {
+    case "sm":
+      return "size-12 text-xl";
+    case "lg":
+      return "size-16 sm:size-20 text-3xl sm:text-4xl";
+    default:
+      return "size-14 sm:size-16 text-2xl sm:text-3xl";
+  }
+}
 
 export function AIAssistantButton({
   onClick,
@@ -64,7 +69,7 @@ export function AIAssistantButton({
       variant="assistantFab"
       size="none"
       onClick={onClick}
-      className={cn("fixed", positionClasses, SIZE_CLASSES[size], "z-30 group", className)}
+      className={cn("fixed", positionClasses, getFabSizeClasses(size), "z-30 group", className)}
       title={tooltipText}
       aria-label={ariaLabel}
     >

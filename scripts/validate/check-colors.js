@@ -19,6 +19,7 @@ export function run() {
     "src/index.css",
     "convex/shared/colors.ts", // Shared runtime color constants for DB/payload usage
     "convex/outreach/sendEngine.ts", // Email HTML templates require inline colors
+    "convex/outreach/helpers.ts", // Email compliance footer requires inline colors
     "emails/", // Email templates
     "*.test.ts",
     "*.test.tsx",

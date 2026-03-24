@@ -43,6 +43,7 @@ import {
 } from "./http/githubOAuth";
 import { handleCallback, initiateAuth, triggerSync } from "./http/googleOAuth";
 import { handleIntakePreflight, handleIntakeSubmission } from "./http/intake";
+import { handleGmailCallback, initiateGmailAuth } from "./http/outreachOAuth";
 import { handleSlashCommand } from "./http/slackCommands";
 import {
   handleCallback as handleSlackCallback,
@@ -151,6 +152,19 @@ http.route({
   path: "/auth/request-reset",
   method: "OPTIONS",
   handler: securePasswordResetPreflight,
+});
+
+// Outreach OAuth routes (Gmail mailbox connection)
+http.route({
+  path: "/outreach/google/auth",
+  method: "GET",
+  handler: initiateGmailAuth,
+});
+
+http.route({
+  path: "/outreach/google/callback",
+  method: "GET",
+  handler: handleGmailCallback,
 });
 
 // Outreach tracking routes (open pixel, click redirect, unsubscribe)

@@ -78,7 +78,9 @@ export function IssueDetailContent({
                   testId={TEST_IDS.ISSUE.DESCRIPTION_EDITOR}
                 />
                 <Flex gap="sm">
-                  <Button onClick={onSave}>Save Changes</Button>
+                  <Button onClick={onSave} data-testid={TEST_IDS.ISSUE.SAVE_BUTTON}>
+                    Save Changes
+                  </Button>
                   <Button variant="outline" onClick={onCancel}>
                     Cancel
                   </Button>

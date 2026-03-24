@@ -93,10 +93,7 @@ const stories: Story[] = [
 export function WhyChooseSection() {
   return (
     <section data-testid={TEST_IDS.LANDING.PROOF_SECTION}>
-      <Container
-        size="lg"
-        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}
-      >
+      <Container size="lg" padding="section">
         <Stack gap="2xl">
           <SectionIntro
             align="center"
@@ -121,7 +118,7 @@ function StoryCard({ audience, body, evidence, icon, iconTone, stat, statLabel, 
     <Card recipe="landingStoryCard" padding="none">
       <Stack gap="lg">
         <Flex align="center" justify="between" gap="sm">
-          <Flex align="center" gap="sm" style={{ minWidth: 0 }}>
+          <Flex align="center" gap="sm" className="min-w-0">
             <IconCircle size="md" variant="soft">
               <Icon icon={icon} size="md" tone={iconTone} />
             </IconCircle>

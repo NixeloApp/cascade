@@ -276,6 +276,7 @@ export function run() {
     "templates.ts", // Complex background processing with acceptable N+1
     "documentTemplates.ts", // Migration function with sequential patches
     "slackCommandsCore.ts", // Slack search queries multiple projects (small count)
+    "sendEngine.ts", // Click tracking inserts sequentially to capture Convex _ids for redirect URLs
   ];
 
   function findTsFiles(dir) {

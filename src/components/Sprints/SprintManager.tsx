@@ -184,7 +184,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                       {Math.round(issueProgress)}%
                     </Typography>
                   </Flex>
-                  <Progress value={issueProgress} className="h-1.5" />
+                  <Progress value={issueProgress} size="sm" />
                 </Stack>
 
                 {/* Story point progress (only shown when issues have points) */}
@@ -198,7 +198,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                         {Math.round(pointProgress)}%
                       </Typography>
                     </Flex>
-                    <Progress value={pointProgress} className="h-1.5" />
+                    <Progress value={pointProgress} size="sm" />
                   </Stack>
                 )}
               </Stack>
@@ -450,9 +450,15 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
         justify="between"
         gap="md"
       >
-        <Typography variant="h4">Sprint Management</Typography>
+        <Typography variant="h4" data-testid={TEST_IDS.SPRINT.PAGE_HEADER}>
+          Sprint Management
+        </Typography>
         {canEdit && (
-          <Button onClick={() => setShowCreateForm(true)} variant="primary">
+          <Button
+            onClick={() => setShowCreateForm(true)}
+            variant="primary"
+            data-testid={TEST_IDS.SPRINT.CREATE_BUTTON}
+          >
             <span className="hidden sm:inline">Create Sprint</span>
             <span className="sm:hidden">+ Sprint</span>
           </Button>
@@ -571,6 +577,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             icon={Trophy}
             title="No sprints yet"
             description="Create a sprint to start planning work"
+            data-testid={TEST_IDS.SPRINT.EMPTY_STATE}
             action={
               canEdit
                 ? { label: "Create Sprint", onClick: () => setShowCreateForm(true) }

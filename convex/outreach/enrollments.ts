@@ -163,20 +163,19 @@ export const createEnrollments = authenticatedMutation({
     for (let i = 0; i < args.contactIds.length; i++) {
       const contactId = args.contactIds[i];
       const contact = contacts[i];
+      const belongsToOrg = contact?.organizationId === sequence.organizationId;
 
-      if (!contact || contact.organizationId !== sequence.organizationId) {
-        skipped++;
-        continue;
-      }
-
-      const eligible = await isContactEligible(
-        ctx,
-        contactId,
-        contact.email,
-        args.sequenceId,
-        sequence.organizationId,
-      );
-      if (!eligible) {
+      if (
+        !contact ||
+        !belongsToOrg ||
+        !(await isContactEligible(
+          ctx,
+          contactId,
+          contact.email,
+          args.sequenceId,
+          sequence.organizationId,
+        ))
+      ) {
         skipped++;
         continue;
       }

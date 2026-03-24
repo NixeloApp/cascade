@@ -22,10 +22,7 @@ const answerSteps = [
 export function AIFeatureDemo() {
   return (
     <section id="resources">
-      <Container
-        size="lg"
-        style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}
-      >
+      <Container size="lg" padding="section">
         <Stack gap="2xl">
           <SectionIntro
             align="center"

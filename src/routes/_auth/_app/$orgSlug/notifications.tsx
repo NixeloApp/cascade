@@ -39,6 +39,7 @@ import {
 import { useOfflineNotificationMarkAsRead } from "@/hooks/useOfflineNotificationMarkAsRead";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Archive, Bell, CheckCheck, Inbox } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/notifications")({
   component: NotificationsPage,
@@ -274,7 +275,7 @@ export function NotificationsPage() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout data-testid={TEST_IDS.NOTIFICATIONS.CONTENT}>
       <PageStack>
         <PageHeader
           title="Notifications"

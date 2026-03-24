@@ -161,11 +161,11 @@ export class DashboardPage extends BasePage {
     // Use aria-label="Loading" to target actual loading spinners, not empty states
     this.loadingSpinner = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
 
-    // Dashboard specific content - match actual UI headings
-    this.myIssuesSection = page.getByRole("heading", { name: /feed/i }).first();
-    this.workspacesSection = page.getByRole("heading", { name: /workspaces/i });
-    this.recentActivitySection = page.getByText(/recent activity/i);
-    this.quickStatsSection = page.getByText(/quick stats/i);
+    // Dashboard sections - use data-testid where available, semantic fallback where not
+    this.myIssuesSection = page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING);
+    this.workspacesSection = page.getByTestId(TEST_IDS.DASHBOARD.WORKSPACES_LIST);
+    this.recentActivitySection = page.getByTestId(TEST_IDS.DASHBOARD.RECENT_ACTIVITY);
+    this.quickStatsSection = page.getByTestId(TEST_IDS.DASHBOARD.QUICK_STATS);
     // Issue filter tabs: tab role in Radix/Tabs, with button fallback for legacy markup.
     this.assignedTab = page
       .getByRole("tab", { name: /^assigned/i })

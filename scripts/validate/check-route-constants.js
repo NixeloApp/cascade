@@ -97,6 +97,7 @@ const ALLOWED_PATTERNS = [
 const SKIP_FILE_PATTERNS = [
   /\.stories\.tsx?$/, // Storybook story files
   /screenshot-pages\.ts$/, // Screenshot utility
+  /screenshot-lib\//, // Screenshot library modules
   /src\/.*\.test\.tsx?$/, // Unit test files use fixture paths
   /src\/.*\.spec\.tsx?$/, // Unit spec files use fixture paths
 ];

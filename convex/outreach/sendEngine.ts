@@ -14,12 +14,20 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import type { MutationCtx } from "../_generated/server";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { logger } from "../lib/logger";
 import { MINUTE } from "../lib/timeUtils";
 import { isSuppressed } from "./contacts";
 import { advanceEnrollment } from "./enrollments";
+import {
+  buildComplianceFooter,
+  extractTrackableUrls,
+  injectOpenTrackingPixel,
+  renderTemplate,
+  rewriteUrlsWithTrackingIds,
+} from "./helpers";
 
 // =============================================================================
 // Constants
@@ -105,6 +113,7 @@ export const processDueEnrollments = internalAction({
         mailboxId: checkResult.mailboxId,
         success: sendResult.success,
         error: sendResult.error,
+        gmailThreadId: sendResult.gmailThreadId,
       });
 
       if (sendResult.success) {
@@ -169,22 +178,37 @@ export const checkPreSend = internalMutation({
 
     // Render template
     const renderedSubject = renderTemplate(step.subject, contact);
-    const renderedBody = renderTemplate(step.body, contact);
+    let renderedBody = renderTemplate(step.body, contact);
 
-    // Add compliance footer
-    const footer = buildComplianceFooter(
-      sequence.physicalAddress,
-      enrollment._id,
-      sequence.trackingDomain,
-    );
-    const fullBody = renderedBody + footer;
+    const trackingDomain = sequence.trackingDomain ?? "track.nixelo.com";
+
+    // Click tracking: extract URLs, persist tracking links, rewrite HTML
+    const trackableUrls = extractTrackableUrls(renderedBody);
+    const urlToTrackingId = new Map<string, string>();
+    for (const url of trackableUrls) {
+      const linkId = await ctx.db.insert("outreachTrackingLinks", {
+        enrollmentId: enrollment._id,
+        step: enrollment.currentStep,
+        originalUrl: url,
+        createdAt: Date.now(),
+      });
+      urlToTrackingId.set(url, linkId);
+    }
+    renderedBody = rewriteUrlsWithTrackingIds(renderedBody, urlToTrackingId, trackingDomain);
+
+    // Add compliance footer (before open pixel — pixel should be last)
+    const footer = buildComplianceFooter(sequence.physicalAddress, enrollment._id, trackingDomain);
+    renderedBody = renderedBody + footer;
+
+    // Inject open tracking pixel (always last in the body)
+    renderedBody = injectOpenTrackingPixel(renderedBody, enrollment._id, trackingDomain);
 
     return {
       canSend: true as const,
       mailboxId: sequence.mailboxId,
       contactEmail: contact.email,
       renderedSubject,
-      renderedBody: fullBody,
+      renderedBody,
       fromEmail: mailbox.email,
       fromName: mailbox.displayName,
     };
@@ -209,24 +233,22 @@ export const sendSequenceEmail = internalAction({
     fromEmail: v.string(),
     fromName: v.string(),
   },
-  handler: async (ctx, args) => {
-    void ctx; // Will use for SMTP auth lookup
-    // TODO: Implement actual SMTP sending via user's OAuth credentials
-    //
-    // This will use:
-    // - Gmail API (googleapis) for Google mailboxes
-    // - Microsoft Graph API for Outlook mailboxes
-    //
-    // For now, log and return success for development.
-    // Replace with actual implementation when OAuth flow is built.
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ success: boolean; error?: string; gmailThreadId?: string }> => {
+    // Delegate to Gmail sender (Microsoft Graph can be added later)
+    const result = await ctx.runAction(internal.outreach.gmail.sendViaGmailAction, {
+      mailboxId: args.mailboxId,
+      enrollmentId: args.enrollmentId,
+      to: args.to,
+      subject: args.subject,
+      body: args.body,
+      fromEmail: args.fromEmail,
+      fromName: args.fromName,
+    });
 
-    logger.info(
-      `[OUTREACH] Would send email: from=${args.fromEmail} to=${args.to} subject="${args.subject}" step=${args.step}`,
-    );
-
-    // Fail closed — return skipped so the cron does not record a send
-    // or bounce event. The enrollment stays in its current state.
-    return { success: false, error: "EMAIL_NOT_IMPLEMENTED" };
+    return { success: result.success, error: result.error, gmailThreadId: result.threadId };
   },
 });
 
@@ -246,6 +268,109 @@ export const updateEnrollmentNextSend = internalMutation({
 // Step 4: Record result (internal mutation — updates DB state)
 // =============================================================================
 
+type SendResultArgs = {
+  enrollmentId: Id<"outreachEnrollments">;
+  sequenceId: Id<"outreachSequences">;
+  contactId: Id<"outreachContacts">;
+  organizationId: Id<"organizations">;
+  step: number;
+  mailboxId: Id<"outreachMailboxes">;
+};
+
+async function recordSuccessfulSend(ctx: MutationCtx, args: SendResultArgs) {
+  await ctx.db.insert("outreachEvents", {
+    enrollmentId: args.enrollmentId,
+    sequenceId: args.sequenceId,
+    contactId: args.contactId,
+    organizationId: args.organizationId,
+    type: "sent",
+    step: args.step,
+    createdAt: Date.now(),
+  });
+
+  await ctx.db.patch(args.enrollmentId, { lastSentAt: Date.now() });
+
+  const mailbox = await ctx.db.get(args.mailboxId);
+  if (mailbox) {
+    const today = new Date().toISOString().slice(0, 10);
+    const resetDate = new Date(mailbox.todayResetAt).toISOString().slice(0, 10);
+    const currentCount = today === resetDate ? mailbox.todaySendCount : 0;
+    await ctx.db.patch(args.mailboxId, {
+      todaySendCount: currentCount + 1,
+      todayResetAt: today === resetDate ? mailbox.todayResetAt : Date.now(),
+    });
+  }
+
+  const sequence = await ctx.db.get(args.sequenceId);
+  if (sequence) {
+    await advanceEnrollment(
+      ctx,
+      args.enrollmentId,
+      sequence.steps.length,
+      sequence.steps[args.step + 1]?.delayDays,
+    );
+    const stats = sequence.stats ?? {
+      enrolled: 0,
+      sent: 0,
+      opened: 0,
+      replied: 0,
+      bounced: 0,
+      unsubscribed: 0,
+    };
+    await ctx.db.patch(args.sequenceId, { stats: { ...stats, sent: stats.sent + 1 } });
+  }
+}
+
+/** Patterns indicating a permanent delivery failure (not a transient error). */
+const HARD_BOUNCE_PATTERNS = [
+  /invalid.*address/i,
+  /user.*not.*found/i,
+  /mailbox.*not.*found/i,
+  /does not exist/i,
+  /550\b/,
+  /553\b/,
+  /disabled.*account/i,
+];
+
+function isHardBounce(error: string | undefined): boolean {
+  if (!error) return false;
+  return HARD_BOUNCE_PATTERNS.some((p) => p.test(error));
+}
+
+async function recordFailedSend(ctx: MutationCtx, args: SendResultArgs & { error?: string }) {
+  if (isHardBounce(args.error)) {
+    // Permanent failure — mark as bounced and stop the enrollment
+    await ctx.db.insert("outreachEvents", {
+      enrollmentId: args.enrollmentId,
+      sequenceId: args.sequenceId,
+      contactId: args.contactId,
+      organizationId: args.organizationId,
+      type: "bounced",
+      step: args.step,
+      metadata: { bounceType: "hard" },
+      createdAt: Date.now(),
+    });
+
+    await ctx.db.patch(args.enrollmentId, {
+      status: "bounced",
+      completedAt: Date.now(),
+      nextSendAt: undefined,
+    });
+
+    const sequence = await ctx.db.get(args.sequenceId);
+    if (sequence?.stats) {
+      await ctx.db.patch(args.sequenceId, {
+        stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
+      });
+    }
+  } else {
+    // Transient failure (OAuth, rate limit, timeout) — defer and retry later
+    await ctx.db.patch(args.enrollmentId, {
+      nextSendAt: Date.now() + 15 * MINUTE,
+    });
+  }
+}
+
 /** Record a send result and advance enrollment */
 export const recordSendResult = internalMutation({
   args: {
@@ -257,91 +382,22 @@ export const recordSendResult = internalMutation({
     mailboxId: v.id("outreachMailboxes"),
     success: v.boolean(),
     error: v.optional(v.string()),
+    gmailThreadId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // When sender is not implemented, defer the enrollment so it doesn't
-    // monopolize the batch on every cron cycle. No event is recorded.
     if (args.error === "EMAIL_NOT_IMPLEMENTED") {
       await ctx.db.patch(args.enrollmentId, { nextSendAt: Date.now() + 60 * MINUTE });
       return;
     }
 
     if (args.success) {
-      // Log sent event
-      await ctx.db.insert("outreachEvents", {
-        enrollmentId: args.enrollmentId,
-        sequenceId: args.sequenceId,
-        contactId: args.contactId,
-        organizationId: args.organizationId,
-        type: "sent",
-        step: args.step,
-        createdAt: Date.now(),
-      });
-
-      // Update enrollment timestamp
-      await ctx.db.patch(args.enrollmentId, { lastSentAt: Date.now() });
-
-      // Increment mailbox daily send count
-      const mailbox = await ctx.db.get(args.mailboxId);
-      if (mailbox) {
-        const today = new Date().toISOString().slice(0, 10);
-        const resetDate = new Date(mailbox.todayResetAt).toISOString().slice(0, 10);
-        const currentCount = today === resetDate ? mailbox.todaySendCount : 0;
-
-        await ctx.db.patch(args.mailboxId, {
-          todaySendCount: currentCount + 1,
-          todayResetAt: today === resetDate ? mailbox.todayResetAt : Date.now(),
-        });
-      }
-
-      // Advance to next step (or mark completed)
-      const sequence = await ctx.db.get(args.sequenceId);
-      if (sequence) {
-        const nextStepIndex = args.step + 1;
-        const nextStep = sequence.steps[nextStepIndex];
-
-        await advanceEnrollment(ctx, args.enrollmentId, sequence.steps.length, nextStep?.delayDays);
-
-        // Update sequence stats
-        const currentStats = sequence.stats ?? {
-          enrolled: 0,
-          sent: 0,
-          opened: 0,
-          replied: 0,
-          bounced: 0,
-          unsubscribed: 0,
-        };
-        await ctx.db.patch(args.sequenceId, {
-          stats: { ...currentStats, sent: currentStats.sent + 1 },
-        });
+      await recordSuccessfulSend(ctx, args);
+      // Store Gmail thread ID for reply correlation
+      if (args.gmailThreadId) {
+        await ctx.db.patch(args.enrollmentId, { gmailThreadId: args.gmailThreadId });
       }
     } else {
-      // Send failed — log bounce event
-      await ctx.db.insert("outreachEvents", {
-        enrollmentId: args.enrollmentId,
-        sequenceId: args.sequenceId,
-        contactId: args.contactId,
-        organizationId: args.organizationId,
-        type: "bounced",
-        step: args.step,
-        metadata: { bounceType: "hard" },
-        createdAt: Date.now(),
-      });
-
-      // Stop enrollment on hard failure
-      await ctx.db.patch(args.enrollmentId, {
-        status: "bounced",
-        completedAt: Date.now(),
-        nextSendAt: undefined,
-      });
-
-      // Increment sequence bounce stats
-      const sequence = await ctx.db.get(args.sequenceId);
-      if (sequence?.stats) {
-        await ctx.db.patch(args.sequenceId, {
-          stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
-        });
-      }
+      await recordFailedSend(ctx, { ...args, error: args.error });
     }
   },
 });
@@ -372,56 +428,3 @@ export const resetDailySendCounts = internalMutation({
     // Sufficient for current scale (< 100 active mailboxes).
   },
 });
-
-// =============================================================================
-// Template Rendering
-// =============================================================================
-
-/** Replace {{variable}} placeholders with contact data */
-function renderTemplate(
-  template: string,
-  contact: {
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    company?: string;
-    customFields?: Record<string, string>;
-  },
-): string {
-  let result = template;
-
-  // Standard variables
-  result = result.replace(/\{\{email\}\}/gi, contact.email);
-  result = result.replace(/\{\{firstName\}\}/gi, contact.firstName ?? "");
-  result = result.replace(/\{\{lastName\}\}/gi, contact.lastName ?? "");
-  result = result.replace(/\{\{company\}\}/gi, contact.company ?? "");
-
-  // Custom fields
-  if (contact.customFields) {
-    for (const [key, value] of Object.entries(contact.customFields)) {
-      const pattern = new RegExp(`\\{\\{${key}\\}\\}`, "gi");
-      result = result.replace(pattern, value);
-    }
-  }
-
-  // Clean up any remaining unresolved variables
-  result = result.replace(/\{\{[^}]+\}\}/g, "");
-
-  return result;
-}
-
-/** Build the compliance footer (unsubscribe link + physical address) */
-function buildComplianceFooter(
-  physicalAddress: string,
-  enrollmentId: Id<"outreachEnrollments">,
-  trackingDomain?: string,
-): string {
-  const domain = trackingDomain ?? "track.nixelo.com";
-  const unsubUrl = `https://${domain}/t/u/${enrollmentId}`;
-
-  return `
-<div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e5e5;font-size:11px;color:#888;line-height:1.4;">
-  <p>${physicalAddress}</p>
-  <p><a href="${unsubUrl}" style="color:#888;">Unsubscribe</a></p>
-</div>`;
-}

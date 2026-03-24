@@ -105,22 +105,12 @@ export class SettingsPage extends BasePage {
     super(page, orgSlug);
 
     // Settings tabs
-    this.integrationsTab = page
-      .getByRole("tab", { name: /integration/i })
-      .or(page.getByRole("button", { name: /integration/i }));
-    this.apiKeysTab = page
-      .getByRole("tab", { name: /api.*key/i })
-      .or(page.getByRole("button", { name: /api.*key/i }));
-    this.offlineTab = page
-      .getByRole("tab", { name: /offline/i })
-      .or(page.getByRole("button", { name: /offline/i }));
-    this.preferencesTab = page
-      .getByRole("tab", { name: /preference/i })
-      .or(page.getByRole("button", { name: /preference/i }));
-    this.adminTab = page
-      .getByRole("tab", { name: /admin/i })
-      .or(page.getByRole("button", { name: /admin/i }));
-    this.devToolsTab = page.getByRole("tab", { name: /dev tools/i });
+    this.integrationsTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_INTEGRATIONS);
+    this.apiKeysTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_APIKEYS);
+    this.offlineTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_OFFLINE);
+    this.preferencesTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_PREFERENCES);
+    this.adminTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_ADMIN);
+    this.devToolsTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_DEVELOPER);
 
     // Theme options (in Preferences tab) - ToggleGroupItems with aria-labels
     this.themeLightOption = page.getByRole("radio", { name: /light theme/i });
@@ -176,7 +166,7 @@ export class SettingsPage extends BasePage {
       .getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION)
       .getByRole("heading")
       .first();
-    this.inviteUserButton = page.getByRole("button", { name: /invite.*user/i });
+    this.inviteUserButton = page.getByTestId(TEST_IDS.SETTINGS.INVITE_BUTTON);
     this.userTypeManager = page.getByTestId(TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION);
     this.hourComplianceDashboard = page.getByTestId(TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION);
     this.adminUsersTab = page.getByTestId(TEST_IDS.SETTINGS.ADMIN_USERS_TAB);

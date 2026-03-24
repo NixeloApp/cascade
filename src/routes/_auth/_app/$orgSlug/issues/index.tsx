@@ -112,7 +112,7 @@ function IssueFilterBar({
             value={filters.statusFilter || "all"}
             onValueChange={(v) => filters.setStatusFilter(v === "all" ? undefined : v)}
           >
-            <SelectTrigger className="w-36">
+            <SelectTrigger width="sm">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -129,7 +129,7 @@ function IssueFilterBar({
             value={filters.priorityFilter || "all"}
             onValueChange={(v) => filters.setPriorityFilter(v === "all" ? undefined : v)}
           >
-            <SelectTrigger className="w-36">
+            <SelectTrigger width="sm">
               <SelectValue placeholder="All Priorities" />
             </SelectTrigger>
             <SelectContent>
@@ -145,7 +145,7 @@ function IssueFilterBar({
             value={filters.typeFilter || "all"}
             onValueChange={(v) => filters.setTypeFilter(v === "all" ? undefined : v)}
           >
-            <SelectTrigger className="w-36">
+            <SelectTrigger width="sm">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>

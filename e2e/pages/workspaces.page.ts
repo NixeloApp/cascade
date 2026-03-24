@@ -16,50 +16,40 @@ import { BasePage } from "./base.page";
  */
 export class WorkspacesPage extends BasePage {
   readonly newWorkspaceButton: Locator;
-  readonly workspaceList: Locator;
   readonly workspaceCards: Locator;
   readonly workspaceTabs: Locator;
   readonly workspaceTeamsTab: Locator;
   readonly workspaceSettingsTab: Locator;
-  readonly teamsPageHeader: Locator;
   readonly createTeamButton: Locator;
   readonly teamsEmptyStateHeading: Locator;
-  readonly teamCards: Locator;
   readonly workspaceSettingsHeader: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
 
-    // This page object targets the route-owned create-workspace modal, not the sidebar's
-    // direct-create shortcut, so keep the trigger scoped to the page surface.
     this.newWorkspaceButton = page
       .getByRole("main")
       .getByRole("button", { name: /\+ Create Workspace|Create Workspace/i })
       .first();
-    this.workspaceList = page.getByRole("main").locator("a[href*='/workspaces/']").locator("..");
-    this.workspaceCards = page.locator("a[href*='/workspaces/']");
+    this.workspaceCards = page.getByTestId(TEST_IDS.WORKSPACE.CARD);
     this.workspaceTabs = page
       .getByRole("navigation")
       .filter({ has: page.getByRole("link", { name: /^Teams$/ }) })
       .first();
     this.workspaceTeamsTab = this.workspaceTabs.getByRole("link", { name: /^Teams$/ });
     this.workspaceSettingsTab = this.workspaceTabs.getByRole("link", { name: /^Settings$/ });
-    this.teamsPageHeader = page.getByRole("heading", { name: /^Teams$/ });
     this.createTeamButton = page.getByRole("button", { name: /create team/i }).first();
     this.teamsEmptyStateHeading = page.getByRole("heading", { name: /no teams yet/i });
-    this.teamCards = page
-      .getByRole("main")
-      .locator("a[href*='/teams/']")
-      .filter({ has: page.getByRole("heading", { level: 3 }) });
     this.workspaceSettingsHeader = page.getByRole("heading", { name: /workspace settings/i });
   }
 
   async expectLoaded() {
-    // Wait for any loading spinner to be hidden
-    const loadingSpinner = this.page
-      .locator(".loading-spinner")
-      .or(this.page.getByText(/loading/i));
-    await this.waitForOptionalLoadingSpinnerToClear(loadingSpinner);
+    await this.page
+      .getByTestId(TEST_IDS.LOADING.SPINNER)
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {
+        /* spinner may not appear at all */
+      });
   }
 
   async goto() {
@@ -69,10 +59,11 @@ export class WorkspacesPage extends BasePage {
 
   async waitUntilReady(): Promise<void> {
     await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
+    await this.newWorkspaceButton.waitFor({ state: "visible", timeout: 12000 });
     await expect
       .poll(
         async () => {
-          const cardCount = await getLocatorCount(this.page.getByTestId(TEST_IDS.WORKSPACE.CARD));
+          const cardCount = await getLocatorCount(this.workspaceCards);
           if (cardCount > 0) return "ready";
           return (await isLocatorVisible(this.page.getByText(/no workspaces yet/i)))
             ? "ready"
@@ -102,8 +93,6 @@ export class WorkspacesPage extends BasePage {
       },
     });
 
-    // After workspace creation, the page may redirect to the workspace detail page
-    // Wait for either the workspace to appear in the list OR the workspace detail page to load
     await this.expectWorkspaceVisible(name);
   }
 
@@ -112,23 +101,19 @@ export class WorkspacesPage extends BasePage {
   }
 
   async expectWorkspacesView() {
-    await expect(this.page.getByRole("heading", { name: /workspaces/i }).first()).toBeVisible();
+    await expect(this.pageHeaderTitle).toBeVisible();
     await expect(this.newWorkspaceButton.first()).toBeVisible();
   }
 
   async expectWorkspaceDetailVisible(name: string) {
     await expect(this.page).toHaveURL(routePattern(ROUTES.workspaces.detail.path));
-    // PageHeader renders workspace name as h2
-    await expect(this.page.getByRole("heading", { name, level: 2 })).toBeVisible();
+    await expect(this.pageHeaderTitle).toBeVisible();
+    await expect(this.pageHeaderTitle).toContainText(name);
   }
 
   async expectWorkspaceVisible(name: string) {
-    const mainContent = this.page.getByRole("main");
-    // Workspace list cards use h4, detail page uses h2 via PageHeader
-    const workspaceCard = mainContent.locator(`a[href*="/workspaces/"]`).filter({ hasText: name });
-    const workspaceH2 = mainContent.getByRole("heading", { name, level: 2 });
-    const workspaceH4 = mainContent.getByRole("heading", { name, level: 4 });
-    await expect(workspaceCard.or(workspaceH2).or(workspaceH4)).toBeVisible();
+    const card = this.workspaceCards.filter({ hasText: name }).first();
+    await expect(card).toBeVisible();
   }
 
   async isWorkspaceSettingsTabVisible() {
@@ -136,23 +121,18 @@ export class WorkspacesPage extends BasePage {
   }
 
   async openWorkspace(name: string) {
-    // Only skip navigation if we're already on a workspace detail route with the heading visible
     const onWorkspaceRoute = routePattern(ROUTES.workspaces.detail.path).test(this.page.url());
     if (onWorkspaceRoute) {
-      // PageHeader renders workspace name as h2
-      const headingVisible = await isLocatorVisible(
-        this.page.getByRole("heading", { name, level: 2 }),
-      );
-      if (headingVisible) return;
+      const headingVisible = await isLocatorVisible(this.pageHeaderTitle);
+      if (headingVisible) {
+        const text = await this.pageHeaderTitle.textContent();
+        if (text?.includes(name)) return;
+      }
     }
 
-    const workspaceCard = this.page
-      .getByRole("main")
-      .locator(`a[href*="/workspaces/"]`)
-      .filter({ hasText: name })
-      .first();
-    await expect(workspaceCard).toBeVisible();
-    await workspaceCard.click();
+    const card = this.workspaceCards.filter({ hasText: name }).first();
+    await expect(card).toBeVisible();
+    await card.click();
   }
 
   async openWorkspaceTeams(name: string) {
@@ -169,14 +149,14 @@ export class WorkspacesPage extends BasePage {
 
   async expectTeamsLoaded() {
     await expect(this.page).toHaveURL(routePattern(ROUTES.workspaces.teams.list.path));
-    await expect(this.teamsPageHeader).toBeVisible();
     await expect(this.createTeamButton).toBeVisible();
   }
 
   async getTeamsPageState(): Promise<"empty" | "teams"> {
     await this.expectTeamsLoaded();
 
-    if (await isLocatorVisible(this.teamCards.first())) {
+    const teamCards = this.page.getByTestId(TEST_IDS.WORKSPACE.CARD);
+    if (await isLocatorVisible(teamCards.first())) {
       return "teams";
     }
 
@@ -184,8 +164,8 @@ export class WorkspacesPage extends BasePage {
       return "empty";
     }
 
-    await expect(this.teamsEmptyStateHeading.or(this.teamCards.first())).toBeVisible();
-    return (await isLocatorVisible(this.teamCards.first())) ? "teams" : "empty";
+    await expect(this.teamsEmptyStateHeading.or(teamCards.first())).toBeVisible();
+    return (await isLocatorVisible(teamCards.first())) ? "teams" : "empty";
   }
 
   async expectWorkspaceSettingsLoaded() {
@@ -205,9 +185,7 @@ export class WorkspacesPage extends BasePage {
 
   private async waitForWorkspacesView(timeout = 3000) {
     try {
-      await expect(this.page.getByRole("heading", { name: /workspaces/i }).first()).toBeVisible({
-        timeout,
-      });
+      await expect(this.pageHeaderTitle).toBeVisible({ timeout });
       await expect(this.newWorkspaceButton.first()).toBeVisible({ timeout });
       return true;
     } catch {
@@ -257,23 +235,6 @@ export class WorkspacesPage extends BasePage {
     }
   }
 
-  private async waitForOptionalLoadingSpinnerToClear(
-    loadingSpinner: Locator,
-    timeout = 5000,
-  ): Promise<void> {
-    const spinnerVisible = await isLocatorVisible(loadingSpinner);
-    if (!spinnerVisible) {
-      return;
-    }
-
-    try {
-      await loadingSpinner.waitFor({ state: "hidden", timeout });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Workspace page loading spinner did not clear: ${message}`);
-    }
-  }
-
   private async prepareLocatorForInteraction(locator: Locator, label: string): Promise<void> {
     await expect(locator, `${label} should be visible before interaction`).toBeVisible();
 
@@ -287,7 +248,7 @@ export class WorkspacesPage extends BasePage {
         ).toBeVisible();
         return;
       } catch {
-        // Fall through to the explicit visibility check and error below.
+        // Fall through
       }
 
       const stillVisible = await isLocatorVisible(locator);

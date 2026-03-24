@@ -19,7 +19,7 @@ const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
 const selectTriggerVariants = cva(
-  "flex w-full items-center justify-between rounded-md border text-sm text-ui-text ring-offset-ui-bg transition-colors duration-default placeholder:text-ui-text-tertiary focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+  "flex items-center justify-between rounded-md border text-sm text-ui-text ring-offset-ui-bg transition-colors duration-default placeholder:text-ui-text-tertiary focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
   {
     variants: {
       variant: {
@@ -27,9 +27,20 @@ const selectTriggerVariants = cva(
         inlineEdit:
           "h-8 border-transparent bg-transparent px-2 py-1 hover:bg-ui-bg-hover hover:border-ui-border focus:bg-ui-bg focus:border-ui-border",
       },
+      width: {
+        /** Full-width (default) — fills parent container */
+        full: "w-full",
+        /** Compact filter selects — status, priority, sort dropdowns */
+        sm: "w-36",
+        /** Medium controls — category selects, roadmap controls */
+        md: "w-48",
+        /** Wide selects — epic filters, grouping selects */
+        lg: "w-56",
+      },
     },
     defaultVariants: {
       variant: "default",
+      width: "full",
     },
   },
 );
@@ -38,10 +49,10 @@ const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> &
     VariantProps<typeof selectTriggerVariants>
->(({ className, children, variant, ...props }, ref) => (
+>(({ className, children, variant, width, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
-    className={cn(selectTriggerVariants({ variant }), className)}
+    className={cn(selectTriggerVariants({ variant, width }), className)}
     {...props}
   >
     {children}
