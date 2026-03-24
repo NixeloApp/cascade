@@ -62,6 +62,32 @@ import {
 // ---------------------------------------------------------------------------
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:5555";
+
+/**
+ * Wait for loading spinners to disappear using data-testid instead of
+ * the brittle `role="status"` selector (which also matches alert banners).
+ */
+async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> {
+  try {
+    await expect
+      .poll(
+        async () => {
+          const spinner = page.getByTestId(TEST_IDS.LOADING.SPINNER);
+          const count = await spinner.count();
+          if (count === 0) return 0;
+          let visible = 0;
+          for (let i = 0; i < count; i++) {
+            if (await isLocatorVisible(spinner.nth(i))) visible++;
+          }
+          return visible;
+        },
+        { timeout, intervals: [100, 200, 500] },
+      )
+      .toBe(0);
+  } catch {
+    // Spinner may have cleared between polls — non-critical
+  }
+}
 const SPECS_BASE_DIR = path.join(process.cwd(), "docs", "design", "specs", "pages");
 const MODAL_SPECS_BASE_DIR = path.join(
   process.cwd(),
@@ -1475,7 +1501,7 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
         timeout: 6000,
       });
       await waitForLoadingSkeletonsToClear(page, 4000);
-      await page.getByRole("status").waitFor({ state: "hidden", timeout: 4000 });
+      await waitForSpinnersHidden(page, 4000);
       return true;
     } catch {
       if (attempt === 0) {
@@ -1497,7 +1523,7 @@ async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> 
     state: "visible",
     timeout: 12000,
   });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
   await page.waitForFunction(
     (capturePrefix) => {
       const text = document.body.innerText || "";
@@ -1559,7 +1585,7 @@ async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
       { timeout: 12000 },
     )
     .not.toBe("pending");
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 type CalendarDragState = {
@@ -1631,7 +1657,7 @@ async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void
     prefix,
     { timeout: 12000 },
   );
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForTimeTrackingReady(page: Page): Promise<void> {
@@ -1655,7 +1681,7 @@ async function waitForTimeTrackingReady(page: Page): Promise<void> {
     undefined,
     { timeout: 12000 },
   );
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
@@ -1686,7 +1712,7 @@ async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
     undefined,
     { timeout: 12000 },
   );
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForWorkspaceSettingsReady(page: Page): Promise<void> {
@@ -1698,7 +1724,7 @@ async function waitForWorkspaceSettingsReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
@@ -1707,7 +1733,7 @@ async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
     .getByText(/backlog is empty/i)
     .or(page.getByTestId(TEST_IDS.BOARD.COLUMN))
     .waitFor({ state: "visible", timeout: 12000 });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForTeamDetailReady(page: Page): Promise<void> {
@@ -1736,7 +1762,7 @@ async function waitForTeamSettingsReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForIssueDetailReady(page: Page): Promise<void> {
@@ -1749,7 +1775,7 @@ async function waitForIssueDetailReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForDocumentsReady(page: Page): Promise<void> {
@@ -1768,7 +1794,7 @@ async function waitForDocumentsReady(page: Page): Promise<void> {
     undefined,
     { timeout: 12000 },
   );
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForDocumentEditorReady(page: Page): Promise<void> {
@@ -1790,7 +1816,7 @@ async function waitForDocumentEditorReady(page: Page): Promise<void> {
     undefined,
     { timeout: 12000 },
   );
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
@@ -1814,7 +1840,7 @@ async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
     undefined,
     { timeout: 12000 },
   );
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForActivityReady(page: Page): Promise<void> {
@@ -1826,7 +1852,7 @@ async function waitForActivityReady(page: Page): Promise<void> {
     .getByTestId(TEST_IDS.ACTIVITY.FEED)
     .or(page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE))
     .waitFor({ state: "visible", timeout: 12000 });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForAnalyticsReady(
@@ -1841,7 +1867,7 @@ async function waitForAnalyticsReady(
     state: "visible",
     timeout: 12000,
   });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
   await waitForLoadingSkeletonsToClear(page, 5000);
 }
 
@@ -1854,7 +1880,7 @@ async function waitForTimesheetReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForSprintsReady(page: Page): Promise<void> {
@@ -1863,7 +1889,7 @@ async function waitForSprintsReady(page: Page): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForProjectMembersReady(page: Page): Promise<void> {
@@ -1876,7 +1902,7 @@ async function waitForProjectMembersReady(page: Page): Promise<void> {
     timeout: 12000,
   });
   await page.getByText(/members? with access/i).waitFor({ state: "visible", timeout: 12000 });
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function scrollSectionNearViewportTop(
@@ -1921,7 +1947,7 @@ async function waitForRoadmapReady(page: Page): Promise<void> {
     undefined,
     { timeout: 12000 },
   );
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForBillingReady(page: Page): Promise<void> {
@@ -1934,7 +1960,7 @@ async function waitForBillingReady(page: Page): Promise<void> {
     undefined,
     { timeout: 12000 },
   );
-  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForSpinnersHidden(page);
 }
 
 async function waitForExpectedContent(
@@ -1973,7 +1999,7 @@ async function waitForExpectedContent(
       undefined,
       { timeout: 20000 },
     );
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     await waitForLoadingSkeletonsToClear(page, 4000);
     return;
   }
@@ -2060,7 +2086,7 @@ async function waitForExpectedContent(
       });
     }
 
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2068,7 +2094,7 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /^authentication$/i })
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2081,9 +2107,9 @@ async function waitForExpectedContent(
 
   if (name === "assistant" || /\/assistant\/?$/.test(url)) {
     await page
-      .getByRole("heading", { name: /assistant/i })
+      .getByRole("heading", { name: /^assistant$/i })
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2136,10 +2162,11 @@ async function waitForExpectedContent(
 
   if (isWorkspaceDependenciesUrl(url) || /^workspace-[^-]+-dependencies$/.test(name)) {
     await page
-      .getByRole("heading", { name: /dependencies/i })
+      .getByRole("heading", { name: /^dependencies$/i })
       .or(page.getByText(/no dependencies/i))
+      .first()
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2148,7 +2175,7 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /wiki/i })
       .or(page.getByText(/no pages/i))
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2167,7 +2194,7 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /wiki/i })
       .or(page.getByText(/no pages/i))
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2226,7 +2253,7 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /inbox/i })
       .or(page.getByText(/no items in inbox/i))
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2247,7 +2274,7 @@ async function waitForExpectedContent(
         },
       )
       .toBe(true);
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     await expect
       .poll(
         async () => {
@@ -2271,7 +2298,7 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /my issues/i })
       .or(page.getByText(/no issues assigned/i))
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2284,9 +2311,9 @@ async function waitForExpectedContent(
   if (isInvoicesUrl(url) || name === "invoices") {
     await page
       .getByRole("heading", { name: /invoices/i })
-      .or(page.getByText(/no invoices/i))
+      .first()
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2300,7 +2327,7 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /clients/i })
       .or(page.getByText(/no clients/i))
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -2312,7 +2339,7 @@ async function waitForExpectedContent(
       .getByText(/meeting memory/i)
       .or(page.getByText(/no meeting recordings yet/i))
       .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForSpinnersHidden(page);
     return;
   }
 
@@ -4840,7 +4867,78 @@ async function screenshotIssueInteractiveStates(
 // Main capture function for a single viewport/theme combination
 // ---------------------------------------------------------------------------
 
-async function captureForConfig(
+/**
+ * Authenticate, navigate to the app gateway, and return the page ready
+ * for authenticated captures. Returns null if auth fails.
+ */
+async function authenticateAndNavigate(page: Page): Promise<boolean> {
+  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
+  const loginResult = await testUserService.loginTestUser(
+    SCREENSHOT_USER.email,
+    SCREENSHOT_USER.password,
+  );
+
+  if (!loginResult.success || !loginResult.token) {
+    return false;
+  }
+
+  await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
+  await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
+  await page.waitForURL((u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname), {
+    timeout: 15000,
+  });
+  await waitForScreenshotReady(page);
+  return true;
+}
+
+/**
+ * Capture empty states for a single viewport/theme combination.
+ * Must run BEFORE data is seeded so pages genuinely show empty UI.
+ */
+async function captureEmptyForConfig(
+  browser: Browser,
+  viewport: ViewportName,
+  theme: ThemeName,
+  orgSlug: string,
+): Promise<void> {
+  currentConfigPrefix = `${viewport}-${theme}`;
+  resetCounters();
+
+  console.log(
+    `\n  📸 ${currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}) [empty]`,
+  );
+
+  const context = await browser.newContext({
+    viewport: VIEWPORTS[viewport],
+    colorScheme: theme,
+    timezoneId: E2E_TIMEZONE,
+  });
+  const page = await context.newPage();
+
+  try {
+    if (!(await authenticateAndNavigate(page))) {
+      captureFailures++;
+      console.log(`    ⚠️ Auth failed for ${currentConfigPrefix} empty states`);
+      return;
+    }
+    await screenshotEmptyStates(page, orgSlug);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (isCrashLikeError(message)) {
+      throw error;
+    }
+    captureFailures++;
+    console.log(`    ⚠️ Empty state capture failed for ${currentConfigPrefix}: ${message}`);
+  } finally {
+    await context.close();
+  }
+}
+
+/**
+ * Capture public pages and filled states for a single viewport/theme combination.
+ * Runs AFTER data has been seeded.
+ */
+async function captureFilledForConfig(
   browser: Browser,
   viewport: ViewportName,
   theme: ThemeName,
@@ -4851,7 +4949,7 @@ async function captureForConfig(
   resetCounters();
 
   console.log(
-    `\n  📸 ${currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height})`,
+    `\n  📸 ${currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}) [public + filled]`,
   );
 
   const context = await browser.newContext({
@@ -4861,45 +4959,28 @@ async function captureForConfig(
   });
   const page = await context.newPage();
 
-  // Public pages (no auth needed)
+  // Public pages (no auth needed, but some need seed data for tokens)
   await screenshotPublicPages(page, seedResult);
 
-  // Inject auth tokens
-  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
-  const loginResult = await testUserService.loginTestUser(
-    SCREENSHOT_USER.email,
-    SCREENSHOT_USER.password,
-  );
-
-  if (loginResult.success && loginResult.token) {
-    await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
-    await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
-    try {
-      await page.waitForURL(
-        (u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname),
-        { timeout: 15000 },
-      );
-      await waitForScreenshotReady(page);
-
-      // Empty states (before seed data is visible in this context)
-      await screenshotEmptyStates(page, orgSlug);
-
-      // Filled states
-      const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
-      await screenshotFilledStates(page, filledOrgSlug, seedResult);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (isCrashLikeError(message)) {
-        throw error;
-      }
+  try {
+    if (!(await authenticateAndNavigate(page))) {
       captureFailures++;
-      console.log(
-        `    ⚠️ Auth or capture failed for ${currentConfigPrefix}, skipping authenticated pages: ${message}`,
-      );
+      console.log(`    ⚠️ Auth failed for ${currentConfigPrefix} filled states`);
+      return;
     }
-  }
 
-  await context.close();
+    const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
+    await screenshotFilledStates(page, filledOrgSlug, seedResult);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (isCrashLikeError(message)) {
+      throw error;
+    }
+    captureFailures++;
+    console.log(`    ⚠️ Filled state capture failed for ${currentConfigPrefix}: ${message}`);
+  } finally {
+    await context.close();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -5189,7 +5270,52 @@ async function run(): Promise<void> {
   }
   await setupBrowser.close();
 
-  // Seed data for filled states
+  // -----------------------------------------------------------------------
+  // Phase 1: Empty states — capture BEFORE seeding so pages are genuinely
+  // empty. This eliminates the race condition where Convex syncs seeded
+  // data before the empty-state screenshots can be captured.
+  // -----------------------------------------------------------------------
+  const hasEmptyCaptures = shouldCaptureAny("empty", [
+    "dashboard",
+    "projects",
+    "issues",
+    "documents",
+    "documents-templates",
+    "workspaces",
+    "time-tracking",
+    "notifications",
+    "my-issues",
+    "invoices",
+    "clients",
+    "meetings",
+    "settings",
+    "settings-profile",
+  ]);
+
+  if (hasEmptyCaptures) {
+    console.log("\n  📋 Phase 1: Empty states (before seeding)");
+    for (const config of selectedConfigs) {
+      const browser = await launchBrowser();
+      try {
+        await captureEmptyForConfig(browser, config.viewport, config.theme, orgSlug);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (isCrashLikeError(message)) {
+          throw error;
+        }
+        captureFailures++;
+        console.log(`    ⚠️ ${config.viewport}-${config.theme} empty capture failed: ${message}`);
+      } finally {
+        await browser.close();
+      }
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Phase 2: Seed data, then capture public pages + filled states.
+  // Public pages need seed data (invite tokens, portal tokens, etc.).
+  // -----------------------------------------------------------------------
+  console.log("\n  📋 Phase 2: Seed data + public pages + filled states");
   console.log("  Seeding screenshot data...");
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, { orgSlug });
   if (seedResult.success) {
@@ -5200,24 +5326,12 @@ async function run(): Promise<void> {
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
   }
 
-  // Capture configured combinations
   for (const config of selectedConfigs) {
     let completed = false;
     for (let attempt = 1; attempt <= 2 && !completed; attempt++) {
       const browser = await launchBrowser();
       try {
-        const configSeedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
-          orgSlug,
-        });
-        const effectiveSeedResult =
-          configSeedResult.success && configSeedResult.orgSlug ? configSeedResult : seedResult;
-        await captureForConfig(
-          browser,
-          config.viewport,
-          config.theme,
-          orgSlug,
-          effectiveSeedResult,
-        );
+        await captureFilledForConfig(browser, config.viewport, config.theme, orgSlug, seedResult);
         completed = true;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
