@@ -10,7 +10,7 @@
 
 | Category | Count | Details |
 |----------|-------|---------|
-| Visual/shell weight | 1 | ~~Auth shell x4, dashboard gradients x2, forgot-password sparse~~ **Fixed** — minimal centered layout (Mintlify-style), meetings density remains |
+| ~~Visual/shell weight~~ | ~~1~~ | ~~Auth shell x4, dashboard gradients x2, forgot-password sparse~~ **Fixed** — minimal centered layout; ~~meetings density~~ **Fixed** — collapsible detail sections |
 | Screenshot coverage | 3 | Documents states, analytics states, auth sign-up |
 | ~~Product depth~~ | ~~1~~ | ~~Dependencies graph~~ **Fixed** — cross-team blocker matrix with heatmap intensity |
 | Infrastructure | 1 | External error reporting (Sentry/PostHog) |
@@ -47,4 +47,4 @@
 | Spec issues fixed | 53 total |
 | TEST_IDs | 197 |
 | Biome lint warnings | 0 |
-| MEDIUM remaining | 5 |
+| MEDIUM remaining | 4 |
