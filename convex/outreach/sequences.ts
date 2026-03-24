@@ -251,16 +251,27 @@ export const remove = authenticatedMutation({
       throw conflict("Cannot delete an active sequence. Pause it first.");
     }
 
-    // Check for any non-terminal enrollments
-    const activeEnrollments = await ctx.db
+    // Check for any non-terminal enrollments (active or paused)
+    const activeEnrollment = await ctx.db
       .query("outreachEnrollments")
       .withIndex("by_sequence_status", (q) =>
         q.eq("sequenceId", args.sequenceId).eq("status", "active"),
       )
       .first();
+    const pausedEnrollment = await ctx.db
+      .query("outreachEnrollments")
+      .withIndex("by_sequence_status", (q) =>
+        q
+          .eq("sequenceId", args.sequenceId)
+          .eq(
+            "status",
+            "paused" as "active" | "completed" | "paused" | "replied" | "bounced" | "unsubscribed",
+          ),
+      )
+      .first();
 
-    if (activeEnrollments) {
-      throw conflict("Cannot delete sequence with active enrollments");
+    if (activeEnrollment || pausedEnrollment) {
+      throw conflict("Cannot delete sequence with active or paused enrollments");
     }
 
     await ctx.db.delete(args.sequenceId);

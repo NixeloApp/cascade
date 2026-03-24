@@ -334,6 +334,14 @@ export const recordSendResult = internalMutation({
         completedAt: Date.now(),
         nextSendAt: undefined,
       });
+
+      // Increment sequence bounce stats
+      const sequence = await ctx.db.get(args.sequenceId);
+      if (sequence?.stats) {
+        await ctx.db.patch(args.sequenceId, {
+          stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
+        });
+      }
     }
   },
 });
