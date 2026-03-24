@@ -39,27 +39,27 @@
 
 ---
 
-## Phase 1: Deduplicate & Consolidate Utils
+## Phase 1: Deduplicate & Consolidate Utils ✅ DONE
 
 **Goal:** Single source of truth for all shared utilities. No duplicates.
 
-### 1.1 Consolidate wait helpers
+### 1.1 Consolidate wait helpers ✅
 
-- [ ] Delete `test-helpers.ts:waitForAnimations` — use `wait-helpers.ts:waitForAnimation` everywhere (it correctly skips infinite animations)
-- [ ] Delete `test-helpers.ts:waitForToast` — use `wait-helpers.ts:waitForToast` everywhere
-- [ ] Move remaining `test-helpers.ts` functions (`createTestNamespace`, `generateTestEmail`, `dismissAllToasts`, `mockApiResponse`) into purpose-specific files or `wait-helpers.ts`
-- [ ] Delete `test-helpers.ts` once empty
-- [ ] Update barrel `e2e/utils/index.ts` to remove dual exports
+- [x] Delete `test-helpers.ts:waitForAnimations` — removed (buggy: waited on infinite animations)
+- [x] Delete `test-helpers.ts:waitForToast` — removed (duplicate of wait-helpers version)
+- [x] Removed 8 other dead functions from `test-helpers.ts` (164 → 50 lines)
+- [x] `test-helpers.ts` now contains only `createTestNamespace` (the one function actually used)
+- [x] Update barrel `e2e/utils/index.ts` — cleaned up
 
-### 1.2 Consolidate auth helpers
+### 1.2 Consolidate auth helpers ✅
 
-- [ ] Remove the private `injectAuthTokens` from `screenshot-pages.ts`
-- [ ] Export a single `injectAuthTokens(page, token, refreshToken)` from `auth-helpers.ts`
-- [ ] Screenshot tool imports and uses the shared version
+- [x] Remove the private `injectAuthTokens` from `screenshot-pages.ts`
+- [x] Export a single `injectAuthTokens(page, token, refreshToken)` from `auth-helpers.ts`
+- [x] Screenshot tool imports and uses the shared version (with stale-key cleanup)
 
-### 1.3 Fix known bug
+### 1.3 Fix known bug ✅
 
-- [ ] Fix `wait-helpers.ts` line 91: `hydratedMarker` reference error in `waitForFormReady`
+- [x] Fix `wait-helpers.ts`: removed dead `hydratedMarker` reference and redundant post-poll re-check in `waitForFormReady`
 
 ---
 
