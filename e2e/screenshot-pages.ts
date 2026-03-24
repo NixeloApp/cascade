@@ -1781,6 +1781,7 @@ async function autoLogin(page: Page): Promise<string | null> {
   }
   console.log(`    User ready: ${SCREENSHOT_USER.email}`);
 
+  // Get API token
   console.log("    Logging in via API...");
   const loginResult = await testUserService.loginTestUser(
     SCREENSHOT_USER.email,
@@ -1791,23 +1792,29 @@ async function autoLogin(page: Page): Promise<string | null> {
     return null;
   }
 
-  // Navigate to signin first so we have a page context for localStorage injection
+  // Discover orgSlug by doing a lightweight seed (returns orgSlug)
+  const seedProbe = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {});
+  const orgSlug = seedProbe.orgSlug;
+  if (!orgSlug) {
+    console.error("    Could not determine org slug from seed probe");
+    return null;
+  }
+
+  // Inject tokens and navigate directly to the dashboard (bypasses /app redirect)
   await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
   await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
-  // Navigate to /app — the auth redirect picks up injected tokens from localStorage
-  await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "load" });
+  await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
 
+  // Wait for the dashboard to settle — the Convex auth client needs time to validate
+  // the injected token and render the authenticated page
   try {
-    await page.waitForURL((u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname), {
-      timeout: 20000,
-    });
+    await waitForDashboardReady(page);
   } catch {
-    console.error("    Login redirect timed out. Current URL:", page.url());
+    console.error("    Dashboard did not become ready. Current URL:", page.url());
     return null;
   }
 
   await waitForScreenshotReady(page);
-  const orgSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0];
   console.log(`    Logged in. Org: ${orgSlug}`);
   return orgSlug;
 }
@@ -4031,7 +4038,7 @@ async function screenshotIssueInteractiveStates(
  * Authenticate, navigate to the app gateway, and return the page ready
  * for authenticated captures. Returns null if auth fails.
  */
-async function authenticateAndNavigate(page: Page): Promise<boolean> {
+async function authenticateAndNavigate(page: Page, orgSlug: string): Promise<boolean> {
   await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
   const loginResult = await testUserService.loginTestUser(
     SCREENSHOT_USER.email,
@@ -4043,11 +4050,8 @@ async function authenticateAndNavigate(page: Page): Promise<boolean> {
   }
 
   await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
-  await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
-  await page.waitForURL((u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname), {
-    timeout: 15000,
-  });
-  await waitForScreenshotReady(page);
+  await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
+  await waitForDashboardReady(page);
   return true;
 }
 
@@ -4076,7 +4080,7 @@ async function captureEmptyForConfig(
   const page = await context.newPage();
 
   try {
-    if (!(await authenticateAndNavigate(page))) {
+    if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureFailures++;
       console.log(`    ⚠️ Auth failed for ${currentConfigPrefix} empty states`);
       return;
@@ -4123,7 +4127,7 @@ async function captureFilledForConfig(
   await screenshotPublicPages(page, seedResult);
 
   try {
-    if (!(await authenticateAndNavigate(page))) {
+    if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureFailures++;
       console.log(`    ⚠️ Auth failed for ${currentConfigPrefix} filled states`);
       return;
