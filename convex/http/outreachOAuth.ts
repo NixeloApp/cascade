@@ -263,6 +263,8 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
     status: 200,
     headers: {
       "Content-Type": "text/html",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      Pragma: "no-cache",
       "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
     },
   });

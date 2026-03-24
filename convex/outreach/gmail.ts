@@ -338,8 +338,13 @@ export const checkReplies = internalAction({
     const accessToken = refreshed ?? mailbox.accessToken;
     const authHeaders = { Authorization: `Bearer ${accessToken}` };
 
-    const oneDayAgo = Math.floor((Date.now() - DAY) / 1000);
-    const query = `in:inbox is:unread after:${oneDayAgo}`;
+    // Use lastHealthCheckAt as a watermark so we don't miss replies that
+    // the mailbox owner reads before our cron runs (is:unread would miss those).
+    // Fall back to 24h ago if no previous check.
+    const sinceEpoch = mailbox.lastHealthCheckAt
+      ? Math.floor((mailbox.lastHealthCheckAt - 5 * MINUTE) / 1000)
+      : Math.floor((Date.now() - DAY) / 1000);
+    const query = `in:inbox after:${sinceEpoch}`;
 
     try {
       const response = await fetchWithTimeout(
@@ -420,6 +425,7 @@ export const getMailboxTokens = internalQuery({
       expiresAt: mailbox.expiresAt,
       email: mailbox.email,
       displayName: mailbox.displayName,
+      lastHealthCheckAt: mailbox.lastHealthCheckAt,
     };
   },
 });
