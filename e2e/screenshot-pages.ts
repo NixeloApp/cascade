@@ -30,26 +30,37 @@ import { ROUTES } from "../convex/shared/routes";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { E2E_TIMEZONE } from "./constants";
 import { ProjectsPage } from "./pages";
+import {
+  captureCurrentView,
+  captureScreenshotBuffer,
+  captureState,
+  getCurrentConfigUnsubscribeToken,
+  getStagedOutputSummary,
+  isConfigSelected,
+  isCrashLikeError,
+  promoteStagedScreenshots,
+  registerWaitForExpectedContent,
+  resetCounters,
+  runCaptureStep,
+  runRequiredCaptureStep,
+  shouldCapture,
+  shouldCaptureAny,
+  takeScreenshot,
+} from "./screenshot-lib/capture";
 import { parseCliOptions, printUsage } from "./screenshot-lib/cli";
 import {
   BASE_URL,
-  type CaptureTarget,
-  type CliOptions,
   CONFIGS,
   DEFAULT_SCREENSHOT_PROJECT_WORKFLOW_STATES,
-  FALLBACK_SCREENSHOT_DIR,
   MARKDOWN_IMPORT_PREVIEW,
   MARKDOWN_RICH_CONTENT,
-  MODAL_SPECS_BASE_DIR,
   SCREENSHOT_STAGING_BASE_DIR,
   SCREENSHOT_USER,
   SEARCH_SHORTCUT,
-  SPECS_BASE_DIR,
-  type ThemeName,
   VIEWPORTS,
   type ViewportName,
 } from "./screenshot-lib/config";
-import { getGeneratedSpecFolders, resolveCaptureTarget } from "./screenshot-lib/routing";
+import { getGeneratedSpecFolders } from "./screenshot-lib/routing";
 import { injectAuthTokens } from "./utils/auth-helpers";
 import {
   getLocatorAttribute,
@@ -103,366 +114,7 @@ async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> 
   }
 }
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-
-let currentConfigPrefix = ""; // e.g. "desktop-dark", "tablet-light"
-let counters = new Map<string, number>();
-let totalScreenshots = 0;
-let stagingRootDir = "";
-let captureFailures = 0;
-let cliOptions: CliOptions = {
-  headless: true,
-  dryRun: false,
-  configFilters: null,
-  specFilters: [],
-  matchFilters: [],
-  help: false,
-};
-
-function resetCounters(): void {
-  counters = new Map<string, number>();
-}
-
-function nextIndex(prefix: string): number {
-  const n = (counters.get(prefix) ?? 0) + 1;
-  counters.set(prefix, n);
-  return n;
-}
-
-// ---------------------------------------------------------------------------
-// Screenshot helpers
-// ---------------------------------------------------------------------------
-
-function matchesSpecFilters(target: CaptureTarget): boolean {
-  if (cliOptions.specFilters.length === 0) {
-    return true;
-  }
-
-  const candidates = [
-    target.specFolder?.toLowerCase(),
-    target.modalSpecSlug?.toLowerCase(),
-    target.modalSpecSlug ? "modals" : null,
-    target.modalSpecSlug ? `modals/${target.modalSpecSlug.toLowerCase()}` : null,
-  ].filter((value): value is string => typeof value === "string");
-
-  return cliOptions.specFilters.some((filter) =>
-    candidates.some((candidate) => candidate.includes(filter)),
-  );
-}
-
-function matchesMatchFilters(prefix: string, name: string, target: CaptureTarget): boolean {
-  if (cliOptions.matchFilters.length === 0) {
-    return true;
-  }
-
-  const haystacks = [
-    prefix,
-    name,
-    target.pageId,
-    target.specFolder ?? "",
-    target.modalSpecSlug ?? "",
-  ].map((value) => value.toLowerCase());
-
-  return cliOptions.matchFilters.some((filter) =>
-    haystacks.some((candidate) => candidate.includes(filter)),
-  );
-}
-
-function isConfigSelected(viewport: ViewportName, theme: ThemeName): boolean {
-  if (!cliOptions.configFilters) {
-    return true;
-  }
-
-  return cliOptions.configFilters.has(`${viewport}-${theme}`);
-}
-
-function shouldCapture(prefix: string, name: string): boolean {
-  if (cliOptions.configFilters && !cliOptions.configFilters.has(currentConfigPrefix)) {
-    return false;
-  }
-
-  const target = resolveCaptureTarget(prefix, name);
-  return matchesSpecFilters(target) && matchesMatchFilters(prefix, name, target);
-}
-
-function shouldCaptureAny(prefix: string, names: string[]): boolean {
-  return names.some((name) => shouldCapture(prefix, name));
-}
-
-function getCurrentConfigUnsubscribeToken(seed: SeedScreenshotResult): string | undefined {
-  switch (currentConfigPrefix) {
-    case "desktop-dark":
-      return seed.unsubscribeTokens?.desktopDark;
-    case "desktop-light":
-      return seed.unsubscribeTokens?.desktopLight;
-    case "tablet-light":
-      return seed.unsubscribeTokens?.tabletLight;
-    case "mobile-light":
-      return seed.unsubscribeTokens?.mobileLight;
-    default:
-      return undefined;
-  }
-}
-
-function getFinalScreenshotPaths(prefix: string, name: string): string[] {
-  const target = resolveCaptureTarget(prefix, name);
-  const finalPaths: string[] = [];
-
-  // Filename: viewport-theme.png or viewport-theme-suffix.png
-  const filename = target.filenameSuffix
-    ? `${currentConfigPrefix}${target.filenameSuffix}.png`
-    : `${currentConfigPrefix}.png`;
-
-  if (target.specFolder) {
-    // Page has a spec folder - put screenshot there
-    const specScreenshotDir = path.join(SPECS_BASE_DIR, target.specFolder, "screenshots");
-    if (!fs.existsSync(specScreenshotDir)) {
-      fs.mkdirSync(specScreenshotDir, { recursive: true });
-    }
-    finalPaths.push(path.join(specScreenshotDir, filename));
-  } else {
-    // No spec folder - use fallback with full naming
-    const fallbackFilename = `${currentConfigPrefix}-${prefix}-${name}.png`;
-    if (!fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
-      fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
-    }
-    finalPaths.push(path.join(FALLBACK_SCREENSHOT_DIR, fallbackFilename));
-  }
-
-  if (target.modalSpecSlug) {
-    if (!fs.existsSync(MODAL_SPECS_BASE_DIR)) {
-      fs.mkdirSync(MODAL_SPECS_BASE_DIR, { recursive: true });
-    }
-    finalPaths.push(
-      path.join(MODAL_SPECS_BASE_DIR, `${target.modalSpecSlug}-${currentConfigPrefix}.png`),
-    );
-  }
-
-  return [...new Set(finalPaths)];
-}
-
-function ensureStagingRoot(): string {
-  if (!stagingRootDir) {
-    throw new Error("Screenshot staging directory has not been initialized");
-  }
-  return stagingRootDir;
-}
-
-function getStagedScreenshotPath(finalPath: string): string {
-  const relativePath = path.relative(process.cwd(), finalPath);
-  const stagedPath = path.join(ensureStagingRoot(), relativePath);
-  fs.mkdirSync(path.dirname(stagedPath), { recursive: true });
-  return stagedPath;
-}
-
-function getStagedOutputSummary(): Map<string, number> {
-  const summary = new Map<string, number>();
-  const specsPrefix = path.join("docs", "design", "specs", "pages") + path.sep;
-  const modalSpecsPrefix = path.join("docs", "design", "specs", "modals", "screenshots") + path.sep;
-  const fallbackPrefix = path.join("e2e", "screenshots") + path.sep;
-
-  for (const stagedFile of collectFilesRecursively(ensureStagingRoot())) {
-    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
-    let bucket: string | null = null;
-
-    if (relativePath.startsWith(specsPrefix)) {
-      const specRelativePath = relativePath.slice(specsPrefix.length);
-      const [specFolder, screenshotsFolder] = specRelativePath.split(path.sep);
-      if (specFolder && screenshotsFolder === "screenshots") {
-        bucket = path.join("docs/design/specs/pages", specFolder, "screenshots");
-      }
-    } else if (relativePath.startsWith(modalSpecsPrefix)) {
-      bucket = "docs/design/specs/modals/screenshots";
-    } else if (relativePath.startsWith(fallbackPrefix)) {
-      bucket = "e2e/screenshots";
-    }
-
-    if (!bucket) {
-      continue;
-    }
-
-    summary.set(bucket, (summary.get(bucket) ?? 0) + 1);
-  }
-
-  return new Map([...summary.entries()].sort(([a], [b]) => a.localeCompare(b)));
-}
-
-function collectFilesRecursively(dir: string): string[] {
-  if (!fs.existsSync(dir)) {
-    return [];
-  }
-
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const entryPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      return collectFilesRecursively(entryPath);
-    }
-    return [entryPath];
-  });
-}
-
-function promoteStagedScreenshots(): void {
-  const stagedFiles = collectFilesRecursively(ensureStagingRoot());
-
-  // Build a map of target directories to the set of files that will be promoted there
-  const targetDirToFiles = new Map<string, Set<string>>();
-  for (const stagedFile of stagedFiles) {
-    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
-    const finalPath = path.join(process.cwd(), relativePath);
-    const targetDir = path.dirname(finalPath);
-    if (!targetDirToFiles.has(targetDir)) {
-      targetDirToFiles.set(targetDir, new Set());
-    }
-    targetDirToFiles.get(targetDir)?.add(path.basename(finalPath));
-  }
-
-  // Delete stale screenshots only during exhaustive runs (no filters applied)
-  // to avoid accidentally removing valid baselines for untargeted configs/pages
-  const isExhaustiveRun =
-    !cliOptions.configFilters &&
-    cliOptions.specFilters.length === 0 &&
-    cliOptions.matchFilters.length === 0;
-
-  if (isExhaustiveRun) {
-    for (const [targetDir, expectedFiles] of targetDirToFiles) {
-      if (!fs.existsSync(targetDir)) continue;
-      for (const existingFile of fs.readdirSync(targetDir)) {
-        // Preserve reference-*.png baselines used by design review
-        if (existingFile.startsWith("reference-")) continue;
-        if (existingFile.endsWith(".png") && !expectedFiles.has(existingFile)) {
-          const stalePath = path.join(targetDir, existingFile);
-          fs.rmSync(stalePath, { force: true });
-          console.log(`  🗑️  Removed stale: ${path.relative(process.cwd(), stalePath)}`);
-        }
-      }
-    }
-  }
-
-  // Copy staged files to final locations
-  for (const stagedFile of stagedFiles) {
-    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
-    const finalPath = path.join(process.cwd(), relativePath);
-    fs.mkdirSync(path.dirname(finalPath), { recursive: true });
-    fs.copyFileSync(stagedFile, finalPath);
-  }
-}
-
-async function takeScreenshot(
-  page: Page,
-  prefix: string,
-  name: string,
-  url: string,
-): Promise<void> {
-  if (!shouldCapture(prefix, name)) {
-    return;
-  }
-
-  const n = nextIndex(prefix);
-  const num = String(n).padStart(2, "0");
-  const finalPaths = getFinalScreenshotPaths(prefix, name);
-  const relativePaths = finalPaths.map((finalPath) => path.relative(process.cwd(), finalPath));
-  const relativePathLabel = relativePaths.join(" + ");
-
-  if (cliOptions.dryRun) {
-    totalScreenshots++;
-    console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}`);
-    return;
-  }
-
-  const startTime = performance.now();
-
-  try {
-    await page.goto(`${BASE_URL}${url}`, { waitUntil: "load", timeout: 30000 });
-  } catch {
-    // Navigation timeout is acceptable -- page may still be usable
-  }
-  await waitForScreenshotReady(page);
-  await waitForExpectedContent(page, url, name, prefix);
-  await waitForScreenshotReady(page);
-  const screenshot = await captureScreenshotBuffer(page);
-  const screenshotHash = getScreenshotHash(screenshot);
-  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
-  for (const finalPath of finalPaths) {
-    fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
-  }
-  totalScreenshots++;
-
-  const elapsed = Math.round(performance.now() - startTime);
-  console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}  (${elapsed}ms)`);
-}
-
-async function captureCurrentView(
-  page: Page,
-  prefix: string,
-  name: string,
-  options?: { skipReadyCheck?: boolean },
-): Promise<void> {
-  if (!shouldCapture(prefix, name)) {
-    return;
-  }
-
-  const n = nextIndex(prefix);
-  const num = String(n).padStart(2, "0");
-  const finalPaths = getFinalScreenshotPaths(prefix, name);
-  const relativePaths = finalPaths.map((finalPath) => path.relative(process.cwd(), finalPath));
-  const relativePathLabel = relativePaths.join(" + ");
-
-  if (cliOptions.dryRun) {
-    totalScreenshots++;
-    console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}`);
-    return;
-  }
-
-  const startTime = performance.now();
-
-  if (!options?.skipReadyCheck) {
-    await waitForScreenshotReady(page);
-  }
-  const screenshot = await captureScreenshotBuffer(page);
-  const screenshotHash = getScreenshotHash(screenshot);
-  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
-  for (const finalPath of finalPaths) {
-    fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
-  }
-  totalScreenshots++;
-
-  const elapsed = Math.round(performance.now() - startTime);
-  console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}  (${elapsed}ms)`);
-}
-
-async function captureScreenshotBuffer(page: Page): Promise<Buffer> {
-  return page.screenshot({ animations: "disabled" });
-}
-
-let captureSkips = 0;
-
-async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
-  try {
-    await fn();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (isCrashLikeError(message)) {
-      throw error;
-    }
-    // Soft skip — interactive state not available, not a hard failure
-    captureSkips++;
-    console.log(`    ⚠️  skipped ${label}: ${message}`);
-  }
-}
-
-async function runRequiredCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
-  try {
-    await fn();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (isCrashLikeError(message)) {
-      throw error;
-    }
-    throw new Error(`Required capture failed for ${label}: ${message}`);
-  }
-}
+// State is managed by captureState (from ./screenshot-lib/capture)
 
 async function waitForDuplicateDetectionSearchReady(
   orgSlug: string,
@@ -487,15 +139,6 @@ async function waitForDuplicateDetectionSearchReady(
       },
     )
     .toBe(true);
-}
-
-function isCrashLikeError(message: string): boolean {
-  return (
-    message.includes("Target crashed") ||
-    message.includes("Target page, context or browser has been closed") ||
-    message.includes("Page crashed") ||
-    message.includes("Browser has been closed")
-  );
 }
 
 async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
@@ -2570,7 +2213,7 @@ async function screenshotFilledStates(
 
         if (
           shouldCapture(p, "calendar-drag-and-drop") &&
-          supportsCalendarDragAndDropCapture(currentConfigPrefix)
+          supportsCalendarDragAndDropCapture(captureState.currentConfigPrefix)
         ) {
           await runCaptureStep("calendar drag-and-drop", async () => {
             const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
@@ -3002,7 +2645,8 @@ async function screenshotFilledStates(
   // Sidebar collapsed
   if (
     shouldCapture(p, "sidebar-collapsed") &&
-    (currentConfigPrefix === "desktop-dark" || currentConfigPrefix === "desktop-light")
+    (captureState.currentConfigPrefix === "desktop-dark" ||
+      captureState.currentConfigPrefix === "desktop-light")
   ) {
     await runCaptureStep("sidebar collapsed", async () => {
       await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
@@ -3027,7 +2671,8 @@ async function screenshotFilledStates(
 
   if (
     shouldCapture(p, "mobile-hamburger") &&
-    (currentConfigPrefix === "tablet-light" || currentConfigPrefix === "mobile-light")
+    (captureState.currentConfigPrefix === "tablet-light" ||
+      captureState.currentConfigPrefix === "mobile-light")
   ) {
     await runCaptureStep("mobile hamburger", async () => {
       const dashboardUrl = ROUTES.dashboard.build(orgSlug);
@@ -3059,7 +2704,10 @@ async function screenshotFilledStates(
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
 
-      if (currentConfigPrefix === "tablet-light" || currentConfigPrefix === "mobile-light") {
+      if (
+        captureState.currentConfigPrefix === "tablet-light" ||
+        captureState.currentConfigPrefix === "mobile-light"
+      ) {
         await openMobileSidebarMenu(page);
       }
 
@@ -3339,7 +2987,7 @@ async function screenshotDashboardModals(
   }
 
   const shortcutsTrigger = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
-  if (currentConfigPrefix !== "mobile-light" && (await shortcutsTrigger.count()) > 0) {
+  if (captureState.currentConfigPrefix !== "mobile-light" && (await shortcutsTrigger.count()) > 0) {
     await runCaptureStep("dashboard shortcuts modal", async () => {
       await dismissAllDialogs(page);
       const shortcutsDialog = await openStableDialog(
@@ -4096,11 +3744,11 @@ async function captureEmptyForConfig(
   orgSlug: string,
   storageState?: { cookies: unknown[]; origins: unknown[] },
 ): Promise<void> {
-  currentConfigPrefix = `${viewport}-${theme}`;
+  captureState.currentConfigPrefix = `${viewport}-${theme}`;
   resetCounters();
 
   console.log(
-    `\n  📸 ${currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}) [empty]`,
+    `\n  📸 ${captureState.currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}) [empty]`,
   );
 
   const context = await browser.newContext({
@@ -4117,8 +3765,8 @@ async function captureEmptyForConfig(
       await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
       await waitForDashboardReady(page);
     } else if (!(await authenticateAndNavigate(page, orgSlug))) {
-      captureFailures++;
-      console.log(`    ⚠️ Auth failed for ${currentConfigPrefix} empty states`);
+      captureState.captureFailures++;
+      console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
       return;
     }
     await screenshotEmptyStates(page, orgSlug);
@@ -4127,8 +3775,10 @@ async function captureEmptyForConfig(
     if (isCrashLikeError(message)) {
       throw error;
     }
-    captureFailures++;
-    console.log(`    ⚠️ Empty state capture failed for ${currentConfigPrefix}: ${message}`);
+    captureState.captureFailures++;
+    console.log(
+      `    ⚠️ Empty state capture failed for ${captureState.currentConfigPrefix}: ${message}`,
+    );
   } finally {
     await context.close();
   }
@@ -4146,11 +3796,11 @@ async function captureFilledForConfig(
   seedResult: SeedScreenshotResult,
   storageState?: { cookies: unknown[]; origins: unknown[] },
 ): Promise<void> {
-  currentConfigPrefix = `${viewport}-${theme}`;
+  captureState.currentConfigPrefix = `${viewport}-${theme}`;
   resetCounters();
 
   console.log(
-    `\n  📸 ${currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}) [public + filled]`,
+    `\n  📸 ${captureState.currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}) [public + filled]`,
   );
 
   const context = await browser.newContext({
@@ -4169,8 +3819,8 @@ async function captureFilledForConfig(
       await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
       await waitForDashboardReady(page);
     } else if (!(await authenticateAndNavigate(page, orgSlug))) {
-      captureFailures++;
-      console.log(`    ⚠️ Auth failed for ${currentConfigPrefix} filled states`);
+      captureState.captureFailures++;
+      console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
       return;
     }
 
@@ -4181,8 +3831,10 @@ async function captureFilledForConfig(
     if (isCrashLikeError(message)) {
       throw error;
     }
-    captureFailures++;
-    console.log(`    ⚠️ Filled state capture failed for ${currentConfigPrefix}: ${message}`);
+    captureState.captureFailures++;
+    console.log(
+      `    ⚠️ Filled state capture failed for ${captureState.currentConfigPrefix}: ${message}`,
+    );
   } finally {
     await context.close();
   }
@@ -4372,7 +4024,7 @@ function dryRunEnumerate(
   let count = 0;
   for (const config of configs) {
     const configName = `${config.viewport}-${config.theme}`;
-    currentConfigPrefix = configName;
+    captureState.currentConfigPrefix = configName;
     console.log(
       `  📸 ${configName.toUpperCase()} (${VIEWPORTS[config.viewport].width}x${VIEWPORTS[config.viewport].height})`,
     );
@@ -4401,8 +4053,9 @@ function dryRunEnumerate(
 // ---------------------------------------------------------------------------
 
 async function run(): Promise<void> {
-  cliOptions = parseCliOptions(process.argv.slice(2));
-  if (cliOptions.help) {
+  captureState.cliOptions = parseCliOptions(process.argv.slice(2));
+  registerWaitForExpectedContent(waitForExpectedContent);
+  if (captureState.cliOptions.help) {
     printUsage();
     return;
   }
@@ -4422,14 +4075,14 @@ async function run(): Promise<void> {
   console.log(`\n  Base URL: ${BASE_URL}`);
   console.log(`  Configs: ${selectedConfigs.map((c) => `${c.viewport}-${c.theme}`).join(", ")}`);
   console.log(`  Spec folders: ${[...new Set(specFolders)].join(", ")}`);
-  if (cliOptions.specFilters.length > 0) {
-    console.log(`  Spec filter: ${cliOptions.specFilters.join(", ")}`);
+  if (captureState.cliOptions.specFilters.length > 0) {
+    console.log(`  Spec filter: ${captureState.cliOptions.specFilters.join(", ")}`);
   }
-  if (cliOptions.matchFilters.length > 0) {
-    console.log(`  Match filter: ${cliOptions.matchFilters.join(", ")}`);
+  if (captureState.cliOptions.matchFilters.length > 0) {
+    console.log(`  Match filter: ${captureState.cliOptions.matchFilters.join(", ")}`);
   }
 
-  if (cliOptions.dryRun) {
+  if (captureState.cliOptions.dryRun) {
     console.log("\n  🏃 DRY RUN — listing targets without launching a browser\n");
     dryRunEnumerate(selectedConfigs);
     return;
@@ -4437,9 +4090,9 @@ async function run(): Promise<void> {
 
   // Create staging directory only when we are actually capturing (not dry-run)
   fs.mkdirSync(SCREENSHOT_STAGING_BASE_DIR, { recursive: true });
-  stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
+  captureState.stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
 
-  const headless = cliOptions.headless;
+  const headless = captureState.cliOptions.headless;
   const launchBrowser = () => chromium.launch({ headless });
   const setupBrowser = await launchBrowser();
 
@@ -4516,7 +4169,7 @@ async function run(): Promise<void> {
         if (isCrashLikeError(message)) {
           throw error;
         }
-        captureFailures++;
+        captureState.captureFailures++;
         console.log(`    ⚠️ ${config.viewport}-${config.theme} empty capture failed: ${message}`);
       } finally {
         await browser.close();
@@ -4560,7 +4213,7 @@ async function run(): Promise<void> {
           `    ⚠️ ${config.viewport}-${config.theme} failed on attempt ${attempt}: ${message}${shouldRetry ? " (retrying)" : ""}`,
         );
         if (!shouldRetry) {
-          captureFailures++;
+          captureState.captureFailures++;
           break;
         }
       } finally {
@@ -4569,28 +4222,28 @@ async function run(): Promise<void> {
     }
   }
 
-  if (captureFailures > 0) {
+  if (captureState.captureFailures > 0) {
     fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
-    stagingRootDir = "";
+    captureState.stagingRootDir = "";
     throw new Error(
-      `Screenshot capture had ${captureFailures} failure(s); staged output was not promoted`,
+      `Screenshot capture had ${captureState.captureFailures} failure(s); staged output was not promoted`,
     );
   }
 
-  if (totalScreenshots === 0) {
+  if (captureState.totalScreenshots === 0) {
     fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
-    stagingRootDir = "";
+    captureState.stagingRootDir = "";
     throw new Error("No screenshots matched the provided filters");
   }
 
   promoteStagedScreenshots();
   const outputSummary = getStagedOutputSummary();
   fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
-  stagingRootDir = "";
+  captureState.stagingRootDir = "";
 
-  const skipNote = captureSkips > 0 ? ` (${captureSkips} skipped)` : "";
+  const skipNote = captureState.captureSkips > 0 ? ` (${captureState.captureSkips} skipped)` : "";
   console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured${skipNote}`);
+  console.log(`║  ✅ COMPLETE: ${captureState.totalScreenshots} screenshots captured${skipNote}`);
   console.log("╚════════════════════════════════════════════════════════════╝\n");
 
   console.log("  Output:");

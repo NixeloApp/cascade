@@ -38,9 +38,9 @@ All 3 page objects migrated to TEST_IDs:
 
 ### Phase 3.1: Split monolith (4,544 lines → target <500)
 
-Extracted so far: config (170) + cli (72) + routing (190) = 432 lines.
+Extracted so far: config (159) + cli (69) + routing (215) + capture (454) = 897 lines.
 
-- [ ] Extract `takeScreenshot`, hash guards, staging logic into `capture.ts`
+- [x] Extract `takeScreenshot`, hash guards, staging logic into `capture.ts`
 - [ ] Extract `screenshotPublicPages` into `public-pages.ts`
 - [ ] Extract `screenshotEmptyStates` / `screenshotFilledStates`
 - [ ] Extract modal/dialog state captures into `modals.ts`
@@ -63,7 +63,7 @@ Extracted so far: config (170) + cli (72) + routing (190) = 432 lines.
 
 | Metric | Before | After |
 |--------|--------|-------|
-| File lines | 5,292 | 4,544 |
+| File lines | 5,292 | 4,247 |
 | Private functions | 134 | ~76 |
 | TEST_ID usage | 64 | 95 |
 | Fragile selectors | ~150 | 57 (mostly appropriate getByText) |
