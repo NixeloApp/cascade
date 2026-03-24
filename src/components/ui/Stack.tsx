@@ -27,6 +27,22 @@ const stackVariants = cva("flex flex-col", {
       end: "items-end",
       stretch: "items-stretch",
     },
+    mb: {
+      none: "",
+      xs: "mb-1",
+      sm: "mb-2",
+      md: "mb-4",
+      lg: "mb-6",
+      xl: "mb-8",
+    },
+    mt: {
+      none: "",
+      xs: "mt-1",
+      sm: "mt-2",
+      md: "mt-4",
+      lg: "mt-6",
+      xl: "mt-8",
+    },
   },
   defaultVariants: {
     gap: "md",
@@ -51,8 +67,12 @@ export interface StackProps
  * </Stack>
  */
 export const Stack = React.forwardRef<HTMLDivElement, StackProps>(
-  ({ className, gap, align, as: Component = "div", ...props }, ref) => (
-    <Component ref={ref} className={cn(stackVariants({ gap, align }), className)} {...props} />
+  ({ className, gap, align, mb, mt, as: Component = "div", ...props }, ref) => (
+    <Component
+      ref={ref}
+      className={cn(stackVariants({ gap, align, mb, mt }), className)}
+      {...props}
+    />
   ),
 );
 Stack.displayName = "Stack";

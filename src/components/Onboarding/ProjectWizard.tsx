@@ -222,7 +222,7 @@ export function ProjectWizard({
                     Continuous flow of work through columns. Great for ongoing projects and support
                     teams.
                   </Typography>
-                  <Stack gap="xs" className="mt-2">
+                  <Stack gap="xs" mt="sm">
                     <Typography as="span" variant="caption" color="tertiary">
                       <Icon icon={Check} size="xs" inline /> No time constraints
                     </Typography>
@@ -251,7 +251,7 @@ export function ProjectWizard({
                     Work in sprints with defined goals. Great for product development and fixed
                     deadlines.
                   </Typography>
-                  <Stack gap="xs" className="mt-2">
+                  <Stack gap="xs" mt="sm">
                     <Typography as="span" variant="caption" color="tertiary">
                       <Icon icon={Check} size="xs" inline /> Sprint planning
                     </Typography>

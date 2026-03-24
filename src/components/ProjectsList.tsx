@@ -467,7 +467,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
       )}
 
       {status === "CanLoadMore" ? (
-        <Flex justify="center" className="mt-8">
+        <Flex justify="center" mt="xl">
           <Button variant="outline" onClick={() => loadMore(20)}>
             Load More Projects
           </Button>
