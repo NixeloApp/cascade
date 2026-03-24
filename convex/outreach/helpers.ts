@@ -4,8 +4,6 @@
  * Exported for testability. Used by sendEngine.ts during pre-send processing.
  */
 
-import type { Id } from "../_generated/dataModel";
-
 // =============================================================================
 // Template Rendering
 // =============================================================================

@@ -279,6 +279,43 @@ export const sendViaGmailAction = internalAction({
 // Reply Detection Action (called by cron)
 // =============================================================================
 
+/** Metadata headers requested for reply detection and auto-reply filtering. */
+const REPLY_METADATA_HEADERS = [
+  "From",
+  "Subject",
+  "In-Reply-To",
+  "Auto-Submitted",
+  "X-Auto-Response-Suppress",
+  "X-Autoreply",
+  "X-Autorespond",
+  "Precedence",
+];
+
+const REPLY_HEADER_PARAMS = REPLY_METADATA_HEADERS.map((h) => `metadataHeaders=${h}`).join("&");
+
+/** Fetch a single Gmail message and return the sender email, or null if it should be skipped. */
+async function fetchAndFilterMessage(
+  msgId: string,
+  authHeaders: Record<string, string>,
+): Promise<string | null> {
+  const msgResponse = await fetchWithTimeout(
+    `${GMAIL_API_BASE}/messages/${msgId}?format=metadata&${REPLY_HEADER_PARAMS}`,
+    { headers: authHeaders },
+    10000,
+  );
+  if (!msgResponse.ok) return null;
+
+  const msgData = (await msgResponse.json()) as {
+    snippet?: string;
+    payload: { headers: Array<{ name: string; value: string }> };
+  };
+
+  // Skip auto-replies (OOO, bounce notifications, auto-responders)
+  if (isAutoReply(msgData.payload.headers, msgData.snippet)) return null;
+
+  return extractSenderEmail(msgData.payload.headers);
+}
+
 /**
  * Poll a connected Gmail mailbox for new replies to outreach emails.
  *
@@ -318,38 +355,7 @@ export const checkReplies = internalAction({
 
       let replies = 0;
       for (const msg of data.messages) {
-        // Request auto-reply headers alongside sender info for OOO filtering
-        const headerParams = [
-          "From",
-          "Subject",
-          "In-Reply-To",
-          "Auto-Submitted",
-          "X-Auto-Response-Suppress",
-          "X-Autoreply",
-          "X-Autorespond",
-          "Precedence",
-        ]
-          .map((h) => `metadataHeaders=${h}`)
-          .join("&");
-
-        const msgResponse = await fetchWithTimeout(
-          `${GMAIL_API_BASE}/messages/${msg.id}?format=metadata&${headerParams}`,
-          { headers: authHeaders },
-          10000,
-        );
-        if (!msgResponse.ok) continue;
-
-        const msgData = (await msgResponse.json()) as {
-          snippet?: string;
-          payload: { headers: Array<{ name: string; value: string }> };
-        };
-
-        // Skip auto-replies (OOO, bounce notifications, auto-responders)
-        if (isAutoReply(msgData.payload.headers, msgData.snippet)) {
-          continue;
-        }
-
-        const senderEmail = extractSenderEmail(msgData.payload.headers);
+        const senderEmail = await fetchAndFilterMessage(msg.id, authHeaders);
         if (!senderEmail) continue;
 
         const matchResult = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForReply, {
