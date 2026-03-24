@@ -59,6 +59,55 @@ function buildIssuesByPriority(priorityCounts: Record<string, number>) {
   };
 }
 
+/** Build a normalized burndown curve for a sprint's completed issues. */
+function buildNormalizedBurndown(
+  doneTransitions: Array<{ points: number; doneAt: number } | null>,
+  totalPoints: number,
+  startDate: number,
+  totalDays: number,
+): Array<{ percent: number; remainingRatio: number }> {
+  const intervals = 11; // 0%, 10%, 20%, ... 100%
+  const result: Array<{ percent: number; remainingRatio: number }> = [];
+
+  for (let i = 0; i < intervals; i++) {
+    const pct = i * 10;
+    const cutoffTime = startDate + (totalDays * DAY * pct) / 100;
+    let completedByTime = 0;
+    for (const t of doneTransitions) {
+      if (t && t.doneAt <= cutoffTime) completedByTime += t.points;
+    }
+    const remainingRatio = totalPoints > 0 ? (totalPoints - completedByTime) / totalPoints : 1;
+    result.push({ percent: pct, remainingRatio: Math.max(0, remainingRatio) });
+  }
+
+  return result;
+}
+
+/** Classify issues into current/previous period counts for trend comparison. */
+function countPeriodIssues(
+  issues: Array<{ _creationTime: number; status: string }>,
+  doneStateIds: Set<string>,
+  currentStart: number,
+  previousStart: number,
+) {
+  let currentCreated = 0;
+  let currentCompleted = 0;
+  let previousCreated = 0;
+  let previousCompleted = 0;
+
+  for (const issue of issues) {
+    if (issue._creationTime >= currentStart) {
+      currentCreated++;
+      if (doneStateIds.has(issue.status)) currentCompleted++;
+    } else if (issue._creationTime >= previousStart) {
+      previousCreated++;
+      if (doneStateIds.has(issue.status)) previousCompleted++;
+    }
+  }
+
+  return { currentCreated, currentCompleted, previousCreated, previousCompleted };
+}
+
 /**
  * Get project analytics overview
  * Requires viewer access to project
@@ -373,23 +422,12 @@ export const getSprintBurndownComparison = projectQuery({
         const startDate = sprint.startDate ?? sprint._creationTime;
         const endDate = sprint.endDate ?? Date.now();
         const totalDays = Math.max(1, Math.ceil((endDate - startDate) / DAY));
-
-        // Build normalized burndown: what % of points remained at each 10% time interval
-        const intervals = 11; // 0%, 10%, 20%, ... 100%
-        const normalizedBurndown: Array<{ percent: number; remainingRatio: number }> = [];
-
-        for (let i = 0; i < intervals; i++) {
-          const pct = i * 10;
-          const cutoffTime = startDate + (totalDays * DAY * pct) / 100;
-          // Count points completed by this time
-          let completedByTime = 0;
-          for (const t of doneTransitions) {
-            if (t && t.doneAt <= cutoffTime) completedByTime += t.points;
-          }
-          const remainingRatio =
-            totalPoints > 0 ? (totalPoints - completedByTime) / totalPoints : 1;
-          normalizedBurndown.push({ percent: pct, remainingRatio: Math.max(0, remainingRatio) });
-        }
+        const normalizedBurndown = buildNormalizedBurndown(
+          doneTransitions,
+          totalPoints,
+          startDate,
+          totalDays,
+        );
 
         return {
           sprintId: sprint._id,
@@ -852,19 +890,12 @@ export const getOrgAnalyticsTrend = authenticatedQuery({
       .take(MAX_PAGE_SIZE);
     const projects = orgProjects.filter((p) => !p.isDeleted);
 
-    // Count issues created and completed in each period
-    let currentCreated = 0;
-    let currentCompleted = 0;
-    let previousCreated = 0;
-    let previousCompleted = 0;
-
-    await Promise.all(
+    // Count issues created and completed in each period across all projects
+    const periodCounts = await Promise.all(
       projects.map(async (project) => {
         const doneStateIds = new Set(
           project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
         );
-
-        // Fetch recent issues (both periods)
         const issues = await ctx.db
           .query("issues")
           .withIndex("by_project_deleted", (q) =>
@@ -873,17 +904,20 @@ export const getOrgAnalyticsTrend = authenticatedQuery({
           .filter((q) => q.gte(q.field("_creationTime"), previousStart))
           .take(MAX_PAGE_SIZE);
 
-        for (const issue of issues) {
-          if (issue._creationTime >= currentStart) {
-            currentCreated++;
-            if (doneStateIds.has(issue.status)) currentCompleted++;
-          } else if (issue._creationTime >= previousStart) {
-            previousCreated++;
-            if (doneStateIds.has(issue.status)) previousCompleted++;
-          }
-        }
+        return countPeriodIssues(issues, doneStateIds, currentStart, previousStart);
       }),
     );
+
+    const { currentCreated, currentCompleted, previousCreated, previousCompleted } =
+      periodCounts.reduce(
+        (acc, c) => ({
+          currentCreated: acc.currentCreated + c.currentCreated,
+          currentCompleted: acc.currentCompleted + c.currentCompleted,
+          previousCreated: acc.previousCreated + c.previousCreated,
+          previousCompleted: acc.previousCompleted + c.previousCompleted,
+        }),
+        { currentCreated: 0, currentCompleted: 0, previousCreated: 0, previousCompleted: 0 },
+      );
 
     const pctChange = (current: number, previous: number) => {
       if (previous === 0) return current > 0 ? 100 : 0;
