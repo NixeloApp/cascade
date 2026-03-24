@@ -60,38 +60,24 @@ export class CalendarPage extends BasePage {
     super(page, orgSlug);
 
     // Calendar view
-    this.calendar = page
-      .getByTestId(TEST_IDS.CALENDAR.ROOT)
-      .or(page.locator(".calendar, [role='grid']").first());
+    this.calendar = page.getByTestId(TEST_IDS.CALENDAR.ROOT);
     this.calendarGrid = page.getByTestId(TEST_IDS.CALENDAR.GRID);
-    this.todayButton = page.getByRole("button", { name: /today/i });
-    this.prevButton = page.getByRole("button", { name: /prev|previous|back|←|</i });
-    this.nextButton = page.getByRole("button", { name: /next|forward|→|>/i });
+    this.todayButton = page.getByTestId(TEST_IDS.CALENDAR.TODAY_BUTTON);
+    this.prevButton = page.getByTestId(TEST_IDS.CALENDAR.PREV_BUTTON);
+    this.nextButton = page.getByTestId(TEST_IDS.CALENDAR.NEXT_BUTTON);
     this.monthYearLabel = page.getByTestId(TEST_IDS.CALENDAR.HEADER_DATE);
 
     // View toggles
-    this.monthViewButton = page
-      .getByTestId(TEST_IDS.CALENDAR.MODE_MONTH)
-      .or(page.getByRole("button", { name: /^month$/i }));
-    this.weekViewButton = page
-      .getByTestId(TEST_IDS.CALENDAR.MODE_WEEK)
-      .or(page.getByRole("button", { name: /^week$/i }));
-    this.dayViewButton = page
-      .getByTestId(TEST_IDS.CALENDAR.MODE_DAY)
-      .or(page.getByRole("button", { name: /^day$/i }));
+    this.monthViewButton = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH);
+    this.weekViewButton = page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK);
+    this.dayViewButton = page.getByTestId(TEST_IDS.CALENDAR.MODE_DAY);
 
     // Events
-    this.eventItems = page
-      .getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM)
-      .or(page.locator(".calendar-event, .fc-event"));
-    this.createEventButton = page.getByRole("button", {
-      name: /create.*event|new.*event|add.*event|\+/i,
-    });
+    this.eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
+    this.createEventButton = page.getByTestId(TEST_IDS.CALENDAR.CREATE_EVENT_BUTTON);
 
     // Create event modal
-    this.createEventModal = page
-      .getByRole("dialog")
-      .filter({ hasText: /create.*event|new.*event/i });
+    this.createEventModal = page.getByTestId(TEST_IDS.CALENDAR.CREATE_EVENT_MODAL);
     this.eventTitleInput = page
       .getByPlaceholder(/title|event.*title/i)
       .or(page.getByLabel(/title/i));

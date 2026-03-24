@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { useCalendarContext } from "../../calendar-context";
 
 /** Navigation buttons for moving between dates (today, prev, next). */
@@ -43,6 +44,7 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
         chrome="calendarHeaderControl"
         chromeSize="calendarHeaderPill"
         onClick={() => setDate(new Date())}
+        data-testid={TEST_IDS.CALENDAR.TODAY_BUTTON}
       >
         Today
       </Button>
@@ -51,6 +53,7 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
         chromeSize="calendarHeaderIcon"
         onClick={handleDateBackward}
         aria-label="Previous month"
+        data-testid={TEST_IDS.CALENDAR.PREV_BUTTON}
       >
         <ChevronLeft className="min-size-5 min-" />
       </Button>
@@ -65,6 +68,7 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
         chromeSize="calendarHeaderIcon"
         onClick={handleDateForward}
         aria-label="Next month"
+        data-testid={TEST_IDS.CALENDAR.NEXT_BUTTON}
       >
         <ChevronRight className="min-size-5 min-" />
       </Button>

@@ -14,6 +14,7 @@ import { z } from "zod";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FormInput, FormTextarea } from "@/lib/form";
 import { doesOutOfOfficeOverlapTimeRange, formatOutOfOfficeDateRange } from "@/lib/outOfOffice";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
@@ -145,6 +146,7 @@ export function CreateEventModal({
       title="Create Event"
       description="Add a new event to your calendar"
       size="lg"
+      data-testid={TEST_IDS.CALENDAR.CREATE_EVENT_MODAL}
     >
       <form
         onSubmit={(e) => {

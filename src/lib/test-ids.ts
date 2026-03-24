@@ -257,6 +257,16 @@ export const TEST_IDS = {
   CALENDAR: {
     /** @see src/components/Calendar/CalendarView.tsx */
     ROOT: "calendar-root",
+    /** @see src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx */
+    TODAY_BUTTON: "calendar-today-button",
+    /** @see src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx */
+    PREV_BUTTON: "calendar-prev-button",
+    /** @see src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx */
+    NEXT_BUTTON: "calendar-next-button",
+    /** @see src/components/Calendar/CreateEventModal.tsx */
+    CREATE_EVENT_MODAL: "calendar-create-event-modal",
+    /** @see src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-add.tsx */
+    CREATE_EVENT_BUTTON: "calendar-create-event-button",
     /** @see src/components/Calendar/shadcn-calendar/body/calendar-body.tsx */
     GRID: "calendar-grid",
     /** @see src/components/Calendar/shadcn-calendar/calendar-event.tsx */
