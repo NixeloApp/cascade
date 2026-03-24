@@ -10,7 +10,7 @@
 
 - [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing ratchet (86 files / 127 violations)
 - [ ] [validator-strengthening.md](./validator-strengthening.md) — Validator framework improvements — 6 items
-- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Data-testid migration ~75% complete. Page objects done. Monolith split and CI integration remain.
+- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Monolith split done (5,292→619 lines). Remaining: page objects for page types, CI integration.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven visual cleanup — 19 items
 
 ### Features (need product decisions)
@@ -33,5 +33,5 @@
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | TEST_IDs | 203 defined, 95 used in screenshot tool |
-| Biome lint warnings | 0 |
+| Biome warnings | 0 |
 | MEDIUM page spec issues | 0 |

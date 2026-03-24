@@ -59,7 +59,6 @@ export interface TrackingLink {
  */
 export function injectClickTracking(
   html: string,
-  enrollmentId: string,
   step: number,
   trackingDomain: string,
   generateId: () => string,

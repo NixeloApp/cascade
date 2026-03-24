@@ -10,12 +10,7 @@ import type { Locator, Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { ProjectsPage } from "../pages";
-import {
-  getLocatorAttribute,
-  getLocatorCount,
-  isLocatorVisible,
-  waitForLocatorVisible,
-} from "../utils/locator-state";
+import { getLocatorAttribute, getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import type { SeedScreenshotResult } from "../utils/test-user-service";
 import {
   dismissAllDialogs,

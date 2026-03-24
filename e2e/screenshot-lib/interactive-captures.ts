@@ -5,7 +5,7 @@
  * and feature-specific UI flows (board interactions, sprint workflows, etc.).
  */
 
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { ProjectsPage } from "../pages";
@@ -24,15 +24,7 @@ import {
   shouldCaptureAny,
 } from "./capture";
 import { BASE_URL } from "./config";
-import {
-  getUploadDialogReadyLocator,
-  openMobileSidebarMenu,
-  openOmnibox,
-  openStableAlertDialog,
-  openStableDialog,
-  waitForCreateIssueModalScreenshotReady,
-  waitForDashboardCustomizeDialogReady,
-} from "./dialog-helpers";
+import { openOmnibox, openStableDialog } from "./dialog-helpers";
 import { waitForBoardReady, waitForExpectedContent } from "./readiness";
 
 export async function screenshotDashboardModals(

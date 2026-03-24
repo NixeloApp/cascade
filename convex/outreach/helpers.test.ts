@@ -70,13 +70,7 @@ describe("outreach helpers", () => {
     it("rewrites http links", () => {
       idCounter = 0;
       const html = '<a href="https://example.com">Click</a>';
-      const { html: result, links } = injectClickTracking(
-        html,
-        "enr1",
-        0,
-        "t.nixelo.com",
-        generateId,
-      );
+      const { html: result, links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
 
       expect(result).toBe('<a href="https://t.nixelo.com/t/c/link-1">Click</a>');
       expect(links).toHaveLength(1);
@@ -88,20 +82,14 @@ describe("outreach helpers", () => {
     it("rewrites multiple links", () => {
       idCounter = 0;
       const html = '<a href="https://a.com">A</a> <a href="https://b.com">B</a>';
-      const { links } = injectClickTracking(html, "enr1", 0, "t.nixelo.com", generateId);
+      const { links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
       expect(links).toHaveLength(2);
     });
 
     it("skips mailto links", () => {
       idCounter = 0;
       const html = '<a href="mailto:test@test.com">Email</a>';
-      const { html: result, links } = injectClickTracking(
-        html,
-        "enr1",
-        0,
-        "t.nixelo.com",
-        generateId,
-      );
+      const { html: result, links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
 
       expect(result).toBe(html); // Unchanged
       expect(links).toHaveLength(0);
@@ -110,13 +98,7 @@ describe("outreach helpers", () => {
     it("skips unsubscribe links", () => {
       idCounter = 0;
       const html = '<a href="https://t.nixelo.com/t/u/enr1">Unsub</a>';
-      const { html: result, links } = injectClickTracking(
-        html,
-        "enr1",
-        0,
-        "t.nixelo.com",
-        generateId,
-      );
+      const { html: result, links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
 
       expect(result).toBe(html); // Unchanged
       expect(links).toHaveLength(0);
@@ -125,13 +107,7 @@ describe("outreach helpers", () => {
     it("handles html with no links", () => {
       idCounter = 0;
       const html = "<p>No links here</p>";
-      const { html: result, links } = injectClickTracking(
-        html,
-        "enr1",
-        0,
-        "t.nixelo.com",
-        generateId,
-      );
+      const { html: result, links } = injectClickTracking(html, 0, "t.nixelo.com", generateId);
 
       expect(result).toBe(html);
       expect(links).toHaveLength(0);

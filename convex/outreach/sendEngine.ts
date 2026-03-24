@@ -183,7 +183,6 @@ export const checkPreSend = internalMutation({
     // Inject click tracking (rewrite URLs)
     const { html: bodyWithClickTracking, links } = injectClickTracking(
       renderedBody,
-      enrollment._id,
       enrollment.currentStep,
       trackingDomain,
       () => crypto.randomUUID(),
