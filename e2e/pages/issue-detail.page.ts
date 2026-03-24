@@ -42,6 +42,13 @@ export class IssueDetailPage extends BasePage {
       state: "visible",
       timeout: 12000,
     });
+    await this.page
+      .getByRole("button", { name: /edit issue|save changes/i })
+      .waitFor({ state: "visible", timeout: 12000 });
+    await this.page.getByText("Loading comments...").waitFor({ state: "hidden", timeout: 12000 });
+    await this.page
+      .getByRole("button", { name: /add comment/i })
+      .waitFor({ state: "visible", timeout: 12000 });
   }
 
   async gotoIssue(issueKey: string) {

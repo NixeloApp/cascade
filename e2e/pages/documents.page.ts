@@ -94,16 +94,19 @@ export class DocumentsPage extends BasePage {
   }
 
   async waitUntilReady(): Promise<void> {
-    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 20000 });
     await expect
       .poll(
         async () => {
           const cardCount = await this.page.getByTestId(TEST_IDS.DOCUMENT.CARD).count();
           if (cardCount > 0) return "ready";
-          const emptyVisible = await this.page.getByText(/no documents/i).isVisible();
+          const emptyVisible =
+            (await isLocatorVisible(this.page.getByText(/no documents/i))) ||
+            (await isLocatorVisible(this.page.getByText(/nothing here yet/i))) ||
+            (await isLocatorVisible(this.page.getByText(/create.*document/i)));
           return emptyVisible ? "ready" : "pending";
         },
-        { timeout: 12000 },
+        { timeout: 25000 },
       )
       .not.toBe("pending");
   }

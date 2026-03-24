@@ -59,6 +59,7 @@ export class WorkspacesPage extends BasePage {
 
   async waitUntilReady(): Promise<void> {
     await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
+    await this.newWorkspaceButton.waitFor({ state: "visible", timeout: 12000 });
     await expect
       .poll(
         async () => {

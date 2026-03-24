@@ -10,9 +10,13 @@ import { expect, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { AnalyticsPage } from "../pages/analytics.page";
 import { BacklogPage } from "../pages/backlog.page";
+import { DocumentsPage } from "../pages/documents.page";
+import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
+import { ProjectsPage } from "../pages/projects.page";
 import { RoadmapPage } from "../pages/roadmap.page";
 import { TeamPage } from "../pages/team.page";
+import { WorkspacesPage } from "../pages/workspaces.page";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import {
   waitForAnimation,
@@ -433,34 +437,9 @@ export async function waitForBoardReady(page: Page): Promise<boolean> {
   return false;
 }
 
-export async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByRole("button", { name: /create project/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
+export async function waitForProjectsReady(page: Page): Promise<void> {
+  await new ProjectsPage(page, READINESS_ONLY_SLUG).waitUntilReady();
   await waitForSpinnersHidden(page);
-
-  if (prefix === "empty") {
-    await page.getByTestId(TEST_IDS.PROJECT.EMPTY_STATE).waitFor({
-      state: "visible",
-      timeout: 12000,
-    });
-  } else {
-    // Wait for at least one project card or the empty state
-    await expect
-      .poll(
-        async () => {
-          const cardCount = await page.getByTestId(TEST_IDS.PROJECT.CARD).count();
-          return cardCount > 0 ? "ready" : "pending";
-        },
-        { timeout: 12000 },
-      )
-      .toBe("ready");
-  }
 }
 
 export async function waitForIssuesReady(page: Page): Promise<void> {
@@ -509,29 +488,8 @@ export async function getCalendarDragState(page: Page): Promise<CalendarDragStat
   };
 }
 
-export async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByRole("button", { name: /create workspace/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await expect
-    .poll(
-      async () => {
-        if (prefix === "empty") {
-          return (await isLocatorVisible(page.getByText(/no workspaces yet/i)))
-            ? "ready"
-            : "pending";
-        }
-        const cardCount = await getLocatorCount(page.getByTestId(TEST_IDS.WORKSPACE.CARD));
-        return cardCount > 0 ? "ready" : "pending";
-      },
-      { timeout: 12000 },
-    )
-    .toBe("ready");
+export async function waitForWorkspacesReady(page: Page): Promise<void> {
+  await new WorkspacesPage(page, READINESS_ONLY_SLUG).waitUntilReady();
   await waitForSpinnersHidden(page);
 }
 
@@ -545,52 +503,18 @@ export async function waitForTeamDetailReady(page: Page): Promise<void> {
 }
 
 export async function waitForIssueDetailReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.ISSUE.KEY).first().waitFor({ state: "visible", timeout: 12000 });
-  await page
-    .getByRole("button", { name: /edit issue|save changes/i })
-    .waitFor({ state: "visible", timeout: 12000 });
-  await page.getByText("Loading comments...").waitFor({ state: "hidden", timeout: 12000 });
-  await page.getByRole("button", { name: /add comment/i }).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
+  await new IssueDetailPage(page, READINESS_ONLY_SLUG).waitUntilReady();
   await waitForSpinnersHidden(page);
 }
 
 export async function waitForDocumentsReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE).waitFor({
-    state: "visible",
-    timeout: 20000,
-  });
-  // Wait for document cards, empty state, OR loading to finish.
-  // The page may show a loading spinner while Convex auth settles.
   await waitForSpinnersHidden(page, 15000);
-  await expect
-    .poll(
-      async () => {
-        const cardCount = await getLocatorCount(page.getByTestId(TEST_IDS.DOCUMENT.CARD));
-        if (cardCount > 0) return "ready";
-        // Check for any empty state text (various phrasings across the app)
-        const emptyVisible =
-          (await isLocatorVisible(page.getByText(/no documents/i))) ||
-          (await isLocatorVisible(page.getByText(/nothing here yet/i))) ||
-          (await isLocatorVisible(page.getByText(/create.*document/i)));
-        return emptyVisible ? "empty" : "pending";
-      },
-      { timeout: 25000 },
-    )
-    .not.toBe("pending");
+  await new DocumentsPage(page, READINESS_ONLY_SLUG).waitUntilReady();
 }
 
 export async function waitForDocumentEditorReady(page: Page): Promise<void> {
-  await page.getByTestId(TEST_IDS.DOCUMENT.TITLE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
-  await page.getByTestId(TEST_IDS.EDITOR.PLATE).waitFor({
-    state: "visible",
-    timeout: 12000,
-  });
+  const docsPage = new DocumentsPage(page, READINESS_ONLY_SLUG);
+  await docsPage.expectEditorVisible();
   await waitForSpinnersHidden(page);
 }
 
@@ -725,7 +649,7 @@ export async function waitForExpectedContent(
   // --- Pages with unique readiness logic ---
 
   if (URL.projects.test(url) || name === "projects") {
-    await waitForProjectsReady(page, prefix);
+    await waitForProjectsReady(page);
     return;
   }
 
@@ -735,7 +659,7 @@ export async function waitForExpectedContent(
   }
 
   if (URL.workspaces.test(url) || name === "workspaces") {
-    await waitForWorkspacesReady(page, prefix);
+    await waitForWorkspacesReady(page);
     return;
   }
 
