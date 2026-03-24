@@ -336,6 +336,68 @@ async function fetchAndFilterMessage(
  *    by looking for the X-Nixelo-Enrollment header in the thread
  * 3. If it's a reply, stop the enrollment and record the event
  */
+type GmailMessageRef = { id: string; threadId: string };
+
+/** Fetch a single page of Gmail messages. Returns null on failure or empty result. */
+async function fetchMessagePage(
+  authHeaders: Record<string, string>,
+  query: string,
+  pageToken?: string,
+): Promise<{ messages: GmailMessageRef[]; nextPageToken?: string } | null> {
+  const url = `${GMAIL_API_BASE}/messages?q=${encodeURIComponent(query)}&maxResults=50${pageToken ? `&pageToken=${pageToken}` : ""}`;
+  const response = await fetchWithTimeout(url, { headers: authHeaders }, 15000);
+  if (!response.ok) return null;
+  const data = (await response.json()) as { messages?: GmailMessageRef[]; nextPageToken?: string };
+  return data.messages?.length
+    ? { messages: data.messages, nextPageToken: data.nextPageToken }
+    : null;
+}
+
+/** Process a batch of Gmail messages, matching replies to enrollments. */
+async function processMessageBatch(
+  ctx: Pick<import("../_generated/server").ActionCtx, "runMutation">,
+  messages: GmailMessageRef[],
+  authHeaders: Record<string, string>,
+  mailboxId: Id<"outreachMailboxes">,
+): Promise<number> {
+  let matched = 0;
+  for (const msg of messages) {
+    const senderEmail = await fetchAndFilterMessage(msg.id, authHeaders);
+    if (!senderEmail) continue;
+    const result = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForReply, {
+      senderEmail,
+      mailboxId,
+      gmailThreadId: msg.threadId,
+    });
+    if (result.matched) matched++;
+  }
+  return matched;
+}
+
+/** Paginate through Gmail messages and match replies to enrollments. */
+async function pollGmailReplies(
+  ctx: Pick<import("../_generated/server").ActionCtx, "runMutation">,
+  authHeaders: Record<string, string>,
+  query: string,
+  mailboxId: Id<"outreachMailboxes">,
+): Promise<{ checked: number; replies: number }> {
+  let replies = 0;
+  let totalChecked = 0;
+  let pageToken: string | undefined;
+
+  for (let page = 0; page < 5; page++) {
+    const pageResult = await fetchMessagePage(authHeaders, query, pageToken);
+    if (!pageResult) break;
+
+    replies += await processMessageBatch(ctx, pageResult.messages, authHeaders, mailboxId);
+    totalChecked += pageResult.messages.length;
+    pageToken = pageResult.nextPageToken;
+    if (!pageToken) break;
+  }
+
+  return { checked: totalChecked, replies };
+}
+
 export const checkReplies = internalAction({
   args: { mailboxId: v.id("outreachMailboxes") },
   handler: async (ctx, args) => {
@@ -348,54 +410,20 @@ export const checkReplies = internalAction({
     const accessToken = refreshed ?? mailbox.accessToken;
     const authHeaders = { Authorization: `Bearer ${accessToken}` };
 
-    // Use lastHealthCheckAt as a watermark so we don't miss replies that
-    // the mailbox owner reads before our cron runs (is:unread would miss those).
-    // Fall back to 24h ago if no previous check.
     const sinceEpoch = mailbox.lastHealthCheckAt
       ? Math.floor((mailbox.lastHealthCheckAt - 5 * MINUTE) / 1000)
       : Math.floor((Date.now() - DAY) / 1000);
     const query = `in:inbox after:${sinceEpoch}`;
 
     try {
-      let replies = 0;
-      let totalChecked = 0;
-      let pageToken: string | undefined;
-      const MAX_PAGES = 5; // Cap pagination to avoid unbounded API calls
+      const result = await pollGmailReplies(ctx, authHeaders, query, args.mailboxId);
 
-      for (let page = 0; page < MAX_PAGES; page++) {
-        const pageUrl = `${GMAIL_API_BASE}/messages?q=${encodeURIComponent(query)}&maxResults=50${pageToken ? `&pageToken=${pageToken}` : ""}`;
-        const response = await fetchWithTimeout(pageUrl, { headers: authHeaders }, 15000);
-        if (!response.ok) break;
-
-        const data = (await response.json()) as {
-          messages?: Array<{ id: string; threadId: string }>;
-          nextPageToken?: string;
-        };
-        if (!data.messages?.length) break;
-
-        for (const msg of data.messages) {
-          const senderEmail = await fetchAndFilterMessage(msg.id, authHeaders);
-          if (!senderEmail) continue;
-
-          const matchResult = await ctx.runMutation(
-            internal.outreach.gmail.findEnrollmentForReply,
-            { senderEmail, mailboxId: args.mailboxId, gmailThreadId: msg.threadId },
-          );
-          if (matchResult.matched) replies++;
-        }
-
-        totalChecked += data.messages.length;
-        pageToken = data.nextPageToken;
-        if (!pageToken) break;
-      }
-
-      // Only advance watermark if we successfully processed at least one page
-      if (totalChecked > 0) {
+      if (result.checked > 0) {
         await ctx.runMutation(internal.outreach.gmail.updateMailboxHealthCheck, {
           mailboxId: args.mailboxId,
         });
       }
-      return { checked: totalChecked, replies };
+      return result;
     } catch (e) {
       logger.warn("Gmail reply polling failed", {
         error: e instanceof Error ? e.message : "unknown",
