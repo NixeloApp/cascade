@@ -1162,21 +1162,14 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "landing") {
     await page
       .getByRole("heading", { name: /replace scattered project tools/i })
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/product control tower/i)
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByText(/product control tower/i).waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
 
   if (["signin", "signup", "forgot-password", "invite-invalid"].includes(name)) {
-    await page
-      .getByText(/secure account access/i)
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByText(/secure account access/i).waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1184,15 +1177,12 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "signup-verify") {
     await page
       .getByRole("heading", { name: /create your account/i })
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByRole("heading", { name: /verify your email/i })
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
@@ -1201,11 +1191,9 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "forgot-password-reset") {
     await page
       .getByRole("heading", { name: /check your email/i })
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByTestId(TEST_IDS.AUTH.RESET_CODE_INPUT)
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
@@ -1214,11 +1202,9 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "verify-email") {
     await page
       .getByRole("heading", { name: /check your email/i })
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
@@ -1227,12 +1213,8 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "invite") {
     await page
       .getByRole("heading", { name: /you're invited/i })
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/has invited you to join/i)
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByText(/has invited you to join/i).waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1255,7 +1237,6 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "portal") {
     await page
       .getByRole("heading", { name: /client portal/i })
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/portal token received/i)
@@ -1269,7 +1250,6 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "portal-project") {
     await page
       .getByRole("heading", { name: /project view/i })
-      .first()
       .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/^issues$/i)
@@ -2462,7 +2442,7 @@ async function openDocumentEditorForCapture(page: Page, docUrl: string): Promise
 }
 
 async function openDocumentActionsMenu(page: Page): Promise<void> {
-  const trigger = page.getByRole("button", { name: /more document actions/i }).first();
+  const trigger = page.getByRole("button", { name: /more document actions/i });
   await trigger.waitFor({ state: "visible", timeout: 8000 });
   await trigger.click();
   await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
@@ -2474,7 +2454,7 @@ async function openMarkdownImportPreviewDialog(
   filename: string,
 ): Promise<Locator> {
   await dismissAllDialogs(page);
-  const trigger = page.getByRole("button", { name: /import from markdown/i }).first();
+  const trigger = page.getByRole("button", { name: /import from markdown/i });
   await trigger.waitFor({ state: "visible", timeout: 8000 });
   await page.evaluate(
     ({ queuedMarkdown, queuedFilename }) => {
@@ -2503,17 +2483,10 @@ async function primeDocumentEditorRichContent(page: Page, docUrl: string): Promi
       }),
     );
   }, MARKDOWN_RICH_CONTENT);
-  await page
-    .getByText(/^Release Readiness$/)
-    .first()
-    .waitFor({ state: "visible", timeout: 5000 });
-  await page
-    .getByText(/qa signoff/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 5000 });
+  await page.getByText(/^Release Readiness$/).waitFor({ state: "visible", timeout: 5000 });
+  await page.getByText(/qa signoff/i).waitFor({ state: "visible", timeout: 5000 });
   await page
     .getByText(/export const shipWindow = "2026-03-25";/i)
-    .first()
     .waitFor({ state: "visible", timeout: 5000 });
   await waitForScreenshotReady(page);
 }
@@ -2569,7 +2542,7 @@ async function openDocumentEditorFloatingToolbarForCapture(
   await page.evaluate(() => {
     window.dispatchEvent(new Event("nixelo:e2e-open-floating-toolbar"));
   });
-  await page.getByRole("button", { name: /bold/i }).first().waitFor({
+  await page.getByRole("button", { name: /bold/i }).waitFor({
     state: "visible",
     timeout: 5000,
   });
@@ -2886,7 +2859,7 @@ async function screenshotFilledStates(
         await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^change avatar$/i }).first();
+        const trigger = page.getByRole("button", { name: /^change avatar$/i });
         const dialog = await openStableDialog(
           page,
           trigger,
@@ -2908,7 +2881,7 @@ async function screenshotFilledStates(
         await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^(add|change) cover$/i }).first();
+        const trigger = page.getByRole("button", { name: /^(add|change) cover$/i });
         const dialog = await openStableDialog(
           page,
           trigger,
@@ -2939,11 +2912,9 @@ async function screenshotFilledStates(
           await waitForExpectedContent(permissionPage, settingsUrl, "settings-profile", p);
           await permissionPage
             .getByText(/browser notifications blocked/i)
-            .first()
             .waitFor({ state: "visible", timeout: 5000 });
           await permissionPage
             .getByRole("button", { name: /^blocked$/i })
-            .first()
             .waitFor({ state: "visible", timeout: 5000 });
           await waitForScreenshotReady(permissionPage);
           await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
@@ -2996,7 +2967,7 @@ async function screenshotFilledStates(
           timeout: 15000,
         });
         await waitForExpectedContent(page, settingsUrl, `project-${normalizedProjectKey}-members`);
-        const membersHeading = page.getByRole("heading", { name: /^members$/i }).first();
+        const membersHeading = page.getByRole("heading", { name: /^members$/i });
         await scrollSectionNearViewportTop(membersHeading, page);
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-members`);
@@ -3032,8 +3003,8 @@ async function screenshotFilledStates(
         await waitForExpectedContent(page, settingsUrl, `project-${normalizedProjectKey}-settings`);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^delete project$/i }).first();
-        const confirmInput = page.getByPlaceholder(`Type ${projectKey} to confirm`).first();
+        const trigger = page.getByRole("button", { name: /^delete project$/i });
+        const confirmInput = page.getByPlaceholder(`Type ${projectKey} to confirm`);
         await trigger.waitFor({ state: "visible", timeout: 8000 });
         const dialog = await openStableAlertDialog(page, trigger, confirmInput);
         await waitForScreenshotReady(page);
@@ -3209,7 +3180,6 @@ async function screenshotFilledStates(
         await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         await page
           .getByText(/you have an unsaved draft/i)
-          .first()
           .waitFor({ state: "visible", timeout: 8000 });
         await waitForScreenshotReady(page);
         await captureCurrentView(
@@ -3313,7 +3283,7 @@ async function screenshotFilledStates(
             continue;
           }
           const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-          await toggleItem.first().waitFor({ state: "visible", timeout: 5000 });
+          await toggleItem.waitFor({ state: "visible", timeout: 5000 });
           if ((await toggleItem.count()) === 0) {
             throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
           }
@@ -3332,7 +3302,7 @@ async function screenshotFilledStates(
             const openDayView = async (): Promise<void> => {
               const dayToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_DAY);
               if ((await dayToggle.count()) > 0) {
-                await dayToggle.first().click();
+                await dayToggle.click();
                 await waitForScreenshotReady(page);
                 await waitForCalendarReady(page);
               }
@@ -3392,7 +3362,7 @@ async function screenshotFilledStates(
             if ((await quickAddButton.count()) > 0 && (await quickAddButton.isVisible())) {
               await quickAddButton.click();
             } else {
-              const headerAddButton = page.getByRole("button", { name: /add event/i }).first();
+              const headerAddButton = page.getByRole("button", { name: /add event/i });
               await headerAddButton.waitFor({ state: "visible", timeout: 5000 });
               await headerAddButton.click();
             }
@@ -3556,10 +3526,10 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-favorite")) {
         await runCaptureStep("document favorite state", async () => {
           await openDocumentEditorForCapture(page, baseDocUrl);
-          const toggle = page.getByRole("button", { name: /add to favorites/i }).first();
+          const toggle = page.getByRole("button", { name: /add to favorites/i });
           await toggle.waitFor({ state: "visible", timeout: 8000 });
           await toggle.click();
-          const activeToggle = page.getByRole("button", { name: /remove from favorites/i }).first();
+          const activeToggle = page.getByRole("button", { name: /remove from favorites/i });
           await activeToggle.waitFor({ state: "visible", timeout: 5000 });
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-favorite");
@@ -3571,10 +3541,10 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-sidebar-favorites")) {
         await runCaptureStep("document sidebar favorites", async () => {
           await openDocumentEditorForCapture(page, baseDocUrl);
-          const toggle = page.getByRole("button", { name: /add to favorites/i }).first();
+          const toggle = page.getByRole("button", { name: /add to favorites/i });
           await toggle.waitFor({ state: "visible", timeout: 8000 });
           await toggle.click();
-          const activeToggle = page.getByRole("button", { name: /remove from favorites/i }).first();
+          const activeToggle = page.getByRole("button", { name: /remove from favorites/i });
           await activeToggle.waitFor({ state: "visible", timeout: 5000 });
           await page
             .locator("aside")
@@ -3597,7 +3567,7 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-color-picker")) {
         await runRequiredCaptureStep("document color picker", async () => {
           await openDocumentEditorFloatingToolbarForCapture(page, baseDocUrl);
-          const colorButton = page.getByRole("button", { name: /^text color$/i }).first();
+          const colorButton = page.getByRole("button", { name: /^text color$/i });
           await colorButton.waitFor({ state: "visible", timeout: 5000 });
           await colorButton.evaluate((button: HTMLElement) => {
             button.click();
@@ -3675,7 +3645,7 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /^customize$/i }).first();
+      const trigger = page.getByRole("button", { name: /^customize$/i });
       const dialog = await openStableDialog(
         page,
         trigger,
@@ -3698,7 +3668,7 @@ async function screenshotFilledStates(
       });
       await waitForScreenshotReady(page);
       await waitForCalendarReady(page);
-      const trigger = page.getByRole("button", { name: /add event/i }).first();
+      const trigger = page.getByRole("button", { name: /add event/i });
       const dialog = await openStableDialog(
         page,
         trigger,
@@ -3721,7 +3691,7 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByText("Create Workspace").first();
+      const trigger = page.getByText("Create Workspace");
       const dialog = await openStableDialog(
         page,
         trigger,
@@ -3742,7 +3712,7 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByText("Create Team").first();
+      const trigger = page.getByText("Create Team");
       await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
       const dialog = await waitForDialogOpen(page);
@@ -3760,7 +3730,7 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, boardUrl, "board");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /import \/ export/i }).first();
+      const trigger = page.getByRole("button", { name: /import \/ export/i });
       const dialog = await openStableDialog(
         page,
         trigger,
@@ -3783,7 +3753,7 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, boardUrl, "board");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /import \/ export/i }).first();
+      const trigger = page.getByRole("button", { name: /import \/ export/i });
       const dialog = await openStableDialog(
         page,
         trigger,
@@ -3820,7 +3790,7 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.timeTracking.build(orgSlug), "time-tracking");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /add time entry/i }).first();
+      const trigger = page.getByRole("button", { name: /add time entry/i });
       const dialog = await openStableDialog(
         page,
         trigger,
@@ -4112,7 +4082,7 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForNotificationsContentReady();
       // Click the Mentions filter button
-      const mentionsFilter = page.getByRole("button", { name: /^mentions$/i }).first();
+      const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
       await mentionsFilter.waitFor({ state: "visible", timeout: 5000 });
       await mentionsFilter.click();
       await waitForMentionsFilterState();
@@ -4180,7 +4150,7 @@ async function screenshotDashboardModals(
       await dismissAllDialogs(page);
       const shortcutsDialog = await openStableDialog(
         page,
-        shortcutsTrigger.first(),
+        shortcutsTrigger,
         page.getByRole("dialog", { name: /keyboard shortcuts/i }),
         page.getByPlaceholder("Search shortcuts..."),
         "shortcuts help",
@@ -4190,7 +4160,7 @@ async function screenshotDashboardModals(
     });
   }
 
-  const timeEntryTrigger = page.getByRole("button", { name: /^start timer$/i }).first();
+  const timeEntryTrigger = page.getByRole("button", { name: /^start timer$/i });
   if ((await timeEntryTrigger.count()) > 0) {
     await runCaptureStep("dashboard time-entry modal", async () => {
       await dismissAllDialogs(page);
@@ -4237,11 +4207,9 @@ async function screenshotDashboardLoadingState(
       );
       await loadingPage
         .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
-        .first()
         .waitFor({ state: "visible", timeout: 15000 });
       await loadingPage
         .getByRole("heading", { name: /^dashboard$/i })
-        .first()
         .waitFor({ state: "visible", timeout: 12000 });
       await expect
         .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
@@ -4522,7 +4490,7 @@ async function screenshotBoardInteractiveStates(
     await runCaptureStep(`board swimlane ${mode}`, async () => {
       await loadBoard();
       // Open swimlane dropdown — button says "Swimlanes" on fresh load
-      const swimlaneButton = page.getByText("Swimlanes", { exact: true }).first();
+      const swimlaneButton = page.getByText("Swimlanes", { exact: true });
       await swimlaneButton.waitFor({ state: "visible", timeout: 8000 });
       await swimlaneButton.click();
       // Select the mode via menuitemcheckbox to avoid matching hidden mobile
@@ -4545,7 +4513,7 @@ async function screenshotBoardInteractiveStates(
       await loadBoard();
       // Find collapse button INSIDE a board column header (not sidebar)
       const columnHeader = page.getByTestId(TEST_IDS.BOARD.COLUMN).first();
-      const collapseButton = columnHeader.getByLabel(/collapse/i).first();
+      const collapseButton = columnHeader.getByLabel(/collapse/i);
       await collapseButton.waitFor({ state: "visible", timeout: 8000 });
       await collapseButton.click();
       await waitForScreenshotReady(page);
@@ -4584,7 +4552,7 @@ async function screenshotBoardInteractiveStates(
 
       try {
         await loadBoard();
-        const triageColumn = page.getByLabel(/triage column/i).first();
+        const triageColumn = page.getByLabel(/triage column/i);
         await triageColumn.waitFor({ state: "visible", timeout: 8000 });
         await triageColumn.getByText("No issues yet", { exact: true }).waitFor({ timeout: 8000 });
         await waitForScreenshotReady(page);
@@ -4657,7 +4625,7 @@ async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-display-properties`)) {
     await runCaptureStep("board display properties", async () => {
       await loadBoard();
-      const propsButton = page.getByText("Properties", { exact: true }).first();
+      const propsButton = page.getByText("Properties", { exact: true });
       await propsButton.waitFor({ state: "visible", timeout: 8000 });
       await propsButton.click();
       // Wait for dropdown to be visible
@@ -4678,7 +4646,7 @@ async function screenshotBoardInteractiveStates(
     await runCaptureStep("board peek mode", async () => {
       await loadBoard();
       // Toggle to side panel mode
-      const toggleBtn = page.getByLabel(/switch to side panel view/i).first();
+      const toggleBtn = page.getByLabel(/switch to side panel view/i);
       await toggleBtn.waitFor({ state: "visible", timeout: 8000 });
       await toggleBtn.click();
       await waitForScreenshotReady(page);
@@ -4697,7 +4665,7 @@ async function screenshotBoardInteractiveStates(
 
       // Close panel and reset to modal view
       await page.keyboard.press("Escape");
-      const resetBtn = page.getByLabel(/switch to modal view/i).first();
+      const resetBtn = page.getByLabel(/switch to modal view/i);
       if (await isLocatorVisible(resetBtn)) {
         await resetBtn.click();
       }
@@ -4722,7 +4690,7 @@ async function screenshotSprintInteractiveStates(
   // Burndown chart (default view — click "Burndown" to ensure it's active)
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burndown`)) {
     await runCaptureStep("sprint burndown chart", async () => {
-      const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
+      const burndownBtn = page.getByRole("button", { name: /^burndown$/i });
       if (await isLocatorVisible(burndownBtn)) {
         await burndownBtn.click();
         await waitForScreenshotReady(page);
@@ -4734,13 +4702,13 @@ async function screenshotSprintInteractiveStates(
   // Burnup chart (toggle)
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burnup`)) {
     await runCaptureStep("sprint burnup chart", async () => {
-      const burnupBtn = page.getByRole("button", { name: /^burnup$/i }).first();
+      const burnupBtn = page.getByRole("button", { name: /^burnup$/i });
       await burnupBtn.waitFor({ state: "visible", timeout: 5000 });
       await burnupBtn.click();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burnup`);
       // Switch back to burndown
-      const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
+      const burndownBtn = page.getByRole("button", { name: /^burndown$/i });
       if (await isLocatorVisible(burndownBtn)) {
         await burndownBtn.click();
       }
@@ -4750,7 +4718,7 @@ async function screenshotSprintInteractiveStates(
   // Workload popover
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-workload`)) {
     await runCaptureStep("sprint workload popover", async () => {
-      const workloadBtn = page.getByRole("button", { name: /assignees/i }).first();
+      const workloadBtn = page.getByRole("button", { name: /assignees/i });
       await workloadBtn.waitFor({ state: "visible", timeout: 5000 });
       await workloadBtn.click();
       // Wait for popover content
@@ -4768,7 +4736,7 @@ async function screenshotSprintInteractiveStates(
   // Create sprint overlap warning
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-date-overlap-warning`)) {
     await runCaptureStep("sprint date overlap warning", async () => {
-      let startSprintButton = page.getByRole("button", { name: /^start sprint$/i }).first();
+      let startSprintButton = page.getByRole("button", { name: /^start sprint$/i });
 
       if (!(await isLocatorVisible(startSprintButton))) {
         const createSprintButton = page
@@ -4787,7 +4755,7 @@ async function screenshotSprintInteractiveStates(
           (form as HTMLFormElement).requestSubmit();
         });
 
-        startSprintButton = page.getByRole("button", { name: /^start sprint$/i }).first();
+        startSprintButton = page.getByRole("button", { name: /^start sprint$/i });
         await startSprintButton.waitFor({ state: "visible", timeout: 5000 });
       }
 
