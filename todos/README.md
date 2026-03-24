@@ -13,7 +13,7 @@
 | ~~Visual/shell weight~~ | ~~1~~ | ~~Auth shell x4, dashboard gradients x2, forgot-password sparse~~ **Fixed** — minimal centered layout; ~~meetings density~~ **Fixed** — collapsible detail sections |
 | Screenshot coverage | 3 | Documents states, analytics states, auth sign-up |
 | ~~Product depth~~ | ~~1~~ | ~~Dependencies graph~~ **Fixed** — cross-team blocker matrix with heatmap intensity |
-| Infrastructure | 1 | External error reporting (Sentry/PostHog) |
+| ~~Infrastructure~~ | ~~1~~ | ~~External error reporting~~ **Fixed** — pluggable reportError() wired into showError + ErrorBoundary; add Sentry/PostHog via setErrorReportingProvider() |
 
 **Resolved this session:**
 - ~~UX: Workspaces search/filter~~ — Added search with name/description/slug filtering
@@ -41,10 +41,10 @@
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Unit tests | 4474 pass |
+| Unit tests | 4479 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | Spec issues fixed | 53 total |
 | TEST_IDs | 197 |
 | Biome lint warnings | 0 |
-| MEDIUM remaining | 4 |
+| MEDIUM remaining | 3 |
