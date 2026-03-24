@@ -4040,24 +4040,40 @@ async function screenshotIssueInteractiveStates(
  * for authenticated captures. Returns null if auth fails.
  */
 async function authenticateAndNavigate(page: Page, orgSlug: string): Promise<boolean> {
-  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
+  // Navigate to sign-in page and inject tokens
+  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "load" });
   const loginResult = await testUserService.loginTestUser(
     SCREENSHOT_USER.email,
     SCREENSHOT_USER.password,
   );
-
-  if (!loginResult.success || !loginResult.token) {
-    return false;
-  }
+  if (!loginResult.success || !loginResult.token) return false;
 
   await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
 
-  // Warm the Convex auth session — the seed call authenticates server-side,
-  // ensuring the WebSocket connection will be accepted when the client connects.
-  await testUserService.seedScreenshotData(SCREENSHOT_USER.email, { orgSlug });
-
+  // Navigate to dashboard and wait for Convex to pick up tokens.
+  // The reload() is critical — it forces ConvexReactClient to re-initialize
+  // and read the JWT from localStorage during its constructor, which is the
+  // only reliable way to establish auth in a fresh browser context.
   await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
-  await waitForDashboardReady(page);
+
+  // Wait for Convex WebSocket to connect and auth to settle.
+  // Check for the search button (rendered by the app shell after auth).
+  try {
+    await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
+      state: "visible",
+      timeout: 30000,
+    });
+  } catch {
+    // If search button doesn't appear, auth may not have settled.
+    // Reload once more to retry auth initialization.
+    await page.reload({ waitUntil: "load" });
+    await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
+      state: "visible",
+      timeout: 20000,
+    });
+  }
+
+  await waitForSpinnersHidden(page, 10000);
   return true;
 }
 
@@ -4070,6 +4086,7 @@ async function captureEmptyForConfig(
   viewport: ViewportName,
   theme: ThemeName,
   orgSlug: string,
+  storageState?: { cookies: unknown[]; origins: unknown[] },
 ): Promise<void> {
   currentConfigPrefix = `${viewport}-${theme}`;
   resetCounters();
@@ -4082,11 +4099,16 @@ async function captureEmptyForConfig(
     viewport: VIEWPORTS[viewport],
     colorScheme: theme,
     timezoneId: E2E_TIMEZONE,
+    ...(storageState ? { storageState } : {}),
   });
   const page = await context.newPage();
 
   try {
-    if (!(await authenticateAndNavigate(page, orgSlug))) {
+    if (storageState) {
+      // Storage state carries auth — navigate directly to dashboard
+      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
+      await waitForDashboardReady(page);
+    } else if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureFailures++;
       console.log(`    ⚠️ Auth failed for ${currentConfigPrefix} empty states`);
       return;
@@ -4114,6 +4136,7 @@ async function captureFilledForConfig(
   theme: ThemeName,
   orgSlug: string,
   seedResult: SeedScreenshotResult,
+  storageState?: { cookies: unknown[]; origins: unknown[] },
 ): Promise<void> {
   currentConfigPrefix = `${viewport}-${theme}`;
   resetCounters();
@@ -4126,6 +4149,7 @@ async function captureFilledForConfig(
     viewport: VIEWPORTS[viewport],
     colorScheme: theme,
     timezoneId: E2E_TIMEZONE,
+    ...(storageState ? { storageState } : {}),
   });
   const page = await context.newPage();
 
@@ -4133,7 +4157,10 @@ async function captureFilledForConfig(
   await screenshotPublicPages(page, seedResult);
 
   try {
-    if (!(await authenticateAndNavigate(page, orgSlug))) {
+    if (storageState) {
+      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
+      await waitForDashboardReady(page);
+    } else if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureFailures++;
       console.log(`    ⚠️ Auth failed for ${currentConfigPrefix} filled states`);
       return;
@@ -4431,6 +4458,8 @@ async function run(): Promise<void> {
   });
   const setupPage = await setupContext.newPage();
   const orgSlug = await autoLogin(setupPage);
+  // Capture the authenticated storage state so per-config contexts can reuse it
+  const authStorageState = orgSlug ? await setupContext.storageState() : null;
   await setupContext.close();
 
   if (!orgSlug) {
@@ -4467,7 +4496,13 @@ async function run(): Promise<void> {
     for (const config of selectedConfigs) {
       const browser = await launchBrowser();
       try {
-        await captureEmptyForConfig(browser, config.viewport, config.theme, orgSlug);
+        await captureEmptyForConfig(
+          browser,
+          config.viewport,
+          config.theme,
+          orgSlug,
+          authStorageState ?? undefined,
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (isCrashLikeError(message)) {
@@ -4501,7 +4536,14 @@ async function run(): Promise<void> {
     for (let attempt = 1; attempt <= 2 && !completed; attempt++) {
       const browser = await launchBrowser();
       try {
-        await captureFilledForConfig(browser, config.viewport, config.theme, orgSlug, seedResult);
+        await captureFilledForConfig(
+          browser,
+          config.viewport,
+          config.theme,
+          orgSlug,
+          seedResult,
+          authStorageState ?? undefined,
+        );
         completed = true;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
