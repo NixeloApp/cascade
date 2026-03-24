@@ -329,16 +329,35 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
   }
 
   // Store tokens and create mailbox server-side — tokens never reach the browser
-  const mailboxId = await ctx.runMutation(internal.outreach.mailboxes.createMailboxFromOAuth, {
-    userId,
-    organizationId,
-    provider: "google",
-    email: userInfo.email,
-    displayName: userInfo.name ?? userInfo.email.split("@")[0],
-    accessToken: tokens.access_token,
-    refreshToken: tokens.refresh_token,
-    expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * SECOND : undefined,
-  });
+  let mailboxId: string;
+  try {
+    mailboxId = await ctx.runMutation(internal.outreach.mailboxes.createMailboxFromOAuth, {
+      userId,
+      organizationId,
+      provider: "google",
+      email: userInfo.email,
+      displayName: userInfo.name ?? userInfo.email.split("@")[0],
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * SECOND : undefined,
+    });
+  } catch (e) {
+    logger.error("Failed to create mailbox from OAuth", { error: e });
+    return new Response(
+      renderOAuthErrorPageHtml(
+        "Gmail Connection - Error",
+        "Failed to save mailbox connection. Please try again.",
+      ),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "text/html",
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+        },
+      },
+    );
+  }
 
   const siteUrl = process.env.SITE_URL ?? "http://localhost:5555";
   return new Response(renderOutreachSuccessPageHtml(userInfo.email, mailboxId, siteUrl), {
