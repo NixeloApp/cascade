@@ -24,8 +24,10 @@ export class MeetingsPage extends BasePage {
     this.detailSection = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
     this.memorySection = page.getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION);
     this.actionItemsSection = page.getByTestId(TEST_IDS.MEETINGS.ACTION_ITEMS_SECTION);
-    this.emptyStateTitle = page.getByTestId(TEST_IDS.MEETINGS.EMPTY_STATE);
-    this.emptyStateDescription = this.emptyStateTitle;
+    this.emptyStateTitle = page.getByText(/no meeting recordings yet/i);
+    this.emptyStateDescription = page.getByText(
+      /schedule from calendar or add a direct meeting url/i,
+    );
     this.meetingsSearchInput = page.getByTestId(TEST_IDS.MEETINGS.SEARCH_INPUT);
     this.transcriptSearchInput = page.getByTestId(TEST_IDS.MEETINGS.TRANSCRIPT_SEARCH);
   }

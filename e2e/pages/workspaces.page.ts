@@ -113,7 +113,7 @@ export class WorkspacesPage extends BasePage {
 
   async expectWorkspaceVisible(name: string) {
     const card = this.workspaceCards.filter({ hasText: name }).first();
-    await expect(card).toBeVisible();
+    await card.waitFor({ state: "visible", timeout: 15000 });
   }
 
   async isWorkspaceSettingsTabVisible() {
