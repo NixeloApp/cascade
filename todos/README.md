@@ -12,7 +12,7 @@
 |----------|-------|---------|
 | Visual/shell weight | 8 | Auth shell x4, dashboard gradients x2, forgot-password sparse, meetings density |
 | Screenshot coverage | 3 | Documents states, analytics states, auth sign-up |
-| Product depth | 1 | Dependencies graph (needs design: node graph? matrix? table?) |
+| ~~Product depth~~ | ~~1~~ | ~~Dependencies graph~~ **Fixed** — cross-team blocker matrix with heatmap intensity |
 | Infrastructure | 1 | External error reporting (Sentry/PostHog) |
 
 **Resolved this session:**
@@ -47,4 +47,4 @@
 | Spec issues fixed | 53 total |
 | TEST_IDs | 197 |
 | Biome lint warnings | 0 |
-| MEDIUM remaining | 13 |
+| MEDIUM remaining | 12 |
