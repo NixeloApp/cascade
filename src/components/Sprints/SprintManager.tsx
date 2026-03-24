@@ -43,6 +43,7 @@ import {
   DEFAULT_SPRINT_PRESET,
   SPRINT_DURATION_PRESETS,
 } from "@/lib/sprint-presets";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
 type SprintWithCounts = FunctionReturnType<typeof api.sprints.listByProject>[number];
@@ -441,7 +442,12 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
       {/* Create Sprint Form */}
       {showCreateForm && (
         <Card padding="md" className="animate-scale-in">
-          <Stack as="form" gap="md" onSubmit={(e: React.FormEvent) => void handleCreateSprint(e)}>
+          <Stack
+            as="form"
+            gap="md"
+            data-testid={TEST_IDS.SPRINT.CREATE_FORM}
+            onSubmit={(e: React.FormEvent) => void handleCreateSprint(e)}
+          >
             <Input
               label="Sprint Name"
               type="text"

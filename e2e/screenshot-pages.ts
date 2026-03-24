@@ -1766,7 +1766,7 @@ async function waitForTeamSettingsReady(page: Page): Promise<void> {
 }
 
 async function waitForIssueDetailReady(page: Page): Promise<void> {
-  await page.locator("code").first().waitFor({ state: "visible", timeout: 12000 });
+  await page.getByTestId(TEST_IDS.ISSUE.KEY).first().waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("button", { name: /edit issue|save changes/i })
     .waitFor({ state: "visible", timeout: 12000 });
@@ -3784,7 +3784,7 @@ async function screenshotFilledStates(
         page,
         trigger,
         page.getByRole("dialog", { name: /^log time$/i }),
-        page.locator("#time-entry-form"),
+        page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM),
         "manual time entry",
       );
       await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
@@ -4157,7 +4157,7 @@ async function screenshotDashboardModals(
         page,
         timeEntryTrigger,
         page.getByRole("dialog", { name: /^start timer$/i }),
-        page.locator("#time-entry-form"),
+        page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM),
         "dashboard time entry",
       );
       await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
@@ -4354,18 +4354,9 @@ async function screenshotMeetingsStates(
   }
 
   const meetingsUrl = ROUTES.meetings.build(orgSlug);
-  const recentMeetingsSection = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: /^recent meetings$/i }) })
-    .first();
-  const meetingDetailSection = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: /^meeting detail$/i }) })
-    .first();
-  const meetingMemorySection = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: /^meeting memory$/i }) })
-    .first();
+  const recentMeetingsSection = page.getByTestId(TEST_IDS.MEETINGS.RECENT_SECTION);
+  const meetingDetailSection = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
+  const meetingMemorySection = page.getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION);
 
   const openMeetingsForCapture = async () => {
     await page.goto(`${BASE_URL}${meetingsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
@@ -4377,7 +4368,7 @@ async function screenshotMeetingsStates(
     await runCaptureStep("meetings detail", async () => {
       await openMeetingsForCapture();
       const clientLaunchReviewCard = recentMeetingsSection
-        .locator("[role='button']")
+        .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
         .filter({ hasText: /Client Launch Review/i })
         .first();
       await clientLaunchReviewCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
@@ -4403,7 +4394,7 @@ async function screenshotMeetingsStates(
     await runCaptureStep("meetings transcript search", async () => {
       await openMeetingsForCapture();
       const weeklyProductSyncCard = recentMeetingsSection
-        .locator("[role='button']")
+        .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
         .filter({ hasText: /Weekly Product Sync/i })
         .first();
       await weeklyProductSyncCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
@@ -4641,7 +4632,8 @@ async function screenshotBoardInteractiveStates(
       await waitForScreenshotReady(page);
 
       // Click an issue card to open side panel
-      const issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
+      const board = page.getByTestId(TEST_IDS.BOARD.ROOT);
+      const issueCard = board.getByTestId(TEST_IDS.ISSUE.CARD).first();
       await issueCard.waitFor({ state: "visible", timeout: 5000 });
       await issueCard.click();
 
@@ -4737,7 +4729,7 @@ async function screenshotSprintInteractiveStates(
         const sprintNameInput = page.getByLabel("Sprint Name");
         await sprintNameInput.waitFor({ state: "visible", timeout: 5000 });
 
-        const createForm = page.locator("form").filter({ has: sprintNameInput }).first();
+        const createForm = page.getByTestId(TEST_IDS.SPRINT.CREATE_FORM);
         await createForm.waitFor({ state: "visible", timeout: 5000 });
         await sprintNameInput.fill("Overlap Warning Sprint");
         await createForm.evaluate((form) => {

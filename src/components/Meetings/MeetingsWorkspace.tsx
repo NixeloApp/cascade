@@ -48,6 +48,7 @@ import {
   formatRelativeTime,
 } from "@/lib/formatting";
 import { Calendar, CheckCircle, FileText, Mic, XCircle } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
 type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[number];
@@ -364,7 +365,13 @@ function RecordingListItem({
   recording: MeetingOverview;
 }) {
   return (
-    <Card variant={isSelected ? "outline" : "soft"} padding="md" hoverable onClick={onSelect}>
+    <Card
+      variant={isSelected ? "outline" : "soft"}
+      padding="md"
+      hoverable
+      onClick={onSelect}
+      data-testid={TEST_IDS.MEETINGS.RECORDING_CARD}
+    >
       <Stack gap="sm">
         <Flex justify="between" align="start" gap="sm" wrap>
           <FlexItem flex="1">
@@ -476,7 +483,12 @@ function MeetingMemorySection({
 
   if (memory === undefined) {
     return (
-      <Section title="Meeting Memory" description={description} gap="sm">
+      <Section
+        title="Meeting Memory"
+        description={description}
+        gap="sm"
+        data-testid={TEST_IDS.MEETINGS.MEMORY_SECTION}
+      >
         <Card variant="soft" padding="lg">
           <Flex justify="center">
             <LoadingSpinner size="lg" />
@@ -487,7 +499,12 @@ function MeetingMemorySection({
   }
 
   return (
-    <Section title="Meeting Memory" description={description} gap="sm">
+    <Section
+      title="Meeting Memory"
+      description={description}
+      gap="sm"
+      data-testid={TEST_IDS.MEETINGS.MEMORY_SECTION}
+    >
       {projectLenses.length > 0 && (
         <Flex gap="xs" wrap>
           <Button
@@ -1538,6 +1555,7 @@ export function MeetingsWorkspace() {
             title="Recent Meetings"
             description="Recordings created from calendar-linked meetings and direct bot runs."
             gap="sm"
+            data-testid={TEST_IDS.MEETINGS.RECENT_SECTION}
           >
             <Stack gap="sm">
               <Flex justify="between" align="center" gap="sm" wrap>
@@ -1664,6 +1682,7 @@ export function MeetingsWorkspace() {
             title="Meeting Detail"
             description="Review summaries, decisions, action items, transcript, and participants."
             gap="sm"
+            data-testid={TEST_IDS.MEETINGS.DETAIL_SECTION}
           >
             {selectedRecordingId ? (
               <RecordingDetailPanel recording={selectedRecording} projects={projects} />
