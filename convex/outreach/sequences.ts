@@ -145,10 +145,32 @@ export const updateSequenceStatus = authenticatedMutation({
     const mailbox = await ctx.db.get(sequence.mailboxId);
     if (!mailbox?.isActive) throw conflict("Connected mailbox is inactive. Reconnect first.");
 
+    const now = Date.now();
     await ctx.db.patch(args.sequenceId, {
       status: "active",
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
+
+    // Resume any paused enrollments so the send engine picks them up
+    const pausedEnrollments = await ctx.db
+      .query("outreachEnrollments")
+      .withIndex("by_sequence_status", (q) =>
+        q
+          .eq("sequenceId", args.sequenceId)
+          .eq(
+            "status",
+            "paused" as "active" | "completed" | "paused" | "replied" | "bounced" | "unsubscribed",
+          ),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+
+    await Promise.all(
+      pausedEnrollments.map((enrollment) =>
+        ctx.db.patch(enrollment._id, {
+          status: "active",
+        }),
+      ),
+    );
   },
 });
 

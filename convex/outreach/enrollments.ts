@@ -108,14 +108,8 @@ export const createEnrollments = authenticatedMutation({
     let enrolled = 0;
     let skipped = 0;
 
-    // Batch-fetch all contacts and existing enrollments upfront to avoid N+1
-    const [contacts, existingEnrollments] = await Promise.all([
-      Promise.all(args.contactIds.map((id) => ctx.db.get(id))),
-      ctx.db
-        .query("outreachEnrollments")
-        .withIndex("by_sequence", (q) => q.eq("sequenceId", args.sequenceId))
-        .take(BOUNDED_LIST_LIMIT),
-    ]);
+    // Batch-fetch contacts upfront, check enrollment per-contact via index
+    const contacts = await Promise.all(args.contactIds.map((id) => ctx.db.get(id)));
 
     for (let i = 0; i < args.contactIds.length; i++) {
       const contactId = args.contactIds[i];
@@ -125,12 +119,19 @@ export const createEnrollments = authenticatedMutation({
         continue;
       }
 
-      // Skip if already enrolled in this sequence
-      const alreadyEnrolled = existingEnrollments.some(
-        (e) => e.contactId === contactId && (e.status === "active" || e.status === "paused"),
-      );
+      // Check if already enrolled — scan by contact index, filter to this sequence + active/paused
+      const existingEnrollment = await ctx.db
+        .query("outreachEnrollments")
+        .withIndex("by_contact", (q) => q.eq("contactId", contactId))
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("sequenceId"), args.sequenceId),
+            q.or(q.eq(q.field("status"), "active"), q.eq(q.field("status"), "paused")),
+          ),
+        )
+        .first();
 
-      if (alreadyEnrolled) {
+      if (existingEnrollment) {
         skipped++;
         continue;
       }

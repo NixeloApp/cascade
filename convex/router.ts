@@ -154,26 +154,27 @@ http.route({
 });
 
 // Outreach tracking routes (open pixel, click redirect, unsubscribe)
+// Use pathPrefix for dynamic segments: /t/o/{enrollmentId}, /t/c/{linkId}, /t/u/{enrollmentId}
 http.route({
-  path: "/t/o",
+  pathPrefix: "/t/o/",
   method: "GET",
   handler: handleOpenPixel,
 });
 
 http.route({
-  path: "/t/c",
+  pathPrefix: "/t/c/",
   method: "GET",
   handler: handleClickRedirect,
 });
 
 http.route({
-  path: "/t/u",
+  pathPrefix: "/t/u/",
   method: "GET",
   handler: handleUnsubscribeGet,
 });
 
 http.route({
-  path: "/t/u",
+  pathPrefix: "/t/u/",
   method: "POST",
   handler: handleUnsubscribePost,
 });
