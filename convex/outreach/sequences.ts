@@ -166,27 +166,41 @@ export const updateSequenceStatus = authenticatedMutation({
       updatedAt: now,
     });
 
-    // Resume any paused enrollments so the send engine picks them up
-    const pausedEnrollments = await ctx.db
-      .query("outreachEnrollments")
-      .withIndex("by_sequence_status", (q) =>
-        q
-          .eq("sequenceId", args.sequenceId)
-          .eq(
-            "status",
-            "paused" as "active" | "completed" | "paused" | "replied" | "bounced" | "unsubscribed",
-          ),
-      )
-      .take(BOUNDED_LIST_LIMIT);
+    // Resume ALL paused enrollments so the send engine picks them up.
+    // Process in pages to handle sequences with more than BOUNDED_LIST_LIMIT enrollments.
+    let resumed = 0;
+    const MAX_RESUME_PAGES = 10;
+    for (let page = 0; page < MAX_RESUME_PAGES; page++) {
+      const query = ctx.db
+        .query("outreachEnrollments")
+        .withIndex("by_sequence_status", (q) =>
+          q
+            .eq("sequenceId", args.sequenceId)
+            .eq(
+              "status",
+              "paused" as
+                | "active"
+                | "completed"
+                | "paused"
+                | "replied"
+                | "bounced"
+                | "unsubscribed",
+            ),
+        );
+      const batch = await query.take(BOUNDED_LIST_LIMIT);
+      if (batch.length === 0) break;
 
-    await Promise.all(
-      pausedEnrollments.map((enrollment) =>
-        ctx.db.patch(enrollment._id, {
-          status: "active",
-          nextSendAt: Date.now() + 5 * MINUTE,
-        }),
-      ),
-    );
+      await Promise.all(
+        batch.map((enrollment) =>
+          ctx.db.patch(enrollment._id, {
+            status: "active",
+            nextSendAt: Date.now() + 5 * MINUTE,
+          }),
+        ),
+      );
+      resumed += batch.length;
+      if (batch.length < BOUNDED_LIST_LIMIT) break;
+    }
   },
 });
 

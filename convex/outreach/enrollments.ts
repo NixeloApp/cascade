@@ -90,6 +90,13 @@ export const getByContact = authenticatedQuery({
 export const getEvents = authenticatedQuery({
   args: { enrollmentId: v.id("outreachEnrollments") },
   handler: async (ctx, args) => {
+    const enrollment = await ctx.db.get(args.enrollmentId);
+    if (!enrollment) throw notFound("enrollment", args.enrollmentId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (enrollment.organizationId !== user?.defaultOrganizationId)
+      throw notFound("enrollment", args.enrollmentId);
+
     return await ctx.db
       .query("outreachEvents")
       .withIndex("by_enrollment", (q) => q.eq("enrollmentId", args.enrollmentId))
@@ -134,6 +141,10 @@ export const createEnrollments = authenticatedMutation({
   handler: async (ctx, args) => {
     const sequence = await ctx.db.get(args.sequenceId);
     if (!sequence) throw notFound("sequence", args.sequenceId);
+
+    const user = await ctx.db.get(ctx.userId);
+    if (sequence.organizationId !== user?.defaultOrganizationId)
+      throw notFound("sequence", args.sequenceId);
 
     if (sequence.status !== "active" && sequence.status !== "draft") {
       throw conflict("Can only enroll contacts in active or draft sequences");

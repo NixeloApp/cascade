@@ -218,8 +218,9 @@ export const sendSequenceEmail = internalAction({
       `[OUTREACH] Would send email: from=${args.fromEmail} to=${args.to} subject="${args.subject}" step=${args.step}`,
     );
 
-    // Fail closed — do not send until real implementation is built
-    return { success: false, error: "Email sending not implemented" };
+    // Fail closed — return skipped so the cron does not record a send
+    // or bounce event. The enrollment stays in its current state.
+    return { success: false, error: "EMAIL_NOT_IMPLEMENTED" };
   },
 });
 
@@ -240,6 +241,10 @@ export const recordSendResult = internalMutation({
     error: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Skip recording entirely when sender is not implemented —
+    // enrollment stays in its current state, no events logged.
+    if (args.error === "EMAIL_NOT_IMPLEMENTED") return;
+
     if (args.success) {
       // Log sent event
       await ctx.db.insert("outreachEvents", {
