@@ -23,15 +23,17 @@ export const list = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(ctx.userId);
-    if (!user?.defaultOrganizationId) return [];
+    const orgId = user?.defaultOrganizationId;
+    if (!orgId) return [];
 
     const contacts = await ctx.db
       .query("outreachContacts")
-      .withIndex("by_organization", (q) => q.eq("organizationId", user.defaultOrganizationId!))
+      .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
       .take(BOUNDED_LIST_LIMIT);
 
-    if (args.tag) {
-      return contacts.filter((c) => c.tags?.includes(args.tag!));
+    const tagFilter = args.tag;
+    if (tagFilter) {
+      return contacts.filter((c) => c.tags?.includes(tagFilter));
     }
     return contacts;
   },

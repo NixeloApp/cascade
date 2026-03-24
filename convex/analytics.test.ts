@@ -775,6 +775,7 @@ describe("Analytics", () => {
       const doneState = project?.workflowStates.find(
         (s: { category: string }) => s.category === "done",
       );
+      expect(doneState?.category).toBe("done");
 
       const now = Date.now();
       // Create a completed sprint
@@ -797,7 +798,7 @@ describe("Analytics", () => {
       });
       await t.run(async (ctx) => {
         await ctx.db.patch(issue1, {
-          status: doneState!.id,
+          status: doneState?.id,
           storyPoints: 3,
         });
       });
@@ -846,6 +847,7 @@ describe("Analytics", () => {
       const doneState = project?.workflowStates.find(
         (s: { category: string }) => s.category === "done",
       );
+      expect(doneState?.category).toBe("done");
 
       // Create issues via helper, then patch to done status
       const issue1 = await createTestIssue(t, projectId, user1, {
@@ -858,8 +860,8 @@ describe("Analytics", () => {
       });
 
       await t.run(async (ctx) => {
-        await ctx.db.patch(issue1, { status: doneState!.id });
-        await ctx.db.patch(issue2, { status: doneState!.id });
+        await ctx.db.patch(issue1, { status: doneState?.id });
+        await ctx.db.patch(issue2, { status: doneState?.id });
       });
 
       const result = await asUser1.query(api.analytics.getTimeMetricsBreakdown, {
@@ -885,6 +887,7 @@ describe("Analytics", () => {
       const doneState = project?.workflowStates.find(
         (s: { category: string }) => s.category === "done",
       );
+      expect(doneState?.category).toBe("done");
 
       const issue1 = await createTestIssue(t, projectId, userId, {
         title: "Bug issue",
@@ -896,8 +899,8 @@ describe("Analytics", () => {
       });
 
       await t.run(async (ctx) => {
-        await ctx.db.patch(issue1, { status: doneState!.id });
-        await ctx.db.patch(issue2, { status: doneState!.id });
+        await ctx.db.patch(issue1, { status: doneState?.id });
+        await ctx.db.patch(issue2, { status: doneState?.id });
       });
 
       const result = await asUser.query(api.analytics.getTimeMetricsBreakdown, {

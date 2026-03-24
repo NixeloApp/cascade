@@ -97,11 +97,12 @@ export const getOrganizationOverview = authenticatedQuery({
   args: {},
   handler: async (ctx) => {
     const user = await ctx.db.get(ctx.userId);
-    if (!user?.defaultOrganizationId) return null;
+    const orgId = user?.defaultOrganizationId;
+    if (!orgId) return null;
 
     const sequences = await ctx.db
       .query("outreachSequences")
-      .withIndex("by_organization", (q) => q.eq("organizationId", user.defaultOrganizationId!))
+      .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
       .take(BOUNDED_LIST_LIMIT);
 
     const totals = {

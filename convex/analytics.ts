@@ -370,8 +370,8 @@ export const getSprintBurndownComparison = projectQuery({
           if (doneStates.has(issue.status)) completedPoints += pts;
         }
 
-        const startDate = sprint.startDate!;
-        const endDate = sprint.endDate!;
+        const startDate = sprint.startDate ?? sprint._creationTime;
+        const endDate = sprint.endDate ?? Date.now();
         const totalDays = Math.max(1, Math.ceil((endDate - startDate) / DAY));
 
         // Build normalized burndown: what % of points remained at each 10% time interval

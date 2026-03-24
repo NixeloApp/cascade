@@ -89,7 +89,6 @@ function NotificationToggleCard({
 }
 
 interface DigestOptionCardProps {
-  checked: boolean;
   description: string;
   isDisabled: boolean;
   label: string;
@@ -98,7 +97,6 @@ interface DigestOptionCardProps {
 }
 
 function DigestOptionCard({
-  checked,
   description,
   isDisabled,
   label,
@@ -700,7 +698,6 @@ export function NotificationsTab() {
             value="none"
             label="No digest"
             description="Receive emails as events happen."
-            checked={preferences.emailDigest === "none"}
             onChange={() => void handleDigestChange("none")}
             isDisabled={isSaving || !preferences.emailEnabled}
           />
@@ -708,7 +705,6 @@ export function NotificationsTab() {
             value="daily"
             label="Daily digest"
             description="One recap per day with recent activity."
-            checked={preferences.emailDigest === "daily"}
             onChange={() => void handleDigestChange("daily")}
             isDisabled={isSaving || !preferences.emailEnabled}
           />
@@ -716,7 +712,6 @@ export function NotificationsTab() {
             value="weekly"
             label="Weekly digest"
             description="One recap per week with recent activity."
-            checked={preferences.emailDigest === "weekly"}
             onChange={() => void handleDigestChange("weekly")}
             isDisabled={isSaving || !preferences.emailEnabled}
           />

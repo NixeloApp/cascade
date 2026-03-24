@@ -22,11 +22,12 @@ export const list = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(ctx.userId);
-    if (!user?.defaultOrganizationId) return [];
+    const orgId = user?.defaultOrganizationId;
+    if (!orgId) return [];
 
     const query = ctx.db
       .query("outreachSequences")
-      .withIndex("by_organization", (q) => q.eq("organizationId", user.defaultOrganizationId!));
+      .withIndex("by_organization", (q) => q.eq("organizationId", orgId));
 
     const sequences = await query.take(BOUNDED_LIST_LIMIT);
 
