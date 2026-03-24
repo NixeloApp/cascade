@@ -298,32 +298,38 @@ Building only makes sense if:
 
 ### Short version
 
-- **If outreach is a feature:** Use Instantly or Smartlead API for infrastructure.
-  Build campaign logic on top of Nixelo's existing notification system.
-- **If outreach is a product:** Build campaign engine natively, use Instantly API
-  for warmup and deliverability, own the UX and analytics.
-- **Do not build warmup from scratch** under any scenario.
+- **MVP:** Build lightweight sequence engine natively. Users connect their own warm
+  mailbox, send <50/day. No warmup needed, no extra infrastructure.
+- **Post-MVP:** Add multi-mailbox, rotation, A/B testing as users demand it.
+- **Omega post-MVP (1+ year):** Build warmup network from platform user base (need
+  5,000+ connected mailboxes). Or integrate Instantly API as a bridge.
+- **Do not build warmup from scratch** until the platform has enough users to form
+  a viable pool.
 
-### Pragmatic next steps
+### Phased Roadmap
 
-1. **Decide: feature or product?**
-   - Feature: integrate Instantly API, build light UI, ship in weeks
-   - Product: design outreach domain, extend campaign system, ship in months
+**Phase 1 — MVP (~4-6 weeks):**
+- OAuth2 mailbox connection (Gmail, Outlook)
+- Multi-step sequences with personalization
+- Reply detection (IMAP / Gmail API)
+- Open + click tracking
+- Compliance (unsubscribe, CAN-SPAM)
+- Basic analytics dashboard
+- Hard cap: 50 sends/day per mailbox
+- Cost: $0 infrastructure (users' own mailboxes)
+- See: [todos/email-outreach.md](../../../../todos/email-outreach.md)
 
-2. **If feature (recommended starting point):**
-   - Connect Instantly API via backend service
-   - Push leads from Nixelo to Instantly campaigns
-   - Receive webhooks for replies/bounces
-   - Display analytics in Nixelo dashboard
-   - Cost: $97-358/mo + mailboxes
+**Phase 2 — Post-MVP enhancements:**
+- A/B testing, AI-powered email drafts
+- Template library, unified inbox
+- Meeting integration (reply → booking)
 
-3. **If product (future consideration):**
-   - Extend `NotificationCampaignAggregate` for outreach sequences
-   - Build multi-step sequence engine with conditional logic
-   - Integrate warmup via Instantly or dedicated warmup API
-   - Build tracking (pixel + click + reply detection)
-   - Build deliverability dashboard
-   - Timeline: 3-4 months for MVP
+**Phase 3 — Scale (omega post-MVP, 1+ year):**
+- Multi-mailbox + account rotation
+- Warmup network (needs 5,000+ user mailboxes in pool)
+- Bounce classification, deliverability monitoring
+- Or: Instantly API integration as bridge for power users
+- See: [todos-post-mvp/email-outreach-scale.md](../../../../todos-post-mvp/email-outreach-scale.md)
 
 ---
 

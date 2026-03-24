@@ -22,6 +22,7 @@ Items moved here are blocked on external dependencies or deferred past MVP. See 
 | P3 | [uptime-monitoring.md](./uptime-monitoring.md) | Status pages + monitoring | Needs architecture decisions |
 | P4 | [growth-features.md](./growth-features.md) | Outlook Calendar integration | Needs Microsoft Entra setup |
 | P4 | [enterprise.md](./enterprise.md) | Stripe billing, SSO | Needs billing model + IdP decisions |
+| P4 | [email-outreach-scale.md](./email-outreach-scale.md) | Warmup network, multi-mailbox rotation, deliverability monitoring | Needs 5K+ user base for warmup pool viability |
 
 ## Maintenance
 

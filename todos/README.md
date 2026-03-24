@@ -42,6 +42,7 @@ Already clean (12 of 18): e2e-catch-swallows, e2e-hard-rules, feature-class-stri
 | Item | Detail |
 |------|--------|
 | [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (product design) |
+| [email-outreach.md](./email-outreach.md) | Lightweight cold email sequences (research complete, build pending) |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
 | ~22 MEDIUM page spec issues | Mostly visual polish and product decisions |
 
