@@ -38,6 +38,7 @@ import {
   isLocatorVisible,
   waitForLocatorVisible,
 } from "./utils/locator-state";
+import { routePattern } from "./utils/routes";
 import {
   assertScreenshotHashIsNotLoadingState,
   getScreenshotHash,
@@ -1005,161 +1006,49 @@ async function waitForCreateIssueModalScreenshotReady(
   await waitForScreenshotReady(page);
 }
 
-function isProjectBoardUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/board$/.test(url);
-}
-
-function isProjectBacklogUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/backlog$/.test(url);
-}
-
-function isDashboardUrl(url: string): boolean {
-  return /\/[^/]+\/dashboard$/.test(url);
-}
-
-function isProjectCalendarUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/calendar$/.test(url);
-}
-
-function isProjectActivityUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/activity$/.test(url);
-}
-
-function isProjectAnalyticsUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/analytics$/.test(url);
-}
-
-function isProjectTimesheetUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/timesheet$/.test(url);
-}
-
-function isProjectSprintsUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/sprints$/.test(url);
-}
-
-function isProjectRoadmapUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/roadmap$/.test(url);
-}
-
-function isProjectBillingUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/billing$/.test(url);
-}
-
-function isProjectSettingsUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/settings$/.test(url);
-}
-
-function isSettingsUrl(url: string): boolean {
-  return /\/[^/]+\/settings(?:\/profile)?$/.test(url);
-}
-
-function isProjectsUrl(url: string): boolean {
-  return /\/[^/]+\/projects\/?$/.test(url);
-}
-
-function isIssuesUrl(url: string): boolean {
-  return /\/[^/]+\/issues\/?$/.test(url);
-}
-
-function isWorkspacesUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/?$/.test(url);
-}
-
-function isTimeTrackingUrl(url: string): boolean {
-  return /\/[^/]+\/time-tracking$/.test(url);
-}
-
-function isNotificationsUrl(url: string): boolean {
-  return /\/[^/]+\/notifications\/?$/.test(url);
-}
-
-function isMyIssuesUrl(url: string): boolean {
-  return /\/[^/]+\/my-issues\/?$/.test(url);
-}
-
-function isOrgCalendarUrl(url: string): boolean {
-  return (
-    /\/[^/]+\/calendar\/?$/.test(url) &&
-    !url.includes("/projects/") &&
-    !url.includes("/workspaces/")
-  );
-}
-
-function isInvoicesUrl(url: string): boolean {
-  return /\/[^/]+\/invoices\/?$/.test(url);
-}
-
-function isClientsUrl(url: string): boolean {
-  return /\/[^/]+\/clients\/?$/.test(url);
-}
-
-function isMeetingsUrl(url: string): boolean {
-  return /\/[^/]+\/meetings\/?$/.test(url);
-}
-
-function isProjectInboxUrl(url: string): boolean {
-  return /\/projects\/[^/]+\/inbox$/.test(url);
-}
-
-function isWorkspaceDetailUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/?$/.test(url);
-}
-
-function isWorkspaceSettingsUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/settings$/.test(url);
-}
-
-function isWorkspaceBacklogUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/backlog$/.test(url);
-}
-
-function isWorkspaceCalendarUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/calendar$/.test(url);
-}
-
-function isWorkspaceSprintsUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/sprints$/.test(url);
-}
-
-function isWorkspaceDependenciesUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/dependencies$/.test(url);
-}
-
-function isWorkspaceWikiUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/wiki$/.test(url);
-}
-
-function isTeamDetailUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/?$/.test(url);
-}
-
-function isTeamBoardUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/board$/.test(url);
-}
-
-function isTeamCalendarUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/calendar$/.test(url);
-}
-
-function isTeamSettingsUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/settings$/.test(url);
-}
-
-function isTeamWikiUrl(url: string): boolean {
-  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/wiki$/.test(url);
-}
-
-function isIssueDetailUrl(url: string): boolean {
-  return /\/[^/]+\/issues\/[^/]+$/.test(url);
-}
-
-function isDocumentEditorUrl(url: string): boolean {
-  return /\/[^/]+\/documents\/[^/]+$/.test(url);
-}
-
-function isDocumentTemplatesUrl(url: string): boolean {
-  return /\/[^/]+\/documents\/templates$/.test(url);
-}
+// Pre-compiled URL patterns derived from ROUTES. Each converts the route path
+// (e.g. "/$orgSlug/projects/$key/board") into a regex that matches URLs with
+// concrete segments in place of dynamic params.
+const URL = {
+  projectBoard: routePattern(ROUTES.projects.board.path, "$"),
+  projectBacklog: routePattern(ROUTES.projects.backlog.path, "$"),
+  projectCalendar: routePattern(ROUTES.projects.calendar.path, "$"),
+  projectActivity: routePattern(ROUTES.projects.activity.path, "$"),
+  projectAnalytics: routePattern(ROUTES.projects.analytics.path, "$"),
+  projectTimesheet: routePattern(ROUTES.projects.timesheet.path, "$"),
+  projectSprints: routePattern(ROUTES.projects.sprints.path, "$"),
+  projectRoadmap: routePattern(ROUTES.projects.roadmap.path, "$"),
+  projectBilling: routePattern(ROUTES.projects.billing.path, "$"),
+  projectSettings: routePattern(ROUTES.projects.settings.path, "$"),
+  projectInbox: routePattern(ROUTES.projects.inbox.path, "$"),
+  dashboard: routePattern(ROUTES.dashboard.path, "$"),
+  settings: routePattern(ROUTES.settings.profile.path, "$"),
+  projects: routePattern(ROUTES.projects.list.path, "\\/?$"),
+  issues: routePattern(ROUTES.issues.list.path, "\\/?$"),
+  issueDetail: routePattern(ROUTES.issues.detail.path, "$"),
+  workspaces: routePattern(ROUTES.workspaces.list.path, "\\/?$"),
+  timeTracking: routePattern(ROUTES.timeTracking.path, "$"),
+  notifications: routePattern(ROUTES.notifications.path, "\\/?$"),
+  myIssues: routePattern(ROUTES.myIssues.path, "\\/?$"),
+  orgCalendar: routePattern(ROUTES.calendar.path, "\\/?$"),
+  invoices: routePattern(ROUTES.invoices.list.path, "\\/?$"),
+  clients: routePattern(ROUTES.clients.list.path, "\\/?$"),
+  meetings: routePattern(ROUTES.meetings.path, "\\/?$"),
+  workspaceDetail: routePattern(ROUTES.workspaces.detail.path, "\\/?$"),
+  workspaceSettings: routePattern(ROUTES.workspaces.settings.path, "$"),
+  workspaceBacklog: routePattern(ROUTES.workspaces.backlog.path, "$"),
+  workspaceCalendar: routePattern(ROUTES.workspaces.calendar.path, "$"),
+  workspaceSprints: routePattern(ROUTES.workspaces.sprints.path, "$"),
+  workspaceDependencies: routePattern(ROUTES.workspaces.dependencies.path, "$"),
+  workspaceWiki: routePattern(ROUTES.workspaces.wiki.path, "$"),
+  teamDetail: routePattern(ROUTES.workspaces.teams.detail.path, "\\/?$"),
+  teamBoard: routePattern(ROUTES.workspaces.teams.board.path, "$"),
+  teamCalendar: routePattern(ROUTES.workspaces.teams.calendar.path, "$"),
+  teamSettings: routePattern(ROUTES.workspaces.teams.settings.path, "$"),
+  teamWiki: routePattern(ROUTES.workspaces.teams.wiki.path, "$"),
+  documentEditor: routePattern(ROUTES.documents.detail.path, "$"),
+  documentTemplates: routePattern(ROUTES.documents.templates.path, "$"),
+};
 
 async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "landing") {
@@ -1877,7 +1766,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isDashboardUrl(url) || name === "dashboard") {
+  if (URL.dashboard.test(url) || name === "dashboard") {
     // Wait for the sidebar to render — this proves the app shell + auth
     // has completed (splash screen is gone, org context loaded).
     await page
@@ -1897,12 +1786,12 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isProjectBoardUrl(url) || isProjectBacklogUrl(url)) {
+  if (URL.projectBoard.test(url) || URL.projectBacklog.test(url)) {
     await waitForBoardReady(page);
     return;
   }
 
-  if (isProjectSettingsUrl(url)) {
+  if (URL.projectSettings.test(url)) {
     await page.getByRole("heading", { name: "Project Settings" }).waitFor({
       state: "visible",
       timeout: 12000,
@@ -1913,7 +1802,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isSettingsUrl(url) || name === "settings" || name === "settings-profile") {
+  if (URL.settings.test(url) || name === "settings" || name === "settings-profile") {
     await page.waitForURL(
       (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
       {
@@ -1997,47 +1886,47 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isProjectsUrl(url) || name === "projects") {
+  if (URL.projects.test(url) || name === "projects") {
     await waitForProjectsReady(page, prefix);
     return;
   }
 
-  if (isIssuesUrl(url) || name === "issues") {
+  if (URL.issues.test(url) || name === "issues") {
     await waitForIssuesReady(page, prefix);
     return;
   }
 
-  if (isWorkspacesUrl(url) || name === "workspaces") {
+  if (URL.workspaces.test(url) || name === "workspaces") {
     await waitForWorkspacesReady(page, prefix);
     return;
   }
 
-  if (isTimeTrackingUrl(url) || name === "time-tracking") {
+  if (URL.timeTracking.test(url) || name === "time-tracking") {
     await waitForTimeTrackingReady(page);
     return;
   }
 
-  if (isWorkspaceDetailUrl(url) || /^workspace-[^-]+$/.test(name)) {
+  if (URL.workspaceDetail.test(url) || /^workspace-[^-]+$/.test(name)) {
     await waitForWorkspaceDetailReady(page);
     return;
   }
 
-  if (isWorkspaceSettingsUrl(url) || /^workspace-[^-]+-settings$/.test(name)) {
+  if (URL.workspaceSettings.test(url) || /^workspace-[^-]+-settings$/.test(name)) {
     await waitForWorkspaceSettingsReady(page);
     return;
   }
 
-  if (isWorkspaceBacklogUrl(url)) {
+  if (URL.workspaceBacklog.test(url)) {
     await waitForWorkspaceBacklogReady(page);
     return;
   }
 
-  if (isWorkspaceSprintsUrl(url) || /^workspace-[^-]+-sprints$/.test(name)) {
+  if (URL.workspaceSprints.test(url) || /^workspace-[^-]+-sprints$/.test(name)) {
     await waitForSprintsReady(page);
     return;
   }
 
-  if (isWorkspaceDependenciesUrl(url) || /^workspace-[^-]+-dependencies$/.test(name)) {
+  if (URL.workspaceDependencies.test(url) || /^workspace-[^-]+-dependencies$/.test(name)) {
     await page
       .getByRole("heading", { name: /^dependencies$/i })
       .or(page.getByText(/no dependencies/i))
@@ -2047,7 +1936,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isWorkspaceWikiUrl(url) || /^workspace-[^-]+-wiki$/.test(name)) {
+  if (URL.workspaceWiki.test(url) || /^workspace-[^-]+-wiki$/.test(name)) {
     await page
       .getByText(/no workspace docs yet/i)
       .or(page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE))
@@ -2057,17 +1946,17 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isTeamSettingsUrl(url) || /^team-[^-]+-settings$/.test(name)) {
+  if (URL.teamSettings.test(url) || /^team-[^-]+-settings$/.test(name)) {
     await waitForTeamSettingsReady(page);
     return;
   }
 
-  if (isTeamDetailUrl(url) || isTeamBoardUrl(url) || /^team-[^-]+-board$/.test(name)) {
+  if (URL.teamDetail.test(url) || URL.teamBoard.test(url) || /^team-[^-]+-board$/.test(name)) {
     await waitForTeamDetailReady(page);
     return;
   }
 
-  if (isTeamWikiUrl(url) || /^team-[^-]+-wiki$/.test(name)) {
+  if (URL.teamWiki.test(url) || /^team-[^-]+-wiki$/.test(name)) {
     await page
       .getByText(/no workspace docs yet/i)
       .or(page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE))
@@ -2077,7 +1966,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isIssueDetailUrl(url)) {
+  if (URL.issueDetail.test(url)) {
     await waitForIssueDetailReady(page);
     return;
   }
@@ -2087,47 +1976,47 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isDocumentTemplatesUrl(url) || name === "documents-templates") {
+  if (URL.documentTemplates.test(url) || name === "documents-templates") {
     await waitForDocumentTemplatesReady(page);
     return;
   }
 
-  if (isDocumentEditorUrl(url) || name === "document-editor") {
+  if (URL.documentEditor.test(url) || name === "document-editor") {
     await waitForDocumentEditorReady(page);
     return;
   }
 
-  if (isProjectActivityUrl(url)) {
+  if (URL.projectActivity.test(url)) {
     await waitForActivityReady(page);
     return;
   }
 
-  if (isProjectAnalyticsUrl(url)) {
+  if (URL.projectAnalytics.test(url)) {
     await waitForAnalyticsReady(page);
     return;
   }
 
-  if (isProjectTimesheetUrl(url)) {
+  if (URL.projectTimesheet.test(url)) {
     await waitForTimesheetReady(page);
     return;
   }
 
-  if (isProjectSprintsUrl(url)) {
+  if (URL.projectSprints.test(url)) {
     await waitForSprintsReady(page);
     return;
   }
 
-  if (isProjectRoadmapUrl(url)) {
+  if (URL.projectRoadmap.test(url)) {
     await waitForRoadmapReady(page);
     return;
   }
 
-  if (isProjectBillingUrl(url)) {
+  if (URL.projectBilling.test(url)) {
     await waitForBillingReady(page);
     return;
   }
 
-  if (isProjectInboxUrl(url) || name === "inbox") {
+  if (URL.projectInbox.test(url) || name === "inbox") {
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .or(page.getByText(/no items in inbox/i))
@@ -2137,7 +2026,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isNotificationsUrl(url) || name === "notifications") {
+  if (URL.notifications.test(url) || name === "notifications") {
     await waitForDashboardReady(page);
     const notificationsHeading = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
     const inboxTab = page.getByRole("tab", { name: /inbox/i });
@@ -2173,7 +2062,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isMyIssuesUrl(url) || name === "my-issues") {
+  if (URL.myIssues.test(url) || name === "my-issues") {
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .or(page.getByText(/no issues assigned/i))
@@ -2183,13 +2072,16 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isOrgCalendarUrl(url) || name === "org-calendar") {
+  if (
+    (URL.orgCalendar.test(url) && !url.includes("/projects/") && !url.includes("/workspaces/")) ||
+    name === "org-calendar"
+  ) {
     await waitForCalendarReady(page);
     await waitForCalendarEvents(page, 5000);
     return;
   }
 
-  if (isInvoicesUrl(url) || name === "invoices") {
+  if (URL.invoices.test(url) || name === "invoices") {
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
@@ -2202,7 +2094,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isClientsUrl(url) || name === "clients") {
+  if (URL.clients.test(url) || name === "clients") {
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
@@ -2210,7 +2102,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isMeetingsUrl(url) || name === "meetings") {
+  if (URL.meetings.test(url) || name === "meetings") {
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
@@ -2223,9 +2115,9 @@ async function waitForExpectedContent(
   }
 
   if (
-    isProjectCalendarUrl(url) ||
-    isWorkspaceCalendarUrl(url) ||
-    isTeamCalendarUrl(url) ||
+    URL.projectCalendar.test(url) ||
+    URL.workspaceCalendar.test(url) ||
+    URL.teamCalendar.test(url) ||
     name === "calendar-event-modal" ||
     /^calendar-(day|week|month)$/.test(name)
   ) {
