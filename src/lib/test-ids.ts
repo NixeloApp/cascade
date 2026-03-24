@@ -428,6 +428,10 @@ export const TEST_IDS = {
     TABLE: "invite-table",
     /** @see src/components/Admin/UserManagement.tsx - Invite row in table */
     ROW: "invite-row",
+    /** @see src/routes/invite.$token.tsx - Public invite state screen wrapper */
+    STATE_SCREEN: "invite-state-screen",
+    /** @see src/routes/invite.$token.tsx - Loading state */
+    LOADING: "invite-loading",
   },
 
   // ============================================================
@@ -504,6 +508,14 @@ export const TEST_IDS = {
     MEMORY_SECTION: "meetings-memory-section",
     /** @see src/routes/_app.$orgSlug.meetings.tsx */
     RECORDING_CARD: "meetings-recording-card",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - empty state */
+    EMPTY_STATE: "meetings-empty-state",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - search input */
+    SEARCH_INPUT: "meetings-search-input",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - transcript search */
+    TRANSCRIPT_SEARCH: "meetings-transcript-search",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - action items section */
+    ACTION_ITEMS_SECTION: "meetings-action-items-section",
   },
 
   // ============================================================

@@ -22,6 +22,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
 import { AlertCircle, CheckCircle, Clock, Loader2 } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 export const Route = createFileRoute("/invite/$token")({
   component: InviteRoute,
@@ -46,7 +47,12 @@ function InviteStateScreen({
   title,
 }: InviteStateScreenProps) {
   return (
-    <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
+    <Flex
+      align="center"
+      justify="center"
+      className="min-h-screen bg-ui-bg-secondary p-6"
+      data-testid={TEST_IDS.INVITE.STATE_SCREEN}
+    >
       <div className="max-w-md w-full text-center">
         <IconCircle size="xl" variant={iconVariant} className="mx-auto mb-6">
           {icon}
@@ -109,7 +115,12 @@ function InviteRoute() {
   // Loading state
   if (invite === undefined) {
     return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
+      <Flex
+        align="center"
+        justify="center"
+        className="min-h-screen bg-ui-bg-secondary"
+        data-testid={TEST_IDS.INVITE.LOADING}
+      >
         <Stack align="center" gap="lg" className="text-center">
           <Icon icon={Loader2} size="xl" tone="brand" animation="spin" />
           <Typography className="text-ui-text-secondary">Loading invitation...</Typography>

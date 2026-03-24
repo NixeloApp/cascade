@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { waitForDashboardReady } from "../utils/wait-helpers";
@@ -7,33 +8,28 @@ import { BasePage } from "./base.page";
 
 /** Meetings workspace page object for seeded and empty-state E2E coverage. */
 export class MeetingsPage extends BasePage {
-  readonly pageHeading: Locator;
-  readonly meetingMemoryHeading: Locator;
-  readonly recentMeetingsHeading: Locator;
-  readonly meetingDetailHeading: Locator;
+  readonly recentSection: Locator;
+  readonly detailSection: Locator;
+  readonly memorySection: Locator;
+  readonly actionItemsSection: Locator;
   readonly emptyStateTitle: Locator;
   readonly emptyStateDescription: Locator;
   readonly meetingsSearchInput: Locator;
   readonly transcriptSearchInput: Locator;
-  readonly actionItemsSection: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
 
-    this.pageHeading = page.getByRole("heading", { name: /^meetings$/i }).first();
-    this.meetingMemoryHeading = page.getByRole("heading", { name: /^meeting memory$/i }).first();
-    this.recentMeetingsHeading = page.getByRole("heading", { name: /^recent meetings$/i }).first();
-    this.meetingDetailHeading = page.getByRole("heading", { name: /^meeting detail$/i }).first();
+    this.recentSection = page.getByTestId(TEST_IDS.MEETINGS.RECENT_SECTION);
+    this.detailSection = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
+    this.memorySection = page.getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION);
+    this.actionItemsSection = page.getByTestId(TEST_IDS.MEETINGS.ACTION_ITEMS_SECTION);
     this.emptyStateTitle = page.getByText(/no meeting recordings yet/i);
     this.emptyStateDescription = page.getByText(
       /schedule from calendar or add a direct meeting url to start capturing transcripts, summaries, and follow-up work\./i,
     );
-    this.meetingsSearchInput = page.getByRole("searchbox", { name: "Search meetings" });
-    this.transcriptSearchInput = page.getByRole("searchbox", { name: "Search transcript" });
-    this.actionItemsSection = page
-      .locator("section")
-      .filter({ has: page.getByRole("heading", { name: /^action items$/i }) })
-      .first();
+    this.meetingsSearchInput = page.getByTestId(TEST_IDS.MEETINGS.SEARCH_INPUT);
+    this.transcriptSearchInput = page.getByTestId(TEST_IDS.MEETINGS.TRANSCRIPT_SEARCH);
   }
 
   async goto() {
@@ -47,7 +43,7 @@ export class MeetingsPage extends BasePage {
 
   async expectLoaded() {
     await waitForDashboardReady(this.page);
-    await expect(this.pageHeading).toBeVisible();
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
 
     await expect
       .poll(
@@ -75,20 +71,20 @@ export class MeetingsPage extends BasePage {
   }
 
   async expectRecordingVisible(title: string) {
-    await expect(
-      this.page.getByRole("button", { name: new RegExp(title, "i") }).first(),
-    ).toBeVisible();
+    const card = this.recentSection.getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD);
+    await expect(card.filter({ hasText: new RegExp(title, "i") }).first()).toBeVisible();
   }
 
   async openRecording(title: string) {
-    await this.page
-      .getByRole("button", { name: new RegExp(title, "i") })
-      .first()
-      .click();
+    const card = this.recentSection
+      .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
+      .filter({ hasText: new RegExp(title, "i") })
+      .first();
+    await card.click();
   }
 
   async expectRecordingDetail(title: string) {
-    await expect(this.page.getByRole("heading", { name: title }).first()).toBeVisible();
+    await expect(this.detailSection.getByText(title, { exact: true })).toBeVisible();
   }
 
   async filterTranscript(query: string) {
@@ -100,15 +96,15 @@ export class MeetingsPage extends BasePage {
   }
 
   async filterMemoryByProject(projectKey: string) {
-    await this.page.getByRole("button").filter({ hasText: projectKey }).first().click();
+    await this.memorySection.getByRole("button").filter({ hasText: projectKey }).first().click();
   }
 
   async expectMemoryDescription(text: string) {
-    await expect(this.page.getByText(text)).toBeVisible();
+    await expect(this.memorySection.getByText(text)).toBeVisible();
   }
 
   async expectMemoryItemVisible(text: string) {
-    await expect(this.page.getByText(text).first()).toBeVisible();
+    await expect(this.memorySection.getByText(text).first()).toBeVisible();
   }
 
   private getActionItem(description: string) {

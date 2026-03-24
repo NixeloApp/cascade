@@ -15,7 +15,7 @@
 
 ### Features (need product decisions)
 
-- [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Meeting-to-doc flow, provider choice, speaker ID — 21 items
+- [ ] [meeting-intelligence.md](./meeting-intelligence.md) — 3-tier provider system done. Remaining: speaker ID UI, meeting-to-doc (blocked), multi-platform, benchmarks — 25 items
 - [ ] [email-outreach.md](./email-outreach.md) — OAuth email sending, templates, analytics — 35 items
 - [ ] [cal-com-features.md](./cal-com-features.md) — AI scheduling, custom domain, whitelabel — 8 items
 - [ ] [plane-features.md](./plane-features.md) — External notification routing (Slack/Pumble/webhook) — 1 item

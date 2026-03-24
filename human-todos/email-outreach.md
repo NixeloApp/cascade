@@ -1,8 +1,8 @@
 # Email Outreach: Lightweight Cold Email Sequences
 
 > **Priority:** P2
-> **Status:** Research Complete
-> **Last Updated:** 2026-03-23
+> **Status:** Backend Complete — Frontend Pending
+> **Last Updated:** 2026-03-24
 > **Context:** See `docs/research/competitors/email-outreach/` for competitor analysis,
 > `docs/research/comparisons/email-outreach-landscape.md` for full landscape
 
@@ -13,170 +13,165 @@ Let users connect their own mailbox, create multi-step email sequences, send up 
 No warmup, no domain rotation, no extra mailboxes needed. Their existing email is
 already warm.
 
-## Open Questions
+## Decisions Made
 
-- [ ] Which platform first — Nixelo (Convex) or StartHub (NestJS)?
-- [ ] Gmail API vs raw SMTP/IMAP via nodemailer/imapflow? (Gmail API is cleaner but Google-only; SMTP/IMAP works with any provider)
-- [ ] Tracking subdomain — `t.nixelo.com`? `track.starthub.academy`? Needs DNS setup.
-- [ ] Where do contacts come from — CSV import only, or also manual add / platform integration?
+- [x] Platform: **Nixelo (Convex)** — not StartHub
+- [x] Gmail API (not SMTP/IMAP) — cleaner, already have OAuth tokens, no extra libraries
+- [x] Contacts: CSV import + manual add
+- [ ] Tracking subdomain — needs DNS setup (`t.nixelo.com` or similar)
 
-## Libraries
+## Backend Implementation
 
-Already installed: `nodemailer`, `react-email`
+All backend code lives in `convex/outreach/` + `convex/http/outreachOAuth.ts`.
 
-Evaluate before starting:
+### 1. Schema & Validators — DONE
+- [x] 7 tables: `outreachMailboxes`, `outreachContacts`, `outreachSuppressions`, `outreachSequences`, `outreachEnrollments`, `outreachEvents`, `outreachTrackingLinks`
+- [x] 6 enum validators + 3 object validators + 9 type exports
+- [x] All indexes for efficient queries
+- **Files:** `convex/schema.ts`, `convex/validators/index.ts`
 
-| Library | Purpose |
-|:--------|:--------|
-| `imapflow` | Read inbox, detect replies via IMAP |
-| `mailparser` / `postal-mime` | Parse reply content, detect OOO/bounces |
-| `deep-email-validator` | Verify email addresses before sending (syntax + MX + SMTP) |
-| `email-reply-parser` | Strip quoted text from replies, extract new content only |
-| `googleapis` (gmail) | Alternative to IMAP — Gmail API for send + read |
+### 2. Mailbox Connection (OAuth2) — DONE
+- [x] Gmail OAuth2 flow (initiate + callback)
+- [x] Scopes: `gmail.send`, `gmail.readonly`, `userinfo.email`, `userinfo.profile`
+- [x] Token storage in `outreachMailboxes` table
+- [x] Token auto-refresh before expiry
+- [x] Disconnect flow (deactivate, clear tokens)
+- [x] Daily send limit management (default 50)
+- [x] Tokens stripped from client responses (never sent to frontend)
+- [ ] Microsoft 365 OAuth2 flow (deferred — Gmail first)
+- [ ] UI: "Connect your email" settings page
+- **Files:** `convex/http/outreachOAuth.ts`, `convex/outreach/mailboxes.ts`
 
-## Tasks
+### 3. Contact Management — DONE
+- [x] CRUD (create, read, update, delete)
+- [x] CSV batch import with deduplication
+- [x] Suppression list check on import (skip suppressed emails)
+- [x] Email normalization (lowercase, trim)
+- [x] Custom fields for `{{variable}}` templates
+- [x] Tags for segmentation
+- [x] Org-scoped access control
+- [x] Prevent deleting contacts with active enrollments
+- [ ] Email validation on import (`deep-email-validator` — syntax + MX check)
+- [ ] UI: contacts list, import, edit, tag management
+- **Files:** `convex/outreach/contacts.ts`
 
-### 1. Mailbox Connection (OAuth2)
+### 4. Sequence Builder — DONE
+- [x] CRUD (create, edit, activate, pause, delete)
+- [x] Step validation (1-5 steps, first step delay=0, CAN-SPAM address required)
+- [x] Status transitions: draft → active ↔ paused → completed
+- [x] Mailbox validation (must be active to activate sequence)
+- [x] Block editing active sequences (must pause first)
+- [x] Block deleting sequences with active enrollments
+- [x] Cached stats on sequence record for fast dashboard reads
+- [ ] UI: sequence builder, step editor, preview
+- **Files:** `convex/outreach/sequences.ts`
 
-- Google Workspace OAuth2 flow (connect Gmail)
-  - Scopes: `gmail.send`, `gmail.readonly` (or IMAP equivalent)
-  - Token storage (encrypted at rest)
-  - Token refresh logic
-- Microsoft 365 OAuth2 flow (connect Outlook)
-  - Same pattern, Microsoft Graph API scopes
-- Mailbox health check endpoint (verify connection is alive, token valid)
-- UI: "Connect your email" settings page
-- Disconnect flow (revoke token, clean up)
+### 5. Sequence Engine (state machine) — DONE
+- [x] Enrollment state machine: active → replied | bounced | unsubscribed | completed | paused
+- [x] Batch enrollment with dedup + suppression checks
+- [x] Business day scheduling (skip weekends)
+- [x] Random jitter on send times (±30 min)
+- [x] Business hours targeting (9-17 UTC, randomized)
+- [x] Pre-send validation (suppression, daily limit, mailbox health, step exists)
+- [x] Cron: process due enrollments every 2 minutes
+- [x] Rate limiting: 50/day per mailbox, max 20 sends per cron batch
+- [x] Deferred retry on failed pre-checks (15 min backoff)
+- **Files:** `convex/outreach/enrollments.ts`, `convex/outreach/sendEngine.ts`
 
-### 2. Contact Management
+### 6. Gmail Sending — DONE
+- [x] Send via Gmail REST API (not SMTP)
+- [x] RFC 2822 message construction (From, To, Subject, MIME multipart)
+- [x] Base64url encoding (Gmail API requirement)
+- [x] Plain text + HTML alternatives
+- [x] Compliance headers injected: `List-Unsubscribe`, `List-Unsubscribe-Post` (RFC 8058)
+- [x] Custom `X-Nixelo-Enrollment` header for reply matching
+- [x] Token auto-refresh before sending
+- **Files:** `convex/outreach/gmail.ts`
 
-- Contacts table (email, firstName, lastName, company, custom fields, status, suppression flag)
-- CSV import with column mapping UI
-- Deduplication on import (by email)
-- Email validation on import (`deep-email-validator` — reject obviously bad addresses)
-- Global suppression list (bounced + unsubscribed = never email again)
-- Manual add/edit/delete contacts
-- Tag/segment contacts for targeting
+### 7. Reply Detection — DONE
+- [x] Gmail API polling (list recent unread → check sender against active enrollments)
+- [x] Cron: poll all active mailboxes every 5 minutes
+- [x] Match reply to enrollment by sender email + active enrollment lookup
+- [x] Auto-stop sequence on reply, record reply event, update stats
+- [ ] Auto-reply detection (OOO filtering) — not yet implemented
+- [ ] Reply content extraction and storage — not yet implemented
+- **Files:** `convex/outreach/gmail.ts`
 
-### 3. Sequence Builder
+### 8. Open & Click Tracking — DONE
+- [x] Open pixel endpoint: `GET /t/o/{enrollmentId}` → 1x1 transparent GIF
+- [x] Click redirect endpoint: `GET /t/c/{linkId}` → 302 redirect to original URL
+- [x] Event logging (enrollment, sequence, contact, step, timestamp)
+- [x] First-open-only stat counting (no inflation)
+- [x] `Cache-Control: no-cache, no-store` on pixel
+- [x] Convex ID validation on all tracking endpoints
+- [ ] Click tracking link injection in email body (URL rewriting before send) — not yet wired
+- [ ] Open tracking pixel injection in email body — not yet wired
+- **Files:** `convex/outreach/tracking.ts`, `convex/router.ts`
 
-- Sequences table (name, steps[], status: draft/active/paused/completed)
-- Step definition: content (subject, body), delay before this step (e.g. "3 business days"), variant (for A/B later)
-- Template editor with personalization variables:
-  - `{{firstName}}`, `{{lastName}}`, `{{company}}`, `{{customField}}`
-  - Preview with sample contact data
-- Max 5 steps per sequence (MVP constraint)
-- UI: drag-to-reorder steps, edit content inline, set delays between steps
+### 9. Bounce Handling — DONE (basic)
+- [x] Send failures auto-classified as hard bounce
+- [x] Enrollment stopped on bounce, added to suppression
+- [x] Sequence bounce stats incremented
+- [ ] DSN message parsing (soft vs hard bounce classification) — deferred
+- [ ] Retry on soft bounces — deferred
+- [ ] Campaign-level bounce rate alerting — deferred
 
-### 4. Sequence Engine (core state machine)
+### 10. Compliance — DONE
+- [x] `List-Unsubscribe` + `List-Unsubscribe-Post` headers on every email (RFC 8058)
+- [x] Unsubscribe endpoints: GET (page) + POST (one-click) at `/t/u/{enrollmentId}`
+- [x] Visible unsubscribe link in email footer
+- [x] Physical address in email footer (CAN-SPAM)
+- [x] Global suppression list checked before every send
+- [x] Idempotent unsubscribe (safe to click multiple times)
+- **Files:** `convex/outreach/tracking.ts`, `convex/outreach/sendEngine.ts`
 
-This is the brain. Each contact enrolled in a sequence gets their own enrollment record that tracks where they are.
+### 11. Analytics — DONE
+- [x] Per-sequence stats (enrolled, sent, opened, replied, bounced, unsubscribed)
+- [x] Per-step funnel (how many contacts reach each step)
+- [x] Per-contact timeline (all events in order)
+- [x] Organization overview (aggregate across all sequences)
+- [x] Mailbox health (send count, remaining capacity, active status)
+- [x] Rate calculations (open rate, reply rate, bounce rate, unsubscribe rate)
+- [ ] UI: analytics dashboard, funnel charts, timeline view
+- **Files:** `convex/outreach/analytics.ts`
 
-**Data model:**
-- Enrollments table: `{ contactId, sequenceId, currentStep, status, nextSendAt, enrolledAt }`
-- Status values: `active`, `replied`, `bounced`, `unsubscribed`, `completed`, `paused`
-- Per-step log: `{ enrollmentId, step, sentAt, openedAt, clickedAt, repliedAt }`
+### 12. Crons — DONE
+- [x] Process due outreach sends — every 2 minutes
+- [x] Poll mailbox replies — every 5 minutes
+- [x] Reset daily send counts — daily at midnight UTC
+- **File:** `convex/crons.ts`
 
-**Enrollment flow:**
-- User selects contacts + sequence → creates enrollment records for each
-- Each enrollment starts at step 1 with `nextSendAt` = now (or scheduled time)
-- Scheduled function picks up enrollments where `nextSendAt <= now` and `status = active`
+### 13. HTTP Routes — DONE
+- [x] `GET /outreach/google/auth` — initiate Gmail OAuth
+- [x] `GET /outreach/google/callback` — handle Gmail OAuth callback
+- [x] `GET /t/o/{id}` — open tracking pixel
+- [x] `GET /t/c/{id}` — click tracking redirect
+- [x] `GET /t/u/{id}` — unsubscribe page
+- [x] `POST /t/u/{id}` — RFC 8058 one-click unsubscribe
+- **File:** `convex/router.ts`
 
-**Send logic (runs per enrollment per step):**
-- Check: is enrollment still `active`? (could have replied/bounced/unsubscribed since scheduling)
-- Check: is contact on suppression list?
-- Check: has daily send limit (50/day) been reached for this mailbox?
-- If all clear → render template with contact data → send via connected mailbox
-- Log the send event
-- Calculate next step's `nextSendAt`:
-  - Add delay (e.g. 3 business days)
-  - Skip weekends
-  - Adjust to recipient's business hours (if timezone known, otherwise default to sender's timezone)
-  - Add small random jitter (±30 min) so sends don't look automated
-- If this was the last step → mark enrollment as `completed`
+---
 
-**Stop conditions (checked before every send):**
-- Contact replied → status = `replied`, cancel remaining steps
-- Contact bounced → status = `bounced`, cancel remaining, add to suppression
-- Contact unsubscribed → status = `unsubscribed`, cancel remaining, add to suppression
-- User manually paused sequence → all enrollments paused
-- Daily limit reached → defer to next business day (don't skip, just delay)
+## What's Left: Frontend Only
 
-**Rate limiting:**
-- Redis counter or Convex field: sends per mailbox per day
-- Hard cap: 50/day per connected mailbox
-- Per-minute throttle: max 2 sends/minute per mailbox (looks human)
-- Random delay between sends: 30-120 seconds
+### UI Pages Needed
 
-### 5. Reply Detection
+- [ ] **Settings → Connect Mailbox** — "Connect Gmail" button opens OAuth popup, postMessage listener saves tokens via `createMailbox` mutation
+- [ ] **Contacts page** — list, import CSV, manual add, search, filter by tag, suppression list view
+- [ ] **Sequences list** — all sequences with status badges and stats summary
+- [ ] **Sequence builder** — create/edit steps, set delays, template editor with `{{variable}}` support, preview with sample data
+- [ ] **Campaign launch** — select sequence + contacts, schedule or send now
+- [ ] **Analytics** — per-sequence funnel chart, per-contact timeline, mailbox health indicators
+- [ ] **Inbox** — view replies grouped by sequence/contact (simplified unified inbox)
 
-- IMAP polling (via `imapflow`) or Gmail API push notifications
-- Poll frequency: every 2-5 minutes per connected mailbox
-- For each new message in inbox:
-  - Match to an active enrollment by: `In-Reply-To` header, `References` header, or sender email matching a contact in an active sequence
-  - If match found → mark enrollment as `replied`, stop sequence
-  - Parse reply content (`email-reply-parser` to strip quoted text)
-  - Store reply content for display in UI
-- Auto-reply detection:
-  - Check headers: `Auto-Submitted: auto-replied`, `X-Auto-Response-Suppress`
-  - Check body patterns: "out of office", "on vacation", "auto-reply", "I am currently away"
-  - Auto-replies do NOT stop the sequence (just flag them)
+### Wiring Needed
 
-### 6. Open & Click Tracking
+- [ ] Inject open tracking pixel into email HTML body before sending (in `sendEngine.ts` `buildComplianceFooter` or similar)
+- [ ] Rewrite links in email body for click tracking (create `outreachTrackingLinks` records, replace URLs)
+- [ ] Frontend postMessage handler for OAuth popup callback → call `createMailbox` mutation
+- [ ] Tracking subdomain DNS setup (`t.nixelo.com` → Convex site URL)
 
-**Open tracking:**
-- Tracking pixel endpoint: `GET /t/o/{trackingId}` → returns 1x1 transparent GIF
-- Inject `<img src="https://track.domain.com/t/o/{id}" width="1" height="1" />` into email HTML
-- On hit: record open event with timestamp, IP, user-agent
-- Set `Cache-Control: no-cache, no-store` so repeat opens are tracked
-- Note: unreliable metric (Apple MPP pre-fetches, Gmail proxies) — track but don't rely on
-
-**Click tracking:**
-- Rewrite all links in email body: `https://example.com` → `https://track.domain.com/t/c/{linkId}`
-- Click endpoint: `GET /t/c/{linkId}` → log click → 302 redirect to original URL
-- Record: which link, which email, timestamp
-- Custom tracking subdomain with SSL (required — browsers warn on HTTP redirects)
-- Bot click detection: filter clicks where all links are hit within milliseconds (spam filters follow all links)
-
-### 7. Bounce Handling
-
-- Parse bounce/DSN emails arriving in connected mailbox (or via webhook if using Gmail API)
-- Use `mailparser` to extract bounce details from `message/delivery-status` MIME parts
-- Classify:
-  - Hard bounce (5xx: user unknown, mailbox not found) → suppress globally, stop sequence
-  - Soft bounce (4xx: mailbox full, server temp error) → retry up to 3x with backoff, then treat as hard
-- Campaign-level bounce rate monitoring: if >5% of a batch bounces, alert the user
-
-### 8. Compliance (non-negotiable, build alongside everything else)
-
-- One-click unsubscribe header in every email (RFC 8058 `List-Unsubscribe-Post`)
-  - Required by Google/Yahoo since Feb 2024
-  - `List-Unsubscribe: <https://track.domain.com/unsub/{id}>`
-  - `List-Unsubscribe-Post: List-Unsubscribe=One-Click`
-- Unsubscribe link in email footer (visible text link as backup)
-- Physical address in footer (CAN-SPAM requirement)
-  - User configures their address in settings
-  - Auto-injected into every outgoing sequence email
-- Global suppression list checked before every send
-- GDPR: store consent/legitimate-interest basis per contact (if emailing EU)
-
-### 9. Analytics Dashboard
-
-- Per-sequence metrics: enrolled, sent, opened, replied, bounced, unsubscribed
-- Per-step funnel: how many contacts reach step 2, step 3, etc. (conversion funnel)
-- Per-contact timeline: sent → opened → clicked → replied (or bounced/unsubscribed)
-- Reply rate is the primary metric (not open rate — opens are unreliable)
-- Mailbox health: daily send count, bounce rate, complaint rate
-
-### 10. UI Pages
-
-- **Sequences list** — all sequences with status, metrics summary
-- **Sequence builder** — create/edit steps, delays, content, preview
-- **Contacts** — import, list, search, filter by tag/status, suppression list
-- **Campaign launch** — select sequence + contacts, schedule or send immediately
-- **Analytics** — per-sequence funnel, per-contact timeline
-- **Inbox** — view replies grouped by sequence/contact (simplified unified inbox)
-- **Settings** — connect mailbox, physical address, tracking domain config
+---
 
 ## Phase 2 Enhancements (after MVP ships)
 
@@ -185,6 +180,9 @@ This is the brain. Each contact enrolled in a sequence gets their own enrollment
 - Template library (pre-built sequences: investor outreach, partnership, customer discovery)
 - Lead status CRM (interested / not interested / meeting booked / follow up later)
 - Meeting integration — lead replies "yes" → suggest booking link from platform calendar
+- Auto-reply detection (OOO filtering)
+- Reply content extraction and display
+- Microsoft Outlook OAuth support
 
 ## Deferred to Post-MVP (1+ year)
 

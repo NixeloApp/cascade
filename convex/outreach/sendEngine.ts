@@ -209,24 +209,19 @@ export const sendSequenceEmail = internalAction({
     fromEmail: v.string(),
     fromName: v.string(),
   },
-  handler: async (ctx, args) => {
-    void ctx; // Will use for SMTP auth lookup
-    // TODO: Implement actual SMTP sending via user's OAuth credentials
-    //
-    // This will use:
-    // - Gmail API (googleapis) for Google mailboxes
-    // - Microsoft Graph API for Outlook mailboxes
-    //
-    // For now, log and return success for development.
-    // Replace with actual implementation when OAuth flow is built.
+  handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
+    // Delegate to Gmail sender (Microsoft Graph can be added later)
+    const result = await ctx.runAction(internal.outreach.gmail.sendViaGmailAction, {
+      mailboxId: args.mailboxId,
+      enrollmentId: args.enrollmentId,
+      to: args.to,
+      subject: args.subject,
+      body: args.body,
+      fromEmail: args.fromEmail,
+      fromName: args.fromName,
+    });
 
-    logger.info(
-      `[OUTREACH] Would send email: from=${args.fromEmail} to=${args.to} subject="${args.subject}" step=${args.step}`,
-    );
-
-    // Fail closed — return skipped so the cron does not record a send
-    // or bounce event. The enrollment stays in its current state.
-    return { success: false, error: "EMAIL_NOT_IMPLEMENTED" };
+    return { success: result.success, error: result.error };
   },
 });
 
