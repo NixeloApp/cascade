@@ -3,7 +3,6 @@
  * Timeline bars, group headers, issue identity, summary bars, and issue rows.
  */
 
-import type { Id } from "@convex/_generated/dataModel";
 import { ChevronDown, ChevronRight } from "@/lib/icons";
 import {
   getPriorityBadgeTone,
@@ -17,22 +16,15 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
-import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
-import { Progress } from "../ui/Progress";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import type {
-  GroupBy,
-  RoadmapBarIssue,
   RoadmapGroupRowProps,
-  RoadmapIssue,
   RoadmapIssueIdentityProps,
   RoadmapIssueRowProps,
   RoadmapSummaryBarProps,
   RoadmapTimelineBarProps,
-  TimelineGroup,
-  TimelineSpan,
 } from "./types";
 import {
   getBarLeft,

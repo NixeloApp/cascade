@@ -11,7 +11,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
 import { CardSection } from "@/components/ui/CardSection";
 import { Dot } from "@/components/ui/Dot";
@@ -26,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate } from "@/lib/formatting";
-import { Bot, CheckCircle, DollarSign, MessageSquare, Sparkles, Zap } from "@/lib/icons";
+import { Bot, CheckCircle, DollarSign, MessageSquare, Sparkles } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/assistant")({

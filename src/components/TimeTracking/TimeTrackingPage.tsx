@@ -16,7 +16,6 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDurationHuman } from "@/lib/formatting";
 import { BarChart3 } from "@/lib/icons";
 import { PageControls, PageControlsGroup, PageControlsRow, PageStack } from "../layout";
-import { Card } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Label } from "../ui/Label";
 import { OverviewBand } from "../ui/OverviewBand";

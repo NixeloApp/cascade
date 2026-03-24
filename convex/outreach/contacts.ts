@@ -11,7 +11,6 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { conflict, notFound, validation } from "../lib/errors";
-import { outreachContactSources } from "../validators";
 
 // =============================================================================
 // Queries

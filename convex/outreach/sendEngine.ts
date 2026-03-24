@@ -25,7 +25,6 @@ import { advanceEnrollment } from "./enrollments";
 // =============================================================================
 
 const MAX_SENDS_PER_BATCH = 20; // Process at most 20 enrollments per cron tick
-const PER_MINUTE_LIMIT = 2; // Max 2 sends per minute per mailbox
 
 // =============================================================================
 // Step 1: Find due enrollments (internal query)

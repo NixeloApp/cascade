@@ -78,10 +78,9 @@ Each page object should export a static or instance method that waits until the 
 - [ ] Similarly for: `IssuesPage`, `SettingsPage`, `WorkspacesPage`, `MeetingsPage`, `NotificationsPage`, `TimeTrackingPage`, etc.
 - [ ] Move `waitForPublicPageReady` logic into page objects for auth pages (`AuthPage.waitUntilReady`)
 
-### 2.2 Replace `isXxxUrl()` functions
+### 2.2 Replace `isXxxUrl()` functions ✅
 
-- [ ] Replace 30 private `isXxxUrl(url)` regex functions with `routePattern()` from `e2e/utils/routes.ts`
-- [ ] Or move URL detection into page objects as `static matchesUrl(url: string): boolean`
+- [x] Replaced 38 private `isXxxUrl()` functions with a single `URL` pattern object using shared `routePattern()` (-146 lines)
 
 ---
 
@@ -113,12 +112,11 @@ e2e/
 - [ ] Extract manifest diff/approve into `manifest.ts`
 - [ ] Keep `screenshot-pages.ts` as a thin entry point that imports and orchestrates
 
-### 3.2 Fix empty state race condition
+### 3.2 Fix empty state race condition ✅
 
-- [ ] Option A: Capture empty states with a separate fresh user (no seed data)
-- [ ] Option B: Capture empty states BEFORE seeding data
-- [ ] Option C: Use a dedicated "empty org" that never gets seeded
-- [ ] Pick one approach and implement it consistently
+- [x] Implemented Option B: Two-phase flow captures empty states BEFORE seeding data
+- [x] Replaced 33 getByRole("status") with waitForSpinnersHidden() using TEST_IDS.LOADING.SPINNER
+- [x] Fixed strict mode heading violations (invoices, assistant, dependencies)
 
 ---
 
@@ -126,17 +124,16 @@ e2e/
 
 **Goal:** Every interactive/stateful element that E2E tests or screenshots need to locate has a TEST_ID.
 
-### 4.1 Audit gaps
+### 4.1 Audit gaps ✅
 
-Current: 181 TEST_IDs across 22 groups, used in 142 component files (442 occurrences).
-
-- [ ] Audit pages that screenshot tool uses raw selectors for (dashboard widgets, settings sections, sprint cards, etc.)
-- [ ] Add TEST_IDs for elements currently found by fragile selectors:
-  - `page.locator("#time-entry-form")` — should be TEST_IDS.TIME_TRACKING.ENTRY_FORM
-  - `page.locator("form").filter(...)` — sprint form, should be TEST_IDS.SPRINT.FORM
-  - `page.locator("code").first()` — editor code block, should be TEST_IDS.EDITOR.CODE_BLOCK
-  - `page.locator("[role='option']").first()` — dropdown options, context-specific TEST_IDs
-- [ ] Ensure every page/section that gets a screenshot has a TEST_ID marker for readiness detection
+- [x] Replaced all 15 document.body.innerText / querySelectorAll probes with Playwright selectors
+- [x] Replaced 30 heading selectors with TEST_IDS.PAGE.HEADER_TITLE
+- [x] Settings sub-sections now use dedicated TEST_IDs (6 replaced)
+- [x] Added 16 new TEST_IDs: TIME_TRACKING.ENTRY_FORM, DASHBOARD.CONTENT, MEETINGS.* (4), SPRINT.CREATE_FORM/CONTENT, PROJECT.CARD/EMPTY_STATE, DOCUMENT.TEMPLATES_CONTENT, BILLING.CONTENT, WORKSPACE.EMPTY_STATE, TEAMS.EMPTY_STATE, ISSUE.EMPTY_STATE
+- [x] Board readiness uses TEST_IDS.BOARD.ROOT + BOARD.COLUMN
+- [x] Issue detail uses TEST_IDS.ISSUE.KEY (replaced raw `code` selector)
+- [x] EmptyState component now accepts data-testid prop
+- [x] TEST_ID count: 181 to 197 (+16)
 
 ### 4.2 Page objects should prefer TEST_IDs
 
@@ -198,13 +195,29 @@ Some pages don't have page objects yet:
 
 ## Priority Order
 
-1. **Phase 1** (dedup utils) — removes bugs, prevents confusion, ~1 session
-2. **Phase 3.2** (fix empty state race) — unblocks screenshot capture, ~30 min
-3. **Phase 2** (readiness in page objects) — biggest impact on maintainability, ~2–3 sessions
-4. **Phase 4** (TEST_IDs expansion) — incremental, can do alongside Phase 2
-5. **Phase 3** (split monolith) — depends on Phase 2, ~1–2 sessions
-6. **Phase 5** (screenshot uses page objects) — depends on Phase 2+3, ~2 sessions
-7. **Phase 6** (CI) — polish, ~30 min
+1. ~~**Phase 1** (dedup utils)~~ ✅ DONE
+2. ~~**Phase 3.2** (fix empty state race)~~ ✅ DONE
+3. **Phase 2.1** (readiness in page objects) — biggest remaining impact, ~2-3 sessions
+4. ~~**Phase 4** (TEST_IDs expansion)~~ ✅ DONE (197 IDs, all body text probes eliminated)
+5. ~~**Phase 2.2** (URL patterns)~~ ✅ DONE
+6. **Phase 3.1** (split monolith) — depends on Phase 2.1, ~1-2 sessions
+7. **Phase 5** (screenshot uses page objects) — depends on Phase 2.1+3.1, ~2 sessions
+8. **Phase 6** (CI) — polish, ~30 min
+
+## Current Stats (updated 2026-03-25)
+
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| Private functions | 134 | ~96 | -38 |
+| File lines | 5,292 | 5,146 | -146 |
+| TEST_ID count | 181 | 197 | +16 |
+| TEST_ID usage in screenshot tool | 64 | 87+ | +23 |
+| body.innerText probes | 15 | 0 | -15 |
+| querySelectorAll probes | 5 | 0 | -5 |
+| isXxxUrl functions | 38 | 0 | -38 |
+| getByRole("status") spinners | 33 | 0 | -33 |
+| Heading selectors | 53 | 23 | -30 |
+| Duplicate helpers | 6 | 0 | -6 |
 
 ---
 

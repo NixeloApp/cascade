@@ -4,7 +4,6 @@
  */
 
 import type { api } from "@convex/_generated/api";
-import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
 import { formatDate } from "@/lib/formatting";

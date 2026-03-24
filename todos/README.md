@@ -1,6 +1,6 @@
 # Nixelo Todo — MVP
 
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
 ---
 
@@ -24,13 +24,13 @@ All require design decisions, product specs, or infrastructure setup.
 
 | Item | Detail |
 |------|--------|
-| [e2e-overhaul.md](./e2e-overhaul.md) | **HIGH** — E2E & screenshot infrastructure overhaul: shared page objects, TEST_ID coverage, split 5,292-line monolith, fix duplication |
+| [e2e-overhaul.md](./e2e-overhaul.md) | E2E overhaul — Phase 1/2.2/3.2/4 DONE. Remaining: Phase 2.1 (page object readiness), 3.1 (split monolith), 5 (screenshot uses page objects) |
 
 ### Features
 
 | Item | Detail |
 |------|--------|
-| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (HIGH — only remaining HIGH issue) |
+| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (HIGH — needs product decisions on volume/provider) |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
 
 ---
@@ -40,8 +40,9 @@ All require design decisions, product specs, or infrastructure setup.
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| Unit tests | 4472 pass |
+| Unit tests | 4474 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
 | Spec issues fixed | 51 total |
+| TEST_IDs | 197 |
 | MEDIUM remaining | 17 |
