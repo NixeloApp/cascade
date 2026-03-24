@@ -11,6 +11,7 @@ interface EmptyStateConfig {
   title: string;
   description?: string;
   action?: ReactNode | { label: string; onClick: () => void };
+  "data-testid"?: string;
 }
 
 interface PageContentProps {
@@ -46,6 +47,7 @@ export function PageContent({
         title={emptyState.title}
         description={emptyState.description}
         action={emptyState.action}
+        data-testid={emptyState["data-testid"]}
       />
     );
   }
