@@ -370,9 +370,16 @@ export const seedProviders = internalMutation({
   handler: async (ctx) => {
     const now = Date.now();
 
-    // Transcription providers - ONLY monthly reset free tiers
-    // Total free capacity: 22 hours/month (8 + 8 + 5 + 1)
+    // Transcription providers — 3-tier fallback system
+    //
+    // Tier 1: Recurring monthly free tiers (~24 hrs/month)
+    // Tier 2: One-time credits (~885 hrs total)
+    // Tier 3: Paid fallback (Deepgram at $0.0077/min after credits)
+    //
+    // Priority numbers encode tier ordering: 1-4 = recurring, 5-6 = one-time
+    // See docs/ai/voice/ARCHITECTURE.md for full analysis
     const transcriptionProviders = [
+      // --- Tier 1: Recurring monthly free tiers ---
       {
         serviceType: "transcription" as const,
         provider: "speechmatics",
@@ -384,20 +391,21 @@ export const seedProviders = internalMutation({
         isEnabled: true,
         isConfigured: false,
         priority: 1,
-        notes: "8 hrs/month free, resets monthly. Best accuracy for accents.",
+        notes: "Tier 1. 8 hrs/month free, resets monthly. Best accuracy for accents.",
       },
       {
         serviceType: "transcription" as const,
         provider: "gladia",
         displayName: "Gladia",
-        freeUnitsPerMonth: 480, // 8 hours
+        freeUnitsPerMonth: 600, // 10 hours (verified 2026-03-23)
         freeUnitsType: "monthly" as const,
-        costPerUnit: 0.5, // $0.005/min
+        costPerUnit: 1.0, // $0.61/hr async = ~$0.01/min = 1 cent
         unitType: "minute",
         isEnabled: true,
         isConfigured: false,
         priority: 2,
-        notes: "8 hrs/month free, resets monthly. Good accuracy, includes translation.",
+        notes:
+          "Tier 1. 10 hrs/month free, resets monthly. Includes diarization. Verified 2026-03-23.",
       },
       {
         serviceType: "transcription" as const,
@@ -410,7 +418,7 @@ export const seedProviders = internalMutation({
         isEnabled: true,
         isConfigured: false,
         priority: 3,
-        notes: "5 hrs/month free, resets monthly. Enterprise-grade reliability.",
+        notes: "Tier 1. 5 hrs/month free, resets monthly. Enterprise-grade reliability.",
       },
       {
         serviceType: "transcription" as const,
@@ -423,11 +431,39 @@ export const seedProviders = internalMutation({
         isEnabled: true,
         isConfigured: false,
         priority: 4,
-        notes: "1 hr/month free, resets monthly. Google infrastructure reliability.",
+        notes: "Tier 1. 1 hr/month free, resets monthly. Includes diarization (2 speakers).",
       },
-      // NOTE: AssemblyAI and Deepgram excluded - one-time credits only
-      // NOTE: OpenAI Whisper excluded - no free tier
-      // See docs/service-providers-research.md for details
+      // --- Tier 2: One-time credits ---
+      // TODO: Enable when API keys are added. Sign up at deepgram.com and assemblyai.com
+      {
+        serviceType: "transcription" as const,
+        provider: "deepgram",
+        displayName: "Deepgram",
+        freeUnitsPerMonth: 0, // No monthly free tier
+        freeUnitsType: "one_time" as const,
+        oneTimeUnitsRemaining: 42000, // ~700 hrs ($200 credit at $0.0077/min)
+        costPerUnit: 0.77, // $0.0077/min = 0.77 cents (Nova-3)
+        unitType: "minute",
+        isEnabled: false, // TODO: Set to true when DEEPGRAM_API_KEY is configured
+        isConfigured: false,
+        priority: 5,
+        notes:
+          "Tier 2. $200 one-time credit (~700 hrs). Cheapest paid rate after. Includes diarization.",
+      },
+      {
+        serviceType: "transcription" as const,
+        provider: "assemblyai",
+        displayName: "AssemblyAI",
+        freeUnitsPerMonth: 0, // No monthly free tier
+        freeUnitsType: "one_time" as const,
+        oneTimeUnitsRemaining: 11100, // 185 hrs = 11100 min
+        costPerUnit: 3.5, // $0.21/hr = $0.035/min = 3.5 cents (Universal-3 Pro)
+        unitType: "minute",
+        isEnabled: false, // TODO: Set to true when ASSEMBLYAI_API_KEY is configured
+        isConfigured: false,
+        priority: 6,
+        notes: "Tier 2. 185 hrs one-time credit. Includes diarization + language detection.",
+      },
     ];
 
     // Email providers - ONLY monthly reset free tiers

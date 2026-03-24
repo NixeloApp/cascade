@@ -2,7 +2,6 @@
  * Workspace Card
  *
  * Displays a workspace summary with team/project counts and navigation link.
- * Supports compact (single workspace) and standard (multi-workspace grid) layouts.
  */
 
 import type { api } from "@convex/_generated/api";
@@ -24,7 +23,6 @@ export type WorkspaceListItem = FunctionReturnType<typeof api.workspaces.list>[n
 export interface WorkspaceCardProps {
   orgSlug: string;
   workspace: WorkspaceListItem;
-  compact?: boolean;
 }
 
 function WorkspaceIcon({ icon }: { icon: string | undefined }) {
@@ -40,96 +38,7 @@ function WorkspaceIcon({ icon }: { icon: string | undefined }) {
   );
 }
 
-function WorkspaceMetrics({
-  teamCount,
-  projectCount,
-}: {
-  teamCount: number;
-  projectCount: number;
-}) {
-  return (
-    <Grid cols={2} gap="sm">
-      <CardSection>
-        <Stack gap="sm">
-          <Typography variant="metricLabel">Teams</Typography>
-          <Typography variant="h5">{teamCount}</Typography>
-        </Stack>
-      </CardSection>
-      <CardSection>
-        <Stack gap="sm">
-          <Typography variant="metricLabel">Projects</Typography>
-          <Typography variant="h5">{projectCount}</Typography>
-        </Stack>
-      </CardSection>
-    </Grid>
-  );
-}
-
-function WorkspaceFooter({ workspace }: { workspace: WorkspaceListItem }) {
-  return (
-    <CardSection size="compact">
-      <Flex align="center" justify="between" gap="md">
-        <Metadata size="sm">
-          <MetadataItem>
-            {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
-          </MetadataItem>
-          <MetadataItem>
-            {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
-          </MetadataItem>
-        </Metadata>
-        <Badge variant="outline" shape="pill" className="shrink-0">
-          Open workspace
-        </Badge>
-      </Flex>
-    </CardSection>
-  );
-}
-
-function WorkspaceDescription({ text }: { text: string | undefined }) {
-  return (
-    <Typography variant="small" color="secondary" className="max-w-2xl">
-      {text || "Group related teams and projects to keep ownership visible as the org grows."}
-    </Typography>
-  );
-}
-
-export function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardProps) {
-  if (compact) {
-    return (
-      <Link
-        to={ROUTES.workspaces.detail.path}
-        params={{ orgSlug, workspaceSlug: workspace.slug }}
-        className="block h-full"
-      >
-        <Card hoverable padding="lg" className="h-full">
-          <Grid cols={1} colsLg={12} gap="lg">
-            <Flex direction="column" gap="lg" className="lg:col-span-7">
-              <Flex align="center" gap="sm">
-                <WorkspaceIcon icon={workspace.icon} />
-                <Stack gap="sm">
-                  <Typography variant="h4">{workspace.name}</Typography>
-                  <Badge variant="outline" shape="pill">
-                    {workspace.slug}
-                  </Badge>
-                </Stack>
-              </Flex>
-
-              <WorkspaceDescription text={workspace.description} />
-            </Flex>
-
-            <Stack gap="sm" className="lg:col-span-5">
-              <WorkspaceMetrics
-                teamCount={workspace.teamCount}
-                projectCount={workspace.projectCount}
-              />
-              <WorkspaceFooter workspace={workspace} />
-            </Stack>
-          </Grid>
-        </Card>
-      </Link>
-    );
-  }
-
+export function WorkspaceCard({ orgSlug, workspace }: WorkspaceCardProps) {
   return (
     <Link
       to={ROUTES.workspaces.detail.path}
@@ -141,22 +50,48 @@ export function WorkspaceCard({ orgSlug, workspace, compact = false }: Workspace
           <Flex align="start" justify="between" gap="md">
             <Flex align="center" gap="sm">
               <WorkspaceIcon icon={workspace.icon} />
-              <div>
+              <Stack gap="xs">
                 <Typography variant="h4">{workspace.name}</Typography>
-                <Typography variant="caption">Workspace</Typography>
-              </div>
+                {workspace.description ? (
+                  <Typography variant="small" color="secondary" className="line-clamp-2">
+                    {workspace.description}
+                  </Typography>
+                ) : null}
+              </Stack>
             </Flex>
-            <Badge variant="outline" shape="pill">
-              {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
-            </Badge>
           </Flex>
 
-          <WorkspaceDescription text={workspace.description} />
-
-          <WorkspaceMetrics teamCount={workspace.teamCount} projectCount={workspace.projectCount} />
+          <Grid cols={2} gap="sm">
+            <CardSection>
+              <Stack gap="xs">
+                <Typography variant="metricLabel">Teams</Typography>
+                <Typography variant="h5">{workspace.teamCount}</Typography>
+              </Stack>
+            </CardSection>
+            <CardSection>
+              <Stack gap="xs">
+                <Typography variant="metricLabel">Projects</Typography>
+                <Typography variant="h5">{workspace.projectCount}</Typography>
+              </Stack>
+            </CardSection>
+          </Grid>
 
           <div className="mt-auto">
-            <WorkspaceFooter workspace={workspace} />
+            <CardSection size="compact">
+              <Flex align="center" justify="between" gap="md">
+                <Metadata size="sm">
+                  <MetadataItem>
+                    {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
+                  </MetadataItem>
+                  <MetadataItem>
+                    {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
+                  </MetadataItem>
+                </Metadata>
+                <Badge variant="outline" shape="pill" className="shrink-0">
+                  Open workspace
+                </Badge>
+              </Flex>
+            </CardSection>
           </div>
         </Flex>
       </Card>

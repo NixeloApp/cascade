@@ -47,13 +47,140 @@ const TYPE_OPTIONS = [
   ...ISSUE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) })),
 ];
 
-export function AllIssuesPage() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedIssueId, setSelectedIssueId] = useState<Id<"issues"> | null>(null);
+// =============================================================================
+// Filter Hook
+// =============================================================================
+
+function useIssueFilters() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [priorityFilter, setPriorityFilter] = useState<string | undefined>(undefined);
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const deferredSearch = useDeferredValue(searchQuery.trim());
+  const isSearching = !!deferredSearch;
+  const hasActiveFilters = !!(statusFilter || priorityFilter || typeFilter || deferredSearch);
+
+  const clearAll = () => {
+    setStatusFilter(undefined);
+    setPriorityFilter(undefined);
+    setTypeFilter(undefined);
+    setSearchQuery("");
+  };
+
+  return {
+    statusFilter,
+    setStatusFilter,
+    priorityFilter,
+    setPriorityFilter,
+    typeFilter,
+    setTypeFilter,
+    searchQuery,
+    setSearchQuery,
+    deferredSearch,
+    isSearching,
+    hasActiveFilters,
+    clearAll,
+  };
+}
+
+// =============================================================================
+// Filter Bar
+// =============================================================================
+
+function IssueFilterBar({
+  filters,
+  statusOptions,
+}: {
+  filters: ReturnType<typeof useIssueFilters>;
+  statusOptions: Array<{ id: string; name: string }>;
+}) {
+  return (
+    <PageControls spacing="stack">
+      <PageControlsRow>
+        <FlexItem flex="1">
+          <Input
+            placeholder="Search issues..."
+            value={filters.searchQuery}
+            onChange={(e) => filters.setSearchQuery(e.target.value)}
+            variant="search"
+            aria-label="Search issues"
+          />
+        </FlexItem>
+        <PageControlsGroup className="sm:justify-end">
+          <Select
+            value={filters.statusFilter || "all"}
+            onValueChange={(v) => filters.setStatusFilter(v === "all" ? undefined : v)}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {statusOptions.map((opt) => (
+                <SelectItem key={opt.id} value={opt.id}>
+                  {opt.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.priorityFilter || "all"}
+            onValueChange={(v) => filters.setPriorityFilter(v === "all" ? undefined : v)}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="All Priorities" />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIORITY_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.typeFilter || "all"}
+            onValueChange={(v) => filters.setTypeFilter(v === "all" ? undefined : v)}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              {TYPE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {filters.hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={filters.clearAll}
+              leftIcon={<Icon icon={X} size="sm" />}
+            >
+              Clear
+            </Button>
+          )}
+        </PageControlsGroup>
+      </PageControlsRow>
+    </PageControls>
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+export function AllIssuesPage() {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedIssueId, setSelectedIssueId] = useState<Id<"issues"> | null>(null);
+  const filters = useIssueFilters();
 
   const { organizationId } = useOrganization();
 
@@ -62,53 +189,40 @@ export function AllIssuesPage() {
     organizationId ? { organizationId } : "skip",
   );
 
-  // Debounce search query to avoid hammering the server on every keystroke
-  const deferredSearch = useDeferredValue(searchQuery.trim());
-  const isSearching = !!deferredSearch;
-
-  // Paginated browse (when not searching)
   const {
     results: paginatedIssues,
     status,
     loadMore,
   } = usePaginatedQuery(
     api.issues.listOrganizationIssues,
-    organizationId && !isSearching
+    organizationId && !filters.isSearching
       ? {
           organizationId,
-          status: statusFilter,
-          priority: priorityFilter,
-          type: typeFilter,
+          status: filters.statusFilter,
+          priority: filters.priorityFilter,
+          type: filters.typeFilter,
         }
       : "skip",
     { initialNumItems: 20 },
   );
 
-  // Server-side search (when search query is active)
   const searchResults = useAuthenticatedQuery(
     api.issues.searchOrganizationIssues,
-    organizationId && isSearching
+    organizationId && filters.isSearching
       ? {
           organizationId,
-          query: deferredSearch,
-          status: statusFilter,
-          priority: priorityFilter,
-          type: typeFilter,
+          query: filters.deferredSearch,
+          status: filters.statusFilter,
+          priority: filters.priorityFilter,
+          type: filters.typeFilter,
         }
       : "skip",
   );
 
-  const isLoading = isSearching ? searchResults === undefined : status === "LoadingFirstPage";
-  const hasActiveFilters = !!(statusFilter || priorityFilter || typeFilter || deferredSearch);
-
-  const filteredIssues = isSearching ? (searchResults ?? []) : paginatedIssues;
-
-  const handleClearFilters = () => {
-    setStatusFilter(undefined);
-    setPriorityFilter(undefined);
-    setTypeFilter(undefined);
-    setSearchQuery("");
-  };
+  const isLoading = filters.isSearching
+    ? searchResults === undefined
+    : status === "LoadingFirstPage";
+  const filteredIssues = filters.isSearching ? (searchResults ?? []) : paginatedIssues;
 
   return (
     <PageLayout>
@@ -130,82 +244,9 @@ export function AllIssuesPage() {
           }
         />
 
-        <PageControls spacing="stack">
-          <PageControlsRow>
-            <FlexItem flex="1">
-              <Input
-                placeholder="Search issues..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                variant="search"
-                aria-label="Search issues"
-              />
-            </FlexItem>
-            <PageControlsGroup className="sm:justify-end">
-              <Select
-                value={statusFilter || "all"}
-                onValueChange={(v) => setStatusFilter(v === "all" ? undefined : v)}
-              >
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {(statusOptions ?? []).map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id}>
-                      {opt.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <IssueFilterBar filters={filters} statusOptions={statusOptions ?? []} />
 
-              <Select
-                value={priorityFilter || "all"}
-                onValueChange={(v) => setPriorityFilter(v === "all" ? undefined : v)}
-              >
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="All Priorities" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIORITY_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={typeFilter || "all"}
-                onValueChange={(v) => setTypeFilter(v === "all" ? undefined : v)}
-              >
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TYPE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearFilters}
-                  leftIcon={<Icon icon={X} size="sm" />}
-                >
-                  Clear
-                </Button>
-              )}
-            </PageControlsGroup>
-          </PageControlsRow>
-        </PageControls>
-
-        {hasActiveFilters && (
+        {filters.hasActiveFilters && (
           <Typography variant="caption" color="tertiary">
             {filteredIssues.length} issue{filteredIssues.length !== 1 ? "s" : ""} matching filters
           </Typography>
@@ -217,7 +258,7 @@ export function AllIssuesPage() {
           emptyState={{
             icon: SearchX,
             title: "No issues found",
-            description: hasActiveFilters
+            description: filters.hasActiveFilters
               ? "Try adjusting your filters or clearing them."
               : "Create your first issue to get started.",
           }}
@@ -235,7 +276,7 @@ export function AllIssuesPage() {
           </Grid>
         </PageContent>
 
-        {!isSearching && status === "CanLoadMore" && (
+        {!filters.isSearching && status === "CanLoadMore" && (
           <Flex justify="center">
             <Button variant="secondary" onClick={() => loadMore(20)}>
               Load More

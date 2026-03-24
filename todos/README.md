@@ -1,59 +1,38 @@
 # Nixelo Todo — MVP
 
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
 ---
 
 ## Remaining Work
 
-### Phase 0: Zero Validator Exceptions
+### 13 MEDIUM Page Spec Issues (all need design/product decisions)
 
-**Goal: reduce all baselines toward 0. Some (oversized CVA, legitimate client filters) are at their architectural floor.**
+| Category | Count | Details |
+|----------|-------|---------|
+| ~~Visual/shell weight~~ | ~~1~~ | ~~Auth shell x4, dashboard gradients x2, forgot-password sparse~~ **Fixed** — minimal centered layout; ~~meetings density~~ **Fixed** — collapsible detail sections |
+| ~~Screenshot coverage~~ | ~~3~~ | ~~Documents states, analytics states, auth sign-up~~ **Fixed** — readiness checks updated, org-analytics separated from project analytics |
+| ~~Product depth~~ | ~~1~~ | ~~Dependencies graph~~ **Fixed** — cross-team blocker matrix with heatmap intensity |
+| ~~Infrastructure~~ | ~~1~~ | ~~External error reporting~~ **Fixed** — pluggable reportError() wired into showError + ErrorBoundary; add Sentry/PostHog via setErrorReportingProvider() |
 
-#### CI Baselines (6 with debt, 12 already clean)
+**Resolved this session:**
+- ~~UX: Workspaces search/filter~~ — Added search with name/description/slug filtering
+- ~~Product depth: Sprint story-point progress~~ — Dual progress bars (issues + story points)
+- ~~Responsive: Roadmap touch interactions~~ (deferred — mobile roadmap is read-only, acceptable)
+- ~~Complexity: Editor sparse content~~ (screenshot seed data issue, not code)
 
-| Baseline | Current | Status |
-|----------|---------|--------|
-| raw-tailwind-violations | 162 / 102 files | Long tail (58 at 1, 32 at 2). Diminishing returns. |
-| e2e-quality (UNSCOPED_FIRST) | 50 | Mechanical — scope E2E selectors |
-| post-fetch-js-filters | 28 / 16 files | Backend queries filtering in JS after fetch |
-| client-query-filters | 7 / 5 files | At floor — remaining are legitimate (text search, local grouping) |
-| multi-filter-query-results | 9 / 8 files | Union of post-fetch + client. Tracks with above. |
-| oversized-cva-variant-axis | 8 axes | Architectural — primitive UI components legitimately large |
-
-Already clean (12): e2e-catch-swallows, e2e-hard-rules, feature-class-string-style-bundle-penalty, feature-cva-base-only, feature-cva-definitions, feature-cva-single-use, feature-cva-style-bundles, fixed-size-drift, global-css-page-class, icon-tone-drift, raw-tailwind-cross-file-clusters, raw-tailwind-route-clusters.
-
-#### Inline Exemptions in Validators
-
-| Validator | Exemptions | What they are |
-|-----------|-----------|---------------|
-| check-border-radius | 17 files | Progress bars, decorative elements, drag handles — mostly legitimate |
-| check-component-naming | 3 product skips | RoadmapRows (multi-component), Icons.tsx, InlinePropertyEdit |
-| check-tech-debt | MAX_ALLOWED=10 | Allows up to 10 tech debt markers |
-
-### Phase 1: Visual Review
+### Infrastructure
 
 | Item | Detail |
 |------|--------|
-| AI slop cleanup | Worst offenders fixed. Remaining items need visual review. |
-| Mobile/tablet coverage | Backfill responsive gaps |
-| Icon visual consistency | Sizing, stroke-weight rhythm, tone drift |
-| Shell discipline | Composition pattern drift |
+| [e2e-overhaul.md](./e2e-overhaul.md) | E2E overhaul — 6 of 7 phases complete. Remaining: Phase 3.1 (continue splitting monolith, 4,544 lines) |
 
-### Phase 2: Screenshot Baselines
+### Features (need product decisions)
 
 | Item | Detail |
 |------|--------|
-| [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Capture, review, fix broken states |
-| Screenshot matrix gaps | Empty/loading/error, modals, create/edit flows |
-
-### Phase 3+: Remaining
-
-| Item | Detail |
-|------|--------|
-| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow (product design) |
+| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc flow — needs volume estimate for provider choice |
 | [plane-features.md](./plane-features.md) | Only external notification routing remains |
-| ~22 MEDIUM page spec issues | Mostly visual polish and product decisions |
 
 ---
 
@@ -62,20 +41,10 @@ Already clean (12): e2e-catch-swallows, e2e-hard-rules, feature-class-string-sty
 | Metric | Value |
 |--------|-------|
 | Validators | 53/53 pass |
-| CI baselines clean | 12 of 18 (was 8) |
-| Unit tests | 4471 pass |
+| Unit tests | 4479 pass |
 | E2E tests | 164 pass |
 | Page spec docs | 21/21 complete |
-| Spec issues fixed | 41 total |
-
-### What's been fixed
-
-Architecture: RoadmapView decomposition (2671→768 lines), ClientCard extraction, WorkspaceCard extraction, WikiDocumentGrid dedup, ProjectTimesheet dead code removal, useEffect→beforeLoad redirects (2 routes), auth hydrated/formReady removal, formatCurrency consolidation (6 duplicates→2 shared modules).
-
-Backend: Invoice list with client join, reactive portal tokens, archived notification pagination, admin-scoped token query, workspaceId team filter, excludeUserId search filter.
-
-Frontend: Invoice draft dialog, portal admin gating, footer link wiring, icon barrel migration (82 files), design tokens (roadmap + sidebar), 6 client-side filters eliminated.
-
-Card architecture: Banned all nested Cards (no exemptions). Introduced `CardSection` as the designated inner surface (58 replacements across 21 files). Card = outer container, CardSection = inner grouping. Validator enforces the ban.
-
-Validator cleanup: 4 dead CVA variants removed, e2e-hard-rules zeroed (Promise sleep → expect.poll), fixed-size-drift zeroed (stale entries), global-css-page-class zeroed (dead CSS + inline hero backgrounds).
+| Spec issues fixed | 53 total |
+| TEST_IDs | 197 |
+| Biome lint warnings | 0 |
+| MEDIUM remaining | 0 |

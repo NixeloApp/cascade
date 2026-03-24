@@ -41,6 +41,10 @@ export class MeetingsPage extends BasePage {
     await this.expectLoaded();
   }
 
+  async waitUntilReady(): Promise<void> {
+    await this.expectLoaded();
+  }
+
   async expectLoaded() {
     await waitForDashboardReady(this.page);
     await expect(this.pageHeading).toBeVisible();

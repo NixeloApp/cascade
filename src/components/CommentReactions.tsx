@@ -42,7 +42,7 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
   };
 
   return (
-    <Flex align="center" gap="xs" wrap className="mt-2">
+    <Flex align="center" gap="xs" wrap>
       {reactions.map((reaction) => {
         const hasReacted = currentUserId && reaction.userIds.includes(currentUserId);
         return (

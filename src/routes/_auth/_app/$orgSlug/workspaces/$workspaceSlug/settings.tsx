@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageContent, PageError } from "@/components/layout";
+import { PageContent } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -20,8 +20,8 @@ import { Switch } from "@/components/ui/Switch";
 import { Textarea } from "@/components/ui/Textarea";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
+import { useWorkspaceLayout } from "./route";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings")({
   component: WorkspaceSettings,
 });
@@ -30,44 +30,41 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspace
 const WORKSPACE_ICONS = ["🏢", "🏗️", "💼", "🎯", "🚀", "💡", "🔧", "📊", "🎨", "📱", "🌐", "⚡"];
 
 function WorkspaceSettings() {
-  const { organizationId } = useOrganization();
-  const { workspaceSlug } = Route.useParams();
-  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
-    organizationId,
-    slug: workspaceSlug,
-  });
-  const { mutate: updateWorkspace } = useAuthenticatedMutation(api.workspaces.updateWorkspace);
-
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [icon, setIcon] = useState("");
-  const [defaultProjectVisibility, setDefaultProjectVisibility] = useState(true);
-  const [allowExternalSharing, setAllowExternalSharing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [initialized, setInitialized] = useState(false);
-
-  // Initialize form state when workspace data loads
-  if (workspace && !initialized) {
-    setName(workspace.name);
-    setDescription(workspace.description ?? "");
-    setIcon(workspace.icon ?? "🏢");
-    setDefaultProjectVisibility(workspace.settings?.defaultProjectVisibility ?? true);
-    setAllowExternalSharing(workspace.settings?.allowExternalSharing ?? false);
-    setInitialized(true);
-  }
+  const { workspaceId } = useWorkspaceLayout();
+  const workspace = useAuthenticatedQuery(api.workspaces.getWorkspace, { id: workspaceId });
 
   if (workspace === undefined) {
     return <PageContent isLoading>{null}</PageContent>;
   }
 
   if (!workspace) {
-    return (
-      <PageError
-        title="Workspace Not Found"
-        message={`The workspace "${workspaceSlug}" doesn't exist or you don't have access to it.`}
-      />
-    );
+    return <PageContent isLoading>{null}</PageContent>;
   }
+
+  // Key on workspace _id so React remounts the form when workspace changes,
+  // resetting all useState to initialValues without setState-during-render hacks.
+  return <WorkspaceSettingsForm key={workspace._id} workspace={workspace} />;
+}
+
+interface WorkspaceSettingsFormProps {
+  workspace: NonNullable<
+    ReturnType<typeof useAuthenticatedQuery<typeof api.workspaces.getWorkspace>>
+  >;
+}
+
+function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps) {
+  const { mutate: updateWorkspace } = useAuthenticatedMutation(api.workspaces.updateWorkspace);
+
+  const [name, setName] = useState(workspace.name);
+  const [description, setDescription] = useState(workspace.description ?? "");
+  const [icon, setIcon] = useState(workspace.icon ?? "🏢");
+  const [defaultProjectVisibility, setDefaultProjectVisibility] = useState(
+    workspace.settings?.defaultProjectVisibility ?? true,
+  );
+  const [allowExternalSharing, setAllowExternalSharing] = useState(
+    workspace.settings?.allowExternalSharing ?? false,
+  );
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);

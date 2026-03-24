@@ -1,5 +1,5 @@
 import { api } from "@convex/_generated/api";
-import { DAY, WEEK } from "@convex/lib/timeUtils";
+import { DAY } from "@convex/lib/timeUtils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { OrganizationAnalyticsDashboard } from "@/components/Analytics/OrganizationAnalyticsDashboard";

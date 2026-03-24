@@ -488,13 +488,12 @@ export const getTeams = authenticatedQuery({
     let results: PaginationResult<Doc<"teams">> | PaginationResult<Doc<"teamMembers">>;
     if (isAdmin) {
       // Admins see all teams — scoped to workspace if provided
+      const wsId = args.workspaceId;
       results = await fetchPaginatedQuery<Doc<"teams">>(ctx, {
         paginationOpts: args.paginationOpts,
         buildQuery: (db) =>
-          args.workspaceId
-            ? db
-                .query("teams")
-                .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
+          wsId
+            ? db.query("teams").withIndex("by_workspace", (q) => q.eq("workspaceId", wsId))
             : db
                 .query("teams")
                 .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId)),
@@ -624,10 +623,11 @@ export const getOrganizationTeams = organizationQuery({
       }
     }
 
-    const teams = args.workspaceId
+    const wsFilter = args.workspaceId;
+    const teams = wsFilter
       ? await ctx.db
           .query("teams")
-          .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId!))
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", wsFilter))
           .filter(notDeleted)
           .take(MAX_TEAMS_PER_ORG)
       : await ctx.db

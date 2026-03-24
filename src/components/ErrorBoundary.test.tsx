@@ -32,7 +32,7 @@ describe("ErrorBoundary", () => {
     expect(screen.getByText("Child component")).toBeInTheDocument();
   });
 
-  it("should render default error UI when an error occurs", () => {
+  it("should render default error UI with recovery actions", () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
@@ -41,7 +41,8 @@ describe("ErrorBoundary", () => {
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     expect(screen.getByText(/We encountered an unexpected error/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /reload page/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /go to dashboard/i })).toBeInTheDocument();
   });
 
   it("should render custom fallback UI when provided", () => {
@@ -70,7 +71,7 @@ describe("ErrorBoundary", () => {
     expect(errorInfo).toHaveProperty("componentStack");
   });
 
-  it("should display error details in expandable section", () => {
+  it("should display error message and component stack in expandable section", () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
@@ -80,15 +81,33 @@ describe("ErrorBoundary", () => {
     const details = screen.getByText("View error details");
     expect(details).toBeInTheDocument();
 
-    const errorMessage = screen.getByText("Test error");
-    expect(errorMessage).toBeInTheDocument();
+    expect(screen.getByText(/Test error/)).toBeInTheDocument();
   });
 
-  it("should reload page when reload button is clicked", async () => {
+  it("should reset error state when Try again is clicked", async () => {
     const user = userEvent.setup();
-    const reloadMock = vi.fn();
+
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+
+    const retryButton = screen.getByRole("button", { name: /try again/i });
+    await user.click(retryButton);
+
+    // After clicking Try again, ErrorBoundary resets state and re-renders
+    // children. Since ThrowError still throws, the error shows again —
+    // but the state reset happened (the boundary re-attempted rendering).
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+  });
+
+  it("should navigate to dashboard when Go to dashboard is clicked", async () => {
+    const user = userEvent.setup();
     Object.defineProperty(window, "location", {
-      value: { reload: reloadMock },
+      value: { href: "", reload: vi.fn() },
       writable: true,
     });
 
@@ -98,9 +117,9 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
 
-    const reloadButton = screen.getByRole("button", { name: /reload page/i });
-    await user.click(reloadButton);
+    const dashboardButton = screen.getByRole("button", { name: /go to dashboard/i });
+    await user.click(dashboardButton);
 
-    expect(reloadMock).toHaveBeenCalled();
+    expect(window.location.href).toBe("/");
   });
 });

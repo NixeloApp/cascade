@@ -125,6 +125,11 @@ export class CalendarPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async waitUntilReady(): Promise<void> {
+    await this.weekViewButton.waitFor({ state: "visible", timeout: 12000 });
+    await this.todayButton.waitFor({ state: "visible", timeout: 12000 });
+  }
+
   // ===================
   // Actions - Navigation
   // ===================

@@ -139,7 +139,7 @@ Those are not broken, but they are not yet separate reviewed screenshot artifact
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | The canonical screenshot matrix is current, but it still only covers the main route; sparse-data or low-history states remain implicit | screenshot coverage | MEDIUM |
+| 1 | Sparse-data and low-history states not captured (need seed data variation in E2E tooling) | screenshot coverage | LOW |
 | 2 | Desktop light mode is valid, but the chart grid still reads a bit flatter than the top insight band | surface hierarchy | LOW |
 | 3 | The route is contextual now, but there is still no explicit date-range or comparison control when the user wants analysis beyond the default view | product depth | LOW |
 

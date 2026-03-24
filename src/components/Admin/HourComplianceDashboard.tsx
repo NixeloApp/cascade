@@ -21,6 +21,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { PageControlsGroup, PageControlsRow, SectionControls } from "../layout";
 import { Button } from "../ui/Button";
 import { Card, CardBody } from "../ui/Card";
+import { CardSection } from "../ui/CardSection";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
@@ -491,14 +492,14 @@ function ComplianceRecordCard({
             </Grid>
 
             {record.reviewNotes ? (
-              <div className="p-3 bg-ui-bg-secondary">
+              <CardSection>
                 <Typography variant="small">
                   <Typography as="strong" variant="strong">
                     Review Notes:
                   </Typography>{" "}
                   {record.reviewNotes}
                 </Typography>
-              </div>
+              </CardSection>
             ) : null}
           </Stack>
         </FlexItem>

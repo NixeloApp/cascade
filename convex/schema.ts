@@ -51,6 +51,15 @@ import {
   organizationRoles,
   otpCodeTypes,
   outOfOfficeStatus,
+  outreachContactSources,
+  outreachEnrollmentStatuses,
+  outreachEventMetadata,
+  outreachEventTypes,
+  outreachMailboxProviders,
+  outreachSequenceStats,
+  outreachSequenceStatuses,
+  outreachSequenceStep,
+  outreachSuppressionReasons,
   periodTypes,
   personas,
   projectRoles,
@@ -1812,6 +1821,130 @@ const applicationTables = {
     invitedByName: v.optional(v.string()),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  // ===========================================================================
+  // EMAIL OUTREACH
+  // Lightweight cold email sequences — connect mailbox, send <50/day, track replies
+  // ===========================================================================
+
+  // User's connected Gmail/Outlook for sending outreach (not platform email)
+  outreachMailboxes: defineTable({
+    userId: v.id("users"),
+    organizationId: v.id("organizations"),
+    provider: outreachMailboxProviders, // "google" | "microsoft"
+    email: v.string(), // "mikhail@starthub.academy"
+    displayName: v.string(), // For the From header
+    accessToken: v.string(), // OAuth2 access token (encrypted)
+    refreshToken: v.optional(v.string()), // OAuth2 refresh token
+    expiresAt: v.optional(v.number()), // Token expiry timestamp
+    dailySendLimit: v.number(), // Default 50
+    todaySendCount: v.number(), // Resets daily by cron
+    todayResetAt: v.number(), // Date of last counter reset
+    isActive: v.boolean(), // Can this mailbox send?
+    lastHealthCheckAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_organization", ["organizationId"])
+    .index("by_user_provider", ["userId", "provider"])
+    .index("by_active", ["isActive"]),
+
+  // Contacts/leads for outreach campaigns
+  outreachContacts: defineTable({
+    organizationId: v.id("organizations"),
+    email: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    company: v.optional(v.string()),
+    timezone: v.optional(v.string()), // For business hours scheduling
+    customFields: v.optional(v.record(v.string(), v.string())), // {{variable}} data
+    tags: v.optional(v.array(v.string())), // Segmentation
+    source: outreachContactSources, // "csv_import" | "manual" | "api"
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_email", ["email"])
+    .index("by_organization_email", ["organizationId", "email"])
+    .index("by_created_by", ["createdBy"]),
+
+  // Global suppression list — never email these addresses again
+  outreachSuppressions: defineTable({
+    organizationId: v.id("organizations"),
+    email: v.string(),
+    reason: outreachSuppressionReasons, // "hard_bounce" | "unsubscribe" | "complaint" | "manual"
+    suppressedAt: v.number(),
+    sourceEnrollmentId: v.optional(v.id("outreachEnrollments")),
+  })
+    .index("by_organization_email", ["organizationId", "email"])
+    .index("by_reason", ["reason"]),
+
+  // Sequence templates — multi-step email campaigns
+  outreachSequences: defineTable({
+    organizationId: v.id("organizations"),
+    createdBy: v.id("users"),
+    name: v.string(), // "Investor Outreach Q1"
+    status: outreachSequenceStatuses, // "draft" | "active" | "paused" | "completed"
+    mailboxId: v.id("outreachMailboxes"), // Which connected mailbox sends this
+    steps: v.array(outreachSequenceStep), // Ordered list of email steps
+    physicalAddress: v.string(), // CAN-SPAM footer requirement
+    trackingDomain: v.optional(v.string()), // Custom tracking subdomain
+    stats: v.optional(outreachSequenceStats), // Cached metrics for dashboard
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_status", ["status"])
+    .index("by_created_by", ["createdBy"])
+    .index("by_mailbox", ["mailboxId"]),
+
+  // Per-contact enrollment in a sequence — the state machine
+  outreachEnrollments: defineTable({
+    sequenceId: v.id("outreachSequences"),
+    contactId: v.id("outreachContacts"),
+    organizationId: v.id("organizations"),
+    currentStep: v.number(), // 0-indexed step position
+    status: outreachEnrollmentStatuses, // "active" | "replied" | "bounced" | etc.
+    nextSendAt: v.optional(v.number()), // When next step should fire (null if terminal)
+    enrolledAt: v.number(),
+    completedAt: v.optional(v.number()), // When sequence finished (any terminal status)
+    lastSentAt: v.optional(v.number()),
+    lastOpenedAt: v.optional(v.number()),
+    lastClickedAt: v.optional(v.number()),
+    lastRepliedAt: v.optional(v.number()),
+  })
+    .index("by_sequence", ["sequenceId"])
+    .index("by_contact", ["contactId"])
+    .index("by_status", ["status"])
+    .index("by_next_send", ["status", "nextSendAt"]) // For scheduler: active + due
+    .index("by_sequence_status", ["sequenceId", "status"])
+    .index("by_organization", ["organizationId"]),
+
+  // Event log — every email interaction recorded
+  outreachEvents: defineTable({
+    enrollmentId: v.id("outreachEnrollments"),
+    sequenceId: v.id("outreachSequences"),
+    contactId: v.id("outreachContacts"),
+    organizationId: v.id("organizations"),
+    type: outreachEventTypes, // "sent" | "opened" | "clicked" | "replied" | "bounced" | "unsubscribed"
+    step: v.number(), // Which sequence step
+    trackingLinkId: v.optional(v.id("outreachTrackingLinks")), // For click events
+    metadata: outreachEventMetadata, // Bounce type, reply content, etc.
+    createdAt: v.number(),
+  })
+    .index("by_enrollment", ["enrollmentId"])
+    .index("by_sequence", ["sequenceId"])
+    .index("by_type", ["type"])
+    .index("by_organization_type", ["organizationId", "type"])
+    .index("by_created_at", ["createdAt"]),
+
+  // Click tracking URL mapping — linkId → original URL
+  outreachTrackingLinks: defineTable({
+    enrollmentId: v.id("outreachEnrollments"),
+    step: v.number(),
+    originalUrl: v.string(), // The real destination URL
+    createdAt: v.number(),
+  }).index("by_enrollment", ["enrollmentId"]),
 
   // ===========================================================================
   // INFRASTRUCTURE & SYSTEM

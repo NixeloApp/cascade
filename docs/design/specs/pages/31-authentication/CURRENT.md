@@ -103,6 +103,8 @@ The authentication pages handle user sign-in and sign-up with email/password and
 
 ## Screenshot Matrix
 
+### Sign In
+
 | Viewport | Theme | Preview |
 |----------|-------|---------|
 | Desktop | Dark | ![](screenshots/desktop-dark.png) |
@@ -110,15 +112,29 @@ The authentication pages handle user sign-in and sign-up with email/password and
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 
+### Sign Up
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](../03-signup/screenshots/desktop-dark.png) |
+| Desktop | Light | ![](../03-signup/screenshots/desktop-light.png) |
+
+### Sign Up — Verification
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](../03-signup/screenshots/desktop-dark-verify.png) |
+| Desktop | Light | ![](../03-signup/screenshots/desktop-light-verify.png) |
+
 ---
 
 ## Current Problems
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | No screenshot coverage for the sign-up route (only sign-in is captured in this spec's screenshot dir) | testing | MEDIUM |
+| ~~1~~ | ~~No screenshot coverage for sign-up~~ **Fixed** — added sign-up and verification screenshots to the matrix (references from 03-signup spec) | ~~testing~~ | ~~MEDIUM~~ |
 | 2 | The progressive disclosure animation uses `max-h-48` / `max-h-64` arbitrary values for expand/collapse | styling | LOW |
-| 3 | SSO discovery fires a query on every keystroke as the user types their email domain | performance | LOW |
+| ~~3~~ | ~~SSO discovery fires on every keystroke~~ **Fixed** — debounced email domain extraction with 300ms delay before querying | ~~performance~~ | ~~LOW~~ |
 | 4 | The AuthShowcasePanel left-column content (Capture/Coordinate/Deliver rail points) is static marketing copy that may not match the current product | content | LOW |
 | ~~5~~ | ~~Fragile hydrated + formReady two-phase approach~~ **Fixed** — removed both states, microtask scheduling, and FORM_HYDRATED marker. FORM_READY renders when email form is visible. Validation moved to submit handler. | ~~architecture~~ | ~~MEDIUM~~ |
 | 6 | Error messages from `submitPasswordSignIn` are generic ("Could not sign in. Please check your credentials.") -- no specific guidance for common failures | UX | LOW |

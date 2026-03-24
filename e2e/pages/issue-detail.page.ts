@@ -37,6 +37,13 @@ export class IssueDetailPage extends BasePage {
     throw new Error("Use gotoIssue(issueKey) for the issue detail page.");
   }
 
+  async waitUntilReady(): Promise<void> {
+    await this.page.getByTestId(TEST_IDS.ISSUE.KEY).first().waitFor({
+      state: "visible",
+      timeout: 12000,
+    });
+  }
+
   async gotoIssue(issueKey: string) {
     await this.page.goto(ROUTES.issues.detail.build(this.orgSlug, issueKey));
     await this.waitForLoad();

@@ -1,5 +1,7 @@
 import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createContext, useContext } from "react";
 import { PageControls, PageHeader, PageLayout, PageStack } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -8,6 +10,21 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+
+// Context for child routes to access workspace data without re-querying
+interface WorkspaceLayoutContextValue {
+  workspaceId: Id<"workspaces">;
+}
+
+const WorkspaceLayoutContext = createContext<WorkspaceLayoutContextValue | null>(null);
+
+/** Use workspace data from the parent layout. Avoids duplicate getBySlug queries. */
+export function useWorkspaceLayout(): WorkspaceLayoutContextValue {
+  const ctx = useContext(WorkspaceLayoutContext);
+  if (!ctx) throw new Error("useWorkspaceLayout must be used within WorkspaceLayout");
+  return ctx;
+}
+
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug")({
   component: WorkspaceLayout,
 });
@@ -120,7 +137,9 @@ export function WorkspaceLayout() {
           </RouteNav>
         </PageControls>
 
-        <Outlet />
+        <WorkspaceLayoutContext.Provider value={{ workspaceId: workspace._id }}>
+          <Outlet />
+        </WorkspaceLayoutContext.Provider>
       </PageStack>
     </PageLayout>
   );

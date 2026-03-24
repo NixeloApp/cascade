@@ -17,6 +17,7 @@ import { ACTIVITY_TYPES } from "@/lib/constants";
 import { FormTextarea } from "@/lib/form";
 import { formatDateForInput, formatDurationHuman, parseDuration } from "@/lib/formatting";
 import { Clock, Hourglass, X } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -227,6 +228,7 @@ export function ManualTimeEntryModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title="Log Time Manually" size="md">
       <form
+        data-testid={TEST_IDS.TIME_TRACKING.ENTRY_FORM}
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();

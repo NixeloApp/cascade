@@ -112,4 +112,24 @@ crons.interval(
   internal.eventReminders.processDueReminders,
 );
 
+/**
+ * Outreach: Process due sequence enrollments
+ * Runs every 2 minutes to send emails for active enrollments where nextSendAt has passed
+ */
+crons.interval(
+  "process outreach sends",
+  { minutes: 2 },
+  internal.outreach.sendEngine.processDueEnrollments,
+);
+
+/**
+ * Outreach: Reset daily mailbox send counters
+ * Runs daily at midnight UTC
+ */
+crons.daily(
+  "reset outreach daily send counts",
+  { hourUTC: 0, minuteUTC: 0 },
+  internal.outreach.sendEngine.resetDailySendCounts,
+);
+
 export default crons;

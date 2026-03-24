@@ -3,6 +3,7 @@
  */
 
 import { toast } from "sonner";
+import { reportError } from "@/lib/errorReporting";
 import { TEST_IDS } from "@/lib/test-ids";
 
 function getToastOptions(type: "success" | "error" | "info") {
@@ -49,6 +50,7 @@ export function showInfo(message: string): void {
 export function showError(error: unknown, fallback = "An error occurred"): void {
   const message = getErrorMessage(error, fallback);
   toast.error(message, getToastOptions("error"));
+  reportError(error, { context: fallback });
 }
 
 /**

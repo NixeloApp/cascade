@@ -9,53 +9,23 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
-import type { FunctionReturnType } from "convex/server";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
-import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
-import { formatDate } from "@/lib/formatting";
-import {
-  CalendarDays,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  LinkIcon,
-  Plus,
-  X,
-} from "@/lib/icons";
-import {
-  getPriorityBadgeTone,
-  getPriorityColor,
-  getStatusBadgeTone,
-  ISSUE_TYPE_ICONS,
-} from "@/lib/issue-utils";
+import { CalendarDays } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
-import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { RoadmapDependencyPanel, renderDependencyLine } from "./Roadmap/RoadmapDependencyPanel";
 import { RoadmapHeaderControls } from "./Roadmap/RoadmapHeaderControls";
 import { RoadmapLoadingState } from "./Roadmap/RoadmapLoadingState";
-import {
-  RoadmapGroupRow,
-  RoadmapIssueIdentity,
-  RoadmapIssueRow,
-  RoadmapSummaryBar,
-  RoadmapTimelineBar,
-} from "./Roadmap/RoadmapRows";
+import { RoadmapGroupRow, RoadmapIssueRow } from "./Roadmap/RoadmapRows";
 import { renderRoadmapTodayMarker } from "./Roadmap/RoadmapTodayMarker";
-import { Badge } from "./ui/Badge";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Grid } from "./ui/Grid";
-import { Icon } from "./ui/Icon";
-import { SegmentedControl, SegmentedControlItem } from "./ui/SegmentedControl";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
-import { Skeleton } from "./ui/Skeleton";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -69,21 +39,11 @@ interface RoadmapViewProps {
 
 import type {
   DependencyLine,
-  DependencyLineBuildArgs,
-  DragComputationArgs,
   DragState,
   GroupBy,
-  HierarchyIssueRow,
-  ResizeComputationArgs,
   ResizeState,
-  RoadmapBarIssue,
-  RoadmapDependencyItem,
-  RoadmapEpic,
   RoadmapIssue,
   RoadmapIssueRowProps,
-  RoadmapTimelineIssue,
-  TimelineGeometryArgs,
-  TimelineGroup,
   TimelineHeaderCell,
   TimelineRow,
   TimelineSpan,
@@ -91,25 +51,12 @@ import type {
   ViewMode,
 } from "./Roadmap/types";
 import {
-  ACTIVE_DEPENDENCY_OPACITY,
-  ACTIVE_DEPENDENCY_STROKE_WIDTH,
-  DEFAULT_DEPENDENCY_OPACITY,
-  DEFAULT_DEPENDENCY_STROKE_WIDTH,
-  DIMMED_DEPENDENCY_OPACITY,
-  DIMMED_DEPENDENCY_STROKE_WIDTH,
-  GROUP_BY_OPTIONS,
   ISSUE_INFO_COLUMN_WIDTH,
-  PRIORITY_ORDER,
-  ROADMAP_DEPENDENCY_TARGET_NONE,
   ROADMAP_ROW_HEIGHT,
   TIMELINE_BUCKET_WIDTH,
-  TIMELINE_SPANS,
-  TIMELINE_ZOOM_OPTIONS,
 } from "./Roadmap/types";
 import {
-  buildDependencyLine,
   buildDragPatch,
-  buildIssueHierarchyRows,
   buildIssueLookupMap,
   buildIssueRowIndexMap,
   buildMonthHeaderCells,
@@ -117,39 +64,15 @@ import {
   buildRoadmapDependencyItems,
   buildTimelineRows,
   buildWeekHeaderCells,
-  compareTimelineGroups,
   computeDependencyLines,
   getAvailableRoadmapDependencyTargets,
-  getBarLeft,
-  getBarWidth,
-  getBestFitTimelineSpan,
-  getDependencyLineOpacity,
-  getDependencyLineStrokeWidth,
-  getDependencyPath,
-  getGroupDescriptor,
-  getPriorityLabel,
-  getRoadmapBarTitle,
-  getRoadmapDateBadgeLabel,
-  getRoadmapStatusLabel,
-  getRoadmapSubtaskCaption,
   getStickyHeaderColumnClassName,
-  getStickyIssueColumnClassName,
-  getSummaryCompletionLabel,
-  getSummaryCompletionPercentage,
   getTimelineFitWindow,
-  getTimelineGroupBadgeTone,
-  getTimelineGroupLabel,
-  getTimelineGroupSummary,
   getTimelineLayoutWidth,
-  getTimelineMonthsCovered,
   getTimelineRangeLabel,
   getTimelineWindowStepLabel,
   getTodayMarkerOffsetPx,
-  isDependencyLineFocused,
-  isRoadmapIssueCompleted,
-  isRoadmapMilestone,
   shiftTimelineAnchorDate,
-  shouldRenderEpicSummaryBar,
 } from "./Roadmap/utils";
 
 /** Build a map of issue ID to issue for O(1) lookups */

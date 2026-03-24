@@ -13,7 +13,7 @@ import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { MINUTE } from "../lib/timeUtils";
 import type { AIConfig } from "./config";
-import { getAIConfig, getFallbackAIConfig } from "./config";
+import { getFallbackAIConfig } from "./config";
 
 export interface AIMessage {
   role: "system" | "user" | "assistant";

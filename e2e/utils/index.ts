@@ -2,16 +2,17 @@
  * E2E Test Utilities - Central Export
  */
 
-// Auth UI helpers
+// Auth helpers (sign-in flows, token injection)
 export * from "./auth-helpers";
 
-// Mailtrap utilities
-
-// Shared locator-state helpers for resilient E2E polling/recovery
+// Locator state helpers for resilient polling/recovery
 export * from "./locator-state";
-// Test helpers
+
+// Test namespace helpers (unique entity naming for parallel tests)
 export * from "./test-helpers";
-// Test user API service
+
+// Test user API service (create/delete/seed test users)
 export * from "./test-user-service";
-// Wait helpers (semantic wait functions)
+
+// Semantic wait functions (replace arbitrary timeouts)
 export * from "./wait-helpers";

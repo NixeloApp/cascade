@@ -82,15 +82,17 @@ export function SearchResultsList({
             <Flex gap="md" align="start">
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="md" className="shrink-0" />
               <FlexItem flex="1" className="min-w-0">
-                <Flex gap="sm" align="center" className="mb-1">
-                  <Typography variant="inlineCode" color="secondary">
-                    {issue.key}
-                  </Typography>
-                  <Badge size="sm" className={cn(getPriorityColor(issue.priority, "bg"))}>
-                    {issue.priority}
-                  </Badge>
-                </Flex>
-                <Typography variant="label">{issue.title}</Typography>
+                <Stack gap="xs">
+                  <Flex gap="sm" align="center">
+                    <Typography variant="inlineCode" color="secondary">
+                      {issue.key}
+                    </Typography>
+                    <Badge size="sm" className={cn(getPriorityColor(issue.priority, "bg"))}>
+                      {issue.priority}
+                    </Badge>
+                  </Flex>
+                  <Typography variant="label">{issue.title}</Typography>
+                </Stack>
               </FlexItem>
             </Flex>
           </Card>

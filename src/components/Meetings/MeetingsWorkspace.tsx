@@ -47,7 +47,8 @@ import {
   formatNumber,
   formatRelativeTime,
 } from "@/lib/formatting";
-import { Calendar, CheckCircle, FileText, Mic, XCircle } from "@/lib/icons";
+import { Calendar, CheckCircle, ChevronRight, FileText, Mic, XCircle } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
 type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[number];
@@ -364,7 +365,13 @@ function RecordingListItem({
   recording: MeetingOverview;
 }) {
   return (
-    <Card variant={isSelected ? "outline" : "soft"} padding="md" hoverable onClick={onSelect}>
+    <Card
+      variant={isSelected ? "outline" : "soft"}
+      padding="md"
+      hoverable
+      onClick={onSelect}
+      data-testid={TEST_IDS.MEETINGS.RECORDING_CARD}
+    >
       <Stack gap="sm">
         <Flex justify="between" align="start" gap="sm" wrap>
           <FlexItem flex="1">
@@ -476,7 +483,12 @@ function MeetingMemorySection({
 
   if (memory === undefined) {
     return (
-      <Section title="Meeting Memory" description={description} gap="sm">
+      <Section
+        title="Meeting Memory"
+        description={description}
+        gap="sm"
+        data-testid={TEST_IDS.MEETINGS.MEMORY_SECTION}
+      >
         <Card variant="soft" padding="lg">
           <Flex justify="center">
             <LoadingSpinner size="lg" />
@@ -487,7 +499,12 @@ function MeetingMemorySection({
   }
 
   return (
-    <Section title="Meeting Memory" description={description} gap="sm">
+    <Section
+      title="Meeting Memory"
+      description={description}
+      gap="sm"
+      data-testid={TEST_IDS.MEETINGS.MEMORY_SECTION}
+    >
       {projectLenses.length > 0 && (
         <Flex gap="xs" wrap>
           <Button
@@ -1087,6 +1104,39 @@ function ParticipantsSection({ participants }: { participants: MeetingParticipan
   );
 }
 
+/** Collapsible section using native details/summary for meeting detail density. */
+function CollapsibleDetail({
+  title,
+  defaultOpen = false,
+  count,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  count?: number;
+  children: ReactNode;
+}) {
+  return (
+    <details open={defaultOpen} className="group">
+      <Flex
+        as="summary"
+        align="center"
+        gap="sm"
+        className="cursor-pointer list-none [&::-webkit-details-marker]:hidden"
+      >
+        <ChevronRight className="size-4 text-ui-text-tertiary transition-transform group-open:rotate-90" />
+        <Typography variant="h5">{title}</Typography>
+        {count !== undefined && count > 0 && (
+          <Badge size="sm" variant="neutral">
+            {count}
+          </Badge>
+        )}
+      </Flex>
+      <Stack gap="sm">{children}</Stack>
+    </details>
+  );
+}
+
 function SummarySections({
   recording,
   projects,
@@ -1106,16 +1156,17 @@ function SummarySections({
           description="The transcript is available below while the summary is processing."
         />
         {transcript && (
-          <Section title="Transcript" gap="sm">
+          <CollapsibleDetail title="Transcript" defaultOpen>
             <TranscriptSegmentList transcript={transcript} />
-          </Section>
+          </CollapsibleDetail>
         )}
       </Stack>
     );
   }
 
   return (
-    <Stack gap="lg">
+    <Stack gap="md">
+      {/* Summary is always visible — it's the primary content */}
       <Card variant="soft" padding="md">
         <Section title="Summary" gap="sm">
           <Typography variant="muted">{summary.executiveSummary}</Typography>
@@ -1128,24 +1179,27 @@ function SummarySections({
         </Section>
       </Card>
 
+      {/* Action items open by default — high-priority content */}
+      <CollapsibleDetail title="Action Items" defaultOpen count={summary.actionItems.length}>
+        <ActionItemsSection
+          summary={summary}
+          defaultProjectId={recording.projectId}
+          projects={projects}
+        />
+      </CollapsibleDetail>
+
       {summary.keyPoints.length > 0 && (
-        <Section title="Key Points" gap="sm">
+        <CollapsibleDetail title="Key Points" count={summary.keyPoints.length}>
           <List gap="xs" variant="bulleted">
             {summary.keyPoints.map((point) => (
               <li key={point}>{point}</li>
             ))}
           </List>
-        </Section>
+        </CollapsibleDetail>
       )}
 
-      <ActionItemsSection
-        summary={summary}
-        defaultProjectId={recording.projectId}
-        projects={projects}
-      />
-
       {summary.decisions.length > 0 && (
-        <Section title="Decisions" gap="sm">
+        <CollapsibleDetail title="Decisions" count={summary.decisions.length}>
           <List gap="xs">
             {summary.decisions.map((decision) => (
               <Flex as="li" key={decision} align="start" gap="sm">
@@ -1156,21 +1210,21 @@ function SummarySections({
               </Flex>
             ))}
           </List>
-        </Section>
+        </CollapsibleDetail>
       )}
 
       {summary.openQuestions.length > 0 && (
-        <Section title="Open Questions" gap="sm">
+        <CollapsibleDetail title="Open Questions" count={summary.openQuestions.length}>
           <List gap="xs" variant="bulleted">
             {summary.openQuestions.map((question) => (
               <li key={question}>{question}</li>
             ))}
           </List>
-        </Section>
+        </CollapsibleDetail>
       )}
 
       {summary.topics.length > 0 && (
-        <Section title="Topics" gap="sm">
+        <CollapsibleDetail title="Topics" count={summary.topics.length}>
           <List gap="sm">
             {summary.topics.map((topic) => (
               <li key={`topic-${topic.title}-${topic.summary}`}>
@@ -1185,13 +1239,13 @@ function SummarySections({
               </li>
             ))}
           </List>
-        </Section>
+        </CollapsibleDetail>
       )}
 
       {transcript && (
-        <Section title="Transcript" gap="sm">
+        <CollapsibleDetail title="Transcript" defaultOpen>
           <TranscriptSegmentList transcript={transcript} />
-        </Section>
+        </CollapsibleDetail>
       )}
     </Stack>
   );
@@ -1538,6 +1592,7 @@ export function MeetingsWorkspace() {
             title="Recent Meetings"
             description="Recordings created from calendar-linked meetings and direct bot runs."
             gap="sm"
+            data-testid={TEST_IDS.MEETINGS.RECENT_SECTION}
           >
             <Stack gap="sm">
               <Flex justify="between" align="center" gap="sm" wrap>
@@ -1664,6 +1719,7 @@ export function MeetingsWorkspace() {
             title="Meeting Detail"
             description="Review summaries, decisions, action items, transcript, and participants."
             gap="sm"
+            data-testid={TEST_IDS.MEETINGS.DETAIL_SECTION}
           >
             {selectedRecordingId ? (
               <RecordingDetailPanel recording={selectedRecording} projects={projects} />

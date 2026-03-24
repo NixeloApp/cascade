@@ -49,6 +49,12 @@ import {
   initiateAuth as initiateSlackAuth,
 } from "./http/slackOAuth";
 import { handleUnfurl } from "./http/slackUnfurl";
+import {
+  handleClickRedirect,
+  handleOpenPixel,
+  handleUnsubscribeGet,
+  handleUnsubscribePost,
+} from "./outreach/tracking";
 
 const http = httpRouter();
 
@@ -145,6 +151,32 @@ http.route({
   path: "/auth/request-reset",
   method: "OPTIONS",
   handler: securePasswordResetPreflight,
+});
+
+// Outreach tracking routes (open pixel, click redirect, unsubscribe)
+// Use pathPrefix for dynamic segments: /t/o/{enrollmentId}, /t/c/{linkId}, /t/u/{enrollmentId}
+http.route({
+  pathPrefix: "/t/o/",
+  method: "GET",
+  handler: handleOpenPixel,
+});
+
+http.route({
+  pathPrefix: "/t/c/",
+  method: "GET",
+  handler: handleClickRedirect,
+});
+
+http.route({
+  pathPrefix: "/t/u/",
+  method: "GET",
+  handler: handleUnsubscribeGet,
+});
+
+http.route({
+  pathPrefix: "/t/u/",
+  method: "POST",
+  handler: handleUnsubscribePost,
 });
 
 // E2E testing routes

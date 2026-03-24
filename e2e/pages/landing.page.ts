@@ -129,6 +129,12 @@ export class LandingPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async waitUntilReady(): Promise<void> {
+    await this.page
+      .getByRole("heading", { name: /replace scattered project tools/i })
+      .waitFor({ state: "visible", timeout: 12000 });
+  }
+
   // ===================
   // Actions
   // ===================

@@ -93,7 +93,7 @@ The clients page manages billing contacts for agency-style organizations and pro
 | ~~5~~ | ~~Portal link grabs first project~~ **Fixed** — each client card has a project selector dropdown; user explicitly chooses which project to scope the portal link to | ~~correctness~~ | ~~HIGH~~ |
 | 6 | Hourly rate input defaults to "0" string and uses `Number.parseFloat` -- edge cases with empty or invalid input | robustness | LOW |
 | 7 | No search or filter functionality for the client list | scalability | LOW |
-| 8 | No pagination -- all clients load at once | scalability | MEDIUM |
+| ~~8~~ | ~~No pagination~~ **Already fixed** — query uses `.take(MAX_CLIENTS)` (1000 limit), not `.collect()`. | ~~scalability~~ | ~~MEDIUM~~ |
 | ~~9~~ | ~~Portal token state managed locally (not reactive)~~ **Fixed** — added `listTokensByClientReactive` Convex query; `PortalTokenDetails` subscribes via `useAuthenticatedQuery` and auto-updates. Removed manual refresh button and local state. | ~~reactivity~~ | ~~MEDIUM~~ |
 
 ---

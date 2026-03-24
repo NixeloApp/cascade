@@ -1,9 +1,10 @@
 # 📊 Live Research Inventory
 
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-03-23
 
 | Competitor | Category | Analysis Doc | Scraped Data | Deep Metadata | Assets |
 | :--- | :--- | :---: | :---: | :---: | :---: |
+| **Apollo** | Email Outreach | [View](competitors/email-outreach/apollo.md) | ❌ | ❌ | ❌ |
 | **Appflowy** | Open Source | [View](competitors/open-source/appflowy.md) | ❌ | ❌ | ❌ |
 | **Asana** | PM Suites | [View](competitors/pm-suites/asana.md) | ✅ | ✅ | ✅ |
 | **Cal-com** | Open Source | [View](competitors/open-source/cal-com.md) | ❌ | ❌ | ❌ |
@@ -13,10 +14,12 @@
 | **Fireflies** | Meeting AI | [View](competitors/meeting-ai/fireflies.md) | ✅ | ✅ | ✅ |
 | **Gong** | Meeting AI | [View](competitors/meeting-ai/gong.md) | ✅ | ✅ | ✅ |
 | **Harvest** | Unknown | ❌ Missing | ✅ | ✅ | ✅ |
+| **Instantly** | Email Outreach | [View](competitors/email-outreach/instantly.md) | ❌ | ❌ | ❌ |
 | **Height** | PM Suites | [View](competitors/pm-suites/height.md) | ✅ | ❌ | ✅ |
 | **Jibble** | Time Tracking | [View](competitors/time-tracking/jibble.md) | ✅ | ✅ | ✅ |
 | **Jira** | PM Suites | [View](competitors/pm-suites/jira.md) | ✅ | ✅ | ✅ |
 | **Kimai** | Open Source | [View](competitors/open-source/kimai.md) | ❌ | ❌ | ❌ |
+| **Lemlist** | Email Outreach | [View](competitors/email-outreach/lemlist.md) | ❌ | ❌ | ❌ |
 | **Linear** | PM Suites | [View](competitors/pm-suites/linear.md) | ✅ | ✅ | ✅ |
 | **Meeting-baas** | Infrastructure | [View](competitors/infrastructure/meeting-baas.md) | ✅ | ✅ | ✅ |
 | **Mintlify** | Unknown | ❌ Missing | ✅ | ✅ | ✅ |
@@ -29,6 +32,7 @@
 | **Recall-ai** | Infrastructure | [View](competitors/infrastructure/recall-ai.md) | ✅ | ✅ | ✅ |
 | **Shortcut** | PM Suites | [View](competitors/pm-suites/shortcut.md) | ✅ | ✅ | ✅ |
 | **Skribby** | Infrastructure | [View](competitors/infrastructure/skribby.md) | ❌ | ❌ | ❌ |
+| **Smartlead** | Email Outreach | [View](competitors/email-outreach/smartlead.md) | ❌ | ❌ | ❌ |
 | **Timecamp** | Time Tracking | [View](competitors/time-tracking/timecamp.md) | ✅ | ✅ | ✅ |
 | **Tldv** | Meeting AI | [View](competitors/meeting-ai/tldv.md) | ✅ | ✅ | ✅ |
 | **Tmetric** | Time Tracking | [View](competitors/time-tracking/tmetric.md) | ✅ | ✅ | ✅ |

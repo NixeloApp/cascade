@@ -89,7 +89,6 @@ function NotificationToggleCard({
 }
 
 interface DigestOptionCardProps {
-  checked: boolean;
   description: string;
   isDisabled: boolean;
   label: string;
@@ -98,7 +97,6 @@ interface DigestOptionCardProps {
 }
 
 function DigestOptionCard({
-  checked,
   description,
   isDisabled,
   label,
@@ -137,15 +135,17 @@ function PushNotificationsBlocked() {
     <Alert variant="warning">
       <AlertTitle>Browser notifications blocked</AlertTitle>
       <AlertDescription>
-        <Typography variant="small">
-          Notification permission is denied for this site. Re-enable notifications in your browser
-          settings to receive push alerts.
-        </Typography>
-        <div className="mt-3">
-          <Button variant="secondary" size="sm" disabled>
-            Blocked
-          </Button>
-        </div>
+        <Stack gap="md">
+          <Typography variant="small">
+            Notification permission is denied for this site. Re-enable notifications in your browser
+            settings to receive push alerts.
+          </Typography>
+          <div>
+            <Button variant="secondary" size="sm" disabled>
+              Blocked
+            </Button>
+          </div>
+        </Stack>
       </AlertDescription>
     </Alert>
   );
@@ -698,7 +698,6 @@ export function NotificationsTab() {
             value="none"
             label="No digest"
             description="Receive emails as events happen."
-            checked={preferences.emailDigest === "none"}
             onChange={() => void handleDigestChange("none")}
             isDisabled={isSaving || !preferences.emailEnabled}
           />
@@ -706,7 +705,6 @@ export function NotificationsTab() {
             value="daily"
             label="Daily digest"
             description="One recap per day with recent activity."
-            checked={preferences.emailDigest === "daily"}
             onChange={() => void handleDigestChange("daily")}
             isDisabled={isSaving || !preferences.emailEnabled}
           />
@@ -714,7 +712,6 @@ export function NotificationsTab() {
             value="weekly"
             label="Weekly digest"
             description="One recap per week with recent activity."
-            checked={preferences.emailDigest === "weekly"}
             onChange={() => void handleDigestChange("weekly")}
             isDisabled={isSaving || !preferences.emailEnabled}
           />

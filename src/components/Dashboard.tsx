@@ -17,6 +17,7 @@ import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery, useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { useListNavigation } from "../hooks/useListNavigation";
 import {
   DashboardPanel,
@@ -299,6 +300,7 @@ export function Dashboard() {
     <Card
       recipe="dashboardShell"
       padding="lg"
+      data-testid={TEST_IDS.DASHBOARD.CONTENT}
       className="overflow-hidden border-ui-border/55 bg-linear-to-b from-ui-bg via-ui-bg-secondary/65 to-ui-bg-soft/55 px-4 py-5 shadow-elevated sm:px-6 sm:py-6"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-brand-subtle/24 via-ui-bg-secondary/12 to-transparent" />

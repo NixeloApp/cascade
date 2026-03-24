@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Stack } from "../ui/Stack";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 
@@ -32,56 +33,58 @@ interface TemplateCardProps {
 export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
   return (
     <Card padding="md" hoverable className="bg-ui-bg-secondary">
-      <Flex justify="between" align="start">
+      <Flex justify="between" align="start" gap="md">
         <FlexItem flex="1">
-          <Flex gap="sm" align="center" className="mb-2">
-            <Icon icon={ISSUE_TYPE_ICONS[template.type]} size="md" />
-            <Typography variant="h4">{template.name}</Typography>
-            {template.isDefault && (
-              <Tooltip content="Default template">
-                <Badge variant="brand" size="sm">
-                  <Flex align="center" gap="xs">
-                    <Star className="size-3" />
-                    Default
-                  </Flex>
-                </Badge>
-              </Tooltip>
-            )}
-            <Badge variant="neutral" size="sm" className="capitalize">
-              {template.type}
-            </Badge>
-            <Badge variant="brand" size="sm" className="capitalize">
-              {template.defaultPriority}
-            </Badge>
-            {template.defaultStoryPoints !== undefined && (
-              <Badge variant="outline" size="sm">
-                {template.defaultStoryPoints} pts
+          <Stack gap="sm">
+            <Flex gap="sm" align="center">
+              <Icon icon={ISSUE_TYPE_ICONS[template.type]} size="md" />
+              <Typography variant="h4">{template.name}</Typography>
+              {template.isDefault && (
+                <Tooltip content="Default template">
+                  <Badge variant="brand" size="sm">
+                    <Flex align="center" gap="xs">
+                      <Star className="size-3" />
+                      Default
+                    </Flex>
+                  </Badge>
+                </Tooltip>
+              )}
+              <Badge variant="neutral" size="sm" className="capitalize">
+                {template.type}
               </Badge>
-            )}
-          </Flex>
-          <Typography variant="small" color="secondary" className="mb-1">
-            <Typography variant="label" as="span">
-              Title:
-            </Typography>{" "}
-            {template.titleTemplate}
-          </Typography>
-          {template.descriptionTemplate && (
-            <Typography variant="caption" color="tertiary" className="line-clamp-2">
-              {template.descriptionTemplate}
-            </Typography>
-          )}
-          {template.defaultLabels && template.defaultLabels.length > 0 && (
-            <Flex gap="xs" className="mt-2">
-              {template.defaultLabels.map((label) => (
-                <Badge key={label} variant="outline" size="sm">
-                  {label}
+              <Badge variant="brand" size="sm" className="capitalize">
+                {template.defaultPriority}
+              </Badge>
+              {template.defaultStoryPoints !== undefined && (
+                <Badge variant="outline" size="sm">
+                  {template.defaultStoryPoints} pts
                 </Badge>
-              ))}
+              )}
             </Flex>
-          )}
+            <Typography variant="small" color="secondary">
+              <Typography variant="label" as="span">
+                Title:
+              </Typography>{" "}
+              {template.titleTemplate}
+            </Typography>
+            {template.descriptionTemplate && (
+              <Typography variant="caption" color="tertiary" className="line-clamp-2">
+                {template.descriptionTemplate}
+              </Typography>
+            )}
+            {template.defaultLabels && template.defaultLabels.length > 0 && (
+              <Flex gap="xs">
+                {template.defaultLabels.map((label) => (
+                  <Badge key={label} variant="outline" size="sm">
+                    {label}
+                  </Badge>
+                ))}
+              </Flex>
+            )}
+          </Stack>
         </FlexItem>
 
-        <Flex gap="sm" className="ml-4">
+        <Flex gap="sm">
           <Button
             variant="ghost"
             size="sm"

@@ -36,6 +36,13 @@ export abstract class BasePage {
   abstract goto(): Promise<void>;
 
   /**
+   * Wait until the page content is fully rendered and ready for interaction
+   * or screenshot capture. Subclasses implement page-specific readiness checks
+   * (e.g., waiting for data-testid elements, cards to render, spinners to clear).
+   */
+  abstract waitUntilReady(): Promise<void>;
+
+  /**
    * Wait for page to be fully loaded and React to be hydrated
    * We avoid networkidle because Convex keeps WebSocket connections active.
    */

@@ -101,10 +101,10 @@ crashing to a blank screen. Supports an optional custom fallback and an
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | No "Go back" or "Go to dashboard" navigation option -- only reload | `ErrorBoundary` | LOW |
+| ~~1~~ | ~~No navigation option~~ **Fixed** — added "Go to dashboard" button alongside "Try again" | ~~`ErrorBoundary`~~ | ~~LOW~~ |
 | 2 | No external error reporting integration (Sentry, PostHog) -- only console.error | `componentDidCatch` | MEDIUM |
-| 3 | Error details only show `error.message`, not the component stack trace | `<details>` block | LOW |
-| 4 | No way to recover without a full page reload -- no "try again" that re-mounts | `ErrorBoundary` | LOW |
+| ~~3~~ | ~~Error details only show error.message~~ **Fixed** — now shows component stack trace in expandable details | ~~`<details>` block~~ | ~~LOW~~ |
+| ~~4~~ | ~~No recovery without full page reload~~ **Fixed** — "Try again" button resets error state and re-mounts children | ~~`ErrorBoundary`~~ | ~~LOW~~ |
 
 ---
 

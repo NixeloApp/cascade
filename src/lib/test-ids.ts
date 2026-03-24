@@ -56,6 +56,8 @@ export const TEST_IDS = {
     DESCRIPTION_EDITOR: "issue-description-editor",
     /** @see src/components/IssueDetail/IssueDetailContent.tsx */
     DESCRIPTION_CONTENT: "issue-description-content",
+    /** @see src/routes/_app.$orgSlug.issues.index.tsx */
+    EMPTY_STATE: "issue-empty-state",
   },
 
   BOARD: {
@@ -78,6 +80,8 @@ export const TEST_IDS = {
     CARD: "workspace-card",
     /** @see src/components/WorkspaceCard.tsx */
     NAME: "workspace-name",
+    /** @see src/routes/_app.$orgSlug.workspaces.index.tsx */
+    EMPTY_STATE: "workspace-empty-state",
   },
 
   // ============================================================
@@ -185,6 +189,10 @@ export const TEST_IDS = {
     NAME_INPUT: "project-name-input",
     /** @see src/components/CreateProjectFromTemplate.tsx */
     KEY_INPUT: "project-key-input",
+    /** @see src/components/ProjectsList.tsx */
+    CARD: "project-card",
+    /** @see src/components/ProjectsList.tsx */
+    EMPTY_STATE: "project-empty-state",
   },
 
   // ============================================================
@@ -291,6 +299,10 @@ export const TEST_IDS = {
     CARD: "sprint-card",
     /** @see src/components/SprintCard.tsx */
     NAME: "sprint-name",
+    /** @see src/components/Sprints/CreateSprintForm.tsx */
+    CREATE_FORM: "sprint-create-form",
+    /** @see src/routes/_app.$orgSlug.projects.$key.sprints.tsx */
+    CONTENT: "sprints-content",
   },
 
   ROADMAP: {
@@ -436,6 +448,8 @@ export const TEST_IDS = {
   TEAMS: {
     /** @see src/routes/_app.$orgSlug.workspaces.$workspaceSlug.teams.tsx */
     LIST_HEADING: "teams-list-heading",
+    /** @see src/routes/_app.$orgSlug.workspaces.$workspaceSlug.teams.index.tsx */
+    EMPTY_STATE: "teams-empty-state",
   },
 
   // ============================================================
@@ -445,6 +459,8 @@ export const TEST_IDS = {
   DASHBOARD: {
     /** @see src/routes/_app.$orgSlug.dashboard.tsx */
     FEED_HEADING: "dashboard-feed-heading",
+    /** @see src/routes/_app.$orgSlug.dashboard.tsx */
+    CONTENT: "dashboard-content",
   },
 
   // ============================================================
@@ -460,6 +476,43 @@ export const TEST_IDS = {
     TITLE_INPUT: "document-title-input",
     /** @see src/components/Plate/HeadingElement.tsx */
     HEADING_ANCHOR: "document-heading-anchor",
+    /** @see src/routes/_app.$orgSlug.documents.templates.tsx */
+    TEMPLATES_CONTENT: "document-templates-content",
+  },
+
+  // ============================================================
+  // Time Tracking
+  // ============================================================
+
+  TIME_TRACKING: {
+    /** @see src/components/TimeTracking/ManualTimeEntryModal.tsx */
+    ENTRY_FORM: "time-entry-form",
+    /** @see src/routes/_app.$orgSlug.time-tracking.tsx */
+    CONTENT: "time-tracking-content",
+  },
+
+  // ============================================================
+  // Meetings
+  // ============================================================
+
+  MEETINGS: {
+    /** @see src/routes/_app.$orgSlug.meetings.tsx */
+    RECENT_SECTION: "meetings-recent-section",
+    /** @see src/routes/_app.$orgSlug.meetings.tsx */
+    DETAIL_SECTION: "meetings-detail-section",
+    /** @see src/routes/_app.$orgSlug.meetings.tsx */
+    MEMORY_SECTION: "meetings-memory-section",
+    /** @see src/routes/_app.$orgSlug.meetings.tsx */
+    RECORDING_CARD: "meetings-recording-card",
+  },
+
+  // ============================================================
+  // Billing
+  // ============================================================
+
+  BILLING: {
+    /** @see src/routes/_app.$orgSlug.projects.$key.billing.tsx */
+    CONTENT: "billing-content",
   },
 
   // ============================================================

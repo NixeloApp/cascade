@@ -31,6 +31,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Calendar, Folder, KanbanSquare, MapIcon, Plus } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 
 type PaginatedQuery = FunctionReference<"query", "public">;
@@ -115,7 +116,12 @@ function ProjectCard({ project, orgSlug }: { project: ProjectListItem; orgSlug: 
   const projectParams = { key: project.key, orgSlug };
 
   return (
-    <Link to={ROUTES.projects.board.path} params={projectParams} className="group">
+    <Link
+      to={ROUTES.projects.board.path}
+      params={projectParams}
+      className="group"
+      data-testid={TEST_IDS.PROJECT.CARD}
+    >
       <Card hoverable padding="lg" variant="default" className="h-full overflow-hidden">
         <Flex direction="column" gap="md">
           <Flex justify="between" align="start" gap="md">
@@ -421,6 +427,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
       {projects.length === 0 ? (
         <Flex direction="column" gap="lg">
           <EmptyState
+            data-testid={TEST_IDS.PROJECT.EMPTY_STATE}
             icon={Folder}
             title="No projects yet"
             description="Create your first project to organize work"

@@ -252,8 +252,8 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
         const isEditing = editingFieldId === field._id;
 
         return (
-          <div key={field._id} className="border-b border-ui-border-secondary pb-3">
-            <Flex align="start" justify="between" className="mb-2">
+          <Stack key={field._id} gap="sm" className="border-b border-ui-border-secondary pb-3">
+            <Flex align="start" justify="between">
               <FlexItem flex="1">
                 <Flex align="center" gap="sm">
                   <Label required={field.isRequired}>{field.name}</Label>
@@ -288,9 +288,9 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
                 </Flex>
               </Stack>
             ) : (
-              <div className="mt-1">{renderFieldValue(field, fieldValue?.value)}</div>
+              <div>{renderFieldValue(field, fieldValue?.value)}</div>
             )}
-          </div>
+          </Stack>
         );
       })}
     </Stack>

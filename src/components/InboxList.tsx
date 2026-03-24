@@ -106,90 +106,175 @@ const STATUS_CONFIG = {
 // Main Component
 // =============================================================================
 
-export function InboxList({ projectId }: InboxListProps) {
-  const [activeTab, setActiveTab] = useState<"open" | "closed">("open");
+// =============================================================================
+// Selection Hook
+// =============================================================================
+
+function useInboxSelection(projectId: Id<"projects">) {
   const [selectedIds, setSelectedIds] = useState<Set<Id<"inboxIssues">>>(new Set());
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const inboxIssues = useAuthenticatedQuery(api.inbox.list, {
-    projectId,
-    tab: activeTab,
-  });
-
-  const counts = useAuthenticatedQuery(api.inbox.getCounts, { projectId });
-
-  // Bulk mutations
   const { mutate: bulkAccept } = useAuthenticatedMutation(api.inbox.bulkAccept);
   const { mutate: bulkDecline } = useAuthenticatedMutation(api.inbox.bulkDecline);
   const { mutate: bulkSnooze } = useAuthenticatedMutation(api.inbox.bulkSnooze);
 
-  // Clear selection when tab changes
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab as "open" | "closed");
-    setSelectedIds(new Set());
-  };
+  const clear = () => setSelectedIds(new Set());
 
-  // Toggle selection for an item
-  const handleToggleSelect = (id: Id<"inboxIssues">) => {
+  const toggle = (id: Id<"inboxIssues">) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
-  // Select all items
-  const handleSelectAll = () => {
-    const triageable = filteredIssues.filter(
-      (item) => item.status === "pending" || item.status === "snoozed",
-    );
-    setSelectedIds(new Set(triageable.map((item) => item._id)));
+  const selectAll = (items: InboxIssueWithDetails[]) => {
+    const triageable = items.filter((i) => i.status === "pending" || i.status === "snoozed");
+    setSelectedIds(new Set(triageable.map((i) => i._id)));
   };
 
-  // Clear selection
-  const handleClearSelection = () => {
-    setSelectedIds(new Set());
-  };
-
-  // Bulk accept
-  const handleBulkAccept = async () => {
+  const acceptSelected = async () => {
     try {
-      const ids = Array.from(selectedIds);
-      const result = await bulkAccept({ inboxIssueIds: ids, projectId });
+      const result = await bulkAccept({ inboxIssueIds: [...selectedIds], projectId });
       showSuccess(`Accepted ${result.accepted} issue(s)`);
-      setSelectedIds(new Set());
+      clear();
     } catch (error) {
       showError(error, "Failed to accept issues");
     }
   };
 
-  // Bulk decline
-  const handleBulkDecline = async () => {
+  const declineSelected = async () => {
     try {
-      const ids = Array.from(selectedIds);
-      const result = await bulkDecline({ inboxIssueIds: ids, projectId });
+      const result = await bulkDecline({ inboxIssueIds: [...selectedIds], projectId });
       showSuccess(`Declined ${result.declined} issue(s)`);
-      setSelectedIds(new Set());
+      clear();
     } catch (error) {
       showError(error, "Failed to decline issues");
     }
   };
 
-  // Bulk snooze (1 week)
-  const handleBulkSnooze = async () => {
+  const snoozeSelected = async () => {
     try {
-      const ids = Array.from(selectedIds);
-      const oneWeekFromNow = Date.now() + WEEK;
-      const result = await bulkSnooze({ inboxIssueIds: ids, projectId, until: oneWeekFromNow });
+      const until = Date.now() + WEEK;
+      const result = await bulkSnooze({ inboxIssueIds: [...selectedIds], projectId, until });
       showSuccess(`Snoozed ${result.snoozed} issue(s) for 1 week`);
-      setSelectedIds(new Set());
+      clear();
     } catch (error) {
       showError(error, "Failed to snooze issues");
     }
+  };
+
+  return { selectedIds, toggle, selectAll, clear, acceptSelected, declineSelected, snoozeSelected };
+}
+
+// =============================================================================
+// Bulk Actions Bar
+// =============================================================================
+
+function InboxBulkActionsBar({
+  selection,
+  triageableCount,
+  filteredIssues,
+}: {
+  selection: ReturnType<typeof useInboxSelection>;
+  triageableCount: number;
+  filteredIssues: InboxIssueWithDetails[];
+}) {
+  return (
+    <CardSection className="bg-ui-bg-soft">
+      <Flex align="center" gap="md">
+        <Checkbox
+          checked={selection.selectedIds.size === triageableCount && triageableCount > 0}
+          onCheckedChange={(checked) =>
+            checked ? selection.selectAll(filteredIssues) : selection.clear()
+          }
+        />
+        {selection.selectedIds.size > 0 ? (
+          <>
+            <Typography variant="small" color="secondary">
+              {selection.selectedIds.size} selected
+            </Typography>
+            <FlexItem grow />
+            <Button variant="secondary" size="sm" onClick={selection.acceptSelected}>
+              Accept All
+            </Button>
+            <Button variant="outline" size="sm" onClick={selection.snoozeSelected}>
+              Snooze 1 Week
+            </Button>
+            <Button variant="danger" size="sm" onClick={selection.declineSelected}>
+              Decline All
+            </Button>
+            <Button variant="ghost" size="sm" onClick={selection.clear}>
+              Clear
+            </Button>
+          </>
+        ) : (
+          <Typography variant="small" color="tertiary">
+            Select items for bulk actions
+          </Typography>
+        )}
+      </Flex>
+    </CardSection>
+  );
+}
+
+// =============================================================================
+// Tab Content
+// =============================================================================
+
+function InboxTabContent({
+  items,
+  projectId,
+  selectedIds,
+  onToggleSelect,
+  emptyIcon,
+  emptyTitle,
+  emptyDescription,
+  searchActive,
+}: {
+  items: InboxIssueWithDetails[];
+  projectId: Id<"projects">;
+  selectedIds: Set<Id<"inboxIssues">>;
+  onToggleSelect: (id: Id<"inboxIssues">) => void;
+  emptyIcon: typeof Inbox;
+  emptyTitle: string;
+  emptyDescription: string;
+  searchActive: boolean;
+}) {
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        icon={emptyIcon}
+        title={searchActive ? "No matching items" : emptyTitle}
+        description={searchActive ? "Try a different search term." : emptyDescription}
+      />
+    );
+  }
+
+  return (
+    <InboxIssueList
+      items={items}
+      projectId={projectId}
+      selectedIds={selectedIds}
+      onToggleSelect={onToggleSelect}
+    />
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+export function InboxList({ projectId }: InboxListProps) {
+  const [activeTab, setActiveTab] = useState<"open" | "closed">("open");
+  const [searchQuery, setSearchQuery] = useState("");
+  const selection = useInboxSelection(projectId);
+
+  const inboxIssues = useAuthenticatedQuery(api.inbox.list, { projectId, tab: activeTab });
+  const counts = useAuthenticatedQuery(api.inbox.getCounts, { projectId });
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab as "open" | "closed");
+    selection.clear();
   };
 
   if (inboxIssues === undefined || counts === undefined) {
@@ -200,7 +285,6 @@ export function InboxList({ projectId }: InboxListProps) {
     );
   }
 
-  // Client-side search filtering
   const query = searchQuery.trim().toLowerCase();
   const filteredIssues = query
     ? inboxIssues.filter(
@@ -250,88 +334,38 @@ export function InboxList({ projectId }: InboxListProps) {
             </TabsTrigger>
           </TabsList>
 
-          {/* Bulk Actions Bar */}
           {activeTab === "open" && triageableCount > 0 && (
-            <CardSection className="bg-ui-bg-soft">
-              <Flex align="center" gap="md">
-                <Checkbox
-                  checked={selectedIds.size === triageableCount && triageableCount > 0}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      handleSelectAll();
-                    } else {
-                      handleClearSelection();
-                    }
-                  }}
-                />
-                {selectedIds.size > 0 ? (
-                  <>
-                    <Typography variant="small" color="secondary">
-                      {selectedIds.size} selected
-                    </Typography>
-                    <FlexItem grow />
-                    <Button variant="secondary" size="sm" onClick={handleBulkAccept}>
-                      Accept All
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleBulkSnooze}>
-                      Snooze 1 Week
-                    </Button>
-                    <Button variant="danger" size="sm" onClick={handleBulkDecline}>
-                      Decline All
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={handleClearSelection}>
-                      Clear
-                    </Button>
-                  </>
-                ) : (
-                  <Typography variant="small" color="tertiary">
-                    Select items for bulk actions
-                  </Typography>
-                )}
-              </Flex>
-            </CardSection>
+            <InboxBulkActionsBar
+              selection={selection}
+              triageableCount={triageableCount}
+              filteredIssues={filteredIssues}
+            />
           )}
 
           <TabsContent value="open" className="overflow-auto">
-            {filteredIssues.length === 0 ? (
-              <EmptyState
-                icon={Inbox}
-                title={query ? "No matching items" : "No pending items"}
-                description={
-                  query
-                    ? "Try a different search term."
-                    : "All inbox issues have been triaged. New submissions will appear here."
-                }
-              />
-            ) : (
-              <InboxIssueList
-                items={filteredIssues}
-                projectId={projectId}
-                selectedIds={selectedIds}
-                onToggleSelect={handleToggleSelect}
-              />
-            )}
+            <InboxTabContent
+              items={filteredIssues}
+              projectId={projectId}
+              selectedIds={selection.selectedIds}
+              onToggleSelect={selection.toggle}
+              emptyIcon={Inbox}
+              emptyTitle="No pending items"
+              emptyDescription="All inbox issues have been triaged. New submissions will appear here."
+              searchActive={!!query}
+            />
           </TabsContent>
 
           <TabsContent value="closed" className="overflow-auto">
-            {filteredIssues.length === 0 ? (
-              <EmptyState
-                icon={CheckCircle2}
-                title={query ? "No matching items" : "No closed items"}
-                description={
-                  query
-                    ? "Try a different search term."
-                    : "Accepted, declined, and duplicate issues will appear here."
-                }
-              />
-            ) : (
-              <InboxIssueList
-                items={filteredIssues}
-                projectId={projectId}
-                selectedIds={selectedIds}
-                onToggleSelect={handleToggleSelect}
-              />
-            )}
+            <InboxTabContent
+              items={filteredIssues}
+              projectId={projectId}
+              selectedIds={selection.selectedIds}
+              onToggleSelect={selection.toggle}
+              emptyIcon={CheckCircle2}
+              emptyTitle="No closed items"
+              emptyDescription="Accepted, declined, and duplicate issues will appear here."
+              searchActive={!!query}
+            />
           </TabsContent>
         </Tabs>
       </Stack>

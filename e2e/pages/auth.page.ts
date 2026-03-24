@@ -170,6 +170,13 @@ export class AuthPage extends BasePage {
     await this.gotoSignIn();
   }
 
+  async waitUntilReady(): Promise<void> {
+    await this.page.getByText(/secure account access/i).waitFor({
+      state: "visible",
+      timeout: 12000,
+    });
+  }
+
   /**
    * Navigate to sign in page and expand email form
    */
