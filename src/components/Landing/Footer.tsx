@@ -105,7 +105,8 @@ export function Footer() {
             justify="between"
             align="center"
             gap="lg"
-            className="border-t border-ui-border/20 pt-8 sm:flex-row"
+            pt="xl"
+            className="border-t border-ui-border/20 sm:flex-row"
           >
             <Typography variant="muted" className="text-ui-text-secondary">
               © {new Date().getFullYear()} Nixelo. All rights reserved.

@@ -136,7 +136,7 @@ export function GeneralSettings({
             placeholder="Enter project description"
             rows={3}
           />
-          <Flex gap="sm" className="pt-2">
+          <Flex gap="sm" pt="sm">
             <Button onClick={handleSave} disabled={isSaving} isLoading={isSaving}>
               Save Changes
             </Button>

@@ -230,7 +230,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
               + Add State
             </Button>
 
-            <Flex gap="sm" className="pt-5 border-t border-ui-border">
+            <Flex gap="sm" pt="lg" className="border-t border-ui-border">
               <Button onClick={handleSave} disabled={isSaving} isLoading={isSaving}>
                 Save Changes
               </Button>

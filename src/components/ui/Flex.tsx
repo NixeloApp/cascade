@@ -86,6 +86,16 @@ const marginTopClasses: Record<SpacingSize, string> = {
   "2xl": "mt-12",
 };
 
+const paddingTopClasses: Record<SpacingSize, string> = {
+  none: "",
+  xs: "pt-1",
+  sm: "pt-2",
+  md: "pt-4",
+  lg: "pt-5",
+  xl: "pt-8",
+  "2xl": "pt-12",
+};
+
 export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Direction of flex layout */
   direction?: Direction;
@@ -119,6 +129,8 @@ export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   mb?: SpacingSize;
   /** Top margin — spacing above this container */
   mt?: SpacingSize;
+  /** Top padding — internal spacing at top (section separators) */
+  pt?: SpacingSize;
 }
 
 /**
@@ -165,6 +177,7 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
       as: Component = "div",
       mb,
       mt,
+      pt,
       className,
       children,
       ...props
@@ -190,6 +203,7 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
           wrap && "flex-wrap",
           mb && marginBottomClasses[mb],
           mt && marginTopClasses[mt],
+          pt && paddingTopClasses[pt],
           className,
         )}
         {...props}
