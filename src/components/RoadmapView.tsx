@@ -613,7 +613,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     <PageLayout fullHeight className="overflow-hidden">
       <Flex direction="column" className="h-full">
         {/* Header */}
-        <Flex align="center" justify="between" className="mb-6 shrink-0">
+        <Flex align="center" justify="between" mb="lg" className="shrink-0">
           <Stack gap="xs">
             <Typography variant="h2">Roadmap</Typography>
             <Typography variant="small" color="secondary">

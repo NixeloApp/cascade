@@ -13,7 +13,7 @@ export function RoadmapLoadingState() {
   return (
     <PageLayout fullHeight className="overflow-hidden">
       <Flex direction="column" className="h-full">
-        <Flex align="center" justify="between" className="mb-6 shrink-0">
+        <Flex align="center" justify="between" mb="lg" className="shrink-0">
           <Stack gap="xs">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-64" />

@@ -559,7 +559,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
           </>
         )}
 
-        <Stack gap="sm" className="border-t border-ui-border pt-4">
+        <Stack gap="sm" pt="md" className="border-t border-ui-border">
           <Input
             label="Verified Domains"
             value={domains}

@@ -412,7 +412,7 @@ export function CreateEventModal({
                   </Stack>
 
                   {/* Actions - Keep inside form.Subscribe to access isSubmitting */}
-                  <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
+                  <Flex justify="end" gap="sm" pt="md" className="border-t border-ui-border">
                     <form.Subscribe selector={(state) => state.isSubmitting}>
                       {(isSubmitting) => (
                         <>

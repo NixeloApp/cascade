@@ -150,7 +150,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
             surface="bare"
             className="min-h-full"
           >
-            <Flex direction="column" gap="xs" className="mt-4">
+            <Flex direction="column" gap="xs" mt="md">
               <Typography variant="meta">
                 <Icon icon={Lightbulb} size="sm" inline /> "What's our team velocity?"
               </Typography>

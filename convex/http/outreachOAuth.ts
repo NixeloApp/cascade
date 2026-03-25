@@ -12,8 +12,35 @@
  * Microsoft Outlook flow follows the same pattern with Microsoft endpoints.
  */
 
+import { internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import { httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
+
+/** Sign a state string with HMAC-SHA256 using the Google client secret as key. */
+async function signState(payload: string): Promise<string> {
+  const secret = getGoogleClientSecret();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  const hex = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `${payload}.${hex}`;
+}
+
+/** Verify and extract the payload from a signed state string. */
+async function verifyState(signed: string): Promise<string | null> {
+  const lastDot = signed.lastIndexOf(".");
+  if (lastDot === -1) return null;
+  const payload = signed.substring(0, lastDot);
+  const expected = await signState(payload);
+  return constantTimeEqual(signed, expected) ? payload : null;
+}
+
 import {
   getConvexSiteUrl,
   getGoogleClientId,
@@ -89,7 +116,8 @@ const getGmailOAuthConfig = () => {
  * Initiate Gmail OAuth flow
  * GET /outreach/google/auth
  */
-export const initiateGmailAuth = httpAction(async () => {
+export const initiateGmailAuth = httpAction(async (ctx, request) => {
+  void ctx; // HTTP actions require ctx parameter but initiation doesn't use it
   if (!isGoogleOAuthConfigured()) {
     return new Response(JSON.stringify({ error: "Google OAuth not configured" }), {
       status: 500,
@@ -97,33 +125,70 @@ export const initiateGmailAuth = httpAction(async () => {
     });
   }
 
+  // Frontend must pass userId and organizationId so the callback can create
+  // the mailbox server-side without tokens ever reaching the browser.
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+  const organizationId = url.searchParams.get("organizationId");
+  if (!userId || !organizationId) {
+    return new Response(JSON.stringify({ error: "userId and organizationId are required" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const config = getGmailOAuthConfig();
-  const state = crypto.randomUUID();
+  // Sign the state with HMAC so the callback can verify it wasn't forged.
+  // An attacker can't create a valid state without the server's secret.
+  const nonce = crypto.randomUUID();
+  const payload = `${nonce}:${userId}:${organizationId}`;
+  const state = await signState(payload);
 
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   authUrl.searchParams.set("client_id", config.clientId);
   authUrl.searchParams.set("redirect_uri", config.redirectUri);
   authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("scope", config.scopes);
-  authUrl.searchParams.set("access_type", "offline"); // Get refresh token
-  authUrl.searchParams.set("prompt", "consent"); // Force consent to always get refresh token
+  authUrl.searchParams.set("access_type", "offline");
+  authUrl.searchParams.set("prompt", "consent");
   authUrl.searchParams.set("state", state);
 
   return new Response(null, {
     status: 302,
     headers: {
       Location: authUrl.toString(),
-      "Set-Cookie": `outreach-oauth-state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
+      "Set-Cookie": `outreach-oauth-state=${encodeURIComponent(state)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
     },
   });
 });
+
+/** Safely decode a URI component, returning undefined on malformed input. */
+function safeDecode(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Build an OAuth error response that clears the state cookie. */
+function oauthErrorResponse(title: string, message: string, status = 400): Response {
+  return new Response(renderOAuthErrorPageHtml(title, message), {
+    status,
+    headers: {
+      "Content-Type": "text/html",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+    },
+  });
+}
 
 /**
  * Handle Gmail OAuth callback
  * GET /outreach/google/callback?code=xxx&state=xxx
  */
 export const handleGmailCallback = httpAction(async (ctx, request) => {
-  void ctx; // Will be used when callback saves tokens to DB
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
@@ -136,38 +201,24 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
       invalid_scope: "Required Gmail permissions were not granted.",
     };
     const userMessage = messages[error] ?? `Google returned an error: ${error}`;
-    return new Response(
-      renderOAuthErrorPageHtml("Gmail Connection - Error", escapeHtml(userMessage)),
-      {
-        status: 400,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
-        },
-      },
-    );
+    return oauthErrorResponse("Gmail Connection - Error", escapeHtml(userMessage));
   }
 
   // Validate CSRF state
   const cookieHeader = request.headers.get("Cookie");
-  const storedState = cookieHeader
+  const rawCookie = cookieHeader
     ?.split(";")
     .find((c) => c.trim().startsWith("outreach-oauth-state="))
-    ?.split("=")[1];
+    ?.split("=")
+    .slice(1)
+    .join("=")
+    ?.trim();
+  const storedState = safeDecode(rawCookie);
 
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
-    return new Response(
-      renderOAuthErrorPageHtml(
-        "Gmail Connection - Error",
-        "Invalid state or missing authorization code. Please try again.",
-      ),
-      {
-        status: 400,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
-        },
-      },
+    return oauthErrorResponse(
+      "Gmail Connection - Error",
+      "Invalid state or missing authorization code. Please try again.",
     );
   }
 
@@ -247,19 +298,66 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
     );
   }
 
-  // Return success page that posts data back to the frontend
-  // The frontend will call createMailbox mutation with these tokens
-  const connectionData = {
-    provider: "google" as const,
-    email: userInfo.email,
-    displayName: userInfo.name ?? userInfo.email.split("@")[0],
-    accessToken: tokens.access_token,
-    refreshToken: tokens.refresh_token,
-    expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * SECOND : undefined,
-  };
+  // Verify HMAC signature on state to prevent forged userId/organizationId
+  const verifiedPayload = await verifyState(state);
+  if (!verifiedPayload) {
+    return new Response(
+      renderOAuthErrorPageHtml(
+        "Gmail Connection - Error",
+        "Invalid OAuth state signature. Please try connecting again.",
+      ),
+      { status: 400, headers: { "Content-Type": "text/html" } },
+    );
+  }
+
+  // Extract user identity from the verified payload (nonce:userId:organizationId)
+  const stateParts = verifiedPayload.split(":");
+  const userId = stateParts[1] as Id<"users"> | undefined;
+  const organizationId = stateParts[2] as Id<"organizations"> | undefined;
+
+  if (!userId || !organizationId) {
+    return new Response(
+      renderOAuthErrorPageHtml(
+        "Gmail Connection - Error",
+        "Invalid OAuth state: missing user context.",
+      ),
+      { status: 400, headers: { "Content-Type": "text/html" } },
+    );
+  }
+
+  // Store tokens and create mailbox server-side — tokens never reach the browser
+  let mailboxId: string;
+  try {
+    mailboxId = await ctx.runMutation(internal.outreach.mailboxes.createMailboxFromOAuth, {
+      userId,
+      organizationId,
+      provider: "google",
+      email: userInfo.email,
+      displayName: userInfo.name ?? userInfo.email.split("@")[0],
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * SECOND : undefined,
+    });
+  } catch (e) {
+    logger.error("Failed to create mailbox from OAuth", { error: e });
+    return new Response(
+      renderOAuthErrorPageHtml(
+        "Gmail Connection - Error",
+        "Failed to save mailbox connection. Please try again.",
+      ),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "text/html",
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          "Set-Cookie": "outreach-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+        },
+      },
+    );
+  }
 
   const siteUrl = process.env.SITE_URL ?? "http://localhost:5555";
-  return new Response(renderOutreachSuccessPageHtml(userInfo.email, connectionData, siteUrl), {
+  return new Response(renderOutreachSuccessPageHtml(userInfo.email, mailboxId, siteUrl), {
     status: 200,
     headers: {
       "Content-Type": "text/html",
@@ -276,20 +374,12 @@ export const handleGmailCallback = httpAction(async (ctx, request) => {
 
 function renderOutreachSuccessPageHtml(
   email: string,
-  connectionData: {
-    provider: "google" | "microsoft";
-    email: string;
-    displayName: string;
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: number | undefined;
-  },
+  mailboxId: string,
   targetOrigin: string,
 ): string {
-  // The success page sends the connection data back to the parent window
-  // via postMessage, then the frontend calls the createMailbox mutation
+  // Tokens are stored server-side — only the mailbox ID is sent to the browser
   const safeEmail = escapeHtml(email);
-  const safeData = JSON.stringify(connectionData).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+  const safeMailboxId = escapeHtml(mailboxId);
 
   return `<!DOCTYPE html>
 <html>
@@ -300,9 +390,8 @@ function renderOutreachSuccessPageHtml(
   <p>This window will close automatically...</p>
   <script>
     (function() {
-      var data = ${safeData};
       if (window.opener) {
-        window.opener.postMessage({ type: 'outreach-mailbox-connected', data: data }, '${targetOrigin}');
+        window.opener.postMessage({ type: 'outreach-mailbox-connected', mailboxId: '${safeMailboxId}' }, '${targetOrigin}');
         setTimeout(function() { window.close(); }, 1500);
       } else {
         document.body.innerHTML += '<p>Please close this window and refresh the app.</p>';

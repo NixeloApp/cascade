@@ -63,7 +63,7 @@ export function DisplayPropertiesSelector({ value, onChange }: DisplayProperties
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-44">
+      <DropdownMenuContent align="end" minWidth="sm">
         {properties.map((property) => (
           <DropdownMenuCheckboxItem
             key={property}

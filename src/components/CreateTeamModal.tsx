@@ -119,7 +119,7 @@ export function CreateTeamModal({
               onChange={(e) => setDescription(e.target.value)}
             />
           </Stack>
-          <Flex align="center" gap="sm" className="pt-2">
+          <Flex align="center" gap="sm" pt="sm">
             <Checkbox
               id="team-private"
               checked={isPrivate}

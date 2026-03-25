@@ -43,7 +43,7 @@ export function SwimlanSelector({ value, onChange }: SwimlanSelectorProps) {
           <span className="hidden sm:inline">{value === "none" ? "Swimlanes" : currentLabel}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-40">
+      <DropdownMenuContent align="end" minWidth="sm">
         {options.map((option) => (
           <DropdownMenuCheckboxItem
             key={option.value}

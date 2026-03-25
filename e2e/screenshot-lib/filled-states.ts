@@ -409,6 +409,10 @@ export async function screenshotFilledStates(
       });
     }
 
+    // NOTE: This capture creates a real issue in the seeded project. The issue
+    // persists for the rest of the run, which can affect issue counts in later
+    // board/sprint screenshots. A test API for issue deletion would fix this,
+    // but the impact is low since screenshots use seeded data per-run.
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-success-toast`)) {
       await runCaptureStep("create issue success toast", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);

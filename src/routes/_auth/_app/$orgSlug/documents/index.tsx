@@ -121,6 +121,7 @@ export function DocumentsListPage() {
             <Button
               onClick={() => void handleCreateDocument()}
               leftIcon={<Icon icon={Plus} size="sm" />}
+              data-testid={TEST_IDS.DOCUMENT.NEW_BUTTON}
             >
               New Document
             </Button>

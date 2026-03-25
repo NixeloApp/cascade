@@ -64,6 +64,38 @@ const selfAlignClasses: Record<SelfAlign, string> = {
   baseline: "self-baseline",
 };
 
+type SpacingSize = "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+
+const marginBottomClasses: Record<SpacingSize, string> = {
+  none: "",
+  xs: "mb-1",
+  sm: "mb-2",
+  md: "mb-4",
+  lg: "mb-6",
+  xl: "mb-8",
+  "2xl": "mb-12",
+};
+
+const marginTopClasses: Record<SpacingSize, string> = {
+  none: "",
+  xs: "mt-1",
+  sm: "mt-2",
+  md: "mt-4",
+  lg: "mt-6",
+  xl: "mt-8",
+  "2xl": "mt-12",
+};
+
+const paddingTopClasses: Record<SpacingSize, string> = {
+  none: "",
+  xs: "pt-1",
+  sm: "pt-2",
+  md: "pt-4",
+  lg: "pt-6",
+  xl: "pt-8",
+  "2xl": "pt-12",
+};
+
 export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Direction of flex layout */
   direction?: Direction;
@@ -93,6 +125,12 @@ export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   flex?: FlexValue;
   /** Render as a different element */
   as?: React.ElementType;
+  /** Bottom margin — spacing below this container */
+  mb?: SpacingSize;
+  /** Top margin — spacing above this container */
+  mt?: SpacingSize;
+  /** Top padding — internal spacing at top (section separators) */
+  pt?: SpacingSize;
 }
 
 /**
@@ -137,6 +175,9 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
       inline = false,
       flex,
       as: Component = "div",
+      mb,
+      mt,
+      pt,
       className,
       children,
       ...props
@@ -160,6 +201,9 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
           justifySm && `sm:${justifyClasses[justifySm]}`,
           flex && flexClasses[flex],
           wrap && "flex-wrap",
+          mb && marginBottomClasses[mb],
+          mt && marginTopClasses[mt],
+          pt && paddingTopClasses[pt],
           className,
         )}
         {...props}

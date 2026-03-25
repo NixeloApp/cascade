@@ -194,7 +194,7 @@ export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookF
 
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <Flex justify="end" gap="sm" className="pt-4">
+            <Flex justify="end" gap="sm" pt="md">
               <Button
                 type="button"
                 variant="secondary"

@@ -10,6 +10,7 @@
  */
 
 import { v } from "convex/values";
+import { internalMutation } from "../_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { notFound, validation } from "../lib/errors";
@@ -107,6 +108,68 @@ export const createMailbox = authenticatedMutation({
     return await ctx.db.insert("outreachMailboxes", {
       userId: ctx.userId,
       organizationId: user.defaultOrganizationId,
+      provider: args.provider,
+      email: args.email.toLowerCase(),
+      displayName: args.displayName,
+      accessToken: args.accessToken,
+      refreshToken: args.refreshToken,
+      expiresAt: args.expiresAt,
+      dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
+      todaySendCount: 0,
+      todayResetAt: Date.now(),
+      isActive: true,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Internal mutation for creating/updating a mailbox from the OAuth callback.
+ * Called by HTTP actions that already have tokens — no auth context needed.
+ */
+export const createMailboxFromOAuth = internalMutation({
+  args: {
+    userId: v.id("users"),
+    organizationId: v.id("organizations"),
+    provider: outreachMailboxProviders,
+    email: v.string(),
+    displayName: v.string(),
+    accessToken: v.string(),
+    refreshToken: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Verify the user and organization exist before creating the mailbox
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw validation("userId", "User not found");
+    const org = await ctx.db.get(args.organizationId);
+    if (!org) throw validation("organizationId", "Organization not found");
+
+    const existing = await ctx.db
+      .query("outreachMailboxes")
+      .withIndex("by_user_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+
+    const alreadyConnected = existing.find(
+      (m) => m.email.toLowerCase() === args.email.toLowerCase(),
+    );
+
+    if (alreadyConnected) {
+      await ctx.db.patch(alreadyConnected._id, {
+        accessToken: args.accessToken,
+        refreshToken: args.refreshToken,
+        expiresAt: args.expiresAt,
+        isActive: true,
+        updatedAt: Date.now(),
+      });
+      return alreadyConnected._id;
+    }
+
+    return await ctx.db.insert("outreachMailboxes", {
+      userId: args.userId,
+      organizationId: args.organizationId,
       provider: args.provider,
       email: args.email.toLowerCase(),
       displayName: args.displayName,

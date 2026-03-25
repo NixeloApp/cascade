@@ -1578,6 +1578,7 @@ export function MeetingsWorkspace() {
         title: "No meeting recordings yet",
         description:
           "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
+        "data-testid": TEST_IDS.MEETINGS.EMPTY_STATE,
       }}
     >
       <Stack gap="lg">
