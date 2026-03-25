@@ -19,6 +19,7 @@ import { Building2, SearchX, X } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import {
   filterWorkspaces,
+  getWorkspaceOverviewCopy,
   getWorkspaceSearchEmptyState,
   getWorkspaceSearchSummary,
   shouldShowWorkspaceSearch,
@@ -46,6 +47,11 @@ export function WorkspacesList() {
   const totalTeams = workspaces?.reduce((sum, workspace) => sum + workspace.teamCount, 0) ?? 0;
   const totalProjects =
     workspaces?.reduce((sum, workspace) => sum + workspace.projectCount, 0) ?? 0;
+  const overviewCopy = getWorkspaceOverviewCopy({
+    workspaceCount,
+    totalTeams,
+    totalProjects,
+  });
   const hasSearch = searchQuery.trim().length > 0;
   const showSearch = shouldShowWorkspaceSearch(workspaceCount, searchQuery);
   const matchCount = filteredWorkspaces?.length ?? 0;
@@ -92,9 +98,9 @@ export function WorkspacesList() {
       <PageContent isLoading={workspaces === undefined} emptyState={pageEmptyState}>
         <Stack gap="xl">
           <OverviewBand
-            eyebrow="Workspace map"
-            title="Structure teams before work gets scattered."
-            description="Use workspaces to group departments, keep related projects together, and route ownership cleanly across the organization."
+            eyebrow={overviewCopy.eyebrow}
+            title={overviewCopy.title}
+            description={overviewCopy.description}
             metrics={[
               { label: "Workspaces", value: workspaceCount },
               { label: "Teams", value: totalTeams },

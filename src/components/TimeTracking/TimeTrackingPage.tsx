@@ -202,9 +202,9 @@ function TimeTrackingOverview({
   return (
     <div data-testid={TEST_IDS.TIME_TRACKING.OVERVIEW}>
       <OverviewBand
-        eyebrow="Operations pulse"
-        title="Track time with enough context to understand cost, not just duration."
-        description="Use one workspace-level view for recent entries, burn, and rates so delivery health stays visible while the team is still moving."
+        eyebrow="Time summary"
+        title="Review logged time, entry volume, and billable totals before drilling into detail."
+        description="These metrics reflect the active project and date range, so the rest of the page stays anchored to the same scope."
         metrics={[
           {
             label: "Logged",

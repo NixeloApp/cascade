@@ -102,6 +102,8 @@ tabbed view.
   - **Logged** — total duration in human-readable format (e.g., "42h 30m")
   - **Entries** — entry count
   - **Billable** — billable duration or tracked billable value
+- The copy is now literal and scope-driven: it explains that the summary reflects the active project
+  and date range instead of reading like a generic dashboard slogan.
 - Each metric shows "+" suffix when data is truncated beyond query limits.
 - Metrics respect the selected date range and project filter.
 - Data from `api.timeTracking.getTimeEntrySummary` query.

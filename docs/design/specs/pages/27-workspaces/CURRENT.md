@@ -47,11 +47,12 @@ The workspaces list is the org-level structure view. It answers:
 1. `WorkspacesList` owns the route composition, metrics, and search state.
 2. `api.workspaces.list` returns the enriched list with `teamCount` and `projectCount`.
 3. The route computes org-level totals client-side from the loaded workspace list.
-4. Search is case-insensitive across workspace name, slug, and description.
-5. Search is shown whenever the route has at least one workspace, or immediately once a query is active.
-6. Search misses render a full recovery state with a clear-search action instead of a dead text line.
-7. `CreateWorkspaceModal` trims the name, normalizes the slug through shared helpers, resets on close, and routes through the workspace detail path so creation is not hard-coupled to a specific landing tab.
-8. `WorkspaceCard` now uses shared sizing APIs cleanly instead of mixing `IconCircle` size props with raw size classes.
+4. The `OverviewBand` now uses literal structure counts instead of coaching copy, so the first surface reads as an org map instead of a motivational callout.
+5. Search is case-insensitive across workspace name, slug, and description.
+6. Search is shown whenever the route has at least one workspace, or immediately once a query is active.
+7. Search misses render a full recovery state with a clear-search action instead of a dead text line.
+8. `CreateWorkspaceModal` trims the name, normalizes the slug through shared helpers, resets on close, and routes through the workspace detail path so creation is not hard-coupled to a specific landing tab.
+9. `WorkspaceCard` now uses shared sizing APIs cleanly instead of mixing `IconCircle` size props with raw size classes.
 
 ---
 
@@ -99,5 +100,6 @@ instead of only the default route plus a partial modal pass.
 ## Summary
 
 Workspaces is now a reviewed core surface instead of a mostly-canonical screenshot baseline. The
-remaining work is future scalability and broader composition polish, not missing route states or
+overview summary band now reads as concrete structure data instead of filler copy, and the
+remaining work is future scalability plus broader composition polish, not missing route states or
 spec drift.

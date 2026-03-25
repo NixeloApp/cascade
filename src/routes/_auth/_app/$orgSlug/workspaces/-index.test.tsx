@@ -136,7 +136,21 @@ vi.mock("@/components/ui/Input", () => ({
 }));
 
 vi.mock("@/components/ui/OverviewBand", () => ({
-  OverviewBand: ({ title }: { title: string }) => <div>{title}</div>,
+  OverviewBand: ({
+    eyebrow,
+    title,
+    description,
+  }: {
+    eyebrow?: string;
+    title: string;
+    description: string;
+  }) => (
+    <div>
+      {eyebrow ? <div>{eyebrow}</div> : null}
+      <div>{title}</div>
+      <div>{description}</div>
+    </div>
+  ),
 }));
 
 vi.mock("@/components/ui/EmptyState", () => ({
@@ -228,6 +242,16 @@ describe("WorkspacesList", () => {
     const user = userEvent.setup();
 
     render(<WorkspacesList />);
+
+    expect(screen.getByText("Organization structure")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 workspaces, 5 teams, and 11 projects are active."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Use this list to confirm where new teams and projects belong before you create them.",
+      ),
+    ).toBeInTheDocument();
 
     await user.type(screen.getByTestId(TEST_IDS.WORKSPACE.SEARCH_INPUT), "platform");
     expect(screen.getByText("Platform Operations")).toBeInTheDocument();

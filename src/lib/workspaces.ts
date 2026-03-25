@@ -4,6 +4,12 @@ export interface WorkspaceSearchable {
   description?: string | null;
 }
 
+interface WorkspaceOverviewCopyArgs {
+  workspaceCount: number;
+  totalTeams: number;
+  totalProjects: number;
+}
+
 /** Build a stable workspace slug from a user-provided name. */
 export function buildWorkspaceSlug(name: string): string {
   return name
@@ -56,5 +62,27 @@ export function getWorkspaceSearchEmptyState(query: string): {
     title: `No workspaces match "${trimmedQuery}"`,
     description:
       "Try a different workspace name, slug, or description, or clear the current search.",
+  };
+}
+
+/** Build concrete route copy for the workspace structure summary band. */
+export function getWorkspaceOverviewCopy({
+  workspaceCount,
+  totalTeams,
+  totalProjects,
+}: WorkspaceOverviewCopyArgs): {
+  eyebrow: string;
+  title: string;
+  description: string;
+} {
+  const workspaceLabel = `${workspaceCount} workspace${workspaceCount === 1 ? "" : "s"}`;
+  const teamLabel = `${totalTeams} team${totalTeams === 1 ? "" : "s"}`;
+  const projectLabel = `${totalProjects} project${totalProjects === 1 ? "" : "s"}`;
+
+  return {
+    eyebrow: "Organization structure",
+    title: `${workspaceLabel}, ${teamLabel}, and ${projectLabel} are active.`,
+    description:
+      "Use this list to confirm where new teams and projects belong before you create them.",
   };
 }

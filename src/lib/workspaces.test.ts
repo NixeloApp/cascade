@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildWorkspaceSlug,
   filterWorkspaces,
+  getWorkspaceOverviewCopy,
   getWorkspaceSearchEmptyState,
   getWorkspaceSearchSummary,
   normalizeWorkspaceSearchQuery,
@@ -50,6 +51,21 @@ describe("workspaces helpers", () => {
       title: 'No workspaces match "platform"',
       description:
         "Try a different workspace name, slug, or description, or clear the current search.",
+    });
+  });
+
+  it("builds concrete workspace overview copy from structure counts", () => {
+    expect(
+      getWorkspaceOverviewCopy({
+        workspaceCount: 1,
+        totalTeams: 2,
+        totalProjects: 4,
+      }),
+    ).toEqual({
+      eyebrow: "Organization structure",
+      title: "1 workspace, 2 teams, and 4 projects are active.",
+      description:
+        "Use this list to confirm where new teams and projects belong before you create them.",
     });
   });
 });
