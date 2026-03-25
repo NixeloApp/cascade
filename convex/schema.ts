@@ -1849,6 +1849,18 @@ const applicationTables = {
     .index("by_user_provider", ["userId", "provider"])
     .index("by_active", ["isActive"]),
 
+  // Single-use OAuth state nonces for outreach mailbox connection flows
+  outreachOAuthNonces: defineTable({
+    provider: outreachMailboxProviders,
+    stateToken: v.string(),
+    userId: v.id("users"),
+    organizationId: v.id("organizations"),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_state_token", ["stateToken"])
+    .index("by_expires_at", ["expiresAt"]),
+
   // Contacts/leads for outreach campaigns
   outreachContacts: defineTable({
     organizationId: v.id("organizations"),

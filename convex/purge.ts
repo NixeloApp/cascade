@@ -102,6 +102,7 @@ export const TABLES: TableNames[] = [
   "authRateLimits",
   // Outreach
   "outreachMailboxes",
+  "outreachOAuthNonces",
   "outreachContacts",
   "outreachSuppressions",
   "outreachSequences",

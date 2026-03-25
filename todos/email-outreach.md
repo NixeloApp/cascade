@@ -23,7 +23,6 @@
 
 ### Reliability / Compliance
 
-- [ ] Add expiring OAuth nonces.
 - [ ] Add mailbox-aware rate limiting.
 - [ ] Improve bounce classification with richer message parsing.
 - [ ] Add stronger integration coverage for the send and reply pipeline.

@@ -149,6 +149,15 @@ export const createMailboxFromOAuth = internalMutation({
     if (!user) throw validation("userId", "User not found");
     const org = await ctx.db.get(args.organizationId);
     if (!org) throw validation("organizationId", "Organization not found");
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", args.organizationId).eq("userId", args.userId),
+      )
+      .unique();
+    if (!membership) {
+      throw validation("organizationId", "User is not a member of the organization");
+    }
     const encryptedTokens = await encryptMailboxTokensForStorage({
       accessToken: args.accessToken,
       refreshToken: args.refreshToken,
