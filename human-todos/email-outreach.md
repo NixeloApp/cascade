@@ -1,7 +1,7 @@
 # Email Outreach: Lightweight Cold Email Sequences
 
 > **Priority:** P2
-> **Status:** Backend Complete — Frontend Pending
+> **Status:** Backend Complete + Tested — Frontend Pending
 > **Last Updated:** 2026-03-24
 > **Context:** See `docs/research/competitors/email-outreach/` for competitor analysis,
 > `docs/research/comparisons/email-outreach-landscape.md` for full landscape
@@ -86,16 +86,22 @@ All backend code lives in `convex/outreach/` + `convex/http/outreachOAuth.ts`.
 - [x] Compliance headers injected: `List-Unsubscribe`, `List-Unsubscribe-Post` (RFC 8058)
 - [x] Custom `X-Nixelo-Enrollment` header for reply matching
 - [x] Token auto-refresh before sending
-- **Files:** `convex/outreach/gmail.ts`
+- [x] Header injection protection (CR/LF sanitization on all header values)
+- [x] Gmail thread ID captured on send (used for reply correlation)
+- [x] Encrypted token storage at rest (transparent encrypt/decrypt via `mailboxTokens.ts`)
+- **Files:** `convex/outreach/gmail.ts`, `convex/outreach/mailboxTokens.ts`
 
 ### 7. Reply Detection — DONE
 - [x] Gmail API polling (list recent unread → check sender against active enrollments)
 - [x] Cron: poll all active mailboxes every 5 minutes
 - [x] Match reply to enrollment by sender email + active enrollment lookup
 - [x] Auto-stop sequence on reply, record reply event, update stats
-- [ ] Auto-reply detection (OOO filtering) — not yet implemented
+- [x] Auto-reply detection (OOO filtering) — checks `Auto-Submitted`, `X-Auto-Response-Suppress`, `Precedence` headers + body patterns
+- [x] Gmail thread ID correlation (replies matched by thread, not just sender email)
+- [x] Paginated polling (up to 5 pages per mailbox per cycle)
+- [x] Watermark-based polling (only checks messages since last successful poll)
 - [ ] Reply content extraction and storage — not yet implemented
-- **Files:** `convex/outreach/gmail.ts`
+- **Files:** `convex/outreach/gmail.ts`, `convex/outreach/helpers.ts`
 
 ### 8. Open & Click Tracking — DONE
 - [x] Open pixel endpoint: `GET /t/o/{enrollmentId}` → 1x1 transparent GIF
@@ -104,16 +110,17 @@ All backend code lives in `convex/outreach/` + `convex/http/outreachOAuth.ts`.
 - [x] First-open-only stat counting (no inflation)
 - [x] `Cache-Control: no-cache, no-store` on pixel
 - [x] Convex ID validation on all tracking endpoints
-- [ ] Click tracking link injection in email body (URL rewriting before send) — not yet wired
-- [ ] Open tracking pixel injection in email body — not yet wired
-- **Files:** `convex/outreach/tracking.ts`, `convex/router.ts`
+- [x] Click tracking link injection — URLs rewritten in pre-send, `outreachTrackingLinks` records created
+- [x] Open tracking pixel injection — pixel appended to email body in pre-send
+- **Files:** `convex/outreach/tracking.ts`, `convex/outreach/helpers.ts`, `convex/router.ts`
 
-### 9. Bounce Handling — DONE (basic)
-- [x] Send failures auto-classified as hard bounce
-- [x] Enrollment stopped on bounce, added to suppression
+### 9. Bounce Handling — DONE
+- [x] Hard bounce detection via error message pattern matching (550, user not found, etc.)
+- [x] Enrollment stopped on hard bounce, added to suppression
 - [x] Sequence bounce stats incremented
-- [ ] DSN message parsing (soft vs hard bounce classification) — deferred
-- [ ] Retry on soft bounces — deferred
+- [x] Soft bounce (transient errors) deferred for retry (15 min backoff)
+- [x] Encrypted token storage for mailbox credentials
+- [ ] DSN message parsing (structured bounce classification) — deferred
 - [ ] Campaign-level bounce rate alerting — deferred
 
 ### 10. Compliance — DONE
@@ -166,8 +173,8 @@ All backend code lives in `convex/outreach/` + `convex/http/outreachOAuth.ts`.
 
 ### Wiring Needed
 
-- [ ] Inject open tracking pixel into email HTML body before sending (in `sendEngine.ts` `buildComplianceFooter` or similar)
-- [ ] Rewrite links in email body for click tracking (create `outreachTrackingLinks` records, replace URLs)
+- [x] ~~Inject open tracking pixel into email HTML body~~ — done in `helpers.ts` + `sendEngine.ts`
+- [x] ~~Rewrite links in email body for click tracking~~ — done in `helpers.ts` + `sendEngine.ts`
 - [ ] Frontend postMessage handler for OAuth popup callback → call `createMailbox` mutation
 - [ ] Tracking subdomain DNS setup (`t.nixelo.com` → Convex site URL)
 
@@ -180,7 +187,6 @@ All backend code lives in `convex/outreach/` + `convex/http/outreachOAuth.ts`.
 - Template library (pre-built sequences: investor outreach, partnership, customer discovery)
 - Lead status CRM (interested / not interested / meeting booked / follow up later)
 - Meeting integration — lead replies "yes" → suggest booking link from platform calendar
-- Auto-reply detection (OOO filtering)
 - Reply content extraction and display
 - Microsoft Outlook OAuth support
 
