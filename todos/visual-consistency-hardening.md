@@ -8,6 +8,8 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ## Remaining
 
+Documents workspace screenshot review now covers the canonical route plus template and search variants. The remaining work here is broader page-by-page polish, true empty-state review depth, and cross-surface consistency rather than another blind documents gap.
+
 ### Screenshot-driven cleanup
 
 - [ ] Review approved screenshots page by page and turn every visibly broken or weird state into an explicit todo item instead of leaving it as vague review debt

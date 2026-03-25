@@ -54,7 +54,7 @@ import { screenshotFilledStates } from "./screenshot-lib/filled-states";
 import { autoLogin } from "./screenshot-lib/helpers";
 import { screenshotEmptyStates, screenshotPublicPages } from "./screenshot-lib/public-pages";
 import { waitForExpectedContent } from "./screenshot-lib/readiness";
-import { getGeneratedSpecFolders } from "./screenshot-lib/routing";
+import { getGeneratedSpecFolders, resolveCaptureTarget } from "./screenshot-lib/routing";
 import { injectAuthTokens } from "./utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
 import { waitForDashboardReady } from "./utils/wait-helpers";
@@ -125,9 +125,14 @@ async function captureEmptyForConfig(
 
   try {
     if (storageState) {
-      // Storage state carries auth — navigate directly to dashboard
-      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
-      await waitForDashboardReady(page);
+      const dashboardUrl = `${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`;
+      try {
+        await page.goto(dashboardUrl, { waitUntil: "load" });
+        await waitForDashboardReady(page);
+      } catch {
+        await page.reload({ waitUntil: "load" });
+        await waitForDashboardReady(page);
+      }
     } else if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureState.captureFailures++;
       console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
@@ -180,8 +185,14 @@ async function captureFilledForConfig(
 
   try {
     if (storageState) {
-      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
-      await waitForDashboardReady(page);
+      const dashboardUrl = `${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`;
+      try {
+        await page.goto(dashboardUrl, { waitUntil: "load" });
+        await waitForDashboardReady(page);
+      } catch {
+        await page.reload({ waitUntil: "load" });
+        await waitForDashboardReady(page);
+      }
     } else if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureState.captureFailures++;
       console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
@@ -246,6 +257,8 @@ const DRY_RUN_PAGES = [
   "filled-issues",
   "filled-documents",
   "filled-documents-templates",
+  "filled-documents-search-filtered",
+  "filled-documents-search-empty",
   "filled-workspaces",
   "filled-time-tracking",
   "filled-notifications",

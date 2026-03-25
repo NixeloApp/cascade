@@ -537,6 +537,16 @@ export const TEST_IDS = {
     SEARCH_INPUT: "document-search-input",
     /** @see src/components/Documents/DocumentSidebar.tsx */
     TEMPLATE_MODAL: "document-template-modal",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    WORKSPACE_SUMMARY: "documents-workspace-summary",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    WORKSPACE_TEMPLATES_PANEL: "documents-workspace-templates-panel",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    WORKSPACE_RECENT_SECTION: "documents-workspace-recent-section",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    WORKSPACE_LIBRARY_SECTION: "documents-workspace-library-section",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    SEARCH_EMPTY_STATE: "documents-search-empty-state",
   },
 
   // ============================================================

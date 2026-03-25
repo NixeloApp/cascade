@@ -8,7 +8,7 @@
 import type { Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { MeetingsPage, ProjectsPage } from "../pages";
+import { DocumentsPage, MeetingsPage, ProjectsPage } from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import {
   dismissAllDialogs,
@@ -439,6 +439,52 @@ export async function screenshotMeetingsStates(
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, scheduleDialogName);
       await dismissIfOpen(page, meetingsPage.scheduleDialog);
+    });
+  }
+}
+
+export async function screenshotDocumentsStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const filteredSearchName = "documents-search-filtered";
+  const emptySearchName = "documents-search-empty";
+
+  if (!shouldCaptureAny(prefix, [filteredSearchName, emptySearchName])) {
+    return;
+  }
+
+  const documentsUrl = ROUTES.documents.list.build(orgSlug);
+  const documentsPage = new DocumentsPage(page, orgSlug);
+
+  const openDocumentsForCapture = async () => {
+    await page.goto(`${BASE_URL}${documentsUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, documentsUrl, "documents", prefix);
+    await waitForScreenshotReady(page);
+    await documentsPage.expectDocumentsView();
+  };
+
+  if (shouldCapture(prefix, filteredSearchName)) {
+    await runCaptureStep("documents filtered search", async () => {
+      await openDocumentsForCapture();
+      await documentsPage.searchDocuments("requirements");
+      await documentsPage.expectSearchResultVisible("Project Requirements");
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, filteredSearchName);
+    });
+  }
+
+  if (shouldCapture(prefix, emptySearchName)) {
+    await runCaptureStep("documents empty search", async () => {
+      await openDocumentsForCapture();
+      await documentsPage.searchDocuments("zzzz-no-results");
+      await documentsPage.expectSearchEmptyState();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, emptySearchName);
     });
   }
 }

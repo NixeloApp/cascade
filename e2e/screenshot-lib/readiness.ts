@@ -674,6 +674,12 @@ export async function waitForExpectedContent(
     return;
   }
 
+  if (name === "documents-templates" || /\/[^/]+\/documents\/templates\/?$/.test(url)) {
+    await new DocumentsPage(page, READINESS_ONLY_SLUG).waitForTemplatesReady();
+    await waitForSpinnersHidden(page);
+    return;
+  }
+
   if (URL.documentEditor.test(url) || name === "document-editor") {
     await waitForDocumentEditorReady(page);
     return;

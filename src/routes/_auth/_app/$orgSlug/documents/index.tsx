@@ -156,7 +156,7 @@ export function DocumentsListPage() {
         className={isEmpty ? undefined : "mt-6"}
       >
         <Stack gap="xl">
-          <Card padding="lg">
+          <Card padding="lg" data-testid={TEST_IDS.DOCUMENT.WORKSPACE_SUMMARY}>
             <Grid cols={1} colsLg={12} gap="lg">
               <GridItem colSpanLg={8}>
                 <Stack gap="md">
@@ -205,7 +205,11 @@ export function DocumentsListPage() {
               </GridItem>
 
               <GridItem colSpanLg={4}>
-                <CardSection size="lg" className="h-full">
+                <CardSection
+                  size="lg"
+                  className="h-full"
+                  data-testid={TEST_IDS.DOCUMENT.WORKSPACE_TEMPLATES_PANEL}
+                >
                   <Stack gap="md" className="h-full">
                     <Flex align="center" gap="sm">
                       <IconCircle size="sm" tone="brand" variant="muted">
@@ -246,7 +250,11 @@ export function DocumentsListPage() {
 
           <Grid cols={1} colsLg={12} gap="xl">
             <GridItem colSpanLg={7}>
-              <Card recipe="dashboardPanel" padding="lg">
+              <Card
+                recipe="dashboardPanel"
+                padding="lg"
+                data-testid={TEST_IDS.DOCUMENT.WORKSPACE_RECENT_SECTION}
+              >
                 <Stack gap="md">
                   <Flex align="center" justify="between" gap="md" wrap>
                     <div>
@@ -276,6 +284,7 @@ export function DocumentsListPage() {
                         icon={Search}
                         title="No documents match this search"
                         description="Try a title or owner name, or clear the search to see the full library."
+                        data-testid={TEST_IDS.DOCUMENT.SEARCH_EMPTY_STATE}
                       />
                     </CardSection>
                   ) : (
@@ -294,7 +303,11 @@ export function DocumentsListPage() {
             </GridItem>
 
             <GridItem colSpanLg={5}>
-              <Card recipe="dashboardPanel" padding="lg">
+              <Card
+                recipe="dashboardPanel"
+                padding="lg"
+                data-testid={TEST_IDS.DOCUMENT.WORKSPACE_LIBRARY_SECTION}
+              >
                 <Stack gap="md">
                   <div>
                     <Typography variant="h4">Library index</Typography>

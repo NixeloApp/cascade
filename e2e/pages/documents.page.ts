@@ -19,6 +19,13 @@ export class DocumentsPage extends BasePage {
   readonly templateButton: Locator;
   readonly documentList: Locator;
   readonly documentItems: Locator;
+  readonly workspaceSummary: Locator;
+  readonly templatesPanel: Locator;
+  readonly recentSection: Locator;
+  readonly librarySection: Locator;
+  readonly searchEmptyState: Locator;
+  readonly templatesContent: Locator;
+  readonly templatesEmptyState: Locator;
 
   // ===================
   // Locators - Template Modal
@@ -60,6 +67,13 @@ export class DocumentsPage extends BasePage {
     this.documentItems = page
       .getByTestId(TEST_IDS.NAV.DOCUMENT_ITEM)
       .or(this.sidebar.getByRole("button").filter({ hasNotText: /new|template|search/i }));
+    this.workspaceSummary = page.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_SUMMARY);
+    this.templatesPanel = page.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_TEMPLATES_PANEL);
+    this.recentSection = page.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_RECENT_SECTION);
+    this.librarySection = page.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_LIBRARY_SECTION);
+    this.searchEmptyState = page.getByTestId(TEST_IDS.DOCUMENT.SEARCH_EMPTY_STATE);
+    this.templatesContent = page.getByTestId(TEST_IDS.DOCUMENT.TEMPLATES_CONTENT);
+    this.templatesEmptyState = page.getByText(/no templates yet/i);
 
     // Template modal
     this.templateModal = page.getByRole("dialog").filter({ hasText: /template|choose/i });
@@ -92,21 +106,12 @@ export class DocumentsPage extends BasePage {
   }
 
   async waitUntilReady(): Promise<void> {
-    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 20000 });
-    await expect
-      .poll(
-        async () => {
-          const cardCount = await this.page.getByTestId(TEST_IDS.DOCUMENT.CARD).count();
-          if (cardCount > 0) return "ready";
-          const emptyVisible =
-            (await isLocatorVisible(this.page.getByText(/no documents/i))) ||
-            (await isLocatorVisible(this.page.getByText(/nothing here yet/i))) ||
-            (await isLocatorVisible(this.page.getByText(/create.*document/i)));
-          return emptyVisible ? "ready" : "pending";
-        },
-        { timeout: 25000 },
-      )
-      .not.toBe("pending");
+    try {
+      await this.waitForWorkspaceOrEmptyState(20000);
+    } catch {
+      await this.page.reload({ waitUntil: "domcontentloaded" });
+      await this.waitForWorkspaceOrEmptyState(20000);
+    }
   }
 
   async gotoDocument(documentId: string) {
@@ -192,6 +197,24 @@ export class DocumentsPage extends BasePage {
   async expectDocumentsView() {
     await expect(this.sidebar).toBeVisible();
     await expect(this.newDocumentButton).toBeVisible();
+    await expect(this.workspaceSummary).toBeVisible();
+    await expect(this.recentSection).toBeVisible();
+    await expect(this.librarySection).toBeVisible();
+  }
+
+  async expectSearchResultVisible(text: string) {
+    await expect(this.recentSection.getByText(text, { exact: true }).first()).toBeVisible();
+  }
+
+  async expectSearchEmptyState() {
+    await expect(this.searchEmptyState).toBeVisible();
+  }
+
+  async waitForTemplatesReady(): Promise<void> {
+    await expect(this.pageHeaderTitle).toBeVisible({ timeout: 12000 });
+    await expect(this.templatesContent.or(this.templatesEmptyState).first()).toBeVisible({
+      timeout: 12000,
+    });
   }
 
   async expectEditorVisible() {
@@ -318,5 +341,25 @@ export class DocumentsPage extends BasePage {
     await expect(
       this.page.getByText(/document not found/i).or(this.page.getByText(/something went wrong/i)),
     ).toBeVisible();
+  }
+
+  private async waitForWorkspaceOrEmptyState(timeout: number): Promise<void> {
+    await expect
+      .poll(
+        async () => {
+          const workspaceReady =
+            (await isLocatorVisible(this.workspaceSummary)) &&
+            (await isLocatorVisible(this.recentSection)) &&
+            (await isLocatorVisible(this.librarySection));
+          if (workspaceReady) return "ready";
+          const emptyVisible =
+            (await isLocatorVisible(this.page.getByText(/no documents/i))) ||
+            (await isLocatorVisible(this.page.getByText(/nothing here yet/i))) ||
+            (await isLocatorVisible(this.page.getByText(/create.*document/i)));
+          return emptyVisible ? "ready" : "pending";
+        },
+        { timeout, intervals: [250, 500, 1000] },
+      )
+      .not.toBe("pending");
   }
 }

@@ -55,6 +55,7 @@ import {
   screenshotBoardModals,
   screenshotDashboardLoadingState,
   screenshotDashboardModals,
+  screenshotDocumentsStates,
   screenshotIssueInteractiveStates,
   screenshotMeetingsStates,
   screenshotProjectsModal,
@@ -165,6 +166,10 @@ export async function screenshotFilledStates(
   }
   if (shouldCaptureAny(p, ["projects-create-project-modal"])) {
     await screenshotProjectsModal(page, orgSlug, p);
+  }
+
+  if (shouldCaptureAny(p, ["documents-search-filtered", "documents-search-empty"])) {
+    await screenshotDocumentsStates(page, orgSlug, p);
   }
 
   if (
