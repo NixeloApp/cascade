@@ -74,6 +74,12 @@ export interface CheckProjectIssueDuplicatesResult {
   error?: string;
 }
 
+export interface DeleteSeededProjectIssueResult {
+  success: boolean;
+  deleted?: number;
+  error?: string;
+}
+
 export interface E2EWorkflowState {
   id: string;
   name: string;
@@ -408,6 +414,30 @@ export class TestUserService {
       return await response.json();
     } catch (error) {
       console.warn(`  ⚠️ Failed to seed screenshot data:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Delete a screenshot-created issue so later captures keep seeded counts stable.
+   */
+  async deleteSeededProjectIssue(
+    orgSlug: string,
+    projectKey: string,
+    issueTitle: string,
+  ): Promise<DeleteSeededProjectIssueResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.deleteSeededProjectIssue, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, issueTitle }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to delete seeded screenshot issue "${issueTitle}" for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
       return { success: false, error: String(error) };
     }
   }

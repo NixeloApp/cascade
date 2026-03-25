@@ -17,6 +17,7 @@ import {
   cleanupTestUsersEndpoint,
   createTestUserEndpoint,
   debugVerifyPasswordEndpoint,
+  deleteSeededProjectIssueEndpoint,
   deleteTestUserEndpoint,
   getLatestOTPEndpoint,
   googleOAuthLoginEndpoint,
@@ -353,6 +354,13 @@ http.route({
   path: "/e2e/seed-screenshot-data",
   method: "POST",
   handler: seedScreenshotDataEndpoint,
+});
+
+// Delete screenshot-created issues so later captures stay deterministic
+http.route({
+  path: "/e2e/delete-seeded-project-issue",
+  method: "POST",
+  handler: deleteSeededProjectIssueEndpoint,
 });
 
 // Batch cleanup - call repeatedly until done=true (avoids 32k read limit)

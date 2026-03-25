@@ -27,6 +27,7 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
+import { syncProjectIssueStats } from "./lib/projectIssueStats";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
 import { type CalendarEventColor, otpCodeTypes, workflowCategories } from "./validators";
@@ -2209,6 +2210,124 @@ export const checkProjectIssueDuplicatesInternal = internalQuery({
       success: true,
       matchCount: fallbackIssues.length,
       issueKeys: fallbackIssues.map((issue) => issue.key),
+    };
+  },
+});
+
+/**
+ * Delete a screenshot-created issue so later captures stay deterministic.
+ * POST /e2e/delete-seeded-project-issue
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   issueTitle: string,
+ * }
+ */
+export const deleteSeededProjectIssueEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, issueTitle } = body;
+
+    if (!(orgSlug && projectKey && issueTitle)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or issueTitle" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.deleteSeededProjectIssueInternal, {
+      orgSlug,
+      projectKey,
+      issueTitle,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const deleteSeededProjectIssueInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    issueTitle: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    deleted: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const candidateIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project_deleted", (q) => q.eq("projectId", project._id).eq("isDeleted", false))
+      .order("desc")
+      .take(50);
+
+    const issuesToDelete = candidateIssues.filter((issue) => issue.title === args.issueTitle);
+    if (issuesToDelete.length === 0) {
+      return {
+        success: false,
+        error: `issue not found: ${args.issueTitle} in ${args.projectKey}`,
+      };
+    }
+
+    await Promise.all(
+      issuesToDelete.map((issue) =>
+        ctx.db.patch(issue._id, {
+          ...softDeleteFields(issue.reporterId),
+          updatedAt: Date.now(),
+        }),
+      ),
+    );
+
+    await syncProjectIssueStats(ctx, project._id);
+
+    return {
+      success: true,
+      deleted: issuesToDelete.length,
     };
   },
 });

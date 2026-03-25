@@ -11,7 +11,7 @@ import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { ProjectsPage } from "../pages";
 import { getLocatorAttribute, getLocatorCount, isLocatorVisible } from "../utils/locator-state";
-import type { SeedScreenshotResult } from "../utils/test-user-service";
+import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
   dismissIfOpen,
@@ -409,14 +409,12 @@ export async function screenshotFilledStates(
       });
     }
 
-    // NOTE: This capture creates a real issue in the seeded project. The issue
-    // persists for the rest of the run, which can affect issue counts in later
-    // board/sprint screenshots. A test API for issue deletion would fix this,
-    // but the impact is low since screenshots use seeded data per-run.
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-success-toast`)) {
       await runCaptureStep("create issue success toast", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         const issueTitle = "Screenshot toast issue";
+        let createdIssue = false;
+        let deferredError: Error | null = null;
         await page.goto(`${BASE_URL}${boardUrl}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
@@ -433,20 +431,50 @@ export async function screenshotFilledStates(
           .or(modal.getByRole("textbox", { name: /title/i }))
           .first();
         const submitButton = modal.getByRole("button", { name: /^create issue$/i }).last();
-        await titleInput.fill(issueTitle);
-        await submitButton.click();
-        await modal.waitFor({ state: "hidden", timeout: 8000 });
-        const successToast = page
-          .getByTestId(TEST_IDS.TOAST.SUCCESS)
-          .filter({ hasText: /issue created successfully/i })
-          .first();
-        await successToast.waitFor({ state: "visible", timeout: 8000 });
-        await waitForScreenshotReady(page);
-        await captureCurrentView(
-          page,
-          p,
-          `project-${normalizedProjectKey}-create-issue-success-toast`,
-        );
+        try {
+          await titleInput.fill(issueTitle);
+          await submitButton.click();
+          await modal.waitFor({ state: "hidden", timeout: 8000 });
+          createdIssue = true;
+          const successToast = page
+            .getByTestId(TEST_IDS.TOAST.SUCCESS)
+            .filter({ hasText: /issue created successfully/i })
+            .first();
+          await successToast.waitFor({ state: "visible", timeout: 8000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(
+            page,
+            p,
+            `project-${normalizedProjectKey}-create-issue-success-toast`,
+          );
+        } catch (error) {
+          deferredError = error instanceof Error ? error : new Error(String(error));
+        }
+
+        if (createdIssue && projectKey) {
+          const cleanupResult = await testUserService.deleteSeededProjectIssue(
+            orgSlug,
+            projectKey,
+            issueTitle,
+          );
+          if (!cleanupResult.success || (cleanupResult.deleted ?? 0) < 1) {
+            const cleanupError = new Error(
+              cleanupResult.error ??
+                `Failed to delete screenshot-created issue "${issueTitle}" after capture`,
+            );
+            if (deferredError) {
+              throw new AggregateError(
+                [deferredError, cleanupError],
+                "Create-issue success toast capture failed and cleanup did not complete",
+              );
+            }
+            throw cleanupError;
+          }
+        }
+
+        if (deferredError) {
+          throw deferredError;
+        }
       });
     }
 

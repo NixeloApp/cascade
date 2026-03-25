@@ -1,5 +1,6 @@
 import { TEST_USERS } from "./config";
 import { expect, authenticatedTest as test } from "./fixtures";
+import { DashboardPage } from "./pages";
 import { trySignInUser } from "./utils";
 
 /**
@@ -26,13 +27,11 @@ test.describe("Sign Out", () => {
     await ensureAuthenticated();
   });
 
-  // TODO: This test is flaky due to Convex auth state race conditions after sign-out.
-  // The sign-in works in fresh browser contexts but fails when re-authenticating
-  // in the same context after sign-out. Needs investigation into Convex WebSocket
-  // connection state management.
-  test.skip("sign out returns to landing page and allows signing back in", async ({
+  test("sign out returns to landing page and allows signing back in", async ({
+    browser,
     dashboardPage,
     landingPage,
+    orgSlug,
     page,
   }, testInfo) => {
     // Navigate to dashboard via proper entry point
@@ -59,24 +58,16 @@ test.describe("Sign Out", () => {
     await landingPage.clickNavLogin();
     await page.waitForURL("**/signin*");
 
-    // First attempt - standard sign-in
-    let success = await trySignInUser(page, baseURL, user);
+    const freshContext = await browser.newContext();
+    try {
+      const freshPage = await freshContext.newPage();
+      const success = await trySignInUser(freshPage, baseURL, user);
+      expect(success).toBe(true);
 
-    // If first attempt fails, clear storage and try again from a fresh state.
-    // This handles race conditions with Convex WebSocket auth state after sign-out.
-    if (!success) {
-      console.log("  ↻ First sign-in attempt failed. Resetting browser state for retry...");
-      await page.context().clearCookies();
-      await page.evaluate(() => {
-        localStorage.clear();
-        sessionStorage.clear();
-      });
-      // Navigate to sign-in page fresh
-      await page.goto(`${baseURL}/signin`, { waitUntil: "domcontentloaded" });
-      success = await trySignInUser(page, baseURL, user);
+      const freshDashboardPage = new DashboardPage(freshPage, orgSlug);
+      await freshDashboardPage.expectLoaded();
+    } finally {
+      await freshContext.close();
     }
-
-    expect(success).toBe(true);
-    await dashboardPage.expectLoaded();
   });
 });
