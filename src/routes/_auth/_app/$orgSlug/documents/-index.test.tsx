@@ -131,6 +131,19 @@ describe("DocumentsListPage", () => {
     );
   });
 
+  it("renders a stable empty-state hook when the workspace has no documents", () => {
+    mockUseAuthenticatedQuery.mockReturnValue({
+      documents: [],
+      nextCursor: null,
+      hasMore: false,
+    });
+
+    render(<DocumentsListPage />);
+
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.EMPTY_STATE)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create Blank Document" })).toBeInTheDocument();
+  });
+
   it("renders stable screenshot hooks and the search empty state", async () => {
     const user = userEvent.setup();
 

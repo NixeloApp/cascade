@@ -619,6 +619,8 @@ export const TEST_IDS = {
     /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
     WORKSPACE_LIBRARY_SECTION: "documents-workspace-library-section",
     /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    EMPTY_STATE: "documents-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
     SEARCH_EMPTY_STATE: "documents-search-empty-state",
   },
 

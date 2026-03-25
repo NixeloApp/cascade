@@ -24,6 +24,8 @@ export class DocumentsPage extends BasePage {
   readonly recentSection: Locator;
   readonly librarySection: Locator;
   readonly searchEmptyState: Locator;
+  readonly documentsEmptyState: Locator;
+  readonly createBlankDocumentButton: Locator;
   readonly templatesContent: Locator;
   readonly templatesEmptyState: Locator;
 
@@ -72,6 +74,8 @@ export class DocumentsPage extends BasePage {
     this.recentSection = page.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_RECENT_SECTION);
     this.librarySection = page.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_LIBRARY_SECTION);
     this.searchEmptyState = page.getByTestId(TEST_IDS.DOCUMENT.SEARCH_EMPTY_STATE);
+    this.documentsEmptyState = page.getByTestId(TEST_IDS.DOCUMENT.EMPTY_STATE);
+    this.createBlankDocumentButton = page.getByRole("button", { name: /create blank document/i });
     this.templatesContent = page.getByTestId(TEST_IDS.DOCUMENT.TEMPLATES_CONTENT);
     this.templatesEmptyState = page.getByText(/no templates yet/i);
 
@@ -197,9 +201,18 @@ export class DocumentsPage extends BasePage {
   async expectDocumentsView() {
     await expect(this.sidebar).toBeVisible();
     await expect(this.newDocumentButton).toBeVisible();
-    await expect(this.workspaceSummary).toBeVisible();
-    await expect(this.recentSection).toBeVisible();
-    await expect(this.librarySection).toBeVisible();
+    await expect(this.pageHeaderTitle).toHaveText("Documents");
+    await this.waitForWorkspaceOrEmptyState(10000);
+
+    if (await isLocatorVisible(this.workspaceSummary)) {
+      await expect(this.workspaceSummary).toBeVisible();
+      await expect(this.recentSection).toBeVisible();
+      await expect(this.librarySection).toBeVisible();
+      return;
+    }
+
+    await expect(this.documentsEmptyState).toBeVisible();
+    await expect(this.createBlankDocumentButton).toBeVisible();
   }
 
   async expectSearchResultVisible(text: string) {
