@@ -361,6 +361,7 @@ export function run() {
   const screenshotContents = canAuditRouteCoverage ? loadScreenshotRouteSourceContents() : [];
 
   const allRouteKeys = routesFileExists ? extractRouteKeys(routesContent) : [];
+  const auditableRouteKeys = allRouteKeys.filter((key) => !EXCLUDED_ROUTES.has(key));
   const capturedRefs = new Set(
     screenshotContents.flatMap((content) => [...extractScreenshotRouteRefs(content)]),
   );
@@ -371,8 +372,7 @@ export function run() {
 
   const uncovered = [];
   if (canAuditRouteCoverage) {
-    for (const key of allRouteKeys) {
-      if (EXCLUDED_ROUTES.has(key)) continue;
+    for (const key of auditableRouteKeys) {
       if (capturedRefs.has(key)) continue;
 
       // Check if a parent key is referenced (e.g. "issues" covers "issues.list")
@@ -401,7 +401,7 @@ export function run() {
     );
   } else if (uncovered.length > 0) {
     messages.push(
-      `${c.yellow}Routes without screenshot coverage (${uncovered.length}/${allRouteKeys.length}):${c.reset}`,
+      `${c.yellow}Routes without screenshot coverage (${uncovered.length}/${auditableRouteKeys.length}):${c.reset}`,
     );
     for (const key of uncovered) {
       messages.push(`  ${c.dim}ROUTES.${key}${c.reset}`);
@@ -495,8 +495,8 @@ export function run() {
       missingPageSpecDocs.length > 0 ||
       missingRequiredPageSpecs.length > 0 ||
       missingModalSpecVariants.length > 0
-        ? `${canAuditRouteCoverage ? `${allRouteKeys.length - uncovered.length}/${allRouteKeys.length} routes covered` : "route coverage skipped"}, ${specsWithCanonicalVariants}/${completeSpecFolders} page spec folders have canonical screenshots, ${missingModalSpecVariants.length === 0 ? "all" : "not all"} spec'd modals have canonical screenshots`
-        : `all ${allRouteKeys.length} routes covered, all ${completeSpecFolders} page spec folders have canonical screenshots, all spec'd modals have canonical screenshots`,
+        ? `${canAuditRouteCoverage ? `${auditableRouteKeys.length - uncovered.length}/${auditableRouteKeys.length} auditable routes covered` : "route coverage skipped"}, ${specsWithCanonicalVariants}/${completeSpecFolders} page spec folders have canonical screenshots, ${missingModalSpecVariants.length === 0 ? "all" : "not all"} spec'd modals have canonical screenshots`
+        : `all ${auditableRouteKeys.length} auditable routes covered, all ${completeSpecFolders} page spec folders have canonical screenshots, all spec'd modals have canonical screenshots`,
     messages,
   };
 }
