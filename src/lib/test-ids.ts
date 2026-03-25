@@ -107,6 +107,10 @@ export const TEST_IDS = {
     NAME: "workspace-name",
     /** @see src/routes/_app.$orgSlug.workspaces.index.tsx */
     EMPTY_STATE: "workspace-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
+    SEARCH_INPUT: "workspace-search-input",
+    /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
+    SEARCH_EMPTY_STATE: "workspace-search-empty-state",
   },
 
   // ============================================================

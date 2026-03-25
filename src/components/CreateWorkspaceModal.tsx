@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
+import { buildWorkspaceSlug } from "@/lib/workspaces";
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
@@ -33,20 +34,30 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+  };
+
+  const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+    resetForm();
+    onClose();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
 
     setIsSubmitting(true);
     try {
-      // Generate slug from name
-      const slug = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
+      const slug = buildWorkspaceSlug(trimmedName);
 
       await createWorkspace({
-        name,
+        name: trimmedName,
         slug,
         description: description.trim() || undefined,
         organizationId: organizationId as Id<"organizations">,
@@ -54,9 +65,8 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
 
       showSuccess("Workspace created successfully");
       onCreated?.(slug);
+      resetForm();
       onClose();
-      setName("");
-      setDescription("");
     } catch (error) {
       showError(error, "Failed to create workspace");
     } finally {
@@ -67,11 +77,15 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
   return (
     <Dialog
       open={isOpen}
-      onOpenChange={onClose}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose();
+        }
+      }}
       title="Create Workspace"
       footer={
         <>
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button

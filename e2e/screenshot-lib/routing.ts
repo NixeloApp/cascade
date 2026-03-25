@@ -15,6 +15,7 @@ import { PAGE_TO_SPEC_FOLDER } from "./config";
 // ---------------------------------------------------------------------------
 
 export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
+  [/^empty-workspaces$/, "27-workspaces", "-empty"],
   // Public pages with suffixes
   [/^public-verify-2fa$/, "02-signin", "-verify-2fa"],
   [/^public-signup-verify$/, "03-signup", "-verify"],
@@ -36,6 +37,7 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-issues-loading$/, "19-issues", "-loading"],
   // Workspace modals
   [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
+  [/^filled-workspaces-search-empty$/, "27-workspaces", "-search-empty"],
   [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
   [/^filled-time-tracking-manual-entry-modal$/, "22-time-tracking", "-manual-entry-modal"],
   // Settings pages

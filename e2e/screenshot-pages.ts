@@ -255,6 +255,7 @@ const DRY_RUN_PAGES = [
   "filled-documents-search-filtered",
   "filled-documents-search-empty",
   "filled-workspaces",
+  "filled-workspaces-search-empty",
   "filled-time-tracking",
   "filled-notifications",
   "filled-my-issues",

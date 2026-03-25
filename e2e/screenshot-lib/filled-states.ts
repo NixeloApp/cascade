@@ -10,7 +10,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { NotificationsPage, ProjectsPage } from "../pages";
+import { NotificationsPage, ProjectsPage, WorkspacesPage } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
 import { getLocatorCount, isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
@@ -1115,16 +1115,32 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByText("Create Workspace");
+      const workspacesPage = new WorkspacesPage(page, orgSlug);
       const dialog = await openStableDialog(
         page,
-        trigger,
+        workspacesPage.newWorkspaceButton,
         page.getByRole("dialog", { name: /^create workspace$/i }),
         page.getByRole("dialog", { name: /^create workspace$/i }).getByLabel(/^workspace name$/i),
         "create workspace",
       );
       await captureCurrentView(page, p, "workspaces-create-workspace-modal");
       await dismissIfOpen(page, dialog);
+    });
+  }
+
+  if (shouldCapture(p, "workspaces-search-empty")) {
+    await runCaptureStep("workspaces search empty", async () => {
+      const workspacesUrl = ROUTES.workspaces.list.build(orgSlug);
+      const workspacesPage = new WorkspacesPage(page, orgSlug);
+      await page.goto(`${BASE_URL}${workspacesUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await waitForExpectedContent(page, workspacesUrl, "workspaces", p);
+      await waitForScreenshotReady(page);
+      await workspacesPage.search("zzzx-workspace-miss");
+      await workspacesPage.expectSearchEmptyState();
+      await captureCurrentView(page, p, "workspaces-search-empty");
     });
   }
 

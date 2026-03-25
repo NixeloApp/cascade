@@ -82,7 +82,7 @@ describe("CreateWorkspaceModal", () => {
 
     render(<CreateWorkspaceModal isOpen onClose={onClose} onCreated={onCreated} />);
 
-    await user.type(screen.getByLabelText("Workspace Name"), "Platform Operations");
+    await user.type(screen.getByLabelText("Workspace Name"), "  Platform Operations  ");
     await user.type(screen.getByLabelText("Description (Optional)"), "  Core product team  ");
     await user.click(screen.getByRole("button", { name: "Create Workspace" }));
 
@@ -123,5 +123,20 @@ describe("CreateWorkspaceModal", () => {
     expect(showError).toHaveBeenCalledWith(error, "Failed to create workspace");
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Workspace Name")).toHaveValue("Operations Hub");
+  });
+
+  it("resets the form when the modal is cancelled", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+
+    render(<CreateWorkspaceModal isOpen onClose={onClose} />);
+
+    await user.type(screen.getByLabelText("Workspace Name"), "Platform");
+    await user.type(screen.getByLabelText("Description (Optional)"), "Operations");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("Workspace Name")).toHaveValue("");
+    expect(screen.getByLabelText("Description (Optional)")).toHaveValue("");
   });
 });

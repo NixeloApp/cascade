@@ -8,7 +8,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ## Remaining
 
-Documents workspace screenshot review now covers the canonical route plus template and search variants, the issues route now has reviewed filtered, modal, side-panel, and loading captures across desktop/tablet/mobile, notifications now has reviewed archive/filter/popover/empty/loading/overflow states across the full viewport matrix, and the project inbox now has reviewed closed, bulk-selection, snooze, decline, duplicate, and both empty-tab states across the full viewport matrix. The remaining work here is broader page-by-page polish, empty-state quality on other surfaces, and cross-surface consistency rather than another blind core-route gap.
+Documents workspace screenshot review now covers the canonical route plus template and search variants, the issues route now has reviewed filtered, modal, side-panel, and loading captures across desktop/tablet/mobile, notifications now has reviewed archive/filter/popover/empty/loading/overflow states across the full viewport matrix, the project inbox now has reviewed closed, bulk-selection, snooze, decline, duplicate, and both empty-tab states across the full viewport matrix, and the workspaces route now has reviewed true-empty, search-empty, and create-modal coverage across all four configs. The remaining work here is broader page-by-page polish, empty-state quality on other surfaces, and cross-surface consistency rather than another blind core-route gap.
 
 ### Screenshot-driven cleanup
 
