@@ -620,6 +620,8 @@ export async function screenshotFilledStates(
         `project-${normalizedProjectKey}-inbox-snooze-menu`,
         `project-${normalizedProjectKey}-inbox-decline-dialog`,
         `project-${normalizedProjectKey}-inbox-duplicate-dialog`,
+        `project-${normalizedProjectKey}-inbox-open-empty`,
+        `project-${normalizedProjectKey}-inbox-closed-empty`,
       ])
     ) {
       await screenshotProjectInboxStates(page, orgSlug, projectKey, p);

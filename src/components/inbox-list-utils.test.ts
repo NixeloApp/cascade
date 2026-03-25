@@ -3,6 +3,7 @@ import {
   buildCustomSnoozeTimestamp,
   formatInboxSourceLabel,
   getDefaultCustomSnoozeDateValue,
+  getInboxEmptyStateConfig,
 } from "./inbox-list-utils";
 
 describe("inbox-list-utils", () => {
@@ -74,6 +75,53 @@ describe("inbox-list-utils", () => {
           createdByUser: null,
         }),
       ).toBe("Submitted in app");
+    });
+  });
+
+  describe("getInboxEmptyStateConfig", () => {
+    it("prioritizes clearing search when filters hide results", () => {
+      expect(
+        getInboxEmptyStateConfig({
+          counterpartCount: 3,
+          searchActive: true,
+          tab: "open",
+        }),
+      ).toEqual({
+        actionKind: "clearSearch",
+        actionLabel: "Clear search",
+        description: "Try a different search term or clear the current query.",
+        title: "No matching items",
+      });
+    });
+
+    it("prompts switching tabs when the other inbox bucket has items", () => {
+      expect(
+        getInboxEmptyStateConfig({
+          counterpartCount: 2,
+          searchActive: false,
+          tab: "open",
+        }),
+      ).toEqual({
+        actionKind: "switchToClosed",
+        actionLabel: "View closed items",
+        description:
+          "Everything in this inbox has already been triaged. Review prior decisions in the closed tab.",
+        title: "No pending items",
+      });
+
+      expect(
+        getInboxEmptyStateConfig({
+          counterpartCount: 4,
+          searchActive: false,
+          tab: "closed",
+        }),
+      ).toEqual({
+        actionKind: "switchToOpen",
+        actionLabel: "View open items",
+        description:
+          "This project still has items waiting for review. Accepted, declined, and duplicate issues will collect here after triage.",
+        title: "No closed items",
+      });
     });
   });
 });

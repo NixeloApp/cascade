@@ -39,6 +39,21 @@ const TEST_USER_EXPIRATION_MS = HOUR;
 import { api } from "./_generated/api";
 
 type ScreenshotDocumentNode = Record<string, unknown>;
+type SeededInboxActorKey = "owner" | "alex" | "sarah";
+type SeededProjectInboxMode = "default" | "openEmpty" | "closedEmpty";
+
+interface SeededInboxDefinition {
+  createdBy: SeededInboxActorKey;
+  createdOffsetMs: number;
+  declineReason?: string;
+  duplicateOfKey?: string;
+  issueKey: string;
+  snoozedUntil?: number;
+  source: Doc<"inboxIssues">["source"];
+  sourceEmail?: string;
+  status: Doc<"inboxIssues">["status"];
+  triagedOffsetMs?: number;
+}
 
 function screenshotText(text: string): ScreenshotDocumentNode {
   return { type: "text", text };
@@ -162,6 +177,295 @@ const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
     ],
   },
 };
+
+const SCREENSHOT_INBOX_SYNTHETIC_EMAILS = {
+  alex: "alex-rivera-screenshots@inbox.mailtrap.io",
+  sarah: "sarah-kim-screenshots@inbox.mailtrap.io",
+} as const;
+
+function buildSeededProjectInboxDefinitions(
+  mode: SeededProjectInboxMode,
+  now: number,
+): SeededInboxDefinition[] {
+  if (mode === "openEmpty") {
+    return [
+      {
+        createdBy: "owner",
+        createdOffsetMs: 5 * HOUR,
+        issueKey: "DEMO-7",
+        source: "in_app",
+        status: "accepted",
+        triagedOffsetMs: 2 * HOUR,
+      },
+      {
+        createdBy: "alex",
+        createdOffsetMs: 20 * HOUR,
+        declineReason: "Queued for a later release instead of the current triage lane",
+        issueKey: "DEMO-2",
+        source: "email",
+        sourceEmail: "alerts@northstarlabs.example",
+        status: "declined",
+        triagedOffsetMs: 4 * HOUR,
+      },
+      {
+        createdBy: "sarah",
+        createdOffsetMs: 30 * HOUR,
+        issueKey: "DEMO-1",
+        source: "in_app",
+        status: "accepted",
+        triagedOffsetMs: 26 * HOUR,
+      },
+      {
+        createdBy: "alex",
+        createdOffsetMs: 34 * HOUR,
+        declineReason: "Outside current launch scope",
+        issueKey: "DEMO-4",
+        source: "api",
+        sourceEmail: "feedback-hooks@nixelo.test",
+        status: "declined",
+        triagedOffsetMs: 22 * HOUR,
+      },
+      {
+        createdBy: "owner",
+        createdOffsetMs: 40 * HOUR,
+        duplicateOfKey: "DEMO-3",
+        issueKey: "DEMO-6",
+        source: "form",
+        sourceEmail: "intake@nixelo.test",
+        status: "duplicate",
+        triagedOffsetMs: 21 * HOUR,
+      },
+    ];
+  }
+
+  if (mode === "closedEmpty") {
+    return [
+      {
+        createdBy: "owner",
+        createdOffsetMs: 5 * HOUR,
+        issueKey: "DEMO-7",
+        source: "in_app",
+        status: "pending",
+      },
+      {
+        createdBy: "alex",
+        createdOffsetMs: 20 * HOUR,
+        issueKey: "DEMO-2",
+        snoozedUntil: now + 2 * DAY,
+        source: "email",
+        sourceEmail: "alerts@northstarlabs.example",
+        status: "snoozed",
+        triagedOffsetMs: 4 * HOUR,
+      },
+      {
+        createdBy: "sarah",
+        createdOffsetMs: 30 * HOUR,
+        issueKey: "DEMO-1",
+        source: "in_app",
+        status: "pending",
+      },
+      {
+        createdBy: "alex",
+        createdOffsetMs: 34 * HOUR,
+        issueKey: "DEMO-4",
+        snoozedUntil: now + 5 * DAY,
+        source: "api",
+        sourceEmail: "feedback-hooks@nixelo.test",
+        status: "snoozed",
+        triagedOffsetMs: 6 * HOUR,
+      },
+      {
+        createdBy: "owner",
+        createdOffsetMs: 40 * HOUR,
+        issueKey: "DEMO-6",
+        source: "form",
+        sourceEmail: "intake@nixelo.test",
+        status: "pending",
+      },
+    ];
+  }
+
+  return [
+    {
+      createdBy: "owner",
+      createdOffsetMs: 5 * HOUR,
+      issueKey: "DEMO-7",
+      source: "in_app",
+      status: "pending",
+    },
+    {
+      createdBy: "alex",
+      createdOffsetMs: 20 * HOUR,
+      issueKey: "DEMO-2",
+      snoozedUntil: now + 2 * DAY,
+      source: "email",
+      sourceEmail: "alerts@northstarlabs.example",
+      status: "snoozed",
+      triagedOffsetMs: 4 * HOUR,
+    },
+    {
+      createdBy: "sarah",
+      createdOffsetMs: 30 * HOUR,
+      issueKey: "DEMO-1",
+      source: "in_app",
+      status: "accepted",
+      triagedOffsetMs: 26 * HOUR,
+    },
+    {
+      createdBy: "alex",
+      createdOffsetMs: 34 * HOUR,
+      declineReason: "Outside current launch scope",
+      issueKey: "DEMO-4",
+      source: "api",
+      sourceEmail: "feedback-hooks@nixelo.test",
+      status: "declined",
+      triagedOffsetMs: 22 * HOUR,
+    },
+    {
+      createdBy: "owner",
+      createdOffsetMs: 40 * HOUR,
+      duplicateOfKey: "DEMO-3",
+      issueKey: "DEMO-6",
+      source: "form",
+      sourceEmail: "intake@nixelo.test",
+      status: "duplicate",
+      triagedOffsetMs: 21 * HOUR,
+    },
+  ];
+}
+
+function countSeededInboxIssues(definitions: SeededInboxDefinition[]) {
+  let openCount = 0;
+  let closedCount = 0;
+
+  for (const definition of definitions) {
+    if (definition.status === "pending" || definition.status === "snoozed") {
+      openCount += 1;
+    } else {
+      closedCount += 1;
+    }
+  }
+
+  return { closedCount, openCount };
+}
+
+async function resolveSeededInboxUserId(
+  ctx: MutationCtx,
+  email: string,
+): Promise<Id<"users"> | null> {
+  const user = await ctx.db
+    .query("users")
+    .withIndex("email", (q) => q.eq("email", email))
+    .first();
+  return user?._id ?? null;
+}
+
+async function resetSeededProjectInboxIssues(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    mode: SeededProjectInboxMode;
+    issueIdsByKey?: ReadonlyMap<string, Id<"issues">>;
+  },
+): Promise<{ success: boolean; openCount?: number; closedCount?: number; error?: string }> {
+  const now = Date.now();
+  const definitions = buildSeededProjectInboxDefinitions(args.mode, now);
+  const requiredIssueKeys = new Set<string>();
+
+  for (const definition of definitions) {
+    requiredIssueKeys.add(definition.issueKey);
+    if (definition.duplicateOfKey) {
+      requiredIssueKeys.add(definition.duplicateOfKey);
+    }
+  }
+
+  const issueIdsByKey = new Map<string, Id<"issues">>(args.issueIdsByKey ?? []);
+  if (issueIdsByKey.size < requiredIssueKeys.size) {
+    const projectIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const issue of projectIssues) {
+      if (requiredIssueKeys.has(issue.key)) {
+        issueIdsByKey.set(issue.key, issue._id);
+      }
+    }
+  }
+
+  const missingIssueKey = [...requiredIssueKeys].find((issueKey) => !issueIdsByKey.has(issueKey));
+  if (missingIssueKey) {
+    return {
+      success: false,
+      error: `seeded inbox issue not found for screenshot state: ${missingIssueKey}`,
+    };
+  }
+
+  const ownerIssueId = issueIdsByKey.get("DEMO-7");
+  const ownerIssue = ownerIssueId ? await ctx.db.get(ownerIssueId) : null;
+  const fallbackMember = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+    .take(1);
+  const ownerUserId = ownerIssue?.reporterId ?? fallbackMember[0]?.userId;
+  if (!ownerUserId) {
+    return { success: false, error: "Unable to resolve screenshot inbox owner user" };
+  }
+
+  const actorIds: Record<SeededInboxActorKey, Id<"users">> = {
+    owner: ownerUserId,
+    alex:
+      (await resolveSeededInboxUserId(ctx, SCREENSHOT_INBOX_SYNTHETIC_EMAILS.alex)) ?? ownerUserId,
+    sarah:
+      (await resolveSeededInboxUserId(ctx, SCREENSHOT_INBOX_SYNTHETIC_EMAILS.sarah)) ?? ownerUserId,
+  };
+
+  const existingInboxIssues = await ctx.db
+    .query("inboxIssues")
+    .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const inboxIssue of existingInboxIssues) {
+    await ctx.db.delete(inboxIssue._id);
+  }
+
+  for (const definition of definitions) {
+    const issueId = issueIdsByKey.get(definition.issueKey);
+    if (!issueId) {
+      return {
+        success: false,
+        error: `seeded inbox issue not found after validation: ${definition.issueKey}`,
+      };
+    }
+
+    const duplicateOfId = definition.duplicateOfKey
+      ? issueIdsByKey.get(definition.duplicateOfKey)
+      : undefined;
+
+    await ctx.db.insert("inboxIssues", {
+      projectId: args.projectId,
+      issueId,
+      status: definition.status,
+      source: definition.source,
+      sourceEmail: definition.sourceEmail,
+      snoozedUntil: definition.snoozedUntil,
+      duplicateOfId,
+      declineReason: definition.declineReason,
+      createdBy: actorIds[definition.createdBy],
+      createdAt: now - definition.createdOffsetMs,
+      triagedAt: definition.triagedOffsetMs ? now - definition.triagedOffsetMs : undefined,
+      triagedBy: definition.triagedOffsetMs ? ownerUserId : undefined,
+      updatedAt: now - (definition.triagedOffsetMs ?? definition.createdOffsetMs),
+    });
+  }
+
+  return {
+    success: true,
+    ...countSeededInboxIssues(definitions),
+  };
+}
 
 const SCREENSHOT_OUTREACH_MAILBOX = {
   dailySendLimit: 40,
@@ -2892,6 +3196,123 @@ export const deleteSeededProjectIssueInternal = internalMutation({
   },
 });
 
+/**
+ * Reconfigure a seeded project's inbox data for screenshot capture.
+ * POST /e2e/configure-project-inbox-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "openEmpty" | "closedEmpty",
+ * }
+ */
+export const configureProjectInboxStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "openEmpty", "closedEmpty"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid project inbox mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectInboxStateInternal, {
+      orgSlug,
+      projectKey,
+      mode,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectInboxStateInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    mode: v.union(v.literal("default"), v.literal("openEmpty"), v.literal("closedEmpty")),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    closedCount: v.optional(v.number()),
+    openCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const inboxReset = await resetSeededProjectInboxIssues(ctx, {
+      organizationId: organization._id,
+      projectId: project._id,
+      mode: args.mode,
+    });
+
+    if (!inboxReset.success) {
+      return {
+        success: false,
+        error: inboxReset.error ?? `Failed to configure project inbox state: ${args.mode}`,
+      };
+    }
+
+    return {
+      success: true,
+      projectId: project._id,
+      openCount: inboxReset.openCount,
+      closedCount: inboxReset.closedCount,
+    };
+  },
+});
+
 export const updateProjectWorkflowStatesInternal = internalMutation({
   args: {
     orgSlug: v.string(),
@@ -4874,99 +5295,18 @@ export const seedScreenshotDataInternal = internalMutation({
       createdIssueIdsByKey.set(def.key, issueId);
     }
 
-    const existingInboxIssues = await ctx.db
-      .query("inboxIssues")
-      .withIndex("by_project", (q) => q.eq("projectId", projectId))
-      .take(BOUNDED_LIST_LIMIT);
+    const inboxReset = await resetSeededProjectInboxIssues(ctx, {
+      organizationId: orgId,
+      projectId,
+      mode: "default",
+      issueIdsByKey: createdIssueIdsByKey,
+    });
 
-    for (const inboxIssue of existingInboxIssues) {
-      await ctx.db.delete(inboxIssue._id);
-    }
-
-    const inboxSeedDefinitions: Array<{
-      createdBy: Id<"users">;
-      createdOffsetMs: number;
-      declineReason?: string;
-      duplicateOfKey?: string;
-      issueKey: string;
-      snoozedUntil?: number;
-      source: Doc<"inboxIssues">["source"];
-      sourceEmail?: string;
-      status: Doc<"inboxIssues">["status"];
-      triagedOffsetMs?: number;
-    }> = [
-      {
-        createdBy: userId,
-        createdOffsetMs: 5 * HOUR,
-        issueKey: "DEMO-7",
-        source: "in_app",
-        status: "pending",
-      },
-      {
-        createdBy: syntheticUserIds[0] ?? userId,
-        createdOffsetMs: 20 * HOUR,
-        issueKey: "DEMO-2",
-        snoozedUntil: now + 2 * DAY,
-        source: "email",
-        sourceEmail: "alerts@northstarlabs.example",
-        status: "snoozed",
-        triagedOffsetMs: 4 * HOUR,
-      },
-      {
-        createdBy: syntheticUserIds[1] ?? userId,
-        createdOffsetMs: 30 * HOUR,
-        issueKey: "DEMO-1",
-        source: "in_app",
-        status: "accepted",
-        triagedOffsetMs: 26 * HOUR,
-      },
-      {
-        createdBy: syntheticUserIds[0] ?? userId,
-        createdOffsetMs: 34 * HOUR,
-        declineReason: "Outside current launch scope",
-        issueKey: "DEMO-4",
-        source: "api",
-        sourceEmail: "feedback-hooks@nixelo.test",
-        status: "declined",
-        triagedOffsetMs: 22 * HOUR,
-      },
-      {
-        createdBy: userId,
-        createdOffsetMs: 40 * HOUR,
-        duplicateOfKey: "DEMO-3",
-        issueKey: "DEMO-6",
-        source: "form",
-        sourceEmail: "intake@nixelo.test",
-        status: "duplicate",
-        triagedOffsetMs: 21 * HOUR,
-      },
-    ];
-
-    for (const seed of inboxSeedDefinitions) {
-      const issueId = createdIssueIdsByKey.get(seed.issueKey);
-      if (!issueId) {
-        continue;
-      }
-
-      const duplicateOfId = seed.duplicateOfKey
-        ? createdIssueIdsByKey.get(seed.duplicateOfKey)
-        : undefined;
-
-      await ctx.db.insert("inboxIssues", {
-        projectId,
-        issueId,
-        status: seed.status,
-        source: seed.source,
-        sourceEmail: seed.sourceEmail,
-        snoozedUntil: seed.snoozedUntil,
-        duplicateOfId,
-        declineReason: seed.declineReason,
-        createdBy: seed.createdBy,
-        createdAt: now - seed.createdOffsetMs,
-        triagedAt: seed.triagedOffsetMs ? now - seed.triagedOffsetMs : undefined,
-        triagedBy: seed.triagedOffsetMs ? userId : undefined,
-        updatedAt: now - (seed.triagedOffsetMs ?? seed.createdOffsetMs),
-      });
+    if (!inboxReset.success) {
+      return {
+        success: false,
+        error: inboxReset.error ?? "Failed to seed project inbox screenshot state",
+      };
     }
 
     // 8. Create documents (idempotent by title + project)

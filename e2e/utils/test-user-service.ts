@@ -80,6 +80,16 @@ export interface DeleteSeededProjectIssueResult {
   error?: string;
 }
 
+export type ProjectInboxScreenshotState = "default" | "openEmpty" | "closedEmpty";
+
+export interface ConfigureProjectInboxStateResult {
+  success: boolean;
+  closedCount?: number;
+  openCount?: number;
+  projectId?: string;
+  error?: string;
+}
+
 export interface E2EWorkflowState {
   id: string;
   name: string;
@@ -436,6 +446,30 @@ export class TestUserService {
     } catch (error) {
       console.warn(
         `  ⚠️ Failed to delete seeded screenshot issue "${issueTitle}" for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure a seeded project inbox for screenshot capture.
+   */
+  async configureProjectInboxState(
+    orgSlug: string,
+    projectKey: string,
+    mode: ProjectInboxScreenshotState,
+  ): Promise<ConfigureProjectInboxStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureProjectInboxState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure project inbox state ${mode} for ${projectKey} in ${orgSlug}:`,
         error,
       );
       return { success: false, error: String(error) };

@@ -18,6 +18,7 @@ import {
   SprintsPage,
 } from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
+import { testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
   dismissIfOpen,
@@ -637,6 +638,8 @@ export async function screenshotProjectInboxStates(
   const snoozeMenuName = `project-${normalizedProjectKey}-inbox-snooze-menu`;
   const declineDialogName = `project-${normalizedProjectKey}-inbox-decline-dialog`;
   const duplicateDialogName = `project-${normalizedProjectKey}-inbox-duplicate-dialog`;
+  const openEmptyName = `project-${normalizedProjectKey}-inbox-open-empty`;
+  const closedEmptyName = `project-${normalizedProjectKey}-inbox-closed-empty`;
 
   if (
     !shouldCaptureAny(prefix, [
@@ -645,12 +648,20 @@ export async function screenshotProjectInboxStates(
       snoozeMenuName,
       declineDialogName,
       duplicateDialogName,
+      openEmptyName,
+      closedEmptyName,
     ])
   ) {
     return;
   }
 
   const inboxPage = new InboxPage(page, orgSlug, projectKey);
+  const ensureInboxState = async (mode: "default" | "openEmpty" | "closedEmpty") => {
+    const result = await testUserService.configureProjectInboxState(orgSlug, projectKey, mode);
+    if (!result.success) {
+      throw new Error(result.error || `Failed to configure project inbox state: ${mode}`);
+    }
+  };
   const openInbox = async () => {
     await page.goto(`${BASE_URL}${inboxUrl}`, {
       waitUntil: "domcontentloaded",
@@ -659,64 +670,92 @@ export async function screenshotProjectInboxStates(
     await waitForExpectedContent(page, inboxUrl, "projectInbox", prefix);
     await waitForScreenshotReady(page);
   };
+  await ensureInboxState("default");
 
-  if (shouldCapture(prefix, closedTabName)) {
-    await runCaptureStep("project inbox closed tab", async () => {
-      await openInbox();
-      await inboxPage.openClosedTab();
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, closedTabName);
-    });
-  }
-
-  if (shouldCapture(prefix, bulkSelectionName)) {
-    await runCaptureStep("project inbox bulk selection", async () => {
-      await openInbox();
-      await inboxPage.selectFirstOpenIssue();
-      await expect(inboxPage.bulkActions).toBeVisible();
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, bulkSelectionName);
-    });
-  }
-
-  if (shouldCapture(prefix, snoozeMenuName)) {
-    await runCaptureStep("project inbox snooze menu", async () => {
-      await openInbox();
-      await inboxPage.openFirstIssueSnoozeMenu();
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, snoozeMenuName);
-      await page.keyboard.press("Escape");
-    });
-  }
-
-  if (shouldCapture(prefix, declineDialogName)) {
-    await runCaptureStep("project inbox decline dialog", async () => {
-      await page.evaluate(() => {
-        window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "decline-dialog");
+  try {
+    if (shouldCapture(prefix, closedTabName)) {
+      await runCaptureStep("project inbox closed tab", async () => {
+        await openInbox();
+        await inboxPage.openClosedTab();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, closedTabName);
       });
-      await openInbox();
-      await page
-        .getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG)
-        .waitFor({ state: "visible", timeout: 12000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, declineDialogName);
-      await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG));
-    });
-  }
+    }
 
-  if (shouldCapture(prefix, duplicateDialogName)) {
-    await runCaptureStep("project inbox duplicate dialog", async () => {
-      await page.evaluate(() => {
-        window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "duplicate-dialog");
+    if (shouldCapture(prefix, bulkSelectionName)) {
+      await runCaptureStep("project inbox bulk selection", async () => {
+        await openInbox();
+        await inboxPage.selectFirstOpenIssue();
+        await expect(inboxPage.bulkActions).toBeVisible();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, bulkSelectionName);
       });
-      await openInbox();
-      await page
-        .getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG)
-        .waitFor({ state: "visible", timeout: 12000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, duplicateDialogName);
-      await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG));
-    });
+    }
+
+    if (shouldCapture(prefix, snoozeMenuName)) {
+      await runCaptureStep("project inbox snooze menu", async () => {
+        await openInbox();
+        await inboxPage.openFirstIssueSnoozeMenu();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, snoozeMenuName);
+        await page.keyboard.press("Escape");
+      });
+    }
+
+    if (shouldCapture(prefix, declineDialogName)) {
+      await runCaptureStep("project inbox decline dialog", async () => {
+        await page.evaluate(() => {
+          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "decline-dialog");
+        });
+        await openInbox();
+        await page
+          .getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG)
+          .waitFor({ state: "visible", timeout: 12000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, declineDialogName);
+        await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG));
+      });
+    }
+
+    if (shouldCapture(prefix, duplicateDialogName)) {
+      await runCaptureStep("project inbox duplicate dialog", async () => {
+        await page.evaluate(() => {
+          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "duplicate-dialog");
+        });
+        await openInbox();
+        await page
+          .getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG)
+          .waitFor({ state: "visible", timeout: 12000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, duplicateDialogName);
+        await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG));
+      });
+    }
+
+    if (shouldCapture(prefix, openEmptyName)) {
+      await runCaptureStep("project inbox open empty state", async () => {
+        await ensureInboxState("openEmpty");
+        await openInbox();
+        await inboxPage.expectOpenEmptyState();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, openEmptyName);
+      });
+    }
+
+    if (shouldCapture(prefix, closedEmptyName)) {
+      await runCaptureStep("project inbox closed empty state", async () => {
+        await ensureInboxState("closedEmpty");
+        await page.evaluate(() => {
+          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "closed-tab");
+        });
+        await openInbox();
+        await inboxPage.expectClosedEmptyState();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, closedEmptyName);
+      });
+    }
+  } finally {
+    await ensureInboxState("default");
   }
 }
 

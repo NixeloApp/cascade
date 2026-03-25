@@ -43,11 +43,12 @@ or are created directly as inbox items by the system. The inbox is the gate betw
 | Snooze menu | ![](screenshots/desktop-dark-snooze-menu.png) | ![](screenshots/desktop-light-snooze-menu.png) | ![](screenshots/tablet-light-snooze-menu.png) | ![](screenshots/mobile-light-snooze-menu.png) |
 | Decline dialog | ![](screenshots/desktop-dark-decline-dialog.png) | ![](screenshots/desktop-light-decline-dialog.png) | ![](screenshots/tablet-light-decline-dialog.png) | ![](screenshots/mobile-light-decline-dialog.png) |
 | Duplicate dialog | ![](screenshots/desktop-dark-duplicate-dialog.png) | ![](screenshots/desktop-light-duplicate-dialog.png) | ![](screenshots/tablet-light-duplicate-dialog.png) | ![](screenshots/mobile-light-duplicate-dialog.png) |
+| Empty open tab | ![](screenshots/desktop-dark-open-empty.png) | ![](screenshots/desktop-light-open-empty.png) | ![](screenshots/tablet-light-open-empty.png) | ![](screenshots/mobile-light-open-empty.png) |
+| Empty closed tab | ![](screenshots/desktop-dark-closed-empty.png) | ![](screenshots/desktop-light-closed-empty.png) | ![](screenshots/tablet-light-closed-empty.png) | ![](screenshots/mobile-light-closed-empty.png) |
 
 ### Remaining gaps
 
-- Empty open tab ("No issues awaiting triage")
-- Empty closed tab ("No resolved inbox items")
+No known screenshot gaps for this route on the reviewed matrix.
 
 ---
 
@@ -96,7 +97,7 @@ or are created directly as inbox items by the system. The inbox is the gate betw
 - Thin route: resolves project by key, passes `projectId` to `InboxList`.
 - Loading and error states handled at route level.
 
-### 2. InboxList component (1412 lines)
+### 2. InboxList component (1460 lines)
 
 The entire inbox UI lives in a single component with:
 
@@ -133,6 +134,11 @@ The entire inbox UI lives in a single component with:
 - Reopen — returns to pending status
 - Remove — soft-deletes the inbox item
 
+**Empty-state actions:**
+- Search-empty state offers a direct "Clear search" recovery action
+- Open-empty state can jump directly to the closed tab when prior triage exists
+- Closed-empty state can jump back to the open queue when items still need review
+
 ### 3. Status configuration
 
 ```text
@@ -155,11 +161,8 @@ duplicate -> Copy (secondary)          "Duplicate"
 - Snooze preset menu (4 viewports)
 - Decline reason dialog (4 viewports)
 - Duplicate search dialog (4 viewports)
-
-### States that should still be captured
-
-- Empty open tab
-- Empty closed tab
+- Empty open tab (4 viewports)
+- Empty closed tab (4 viewports)
 
 ---
 
@@ -172,6 +175,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 | External intake integration | Issues from the public API surface naturally in this queue. |
 | Tab separation | Open vs closed is clean. No mixing of actionable and resolved items. |
 | Submitter context | Triage notes show who submitted and how (API, email). |
+| Recovery UX | Empty states now point directly to the next useful action instead of dead-ending. |
 
 ---
 
@@ -180,7 +184,6 @@ duplicate -> Copy (secondary)          "Duplicate"
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | 1 | `InboxList` now covers more of the real triage surface, but it is still a very large single component. | maintainability | MEDIUM |
-| 2 | Empty-state review is still shallow compared with the filled and interaction-state matrix. | visual QA | LOW |
 
 ---
 
@@ -189,8 +192,8 @@ duplicate -> Copy (secondary)          "Duplicate"
 | File | Lines | Purpose |
 |------|-------|---------|
 | `src/routes/.../inbox.tsx` | 29 | Route: project resolution |
-| `src/components/InboxList.tsx` | 1412 | Full inbox UI: tabs, bulk actions, rows, dialogs, duplicate search |
-| `e2e/pages/inbox.page.ts` | 110 | Page object for inbox route screenshot and E2E interactions |
+| `src/components/InboxList.tsx` | 1460 | Full inbox UI: tabs, bulk actions, rows, dialogs, duplicate search, empty-state recovery |
+| `e2e/pages/inbox.page.ts` | 128 | Page object for inbox route screenshot and E2E interactions |
 | `convex/inbox.ts` | -- | Backend: list, accept, decline, snooze, duplicate, reopen, remove, counts |
 | `convex/intake.ts` | -- | External submission: createExternal, token management |
 | `convex/http/intake.ts` | -- | HTTP endpoint: POST /api/intake |
@@ -211,6 +214,6 @@ duplicate -> Copy (secondary)          "Duplicate"
 ## Summary
 
 The project inbox is now a fuller triage surface with reviewed closed, bulk-selection,
-snooze-menu, decline-dialog, and duplicate-search states across desktop/tablet/mobile.
-The main remaining gap is empty-state review depth, while the main engineering debt is that
-the route still lives in a very large single component.
+snooze-menu, decline-dialog, duplicate-search, and both empty-tab states across
+desktop/tablet/mobile. The main engineering debt is that the route still lives in a
+very large single component.

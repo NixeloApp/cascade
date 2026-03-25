@@ -29,6 +29,7 @@ import {
   buildCustomSnoozeTimestamp,
   formatInboxSourceLabel,
   getDefaultCustomSnoozeDateValue,
+  getInboxEmptyStateConfig,
   INBOX_SNOOZE_PRESETS,
 } from "./inbox-list-utils";
 import { Badge } from "./ui/Badge";
@@ -139,7 +140,7 @@ const STATUS_CONFIG = {
 } as const;
 
 const DUPLICATE_SEARCH_LIMIT = 8;
-type ProjectInboxE2EState = "decline-dialog" | "duplicate-dialog";
+type ProjectInboxE2EState = "closed-tab" | "decline-dialog" | "duplicate-dialog";
 const PROJECT_INBOX_E2E_STATE_STORAGE_KEY = "nixelo:e2e:project-inbox-state";
 
 function isTriageable(issue: Pick<InboxIssueWithDetails, "status">): boolean {
@@ -824,13 +825,12 @@ function InboxBulkActionsBar({
 }
 
 function InboxTabContent({
-  emptyDescription,
-  emptyTitle,
+  emptyState,
   items,
-  searchActive,
   selectedIds,
   testId,
   onAcceptIssue,
+  onEmptyAction,
   onOpenDecline,
   onOpenDuplicate,
   onOpenCustomSnooze,
@@ -840,13 +840,12 @@ function InboxTabContent({
   onToggleSelect,
   onUnsnoozeIssue,
 }: {
-  emptyDescription: string;
-  emptyTitle: string;
+  emptyState: ReturnType<typeof getInboxEmptyStateConfig>;
   items: InboxIssueWithDetails[];
-  searchActive: boolean;
   selectedIds: Set<Id<"inboxIssues">>;
   testId: string;
   onAcceptIssue: (issueId: Id<"inboxIssues">) => Promise<void>;
+  onEmptyAction?: () => void;
   onOpenDecline: (issue: InboxIssueWithDetails) => void;
   onOpenDuplicate: (issue: InboxIssueWithDetails) => void;
   onOpenCustomSnooze: (issue: InboxIssueWithDetails) => void;
@@ -861,8 +860,16 @@ function InboxTabContent({
       <div data-testid={testId}>
         <EmptyState
           icon={Inbox}
-          title={searchActive ? "No matching items" : emptyTitle}
-          description={searchActive ? "Try a different search term." : emptyDescription}
+          title={emptyState.title}
+          description={emptyState.description}
+          action={
+            emptyState.actionLabel && onEmptyAction
+              ? {
+                  label: emptyState.actionLabel,
+                  onClick: onEmptyAction,
+                }
+              : undefined
+          }
         />
       </div>
     );
@@ -1159,6 +1166,31 @@ export function InboxList({ projectId }: InboxListProps) {
   const normalizedQuery = deferredSearchQuery.trim().toLowerCase();
   const filteredIssues =
     inboxIssues === undefined ? undefined : filterInboxIssues(inboxIssues, normalizedQuery);
+  const openEmptyState = getInboxEmptyStateConfig({
+    counterpartCount: counts?.closed ?? 0,
+    searchActive: normalizedQuery.length > 0,
+    tab: "open",
+  });
+  const closedEmptyState = getInboxEmptyStateConfig({
+    counterpartCount: counts?.open ?? 0,
+    searchActive: normalizedQuery.length > 0,
+    tab: "closed",
+  });
+
+  useEffect(() => {
+    const requestedState = window.sessionStorage.getItem(
+      PROJECT_INBOX_E2E_STATE_STORAGE_KEY,
+    ) as ProjectInboxE2EState | null;
+
+    if (requestedState !== "closed-tab" || activeTab === "closed" || dialogs.actionTarget) {
+      return;
+    }
+
+    setActiveTab("closed");
+    selection.clear();
+    setSearchQuery("");
+    window.sessionStorage.removeItem(PROJECT_INBOX_E2E_STATE_STORAGE_KEY);
+  }, [activeTab, dialogs.actionTarget, selection]);
 
   useEffect(() => {
     if (activeTab !== "open" || dialogs.actionTarget || !filteredIssues) {
@@ -1307,14 +1339,22 @@ export function InboxList({ projectId }: InboxListProps) {
 
             <TabsContent value="open" className="overflow-auto">
               <InboxTabContent
-                emptyDescription="All inbox issues have been triaged. New submissions will appear here."
-                emptyTitle="No pending items"
+                emptyState={openEmptyState}
                 items={filteredIssues}
-                searchActive={normalizedQuery.length > 0}
                 selectedIds={selection.selectedIds}
                 testId={TEST_IDS.PROJECT_INBOX.OPEN_EMPTY_STATE}
                 onAcceptIssue={async (issueId) => {
                   await actions.acceptIssues([issueId]);
+                }}
+                onEmptyAction={() => {
+                  if (openEmptyState.actionKind === "clearSearch") {
+                    handleSearchChange("");
+                    return;
+                  }
+
+                  if (openEmptyState.actionKind === "switchToClosed") {
+                    handleTabChange("closed");
+                  }
                 }}
                 onOpenDecline={(issue) =>
                   dialogs.openDialog({
@@ -1356,14 +1396,22 @@ export function InboxList({ projectId }: InboxListProps) {
 
             <TabsContent value="closed" className="overflow-auto">
               <InboxTabContent
-                emptyDescription="Accepted, declined, and duplicate issues will appear here."
-                emptyTitle="No closed items"
+                emptyState={closedEmptyState}
                 items={filteredIssues}
-                searchActive={normalizedQuery.length > 0}
                 selectedIds={selection.selectedIds}
                 testId={TEST_IDS.PROJECT_INBOX.CLOSED_EMPTY_STATE}
                 onAcceptIssue={async (issueId) => {
                   await actions.acceptIssues([issueId]);
+                }}
+                onEmptyAction={() => {
+                  if (closedEmptyState.actionKind === "clearSearch") {
+                    handleSearchChange("");
+                    return;
+                  }
+
+                  if (closedEmptyState.actionKind === "switchToOpen") {
+                    handleTabChange("open");
+                  }
                 }}
                 onOpenDecline={(issue) =>
                   dialogs.openDialog({

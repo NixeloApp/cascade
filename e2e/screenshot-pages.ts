@@ -322,6 +322,8 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-inbox-snooze-menu",
   "filled-project-PROJ-inbox-decline-dialog",
   "filled-project-PROJ-inbox-duplicate-dialog",
+  "filled-project-PROJ-inbox-open-empty",
+  "filled-project-PROJ-inbox-closed-empty",
   "filled-project-PROJ-sprints",
   "filled-project-PROJ-roadmap",
   "filled-project-PROJ-calendar",

@@ -350,6 +350,46 @@ describe("InboxList", () => {
     expect(screen.queryByText("Customer feedback")).not.toBeInTheDocument();
   });
 
+  it("clears search from the empty-state action", async () => {
+    const user = userEvent.setup();
+    setupMocks({
+      counts: createMockCounts({ open: 1, pending: 1 }),
+      inboxIssues: [
+        createMockInboxIssue({
+          issue: createMockIssueDoc({}, "TEST-8", "Webhook delivery failure"),
+        }),
+      ],
+    });
+
+    render(<InboxList projectId={"proj-1" as Id<"projects">} />);
+
+    const searchInput = screen.getByTestId(TEST_IDS.PROJECT_INBOX.SEARCH_INPUT);
+    await user.type(searchInput, "no-match");
+
+    expect(screen.getByText("No matching items")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /clear search/i }));
+
+    expect(searchInput).toHaveValue("");
+    expect(screen.getByText("Webhook delivery failure")).toBeInTheDocument();
+  });
+
+  it("links the open empty state to the closed tab when resolved items exist", async () => {
+    const user = userEvent.setup();
+    setupMocks({
+      counts: createMockCounts({ closed: 2, declined: 1, duplicate: 1 }),
+      inboxIssues: [],
+    });
+
+    render(<InboxList projectId={"proj-1" as Id<"projects">} />);
+
+    expect(screen.getByText("No pending items")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /view closed items/i }));
+
+    expect(screen.getByText("No closed items")).toBeInTheDocument();
+  });
+
   it("renders the snoozed badge for deferred issues", () => {
     setupMocks({
       counts: createMockCounts({ open: 1, snoozed: 1 }),

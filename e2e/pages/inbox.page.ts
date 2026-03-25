@@ -8,10 +8,12 @@ import { BasePage } from "./base.page";
 export class InboxPage extends BasePage {
   readonly bulkActions: Locator;
   readonly closedTab: Locator;
+  readonly closedEmptyState: Locator;
   readonly customSnoozeDialog: Locator;
   readonly declineDialog: Locator;
   readonly duplicateDialog: Locator;
   readonly inboxRows: Locator;
+  readonly openEmptyState: Locator;
   readonly searchInput: Locator;
   readonly snoozeMenu: Locator;
 
@@ -23,10 +25,12 @@ export class InboxPage extends BasePage {
     super(page, orgSlug);
     this.bulkActions = page.getByTestId(TEST_IDS.PROJECT_INBOX.BULK_ACTIONS);
     this.closedTab = page.getByTestId(TEST_IDS.PROJECT_INBOX.CLOSED_TAB);
+    this.closedEmptyState = page.getByTestId(TEST_IDS.PROJECT_INBOX.CLOSED_EMPTY_STATE);
     this.customSnoozeDialog = page.getByTestId(TEST_IDS.PROJECT_INBOX.CUSTOM_SNOOZE_DIALOG);
     this.declineDialog = page.getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG);
     this.duplicateDialog = page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG);
     this.inboxRows = page.getByTestId(TEST_IDS.PROJECT_INBOX.ROW);
+    this.openEmptyState = page.getByTestId(TEST_IDS.PROJECT_INBOX.OPEN_EMPTY_STATE);
     this.searchInput = page.getByTestId(TEST_IDS.PROJECT_INBOX.SEARCH_INPUT);
     this.snoozeMenu = page.getByTestId(TEST_IDS.PROJECT_INBOX.SNOOZE_MENU);
   }
@@ -106,5 +110,19 @@ export class InboxPage extends BasePage {
   async openClosedTab(): Promise<void> {
     await expect(this.closedTab).toBeVisible();
     await this.closedTab.click();
+  }
+
+  async expectOpenEmptyState(): Promise<void> {
+    await expect
+      .poll(async () => await isLocatorVisible(this.openEmptyState), { timeout: 12000 })
+      .toBe(true);
+    await expect(this.openEmptyState).toContainText(/no pending items/i);
+  }
+
+  async expectClosedEmptyState(): Promise<void> {
+    await expect
+      .poll(async () => await isLocatorVisible(this.closedEmptyState), { timeout: 12000 })
+      .toBe(true);
+    await expect(this.closedEmptyState).toContainText(/no closed items/i);
   }
 }

@@ -16,6 +16,15 @@ export interface InboxSourceMeta {
   sourceEmail?: string;
 }
 
+export type InboxEmptyStateActionKind = "clearSearch" | "switchToClosed" | "switchToOpen";
+
+export interface InboxEmptyStateConfig {
+  actionKind?: InboxEmptyStateActionKind;
+  actionLabel?: string;
+  description: string;
+  title: string;
+}
+
 /** Return the default custom snooze date as a local `YYYY-MM-DD` string. */
 export function getDefaultCustomSnoozeDateValue(now = Date.now()): string {
   const date = new Date(now);
@@ -75,6 +84,58 @@ export function formatInboxSourceLabel({
   }
 
   return "Submitted in app";
+}
+
+/** Build the most helpful empty-state copy for the current inbox tab. */
+export function getInboxEmptyStateConfig({
+  counterpartCount,
+  searchActive,
+  tab,
+}: {
+  counterpartCount: number;
+  searchActive: boolean;
+  tab: "open" | "closed";
+}): InboxEmptyStateConfig {
+  if (searchActive) {
+    return {
+      actionKind: "clearSearch",
+      actionLabel: "Clear search",
+      description: "Try a different search term or clear the current query.",
+      title: "No matching items",
+    };
+  }
+
+  if (tab === "open") {
+    if (counterpartCount > 0) {
+      return {
+        actionKind: "switchToClosed",
+        actionLabel: "View closed items",
+        description:
+          "Everything in this inbox has already been triaged. Review prior decisions in the closed tab.",
+        title: "No pending items",
+      };
+    }
+
+    return {
+      description: "All inbox issues have been triaged. New submissions will appear here.",
+      title: "No pending items",
+    };
+  }
+
+  if (counterpartCount > 0) {
+    return {
+      actionKind: "switchToOpen",
+      actionLabel: "View open items",
+      description:
+        "This project still has items waiting for review. Accepted, declined, and duplicate issues will collect here after triage.",
+      title: "No closed items",
+    };
+  }
+
+  return {
+    description: "Accepted, declined, and duplicate issues will appear here.",
+    title: "No closed items",
+  };
 }
 
 function formatLocalDateInputValue(date: Date): string {
