@@ -112,6 +112,10 @@ export class WorkspacesPage extends BasePage {
   }
 
   async expectWorkspaceVisible(name: string) {
+    // After creation the app may navigate to the workspace detail.
+    // Navigate back to the list to verify the card appears.
+    await this.navigateToWorkspacesRoute();
+    await this.waitUntilReady();
     const card = this.workspaceCards.filter({ hasText: name }).first();
     await card.waitFor({ state: "visible", timeout: 15000 });
   }
