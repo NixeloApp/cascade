@@ -496,6 +496,7 @@ describe("outreach gmail", () => {
     const result = await t.mutation(internal.outreach.gmail.findEnrollmentForBounce, {
       bouncedRecipientEmail: "lead@example.com",
       mailboxId: fixture.mailboxId,
+      gmailMessageId: "soft-bounce-1",
       diagnosticCode: "421 4.7.0 Temporary rate limit exceeded",
       bounceReason: "Delivery temporarily delayed",
     });
@@ -529,7 +530,94 @@ describe("outreach gmail", () => {
       bounceType: "soft",
       failedRecipient: "lead@example.com",
       diagnosticCode: "421 4.7.0 Temporary rate limit exceeded",
+      gmailMessageId: "soft-bounce-1",
       replyContent: "Delivery temporarily delayed",
+    });
+  });
+
+  it("deduplicates repeated soft-bounce polls for the same Gmail message", async () => {
+    const { t, fixture } = await createOutreachFixture();
+
+    vi.mocked(fetchWithTimeout).mockImplementation(async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.includes("/messages?q=")) {
+        return new Response(
+          JSON.stringify({
+            messages: [{ id: "soft-bounce-message", threadId: "soft-bounce-thread" }],
+          }),
+          { status: 200 },
+        );
+      }
+
+      if (requestUrl.includes("/messages/soft-bounce-message?")) {
+        return new Response(
+          JSON.stringify({
+            snippet: "Delivery temporarily delayed",
+            payload: {
+              mimeType: "multipart/report",
+              headers: [
+                {
+                  name: "From",
+                  value: "Mail Delivery Subsystem <mailer-daemon@googlemail.com>",
+                },
+                { name: "Subject", value: "Delivery temporarily delayed" },
+                { name: "X-Failed-Recipients", value: "lead@example.com" },
+              ],
+              parts: [
+                {
+                  mimeType: "message/delivery-status",
+                  body: {
+                    data: encodeBase64UrlUtf8(
+                      [
+                        "Final-Recipient: rfc822; lead@example.com",
+                        "Action: delayed",
+                        "Status: 4.7.0",
+                        "Diagnostic-Code: smtp; 421 4.7.0 Temporary rate limit exceeded",
+                      ].join("\n"),
+                    ),
+                  },
+                },
+              ],
+            },
+          }),
+          { status: 200 },
+        );
+      }
+
+      throw new Error(`Unexpected fetch URL: ${requestUrl}`);
+    });
+
+    const firstResult = await t.action(internal.outreach.gmail.checkReplies, {
+      mailboxId: fixture.mailboxId,
+    });
+    const secondResult = await t.action(internal.outreach.gmail.checkReplies, {
+      mailboxId: fixture.mailboxId,
+    });
+
+    expect(firstResult).toEqual({ checked: 1, replies: 0, bounces: 1 });
+    expect(secondResult).toEqual({ checked: 1, replies: 0, bounces: 0 });
+
+    const enrollment = await t.run(async (ctx) => ctx.db.get(fixture.enrollmentId));
+    expect(enrollment).not.toBeNull();
+    if (enrollment === null) throw new Error("enrollment is null");
+    expect(enrollment.status).toBe("active");
+
+    const sequence = await t.run(async (ctx) => ctx.db.get(fixture.sequenceId));
+    expect(sequence).not.toBeNull();
+    if (sequence === null) throw new Error("sequence is null");
+    expect(sequence.stats?.bounced).toBe(1);
+
+    const events = await t.run(async (ctx) =>
+      ctx.db
+        .query("outreachEvents")
+        .withIndex("by_enrollment", (q) => q.eq("enrollmentId", fixture.enrollmentId))
+        .collect(),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0].metadata).toMatchObject({
+      bounceType: "soft",
+      failedRecipient: "lead@example.com",
+      gmailMessageId: "soft-bounce-message",
     });
   });
 

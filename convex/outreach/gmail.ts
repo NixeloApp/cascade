@@ -561,6 +561,7 @@ async function processMessageBatch(
       const result = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForBounce, {
         bouncedRecipientEmail: recipientEmail,
         mailboxId,
+        gmailMessageId: msg.id,
         gmailThreadId: msg.threadId,
         diagnosticCode: inboundMessage.diagnosticCode,
         bounceReason: inboundMessage.reason,
@@ -875,6 +876,7 @@ export const findEnrollmentForBounce = internalMutation({
   args: {
     bouncedRecipientEmail: v.string(),
     mailboxId: v.id("outreachMailboxes"),
+    gmailMessageId: v.optional(v.string()),
     gmailThreadId: v.optional(v.string()),
     diagnosticCode: v.optional(v.string()),
     bounceReason: v.optional(v.string()),
@@ -910,6 +912,21 @@ export const findEnrollmentForBounce = internalMutation({
       diagnosticCode: args.diagnosticCode,
       reason: args.bounceReason,
     });
+    const existingBounceEvents = await collectInBatches((cursor) =>
+      ctx.db
+        .query("outreachEvents")
+        .withIndex("by_enrollment", (q) => q.eq("enrollmentId", activeEnrollment._id))
+        .paginate({ numItems: BOUNDED_LIST_LIMIT, cursor }),
+    );
+    const alreadyRecorded = args.gmailMessageId
+      ? existingBounceEvents.some(
+          (event) =>
+            event.type === "bounced" && event.metadata?.gmailMessageId === args.gmailMessageId,
+        )
+      : false;
+    if (alreadyRecorded) {
+      return { matched: false };
+    }
 
     await ctx.db.insert("outreachEvents", {
       enrollmentId: activeEnrollment._id,
@@ -922,6 +939,7 @@ export const findEnrollmentForBounce = internalMutation({
         bounceType,
         diagnosticCode: args.diagnosticCode,
         failedRecipient: normalizedEmail,
+        gmailMessageId: args.gmailMessageId,
         replyContent: args.bounceReason,
       },
       createdAt: Date.now(),

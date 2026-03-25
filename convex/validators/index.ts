@@ -226,6 +226,7 @@ export const outreachEventMetadata = v.optional(
     bounceType: v.optional(v.string()), // "hard" | "soft"
     diagnosticCode: v.optional(v.string()),
     failedRecipient: v.optional(v.string()),
+    gmailMessageId: v.optional(v.string()),
     replyContent: v.optional(v.string()), // Extracted reply text
     linkUrl: v.optional(v.string()), // Clicked URL
     userAgent: v.optional(v.string()),
