@@ -23,6 +23,13 @@ type OutreachFixture = {
 
 type ConvexTestInstance = TestConvex<typeof schema>;
 
+const DEFAULT_TOKEN_TTL_MS = MINUTE;
+const REFRESHED_TOKEN_TTL_MS = 2 * MINUTE;
+const DEFAULT_DAILY_SEND_LIMIT = 50;
+const FALLBACK_DEDUP_ADVANCE_MS = 2 * MINUTE;
+const HISTORICAL_ENROLLMENT_COUNT = 100;
+const HISTORICAL_OFFSET_STEP_MS = 1_000;
+
 function encodeBase64UrlUtf8(value: string): string {
   return Buffer.from(value, "utf8")
     .toString("base64")
@@ -46,7 +53,7 @@ async function createMailbox(
     displayName,
     accessToken: `access-token-${email}`,
     refreshToken: `refresh-token-${email}`,
-    expiresAt: Date.now() + 60_000,
+    expiresAt: Date.now() + DEFAULT_TOKEN_TTL_MS,
   });
 }
 
@@ -184,8 +191,8 @@ describe("outreach gmail", () => {
         displayName: "Legacy Mailbox",
         accessToken: "legacy-access-token",
         refreshToken: "legacy-refresh-token",
-        expiresAt: Date.now() + 60_000,
-        dailySendLimit: 50,
+        expiresAt: Date.now() + DEFAULT_TOKEN_TTL_MS,
+        dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
         todaySendCount: 0,
         todayResetAt: Date.now(),
         isActive: true,
@@ -222,13 +229,13 @@ describe("outreach gmail", () => {
       displayName: "Refresh Mailbox",
       accessToken: "initial-access-token",
       refreshToken: "initial-refresh-token",
-      expiresAt: Date.now() + 60_000,
+      expiresAt: Date.now() + DEFAULT_TOKEN_TTL_MS,
     });
 
     await t.mutation(internal.outreach.gmail.updateMailboxTokens, {
       mailboxId,
       accessToken: "refreshed-access-token",
-      expiresAt: Date.now() + 120_000,
+      expiresAt: Date.now() + REFRESHED_TOKEN_TTL_MS,
     });
 
     const rawMailbox = await t.run(async (ctx) => ctx.db.get(mailboxId));
@@ -637,7 +644,7 @@ describe("outreach gmail", () => {
       bounceReason: "Delivery temporarily delayed",
     });
 
-    vi.advanceTimersByTime(2 * MINUTE);
+    vi.advanceTimersByTime(FALLBACK_DEDUP_ADVANCE_MS);
 
     const secondResult = await t.mutation(internal.outreach.gmail.findEnrollmentForBounce, {
       bouncedRecipientEmail: "lead@example.com",
@@ -676,7 +683,7 @@ describe("outreach gmail", () => {
   it("still finds the active mailbox enrollment when older enrollments exceed the bounded slice", async () => {
     const { t, fixture } = await createOutreachFixture();
 
-    for (let index = 0; index < 100; index += 1) {
+    for (let index = 0; index < HISTORICAL_ENROLLMENT_COUNT; index += 1) {
       const { sequenceId, enrollmentId } = await createSequenceAndEnrollment(t, {
         userId: fixture.userId,
         organizationId: fixture.organizationId,
@@ -687,10 +694,10 @@ describe("outreach gmail", () => {
 
       await t.run(async (ctx) => {
         await ctx.db.patch(sequenceId, {
-          updatedAt: Date.now() - (index + 1) * 1_000,
+          updatedAt: Date.now() - (index + 1) * HISTORICAL_OFFSET_STEP_MS,
         });
         await ctx.db.patch(enrollmentId, {
-          completedAt: Date.now() - (index + 1) * 1_000,
+          completedAt: Date.now() - (index + 1) * HISTORICAL_OFFSET_STEP_MS,
           status: "replied",
         });
       });
