@@ -8,6 +8,7 @@ describe("PageContent", () => {
   it("renders a loading spinner while content is loading", () => {
     render(<PageContent isLoading={true}>Loaded content</PageContent>);
 
+    expect(screen.getByTestId(TEST_IDS.PAGE.LOADING_STATE)).toBeInTheDocument();
     expect(screen.getByRole("status")).toBeInTheDocument();
     expect(screen.queryByText("Loaded content")).not.toBeInTheDocument();
   });
@@ -17,7 +18,6 @@ describe("PageContent", () => {
 
     render(
       <PageContent
-        isEmpty={true}
         emptyState={{
           icon: Inbox,
           title: "Nothing here yet",

@@ -298,14 +298,17 @@ export function AllIssuesPage() {
 
         <PageContent
           isLoading={isLoading}
-          isEmpty={filteredIssues.length === 0}
-          emptyState={{
-            icon: SearchX,
-            title: "No issues found",
-            description: filters.hasActiveFilters
-              ? "Try adjusting your filters or clearing them."
-              : "Create your first issue to get started.",
-          }}
+          emptyState={
+            filteredIssues.length === 0
+              ? {
+                  icon: SearchX,
+                  title: "No issues found",
+                  description: filters.hasActiveFilters
+                    ? "Try adjusting your filters or clearing them."
+                    : "Create your first issue to get started.",
+                }
+              : null
+          }
         >
           <Grid cols={1} colsMd={2} colsLg={3} colsXl={4} gap="lg">
             {filteredIssues.map((issue) => (

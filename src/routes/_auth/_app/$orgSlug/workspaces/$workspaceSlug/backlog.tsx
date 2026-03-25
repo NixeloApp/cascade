@@ -102,12 +102,15 @@ function WorkspaceBacklogPage() {
 
   return (
     <PageContent
-      isEmpty={backlogIssues.length === 0}
-      emptyState={{
-        icon: SearchX,
-        title: "Backlog is empty",
-        description: "No unsprinted workspace issues are currently in backlog.",
-      }}
+      emptyState={
+        backlogIssues.length === 0
+          ? {
+              icon: SearchX,
+              title: "Backlog is empty",
+              description: "No unsprinted workspace issues are currently in backlog.",
+            }
+          : null
+      }
     >
       <Stack gap="md">
         <Flex justify="between" align="center" gap="sm">

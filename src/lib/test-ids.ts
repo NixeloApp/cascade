@@ -22,6 +22,8 @@ export const TEST_IDS = {
     /** @see src/components/layout/PageHeader.tsx */
     HEADER_TITLE: "page-header-title",
     /** @see src/components/layout/PageContent.tsx */
+    LOADING_STATE: "page-loading-state",
+    /** @see src/components/layout/PageContent.tsx */
     EMPTY_STATE: "page-empty-state",
     /** @see public/offline.html */
     OFFLINE_FALLBACK_HEADING: "offline-fallback-heading",

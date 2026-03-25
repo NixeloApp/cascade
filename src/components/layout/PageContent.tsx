@@ -17,8 +17,7 @@ interface EmptyStateConfig {
 interface PageContentProps {
   children: ReactNode;
   isLoading?: boolean;
-  isEmpty?: boolean;
-  emptyState?: EmptyStateConfig;
+  emptyState?: EmptyStateConfig | null;
   className?: string;
 }
 
@@ -26,13 +25,17 @@ interface PageContentProps {
 export function PageContent({
   children,
   isLoading,
-  isEmpty,
   emptyState,
   className,
 }: PageContentProps): ReactNode {
   if (isLoading) {
     return (
-      <Card padding="xl" variant="ghost">
+      <Card
+        padding="xl"
+        variant="ghost"
+        className="border border-ui-border-secondary/80 bg-ui-bg-elevated shadow-soft"
+        data-testid={TEST_IDS.PAGE.LOADING_STATE}
+      >
         <Flex align="center" justify="center">
           <LoadingSpinner size="lg" />
         </Flex>
@@ -40,13 +43,14 @@ export function PageContent({
     );
   }
 
-  if (isEmpty && emptyState) {
+  if (emptyState) {
     return (
       <EmptyState
         icon={emptyState.icon}
         title={emptyState.title}
         description={emptyState.description}
         action={emptyState.actions}
+        surface="page"
         data-testid={TEST_IDS.PAGE.EMPTY_STATE}
       />
     );

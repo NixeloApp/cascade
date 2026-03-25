@@ -8,8 +8,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/Breadcrumb";
-import { Card } from "@/components/ui/Card";
-import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -26,6 +24,7 @@ interface PageHeaderProps {
   description?: ReactNode;
   actions?: ReactNode;
   breadcrumbs?: BreadcrumbData[];
+  eyebrow?: ReactNode;
   className?: string;
   spacing?: "standalone" | "stack";
 }
@@ -36,15 +35,12 @@ export function PageHeader({
   description,
   actions,
   breadcrumbs,
+  eyebrow,
   className,
   spacing = "standalone",
 }: PageHeaderProps): ReactNode {
   return (
-    <Card
-      recipe="pageHeader"
-      padding="md"
-      className={cn(spacing === "standalone" && "mb-4 sm:mb-5", className)}
-    >
+    <header className={cn(spacing === "standalone" && "mb-4 sm:mb-5", className)}>
       <Stack gap="sm">
         {breadcrumbs && breadcrumbs.length > 0 && (
           <Breadcrumb>
@@ -75,22 +71,19 @@ export function PageHeader({
           directionSm="row"
         >
           <Stack gap="xs" className="min-w-0">
-            <Flex align="center" gap="xs" className="mb-0.5">
-              <Dot size="md" halo />
-              <Typography variant="pageHeaderEyebrow">Workspace view</Typography>
-            </Flex>
+            {eyebrow ? <Typography variant="pageHeaderEyebrow">{eyebrow}</Typography> : null}
             <Typography variant="pageHeaderTitle" as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
               {title}
             </Typography>
             {description && <Typography variant="pageHeaderDescription">{description}</Typography>}
           </Stack>
           {actions && (
-            <Flex gap="sm" align="center" className="w-full shrink-0 sm:w-auto">
+            <Flex gap="sm" align="center" wrap className="w-full shrink-0 sm:w-auto sm:justify-end">
               {actions}
             </Flex>
           )}
         </Flex>
       </Stack>
-    </Card>
+    </header>
   );
 }

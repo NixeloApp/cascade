@@ -136,23 +136,28 @@ export function DocumentsListPage() {
 
       <PageContent
         isLoading={isLoading}
-        isEmpty={isEmpty}
-        emptyState={{
-          icon: FileText,
-          title: "No documents yet",
-          description:
-            "Start with a template or create a blank document to capture specs, notes, and handoffs.",
-          actions: (
-            <Flex align="center" gap="sm" wrap>
-              <Button onClick={() => void handleCreateDocument()}>Create Blank Document</Button>
-              <Button asChild variant="secondary">
-                <Link to={ROUTES.documents.templates.path} params={{ orgSlug }}>
-                  Browse Templates
-                </Link>
-              </Button>
-            </Flex>
-          ),
-        }}
+        emptyState={
+          isEmpty
+            ? {
+                icon: FileText,
+                title: "No documents yet",
+                description:
+                  "Start with a template or create a blank document to capture specs, notes, and handoffs.",
+                actions: (
+                  <Flex align="center" gap="sm" wrap>
+                    <Button onClick={() => void handleCreateDocument()}>
+                      Create Blank Document
+                    </Button>
+                    <Button asChild variant="secondary">
+                      <Link to={ROUTES.documents.templates.path} params={{ orgSlug }}>
+                        Browse Templates
+                      </Link>
+                    </Button>
+                  </Flex>
+                ),
+              }
+            : null
+        }
         className={isEmpty ? undefined : "mt-6"}
       >
         <Stack gap="xl">

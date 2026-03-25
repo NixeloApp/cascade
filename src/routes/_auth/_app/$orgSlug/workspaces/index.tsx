@@ -50,6 +50,19 @@ export function WorkspacesList() {
   const showSearch = shouldShowWorkspaceSearch(workspaceCount, searchQuery);
   const matchCount = filteredWorkspaces?.length ?? 0;
   const searchEmptyState = hasSearch ? getWorkspaceSearchEmptyState(searchQuery) : null;
+  const pageEmptyState =
+    workspaces !== undefined && workspaces.length === 0
+      ? {
+          icon: Building2,
+          title: "No workspaces yet",
+          description: "Create your first workspace to organize teams and projects",
+          actions: (
+            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+              + Create Workspace
+            </Button>
+          ),
+        }
+      : null;
 
   const handleWorkspaceCreated = (slug: string) => {
     navigate({
@@ -76,20 +89,7 @@ export function WorkspacesList() {
         onCreated={handleWorkspaceCreated}
       />
 
-      <PageContent
-        isLoading={workspaces === undefined}
-        isEmpty={workspaces !== undefined && workspaces.length === 0}
-        emptyState={{
-          icon: Building2,
-          title: "No workspaces yet",
-          description: "Create your first workspace to organize teams and projects",
-          actions: (
-            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-              + Create Workspace
-            </Button>
-          ),
-        }}
-      >
+      <PageContent isLoading={workspaces === undefined} emptyState={pageEmptyState}>
         <Stack gap="xl">
           <OverviewBand
             eyebrow="Workspace map"

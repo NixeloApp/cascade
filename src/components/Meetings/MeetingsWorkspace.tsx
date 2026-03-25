@@ -1737,6 +1737,21 @@ export function MeetingsWorkspace() {
     api.meetingBot.getRecording,
     selectedRecordingId ? { recordingId: selectedRecordingId } : "skip",
   );
+  const pageEmptyState =
+    recordings !== undefined &&
+    recordings.length === 0 &&
+    projectFilter === "all" &&
+    statusFilter === "all" &&
+    platformFilter === "all" &&
+    timeWindowFilter === "all" &&
+    deferredSearchQuery.length < 2
+      ? {
+          icon: Mic,
+          title: "No meeting recordings yet",
+          description:
+            "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
+        }
+      : null;
 
   return (
     <PageContent
@@ -1744,21 +1759,7 @@ export function MeetingsWorkspace() {
         recordings === undefined ||
         (deferredSearchQuery.length >= 2 && searchedRecordings === undefined)
       }
-      isEmpty={
-        recordings !== undefined &&
-        recordings.length === 0 &&
-        projectFilter === "all" &&
-        statusFilter === "all" &&
-        platformFilter === "all" &&
-        timeWindowFilter === "all" &&
-        deferredSearchQuery.length < 2
-      }
-      emptyState={{
-        icon: Mic,
-        title: "No meeting recordings yet",
-        description:
-          "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
-      }}
+      emptyState={pageEmptyState}
     >
       <Stack gap="lg">
         <MeetingMemorySection

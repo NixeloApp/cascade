@@ -56,19 +56,17 @@ vi.mock("@/components/layout", () => ({
   PageContent: ({
     children,
     isLoading,
-    isEmpty,
     emptyState,
   }: {
     children: ReactNode;
     isLoading?: boolean;
-    isEmpty?: boolean;
-    emptyState?: { title: string };
+    emptyState?: { title: string } | null;
   }) =>
     isLoading ? (
       <div data-testid="issues-page-loading">Loading</div>
     ) : (
-      <div data-testid={isEmpty ? TEST_IDS.PAGE.EMPTY_STATE : undefined}>
-        {isEmpty ? emptyState?.title : children}
+      <div data-testid={emptyState ? TEST_IDS.PAGE.EMPTY_STATE : undefined}>
+        {emptyState ? emptyState.title : children}
       </div>
     ),
 }));

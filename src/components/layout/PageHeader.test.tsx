@@ -33,9 +33,14 @@ describe("PageHeader", () => {
       screen.getByRole("heading", { level: 2, name: "Workspace overview" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Track work across teams.")).toBeInTheDocument();
-    expect(screen.getByText("Workspace view")).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "breadcrumb" })).not.toBeInTheDocument();
     expect(container.firstChild).toHaveClass("mb-4", "sm:mb-5", "custom-shell");
+  });
+
+  it("renders an eyebrow only when one is provided", () => {
+    render(<PageHeader title="Workspace overview" eyebrow="Operations" />);
+
+    expect(screen.getByText("Operations")).toBeInTheDocument();
   });
 
   it("drops standalone margin when the header is inside a shared page stack", () => {

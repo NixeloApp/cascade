@@ -304,7 +304,6 @@ export function MyIssuesBoardPage() {
 
       {showEmptyState ? (
         <PageContent
-          isEmpty
           emptyState={{
             icon: ListTodo,
             title: "No issues assigned to you yet",
@@ -316,7 +315,6 @@ export function MyIssuesBoardPage() {
         </PageContent>
       ) : showFilteredEmptyState ? (
         <PageContent
-          isEmpty
           emptyState={{
             icon: SearchX,
             title: "No issues match these filters",
