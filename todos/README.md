@@ -15,7 +15,7 @@ No open critical items on this branch.
 
 ## Features
 
-- [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Speaker-attributed meeting detail shipped; meeting-to-doc, visual QA, and multi-platform capture remain open.
+- [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Speaker-attributed meeting detail and meeting-to-doc export shipped; remaining work is visual QA plus multi-platform capture.
 - [ ] [email-outreach.md](./email-outreach.md) — Gmail-first outreach is now usable end-to-end; remaining work is reliability polish, richer analytics, and provider expansion.
 - [ ] [offline-pwa.md](./offline-pwa.md) — Push verification, optimistic UI, and replay/idempotency polish.
 - [ ] [cal-com-features.md](./cal-com-features.md) — AI scheduling, MCP/chat scheduling ideas, branding, and portal/domain controls.
@@ -30,7 +30,7 @@ Verified on this branch:
 |--------|-------|
 | Typecheck | pass |
 | Validators | 54/54 pass |
-| App tests (`vitest run`) | 4575 pass / 5 skipped |
+| App tests (`vitest run`) | 4588 pass / 5 skipped |
 | Convex tests (`vitest.convex`) | 2116 pass / 3 skipped |
 | Page spec triplets | 41/41 present |
 | Screenshot harness shell (`filled-states.ts`) | 1452 lines |

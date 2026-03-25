@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { OrgContext, type OrgContextType } from "@/hooks/useOrgContext";
+import { useSeededDocumentCreation } from "@/hooks/useSeededDocumentCreation";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showSuccess } from "@/lib/toast";
 import { fireEvent, render, screen, waitFor, within } from "@/test/custom-render";
@@ -33,6 +34,10 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedMutation: vi.fn(),
 }));
 
+vi.mock("@/hooks/useSeededDocumentCreation", () => ({
+  useSeededDocumentCreation: vi.fn(),
+}));
+
 vi.mock("@/lib/toast", () => ({
   showSuccess: vi.fn(),
   showError: vi.fn(),
@@ -46,6 +51,7 @@ type ProjectItem = FunctionReturnType<typeof api.dashboard.getMyProjects>[number
 
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
+const mockUseSeededDocumentCreation = vi.mocked(useSeededDocumentCreation);
 const mockShowSuccess = vi.mocked(showSuccess);
 const mockScrollIntoView = vi.fn();
 
@@ -57,6 +63,7 @@ const alexUserId = "user_alex" as Id<"users">;
 const priyaUserId = "user_priya" as Id<"users">;
 const createIssueFromActionItem = vi.fn();
 const scheduleRecording = vi.fn();
+const createSeededDocumentAndOpen = vi.fn();
 const organizationContext: OrgContextType = {
   organizationId,
   orgSlug: "acme",
@@ -362,6 +369,13 @@ describe("MeetingsWorkspace", () => {
         isAuthLoading: false,
       };
     });
+    mockUseSeededDocumentCreation.mockReturnValue({
+      createSeededDocumentAndOpen,
+      createTemplateDocumentAndOpen: vi.fn(),
+      error: null,
+      isCreatingDocument: false,
+      isLoading: false,
+    });
   });
 
   it("renders an empty state when there are no recordings", () => {
@@ -584,6 +598,39 @@ describe("MeetingsWorkspace", () => {
     expect(screen.getByText("CORE-42")).toBeInTheDocument();
     expect(screen.getByText("Update onboarding copy")).toBeInTheDocument();
     expect(screen.getByText("todo")).toBeInTheDocument();
+  });
+
+  it("creates a seeded meeting document from the selected recording", async () => {
+    createSeededDocumentAndOpen.mockResolvedValue({ documentId: "doc_1" as Id<"documents"> });
+    installMeetingQueryMock({});
+
+    renderMeetingsWorkspace();
+
+    fireEvent.click(screen.getByRole("button", { name: "Create doc" }));
+
+    await waitFor(() => {
+      expect(createSeededDocumentAndOpen).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Meeting Notes: Weekly Product Review",
+          projectId,
+          isPublic: true,
+        }),
+      );
+      expect(mockShowSuccess).toHaveBeenCalledWith("Meeting document created");
+    });
+
+    const createArgs = createSeededDocumentAndOpen.mock.calls[0]?.[0];
+    expect(createArgs?.value).toEqual(
+      expect.arrayContaining([
+        { type: "h1", children: [{ text: "Meeting Notes: Weekly Product Review" }] },
+        { type: "h2", children: [{ text: "Action Items" }] },
+        {
+          type: "todo_li",
+          checked: false,
+          children: [{ text: "Update the spec — Owner: Alex — Due: 2026-03-20 — Priority: high" }],
+        },
+      ]),
+    );
   });
 
   it("filters recordings by status, project, and date window", () => {

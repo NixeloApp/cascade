@@ -42,6 +42,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
+import { useSeededDocumentCreation } from "@/hooks/useSeededDocumentCreation";
 import {
   formatDateTime,
   formatDurationHuman,
@@ -57,6 +58,7 @@ import {
   type ResolvedMeetingPerson,
   resolveActionItemAssignee,
 } from "./meetingAttribution";
+import { buildMeetingDocumentTitle, createMeetingDocumentValue } from "./meetingDocument";
 
 type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[number];
 type MeetingSearchItem = FunctionReturnType<typeof api.meetingBot.searchRecordings>[number];
@@ -1406,6 +1408,25 @@ function RecordingDetailPanel({
   recording: MeetingDetail | undefined;
   projects: ProjectOption[] | undefined;
 }) {
+  const { createSeededDocumentAndOpen, isCreatingDocument } = useSeededDocumentCreation();
+
+  const handleCreateMeetingDocument = async (meeting: NonNullable<MeetingDetail>) => {
+    try {
+      const created = await createSeededDocumentAndOpen({
+        title: buildMeetingDocumentTitle(meeting),
+        projectId: meeting.projectId,
+        isPublic: meeting.projectId ? meeting.isPublic : false,
+        value: createMeetingDocumentValue(meeting),
+      });
+
+      if (created) {
+        showSuccess("Meeting document created");
+      }
+    } catch (error) {
+      showError(error, "Failed to create meeting document");
+    }
+  };
+
   if (recording == null) {
     return (
       <Card variant="soft" padding="xl">
@@ -1429,7 +1450,17 @@ function RecordingDetailPanel({
                 </Typography>
               </Stack>
             </FlexItem>
-            <StatusBadge status={recording.status} />
+            <Flex gap="sm" align="center" wrap>
+              <Button
+                variant="secondary"
+                size="sm"
+                isLoading={isCreatingDocument}
+                onClick={() => void handleCreateMeetingDocument(recording)}
+              >
+                Create doc
+              </Button>
+              <StatusBadge status={recording.status} />
+            </Flex>
           </Flex>
 
           <Metadata>

@@ -48,7 +48,7 @@ const templateSchema = z.object({
 
 interface DocumentTemplatesManagerProps {
   projectId?: Id<"projects">;
-  onSelectTemplate?: (templateId: Id<"documentTemplates">) => void;
+  onSelectTemplate?: (template: Doc<"documentTemplates">) => Promise<void> | void;
   /** Increment to trigger opening the create modal from outside */
   createRequested?: number;
 }
@@ -251,7 +251,7 @@ export function DocumentTemplatesManager({
                       key={template._id}
                       recipe="templateBuiltInTile"
                       padding="md"
-                      onClick={() => onSelectTemplate?.(template._id)}
+                      onClick={() => void onSelectTemplate?.(template)}
                     >
                       <Flex align="start" gap="md">
                         <TemplateIcon value={template.icon} className="size-7" />
@@ -291,7 +291,7 @@ export function DocumentTemplatesManager({
                           <Button
                             variant="unstyled"
                             size="contentStart"
-                            onClick={() => onSelectTemplate?.(template._id)}
+                            onClick={() => void onSelectTemplate?.(template)}
                           >
                             <Flex align="start" gap="md">
                               <TemplateIcon value={template.icon} className="size-6" />

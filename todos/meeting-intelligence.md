@@ -13,20 +13,18 @@ Related docs:
 
 - Google Meet-first capture exists with a richer backend than UI.
 - Meeting detail now resolves transcript speakers and action-item owners against participant metadata, with speaker-attributed transcript turns and search that understands attendee emails.
+- Meeting detail can now export a seeded document with meeting metadata, summary, action items, participants, and transcript context.
 - Provider rotation exists across recurring free tiers, one-time credit tiers, and paid fallback.
 - Deepgram and AssemblyAI are integrated but still need real key setup and runtime verification.
-- Meeting-to-doc is still blocked by document/editor reality gaps.
 
 ## Remaining
 
 ### Immediate Product / UX
 
-- [ ] Add meeting-to-doc flow once document/template initialization is reliable.
 - [ ] Do a real screenshot / visual QA pass for meetings states.
 
-### Blocking Dependencies
+### Product / Infra Follow-Up
 
-- [ ] Clarify template/document seeding around `createDocumentFromTemplate`.
 - [ ] Stop treating the stub `ConvexYjsProvider` as shipped collaboration.
 
 ### Provider Rollout
