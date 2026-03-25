@@ -106,8 +106,8 @@ export class WorkspacesPage extends BasePage {
 
   async expectWorkspaceDetailVisible(name: string) {
     await expect(this.page).toHaveURL(routePattern(ROUTES.workspaces.detail.path));
-    await expect(this.pageHeaderTitle).toBeVisible();
-    await expect(this.pageHeaderTitle).toContainText(name);
+    await expect(this.pageHeaderTitle.first()).toBeVisible();
+    await expect(this.pageHeaderTitle.first()).toContainText(name);
   }
 
   async expectWorkspaceVisible(name: string) {
@@ -125,17 +125,20 @@ export class WorkspacesPage extends BasePage {
   }
 
   async openWorkspace(name: string) {
+    // If already on this workspace's detail page, no-op
     const onWorkspaceRoute = routePattern(ROUTES.workspaces.detail.path).test(this.page.url());
     if (onWorkspaceRoute) {
-      const headingVisible = await isLocatorVisible(this.pageHeaderTitle);
-      if (headingVisible) {
-        const text = await this.pageHeaderTitle.textContent();
+      const heading = this.pageHeaderTitle.first();
+      if (await isLocatorVisible(heading)) {
+        const text = await heading.textContent();
         if (text?.includes(name)) return;
       }
     }
 
+    // Navigate to workspaces list and click the card
+    await this.navigateToWorkspacesRoute();
     const card = this.workspaceCards.filter({ hasText: name }).first();
-    await expect(card).toBeVisible();
+    await card.waitFor({ state: "visible", timeout: 15000 });
     await card.click();
   }
 
