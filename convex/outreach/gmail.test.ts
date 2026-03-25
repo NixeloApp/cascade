@@ -492,6 +492,9 @@ describe("outreach gmail", () => {
 
   it("keeps soft bounces active without suppressing the contact", async () => {
     const { t, fixture } = await createOutreachFixture();
+    const initialEnrollment = await t.run(async (ctx) => ctx.db.get(fixture.enrollmentId));
+    expect(initialEnrollment).not.toBeNull();
+    if (initialEnrollment === null) throw new Error("initialEnrollment is null");
 
     const result = await t.mutation(internal.outreach.gmail.findEnrollmentForBounce, {
       bouncedRecipientEmail: "lead@example.com",
@@ -507,6 +510,8 @@ describe("outreach gmail", () => {
     expect(enrollment).not.toBeNull();
     if (enrollment === null) throw new Error("enrollment is null");
     expect(enrollment.status).toBe("active");
+    expect(enrollment.completedAt).toBeUndefined();
+    expect(enrollment.nextSendAt).toBe(initialEnrollment.nextSendAt);
 
     const suppressions = await t.run(async (ctx) =>
       ctx.db
