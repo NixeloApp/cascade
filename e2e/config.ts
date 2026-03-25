@@ -255,6 +255,8 @@ export const E2E_ENDPOINTS = {
   seedScreenshotData: `${CONVEX_SITE_URL}/e2e/seed-screenshot-data`,
   // Delete a screenshot-created issue so later captures stay deterministic
   deleteSeededProjectIssue: `${CONVEX_SITE_URL}/e2e/delete-seeded-project-issue`,
+  // Reconfigure seeded project-list membership states for screenshot captures
+  configureProjectsState: `${CONVEX_SITE_URL}/e2e/configure-projects-state`,
   // Reconfigure seeded project inbox data for screenshot captures
   configureProjectInboxState: `${CONVEX_SITE_URL}/e2e/configure-project-inbox-state`,
   // Reconfigure seeded roadmap data for screenshot captures

@@ -20,6 +20,7 @@ import {
   configureOrgAnalyticsStateEndpoint,
   configureProjectAnalyticsStateEndpoint,
   configureProjectInboxStateEndpoint,
+  configureProjectsStateEndpoint,
   configureRoadmapStateEndpoint,
   configureTimeTrackingStateEndpoint,
   createTestUserEndpoint,
@@ -368,6 +369,13 @@ http.route({
   path: "/e2e/delete-seeded-project-issue",
   method: "POST",
   handler: deleteSeededProjectIssueEndpoint,
+});
+
+// Reconfigure seeded projects list data for screenshot captures
+http.route({
+  path: "/e2e/configure-projects-state",
+  method: "POST",
+  handler: configureProjectsStateEndpoint,
 });
 
 // Reconfigure seeded project inbox data for screenshot captures

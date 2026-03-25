@@ -71,6 +71,7 @@ import {
   screenshotOrgCalendarStates,
   screenshotProjectInboxStates,
   screenshotProjectsModal,
+  screenshotProjectsStates,
   screenshotRoadmapStates,
   screenshotSprintInteractiveStates,
 } from "./interactive-captures";
@@ -102,7 +103,7 @@ export async function screenshotFilledStates(
 
   // Top-level pages
   await takeScreenshot(page, p, "dashboard", ROUTES.dashboard.build(orgSlug));
-  await takeScreenshot(page, p, "projects", ROUTES.projects.list.build(orgSlug));
+  await screenshotProjectsStates(page, orgSlug, p);
   await takeScreenshot(page, p, "issues", ROUTES.issues.list.build(orgSlug));
   await takeScreenshot(page, p, "documents", ROUTES.documents.list.build(orgSlug));
   await takeScreenshot(page, p, "documents-templates", ROUTES.documents.templates.build(orgSlug));

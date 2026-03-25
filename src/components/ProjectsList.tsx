@@ -15,7 +15,6 @@ import {
   DashboardPanelBody,
   DashboardPanelHeader,
 } from "@/components/Dashboard/DashboardPanel";
-import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
@@ -33,6 +32,7 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { Calendar, Folder, KanbanSquare, MapIcon, Plus } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "./ui/Skeleton";
 
 type PaginatedQuery = FunctionReference<"query", "public">;
 
@@ -96,6 +96,183 @@ const SINGLE_PROJECT_EXPANSION_SIGNALS = [
   "Split projects by client or product area when ownership stops being shared.",
   "Use a new project when reporting, planning, or delivery timing needs diverge.",
 ] as const;
+
+declare global {
+  interface Window {
+    __NIXELO_E2E_PROJECTS_LOADING__?: boolean;
+  }
+}
+
+function isE2EProjectsLoadingOverrideEnabled(): boolean {
+  return typeof window !== "undefined" && window.__NIXELO_E2E_PROJECTS_LOADING__ === true;
+}
+
+function ProjectCardSkeleton() {
+  return (
+    <Card variant="default" padding="lg" className="h-full overflow-hidden">
+      <Flex direction="column" gap="md">
+        <Flex justify="between" align="start" gap="md">
+          <Flex align="center" gap="md" className="min-w-0">
+            <Skeleton className="size-10 shrink-0" />
+            <Skeleton className="h-6 w-40" />
+          </Flex>
+          <Skeleton className="h-4 w-14" />
+        </Flex>
+
+        <Flex direction="column" gap="sm">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-3 w-4/5" />
+        </Flex>
+
+        <Flex align="center" gap="sm" wrap>
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-16" />
+        </Flex>
+      </Flex>
+    </Card>
+  );
+}
+
+function ProjectsLoadingState() {
+  return (
+    <Stack gap="lg" data-testid={TEST_IDS.PROJECT.LOADING_STATE}>
+      <Card variant="elevated" padding="none" className="overflow-hidden">
+        <Flex direction="column" gap="none">
+          <div className={cn(getCardRecipeClassName("projectFeatureStrip"), "px-4 py-4 sm:px-6")}>
+            <Flex align="center" justify="between" gap="md" wrap>
+              <Flex align="center" gap="sm" wrap>
+                <Skeleton className="h-6 w-36" />
+                <Skeleton className="h-4 w-64 max-w-full" />
+              </Flex>
+              <Flex align="center" gap="sm" wrap>
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 w-28" />
+              </Flex>
+            </Flex>
+          </div>
+
+          <DashboardPanelBody padding="lg">
+            <Grid cols={1} colsLg={12} gap="lg" className="items-start">
+              <div className="lg:col-span-8">
+                <Stack gap="lg">
+                  <Flex justify="between" align="start" gap="md">
+                    <Flex align="center" gap="md">
+                      <Skeleton className="size-12 shrink-0" />
+                      <Stack gap="xs">
+                        <Skeleton className="h-8 w-56" />
+                        <Skeleton className="h-4 w-20" />
+                      </Stack>
+                    </Flex>
+                  </Flex>
+
+                  <Flex direction="column" gap="sm">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-11/12" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </Flex>
+
+                  <Flex gap="sm" wrap>
+                    <Skeleton className="h-9 w-28" />
+                    <Skeleton className="h-9 w-32" />
+                    <Skeleton className="h-9 w-32" />
+                  </Flex>
+                </Stack>
+              </div>
+
+              <div className="lg:col-span-4">
+                <CardSection size="md">
+                  <Stack gap="md">
+                    <Skeleton className="h-5 w-36" />
+                    <Grid cols={2} gap="md">
+                      <CardSection>
+                        <Stack gap="xs">
+                          <Skeleton className="h-4 w-16" />
+                          <Skeleton className="h-7 w-12" />
+                          <Skeleton className="h-4 w-full" />
+                        </Stack>
+                      </CardSection>
+                      <CardSection>
+                        <Stack gap="xs">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-7 w-20" />
+                          <Skeleton className="h-4 w-full" />
+                        </Stack>
+                      </CardSection>
+                    </Grid>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </Stack>
+                </CardSection>
+              </div>
+            </Grid>
+          </DashboardPanelBody>
+        </Flex>
+      </Card>
+
+      <Grid cols={1} colsLg={12} gap="lg">
+        <div className="lg:col-span-7">
+          <Card recipe="overlayInset" variant="section" padding="lg" className="h-full">
+            <Stack gap="md">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-full max-w-xl" />
+              <Grid cols={1} colsMd={3} gap="md">
+                {["surface-1", "surface-2", "surface-3"].map((id) => (
+                  <CardSection key={id} size="md">
+                    <Stack gap="md">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="mt-auto h-9 w-full" />
+                    </Stack>
+                  </CardSection>
+                ))}
+              </Grid>
+            </Stack>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-5">
+          <Card recipe="overlayInset" variant="section" padding="lg" className="h-full">
+            <Stack gap="md">
+              <Flex justify="between" align="center" gap="md">
+                <Stack gap="xs">
+                  <Skeleton className="h-6 w-40" />
+                  <Skeleton className="h-4 w-full max-w-sm" />
+                </Stack>
+                <Skeleton className="h-9 w-28" />
+              </Flex>
+              <Grid cols={1} colsSm={2} gap="md">
+                {["highlight-1", "highlight-2"].map((id) => (
+                  <CardSection key={id} size="md">
+                    <Stack gap="xs">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-7 w-20" />
+                      <Skeleton className="h-4 w-full" />
+                    </Stack>
+                  </CardSection>
+                ))}
+              </Grid>
+              <CardSection size="md">
+                <Stack gap="sm">
+                  <Skeleton className="h-5 w-44" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-11/12" />
+                  <Skeleton className="h-4 w-10/12" />
+                </Stack>
+              </CardSection>
+            </Stack>
+          </Card>
+        </div>
+      </Grid>
+
+      <Grid cols={1} colsLg={2} gap="xl">
+        {["project-1", "project-2", "project-3", "project-4"].map((id) => (
+          <ProjectCardSkeleton key={id} />
+        ))}
+      </Grid>
+    </Stack>
+  );
+}
 
 function getSingleProjectHighlights(issueCount: number) {
   return [
@@ -277,7 +454,7 @@ function SingleProjectWorkspaceOverview({
   const projectParams = { key: project.key, orgSlug };
 
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" data-testid={TEST_IDS.PROJECT.SINGLE_PROJECT_OVERVIEW}>
       <Card variant="elevated" padding="none" className="overflow-hidden">
         <Flex direction="column" gap="none">
           <div className={cn(getCardRecipeClassName("projectFeatureStrip"), "px-4 py-4 sm:px-6")}>
@@ -415,8 +592,8 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
     { initialNumItems: 20 },
   );
 
-  if (status === "LoadingFirstPage") {
-    return <PageContent isLoading={true}>Loading projects</PageContent>;
+  if (isE2EProjectsLoadingOverrideEnabled() || status === "LoadingFirstPage") {
+    return <ProjectsLoadingState />;
   }
 
   const hasSingleProject = projects.length === 1;
@@ -459,7 +636,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
           onCreateClick={onCreateClick}
         />
       ) : (
-        <Grid cols={1} colsLg={2} gap="xl">
+        <Grid cols={1} colsLg={2} gap="xl" data-testid={TEST_IDS.PROJECT.GRID}>
           {projects.map((project) => (
             <ProjectCard key={project._id} project={project} orgSlug={orgSlug} />
           ))}

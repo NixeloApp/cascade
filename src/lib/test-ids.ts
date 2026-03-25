@@ -221,7 +221,13 @@ export const TEST_IDS = {
     /** @see src/components/ProjectsList.tsx */
     CARD: "project-card",
     /** @see src/components/ProjectsList.tsx */
+    GRID: "project-grid",
+    /** @see src/components/ProjectsList.tsx */
     EMPTY_STATE: "project-empty-state",
+    /** @see src/components/ProjectsList.tsx */
+    LOADING_STATE: "project-loading-state",
+    /** @see src/components/ProjectsList.tsx */
+    SINGLE_PROJECT_OVERVIEW: "project-single-project-overview",
   },
 
   // ============================================================

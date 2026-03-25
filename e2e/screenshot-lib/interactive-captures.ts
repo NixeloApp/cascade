@@ -281,6 +281,11 @@ export async function screenshotProjectsModal(
     return;
   }
 
+  const projectsState = await testUserService.configureProjectsState(orgSlug, "default");
+  if (!projectsState.success) {
+    throw new Error(projectsState.error ?? "Failed to restore default projects state");
+  }
+
   await page.goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
     waitUntil: "domcontentloaded",
     timeout: 15000,
@@ -295,6 +300,110 @@ export async function screenshotProjectsModal(
     await captureCurrentView(page, prefix, "projects-create-project-modal");
     await projectsPage.closeCreateProjectFormIfOpen();
   });
+}
+
+export async function screenshotProjectsStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const captureNames = {
+    canonical: "projects",
+    empty: "projects-empty",
+    loading: "projects-loading",
+    singleProject: "projects-single-project",
+  } as const;
+
+  if (!shouldCaptureAny(prefix, Object.values(captureNames))) {
+    return;
+  }
+
+  const projectsUrl = ROUTES.projects.list.build(orgSlug);
+
+  const configureProjectsState = async (mode: "default" | "single" | "empty") => {
+    const result = await testUserService.configureProjectsState(orgSlug, mode);
+    if (!result.success) {
+      throw new Error(result.error ?? `Failed to configure projects state: ${mode}`);
+    }
+  };
+
+  const openProjectsPage = async (mode: "default" | "single" | "empty") => {
+    await configureProjectsState(mode);
+    await page.goto(`${BASE_URL}${projectsUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, projectsUrl, "projects");
+    const projectsPage = new ProjectsPage(page, orgSlug);
+    await projectsPage.expectProjectsView();
+    return projectsPage;
+  };
+
+  try {
+    if (shouldCapture(prefix, captureNames.canonical)) {
+      await runCaptureStep("projects canonical", async () => {
+        const projectsPage = await openProjectsPage("default");
+        await projectsPage.expectProjectsGridVisible();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.canonical);
+      });
+    }
+
+    if (shouldCapture(prefix, captureNames.singleProject)) {
+      await runCaptureStep("projects single-project overview", async () => {
+        const projectsPage = await openProjectsPage("single");
+        await projectsPage.expectSingleProjectOverviewVisible();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.singleProject);
+      });
+    }
+
+    if (shouldCapture(prefix, captureNames.empty)) {
+      await runCaptureStep("projects empty", async () => {
+        const projectsPage = await openProjectsPage("empty");
+        await projectsPage.expectProjectsEmptyStateVisible();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.empty);
+      });
+    }
+
+    if (shouldCapture(prefix, captureNames.loading)) {
+      await runCaptureStep("projects loading", async () => {
+        const loadingPage = await page.context().newPage();
+
+        try {
+          await loadingPage.addInitScript(() => {
+            window.__NIXELO_E2E_PROJECTS_LOADING__ = true;
+          });
+
+          await loadingPage.goto(`${BASE_URL}${projectsUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
+          await loadingProjectsPage.expectProjectsLoadingStateVisible(12000);
+          await expect
+            .poll(
+              () => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(),
+              {
+                timeout: 12000,
+              },
+            )
+            .toBeGreaterThan(0);
+          await waitForAnimation(loadingPage);
+          await captureCurrentView(loadingPage, prefix, captureNames.loading, {
+            skipReadyCheck: true,
+          });
+        } finally {
+          if (!loadingPage.isClosed()) {
+            await loadingPage.close();
+          }
+        }
+      });
+    }
+  } finally {
+    await configureProjectsState("default");
+  }
 }
 
 export async function screenshotAssistantStates(

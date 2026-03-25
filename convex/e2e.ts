@@ -151,6 +151,8 @@ interface SeededRoadmapLinkDefinition {
   toKey: string;
 }
 
+type SeededProjectsRouteMode = "default" | "single" | "empty";
+
 const SCREENSHOT_TIME_TRACKING_BASE_ENTRIES: SeededTimeTrackingEntryDefinition[] = [
   {
     activity: "Development",
@@ -1310,6 +1312,90 @@ async function resetSeededAssistantState(
     success: true,
     chatCount: chatDefinitions.length,
     requestCount: usageDefinitions.length,
+  };
+}
+
+async function syncSeededProjectMembershipForRouteState(
+  ctx: MutationCtx,
+  args: {
+    actorId: Id<"users">;
+    projectId: Id<"projects">;
+    shouldBeVisible: boolean;
+    userId: Id<"users">;
+  },
+): Promise<void> {
+  const memberships = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_project_user", (q) =>
+      q.eq("projectId", args.projectId).eq("userId", args.userId),
+    )
+    .take(BOUNDED_LIST_LIMIT);
+
+  const sortedMemberships = [...memberships].sort((a, b) => b._creationTime - a._creationTime);
+
+  if (!args.shouldBeVisible) {
+    for (const membership of sortedMemberships) {
+      if (!membership.isDeleted) {
+        await ctx.db.patch(membership._id, softDeleteFields(args.actorId));
+      }
+    }
+    return;
+  }
+
+  const [primaryMembership, ...duplicateMemberships] = sortedMemberships;
+  if (!primaryMembership) {
+    await ctx.db.insert("projectMembers", {
+      addedBy: args.actorId,
+      projectId: args.projectId,
+      role: "admin",
+      userId: args.userId,
+    });
+    return;
+  }
+
+  await ctx.db.patch(primaryMembership._id, {
+    addedBy: args.actorId,
+    deletedAt: undefined,
+    deletedBy: undefined,
+    isDeleted: undefined,
+    role: "admin",
+  });
+
+  for (const membership of duplicateMemberships) {
+    if (!membership.isDeleted) {
+      await ctx.db.patch(membership._id, softDeleteFields(args.actorId));
+    }
+  }
+}
+
+async function resetSeededProjectsRouteState(
+  ctx: MutationCtx,
+  args: {
+    mode: SeededProjectsRouteMode;
+    ownerUserId: Id<"users">;
+    primaryProjectId: Id<"projects">;
+    secondaryProjectId: Id<"projects">;
+  },
+): Promise<{ success: boolean; visibleProjectCount?: number; error?: string }> {
+  const showPrimaryProject = args.mode !== "empty";
+  const showSecondaryProject = args.mode === "default";
+
+  await syncSeededProjectMembershipForRouteState(ctx, {
+    actorId: args.ownerUserId,
+    projectId: args.primaryProjectId,
+    shouldBeVisible: showPrimaryProject,
+    userId: args.ownerUserId,
+  });
+  await syncSeededProjectMembershipForRouteState(ctx, {
+    actorId: args.ownerUserId,
+    projectId: args.secondaryProjectId,
+    shouldBeVisible: showSecondaryProject,
+    userId: args.ownerUserId,
+  });
+
+  return {
+    success: true,
+    visibleProjectCount: Number(showPrimaryProject) + Number(showSecondaryProject),
   };
 }
 
@@ -4973,6 +5059,121 @@ export const updateProjectInboxStateInternal = internalMutation({
       openCount: inboxReset.openCount,
       closedCount: inboxReset.closedCount,
     };
+  },
+});
+
+/**
+ * Reconfigure seeded projects-list membership data for screenshot capture.
+ * POST /e2e/configure-projects-state
+ * Body: {
+ *   orgSlug: string,
+ *   mode: "default" | "single" | "empty",
+ * }
+ */
+export const configureProjectsStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, mode } = body;
+
+    if (!(orgSlug && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "single", "empty"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid projects mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectsStateInternal, {
+      mode,
+      orgSlug,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectsStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("single"), v.literal("empty")),
+    orgSlug: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    visibleProjectCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const primaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), "DEMO")))
+      .first();
+    const secondaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), "OPS")))
+      .first();
+
+    if (!(primaryProject && secondaryProject)) {
+      return {
+        success: false,
+        error: `seeded projects not found in ${args.orgSlug}`,
+      };
+    }
+
+    const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+      organizationId: organization._id,
+      projectId: primaryProject._id,
+    });
+    if (!screenshotActors.success) {
+      return {
+        success: false,
+        error: screenshotActors.error,
+      };
+    }
+
+    return await resetSeededProjectsRouteState(ctx, {
+      mode: args.mode,
+      ownerUserId: screenshotActors.ownerUserId,
+      primaryProjectId: primaryProject._id,
+      secondaryProjectId: secondaryProject._id,
+    });
   },
 });
 

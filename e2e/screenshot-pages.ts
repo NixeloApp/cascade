@@ -249,6 +249,9 @@ const DRY_RUN_PAGES = [
   // Filled states — top-level
   "filled-dashboard",
   "filled-projects",
+  "filled-projects-single-project",
+  "filled-projects-empty",
+  "filled-projects-loading",
   "filled-issues",
   "filled-documents",
   "filled-documents-templates",

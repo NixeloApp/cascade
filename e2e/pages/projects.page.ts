@@ -32,6 +32,10 @@ export class ProjectsPage extends BasePage {
   readonly projectList: Locator;
   readonly projectItems: Locator;
   readonly projectsPageHeading: Locator;
+  readonly projectsGrid: Locator;
+  readonly projectsEmptyState: Locator;
+  readonly projectsLoadingState: Locator;
+  readonly singleProjectOverview: Locator;
 
   // ===================
   // Locators - Create Project Form
@@ -145,6 +149,10 @@ export class ProjectsPage extends BasePage {
       name: /add new|create|\+/i,
     });
     this.projectsPageHeading = page.getByRole("heading", { name: /^projects$/i });
+    this.projectsGrid = page.getByTestId(TEST_IDS.PROJECT.GRID);
+    this.projectsEmptyState = page.getByTestId(TEST_IDS.PROJECT.EMPTY_STATE);
+    this.projectsLoadingState = page.getByTestId(TEST_IDS.PROJECT.LOADING_STATE);
+    this.singleProjectOverview = page.getByTestId(TEST_IDS.PROJECT.SINGLE_PROJECT_OVERVIEW);
     this.projectList = page
       .getByTestId(TEST_IDS.NAV.WORKSPACE_LIST)
       .or(this.sidebar.locator("ul, [role='list']").first());
@@ -320,24 +328,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async waitUntilReady(): Promise<void> {
-    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
-    await this.page.getByRole("button", { name: /create project/i }).waitFor({
-      state: "visible",
-      timeout: 12000,
-    });
-    await expect
-      .poll(
-        async () => {
-          const cardCount = await this.page.getByTestId(TEST_IDS.PROJECT.CARD).count();
-          if (cardCount > 0) return "ready";
-          const emptyVisible = await this.page
-            .getByTestId(TEST_IDS.PROJECT.EMPTY_STATE)
-            .isVisible();
-          return emptyVisible ? "ready" : "pending";
-        },
-        { timeout: 12000 },
-      )
-      .toBe("ready");
+    await expect.poll(() => this.readProjectsViewState(), { timeout: 12000 }).not.toBe("pending");
   }
 
   async gotoProjectBoard(projectKey: string) {
@@ -1089,6 +1080,22 @@ export class ProjectsPage extends BasePage {
       .not.toBe("pending");
   }
 
+  async expectProjectsGridVisible(timeout = 10000) {
+    await this.projectsGrid.waitFor({ state: "visible", timeout });
+  }
+
+  async expectProjectsEmptyStateVisible(timeout = 10000) {
+    await this.projectsEmptyState.waitFor({ state: "visible", timeout });
+  }
+
+  async expectSingleProjectOverviewVisible(timeout = 10000) {
+    await this.singleProjectOverview.waitFor({ state: "visible", timeout });
+  }
+
+  async expectProjectsLoadingStateVisible(timeout = 10000) {
+    await this.projectsLoadingState.waitFor({ state: "visible", timeout });
+  }
+
   async hasCreateProjectEntryPoint() {
     return (
       (await isLocatorVisible(this.newProjectButton)) ||
@@ -1097,6 +1104,22 @@ export class ProjectsPage extends BasePage {
   }
 
   private async readProjectsViewState(): Promise<"ready" | "pending"> {
+    if (await isLocatorVisible(this.projectsLoadingState)) {
+      return "ready";
+    }
+
+    if (await isLocatorVisible(this.projectsGrid)) {
+      return "ready";
+    }
+
+    if (await isLocatorVisible(this.singleProjectOverview)) {
+      return "ready";
+    }
+
+    if (await isLocatorVisible(this.projectsEmptyState)) {
+      return "ready";
+    }
+
     if (await this.hasCreateProjectEntryPoint()) {
       return "ready";
     }

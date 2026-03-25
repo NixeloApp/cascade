@@ -85,6 +85,7 @@ export type TimeTrackingScreenshotState =
   | "entriesEmpty"
   | "ratesPopulated"
   | "summaryTruncated";
+export type ProjectListScreenshotState = "default" | "single" | "empty";
 export type RoadmapScreenshotState = "default" | "empty" | "milestone";
 export type ProjectInboxScreenshotState = "default" | "openEmpty" | "closedEmpty";
 export type ProjectAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
@@ -101,6 +102,12 @@ export interface ConfigureProjectInboxStateResult {
   closedCount?: number;
   openCount?: number;
   projectId?: string;
+  error?: string;
+}
+
+export interface ConfigureProjectsStateResult {
+  success: boolean;
+  visibleProjectCount?: number;
   error?: string;
 }
 
@@ -536,6 +543,26 @@ export class TestUserService {
         `  ⚠️ Failed to configure project inbox state ${mode} for ${projectKey} in ${orgSlug}:`,
         error,
       );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded projects list data for screenshot capture.
+   */
+  async configureProjectsState(
+    orgSlug: string,
+    mode: ProjectListScreenshotState,
+  ): Promise<ConfigureProjectsStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureProjectsState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to configure projects state ${mode} for ${orgSlug}:`, error);
       return { success: false, error: String(error) };
     }
   }
