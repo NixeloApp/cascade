@@ -558,6 +558,39 @@ export const TEST_IDS = {
   },
 
   // ============================================================
+  // Outreach
+  // ============================================================
+
+  OUTREACH: {
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ROOT: "outreach-root",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    LAUNCH_CHECKLIST: "outreach-launch-checklist",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_OVERVIEW: "outreach-tab-overview",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_SEQUENCES: "outreach-tab-sequences",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_CONTACTS: "outreach-tab-contacts",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_MAILBOXES: "outreach-tab-mailboxes",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_ANALYTICS: "outreach-tab-analytics",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    OVERVIEW_SECTION: "outreach-overview-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    SEQUENCES_LIST: "outreach-sequences-list",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    SEQUENCE_DETAIL: "outreach-sequence-detail",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    CONTACTS_SECTION: "outreach-contacts-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    MAILBOXES_SECTION: "outreach-mailboxes-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ANALYTICS_SECTION: "outreach-analytics-section",
+  },
+
+  // ============================================================
   // Meetings
   // ============================================================
 

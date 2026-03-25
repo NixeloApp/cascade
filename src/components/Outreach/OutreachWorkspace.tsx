@@ -52,6 +52,7 @@ import {
   UserPlus,
   Users,
 } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import {
@@ -565,7 +566,7 @@ export function OutreachWorkspace() {
         actions={headerActions}
       />
 
-      <Stack gap="lg">
+      <Stack gap="lg" data-testid={TEST_IDS.OUTREACH.ROOT}>
         <OutreachLaunchChecklist
           noActiveSequence={noActiveSequence}
           noMailboxConnected={noMailboxConnected}
@@ -574,19 +575,44 @@ export function OutreachWorkspace() {
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as OutreachTab)}>
           <TabsList className="w-full justify-start overflow-x-auto" variant="underline">
-            <TabsTrigger value="overview" variant="underline" tone="indigo">
+            <TabsTrigger
+              value="overview"
+              variant="underline"
+              tone="indigo"
+              data-testid={TEST_IDS.OUTREACH.TAB_OVERVIEW}
+            >
               Overview
             </TabsTrigger>
-            <TabsTrigger value="sequences" variant="underline" tone="indigo">
+            <TabsTrigger
+              value="sequences"
+              variant="underline"
+              tone="indigo"
+              data-testid={TEST_IDS.OUTREACH.TAB_SEQUENCES}
+            >
               Sequences
             </TabsTrigger>
-            <TabsTrigger value="contacts" variant="underline" tone="indigo">
+            <TabsTrigger
+              value="contacts"
+              variant="underline"
+              tone="indigo"
+              data-testid={TEST_IDS.OUTREACH.TAB_CONTACTS}
+            >
               Contacts
             </TabsTrigger>
-            <TabsTrigger value="mailboxes" variant="underline" tone="indigo">
+            <TabsTrigger
+              value="mailboxes"
+              variant="underline"
+              tone="indigo"
+              data-testid={TEST_IDS.OUTREACH.TAB_MAILBOXES}
+            >
               Mailboxes
             </TabsTrigger>
-            <TabsTrigger value="analytics" variant="underline" tone="indigo">
+            <TabsTrigger
+              value="analytics"
+              variant="underline"
+              tone="indigo"
+              data-testid={TEST_IDS.OUTREACH.TAB_ANALYTICS}
+            >
               Analytics
             </TabsTrigger>
           </TabsList>
@@ -856,7 +882,7 @@ function OverviewTabContent({
   onCreateSequence: () => void;
 }) {
   return (
-    <TabsContent value="overview">
+    <TabsContent value="overview" data-testid={TEST_IDS.OUTREACH.OVERVIEW_SECTION}>
       <Stack gap="md">
         <Grid cols={1} colsMd={2} colsLg={4} gap="lg">
           <MetricTile
@@ -992,7 +1018,10 @@ function OutreachLaunchChecklist({
   }
 
   return (
-    <Alert variant={noMailboxConnected ? "warning" : "info"}>
+    <Alert
+      variant={noMailboxConnected ? "warning" : "info"}
+      data-testid={TEST_IDS.OUTREACH.LAUNCH_CHECKLIST}
+    >
       <AlertTitle>Launch checklist</AlertTitle>
       <AlertDescription>
         {getLaunchChecklistMessage({
@@ -1081,7 +1110,12 @@ function SequencesSidebar({
   onSelectSequence: (sequenceId: Id<"outreachSequences">) => void;
 }) {
   return (
-    <Card padding="md" variant="soft" className="lg:col-span-4">
+    <Card
+      padding="md"
+      variant="soft"
+      className="lg:col-span-4"
+      data-testid={TEST_IDS.OUTREACH.SEQUENCES_LIST}
+    >
       <Stack gap="md">
         <SectionTitle
           title="Sequences"
@@ -1164,7 +1198,12 @@ function SelectedSequencePanel({
 }) {
   if (!selectedSequence) {
     return (
-      <Card padding="md" variant="soft" className="lg:col-span-8">
+      <Card
+        padding="md"
+        variant="soft"
+        className="lg:col-span-8"
+        data-testid={TEST_IDS.OUTREACH.SEQUENCE_DETAIL}
+      >
         <EmptyState
           icon={Rocket}
           title="No sequence selected"
@@ -1176,7 +1215,12 @@ function SelectedSequencePanel({
   }
 
   return (
-    <Card padding="md" variant="soft" className="lg:col-span-8">
+    <Card
+      padding="md"
+      variant="soft"
+      className="lg:col-span-8"
+      data-testid={TEST_IDS.OUTREACH.SEQUENCE_DETAIL}
+    >
       <Stack gap="lg">
         <SectionTitle
           title={selectedSequence.name}
@@ -1457,7 +1501,7 @@ function ContactsTabContent({
   onNewContact: () => void;
 }) {
   return (
-    <TabsContent value="contacts">
+    <TabsContent value="contacts" data-testid={TEST_IDS.OUTREACH.CONTACTS_SECTION}>
       <Card padding="md" variant="soft">
         <Stack gap="md">
           <SectionTitle
@@ -1562,7 +1606,7 @@ function MailboxesTabContent({
   onSaveMailboxLimit: (mailboxId: Id<"outreachMailboxes">) => void;
 }) {
   return (
-    <TabsContent value="mailboxes">
+    <TabsContent value="mailboxes" data-testid={TEST_IDS.OUTREACH.MAILBOXES_SECTION}>
       <Stack gap="md">
         <Alert variant="info">
           <AlertTitle>Gmail-first mailbox connections</AlertTitle>
@@ -1708,7 +1752,7 @@ function AnalyticsTabContent({
   onSelectSequence: (sequenceId: Id<"outreachSequences">) => void;
 }) {
   return (
-    <TabsContent value="analytics">
+    <TabsContent value="analytics" data-testid={TEST_IDS.OUTREACH.ANALYTICS_SECTION}>
       <Grid cols={1} colsLg={12} gap="lg">
         <SequenceAnalyticsCard
           selectedSequence={selectedSequence}

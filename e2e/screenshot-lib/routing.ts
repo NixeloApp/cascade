@@ -57,6 +57,11 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-meetings-detail$/, "30-meetings", "-detail"],
   [/^filled-meetings-transcript-search$/, "30-meetings", "-transcript-search"],
   [/^filled-meetings-memory-lens$/, "30-meetings", "-memory-lens"],
+  // Outreach
+  [/^filled-outreach-sequences$/, "41-outreach", "-sequences"],
+  [/^filled-outreach-contacts$/, "41-outreach", "-contacts"],
+  [/^filled-outreach-mailboxes$/, "41-outreach", "-mailboxes"],
+  [/^filled-outreach-analytics$/, "41-outreach", "-analytics"],
   // Misc filled states
   [/^filled-project-tree$/, "29-team-detail", "-project-tree"],
   [/^filled-mobile-hamburger$/, "04-dashboard", "-mobile-hamburger"],
@@ -250,6 +255,7 @@ export const URL_PATTERNS = {
   invoices: routePattern(ROUTES.invoices.list.path, "\\/?$"),
   clients: routePattern(ROUTES.clients.list.path, "\\/?$"),
   meetings: routePattern(ROUTES.meetings.path, "\\/?$"),
+  outreach: routePattern(ROUTES.outreach.path, "\\/?$"),
   workspaceDetail: routePattern(ROUTES.workspaces.detail.path, "\\/?$"),
   workspaceSettings: routePattern(ROUTES.workspaces.settings.path, "$"),
   workspaceBacklog: routePattern(ROUTES.workspaces.backlog.path, "$"),

@@ -134,6 +134,7 @@ export const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "empty-invoices": "25-invoices",
   "empty-clients": "26-clients",
   "empty-meetings": "30-meetings",
+  "empty-outreach": "41-outreach",
 
   // Workspace-level pages (filled states)
   "filled-dashboard": "04-dashboard",
@@ -149,6 +150,7 @@ export const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-invoices": "25-invoices",
   "filled-clients": "26-clients",
   "filled-meetings": "30-meetings",
+  "filled-outreach": "41-outreach",
   "filled-time-tracking": "22-time-tracking",
   "filled-sidebar-collapsed": "04-dashboard",
   "filled-404-page": "40-error",

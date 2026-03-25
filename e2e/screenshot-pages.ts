@@ -32,6 +32,7 @@ import { E2E_TIMEZONE } from "./constants";
 import {
   captureState,
   getStagedOutputSummary,
+  getStagingRoot,
   isConfigSelected,
   isCrashLikeError,
   promoteStagedScreenshots,
@@ -236,6 +237,7 @@ const DRY_RUN_PAGES = [
   "empty-invoices",
   "empty-clients",
   "empty-meetings",
+  "empty-outreach",
   "empty-settings",
   "empty-settings-profile",
   // Filled states — top-level
@@ -253,6 +255,11 @@ const DRY_RUN_PAGES = [
   "filled-invoices",
   "filled-clients",
   "filled-meetings",
+  "filled-outreach",
+  "filled-outreach-sequences",
+  "filled-outreach-contacts",
+  "filled-outreach-mailboxes",
+  "filled-outreach-analytics",
   "filled-meetings-detail",
   "filled-meetings-transcript-search",
   "filled-meetings-memory-lens",
@@ -586,7 +593,7 @@ async function run(): Promise<void> {
   }
 
   if (captureState.captureFailures > 0) {
-    fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+    fs.rmSync(getStagingRoot(), { recursive: true, force: true });
     captureState.stagingRootDir = "";
     throw new Error(
       `Screenshot capture had ${captureState.captureFailures} failure(s); staged output was not promoted`,
@@ -594,14 +601,14 @@ async function run(): Promise<void> {
   }
 
   if (captureState.totalScreenshots === 0) {
-    fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+    fs.rmSync(getStagingRoot(), { recursive: true, force: true });
     captureState.stagingRootDir = "";
     throw new Error("No screenshots matched the provided filters");
   }
 
   promoteStagedScreenshots();
   const outputSummary = getStagedOutputSummary();
-  fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+  fs.rmSync(getStagingRoot(), { recursive: true, force: true });
   captureState.stagingRootDir = "";
 
   const skipNote = captureState.captureSkips > 0 ? ` (${captureState.captureSkips} skipped)` : "";

@@ -13,6 +13,7 @@ import { BacklogPage } from "../pages/backlog.page";
 import { DocumentsPage } from "../pages/documents.page";
 import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
+import { OutreachPage } from "../pages/outreach.page";
 import { ProjectsPage } from "../pages/projects.page";
 import { RoadmapPage } from "../pages/roadmap.page";
 import { TeamPage } from "../pages/team.page";
@@ -728,6 +729,12 @@ export async function waitForExpectedContent(
       .or(page.getByText(/no meeting recordings yet/i))
       .first()
       .waitFor({ state: "visible", timeout: 12000 });
+    await waitForSpinnersHidden(page);
+    return;
+  }
+
+  if (URL.outreach.test(url) || name === "outreach" || name.startsWith("outreach-")) {
+    await new OutreachPage(page, READINESS_ONLY_SLUG).waitUntilReady();
     await waitForSpinnersHidden(page);
     return;
   }

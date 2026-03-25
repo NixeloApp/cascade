@@ -30,6 +30,7 @@ import { logger } from "./lib/logger";
 import { syncProjectIssueStats } from "./lib/projectIssueStats";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
+import { encryptMailboxTokensForStorage } from "./outreach/mailboxTokens";
 import { type CalendarEventColor, otpCodeTypes, workflowCategories } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
@@ -162,6 +163,68 @@ const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
   },
 };
 
+const SCREENSHOT_OUTREACH_MAILBOX = {
+  dailySendLimit: 40,
+  displayName: "Alex Sender",
+  email: "alex.sender.screenshots@nixelo.test",
+  minuteSendCount: 2,
+  minuteSendLimit: 5,
+  todaySendCount: 14,
+} as const;
+
+const SCREENSHOT_OUTREACH_CONTACTS = [
+  {
+    company: "Northstar Labs",
+    customFields: { persona: "Founder", segment: "Expansion" },
+    email: "jamie.rivera.screenshots@nixelo.test",
+    firstName: "Jamie",
+    lastName: "Rivera",
+    tags: ["vip", "saas"],
+    timezone: "America/Chicago",
+  },
+  {
+    company: "Orbit Health",
+    customFields: { persona: "RevOps", segment: "Pipeline" },
+    email: "taylor.north.screenshots@nixelo.test",
+    firstName: "Taylor",
+    lastName: "North",
+    tags: ["revops", "pilot"],
+    timezone: "America/New_York",
+  },
+  {
+    company: "Summit Grid",
+    customFields: { persona: "Operations", segment: "Activation" },
+    email: "casey.lee.screenshots@nixelo.test",
+    firstName: "Casey",
+    lastName: "Lee",
+    tags: ["ops", "expansion"],
+    timezone: "America/Denver",
+  },
+  {
+    company: "Lumen Works",
+    customFields: { persona: "CEO", segment: "Warm" },
+    email: "morgan.hale.screenshots@nixelo.test",
+    firstName: "Morgan",
+    lastName: "Hale",
+    tags: ["warm", "founder"],
+    timezone: "America/Los_Angeles",
+  },
+  {
+    company: "Beacon Point",
+    customFields: { persona: "Marketing", segment: "Paused" },
+    email: "avery.shah.screenshots@nixelo.test",
+    firstName: "Avery",
+    lastName: "Shah",
+    tags: ["marketing", "nurture"],
+    timezone: "Europe/London",
+  },
+] as const;
+
+const SCREENSHOT_OUTREACH_SEQUENCE_NAMES = [
+  "Launch Expansion Sequence",
+  "Founder Follow-up Pilot",
+] as const;
+
 /**
  * Check if email is a test email
  */
@@ -179,6 +242,503 @@ function generateInvitePreviewToken(): string {
   const timestamp = Date.now().toString(36);
   const randomPart = crypto.randomUUID().replace(/-/g, "");
   return `invite_${timestamp}_${randomPart}`;
+}
+
+async function deleteOutreachEnrollmentGraph(
+  ctx: MutationCtx,
+  enrollmentId: Id<"outreachEnrollments">,
+): Promise<void> {
+  const [events, trackingLinks] = await Promise.all([
+    ctx.db
+      .query("outreachEvents")
+      .withIndex("by_enrollment", (q) => q.eq("enrollmentId", enrollmentId))
+      .collect(),
+    ctx.db
+      .query("outreachTrackingLinks")
+      .withIndex("by_enrollment", (q) => q.eq("enrollmentId", enrollmentId))
+      .collect(),
+  ]);
+
+  for (const event of events) {
+    await ctx.db.delete(event._id);
+  }
+
+  for (const trackingLink of trackingLinks) {
+    await ctx.db.delete(trackingLink._id);
+  }
+
+  await ctx.db.delete(enrollmentId);
+}
+
+async function deleteOutreachSequenceGraph(
+  ctx: MutationCtx,
+  sequenceId: Id<"outreachSequences">,
+): Promise<void> {
+  const enrollments = await ctx.db
+    .query("outreachEnrollments")
+    .withIndex("by_sequence", (q) => q.eq("sequenceId", sequenceId))
+    .collect();
+
+  for (const enrollment of enrollments) {
+    await deleteOutreachEnrollmentGraph(ctx, enrollment._id);
+  }
+
+  await ctx.db.delete(sequenceId);
+}
+
+async function seedScreenshotOutreachData(
+  ctx: MutationCtx,
+  args: {
+    now: number;
+    organizationId: Id<"organizations">;
+    userId: Id<"users">;
+  },
+): Promise<void> {
+  const { now, organizationId, userId } = args;
+  const seededContactEmails = new Set<string>(
+    SCREENSHOT_OUTREACH_CONTACTS.map((contact) => contact.email),
+  );
+  const seededSequenceNames = new Set<string>(SCREENSHOT_OUTREACH_SEQUENCE_NAMES);
+
+  const existingSequences = await ctx.db
+    .query("outreachSequences")
+    .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const sequence of existingSequences) {
+    if (seededSequenceNames.has(sequence.name)) {
+      await deleteOutreachSequenceGraph(ctx, sequence._id);
+    }
+  }
+
+  for (const email of seededContactEmails) {
+    const existingContacts = await ctx.db
+      .query("outreachContacts")
+      .withIndex("by_organization_email", (q) =>
+        q.eq("organizationId", organizationId).eq("email", email),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const contact of existingContacts) {
+      await ctx.db.delete(contact._id);
+    }
+
+    const suppressions = await ctx.db
+      .query("outreachSuppressions")
+      .withIndex("by_organization_email", (q) =>
+        q.eq("organizationId", organizationId).eq("email", email),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const suppression of suppressions) {
+      await ctx.db.delete(suppression._id);
+    }
+  }
+
+  const existingMailboxes = await ctx.db
+    .query("outreachMailboxes")
+    .withIndex("by_user_provider", (q) => q.eq("userId", userId).eq("provider", "google"))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const mailbox of existingMailboxes) {
+    if (mailbox.email === SCREENSHOT_OUTREACH_MAILBOX.email) {
+      await ctx.db.delete(mailbox._id);
+    }
+  }
+
+  const encryptedMailboxTokens = await encryptMailboxTokensForStorage({
+    accessToken: "screenshot-google-access-token",
+    refreshToken: "screenshot-google-refresh-token",
+  });
+
+  const mailboxId = await ctx.db.insert("outreachMailboxes", {
+    userId,
+    organizationId,
+    provider: "google",
+    email: SCREENSHOT_OUTREACH_MAILBOX.email,
+    displayName: SCREENSHOT_OUTREACH_MAILBOX.displayName,
+    accessToken: encryptedMailboxTokens.accessToken,
+    refreshToken: encryptedMailboxTokens.refreshToken,
+    expiresAt: now + DAY,
+    dailySendLimit: SCREENSHOT_OUTREACH_MAILBOX.dailySendLimit,
+    todaySendCount: SCREENSHOT_OUTREACH_MAILBOX.todaySendCount,
+    todayResetAt: now,
+    minuteSendLimit: SCREENSHOT_OUTREACH_MAILBOX.minuteSendLimit,
+    minuteSendCount: SCREENSHOT_OUTREACH_MAILBOX.minuteSendCount,
+    minuteWindowStartedAt: now,
+    isActive: true,
+    lastHealthCheckAt: now - 10 * MINUTE,
+    updatedAt: now - 5 * MINUTE,
+  });
+
+  const contactIds = new Map<string, Id<"outreachContacts">>();
+  for (const [index, contact] of SCREENSHOT_OUTREACH_CONTACTS.entries()) {
+    const contactId = await ctx.db.insert("outreachContacts", {
+      organizationId,
+      email: contact.email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      company: contact.company,
+      timezone: contact.timezone,
+      customFields: contact.customFields,
+      tags: [...contact.tags],
+      source: "manual",
+      createdBy: userId,
+      createdAt: now - (index + 1) * HOUR,
+    });
+    contactIds.set(contact.email, contactId);
+  }
+
+  const getContactId = (email: string): Id<"outreachContacts"> => {
+    const contactId = contactIds.get(email);
+    if (!contactId) {
+      throw new Error(`Missing seeded outreach contact: ${email}`);
+    }
+    return contactId;
+  };
+
+  const launchSequenceId = await ctx.db.insert("outreachSequences", {
+    organizationId,
+    createdBy: userId,
+    name: "Launch Expansion Sequence",
+    status: "active",
+    mailboxId,
+    steps: [
+      {
+        order: 0,
+        subject: "Launch notes for {{company}}",
+        body: "Hi {{firstName}}, I pulled together a concise launch brief for {{company}} and thought it might help your rollout team.",
+        delayDays: 0,
+      },
+      {
+        order: 1,
+        subject: "Customer rollout story for {{company}}",
+        body: "Following up with a rollout example that matches the activation work you mentioned for {{company}}.",
+        delayDays: 3,
+      },
+      {
+        order: 2,
+        subject: "Should I close the loop?",
+        body: "If the timing is off I can close the loop for now, otherwise I can send the implementation checklist.",
+        delayDays: 5,
+      },
+    ],
+    physicalAddress: "500 Market Street, Austin, TX 78701",
+    trackingDomain: "links.nixelo.test",
+    stats: {
+      enrolled: 3,
+      sent: 4,
+      opened: 4,
+      replied: 1,
+      bounced: 0,
+      unsubscribed: 0,
+    },
+    createdAt: now - 3 * DAY,
+    updatedAt: now - 30 * MINUTE,
+  });
+
+  const founderSequenceId = await ctx.db.insert("outreachSequences", {
+    organizationId,
+    createdBy: userId,
+    name: "Founder Follow-up Pilot",
+    status: "paused",
+    mailboxId,
+    steps: [
+      {
+        order: 0,
+        subject: "Founder follow-up for {{company}}",
+        body: "Hi {{firstName}}, sending a concise follow-up on the founder workflow we discussed.",
+        delayDays: 0,
+      },
+      {
+        order: 1,
+        subject: "Still relevant for {{company}}?",
+        body: "Wanted to check whether the founder workflow is still a priority this quarter.",
+        delayDays: 4,
+      },
+    ],
+    physicalAddress: "500 Market Street, Austin, TX 78701",
+    trackingDomain: "pilot-links.nixelo.test",
+    stats: {
+      enrolled: 2,
+      sent: 2,
+      opened: 1,
+      replied: 0,
+      bounced: 1,
+      unsubscribed: 0,
+    },
+    createdAt: now - 2 * DAY,
+    updatedAt: now - 2 * HOUR,
+  });
+
+  const launchEnrollmentOneId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: launchSequenceId,
+    contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 2,
+    status: "active",
+    nextSendAt: now + 2 * DAY,
+    enrolledAt: now - 36 * HOUR,
+    completedAt: undefined,
+    lastSentAt: now - 6 * HOUR,
+    lastOpenedAt: now - 4 * HOUR,
+    lastClickedAt: now - 4 * HOUR,
+    lastRepliedAt: undefined,
+    gmailThreadIds: ["thread-launch-expansion-1"],
+  });
+
+  const launchTrackingLinkRealId = await ctx.db.insert("outreachTrackingLinks", {
+    enrollmentId: launchEnrollmentOneId,
+    step: 0,
+    originalUrl: "https://nixelo.test/customer-story",
+    createdAt: now - 28 * HOUR,
+  });
+
+  const launchEnrollmentTwoId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: launchSequenceId,
+    contactId: getContactId("taylor.north.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 0,
+    status: "replied",
+    nextSendAt: undefined,
+    enrolledAt: now - 30 * HOUR,
+    completedAt: now - 22 * HOUR,
+    lastSentAt: now - 26 * HOUR,
+    lastOpenedAt: now - 24 * HOUR,
+    lastClickedAt: undefined,
+    lastRepliedAt: now - 22 * HOUR,
+    gmailThreadIds: ["thread-launch-expansion-2"],
+  });
+
+  const launchEnrollmentThreeId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: launchSequenceId,
+    contactId: getContactId("casey.lee.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 1,
+    status: "active",
+    nextSendAt: now + DAY,
+    enrolledAt: now - 14 * HOUR,
+    completedAt: undefined,
+    lastSentAt: now - 10 * HOUR,
+    lastOpenedAt: now - 8 * HOUR,
+    lastClickedAt: undefined,
+    lastRepliedAt: undefined,
+    gmailThreadIds: ["thread-launch-expansion-3"],
+  });
+
+  const founderEnrollmentOneId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: founderSequenceId,
+    contactId: getContactId("morgan.hale.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 0,
+    status: "bounced",
+    nextSendAt: undefined,
+    enrolledAt: now - 18 * HOUR,
+    completedAt: now - 17 * HOUR,
+    lastSentAt: now - 17 * HOUR,
+    lastOpenedAt: undefined,
+    lastClickedAt: undefined,
+    lastRepliedAt: undefined,
+    gmailThreadIds: ["thread-founder-pilot-1"],
+  });
+
+  const founderEnrollmentTwoId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: founderSequenceId,
+    contactId: getContactId("avery.shah.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 1,
+    status: "paused",
+    nextSendAt: now + 3 * DAY,
+    enrolledAt: now - 12 * HOUR,
+    completedAt: undefined,
+    lastSentAt: now - 9 * HOUR,
+    lastOpenedAt: now - 8 * HOUR,
+    lastClickedAt: undefined,
+    lastRepliedAt: undefined,
+    gmailThreadIds: ["thread-founder-pilot-2"],
+  });
+
+  const outreachEvents: Array<{
+    enrollmentId: Id<"outreachEnrollments">;
+    sequenceId: Id<"outreachSequences">;
+    contactId: Id<"outreachContacts">;
+    organizationId: Id<"organizations">;
+    type: "sent" | "opened" | "clicked" | "replied" | "bounced";
+    step: number;
+    trackingLinkId?: Id<"outreachTrackingLinks">;
+    metadata?: {
+      bounceType?: string;
+      diagnosticCode?: string;
+      failedRecipient?: string;
+      linkUrl?: string;
+      replyContent?: string;
+      userAgent?: string;
+    };
+    createdAt: number;
+  }> = [
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 28 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 27 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "clicked",
+      step: 0,
+      trackingLinkId: launchTrackingLinkRealId,
+      metadata: { linkUrl: "https://nixelo.test/customer-story" },
+      createdAt: now - 26 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 1,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 6 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 1,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 4 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentTwoId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("taylor.north.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 26 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentTwoId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("taylor.north.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 24 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentTwoId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("taylor.north.screenshots@nixelo.test"),
+      organizationId,
+      type: "replied",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { replyContent: "This is timely. Send the implementation checklist." },
+      createdAt: now - 22 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentThreeId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("casey.lee.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 10 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentThreeId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("casey.lee.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 8 * HOUR,
+    },
+    {
+      enrollmentId: founderEnrollmentOneId,
+      sequenceId: founderSequenceId,
+      contactId: getContactId("morgan.hale.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 17 * HOUR,
+    },
+    {
+      enrollmentId: founderEnrollmentOneId,
+      sequenceId: founderSequenceId,
+      contactId: getContactId("morgan.hale.screenshots@nixelo.test"),
+      organizationId,
+      type: "bounced",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: {
+        bounceType: "hard",
+        diagnosticCode: "550 5.1.1 mailbox unavailable",
+        failedRecipient: "morgan.hale.screenshots@nixelo.test",
+      },
+      createdAt: now - 16 * HOUR,
+    },
+    {
+      enrollmentId: founderEnrollmentTwoId,
+      sequenceId: founderSequenceId,
+      contactId: getContactId("avery.shah.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 9 * HOUR,
+    },
+    {
+      enrollmentId: founderEnrollmentTwoId,
+      sequenceId: founderSequenceId,
+      contactId: getContactId("avery.shah.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 8 * HOUR,
+    },
+  ];
+
+  for (const event of outreachEvents) {
+    await ctx.db.insert("outreachEvents", event);
+  }
 }
 
 async function deleteMeetingRecordingGraph(
@@ -4992,6 +5552,12 @@ export const seedScreenshotDataInternal = internalMutation({
         });
       }
     }
+
+    await seedScreenshotOutreachData(ctx, {
+      now,
+      organizationId: orgId,
+      userId,
+    });
 
     // 11. Return result
     return {

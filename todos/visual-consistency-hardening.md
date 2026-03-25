@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** In Progress
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
 Make the product more visually cohesive and more enforceable in code, using the consistency contract, screenshot review loop, and validator output as the cleanup map.
 
@@ -20,6 +20,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 - [ ] Do not let modal/interaction-state screenshot gaps hide consistency regressions
 - [ ] Backfill tablet and mobile screenshot coverage anywhere specs still effectively read as desktop-first even if the route is already visually reviewed
 - [ ] Capture and approve real surface variants when they matter, not just the canonical route screenshot: empty, loading, error, modal, sheet, popover, dropdown, create, edit, confirm, destructive, blocked, filtered, selected, inline-edit, and expanded-detail states.
+- [ ] Outreach now has canonical plus tab-state coverage; the remaining screenshot gap there is dialog/destructive-state review, not basic route visibility.
 - [ ] Audit existing screenshot folders for uneven matrices -- some pages already have desktop/tablet/mobile variants plus deep state captures, while others only have the canonical route and need explicit expansion
 - [ ] Treat "tablet/mobile missing from the reviewed matrix" as a real consistency gap, not just a documentation nicety
 

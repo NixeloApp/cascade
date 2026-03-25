@@ -2,12 +2,13 @@
 
 > **Priority:** P2
 > **Status:** Gmail-first MVP shipped; polish and expansion remain
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
 ## Current State
 
 - Gmail-first Convex backend exists for mailboxes, sequences, enrollments, tracking, analytics, and send/reply processing.
 - The app now ships an organization-level outreach workspace for mailbox connection, sequence building, contact import and management, enrollment control, tracking timelines, and analytics.
+- The outreach route now has first-class page-spec coverage and reviewed screenshots for the canonical workspace plus sequences, contacts, mailboxes, and analytics tab states.
 - The implementation currently uses Gmail REST APIs, not SMTP/IMAP as the primary path.
 - Mailboxes now enforce both daily send caps and minute-window throttling before outbound sends start.
 - Gmail inbox polling now parses DSN-style bounce notifications and suppresses failed recipients automatically.

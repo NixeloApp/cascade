@@ -2,7 +2,7 @@
 
 > **Priority:** P2
 > **Status:** Open
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
 All page-spec triplets already exist. The remaining gap is not missing `CURRENT.md` / `IMPLEMENTATION.md` / `TARGET.md` files; it is missing current-state feature coverage for real shipped behavior.
 
@@ -23,7 +23,6 @@ All page-spec triplets already exist. The remaining gap is not missing `CURRENT.
 - [ ] Roadmap / Gantt current behavior.
 - [ ] Client portal / public sharing limits.
 - [ ] Time tracking / billing current reporting and export behavior.
-- [ ] Meetings current workflow and actual shipped states.
 - [ ] Settings / integrations exceptional states and setup/disconnected flows.
 
 ## Done When

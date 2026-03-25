@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor, within } from "@/test/custom-render";
 import { OutreachWorkspace } from "./OutreachWorkspace";
@@ -406,6 +407,29 @@ describe("OutreachWorkspace", () => {
     await user.click(screen.getAllByRole("button", { name: /connect gmail/i })[0]);
 
     expect(mockShowError).toHaveBeenCalledWith("Please allow popups to connect a Gmail mailbox.");
+  });
+
+  it("renders stable outreach screenshot hooks across the main tabs", async () => {
+    const user = userEvent.setup();
+
+    render(<OutreachWorkspace />);
+
+    expect(screen.getByTestId(TEST_IDS.OUTREACH.ROOT)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.OUTREACH.TAB_OVERVIEW)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.OUTREACH.OVERVIEW_SECTION)).toBeInTheDocument();
+
+    await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_SEQUENCES));
+    expect(await screen.findByTestId(TEST_IDS.OUTREACH.SEQUENCES_LIST)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.OUTREACH.SEQUENCE_DETAIL)).toBeInTheDocument();
+
+    await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_CONTACTS));
+    expect(await screen.findByTestId(TEST_IDS.OUTREACH.CONTACTS_SECTION)).toBeInTheDocument();
+
+    await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_MAILBOXES));
+    expect(await screen.findByTestId(TEST_IDS.OUTREACH.MAILBOXES_SECTION)).toBeInTheDocument();
+
+    await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_ANALYTICS));
+    expect(await screen.findByTestId(TEST_IDS.OUTREACH.ANALYTICS_SECTION)).toBeInTheDocument();
   });
 
   it(

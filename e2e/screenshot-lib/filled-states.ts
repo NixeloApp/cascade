@@ -10,6 +10,7 @@ import type { Locator, Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { ProjectsPage } from "../pages";
+import { OutreachPage } from "../pages/outreach.page";
 import { getLocatorAttribute, getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
@@ -90,6 +91,7 @@ export async function screenshotFilledStates(
   await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
   await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
+  await takeScreenshot(page, p, "outreach", ROUTES.outreach.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(
@@ -159,6 +161,17 @@ export async function screenshotFilledStates(
     shouldCaptureAny(p, ["meetings-detail", "meetings-transcript-search", "meetings-memory-lens"])
   ) {
     await screenshotMeetingsStates(page, orgSlug, p);
+  }
+
+  if (
+    shouldCaptureAny(p, [
+      "outreach-sequences",
+      "outreach-contacts",
+      "outreach-mailboxes",
+      "outreach-analytics",
+    ])
+  ) {
+    await screenshotOutreachStates(page, orgSlug, p);
   }
 
   if (
@@ -1253,6 +1266,49 @@ export async function screenshotFilledStates(
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "404-page");
     });
+  }
+
+  // ── Outreach state captures ──
+
+  async function screenshotOutreachStates(
+    currentPage: Page,
+    currentOrgSlug: string,
+    prefix: string,
+  ): Promise<void> {
+    const outreachPage = new OutreachPage(currentPage, currentOrgSlug);
+    await outreachPage.goto();
+
+    if (shouldCapture(prefix, "outreach-sequences")) {
+      await runCaptureStep("outreach sequences tab", async () => {
+        await outreachPage.openSection("sequences");
+        await captureCurrentView(currentPage, prefix, "outreach-sequences");
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-contacts")) {
+      await runCaptureStep("outreach contacts tab", async () => {
+        await outreachPage.openSection("contacts");
+        await outreachPage.waitForSeededContacts();
+        await captureCurrentView(currentPage, prefix, "outreach-contacts");
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-mailboxes")) {
+      await runCaptureStep("outreach mailboxes tab", async () => {
+        await outreachPage.openSection("mailboxes");
+        await outreachPage.waitForSeededMailbox();
+        await captureCurrentView(currentPage, prefix, "outreach-mailboxes");
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-analytics")) {
+      await runCaptureStep("outreach analytics tab", async () => {
+        await outreachPage.openSection("analytics");
+        await outreachPage.waitForAnalyticsContent();
+        await waitForScreenshotReady(currentPage);
+        await captureCurrentView(currentPage, prefix, "outreach-analytics");
+      });
+    }
   }
 
   // ── Roadmap interactive states ──
