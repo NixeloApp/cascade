@@ -9,7 +9,7 @@ No open critical items on this branch.
 ## Infrastructure
 
 - [ ] [e2e-overhaul.md](./e2e-overhaul.md) — E2E and screenshot infrastructure now has modular validator guardrails plus raw-selector ratchets; remaining work is the optional CI split decision.
-- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven product polish and human review debt; outreach dialog/destructive coverage plus documents workspace template/search review are now in-spec, but broader page-by-page cleanup remains.
+- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven product polish and human review debt; outreach, documents, and issues filtered/modal/loading states are now in-spec, but broader page-by-page cleanup remains.
 - [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing raw Tailwind ratchet and primitive extraction where repetition justifies it.
 - [ ] [validator-strengthening.md](./validator-strengthening.md) — Framework cleanup plus a few missing validator ideas.
 
@@ -30,9 +30,9 @@ Verified on this branch:
 |--------|-------|
 | Typecheck | pass |
 | Validators | 55/55 pass |
-| App tests (`vitest run`) | 4593 pass / 5 skipped |
+| App tests (`vitest run`) | 4595 pass / 5 skipped |
 | Convex tests (`vitest.convex`) | 2116 pass / 3 skipped |
 | Page spec triplets | 42/42 present |
-| Screenshot harness shell (`filled-states.ts`) | 1575 lines |
-| TEST_ID constants / page-object files | 241 / 22 |
+| Screenshot harness shell (`filled-states.ts`) | 1588 lines |
+| TEST_ID constants / page-object files | 247 / 22 |
 | Raw styling debt baseline | 73 files / 102 violations |

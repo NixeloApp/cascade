@@ -57,6 +57,7 @@ import {
   screenshotDashboardModals,
   screenshotDocumentsStates,
   screenshotIssueInteractiveStates,
+  screenshotIssuesStates,
   screenshotMeetingsStates,
   screenshotProjectsModal,
   screenshotSprintInteractiveStates,
@@ -644,6 +645,18 @@ export async function screenshotFilledStates(
 
     if (shouldCaptureAny(p, ["issues-side-panel"])) {
       await screenshotIssueInteractiveStates(page, orgSlug, p);
+    }
+
+    if (
+      shouldCaptureAny(p, [
+        "issues-search-filtered",
+        "issues-search-empty",
+        "issues-filter-active",
+        "issues-create-modal",
+        "issues-loading",
+      ])
+    ) {
+      await screenshotIssuesStates(page, orgSlug, p);
     }
 
     // Calendar view modes

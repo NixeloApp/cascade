@@ -6,9 +6,10 @@
  */
 
 import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { DocumentsPage, MeetingsPage, ProjectsPage } from "../pages";
+import { DocumentsPage, IssuesPage, MeetingsPage, ProjectsPage } from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import {
   dismissAllDialogs,
@@ -24,7 +25,11 @@ import {
   shouldCaptureAny,
 } from "./capture";
 import { BASE_URL } from "./config";
-import { openOmnibox, openStableDialog } from "./dialog-helpers";
+import {
+  openOmnibox,
+  openStableDialog,
+  waitForCreateIssueModalScreenshotReady,
+} from "./dialog-helpers";
 import { waitForBoardReady, waitForExpectedContent } from "./readiness";
 
 export async function screenshotDashboardModals(
@@ -489,6 +494,129 @@ export async function screenshotDocumentsStates(
   }
 }
 
+export async function screenshotIssuesStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const filteredSearchName = "issues-search-filtered";
+  const emptySearchName = "issues-search-empty";
+  const statusFilterName = "issues-filter-active";
+  const createModalName = "issues-create-modal";
+  const loadingStateName = "issues-loading";
+
+  if (
+    !shouldCaptureAny(prefix, [
+      filteredSearchName,
+      emptySearchName,
+      statusFilterName,
+      createModalName,
+      loadingStateName,
+    ])
+  ) {
+    return;
+  }
+
+  const issuesUrl = ROUTES.issues.list.build(orgSlug);
+  const issuesPage = new IssuesPage(page, orgSlug);
+
+  const openIssuesForCapture = async () => {
+    await page.goto(`${BASE_URL}${issuesUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, issuesUrl, "issues", prefix);
+    await waitForScreenshotReady(page);
+  };
+
+  if (shouldCapture(prefix, filteredSearchName)) {
+    await runCaptureStep("issues filtered search", async () => {
+      await openIssuesForCapture();
+      await issuesPage.searchIssues("login");
+      await issuesPage.expectSearchResultVisible("Fix login timeout on mobile");
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, filteredSearchName);
+    });
+  }
+
+  if (shouldCapture(prefix, emptySearchName)) {
+    await runCaptureStep("issues empty search", async () => {
+      await openIssuesForCapture();
+      await issuesPage.searchIssues("zzzz-no-results");
+      await issuesPage.expectSearchEmptyState();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, emptySearchName);
+    });
+  }
+
+  if (shouldCapture(prefix, statusFilterName)) {
+    await runCaptureStep("issues status filter", async () => {
+      await openIssuesForCapture();
+      await issuesPage.filterByStatus("To Do");
+      await issuesPage.expectSearchResultVisible("Add dark mode support");
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, statusFilterName);
+    });
+  }
+
+  if (shouldCapture(prefix, createModalName)) {
+    await runCaptureStep("issues create modal", async () => {
+      await openIssuesForCapture();
+      await dismissAllDialogs(page);
+      const createIssueDialog = page.getByRole("dialog", { name: /^create issue$/i });
+      await openStableDialog(
+        page,
+        issuesPage.createIssueButton,
+        createIssueDialog,
+        issuesPage.issueTitleInput,
+        "issues create issue",
+      );
+      await waitForCreateIssueModalScreenshotReady(page, issuesPage);
+      await captureCurrentView(page, prefix, createModalName);
+      await dismissIfOpen(page, createIssueDialog);
+    });
+  }
+
+  if (shouldCapture(prefix, loadingStateName)) {
+    await runCaptureStep("issues loading state", async () => {
+      const loadingPage = await page.context().newPage();
+      const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_ISSUES_LOADING__ = true;
+        });
+
+        await loadingPage.goto(`${BASE_URL}${issuesUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await loadingPage.waitForURL(
+          (currentUrl) => /\/[^/]+\/issues$/.test(new URL(currentUrl).pathname),
+          {
+            timeout: 15000,
+          },
+        );
+        await loadingIssuesPage.searchInput.waitFor({ state: "visible", timeout: 12000 });
+        await loadingIssuesPage.createIssueButton.waitFor({ state: "visible", timeout: 12000 });
+        await expect
+          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThanOrEqual(1);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, loadingStateName, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
+}
+
 export async function screenshotBoardInteractiveStates(
   page: Page,
   orgSlug: string,
@@ -846,20 +974,12 @@ export async function screenshotIssueInteractiveStates(
     await waitForExpectedContent(page, issuesUrl, "issues", prefix);
     await waitForScreenshotReady(page);
 
-    const toggleBtn = page
-      .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
-      .getByRole("button", { name: /switch to side panel view/i })
-      .first();
-    await toggleBtn.waitFor({ state: "visible", timeout: 8000 });
-    await toggleBtn.click();
+    const issuesPage = new IssuesPage(page, orgSlug);
+    await issuesPage.switchToSidePanelMode();
     await waitForScreenshotReady(page);
 
-    const issueCard = page
-      .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
-      .getByTestId(TEST_IDS.ISSUE.CARD)
-      .first();
-    await issueCard.waitFor({ state: "visible", timeout: 5000 });
-    await issueCard.click();
+    await issuesPage.issueCards.first().waitFor({ state: "visible", timeout: 5000 });
+    await issuesPage.issueCards.first().click();
 
     const issueDetailPanel = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
     await issueDetailPanel.waitFor({ state: "visible", timeout: 5000 });
@@ -871,10 +991,7 @@ export async function screenshotIssueInteractiveStates(
     await captureCurrentView(page, prefix, "issues-side-panel");
 
     await dismissIfOpen(page, issueDetailPanel);
-    const resetBtn = page.getByRole("button", { name: /switch to modal view/i });
-    if (await isLocatorVisible(resetBtn)) {
-      await resetBtn.click();
-    }
+    await issuesPage.switchToModalModeIfVisible();
   });
 }
 

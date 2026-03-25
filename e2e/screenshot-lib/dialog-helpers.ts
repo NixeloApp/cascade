@@ -7,7 +7,6 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import type { ProjectsPage } from "../pages";
 import { getLocatorAttribute, isLocatorVisible } from "../utils/locator-state";
 import {
   dismissAllDialogs,
@@ -112,6 +111,11 @@ export function getUploadDialogReadyLocator(dialog: Locator): Locator {
   return dialog.getByRole("button", { name: /^upload$/i });
 }
 
+export type CreateIssueModalHarness = {
+  createIssueModal: Locator;
+  issueTitleInput: Locator;
+};
+
 /** Wait for the dashboard customization dialog to be fully ready. */
 export async function waitForDashboardCustomizeDialogReady(page: Page): Promise<Locator> {
   const dialog = page.getByRole("dialog", { name: /dashboard customization/i });
@@ -151,10 +155,9 @@ export async function openMobileSidebarMenu(page: Page): Promise<void> {
 /** Wait for the Create Issue modal to be fully ready for screenshot capture. */
 export async function waitForCreateIssueModalScreenshotReady(
   page: Page,
-  projectsPage: ProjectsPage,
+  modalHarness: CreateIssueModalHarness,
 ): Promise<void> {
-  await projectsPage.createIssueModal.waitFor({ state: "visible", timeout: 5000 });
-  await projectsPage.issueTitleInput.waitFor({ state: "visible", timeout: 5000 });
+  await modalHarness.issueTitleInput.waitFor({ state: "visible", timeout: 5000 });
   await page.getByLabel(/create another/i).waitFor({ state: "visible", timeout: 5000 });
   await waitForAnimation(page);
   await waitForScreenshotReady(page);

@@ -8,7 +8,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ## Remaining
 
-Documents workspace screenshot review now covers the canonical route plus template and search variants. The remaining work here is broader page-by-page polish, true empty-state review depth, and cross-surface consistency rather than another blind documents gap.
+Documents workspace screenshot review now covers the canonical route plus template and search variants, and the issues route now has reviewed filtered, modal, side-panel, and loading captures across desktop/tablet/mobile. The remaining work here is broader page-by-page polish, true empty-state review depth, and cross-surface consistency rather than another blind core-route gap.
 
 ### Screenshot-driven cleanup
 

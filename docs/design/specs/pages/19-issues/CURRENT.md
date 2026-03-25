@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/issues`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-23
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -18,7 +18,8 @@ The issues page is the organization-wide issue browser. It answers:
 4. Can I drill into an issue without leaving the list context?
 
 This is a read-heavy discovery surface, not a project-scoped work board. It shows issues from
-every project the user has access to, with simple search and status filtering.
+every project the user has access to, with server-backed search plus status, priority, and type
+filtering.
 
 ---
 
@@ -38,15 +39,11 @@ every project the user has access to, with simple search and status filtering.
 | State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
 |-------|-------------|---------------|--------------|--------------|
 | Side panel open | `desktop-dark-side-panel.png` | `desktop-light-side-panel.png` | `tablet-light-side-panel.png` | `mobile-light-side-panel.png` |
-
-### Missing captures (should be added)
-
-- Empty state (no issues in org)
-- Search active with results
-- Search active with no results
-- Status filter applied
-- Create issue modal open
-- Loading skeleton state
+| Search active with results | `desktop-dark-search-filtered.png` | `desktop-light-search-filtered.png` | `tablet-light-search-filtered.png` | `mobile-light-search-filtered.png` |
+| Search active with no results | `desktop-dark-search-empty.png` | `desktop-light-search-empty.png` | `tablet-light-search-empty.png` | `mobile-light-search-empty.png` |
+| Status filter applied | `desktop-dark-filter-active.png` | `desktop-light-filter-active.png` | `tablet-light-filter-active.png` | `mobile-light-filter-active.png` |
+| Create issue modal open | `desktop-dark-create-modal.png` | `desktop-light-create-modal.png` | `tablet-light-create-modal.png` | `mobile-light-create-modal.png` |
+| Loading state | `desktop-dark-loading.png` | `desktop-light-loading.png` | `tablet-light-loading.png` | `mobile-light-loading.png` |
 
 ---
 
@@ -104,11 +101,11 @@ every project the user has access to, with simple search and status filtering.
 ### 2. Header and controls
 
 - `PageHeader` with title "Issues", description, and two action buttons:
-  - `ViewModeToggle` — toggles between card and list views (from Kanban).
+  - `ViewModeToggle` — toggles between centered modal and right-side peek sheet detail modes.
   - `Button` "Create Issue" — opens the `CreateIssueModal`.
 - `PageControls` row with:
-  - Search `Input` (variant="search") — client-side filter by title or key.
-  - Status `Select` dropdown — server-side filter by workflow state.
+  - Search `Input` (variant="search") — server-backed full-text search by title or key.
+  - Status / priority / type `Select` dropdowns — server-side filter pushdown.
     Status options fetched from `api.projects.getOrganizationWorkflowStates`.
 
 ### 3. Issue grid
@@ -151,18 +148,17 @@ every project the user has access to, with simple search and status filtering.
 
 - Filled grid with seeded issue cards (4 viewports)
 - Side panel open with selected issue (4 viewports)
+- Search active with matching seeded issue results (4 viewports)
+- Search active with zero results (4 viewports)
+- Status filter applied to show a seeded subset (4 viewports)
+- Create issue modal open from the org-wide route (4 viewports)
+- Loading state before the first issue page resolves (4 viewports)
 - Empty issues (captured by screenshot harness as `empty-issues`)
 
 ### States intentionally not over-specified here
 
-- Search active with matching results
-- Search active with zero results
-- Status filter applied showing subset
-- Create issue modal open
-- Loading skeleton during first page load
 - "Load More" button visible vs exhausted
-
-Those cases still need to work, but they are not yet in the canonical screenshot matrix.
+- Fully empty org-with-filters combinations beyond the canonical `empty-issues` route
 
 ---
 
@@ -172,8 +168,9 @@ Those cases still need to work, but they are not yet in the canonical screenshot
 |------|--------------|
 | Layout simplicity | Clean grid with no shell overrides. Reads as a standard list page. |
 | Responsive behavior | Grid collapses from 4 to 3 to 2 to 1 columns cleanly. |
-| Search UX | Instant client-side filtering by title/key. |
+| Search UX | Server-backed search keeps the org-wide browser responsive without giving up filter fidelity. |
 | Detail panel | Nondestructive drill-in — list stays visible behind the panel. |
+| Review coverage | Canonical, side-panel, filtered, empty-search, modal, and loading states are all in the reviewed screenshot matrix. |
 | Page rhythm | Uses shared `PageLayout` / `PageHeader` / `PageControls` discipline. |
 
 ---
@@ -184,8 +181,7 @@ Those cases still need to work, but they are not yet in the canonical screenshot
 |---|---------|------|----------|
 | ~~1~~ | ~~Search is client-side only~~ **Fixed** — `searchOrganizationIssues` uses the `search_title` index for full-text search across all org issues, with status/priority/type filter pushdown | ~~search/pagination~~ | ~~MEDIUM~~ |
 | ~~2~~ | ~~No advanced filters~~ **Fixed** — added server-side priority and type filters via `listOrganizationIssues` args, plus clear-filters button | ~~controls~~ | ~~MEDIUM~~ |
-| 3 | ViewModeToggle is present but the list view mode may not be fully wired in this route (originally from Kanban). | controls | LOW |
-| 4 | `IssueCard` type cast suggests a type mismatch between the paginated query result and the card's expected type. | types | LOW |
+| 3 | `IssueCard` type cast suggests a type mismatch between the paginated query result and the card's expected type. | types | LOW |
 
 ---
 
@@ -193,9 +189,9 @@ Those cases still need to work, but they are not yet in the canonical screenshot
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `src/routes/_auth/_app/$orgSlug/issues/index.tsx` | 173 | Route: layout, state, query wiring |
+| `src/routes/_auth/_app/$orgSlug/issues/index.tsx` | 346 | Route: layout, filter state, query wiring |
 | `src/components/IssueDetail/IssueCard.tsx` | 565 | Issue card with key, title, badges, avatar |
-| `src/components/IssueDetail/CreateIssueModal.tsx` | 1207 | Full issue creation form |
+| `src/components/IssueDetail/CreateIssueModal.tsx` | 1209 | Full issue creation form |
 | `src/components/IssueDetailViewer.tsx` | 47 | Sheet wrapper for detail panel |
 | `src/components/IssueDetailSheet.tsx` | 120 | Slide-in sheet component |
 | `src/components/IssueDetail/IssueDetailContent.tsx` | 135 | Detail layout: header + body + sidebar |
@@ -223,7 +219,6 @@ Those cases still need to work, but they are not yet in the canonical screenshot
 
 ## Summary
 
-The issues page is a clean, simple org-wide issue browser. It uses standard page layout
-primitives, responsive grid, and a nondestructive detail panel. The main gaps are search
-scope (client-side only) and filter depth (status only). The page is structurally sound
-and does not need shell or composition rework.
+The issues page is a structurally sound org-wide issue browser with server-backed discovery,
+pragmatic filter depth, and a nondestructive detail overlay. The remaining work is small:
+clean up the `IssueCard` typing mismatch and keep screenshot review current as the route evolves.

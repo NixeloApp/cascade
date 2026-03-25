@@ -6,8 +6,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { IssueViewModeProvider, useIssueViewMode } from "@/contexts/IssueViewModeContext";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { AllIssuesPage } from "./index";
+
+declare global {
+  interface Window {
+    __NIXELO_E2E_ISSUES_LOADING__?: boolean;
+  }
+}
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => () => ({}),
@@ -48,13 +55,22 @@ vi.mock("@/components/layout", () => ({
   ),
   PageContent: ({
     children,
+    isLoading,
     isEmpty,
     emptyState,
   }: {
     children: ReactNode;
+    isLoading?: boolean;
     isEmpty?: boolean;
-    emptyState?: { title: string };
-  }) => <div>{isEmpty ? emptyState?.title : children}</div>,
+    emptyState?: { title: string; "data-testid"?: string };
+  }) =>
+    isLoading ? (
+      <div data-testid="issues-page-loading">Loading</div>
+    ) : (
+      <div data-testid={isEmpty ? emptyState?.["data-testid"] : undefined}>
+        {isEmpty ? emptyState?.title : children}
+      </div>
+    ),
 }));
 
 vi.mock("@/components/ui/Button", () => ({
@@ -80,17 +96,20 @@ vi.mock("@/components/ui/Grid", () => ({
 
 vi.mock("@/components/ui/Input", () => ({
   Input: ({
+    "data-testid": testId,
     value,
     onChange,
     placeholder,
     "aria-label": ariaLabel,
   }: {
+    "data-testid"?: string;
     value?: string;
     onChange?: (event: { target: { value: string } }) => void;
     placeholder?: string;
     "aria-label"?: string;
   }) => (
     <input
+      data-testid={testId}
       aria-label={ariaLabel}
       placeholder={placeholder}
       value={value}
@@ -101,8 +120,18 @@ vi.mock("@/components/ui/Input", () => ({
 
 vi.mock("@/components/ui/Select", () => ({
   Select: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectTrigger: ({ children }: { children: ReactNode }) => (
-    <button type="button">{children}</button>
+  SelectTrigger: ({
+    children,
+    "aria-label": ariaLabel,
+    "data-testid": testId,
+  }: {
+    children: ReactNode;
+    "aria-label"?: string;
+    "data-testid"?: string;
+  }) => (
+    <button type="button" aria-label={ariaLabel} data-testid={testId}>
+      {children}
+    </button>
   ),
   SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
   SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -121,7 +150,13 @@ vi.mock("@/components/Kanban/ViewModeToggle", () => ({
 }));
 
 vi.mock("@/components/IssueDetail", () => ({
-  CreateIssueModal: ({ open }: { open: boolean }) => (open ? <div>Create issue modal</div> : null),
+  CreateIssueModal: ({ open }: { open: boolean }) =>
+    open ? (
+      <div data-testid={TEST_IDS.ISSUE.CREATE_MODAL}>
+        <input data-testid={TEST_IDS.ISSUE.CREATE_TITLE_INPUT} />
+        Create issue modal
+      </div>
+    ) : null,
   IssueCard: ({
     issue,
     onClick,
@@ -150,6 +185,7 @@ describe("AllIssuesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    delete window.__NIXELO_E2E_ISSUES_LOADING__;
 
     mockUseOrganization.mockReturnValue({
       orgSlug: "acme",
@@ -158,7 +194,24 @@ describe("AllIssuesPage", () => {
       userRole: "owner",
       billingEnabled: true,
     });
-    mockUseAuthenticatedQuery.mockReturnValue([{ id: "todo", name: "To Do" }]);
+    mockUseAuthenticatedQuery.mockImplementation((_, args) => {
+      if (args === "skip") {
+        return undefined;
+      }
+
+      if (typeof args === "object" && args !== null && "query" in args) {
+        return [
+          {
+            _id: "issue-1" as Id<"issues">,
+            key: "ACME-1",
+            title: "Capture issues side panel",
+            status: { name: "To Do", color: "gray" },
+          },
+        ];
+      }
+
+      return [{ id: "todo", name: "To Do" }];
+    });
     mockUsePaginatedQuery.mockReturnValue({
       results: [
         {
@@ -183,6 +236,10 @@ describe("AllIssuesPage", () => {
 
     expect(screen.getByRole("button", { name: "Switch to side panel view" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create Issue" })).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.SEARCH_INPUT)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.STATUS_FILTER)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.TYPE_FILTER)).toBeInTheDocument();
   });
 
   it("opens the selected issue through the peek viewer when the stored preference is side panel", async () => {
@@ -198,5 +255,45 @@ describe("AllIssuesPage", () => {
     await user.click(screen.getByRole("button", { name: "ACME-1: Capture issues side panel" }));
 
     expect(screen.getByText("viewer:peek:issue-1")).toBeInTheDocument();
+  });
+
+  it("shows the filtered empty-state hook and summary when search returns no issues", async () => {
+    mockUseAuthenticatedQuery.mockImplementation((_, args) => {
+      if (args === "skip") {
+        return undefined;
+      }
+
+      if (typeof args === "object" && args !== null && "query" in args) {
+        return [];
+      }
+
+      return [{ id: "todo", name: "To Do" }];
+    });
+    const user = userEvent.setup();
+
+    render(
+      <IssueViewModeProvider>
+        <AllIssuesPage />
+      </IssueViewModeProvider>,
+    );
+
+    await user.type(screen.getByTestId(TEST_IDS.ISSUE.SEARCH_INPUT), "zzzz-no-results");
+
+    expect(await screen.findByTestId(TEST_IDS.ISSUE.FILTER_SUMMARY)).toHaveTextContent(
+      "0 issues matching filters",
+    );
+    expect(await screen.findByTestId(TEST_IDS.ISSUE.SEARCH_EMPTY_STATE)).toBeInTheDocument();
+  });
+
+  it("forces the loading state when the E2E loading override is enabled", () => {
+    window.__NIXELO_E2E_ISSUES_LOADING__ = true;
+
+    render(
+      <IssueViewModeProvider>
+        <AllIssuesPage />
+      </IssueViewModeProvider>,
+    );
+
+    expect(screen.getByTestId("issues-page-loading")).toBeInTheDocument();
   });
 });

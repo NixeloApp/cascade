@@ -32,6 +32,18 @@ export const TEST_IDS = {
   ISSUE: {
     /** @see src/components/IssueCard.tsx */
     CARD: "issue-card",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    SEARCH_INPUT: "issue-search-input",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    STATUS_FILTER: "issue-status-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    PRIORITY_FILTER: "issue-priority-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    TYPE_FILTER: "issue-type-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    FILTER_SUMMARY: "issue-filter-summary",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    SEARCH_EMPTY_STATE: "issue-search-empty-state",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     CREATE_TRIGGER: "issue-create-trigger",
     /** @see src/components/IssueDetail/CreateIssueModal.tsx */

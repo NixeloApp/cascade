@@ -310,6 +310,11 @@ const DRY_RUN_PAGES = [
   // Filled states — projects modals
   "filled-projects-create-project-modal",
   "filled-issues-side-panel",
+  "filled-issues-search-filtered",
+  "filled-issues-search-empty",
+  "filled-issues-filter-active",
+  "filled-issues-create-modal",
+  "filled-issues-loading",
   // Filled states — workspace modals
   "filled-workspaces-create-workspace-modal",
   "filled-workspace-create-team-modal",

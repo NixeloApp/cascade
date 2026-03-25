@@ -29,6 +29,11 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   // Project & issue modals
   [/^filled-projects-create-project-modal$/, "05-projects", "-create-project-modal"],
   [/^filled-issues-side-panel$/, "19-issues", "-side-panel"],
+  [/^filled-issues-search-filtered$/, "19-issues", "-search-filtered"],
+  [/^filled-issues-search-empty$/, "19-issues", "-search-empty"],
+  [/^filled-issues-filter-active$/, "19-issues", "-filter-active"],
+  [/^filled-issues-create-modal$/, "19-issues", "-create-modal"],
+  [/^filled-issues-loading$/, "19-issues", "-loading"],
   // Workspace modals
   [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
   [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
