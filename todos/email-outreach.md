@@ -10,6 +10,7 @@
 - The implementation currently uses Gmail REST APIs, not SMTP/IMAP as the primary path.
 - Mailboxes now enforce both daily send caps and minute-window throttling before outbound sends start.
 - Gmail inbox polling now parses DSN-style bounce notifications and suppresses failed recipients automatically.
+- The send/reply pipeline now has integration coverage for pre-send suppression, template rendering, tracking rewrite, successful sends, hard bounces, and mailbox-scoped reply matching.
 - User-facing workflow is still missing because there is no frontend surface yet.
 - Security and launch blockers are tracked in [p0-outreach-holes.md](./p0-outreach-holes.md).
 
@@ -22,10 +23,6 @@
 - [ ] Contact import and management UI.
 - [ ] Enrollment / campaign management UI.
 - [ ] Tracking and analytics UI.
-
-### Reliability / Compliance
-
-- [ ] Add stronger integration coverage for the send and reply pipeline.
 
 ### Feature Gaps
 

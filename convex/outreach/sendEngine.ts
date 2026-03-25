@@ -19,8 +19,8 @@ import { internalAction, internalMutation, internalQuery } from "../_generated/s
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { logger } from "../lib/logger";
 import { MINUTE } from "../lib/timeUtils";
-import { isSuppressed } from "./contacts";
-import { advanceEnrollment } from "./enrollments";
+import { isSuppressed, suppress } from "./contacts";
+import { advanceEnrollment, stopEnrollment } from "./enrollments";
 import {
   buildComplianceFooter,
   extractTrackableUrls,
@@ -342,6 +342,8 @@ function isHardBounce(error: string | undefined): boolean {
 
 async function recordFailedSend(ctx: MutationCtx, args: SendResultArgs & { error?: string }) {
   if (isHardBounce(args.error)) {
+    const contact = await ctx.db.get(args.contactId);
+
     // Permanent failure — mark as bounced and stop the enrollment
     await ctx.db.insert("outreachEvents", {
       enrollmentId: args.enrollmentId,
@@ -350,20 +352,32 @@ async function recordFailedSend(ctx: MutationCtx, args: SendResultArgs & { error
       organizationId: args.organizationId,
       type: "bounced",
       step: args.step,
-      metadata: { bounceType: "hard" },
+      metadata: {
+        bounceType: "hard",
+        failedRecipient: contact?.email,
+        replyContent: args.error,
+      },
       createdAt: Date.now(),
     });
 
-    await ctx.db.patch(args.enrollmentId, {
-      status: "bounced",
-      completedAt: Date.now(),
-      nextSendAt: undefined,
-    });
+    await stopEnrollment(ctx, args.enrollmentId, "bounced");
+
+    if (contact) {
+      await suppress(ctx, args.organizationId, contact.email, "hard_bounce", args.enrollmentId);
+    }
 
     const sequence = await ctx.db.get(args.sequenceId);
-    if (sequence?.stats) {
+    const stats = sequence?.stats ?? {
+      enrolled: 0,
+      sent: 0,
+      opened: 0,
+      replied: 0,
+      bounced: 0,
+      unsubscribed: 0,
+    };
+    if (sequence) {
       await ctx.db.patch(args.sequenceId, {
-        stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
+        stats: { ...stats, bounced: stats.bounced + 1 },
       });
     }
   } else {

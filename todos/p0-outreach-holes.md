@@ -10,10 +10,6 @@ This file tracks the remaining blockers before outreach should be treated as use
 
 - [ ] Build the frontend surface for sequences, enrollments, contacts, mailboxes, tracking, and analytics.
 
-## Testing
-
-- [ ] Add send-pipeline integration coverage for pre-send validation, template rendering, tracking rewrite/injection, bounce handling, and reply matching.
-
 ## Notes
 
 - Tracking HTTP handlers are already wired in the router and are no longer a todo item.
@@ -21,4 +17,5 @@ This file tracks the remaining blockers before outreach should be treated as use
 - OAuth mailbox tokens are now encrypted at rest and legacy plaintext rows self-heal on runtime access.
 - Mailbox sending now reserves per-minute capacity during pre-send validation and preserves migration-safe defaults for legacy mailbox rows.
 - Gmail inbox polling now classifies DSN-style hard bounces, stops the matched enrollment, records a bounce event, and suppresses the failed recipient.
+- Send-pipeline integration coverage now exercises pre-send suppression, template rendering, tracking link persistence and rewrite, successful Gmail sends, send-time hard bounces, and mailbox-scoped reply detection.
 - This file intentionally keeps only open blockers; completed outreach fixes belong in git history and tests, not here.
