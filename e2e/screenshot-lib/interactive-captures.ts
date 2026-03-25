@@ -878,6 +878,11 @@ export async function screenshotMeetingsStates(
   const filterEmptyName = "meetings-filter-empty";
   const scheduleDialogName = "meetings-schedule-dialog";
   const detailTimeoutMs = 15000;
+  const isDesktopCapture = captureState.currentConfigPrefix.startsWith("desktop-");
+  const isTabletCapture = captureState.currentConfigPrefix === "tablet-light";
+  const shouldCaptureDetailState = isDesktopCapture;
+  const shouldCaptureFilterEmptyState = isDesktopCapture;
+  const shouldCaptureScheduleDialogState = isDesktopCapture || isTabletCapture;
 
   if (
     !shouldCaptureAny(prefix, [
@@ -904,7 +909,7 @@ export async function screenshotMeetingsStates(
     await waitForScreenshotReady(page);
   };
 
-  if (shouldCapture(prefix, meetingsDetailName)) {
+  if (shouldCaptureDetailState && shouldCapture(prefix, meetingsDetailName)) {
     await runCaptureStep("meetings detail", async () => {
       await openMeetingsForCapture();
       const clientLaunchReviewCard = recentMeetingsSection
@@ -997,7 +1002,7 @@ export async function screenshotMeetingsStates(
     });
   }
 
-  if (shouldCapture(prefix, filterEmptyName)) {
+  if (shouldCaptureFilterEmptyState && shouldCapture(prefix, filterEmptyName)) {
     await runCaptureStep("meetings filter empty state", async () => {
       await openMeetingsForCapture();
       await meetingsPage.searchMeetings("zzzz-no-results");
@@ -1007,7 +1012,7 @@ export async function screenshotMeetingsStates(
     });
   }
 
-  if (shouldCapture(prefix, scheduleDialogName)) {
+  if (shouldCaptureScheduleDialogState && shouldCapture(prefix, scheduleDialogName)) {
     await runCaptureStep("meetings schedule dialog", async () => {
       await openMeetingsForCapture();
       await dismissAllDialogs(page);

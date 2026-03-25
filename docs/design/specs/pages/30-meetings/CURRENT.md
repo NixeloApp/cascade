@@ -38,15 +38,16 @@ workspace that feeds later product/document workflows.
 
 | State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
 |------|---------------|---------------|--------------|--------------|
-| Selected-recording detail | `desktop-dark-detail.png` | `desktop-light-detail.png` | `tablet-light-detail.png` | `mobile-light-detail.png` |
+| Selected-recording detail | `desktop-dark-detail.png` | `desktop-light-detail.png` | `n/a` | `n/a` |
 | Memory-lens filter state | `desktop-dark-memory-lens.png` | `desktop-light-memory-lens.png` | `tablet-light-memory-lens.png` | `mobile-light-memory-lens.png` |
 | Transcript search state | `desktop-dark-transcript-search.png` | `desktop-light-transcript-search.png` | `tablet-light-transcript-search.png` | `mobile-light-transcript-search.png` |
 | Processing detail state | `desktop-dark-processing.png` | `desktop-light-processing.png` | `tablet-light-processing.png` | `mobile-light-processing.png` |
-| Filter-empty state | `desktop-dark-filter-empty.png` | `desktop-light-filter-empty.png` | `tablet-light-filter-empty.png` | `mobile-light-filter-empty.png` |
-| Schedule dialog state | `desktop-dark-schedule-dialog.png` | `desktop-light-schedule-dialog.png` | `tablet-light-schedule-dialog.png` | `mobile-light-schedule-dialog.png` |
+| Filter-empty state | `desktop-dark-filter-empty.png` | `desktop-light-filter-empty.png` | `n/a` | `n/a` |
+| Schedule dialog state | `desktop-dark-schedule-dialog.png` | `desktop-light-schedule-dialog.png` | `tablet-light-schedule-dialog.png` | `n/a` |
 
-These screenshot states are now captured and reviewed. The meetings route is no longer relying on
-only a happy-path canonical image plus one or two deep states.
+These screenshot states are now captured and reviewed where they are visually distinct. Small-screen
+detail and filter-empty variants are intentionally not tracked because they collapse to the same
+above-the-fold composition as the canonical view.
 
 ---
 
@@ -146,7 +147,7 @@ This column is the review and handoff side of the route.
 
 | Area | Current Read |
 |------|--------------|
-| Screenshot depth | Strong. This route now covers canonical, deep-state, overlay, empty-after-filtering, and in-progress detail states. |
+| Screenshot depth | Strong. This route covers canonical, deep-state, overlay, and in-progress detail states, while avoiding redundant small-screen captures that do not change the visible composition. |
 | Route purpose | Clear. The page reads as a review/search workspace, not a generic transcript dump. |
 | State coverage | Better than many other product routes because search, memory lens, processing, and scheduling are explicitly reviewed. |
 
