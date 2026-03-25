@@ -130,7 +130,6 @@ export const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "empty-settings": "12-settings",
   "empty-issues": "19-issues",
   "empty-notifications": "21-notifications",
-  "empty-my-issues": "20-my-issues",
   "empty-invoices": "25-invoices",
   "empty-clients": "26-clients",
   "empty-meetings": "30-meetings",

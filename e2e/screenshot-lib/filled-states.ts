@@ -60,6 +60,7 @@ import {
   screenshotIssueInteractiveStates,
   screenshotIssuesStates,
   screenshotMeetingsStates,
+  screenshotMyIssuesStates,
   screenshotProjectInboxStates,
   screenshotProjectsModal,
   screenshotSprintInteractiveStates,
@@ -173,6 +174,16 @@ export async function screenshotFilledStates(
 
   if (shouldCaptureAny(p, ["documents-search-filtered", "documents-search-empty"])) {
     await screenshotDocumentsStates(page, orgSlug, p);
+  }
+
+  if (
+    shouldCaptureAny(p, [
+      "my-issues-filter-active",
+      "my-issues-filtered-empty",
+      "my-issues-loading",
+    ])
+  ) {
+    await screenshotMyIssuesStates(page, orgSlug, p);
   }
 
   if (

@@ -14,6 +14,7 @@ import {
   InboxPage,
   IssuesPage,
   MeetingsPage,
+  MyIssuesPage,
   ProjectsPage,
   SprintsPage,
 } from "../pages";
@@ -607,6 +608,106 @@ export async function screenshotIssuesStates(
         );
         await loadingIssuesPage.searchInput.waitFor({ state: "visible", timeout: 12000 });
         await loadingIssuesPage.createIssueButton.waitFor({ state: "visible", timeout: 12000 });
+        await expect
+          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThanOrEqual(1);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, loadingStateName, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
+}
+
+export async function screenshotMyIssuesStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const filterActiveName = "my-issues-filter-active";
+  const filteredEmptyName = "my-issues-filtered-empty";
+  const loadingStateName = "my-issues-loading";
+
+  if (!shouldCaptureAny(prefix, [filterActiveName, filteredEmptyName, loadingStateName])) {
+    return;
+  }
+
+  const myIssuesUrl = ROUTES.myIssues.build(orgSlug);
+  const myIssuesPage = new MyIssuesPage(page, orgSlug);
+
+  const openMyIssuesForCapture = async () => {
+    await page.goto(`${BASE_URL}${myIssuesUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, myIssuesUrl, "my-issues", prefix);
+    await waitForScreenshotReady(page);
+    await myIssuesPage.waitUntilReady();
+  };
+
+  if (shouldCapture(prefix, filterActiveName)) {
+    await runCaptureStep("my issues filter active", async () => {
+      await openMyIssuesForCapture();
+      await myIssuesPage.filterByPriority("High");
+      await myIssuesPage.expectFilterSummaryVisible();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, filterActiveName);
+    });
+  }
+
+  if (shouldCapture(prefix, filteredEmptyName)) {
+    await runCaptureStep("my issues filtered empty state", async () => {
+      const filteredEmptyPage = await page.context().newPage();
+
+      try {
+        await filteredEmptyPage.addInitScript(() => {
+          window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filtered-empty");
+        });
+
+        const filteredEmptyMyIssuesPage = new MyIssuesPage(filteredEmptyPage, orgSlug);
+        await filteredEmptyPage.goto(`${BASE_URL}${myIssuesUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(filteredEmptyPage, myIssuesUrl, "my-issues", prefix);
+        await waitForScreenshotReady(filteredEmptyPage);
+        await filteredEmptyMyIssuesPage.waitUntilReady();
+        await filteredEmptyMyIssuesPage.expectFilteredEmptyState();
+        await captureCurrentView(filteredEmptyPage, prefix, filteredEmptyName);
+      } finally {
+        if (!filteredEmptyPage.isClosed()) {
+          await filteredEmptyPage.close();
+        }
+      }
+    });
+  }
+
+  if (shouldCapture(prefix, loadingStateName)) {
+    await runCaptureStep("my issues loading state", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_MY_ISSUES_LOADING__ = true;
+        });
+
+        await loadingPage.goto(`${BASE_URL}${myIssuesUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await loadingPage.waitForURL(
+          (currentUrl) => /\/[^/]+\/my-issues$/.test(new URL(currentUrl).pathname),
+          {
+            timeout: 15000,
+          },
+        );
         await expect
           .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
             timeout: 12000,

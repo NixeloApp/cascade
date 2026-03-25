@@ -593,6 +593,25 @@ export const TEST_IDS = {
     ARCHIVE_ALL_BUTTON: "notifications-archive-all-button",
   },
 
+  MY_ISSUES: {
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    CONTENT: "my-issues-content",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    PRIORITY_FILTER: "my-issues-priority-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    DUE_DATE_FILTER: "my-issues-due-date-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    GROUP_BY_CONTROL: "my-issues-group-by-control",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    FILTER_SUMMARY: "my-issues-filter-summary",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    EMPTY_STATE: "my-issues-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    FILTER_EMPTY_STATE: "my-issues-filter-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    COLUMN: "my-issues-column",
+  },
+
   PROJECT_INBOX: {
     /** @see src/components/InboxList.tsx */
     CONTENT: "project-inbox-content",

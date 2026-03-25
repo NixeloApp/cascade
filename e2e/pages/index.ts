@@ -11,6 +11,7 @@ export { IssueDetailPage } from "./issue-detail.page";
 export { IssuesPage } from "./issues.page";
 export { LandingPage } from "./landing.page";
 export { MeetingsPage } from "./meetings.page";
+export { MyIssuesPage } from "./my-issues.page";
 export { NotificationsPage } from "./notifications.page";
 export { OnboardingPage } from "./onboarding.page";
 export { ProjectsPage } from "./projects.page";
