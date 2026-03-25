@@ -15,6 +15,7 @@ import {
   cleanupE2EWorkspacesEndpoint,
   cleanupRbacProjectEndpoint,
   cleanupTestUsersEndpoint,
+  configureNotificationsStateEndpoint,
   configureProjectInboxStateEndpoint,
   createTestUserEndpoint,
   debugVerifyPasswordEndpoint,
@@ -369,6 +370,12 @@ http.route({
   path: "/e2e/configure-project-inbox-state",
   method: "POST",
   handler: configureProjectInboxStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-notifications-state",
+  method: "POST",
+  handler: configureNotificationsStateEndpoint,
 });
 
 // Batch cleanup - call repeatedly until done=true (avoids 32k read limit)

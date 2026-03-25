@@ -577,6 +577,16 @@ export const TEST_IDS = {
   NOTIFICATIONS: {
     /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
     CONTENT: "notifications-content",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    INBOX_EMPTY_STATE: "notifications-inbox-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    ARCHIVED_EMPTY_STATE: "notifications-archived-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    UNREAD_BADGE: "notifications-unread-badge",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    MARK_ALL_READ_BUTTON: "notifications-mark-all-read-button",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    ARCHIVE_ALL_BUTTON: "notifications-archive-all-button",
   },
 
   PROJECT_INBOX: {

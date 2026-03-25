@@ -41,6 +41,7 @@ import { api } from "./_generated/api";
 type ScreenshotDocumentNode = Record<string, unknown>;
 type SeededInboxActorKey = "owner" | "alex" | "sarah";
 type SeededProjectInboxMode = "default" | "openEmpty" | "closedEmpty";
+type SeededNotificationsMode = "default" | "inboxEmpty" | "archivedEmpty" | "unreadOverflow";
 
 interface SeededInboxDefinition {
   createdBy: SeededInboxActorKey;
@@ -53,6 +54,17 @@ interface SeededInboxDefinition {
   sourceEmail?: string;
   status: Doc<"inboxIssues">["status"];
   triagedOffsetMs?: number;
+}
+
+interface SeededNotificationDefinition {
+  actor: SeededInboxActorKey;
+  hoursAgo: number;
+  isArchived?: boolean;
+  isRead: boolean;
+  issueKey?: string;
+  message: string;
+  title: string;
+  type: string;
 }
 
 function screenshotText(text: string): ScreenshotDocumentNode {
@@ -349,6 +361,171 @@ function countSeededInboxIssues(definitions: SeededInboxDefinition[]) {
   return { closedCount, openCount };
 }
 
+function buildSeededNotificationDefinitions(
+  mode: SeededNotificationsMode,
+): SeededNotificationDefinition[] {
+  if (mode === "inboxEmpty") {
+    return [
+      {
+        actor: "alex",
+        hoursAgo: 4,
+        isArchived: true,
+        isRead: true,
+        issueKey: "DEMO-1",
+        message:
+          "Alex archived the DEMO-1 handoff once the checklist was captured in the sprint note.",
+        title: "Checklist handoff archived",
+        type: "issue_status_changed",
+      },
+      {
+        actor: "sarah",
+        hoursAgo: 12,
+        isArchived: true,
+        isRead: true,
+        issueKey: "DEMO-3",
+        message: "Sarah archived the DEMO-3 comment thread after the launch note was finalized.",
+        title: "Comment thread archived",
+        type: "issue_commented",
+      },
+      {
+        actor: "owner",
+        hoursAgo: 28,
+        isArchived: true,
+        isRead: true,
+        issueKey: "DEMO-7",
+        message:
+          "The release checklist reminder moved into the archive after the owner reviewed it.",
+        title: "Release reminder archived",
+        type: "issue_assigned",
+      },
+    ];
+  }
+
+  if (mode === "archivedEmpty") {
+    return [
+      {
+        actor: "owner",
+        hoursAgo: 1,
+        isRead: false,
+        issueKey: "DEMO-1",
+        message: "DEMO-1 needs a final owner confirmation before the rollout checklist closes.",
+        title: "Owner confirmation requested",
+        type: "issue_assigned",
+      },
+      {
+        actor: "alex",
+        hoursAgo: 3,
+        isRead: false,
+        issueKey: "DEMO-3",
+        message:
+          'Alex left a new launch comment: "Please recheck the acceptance copy before we ship."',
+        title: "Launch copy comment",
+        type: "issue_commented",
+      },
+      {
+        actor: "sarah",
+        hoursAgo: 9,
+        isRead: true,
+        issueKey: "DEMO-5",
+        message: "Sarah mentioned you in the database optimization thread for one final review.",
+        title: "Review mention from Sarah",
+        type: "issue_mentioned",
+      },
+    ];
+  }
+
+  if (mode === "unreadOverflow") {
+    const overflowTypes = [
+      "issue_assigned",
+      "issue_commented",
+      "issue_mentioned",
+      "issue_status_changed",
+    ] as const;
+
+    return Array.from({ length: 100 }, (_, index) => {
+      const issueKey = `DEMO-${(index % 7) + 1}`;
+      const ordinal = index + 1;
+      return {
+        actor: index % 3 === 0 ? "owner" : index % 3 === 1 ? "alex" : "sarah",
+        hoursAgo: (index % 48) + 1,
+        isRead: false,
+        issueKey,
+        message: `Overflow notification ${ordinal} keeps the unread badge pinned above ninety-nine for screenshot review.`,
+        title: `Overflow notification ${ordinal}`,
+        type: overflowTypes[index % overflowTypes.length],
+      };
+    });
+  }
+
+  return [
+    {
+      actor: "owner",
+      hoursAgo: 1,
+      isRead: false,
+      issueKey: "DEMO-1",
+      message: "DEMO-1: Set up CI/CD pipeline was assigned to you",
+      title: "Issue assigned to you",
+      type: "issue_assigned",
+    },
+    {
+      actor: "alex",
+      hoursAgo: 3,
+      isRead: false,
+      issueKey: "DEMO-3",
+      message: 'Alex Rivera commented: "Dashboard layout looks great, merging now."',
+      title: "New comment on DEMO-3",
+      type: "issue_commented",
+    },
+    {
+      actor: "sarah",
+      hoursAgo: 8,
+      isRead: false,
+      issueKey: "DEMO-5",
+      message: "Sarah Kim mentioned you in DEMO-5: Database query optimization",
+      title: "You were mentioned",
+      type: "issue_mentioned",
+    },
+    {
+      actor: "owner",
+      hoursAgo: 24,
+      isRead: true,
+      issueKey: "DEMO-2",
+      message: "DEMO-2: Fix login timeout moved from In Progress to In Review",
+      title: "Issue status updated",
+      type: "issue_status_changed",
+    },
+    {
+      actor: "alex",
+      hoursAgo: 48,
+      isRead: true,
+      issueKey: "DEMO-7",
+      message: "Sprint 1 has started with 5 issues assigned",
+      title: "Sprint started",
+      type: "sprint_started",
+    },
+  ];
+}
+
+function countSeededNotifications(definitions: SeededNotificationDefinition[]) {
+  let archivedCount = 0;
+  let unreadCount = 0;
+  let visibleCount = 0;
+
+  for (const definition of definitions) {
+    if (definition.isArchived) {
+      archivedCount += 1;
+      continue;
+    }
+
+    visibleCount += 1;
+    if (!definition.isRead) {
+      unreadCount += 1;
+    }
+  }
+
+  return { archivedCount, unreadCount, visibleCount };
+}
+
 async function resolveSeededInboxUserId(
   ctx: MutationCtx,
   email: string,
@@ -358,6 +535,66 @@ async function resolveSeededInboxUserId(
     .withIndex("email", (q) => q.eq("email", email))
     .first();
   return user?._id ?? null;
+}
+
+async function resolveSeededScreenshotActors(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    issueIdsByKey?: ReadonlyMap<string, Id<"issues">>;
+  },
+): Promise<
+  | {
+      success: true;
+      actorIds: Record<SeededInboxActorKey, Id<"users">>;
+      ownerUserId: Id<"users">;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const issueIdsByKey = new Map<string, Id<"issues">>(args.issueIdsByKey ?? []);
+  if (!issueIdsByKey.has("DEMO-7")) {
+    const projectIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const issue of projectIssues) {
+      if (!issueIdsByKey.has(issue.key)) {
+        issueIdsByKey.set(issue.key, issue._id);
+      }
+    }
+  }
+
+  const ownerIssueId = issueIdsByKey.get("DEMO-7");
+  const ownerIssue = ownerIssueId ? await ctx.db.get(ownerIssueId) : null;
+  const fallbackMember = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+    .take(1);
+  const ownerUserId = ownerIssue?.reporterId ?? fallbackMember[0]?.userId;
+
+  if (!ownerUserId) {
+    return { success: false, error: "Unable to resolve screenshot owner user" };
+  }
+
+  return {
+    success: true,
+    ownerUserId,
+    actorIds: {
+      owner: ownerUserId,
+      alex:
+        (await resolveSeededInboxUserId(ctx, SCREENSHOT_INBOX_SYNTHETIC_EMAILS.alex)) ??
+        ownerUserId,
+      sarah:
+        (await resolveSeededInboxUserId(ctx, SCREENSHOT_INBOX_SYNTHETIC_EMAILS.sarah)) ??
+        ownerUserId,
+    },
+  };
 }
 
 async function resetSeededProjectInboxIssues(
@@ -403,24 +640,15 @@ async function resetSeededProjectInboxIssues(
     };
   }
 
-  const ownerIssueId = issueIdsByKey.get("DEMO-7");
-  const ownerIssue = ownerIssueId ? await ctx.db.get(ownerIssueId) : null;
-  const fallbackMember = await ctx.db
-    .query("organizationMembers")
-    .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
-    .take(1);
-  const ownerUserId = ownerIssue?.reporterId ?? fallbackMember[0]?.userId;
-  if (!ownerUserId) {
-    return { success: false, error: "Unable to resolve screenshot inbox owner user" };
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+    issueIdsByKey,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
   }
-
-  const actorIds: Record<SeededInboxActorKey, Id<"users">> = {
-    owner: ownerUserId,
-    alex:
-      (await resolveSeededInboxUserId(ctx, SCREENSHOT_INBOX_SYNTHETIC_EMAILS.alex)) ?? ownerUserId,
-    sarah:
-      (await resolveSeededInboxUserId(ctx, SCREENSHOT_INBOX_SYNTHETIC_EMAILS.sarah)) ?? ownerUserId,
-  };
+  const { actorIds, ownerUserId } = screenshotActors;
 
   const existingInboxIssues = await ctx.db
     .query("inboxIssues")
@@ -464,6 +692,93 @@ async function resetSeededProjectInboxIssues(
   return {
     success: true,
     ...countSeededInboxIssues(definitions),
+  };
+}
+
+async function resetSeededNotificationsForUser(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    mode: SeededNotificationsMode;
+    issueIdsByKey?: ReadonlyMap<string, Id<"issues">>;
+  },
+): Promise<{
+  success: boolean;
+  archivedCount?: number;
+  unreadCount?: number;
+  visibleCount?: number;
+  error?: string;
+}> {
+  const definitions = buildSeededNotificationDefinitions(args.mode);
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+    issueIdsByKey: args.issueIdsByKey,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const requiredIssueKeys = new Set(
+    definitions
+      .map((definition) => definition.issueKey)
+      .filter((issueKey): issueKey is string => issueKey !== undefined),
+  );
+  const issueIdsByKey = new Map<string, Id<"issues">>(args.issueIdsByKey ?? []);
+
+  if (issueIdsByKey.size < requiredIssueKeys.size) {
+    const projectIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const issue of projectIssues) {
+      if (requiredIssueKeys.has(issue.key)) {
+        issueIdsByKey.set(issue.key, issue._id);
+      }
+    }
+  }
+
+  const missingIssueKey = [...requiredIssueKeys].find((issueKey) => !issueIdsByKey.has(issueKey));
+  if (missingIssueKey) {
+    return {
+      success: false,
+      error: `seeded notification issue not found for screenshot state: ${missingIssueKey}`,
+    };
+  }
+
+  const existingNotifications = await ctx.db
+    .query("notifications")
+    .withIndex("by_user", (q) => q.eq("userId", screenshotActors.ownerUserId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const notification of existingNotifications) {
+    if (notification.projectId === args.projectId) {
+      await ctx.db.delete(notification._id);
+    }
+  }
+
+  const now = Date.now();
+  for (const definition of definitions) {
+    await ctx.db.insert("notifications", {
+      userId: screenshotActors.ownerUserId,
+      type: definition.type,
+      title: definition.title,
+      message: definition.message,
+      issueId: definition.issueKey ? issueIdsByKey.get(definition.issueKey) : undefined,
+      projectId: args.projectId,
+      actorId: screenshotActors.actorIds[definition.actor],
+      isRead: definition.isRead,
+      isArchived: definition.isArchived,
+      archivedAt: definition.isArchived ? now - definition.hoursAgo * HOUR : undefined,
+    });
+  }
+
+  return {
+    success: true,
+    ...countSeededNotifications(definitions),
   };
 }
 
@@ -3313,6 +3628,130 @@ export const updateProjectInboxStateInternal = internalMutation({
   },
 });
 
+/**
+ * Reconfigure seeded notifications data for screenshot capture.
+ * POST /e2e/configure-notifications-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "inboxEmpty" | "archivedEmpty" | "unreadOverflow",
+ * }
+ */
+export const configureNotificationsStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "inboxEmpty", "archivedEmpty", "unreadOverflow"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid notifications mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateNotificationsStateInternal, {
+      orgSlug,
+      projectKey,
+      mode,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateNotificationsStateInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    mode: v.union(
+      v.literal("default"),
+      v.literal("inboxEmpty"),
+      v.literal("archivedEmpty"),
+      v.literal("unreadOverflow"),
+    ),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    archivedCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    unreadCount: v.optional(v.number()),
+    visibleCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const notificationReset = await resetSeededNotificationsForUser(ctx, {
+      organizationId: organization._id,
+      projectId: project._id,
+      mode: args.mode,
+    });
+
+    if (!notificationReset.success) {
+      return {
+        success: false,
+        error: notificationReset.error ?? `Failed to configure notifications state: ${args.mode}`,
+      };
+    }
+
+    return {
+      success: true,
+      projectId: project._id,
+      visibleCount: notificationReset.visibleCount,
+      archivedCount: notificationReset.archivedCount,
+      unreadCount: notificationReset.unreadCount,
+    };
+  },
+});
+
 export const updateProjectWorkflowStatesInternal = internalMutation({
   args: {
     orgSlug: v.string(),
@@ -5697,63 +6136,17 @@ export const seedScreenshotDataInternal = internalMutation({
       }
     }
 
-    // 10b. Create notifications (idempotent by type + title substring)
-    const notificationDefs: Array<{
-      type: string;
-      title: string;
-      body: string;
-      hoursAgo: number;
-    }> = [
-      {
-        type: "issue_assigned",
-        title: "Issue assigned to you",
-        body: "DEMO-1: Set up CI/CD pipeline was assigned to you",
-        hoursAgo: 1,
-      },
-      {
-        type: "issue_commented",
-        title: "New comment on DEMO-3",
-        body: 'Alex Rivera commented: "Dashboard layout looks great, merging now."',
-        hoursAgo: 3,
-      },
-      {
-        type: "issue_mentioned",
-        title: "You were mentioned",
-        body: "Sarah Kim mentioned you in DEMO-5: Database query optimization",
-        hoursAgo: 8,
-      },
-      {
-        type: "issue_status_changed",
-        title: "Issue status updated",
-        body: "DEMO-2: Fix login timeout moved from In Progress to In Review",
-        hoursAgo: 24,
-      },
-      {
-        type: "sprint_started",
-        title: "Sprint started",
-        body: "Sprint 1 has started with 5 issues assigned",
-        hoursAgo: 48,
-      },
-    ];
-
-    for (const notif of notificationDefs) {
-      const existing = await ctx.db
-        .query("notifications")
-        .withIndex("by_user_active", (q) => q.eq("userId", userId).eq("isDeleted", undefined))
-        .filter((q) => q.eq(q.field("title"), notif.title))
-        .first();
-
-      if (!existing) {
-        await ctx.db.insert("notifications", {
-          userId,
-          type: notif.type,
-          title: notif.title,
-          message: notif.body,
-          isRead: notif.hoursAgo > 12,
-          projectId,
-          actorId: syntheticUserIds[0],
-        });
-      }
+    const notificationsReset = await resetSeededNotificationsForUser(ctx, {
+      organizationId: orgId,
+      projectId,
+      mode: "default",
+      issueIdsByKey: createdIssueIdsByKey,
+    });
+    if (!notificationsReset.success) {
+      return {
+        success: false,
+        error: notificationsReset.error ?? "Failed to seed notifications screenshot state",
+      };
     }
 
     // 10c. Create meetings workspace data with two completed recordings spanning

@@ -408,6 +408,10 @@ const DRY_RUN_PAGES = [
   "filled-notification-snooze-popover",
   "filled-notifications-archived",
   "filled-notifications-filter-active",
+  "filled-notifications-inbox-empty",
+  "filled-notifications-archived-empty",
+  "filled-notifications-mark-all-read-loading",
+  "filled-notifications-unread-overflow",
   "filled-project-tree",
   // Filled states — navigation / shell states
   "filled-sidebar-collapsed",

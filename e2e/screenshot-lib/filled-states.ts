@@ -7,11 +7,12 @@
  */
 
 import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ProjectsPage } from "../pages";
+import { NotificationsPage, ProjectsPage } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
-import { getLocatorAttribute, getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import { getLocatorCount, isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -1475,7 +1476,9 @@ export async function screenshotFilledStates(
 
   async function waitForNotificationsContentReady(): Promise<void> {
     const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    const emptyState = page.getByText(/no notifications/i);
+    const emptyState = page
+      .getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE)
+      .or(page.getByTestId(TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE));
     const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
 
     await expect
@@ -1496,19 +1499,16 @@ export async function screenshotFilledStates(
   }
 
   async function waitForMentionsFilterState(): Promise<void> {
-    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
     const mentionNotification = page.getByText(/you were mentioned/i);
-    const emptyState = page.getByText(/no notifications/i);
+    const emptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
 
     await expect
       .poll(
         async () => {
-          const classes = (await getLocatorAttribute(mentionsFilter, "class", "")) ?? "";
-          const filterActive = classes.includes("bg-ui-bg-secondary");
           const mentionVisible = await isLocatorVisible(mentionNotification);
           const emptyVisible = await isLocatorVisible(emptyState);
 
-          return filterActive && (mentionVisible || emptyVisible) ? "ready" : "pending";
+          return mentionVisible || emptyVisible ? "ready" : "pending";
         },
         {
           timeout: 10000,
@@ -1518,6 +1518,30 @@ export async function screenshotFilledStates(
       .toBe("ready");
 
     await waitForAnimation(page);
+  }
+
+  async function openNotificationSnoozePopoverForCapture(): Promise<void> {
+    const firstNotification = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM).first();
+    const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
+    const snoozeMenuHeading = page.getByText(/snooze until/i);
+
+    await firstNotification.waitFor({ state: "visible", timeout: 5000 });
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await firstNotification.hover();
+      await waitForAnimation(page);
+      await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
+      await snoozeButton.focus();
+      await snoozeButton.press("Enter");
+
+      if (await waitForLocatorVisible(snoozeMenuHeading, 2000)) {
+        return;
+      }
+
+      await page.keyboard.press("Escape");
+    }
+
+    throw new Error("Notification snooze popover did not open");
   }
 
   // Notification popover (bell icon in header)
@@ -1548,17 +1572,7 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-
-      const firstNotification = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM).first();
-      await firstNotification.waitFor({ state: "visible", timeout: 5000 });
-      await firstNotification.hover();
-      await waitForAnimation(page);
-
-      const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
-      await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
-      await snoozeButton.click();
-
-      await page.getByText(/snooze until/i).waitFor({ state: "visible", timeout: 5000 });
+      await openNotificationSnoozePopoverForCapture();
       await waitForAnimation(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-snooze-popover");
@@ -1592,12 +1606,139 @@ export async function screenshotFilledStates(
       });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForNotificationsContentReady();
-      // Click the Mentions filter button
-      const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
-      await mentionsFilter.waitFor({ state: "visible", timeout: 5000 });
-      await mentionsFilter.click();
+      const notificationsPage = new NotificationsPage(page, orgSlug);
+      await notificationsPage.activateMentionsFilter();
       await waitForMentionsFilterState();
       await captureCurrentView(page, p, "notifications-filter-active");
+    });
+  }
+
+  if (shouldCapture(p, "notifications-inbox-empty") && projectKey) {
+    await runCaptureStep("notifications inbox empty", async () => {
+      const configureResult = await testUserService.configureNotificationsState(
+        orgSlug,
+        projectKey,
+        "inboxEmpty",
+      );
+      if (!configureResult.success) {
+        throw new Error(configureResult.error ?? "Failed to configure inbox-empty notifications");
+      }
+
+      try {
+        await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
+        const notificationsPage = new NotificationsPage(page, orgSlug);
+        await notificationsPage.expectInboxEmptyState();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, "notifications-inbox-empty");
+      } finally {
+        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+      }
+    });
+  }
+
+  if (shouldCapture(p, "notifications-archived-empty") && projectKey) {
+    await runCaptureStep("notifications archived empty", async () => {
+      const configureResult = await testUserService.configureNotificationsState(
+        orgSlug,
+        projectKey,
+        "archivedEmpty",
+      );
+      if (!configureResult.success) {
+        throw new Error(
+          configureResult.error ?? "Failed to configure archived-empty notifications",
+        );
+      }
+
+      try {
+        const archivedEmptyPage = await page.context().newPage();
+
+        try {
+          await archivedEmptyPage.addInitScript(() => {
+            window.sessionStorage.setItem("nixelo:e2e:notifications-state", "archived-tab");
+          });
+          await archivedEmptyPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          await waitForExpectedContent(
+            archivedEmptyPage,
+            ROUTES.notifications.build(orgSlug),
+            "notifications",
+          );
+          const notificationsPage = new NotificationsPage(archivedEmptyPage, orgSlug);
+          await waitForScreenshotReady(archivedEmptyPage);
+          await notificationsPage.expectArchivedEmptyState();
+          await captureCurrentView(archivedEmptyPage, p, "notifications-archived-empty");
+        } finally {
+          if (!archivedEmptyPage.isClosed()) {
+            await archivedEmptyPage.close();
+          }
+        }
+      } finally {
+        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+      }
+    });
+  }
+
+  if (shouldCapture(p, "notifications-unread-overflow") && projectKey) {
+    await runCaptureStep("notifications unread overflow", async () => {
+      const configureResult = await testUserService.configureNotificationsState(
+        orgSlug,
+        projectKey,
+        "unreadOverflow",
+      );
+      if (!configureResult.success) {
+        throw new Error(
+          configureResult.error ?? "Failed to configure unread-overflow notifications",
+        );
+      }
+
+      try {
+        await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
+        const notificationsPage = new NotificationsPage(page, orgSlug);
+        await notificationsPage.expectUnreadOverflowBadge();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, "notifications-unread-overflow");
+      } finally {
+        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+      }
+    });
+  }
+
+  if (shouldCapture(p, "notifications-mark-all-read-loading")) {
+    await runCaptureStep("notifications mark-all-read loading", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ = true;
+        });
+        await loadingPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(
+          loadingPage,
+          ROUTES.notifications.build(orgSlug),
+          "notifications",
+        );
+        const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
+        await expect(notificationsPage.markAllReadButton).toHaveAttribute("aria-busy", "true");
+        await waitForScreenshotReady(loadingPage);
+        await captureCurrentView(loadingPage, p, "notifications-mark-all-read-loading");
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
     });
   }
 }

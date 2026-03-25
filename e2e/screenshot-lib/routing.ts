@@ -58,6 +58,10 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-notification-snooze-popover$/, "21-notifications", "-snooze-popover"],
   [/^filled-notifications-archived$/, "21-notifications", "-archived"],
   [/^filled-notifications-filter-active$/, "21-notifications", "-filter-active"],
+  [/^filled-notifications-inbox-empty$/, "21-notifications", "-inbox-empty"],
+  [/^filled-notifications-archived-empty$/, "21-notifications", "-archived-empty"],
+  [/^filled-notifications-mark-all-read-loading$/, "21-notifications", "-mark-all-read-loading"],
+  [/^filled-notifications-unread-overflow$/, "21-notifications", "-unread-overflow"],
   // Documents
   [/^empty-documents-templates$/, "09-documents", "-templates-empty"],
   [/^filled-documents-templates$/, "09-documents", "-templates"],

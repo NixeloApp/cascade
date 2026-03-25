@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/notifications`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-23
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -37,16 +37,13 @@ category filtering, bulk actions, and an archive tab that the popover does not.
 
 | State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
 |-------|-------------|---------------|--------------|--------------|
-| Filter active | `desktop-dark-filter-active.png` | — | `tablet-light-filter-active.png` | `mobile-light-filter-active.png` |
-| Archived tab | — | `desktop-light-archived.png` | — | `mobile-light-archived.png` |
+| Filter active | `desktop-dark-filter-active.png` | `desktop-light-filter-active.png` | `tablet-light-filter-active.png` | `mobile-light-filter-active.png` |
+| Archived tab | `desktop-dark-archived.png` | `desktop-light-archived.png` | `tablet-light-archived.png` | `mobile-light-archived.png` |
 | Snooze popover | `desktop-dark-snooze-popover.png` | `desktop-light-snooze-popover.png` | `tablet-light-snooze-popover.png` | `mobile-light-snooze-popover.png` |
-
-### Missing captures (should be added)
-
-- Empty inbox state ("You're all caught up")
-- Empty archive state
-- Bulk "Mark all read" in progress (loading state)
-- Unread badge showing 99+
+| Inbox empty state | `desktop-dark-inbox-empty.png` | `desktop-light-inbox-empty.png` | `tablet-light-inbox-empty.png` | `mobile-light-inbox-empty.png` |
+| Archived empty state | `desktop-dark-archived-empty.png` | `desktop-light-archived-empty.png` | `tablet-light-archived-empty.png` | `mobile-light-archived-empty.png` |
+| Mark all read loading | `desktop-dark-mark-all-read-loading.png` | `desktop-light-mark-all-read-loading.png` | `tablet-light-mark-all-read-loading.png` | `mobile-light-mark-all-read-loading.png` |
+| 99+ unread badge | `desktop-dark-unread-overflow.png` | `desktop-light-unread-overflow.png` | `tablet-light-unread-overflow.png` | `mobile-light-unread-overflow.png` |
 
 ---
 
@@ -109,6 +106,7 @@ category filtering, bulk actions, and an archive tab that the popover does not.
   - "Mark all read" button (ghost variant) with CheckCheck icon — only when unread > 0
   - "Archive all" button (ghost variant) with Archive icon — only when notifications > 0
 - Both actions show loading spinners during execution. Disabled while any bulk action runs.
+- E2E route override can force the mark-all-read loading state without mutating live UI flow.
 
 ### 3. Tab bar and filters
 
@@ -119,6 +117,7 @@ category filtering, bulk actions, and an archive tab that the popover does not.
   - Each maps to backend notification type(s) via `FILTER_TYPE_MAP`
   - "All" sends no type filter. Others send specific types as query args.
   - Uses `chrome="filter"` / `chrome="filterActive"` for selected state.
+- E2E screenshot bootstrap can force the archived tab on first render for deterministic archived-empty capture.
 
 ### 4. Notification list (inbox)
 
@@ -132,13 +131,17 @@ category filtering, bulk actions, and an archive tab that the popover does not.
   - Action buttons: Mark as read, Archive, overflow (snooze, delete)
 - Unread items: bold text, unread indicator dot
 - Snoozed items: snooze icon with "snoozed until" tooltip
+- Empty inbox states now branch intentionally:
+  - active filter with no matches → "No matching notifications" + clear-filter action
+  - truly empty inbox with archived history → "You're all caught up" + view-archived action
+  - truly empty inbox with no archive → passive empty state only
 
 ### 5. Notification list (archived)
 
 - Flat list (no date grouping)
 - Same `NotificationItem` component but with "Unarchive" instead of "Archive"
 - No snooze action in archived tab
-- Empty state: "No archived notifications" with Archive icon
+- Empty state: "No archived notifications" with Archive icon and a "View inbox" recovery action when active inbox items exist
 
 ### 6. Offline support
 
@@ -153,16 +156,16 @@ category filtering, bulk actions, and an archive tab that the popover does not.
 ### States the current spec explicitly covers
 
 - Filled inbox with date groups (4 viewports, 2 themes)
-- Filter active showing subset (3 viewports)
-- Archived tab with items (2 viewports)
+- Filter active showing subset (4 viewports)
+- Archived tab with items (4 viewports)
 - Snooze popover open (4 viewports)
+- Inbox empty ("You're all caught up") with recovery action when archive exists
+- Archived empty state with recovery action when inbox still has items
+- Bulk "Mark all read" loading state
+- 99+ unread badge overflow
 
 ### States intentionally not over-specified here
 
-- Empty inbox ("You're all caught up")
-- Empty archive
-- Bulk action loading states
-- 99+ unread badge overflow
 - Individual notification hover states
 - Snooze duration picker interaction
 
@@ -177,6 +180,7 @@ category filtering, bulk actions, and an archive tab that the popover does not.
 | Offline resilience | Mark-as-read works offline. Users don't lose read state during blips. |
 | Bulk actions | Mark all read and archive all are one-click operations with loading feedback. |
 | Tab separation | Inbox vs archived is clean. No mixing of active and resolved items. |
+| Empty-state recovery | Empty inbox/archive states now point users back to the next useful place instead of dead-ending. |
 
 ---
 
@@ -187,7 +191,7 @@ category filtering, bulk actions, and an archive tab that the popover does not.
 | ~~1~~ | ~~Large initial page size, no pagination~~ **Fixed** — reduced to 25 items with "Load more" button (loads 25 more each click) | ~~performance~~ | ~~MEDIUM~~ |
 | ~~2~~ | ~~Archived notifications load all at once~~ **Fixed** — converted to `fetchPaginatedQuery` with `paginationOpts`; frontend uses `usePaginatedQuery` with 25 items initially and "Load more archived" button | ~~performance~~ | ~~MEDIUM~~ |
 | 3 | No search within notifications — must use filter pills or scan visually. | UX | LOW |
-| 4 | Snooze duration options are in a popover but the interaction is not captured in the canonical screenshots. | screenshot gap | LOW |
+| ~~4~~ | ~~Snooze duration options are in a popover but the interaction is not captured in the canonical screenshots.~~ **Fixed** — canonical-plus-state matrix now covers snooze popover, archive tab, filter state, both empty tabs, unread overflow, and mark-all-read loading across the reviewed viewport set | ~~screenshot gap~~ | ~~LOW~~ |
 
 ---
 
@@ -195,11 +199,13 @@ category filtering, bulk actions, and an archive tab that the popover does not.
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `src/routes/_auth/_app/$orgSlug/notifications.tsx` | 380 | Route: layout, tabs, filters, date grouping, bulk actions |
+| `src/routes/_auth/_app/$orgSlug/notifications.tsx` | 512 | Route: layout, tabs, filters, date grouping, bulk actions, empty-state recovery, E2E overrides |
 | `src/components/Notifications/NotificationItem.tsx` | 279 | Single notification row with actions |
 | `src/components/Notifications/NotificationCenter.tsx` | 316 | Header popover version (not used on this page) |
 | `src/hooks/useOfflineNotificationMarkAsRead.ts` | — | Offline-capable mark-as-read hook |
 | `convex/notifications.ts` | — | Backend: list, markAsRead, archive, snooze, delete |
+| `convex/e2e.ts` | — | Deterministic seeded notification screenshot states |
+| `e2e/pages/notifications.page.ts` | 73 | Notification route screenshot/page-object selectors |
 | `e2e/screenshot-pages.ts` | — | `empty-notifications` + `filled-notifications` specs |
 
 ---
@@ -219,6 +225,7 @@ category filtering, bulk actions, and an archive tab that the popover does not.
 ## Summary
 
 The notifications page is a mature, well-structured notification hub. Date grouping, category
-filtering, bulk actions, offline mark-as-read, and tab separation all work as intended. The
-main gaps are pagination for the archived tab and the lack of search within notifications.
-The page uses standard layout primitives and does not need shell or composition rework.
+filtering, bulk actions, offline mark-as-read, tab separation, and empty-state recovery all work
+as intended. The screenshot/spec matrix now covers the route’s important tab, popover, empty,
+loading, and overflow states across desktop/tablet/mobile. The main remaining product gap is the
+lack of search within notifications, not route credibility or screenshot depth.

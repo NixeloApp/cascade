@@ -81,11 +81,25 @@ export interface DeleteSeededProjectIssueResult {
 }
 
 export type ProjectInboxScreenshotState = "default" | "openEmpty" | "closedEmpty";
+export type NotificationsScreenshotState =
+  | "default"
+  | "inboxEmpty"
+  | "archivedEmpty"
+  | "unreadOverflow";
 
 export interface ConfigureProjectInboxStateResult {
   success: boolean;
   closedCount?: number;
   openCount?: number;
+  projectId?: string;
+  error?: string;
+}
+
+export interface ConfigureNotificationsStateResult {
+  success: boolean;
+  archivedCount?: number;
+  unreadCount?: number;
+  visibleCount?: number;
   projectId?: string;
   error?: string;
 }
@@ -470,6 +484,30 @@ export class TestUserService {
     } catch (error) {
       console.warn(
         `  ⚠️ Failed to configure project inbox state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded notifications data for screenshot capture.
+   */
+  async configureNotificationsState(
+    orgSlug: string,
+    projectKey: string,
+    mode: NotificationsScreenshotState,
+  ): Promise<ConfigureNotificationsStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureNotificationsState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure notifications state ${mode} for ${projectKey} in ${orgSlug}:`,
         error,
       );
       return { success: false, error: String(error) };

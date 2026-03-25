@@ -1,4 +1,5 @@
-import type { Locator } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 
 /**
  * Explicit fallback reads for Playwright locator state in polling/recovery
@@ -80,4 +81,11 @@ export async function waitForLocatorVisible(locator: Locator, timeout: number): 
   } catch {
     return false;
   }
+}
+
+export function getPageHeaderOrGenericEmptyState(page: Page): Locator {
+  return page
+    .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
+    .or(page.getByText(/no .+yet|nothing here yet/i))
+    .first();
 }

@@ -19,7 +19,11 @@ import { ProjectsPage } from "../pages/projects.page";
 import { RoadmapPage } from "../pages/roadmap.page";
 import { TeamPage } from "../pages/team.page";
 import { WorkspacesPage } from "../pages/workspaces.page";
-import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import {
+  getLocatorCount,
+  getPageHeaderOrGenericEmptyState,
+  isLocatorVisible,
+} from "../utils/locator-state";
 import {
   waitForAnimation,
   waitForDashboardReady,
@@ -708,9 +712,11 @@ export async function waitForExpectedContent(
   if (URL.notifications.test(url) || name === "notifications") {
     await waitForDashboardReady(page);
     const headerTitle = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
+    const archivedTab = page.getByRole("tab", { name: /archived/i });
     const inboxTab = page.getByRole("tab", { name: /inbox/i });
+    const archivedEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE);
+    const inboxEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
     const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    const emptyState = page.getByText(/no notifications/i);
     const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
     await expect
       .poll(
@@ -723,9 +729,17 @@ export async function waitForExpectedContent(
       .poll(
         async () => {
           const mentionsVisible = await isLocatorVisible(mentionsFilter);
+          const archivedSelected = (await archivedTab.getAttribute("aria-selected")) === "true";
           const itemCount = await getLocatorCount(notificationItems);
-          const emptyVisible = await isLocatorVisible(emptyState);
-          return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
+          const inboxEmptyVisible = await isLocatorVisible(inboxEmptyState);
+          const archivedEmptyVisible = await isLocatorVisible(archivedEmptyState);
+          if (mentionsVisible && (itemCount > 0 || inboxEmptyVisible)) {
+            return "ready";
+          }
+          if (archivedSelected && (itemCount > 0 || archivedEmptyVisible)) {
+            return "ready";
+          }
+          return "pending";
         },
         { timeout: 10000 },
       )
@@ -827,10 +841,6 @@ export async function waitForExpectedContent(
   // workspace wiki, team settings, team wiki, document templates,
   // project activity, project timesheet, project sprints, project
   // billing, project settings, project members
-  await page
-    .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-    .or(page.getByText(/no .+yet|nothing here yet/i))
-    .first()
-    .waitFor({ state: "visible", timeout: 20000 });
+  await getPageHeaderOrGenericEmptyState(page).waitFor({ state: "visible", timeout: 20000 });
   await waitForSpinnersHidden(page);
 }
