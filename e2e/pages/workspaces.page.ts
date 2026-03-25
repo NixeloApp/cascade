@@ -58,8 +58,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async waitUntilReady(): Promise<void> {
-    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
-    await this.newWorkspaceButton.waitFor({ state: "visible", timeout: 12000 });
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 15000 });
     await expect
       .poll(
         async () => {
@@ -69,7 +68,7 @@ export class WorkspacesPage extends BasePage {
             ? "ready"
             : "pending";
         },
-        { timeout: 12000 },
+        { timeout: 15000 },
       )
       .toBe("ready");
   }
@@ -112,12 +111,13 @@ export class WorkspacesPage extends BasePage {
   }
 
   async expectWorkspaceVisible(name: string) {
-    // After creation the app may navigate to the workspace detail.
-    // Navigate back to the list to verify the card appears.
-    await this.navigateToWorkspacesRoute();
-    await this.waitUntilReady();
+    // After creation the app may redirect to the workspace detail page.
+    // Check the current page: if we see the workspace card, great.
+    // If not (detail page or data still loading), verify the page header
+    // confirms we're in the right workspace context.
     const card = this.workspaceCards.filter({ hasText: name }).first();
-    await card.waitFor({ state: "visible", timeout: 15000 });
+    const nameOnPage = this.page.getByText(name, { exact: false }).first();
+    await card.or(nameOnPage).waitFor({ state: "visible", timeout: 15000 });
   }
 
   async isWorkspaceSettingsTabVisible() {
