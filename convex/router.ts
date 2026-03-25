@@ -16,6 +16,7 @@ import {
   cleanupRbacProjectEndpoint,
   cleanupTestUsersEndpoint,
   configureNotificationsStateEndpoint,
+  configureProjectAnalyticsStateEndpoint,
   configureProjectInboxStateEndpoint,
   createTestUserEndpoint,
   debugVerifyPasswordEndpoint,
@@ -370,6 +371,12 @@ http.route({
   path: "/e2e/configure-project-inbox-state",
   method: "POST",
   handler: configureProjectInboxStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-project-analytics-state",
+  method: "POST",
+  handler: configureProjectAnalyticsStateEndpoint,
 });
 
 http.route({

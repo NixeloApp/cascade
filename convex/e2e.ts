@@ -28,7 +28,7 @@ import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { syncProjectIssueStats } from "./lib/projectIssueStats";
-import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { notDeleted, restoreFields, softDeleteFields } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
 import { encryptMailboxTokensForStorage } from "./outreach/mailboxTokens";
 import { type CalendarEventColor, otpCodeTypes, workflowCategories } from "./validators";
@@ -41,6 +41,7 @@ import { api } from "./_generated/api";
 type ScreenshotDocumentNode = Record<string, unknown>;
 type SeededInboxActorKey = "owner" | "alex" | "sarah";
 type SeededProjectInboxMode = "default" | "openEmpty" | "closedEmpty";
+type SeededProjectAnalyticsMode = "default" | "sparseData" | "noActivity";
 type SeededNotificationsMode = "default" | "inboxEmpty" | "archivedEmpty" | "unreadOverflow";
 
 interface SeededInboxDefinition {
@@ -65,6 +66,36 @@ interface SeededNotificationDefinition {
   message: string;
   title: string;
   type: string;
+}
+
+interface SeededAnalyticsSprintDefinition {
+  endDate: number;
+  goal: string;
+  name: string;
+  startDate: number;
+  status: Doc<"sprints">["status"];
+}
+
+interface SeededAnalyticsIssueDefinition {
+  assignedTo: SeededInboxActorKey | null;
+  dueDate?: number;
+  key: string;
+  priority: Doc<"issues">["priority"];
+  sprintName?: string;
+  status: string;
+  storyPoints?: number;
+  title: string;
+  type: Doc<"issues">["type"];
+}
+
+interface SeededAnalyticsActivityDefinition {
+  action: Doc<"issueActivity">["action"];
+  actor: SeededInboxActorKey;
+  field?: string;
+  issueKey: string;
+  newValue?: string;
+  oldValue?: string;
+  timestamp: number;
 }
 
 function screenshotText(text: string): ScreenshotDocumentNode {
@@ -194,6 +225,194 @@ const SCREENSHOT_INBOX_SYNTHETIC_EMAILS = {
   alex: "alex-rivera-screenshots@inbox.mailtrap.io",
   sarah: "sarah-kim-screenshots@inbox.mailtrap.io",
 } as const;
+
+function buildSeededProjectAnalyticsSprintDefinitions(
+  mode: SeededProjectAnalyticsMode,
+  now: number,
+): SeededAnalyticsSprintDefinition[] {
+  if (mode === "sparseData") {
+    return [
+      {
+        endDate: now + 4 * DAY,
+        goal: "Tighten the launch checklist before the next release review.",
+        name: "Sprint 1",
+        startDate: now - 3 * DAY,
+        status: "active",
+      },
+    ];
+  }
+
+  return [
+    {
+      endDate: now + WEEK,
+      goal: "Launch MVP features",
+      name: "Sprint 1",
+      startDate: now - WEEK,
+      status: "active",
+    },
+    {
+      endDate: now - 2 * WEEK,
+      goal: "Close delivery blockers before rollout week.",
+      name: "Launch Prep",
+      startDate: now - 3 * WEEK,
+      status: "completed",
+    },
+    {
+      endDate: now - 4 * WEEK,
+      goal: "Stabilize the project shell and baseline workflows.",
+      name: "Foundation",
+      startDate: now - 5 * WEEK,
+      status: "completed",
+    },
+  ];
+}
+
+function buildSeededProjectAnalyticsIssueDefinitions(
+  mode: SeededProjectAnalyticsMode,
+  now: number,
+): SeededAnalyticsIssueDefinition[] {
+  if (mode === "sparseData") {
+    return [
+      {
+        assignedTo: null,
+        dueDate: now + DAY,
+        key: "DEMO-2",
+        priority: "highest",
+        sprintName: "Sprint 1",
+        status: "in-progress",
+        title: "Fix login timeout on mobile",
+        type: "bug",
+      },
+      {
+        assignedTo: null,
+        dueDate: now + 4 * DAY,
+        key: "DEMO-4",
+        priority: "medium",
+        sprintName: "Sprint 1",
+        status: "todo",
+        title: "Add dark mode support",
+        type: "story",
+      },
+      {
+        assignedTo: null,
+        dueDate: now + 6 * DAY,
+        key: "DEMO-7",
+        priority: "high",
+        status: "todo",
+        title: "Improve release checklist",
+        type: "task",
+      },
+    ];
+  }
+
+  return [
+    {
+      assignedTo: "owner",
+      dueDate: now - 2 * DAY,
+      key: "DEMO-1",
+      priority: "high",
+      sprintName: "Launch Prep",
+      status: "done",
+      storyPoints: 8,
+      title: "Set up CI/CD pipeline",
+      type: "task",
+    },
+    {
+      assignedTo: "alex",
+      dueDate: now + DAY,
+      key: "DEMO-2",
+      priority: "highest",
+      sprintName: "Sprint 1",
+      status: "in-progress",
+      title: "Fix login timeout on mobile",
+      type: "bug",
+    },
+    {
+      assignedTo: "sarah",
+      dueDate: now + 3 * DAY,
+      key: "DEMO-3",
+      priority: "medium",
+      sprintName: "Sprint 1",
+      status: "in-review",
+      title: "Design new dashboard layout",
+      type: "story",
+    },
+    {
+      assignedTo: null,
+      dueDate: now + 7 * DAY,
+      key: "DEMO-4",
+      priority: "medium",
+      sprintName: "Sprint 1",
+      status: "todo",
+      title: "Add dark mode support",
+      type: "story",
+    },
+    {
+      assignedTo: "owner",
+      key: "DEMO-5",
+      priority: "high",
+      sprintName: "Foundation",
+      status: "done",
+      storyPoints: 5,
+      title: "Database query optimization",
+      type: "task",
+    },
+    {
+      assignedTo: null,
+      key: "DEMO-6",
+      priority: "low",
+      status: "todo",
+      title: "User onboarding flow",
+      type: "epic",
+    },
+    {
+      assignedTo: "owner",
+      dueDate: now + 2 * DAY,
+      key: "DEMO-7",
+      priority: "high",
+      sprintName: "Sprint 1",
+      status: "todo",
+      title: "Improve release checklist",
+      type: "task",
+    },
+  ];
+}
+
+function buildSeededProjectAnalyticsActivityDefinitions(
+  mode: SeededProjectAnalyticsMode,
+  now: number,
+): SeededAnalyticsActivityDefinition[] {
+  if (mode !== "default") {
+    return [];
+  }
+
+  return [
+    {
+      action: "updated",
+      actor: "alex",
+      field: "status",
+      issueKey: "DEMO-2",
+      newValue: "In Progress",
+      oldValue: "Todo",
+      timestamp: now - 45 * MINUTE,
+    },
+    {
+      action: "commented",
+      actor: "sarah",
+      issueKey: "DEMO-3",
+      timestamp: now - 2 * HOUR,
+    },
+    {
+      action: "updated",
+      actor: "owner",
+      field: "priority",
+      issueKey: "DEMO-7",
+      newValue: "High",
+      oldValue: "Medium",
+      timestamp: now - 5 * HOUR,
+    },
+  ];
+}
 
 function buildSeededProjectInboxDefinitions(
   mode: SeededProjectInboxMode,
@@ -779,6 +998,217 @@ async function resetSeededNotificationsForUser(
   return {
     success: true,
     ...countSeededNotifications(definitions),
+  };
+}
+
+async function resetSeededProjectAnalyticsState(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    mode: SeededProjectAnalyticsMode;
+  },
+): Promise<{
+  success: boolean;
+  activityCount?: number;
+  issueCount?: number;
+  projectId?: Id<"projects">;
+  sprintCount?: number;
+  error?: string;
+}> {
+  const now = Date.now();
+  const project = await ctx.db.get(args.projectId);
+  if (!project) {
+    return { success: false, error: `project not found: ${args.projectId}` };
+  }
+
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const { actorIds, ownerUserId } = screenshotActors;
+  const sprintDefinitions = buildSeededProjectAnalyticsSprintDefinitions(args.mode, now);
+  const issueDefinitions = buildSeededProjectAnalyticsIssueDefinitions(args.mode, now);
+  const activityDefinitions = buildSeededProjectAnalyticsActivityDefinitions(args.mode, now);
+  const desiredSprintNames = new Set(sprintDefinitions.map((definition) => definition.name));
+  const desiredIssueKeys = new Set(issueDefinitions.map((definition) => definition.key));
+
+  const existingSprints = await ctx.db
+    .query("sprints")
+    .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+  const existingSprintsByName = new Map(existingSprints.map((sprint) => [sprint.name, sprint]));
+  const sprintIdsByName = new Map<string, Id<"sprints">>();
+
+  for (const definition of sprintDefinitions) {
+    const existingSprint = existingSprintsByName.get(definition.name);
+
+    if (existingSprint) {
+      await ctx.db.patch(existingSprint._id, {
+        ...restoreFields(),
+        endDate: definition.endDate,
+        goal: definition.goal,
+        name: definition.name,
+        projectId: args.projectId,
+        startDate: definition.startDate,
+        status: definition.status,
+        updatedAt: now,
+      });
+      sprintIdsByName.set(definition.name, existingSprint._id);
+      continue;
+    }
+
+    const sprintId = await ctx.db.insert("sprints", {
+      createdBy: ownerUserId,
+      endDate: definition.endDate,
+      goal: definition.goal,
+      name: definition.name,
+      projectId: args.projectId,
+      startDate: definition.startDate,
+      status: definition.status,
+      updatedAt: now,
+    });
+    sprintIdsByName.set(definition.name, sprintId);
+  }
+
+  for (const sprint of existingSprints) {
+    if (desiredSprintNames.has(sprint.name)) {
+      continue;
+    }
+
+    await ctx.db.delete(sprint._id);
+  }
+
+  const existingIssues = await ctx.db
+    .query("issues")
+    .withIndex("by_project_deleted", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+  const existingIssuesByKey = new Map(existingIssues.map((issue) => [issue.key, issue]));
+  const issueIdsByKey = new Map<string, Id<"issues">>();
+
+  for (let index = 0; index < issueDefinitions.length; index += 1) {
+    const definition = issueDefinitions[index];
+    const existingIssue = existingIssuesByKey.get(definition.key);
+    const assigneeId = definition.assignedTo === null ? undefined : actorIds[definition.assignedTo];
+    const sprintId = definition.sprintName ? sprintIdsByName.get(definition.sprintName) : undefined;
+    const updatedAt =
+      activityDefinitions.find((activity) => activity.issueKey === definition.key)?.timestamp ??
+      now;
+
+    if (definition.sprintName && !sprintId) {
+      return {
+        success: false,
+        error: `missing sprint "${definition.sprintName}" for analytics state ${args.mode}`,
+      };
+    }
+
+    if (existingIssue) {
+      await ctx.db.patch(existingIssue._id, {
+        ...restoreFields(),
+        assigneeId,
+        attachments: [],
+        dueDate: definition.dueDate,
+        labels: [],
+        linkedDocuments: [],
+        order: index,
+        organizationId: args.organizationId,
+        priority: definition.priority,
+        projectId: args.projectId,
+        reporterId: ownerUserId,
+        searchContent: definition.title,
+        sprintId,
+        status: definition.status,
+        storyPoints: definition.storyPoints,
+        teamId: project.teamId,
+        title: definition.title,
+        type: definition.type,
+        updatedAt,
+        version: existingIssue.version ?? 1,
+        workspaceId: project.workspaceId,
+      });
+      issueIdsByKey.set(definition.key, existingIssue._id);
+      continue;
+    }
+
+    const issueId = await ctx.db.insert("issues", {
+      assigneeId,
+      attachments: [],
+      dueDate: definition.dueDate,
+      key: definition.key,
+      labels: [],
+      linkedDocuments: [],
+      order: index,
+      organizationId: args.organizationId,
+      priority: definition.priority,
+      projectId: args.projectId,
+      reporterId: ownerUserId,
+      searchContent: definition.title,
+      sprintId,
+      status: definition.status,
+      storyPoints: definition.storyPoints,
+      teamId: project.teamId,
+      title: definition.title,
+      type: definition.type,
+      updatedAt,
+      version: 1,
+      workspaceId: project.workspaceId,
+    });
+    issueIdsByKey.set(definition.key, issueId);
+  }
+
+  for (const issue of existingIssues) {
+    if (desiredIssueKeys.has(issue.key)) {
+      continue;
+    }
+
+    await ctx.db.patch(issue._id, {
+      ...softDeleteFields(ownerUserId),
+      updatedAt: now,
+    });
+  }
+
+  for (const issue of existingIssues) {
+    const activities = await ctx.db
+      .query("issueActivity")
+      .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const activity of activities) {
+      await ctx.db.delete(activity._id);
+    }
+  }
+
+  for (const activity of activityDefinitions) {
+    const issueId = issueIdsByKey.get(activity.issueKey);
+    if (!issueId) {
+      return {
+        success: false,
+        error: `missing issue "${activity.issueKey}" for analytics activity state ${args.mode}`,
+      };
+    }
+
+    await ctx.db.insert("issueActivity", {
+      action: activity.action,
+      field: activity.field,
+      issueId,
+      newValue: activity.newValue,
+      oldValue: activity.oldValue,
+      userId: actorIds[activity.actor],
+    });
+  }
+
+  await syncProjectIssueStats(ctx, args.projectId);
+
+  return {
+    success: true,
+    activityCount: activityDefinitions.length,
+    issueCount: issueDefinitions.length,
+    projectId: args.projectId,
+    sprintCount: sprintDefinitions.length,
   };
 }
 
@@ -3625,6 +4055,119 @@ export const updateProjectInboxStateInternal = internalMutation({
       openCount: inboxReset.openCount,
       closedCount: inboxReset.closedCount,
     };
+  },
+});
+
+/**
+ * Reconfigure a seeded project's analytics data for screenshot capture.
+ * POST /e2e/configure-project-analytics-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "sparseData" | "noActivity",
+ * }
+ */
+export const configureProjectAnalyticsStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "sparseData", "noActivity"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid project analytics mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectAnalyticsStateInternal, {
+      mode,
+      orgSlug,
+      projectKey,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectAnalyticsStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("sparseData"), v.literal("noActivity")),
+    orgSlug: v.string(),
+    projectKey: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    activityCount: v.optional(v.number()),
+    issueCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    sprintCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const analyticsReset = await resetSeededProjectAnalyticsState(ctx, {
+      mode: args.mode,
+      organizationId: organization._id,
+      projectId: project._id,
+    });
+
+    if (!analyticsReset.success) {
+      return {
+        success: false,
+        error: analyticsReset.error ?? `Failed to configure project analytics state: ${args.mode}`,
+      };
+    }
+
+    return analyticsReset;
   },
 });
 

@@ -107,6 +107,8 @@ export class ProjectsPage extends BasePage {
   readonly analyticsIssuesByTypeChart: Locator;
   readonly analyticsIssuesByPriorityChart: Locator;
   readonly analyticsTeamVelocityChart: Locator;
+  readonly analyticsAssigneeChart: Locator;
+  readonly analyticsRecentActivity: Locator;
   readonly analyticsNoCompletedSprintsMessage: Locator;
   readonly roadmapViewToggle: Locator;
   readonly roadmapEpicFilter: Locator;
@@ -246,6 +248,8 @@ export class ProjectsPage extends BasePage {
     this.analyticsIssuesByTypeChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_TYPE);
     this.analyticsIssuesByPriorityChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_PRIORITY);
     this.analyticsTeamVelocityChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_VELOCITY);
+    this.analyticsAssigneeChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_ASSIGNEE);
+    this.analyticsRecentActivity = page.getByTestId(TEST_IDS.ANALYTICS.RECENT_ACTIVITY);
     this.analyticsNoCompletedSprintsMessage = page.getByText("No completed sprints yet");
     this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
     this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });
@@ -703,6 +707,19 @@ export class ProjectsPage extends BasePage {
     await expect(this.analyticsIssuesByPriorityChart).toBeVisible();
     await this.analyticsTeamVelocityChart.scrollIntoViewIfNeeded();
     await expect(this.analyticsTeamVelocityChart).toBeVisible();
+  }
+
+  async expectAnalyticsSparseDataState() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsAssigneeChart).toContainText("No assigned work yet");
+    await expect(this.analyticsTeamVelocityChart).toContainText("No sprint history yet");
+    await expect(this.analyticsRecentActivity).toContainText("No recent activity yet");
+  }
+
+  async expectAnalyticsNoActivityState() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsRecentActivity).toContainText("No recent activity yet");
+    await expect(this.analyticsAssigneeChart).not.toContainText("No assigned work yet");
   }
 
   async getAnalyticsTotalIssuesCount() {

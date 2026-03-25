@@ -311,7 +311,6 @@ export async function screenshotFilledStates(
       "roadmap",
       "calendar",
       "activity",
-      "analytics",
       "billing",
       "timesheet",
       "settings",
@@ -326,6 +325,129 @@ export async function screenshotFilledStates(
         `project-${normalizedProjectKey}-${tab}`,
         `/${orgSlug}/projects/${projectKey}/${tab}`,
       );
+    }
+
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-analytics`,
+        `project-${normalizedProjectKey}-analytics-sparse-data`,
+        `project-${normalizedProjectKey}-analytics-no-activity`,
+      ])
+    ) {
+      await runCaptureStep("project analytics states", async () => {
+        const analyticsUrl = ROUTES.projects.analytics.build(orgSlug, projectKey);
+
+        try {
+          const defaultStateResult = await testUserService.configureProjectAnalyticsState(
+            orgSlug,
+            projectKey,
+            "default",
+          );
+          if (!defaultStateResult.success) {
+            throw new Error(
+              defaultStateResult.error ?? "Failed to configure default analytics screenshot state",
+            );
+          }
+
+          if (shouldCapture(p, `project-${normalizedProjectKey}-analytics`)) {
+            await page.goto(`${BASE_URL}${analyticsUrl}`, {
+              waitUntil: "domcontentloaded",
+              timeout: 15000,
+            });
+            await waitForExpectedContent(
+              page,
+              analyticsUrl,
+              `project-${normalizedProjectKey}-analytics`,
+            );
+            const projectsPage = new ProjectsPage(page, orgSlug);
+            await projectsPage.expectAnalyticsChartsVisible();
+            await expect(projectsPage.analyticsRecentActivity).not.toContainText(
+              "No recent activity yet",
+            );
+            await waitForScreenshotReady(page);
+            await captureCurrentView(page, p, `project-${normalizedProjectKey}-analytics`);
+          }
+
+          if (shouldCapture(p, `project-${normalizedProjectKey}-analytics-sparse-data`)) {
+            const sparseStateResult = await testUserService.configureProjectAnalyticsState(
+              orgSlug,
+              projectKey,
+              "sparseData",
+            );
+            if (!sparseStateResult.success) {
+              throw new Error(
+                sparseStateResult.error ?? "Failed to configure sparse analytics screenshot state",
+              );
+            }
+
+            const sparsePage = await page.context().newPage();
+            try {
+              await sparsePage.goto(`${BASE_URL}${analyticsUrl}`, {
+                waitUntil: "domcontentloaded",
+                timeout: 15000,
+              });
+              await waitForExpectedContent(
+                sparsePage,
+                analyticsUrl,
+                `project-${normalizedProjectKey}-analytics`,
+              );
+              const projectsPage = new ProjectsPage(sparsePage, orgSlug);
+              await projectsPage.expectAnalyticsSparseDataState();
+              await waitForScreenshotReady(sparsePage);
+              await captureCurrentView(
+                sparsePage,
+                p,
+                `project-${normalizedProjectKey}-analytics-sparse-data`,
+              );
+            } finally {
+              if (!sparsePage.isClosed()) {
+                await sparsePage.close();
+              }
+            }
+          }
+
+          if (shouldCapture(p, `project-${normalizedProjectKey}-analytics-no-activity`)) {
+            const noActivityStateResult = await testUserService.configureProjectAnalyticsState(
+              orgSlug,
+              projectKey,
+              "noActivity",
+            );
+            if (!noActivityStateResult.success) {
+              throw new Error(
+                noActivityStateResult.error ??
+                  "Failed to configure no-activity analytics screenshot state",
+              );
+            }
+
+            const noActivityPage = await page.context().newPage();
+            try {
+              await noActivityPage.goto(`${BASE_URL}${analyticsUrl}`, {
+                waitUntil: "domcontentloaded",
+                timeout: 15000,
+              });
+              await waitForExpectedContent(
+                noActivityPage,
+                analyticsUrl,
+                `project-${normalizedProjectKey}-analytics`,
+              );
+              const projectsPage = new ProjectsPage(noActivityPage, orgSlug);
+              await projectsPage.expectAnalyticsNoActivityState();
+              await waitForScreenshotReady(noActivityPage);
+              await captureCurrentView(
+                noActivityPage,
+                p,
+                `project-${normalizedProjectKey}-analytics-no-activity`,
+              );
+            } finally {
+              if (!noActivityPage.isClosed()) {
+                await noActivityPage.close();
+              }
+            }
+          }
+        } finally {
+          await testUserService.configureProjectAnalyticsState(orgSlug, projectKey, "default");
+        }
+      });
     }
 
     if (

@@ -374,6 +374,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
         <ChartCard
           title="Issues by Assignee"
           description="How currently assigned work is distributed across the team."
+          testId={TEST_IDS.ANALYTICS.CHART_ASSIGNEE}
           emptyState={
             assigneeChartData.length === 0
               ? {

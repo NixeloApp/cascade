@@ -333,6 +333,8 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-calendar",
   "filled-project-PROJ-activity",
   "filled-project-PROJ-analytics",
+  "filled-project-PROJ-analytics-sparse-data",
+  "filled-project-PROJ-analytics-no-activity",
   "filled-project-PROJ-billing",
   "filled-project-PROJ-timesheet",
   "filled-project-PROJ-members",

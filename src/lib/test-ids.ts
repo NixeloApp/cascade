@@ -385,6 +385,8 @@ export const TEST_IDS = {
     CHART_TYPE: "analytics-chart-type",
     CHART_PRIORITY: "analytics-chart-priority",
     CHART_VELOCITY: "analytics-chart-velocity",
+    CHART_ASSIGNEE: "analytics-chart-assignee",
+    RECENT_ACTIVITY: "analytics-recent-activity",
     /** Metric card labels */
     METRIC_TOTAL_ISSUES: "analytics-metric-total-issues",
     METRIC_UNASSIGNED: "analytics-metric-unassigned",

@@ -157,6 +157,8 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-calendar-drag-and-drop$/, "11-calendar", "-drag-and-drop"],
   [/^filled-calendar-quick-add$/, "11-calendar", "-quick-add"],
   // Project analytics, members, settings
+  [/^filled-project-.+-analytics-sparse-data$/, "13-analytics", "-sparse-data"],
+  [/^filled-project-.+-analytics-no-activity$/, "13-analytics", "-no-activity"],
   [/^filled-project-.+-analytics$/, "13-analytics", ""],
   [/^filled-project-.+-members$/, "17-members", ""],
   [/^filled-project-.+-members-confirm-dialog$/, "17-members", "-confirm-dialog"],

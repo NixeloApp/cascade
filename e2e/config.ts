@@ -257,6 +257,8 @@ export const E2E_ENDPOINTS = {
   deleteSeededProjectIssue: `${CONVEX_SITE_URL}/e2e/delete-seeded-project-issue`,
   // Reconfigure seeded project inbox data for screenshot captures
   configureProjectInboxState: `${CONVEX_SITE_URL}/e2e/configure-project-inbox-state`,
+  // Reconfigure seeded project analytics data for screenshot captures
+  configureProjectAnalyticsState: `${CONVEX_SITE_URL}/e2e/configure-project-analytics-state`,
   // Reconfigure seeded notifications data for screenshot captures
   configureNotificationsState: `${CONVEX_SITE_URL}/e2e/configure-notifications-state`,
   // Reset meetings data for a specific E2E user
