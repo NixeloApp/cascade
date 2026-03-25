@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { queueAddComment } from "@/lib/offlineComments";
+import { createCommentClientRequestId, queueAddComment } from "@/lib/offlineComments";
 import { showInfo } from "@/lib/toast";
 import { useOnlineStatus } from "./useOffline";
 
@@ -21,7 +21,8 @@ export function useOfflineAddComment() {
     mentions?: Id<"users">[],
     attachments?: Id<"_storage">[],
   ): Promise<{ queued: boolean; commentId?: Id<"issueComments"> }> => {
-    const queueArgs = { issueId, content, mentions };
+    const clientRequestId = createCommentClientRequestId();
+    const queueArgs = { issueId, content, mentions, clientRequestId };
 
     if (!isOnline) {
       if (!userId) {

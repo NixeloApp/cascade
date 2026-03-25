@@ -19,7 +19,6 @@ Related docs:
 ### UX / Replay Polish
 
 - [ ] Add optimistic UI for queued mutations where the current UX still waits for replay confirmation.
-- [ ] Add a server-side idempotency strategy for replayed comments if we want stronger guarantees than the current low-risk behavior.
 
 ### Docs
 

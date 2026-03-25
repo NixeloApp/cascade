@@ -547,6 +547,57 @@ describe("Issue Mutations", () => {
       expect(commentId.length).toBeGreaterThan(0);
       await t.finishInProgressScheduledFunctions();
     });
+
+    it("deduplicates retried comment submissions by client request ID", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Offline Replay Project",
+        key: "OFFC",
+      });
+
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: "Replay comment test",
+        type: "task",
+        priority: "medium",
+      });
+
+      const firstResult = await asUser.mutation(api.issues.addComment, {
+        issueId,
+        content: "Post once even if replayed",
+        clientRequestId: "issue-comment:request-1",
+      });
+
+      const secondResult = await asUser.mutation(api.issues.addComment, {
+        issueId,
+        content: "Post once even if replayed",
+        clientRequestId: "issue-comment:request-1",
+      });
+
+      expect(secondResult.commentId).toBe(firstResult.commentId);
+
+      const [comments, activities] = await Promise.all([
+        t.run(async (ctx) => {
+          return await ctx.db
+            .query("issueComments")
+            .withIndex("by_issue", (q) => q.eq("issueId", issueId))
+            .collect();
+        }),
+        t.run(async (ctx) => {
+          return await ctx.db
+            .query("issueActivity")
+            .withIndex("by_issue", (q) => q.eq("issueId", issueId))
+            .collect();
+        }),
+      ]);
+
+      expect(comments).toHaveLength(1);
+      expect(comments[0]?.clientRequestId).toBe("issue-comment:request-1");
+      expect(activities.filter((activity) => activity.action === "commented")).toHaveLength(1);
+      await t.finishInProgressScheduledFunctions();
+    });
   });
 
   describe("bulk operations", () => {

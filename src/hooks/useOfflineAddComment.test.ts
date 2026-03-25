@@ -1,6 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
+import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { queueAddComment } from "@/lib/offlineComments";
 import { showInfo } from "@/lib/toast";
@@ -27,6 +28,7 @@ vi.mock("./useCurrentUser", () => ({
 }));
 
 vi.mock("@/lib/offlineComments", () => ({
+  createCommentClientRequestId: vi.fn(() => "comment-request-123"),
   queueAddComment: vi.fn(),
 }));
 
@@ -58,17 +60,26 @@ describe("useOfflineAddComment", () => {
       isAuthLoading: false,
     });
     mockUseOnlineStatus.mockReturnValue(true);
+    Object.defineProperty(window.navigator, "onLine", {
+      configurable: true,
+      value: true,
+    });
   });
 
   it("calls the live mutation when online", async () => {
     const { result } = renderHook(() => useOfflineAddComment());
-    const response = await result.current.addComment("issue-123" as Id<"issues">, "Great work!");
+    let response: Awaited<ReturnType<typeof result.current.addComment>> | undefined;
+
+    await act(async () => {
+      response = await result.current.addComment("issue-123" as Id<"issues">, "Great work!");
+    });
 
     expect(response).toEqual({ queued: false, commentId: "comment-new" });
     expect(mockMutation).toHaveBeenCalledWith({
       issueId: "issue-123",
       content: "Great work!",
       mentions: undefined,
+      clientRequestId: "comment-request-123",
     });
     expect(mockQueueAddComment).not.toHaveBeenCalled();
   });
@@ -78,15 +89,66 @@ describe("useOfflineAddComment", () => {
     mockQueueAddComment.mockResolvedValue(1);
 
     const { result } = renderHook(() => useOfflineAddComment());
-    const response = await result.current.addComment("issue-456" as Id<"issues">, "Will fix this");
+    let response: Awaited<ReturnType<typeof result.current.addComment>> | undefined;
+
+    await act(async () => {
+      response = await result.current.addComment("issue-456" as Id<"issues">, "Will fix this");
+    });
 
     expect(response).toEqual({ queued: true });
     expect(mockQueueAddComment).toHaveBeenCalledWith(
-      { issueId: "issue-456", content: "Will fix this", mentions: undefined },
+      {
+        issueId: "issue-456",
+        content: "Will fix this",
+        mentions: undefined,
+        clientRequestId: "comment-request-123",
+      },
       "test-user-id",
     );
     expect(vi.mocked(showInfo)).toHaveBeenCalledWith(
       "Comment queued — will post when you reconnect",
+    );
+  });
+
+  it("queues the same client request ID when a live submit drops offline mid-request", async () => {
+    mockMutation = Object.assign(
+      vi.fn(() => Promise.reject(new Error("Network dropped during submit"))),
+      { withOptimisticUpdate: () => mockMutation },
+    ) as ReactMutation<FunctionReference<"mutation">>;
+    mockUseAuthenticatedMutation.mockReturnValue({
+      mutate: mockMutation,
+      canAct: true,
+      isAuthLoading: false,
+    });
+    mockQueueAddComment.mockResolvedValue(2);
+    Object.defineProperty(window.navigator, "onLine", {
+      configurable: true,
+      value: false,
+    });
+
+    const { result } = renderHook(() => useOfflineAddComment());
+    let response: Awaited<ReturnType<typeof result.current.addComment>> | undefined;
+
+    await act(async () => {
+      response = await result.current.addComment("issue-987" as Id<"issues">, "Retry me");
+    });
+
+    expect(response).toEqual({ queued: true });
+    expect(mockMutation).toHaveBeenCalledWith({
+      issueId: "issue-987",
+      content: "Retry me",
+      mentions: undefined,
+      attachments: undefined,
+      clientRequestId: "comment-request-123",
+    });
+    expect(mockQueueAddComment).toHaveBeenCalledWith(
+      {
+        issueId: "issue-987",
+        content: "Retry me",
+        mentions: undefined,
+        clientRequestId: "comment-request-123",
+      },
+      "test-user-id",
     );
   });
 

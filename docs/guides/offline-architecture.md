@@ -162,7 +162,7 @@ Current live replay coverage:
 | `userSettings.update` | PreferencesTab (theme, timezone, dashboard layout) | Idempotent — last-write-wins | None |
 | `notifications.markAsRead` | NotificationCenter, notifications page | Trivially idempotent | None |
 | `issues.updateStatus` | IssueDetailSidebar status dropdown | Last-write-wins, skips optimistic lock | Medium — status may have moved |
-| `issues.addComment` | IssueComments form | Append-only, no server-side dedup yet | Low — only edge case is deleted issue |
+| `issues.addComment` | IssueComments form | Idempotent by client request ID on the server | Low — only edge case is deleted issue |
 
 **UX indicators:**
 - Offline badge in app header (WifiOff icon) — visible on every page
@@ -190,7 +190,6 @@ Practical fallback when Background Sync is unavailable:
 The current architecture still lacks:
 
 - replay coverage for more mutation families (current: 4)
-- server-side idempotency key for comment replay (low risk for v1)
 - optimistic UI for queued mutations (e.g., grey out read notification)
 - end-to-end browser verification for push across worker updates
 - durable server-side auditing for failed offline actions

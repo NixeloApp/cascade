@@ -432,6 +432,7 @@ export const addComment = issueViewerMutation({
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
     attachments: v.optional(v.array(v.id("_storage"))),
+    clientRequestId: v.optional(v.string()),
   },
   returns: v.object({ commentId: v.id("issueComments") }),
   handler: async (ctx, args) => {
@@ -439,6 +440,23 @@ export const addComment = issueViewerMutation({
     const now = Date.now();
     const mentions = args.mentions || [];
     const attachments = args.attachments || [];
+    const clientRequestId = args.clientRequestId;
+
+    if (clientRequestId) {
+      const existingComment = await ctx.db
+        .query("issueComments")
+        .withIndex("by_authorId_and_issueId_and_clientRequestId", (q) =>
+          q
+            .eq("authorId", ctx.userId)
+            .eq("issueId", ctx.issue._id)
+            .eq("clientRequestId", clientRequestId),
+        )
+        .unique();
+
+      if (existingComment) {
+        return { commentId: existingComment._id };
+      }
+    }
 
     if (attachments.length > 0) {
       const issueAttachments = new Set((ctx.issue.attachments || []).map((id) => id.toString()));
@@ -455,6 +473,7 @@ export const addComment = issueViewerMutation({
       content: args.content,
       mentions,
       attachments,
+      clientRequestId,
       updatedAt: now,
     });
 

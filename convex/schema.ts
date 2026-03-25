@@ -594,6 +594,8 @@ const applicationTables = {
     content: v.string(),
     mentions: v.array(v.id("users")),
     attachments: v.optional(v.array(v.id("_storage"))),
+    // Optional for older comments; new offline/live comment submits use this to prevent replay duplicates.
+    clientRequestId: v.optional(v.string()),
     updatedAt: v.number(),
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
@@ -601,6 +603,11 @@ const applicationTables = {
   })
     .index("by_issue", ["issueId"])
     .index("by_author", ["authorId"])
+    .index("by_authorId_and_issueId_and_clientRequestId", [
+      "authorId",
+      "issueId",
+      "clientRequestId",
+    ])
     .index("by_deleted", ["isDeleted"]),
 
   issueCommentReactions: defineTable({

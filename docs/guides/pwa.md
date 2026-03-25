@@ -24,7 +24,8 @@ What is true right now:
 - The dead `src/service-worker.ts` worker candidate has been removed from source because it was not part of the shipped build pipeline.
 - `promptInstall()` is now wired from the root app shell for production, non-E2E builds.
 - `processOfflineQueue()` in `src/lib/offline.ts` now rejects unsupported replay types explicitly instead of marking them synced without contacting a backend.
-- The first live replay path now exists for `userSettings.update`; queued preference changes flush from the authenticated app shell on startup and reconnect.
+- The live replay lane now covers `userSettings.update`, `notifications.markAsRead`, `issues.updateStatus`, and `issues.addComment`.
+- Queued comment replays now carry a client request ID so reconnect/network-flap retries do not double-post the same issue comment.
 
 Operational implication:
 
@@ -46,12 +47,12 @@ Verified now:
 - local IndexedDB mutation queue
 - truthful queue diagnostics in Settings
 - manual queue processing from Settings
-- one real replayable mutation family: `userSettings.update`
+- four real replayable mutation families: `userSettings.update`, `notifications.markAsRead`, `issues.updateStatus`, and `issues.addComment`
 - install/update helper wiring in the app shell
 - production-preview browser automation confirms an authenticated Settings session stays usable offline once loaded
 - production-preview browser automation confirms previously visited authenticated Settings and dashboard routes restore offline in preview
 - production-preview browser automation confirms Chromium installability checks are clean for the built app
-- production-preview browser automation confirms queued `userSettings.update` changes replay in preview and update `Last Successful Replay`
+- production-preview browser automation confirms queued replay updates `Last Successful Replay` in preview
 
 Not yet verified end to end:
 
@@ -234,6 +235,9 @@ Current replay triggers:
 Current live replay coverage:
 
 - `userSettings.update`
+- `notifications.markAsRead`
+- `issues.updateStatus`
+- `issues.addComment` (deduplicated server-side by client request ID)
 
 Current retry behavior:
 

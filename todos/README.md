@@ -17,7 +17,7 @@ No open critical items on this branch.
 
 - [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Speaker-attributed meeting detail, meeting-to-doc export, and reviewed meetings screenshots shipped; remaining work is provider rollout plus multi-platform capture.
 - [ ] [email-outreach.md](./email-outreach.md) — Gmail-first outreach is now usable end to end with reviewed route, tab, dialog, and destructive-state screenshots; remaining work is reliability polish, richer analytics, and provider expansion.
-- [ ] [offline-pwa.md](./offline-pwa.md) — Push verification, optimistic UI, and replay/idempotency polish.
+- [ ] [offline-pwa.md](./offline-pwa.md) — Push verification, optimistic UI, and worker/replay polish.
 - [ ] [cal-com-features.md](./cal-com-features.md) — AI scheduling, MCP/chat scheduling ideas, branding, and portal/domain controls.
 - [ ] [plane-features.md](./plane-features.md) — External notification routing.
 - [ ] [feature-docs-expansion.md](./feature-docs-expansion.md) — Current-state feature documentation still needs coverage and structure cleanup.
@@ -30,8 +30,8 @@ Verified on this branch:
 |--------|-------|
 | Typecheck | pass |
 | Validators | 55/55 pass |
-| App tests (`vitest run`) | 4654 pass / 3 skipped |
-| Convex tests (`vitest.convex`) | 2120 pass / 3 skipped |
+| App tests (`vitest run`) | 4658 pass / 3 skipped |
+| Convex tests (`vitest.convex`) | 2121 pass / 3 skipped |
 | Page spec triplets | 42/42 present |
 | Screenshot harness shell (`filled-states.ts`) | 2133 lines |
 | TEST_ID constants / page-object files | 331 / 26 |
