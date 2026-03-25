@@ -305,6 +305,17 @@ export const TEST_IDS = {
     MODE_MONTH: "calendar-mode-month",
   },
 
+  ORG_CALENDAR: {
+    /** @see src/routes/_auth/_app/$orgSlug/calendar.tsx */
+    CONTENT: "org-calendar-content",
+    /** @see src/routes/_auth/_app/$orgSlug/calendar.tsx */
+    LOADING_STATE: "org-calendar-loading-state",
+    /** @see src/routes/_auth/_app/$orgSlug/calendar.tsx */
+    TEAM_FILTER: "org-calendar-team-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/calendar.tsx */
+    WORKSPACE_FILTER: "org-calendar-workspace-filter",
+  },
+
   // ============================================================
   // Debug / Dev Tools
   // ============================================================

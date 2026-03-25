@@ -162,6 +162,9 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-calendar-drag-and-drop$/, "11-calendar", "-drag-and-drop"],
   [/^filled-calendar-quick-add$/, "11-calendar", "-quick-add"],
   // Org and project analytics, members, settings
+  [/^filled-org-calendar-workspace-scope$/, "23-org-calendar", "-workspace-scope"],
+  [/^filled-org-calendar-team-scope$/, "23-org-calendar", "-team-scope"],
+  [/^filled-org-calendar-loading$/, "23-org-calendar", "-loading"],
   [/^filled-org-analytics-sparse-data$/, "24-org-analytics", "-sparse-data"],
   [/^filled-org-analytics-no-activity$/, "24-org-analytics", "-no-activity"],
   [/^filled-project-.+-analytics-sparse-data$/, "13-analytics", "-sparse-data"],

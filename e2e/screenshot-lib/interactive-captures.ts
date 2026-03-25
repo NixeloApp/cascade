@@ -10,6 +10,7 @@ import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
+  CalendarPage,
   DocumentsPage,
   InboxPage,
   IssuesPage,
@@ -185,6 +186,89 @@ export async function screenshotDashboardLoadingState(
       }
     }
   });
+}
+
+export async function screenshotOrgCalendarStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const workspaceScopeName = "org-calendar-workspace-scope";
+  const teamScopeName = "org-calendar-team-scope";
+  const loadingStateName = "org-calendar-loading";
+
+  if (!shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName, loadingStateName])) {
+    return;
+  }
+
+  const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
+
+  if (shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName])) {
+    await runCaptureStep("org calendar filtered scope states", async () => {
+      await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
+      await waitForScreenshotReady(page);
+
+      const calendarPage = new CalendarPage(page, orgSlug);
+
+      if (shouldCapture(prefix, workspaceScopeName)) {
+        await calendarPage.selectWorkspace("Product");
+        await calendarPage.expectWorkspaceScope("Product");
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, workspaceScopeName);
+      }
+
+      if (shouldCapture(prefix, teamScopeName)) {
+        await calendarPage.selectWorkspace("Product");
+        await calendarPage.selectTeam("Engineering");
+        await calendarPage.expectTeamScope("Engineering");
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, teamScopeName);
+      }
+    });
+  }
+
+  if (shouldCapture(prefix, loadingStateName)) {
+    await runCaptureStep("org calendar loading state", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_ORG_CALENDAR_LOADING__ = true;
+        });
+
+        await loadingPage.goto(`${BASE_URL}${orgCalendarUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await loadingPage.waitForURL(
+          (currentUrl) => /\/[^/]+\/calendar$/.test(new URL(currentUrl).pathname),
+          {
+            timeout: 15000,
+          },
+        );
+        await loadingPage
+          .getByTestId(TEST_IDS.ORG_CALENDAR.LOADING_STATE)
+          .waitFor({ state: "visible", timeout: 12000 });
+        await expect
+          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThanOrEqual(10);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, loadingStateName, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
 }
 
 export async function screenshotProjectsModal(

@@ -7383,6 +7383,7 @@ export const seedScreenshotDataInternal = internalMutation({
         await ctx.db.patch(existing._id, {
           organizationId: orgId,
           workspaceId,
+          teamId,
           projectId,
           description: cal.description,
           startTime,
@@ -7399,6 +7400,7 @@ export const seedScreenshotDataInternal = internalMutation({
         await ctx.db.insert("calendarEvents", {
           organizationId: orgId,
           workspaceId,
+          teamId,
           projectId,
           title: cal.title,
           description: cal.description,

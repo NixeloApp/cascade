@@ -67,6 +67,7 @@ import {
   screenshotIssuesStates,
   screenshotMeetingsStates,
   screenshotMyIssuesStates,
+  screenshotOrgCalendarStates,
   screenshotProjectInboxStates,
   screenshotProjectsModal,
   screenshotRoadmapStates,
@@ -270,6 +271,19 @@ export async function screenshotFilledStates(
 
   if (shouldCaptureAny(p, ["documents-search-filtered", "documents-search-empty"])) {
     await screenshotDocumentsStates(page, orgSlug, p);
+  }
+
+  if (
+    shouldCaptureAny(p, [
+      "org-calendar-workspace-scope",
+      "org-calendar-team-scope",
+      "org-calendar-loading",
+      "my-issues-filter-active",
+      "my-issues-filtered-empty",
+      "my-issues-loading",
+    ])
+  ) {
+    await screenshotOrgCalendarStates(page, orgSlug, p);
   }
 
   if (

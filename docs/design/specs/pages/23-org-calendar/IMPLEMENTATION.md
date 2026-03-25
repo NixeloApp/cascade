@@ -28,8 +28,9 @@
 
 | State | Type | Location | Purpose |
 |-------|------|----------|---------|
-| `selectedWorkspaceId` | `Id<"workspaces"> \| "all"` | Route component `useState` | Workspace filter |
-| `selectedTeamId` | `Id<"teams"> \| "all"` | Route component `useState` | Team filter (cascaded by workspace) |
+| `workspace` | `string \| undefined` | Route search params | Workspace filter persistence and deep linking |
+| `team` | `string \| undefined` | Route search params | Team filter persistence and deep linking |
+| `selection` | derived object | Route helper (`getCalendarSelectionState`) | Validated workspace/team scope, disabled state, and workspace-scoped team options |
 | `mode` | `"day" \| "week" \| "month"` | CalendarView `useState` | Active calendar view mode |
 | `date` | `Date` | CalendarView `useState` | Currently visible date |
 | `showCreateModal` | `boolean` | CalendarView `useState` | Create event modal visibility |
@@ -44,20 +45,21 @@ OrganizationCalendarPage
 ├── PageLayout (fullHeight)
 │   ├── PageHeader
 │   │   ├── title (dynamic scope label)
-│   │   └── actions
+│   │   └── OrganizationCalendarFilterControls
 │   │       ├── Select (workspace filter)
 │   │       │   ├── SelectTrigger
 │   │       │   └── SelectContent → SelectItem[]
 │   │       └── Select (team filter)
 │   │           ├── SelectTrigger
 │   │           └── SelectContent → SelectItem[]
-│   └── Suspense (fallback: PageContent isLoading)
-│       └── CalendarView
-│           ├── ShadcnCalendar (calendar grid engine)
-│           │   ├── CalendarHeader (mode switching, navigation)
-│           │   └── CalendarBody (day/week/month grid)
-│           ├── CreateEventModal
-│           └── EventDetailsModal
+│   └── div[data-testid=TEST_IDS.ORG_CALENDAR.CONTENT]
+│       └── Suspense (fallback: OrganizationCalendarLoadingBody)
+│           └── CalendarView
+│               ├── ShadcnCalendar (calendar grid engine)
+│               │   ├── CalendarHeader (mode switching, navigation)
+│               │   └── CalendarBody (day/week/month grid)
+│               ├── CreateEventModal
+│               └── EventDetailsModal
 ```
 
 ---
@@ -73,8 +75,10 @@ OrganizationCalendarPage
 
 ## Data Flow
 
-1. Route mounts, fetches workspace list and team list in parallel.
-2. User selects filters -> local state updates -> CalendarView receives new scope props.
-3. CalendarView computes date range from `(date, mode)` and queries `calendarEvents.listByDateRange` with the active scope.
-4. Events render in the calendar grid, color-coded by `colorByScope` setting.
-5. User interactions (click, drag, create) trigger mutations through CalendarView's internal state.
+1. Route mounts, validates `workspace` and `team` from URL search params, then fetches workspace and team data in parallel.
+2. Route derives a normalized selection with `getCalendarSelectionState`, dropping stale workspace/team ids that no longer exist or no longer match the chosen workspace.
+3. If the URL contains an invalid combination, the route rewrites search params with `replace: true` so the visible state and deep link stay aligned.
+4. User selects filters -> route updates search params -> derived selection changes -> `CalendarView` receives the new scope props.
+5. `CalendarView` computes date range from `(date, mode)` and queries `calendarEvents.listByDateRange` with the active org/workspace/team scope.
+6. Events render in the calendar grid, color-coded by `colorByScope` setting.
+7. User interactions (click, drag, create) trigger mutations through CalendarView's internal state.
