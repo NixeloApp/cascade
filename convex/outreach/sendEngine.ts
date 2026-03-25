@@ -28,6 +28,11 @@ import {
   renderTemplate,
   rewriteUrlsWithTrackingIds,
 } from "./helpers";
+import {
+  buildMailboxSendReservationPatch,
+  buildMailboxSuccessfulSendPatch,
+  getMailboxRateLimitSnapshot,
+} from "./mailboxRateLimits";
 
 // =============================================================================
 // Constants
@@ -166,16 +171,16 @@ export const checkPreSend = internalMutation({
     const mailbox = await ctx.db.get(sequence.mailboxId);
     if (!mailbox?.isActive) return fail;
 
-    // Check daily send limit
-    const today = new Date().toISOString().slice(0, 10);
-    const resetDate = new Date(mailbox.todayResetAt).toISOString().slice(0, 10);
-    const todaySendCount = today === resetDate ? mailbox.todaySendCount : 0;
+    const rateLimits = getMailboxRateLimitSnapshot(mailbox);
 
-    if (todaySendCount >= mailbox.dailySendLimit) return fail;
+    if (rateLimits.todaySendCount >= mailbox.dailySendLimit) return fail;
+    if (rateLimits.minuteSendCount >= rateLimits.minuteSendLimit) return fail;
 
     // Validate step exists
     const step = sequence.steps[enrollment.currentStep];
     if (!step) return fail;
+
+    await ctx.db.patch(sequence.mailboxId, buildMailboxSendReservationPatch(mailbox));
 
     // Render template
     const renderedSubject = renderTemplate(step.subject, contact);
@@ -296,13 +301,7 @@ async function recordSuccessfulSend(ctx: MutationCtx, args: SendResultArgs) {
 
   const mailbox = await ctx.db.get(args.mailboxId);
   if (mailbox) {
-    const today = new Date().toISOString().slice(0, 10);
-    const resetDate = new Date(mailbox.todayResetAt).toISOString().slice(0, 10);
-    const currentCount = today === resetDate ? mailbox.todaySendCount : 0;
-    await ctx.db.patch(args.mailboxId, {
-      todaySendCount: currentCount + 1,
-      todayResetAt: today === resetDate ? mailbox.todayResetAt : Date.now(),
-    });
+    await ctx.db.patch(args.mailboxId, buildMailboxSuccessfulSendPatch(mailbox));
   }
 
   const sequence = await ctx.db.get(args.sequenceId);

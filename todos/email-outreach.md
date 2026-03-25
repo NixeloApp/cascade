@@ -8,6 +8,7 @@
 
 - Gmail-first Convex backend exists for mailboxes, sequences, enrollments, tracking, analytics, and send/reply processing.
 - The implementation currently uses Gmail REST APIs, not SMTP/IMAP as the primary path.
+- Mailboxes now enforce both daily send caps and minute-window throttling before outbound sends start.
 - User-facing workflow is still missing because there is no frontend surface yet.
 - Security and launch blockers are tracked in [p0-outreach-holes.md](./p0-outreach-holes.md).
 
@@ -23,7 +24,6 @@
 
 ### Reliability / Compliance
 
-- [ ] Add mailbox-aware rate limiting.
 - [ ] Improve bounce classification with richer message parsing.
 - [ ] Add stronger integration coverage for the send and reply pipeline.
 

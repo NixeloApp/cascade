@@ -1840,6 +1840,9 @@ const applicationTables = {
     dailySendLimit: v.number(), // Default 50
     todaySendCount: v.number(), // Resets daily by cron
     todayResetAt: v.number(), // Date of last counter reset
+    minuteSendLimit: v.optional(v.number()), // Optional during rollout; defaults at runtime
+    minuteSendCount: v.optional(v.number()), // Reserved send attempts in the current minute window
+    minuteWindowStartedAt: v.optional(v.number()), // Start of the current minute throttle window
     isActive: v.boolean(), // Can this mailbox send?
     lastHealthCheckAt: v.optional(v.number()),
     updatedAt: v.number(),

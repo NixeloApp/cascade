@@ -6,6 +6,7 @@ import { v } from "convex/values";
 import { authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { notFound } from "../lib/errors";
+import { getMailboxRateLimitSnapshot } from "./mailboxRateLimits";
 
 // =============================================================================
 // Sequence-Level Analytics
@@ -156,7 +157,7 @@ export const getOrganizationOverview = authenticatedQuery({
   },
 });
 
-/** Get mailbox health (send counts, remaining capacity today) */
+/** Get mailbox health (send counts and remaining capacity across daily and minute windows) */
 export const getMailboxHealth = authenticatedQuery({
   args: {},
   handler: async (ctx) => {
@@ -166,9 +167,7 @@ export const getMailboxHealth = authenticatedQuery({
       .take(BOUNDED_LIST_LIMIT);
 
     return mailboxes.map((m) => {
-      const today = new Date().toISOString().slice(0, 10);
-      const resetDate = new Date(m.todayResetAt).toISOString().slice(0, 10);
-      const todaySent = today === resetDate ? m.todaySendCount : 0;
+      const rateLimits = getMailboxRateLimitSnapshot(m);
 
       return {
         id: m._id,
@@ -176,8 +175,11 @@ export const getMailboxHealth = authenticatedQuery({
         provider: m.provider,
         isActive: m.isActive,
         dailyLimit: m.dailySendLimit,
-        todaySent,
-        remaining: Math.max(0, m.dailySendLimit - todaySent),
+        minuteLimit: rateLimits.minuteSendLimit,
+        todaySent: rateLimits.todaySendCount,
+        minuteSent: rateLimits.minuteSendCount,
+        remaining: Math.max(0, m.dailySendLimit - rateLimits.todaySendCount),
+        minuteRemaining: Math.max(0, rateLimits.minuteSendLimit - rateLimits.minuteSendCount),
       };
     });
   },
