@@ -4,7 +4,7 @@
 
 ## Critical
 
-- [ ] [p0-outreach-holes.md](./p0-outreach-holes.md) — Outreach still has real launch blockers: no frontend UI, bounce hardening, and missing send-pipeline integration coverage.
+- [ ] [p0-outreach-holes.md](./p0-outreach-holes.md) — Outreach still has real launch blockers: no frontend UI and missing send-pipeline integration coverage.
 
 ## Infrastructure
 
@@ -30,8 +30,8 @@ Verified on this branch:
 |--------|-------|
 | Typecheck | pass |
 | Validators | 53/53 pass |
-| App tests (`vitest run`) | 4556 pass / 5 skipped |
-| Convex tests (`vitest.convex`) | 2111 pass / 3 skipped |
+| App tests (`vitest run`) | 4559 pass / 5 skipped |
+| Convex tests (`vitest.convex`) | 2114 pass / 3 skipped |
 | Page spec triplets | 41/41 present |
 | Screenshot harness shell (`filled-states.ts`) | 1452 lines |
 | TEST_ID constants / page-object files | 207 / 22 |

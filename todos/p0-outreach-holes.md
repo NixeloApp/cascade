@@ -9,7 +9,6 @@ This file tracks the remaining blockers before outreach should be treated as use
 ## Product / UX
 
 - [ ] Build the frontend surface for sequences, enrollments, contacts, mailboxes, tracking, and analytics.
-- [ ] Improve bounce handling beyond regex heuristics by parsing Gmail/DSN-style bounce signals.
 
 ## Testing
 
@@ -21,4 +20,5 @@ This file tracks the remaining blockers before outreach should be treated as use
 - Outreach OAuth state now uses DB-backed single-use expiring nonces with handler coverage for success, replay rejection, expiry, and provider errors.
 - OAuth mailbox tokens are now encrypted at rest and legacy plaintext rows self-heal on runtime access.
 - Mailbox sending now reserves per-minute capacity during pre-send validation and preserves migration-safe defaults for legacy mailbox rows.
+- Gmail inbox polling now classifies DSN-style hard bounces, stops the matched enrollment, records a bounce event, and suppresses the failed recipient.
 - This file intentionally keeps only open blockers; completed outreach fixes belong in git history and tests, not here.

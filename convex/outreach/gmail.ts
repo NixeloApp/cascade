@@ -18,6 +18,7 @@ import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { logger } from "../lib/logger";
 import { DAY, MINUTE } from "../lib/timeUtils";
+import { suppress } from "./contacts";
 import { stopEnrollment } from "./enrollments";
 import { isAutoReply } from "./helpers";
 import { encryptMailboxTokensForStorage, getDecryptedMailboxTokenSnapshot } from "./mailboxTokens";
@@ -27,6 +28,56 @@ import { encryptMailboxTokensForStorage, getDecryptedMailboxTokenSnapshot } from
 // =============================================================================
 
 const GMAIL_API_BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
+const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+const BOUNCE_SENDER_PATTERNS = [/mailer-daemon/i, /postmaster/i, /mail delivery subsystem/i];
+const BOUNCE_SUBJECT_PATTERNS = [
+  /delivery status notification/i,
+  /delivery failure/i,
+  /delivery incomplete/i,
+  /message blocked/i,
+  /returned mail/i,
+  /undeliverable/i,
+];
+const BOUNCE_BODY_PATTERNS = [
+  /delivery to the following recipient(?:s)? failed/i,
+  /address not found/i,
+  /your message wasn't delivered/i,
+  /the following address(?:es)? failed/i,
+  /diagnostic-code:/i,
+  /final-recipient:/i,
+  /\bstatus:\s*5\.\d\.\d\b/i,
+];
+const BOUNCE_RECIPIENT_PATTERNS = [
+  /Final-Recipient:\s*rfc822;\s*<?([^>\s;]+@[^>\s;]+)>?/gi,
+  /Original-Recipient:\s*rfc822;\s*<?([^>\s;]+@[^>\s;]+)>?/gi,
+  /X-Failed-Recipients:\s*([^\r\n]+)/gi,
+  /Delivery to the following recipient(?:s)? failed(?: permanently)?:\s*([\s\S]*?)(?:\n\s*\n|$)/gi,
+  /The following address(?:es)? failed:\s*([\s\S]*?)(?:\n\s*\n|$)/gi,
+];
+
+type GmailMessageHeader = { name: string; value: string };
+
+type GmailMessagePayload = {
+  mimeType?: string;
+  headers?: GmailMessageHeader[];
+  body?: { data?: string };
+  parts?: GmailMessagePayload[];
+};
+
+type GmailFullMessage = {
+  snippet?: string;
+  payload?: GmailMessagePayload;
+};
+
+type GmailInboundMessage =
+  | { kind: "skip" }
+  | { kind: "reply"; senderEmail: string }
+  | {
+      kind: "bounce";
+      recipientEmails: string[];
+      diagnosticCode?: string;
+      reason?: string;
+    };
 
 /** Try to refresh an expiring access token. Returns the new token or null. */
 async function tryRefreshToken(
@@ -58,6 +109,125 @@ function extractSenderEmail(headers: Array<{ name: string; value: string }>): st
   if (!fromHeader?.value) return null;
   const match = fromHeader.value.match(/<([^>]+)>/);
   return (match?.[1] ?? fromHeader.value).toLowerCase().trim() || null;
+}
+
+function getHeaderValue(headers: GmailMessageHeader[], name: string): string | null {
+  const header = headers.find((candidate) => candidate.name.toLowerCase() === name.toLowerCase());
+  return header?.value ?? null;
+}
+
+function decodeBase64UrlUtf8(encoded: string | undefined): string {
+  if (!encoded) return "";
+
+  try {
+    const normalized = encoded
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(encoded.length / 4) * 4, "=");
+    const binary = atob(normalized);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return "";
+  }
+}
+
+function extractTextFromPayload(payload: GmailMessagePayload | undefined): string {
+  if (!payload) return "";
+
+  const sections: string[] = [];
+  const mimeType = payload.mimeType?.toLowerCase() ?? "";
+  const bodyText = decodeBase64UrlUtf8(payload.body?.data);
+
+  if (
+    bodyText &&
+    (mimeType.startsWith("text/") ||
+      mimeType === "message/delivery-status" ||
+      mimeType === "message/rfc822" ||
+      mimeType === "")
+  ) {
+    sections.push(bodyText);
+  }
+
+  for (const part of payload.parts ?? []) {
+    const partText = extractTextFromPayload(part);
+    if (partText) sections.push(partText);
+  }
+
+  return sections.join("\n");
+}
+
+function collectEmails(value: string): string[] {
+  const matches = value.match(EMAIL_PATTERN) ?? [];
+  return [...new Set(matches.map((email) => email.toLowerCase().trim()))];
+}
+
+function getMessageText(message: GmailFullMessage): string {
+  return [message.snippet ?? "", extractTextFromPayload(message.payload)]
+    .filter((segment) => segment.length > 0)
+    .join("\n");
+}
+
+function isBounceLikeMessage(params: {
+  mimeType: string;
+  from: string;
+  subject: string;
+  bodyText: string;
+}): boolean {
+  return (
+    params.mimeType === "multipart/report" ||
+    BOUNCE_SENDER_PATTERNS.some((pattern) => pattern.test(params.from)) ||
+    BOUNCE_SUBJECT_PATTERNS.some((pattern) => pattern.test(params.subject)) ||
+    BOUNCE_BODY_PATTERNS.some((pattern) => pattern.test(params.bodyText))
+  );
+}
+
+function collectBounceRecipients(headers: GmailMessageHeader[], bodyText: string): string[] {
+  const recipients = new Set<string>();
+  for (const pattern of BOUNCE_RECIPIENT_PATTERNS) {
+    for (const match of bodyText.matchAll(pattern)) {
+      for (const email of collectEmails(match[1] ?? "")) {
+        recipients.add(email);
+      }
+    }
+  }
+
+  const xFailedRecipients = getHeaderValue(headers, "X-Failed-Recipients");
+  for (const email of collectEmails(xFailedRecipients ?? "")) {
+    recipients.add(email);
+  }
+
+  return [...recipients];
+}
+
+function extractDiagnosticCode(bodyText: string): string | undefined {
+  return (
+    bodyText.match(/Diagnostic-Code:\s*[^\r\n;]+;\s*([^\r\n]+)/i)?.[1]?.trim() ??
+    bodyText.match(/\b(5\.\d\.\d[^\r\n]*)/i)?.[1]?.trim()
+  );
+}
+
+function extractBounceDetails(message: GmailFullMessage): {
+  recipientEmails: string[];
+  diagnosticCode?: string;
+  reason?: string;
+} | null {
+  const headers = message.payload?.headers ?? [];
+  const subject = getHeaderValue(headers, "Subject") ?? "";
+  const from = getHeaderValue(headers, "From") ?? "";
+  const bodyText = getMessageText(message);
+  const mimeType = message.payload?.mimeType?.toLowerCase() ?? "";
+
+  if (!isBounceLikeMessage({ mimeType, from, subject, bodyText })) return null;
+
+  const recipientEmails = collectBounceRecipients(headers, bodyText);
+  if (recipientEmails.length === 0) return null;
+
+  return {
+    recipientEmails,
+    diagnosticCode: extractDiagnosticCode(bodyText),
+    reason: subject || message.snippet,
+  };
 }
 
 interface GmailSendResult {
@@ -306,27 +476,32 @@ const REPLY_METADATA_HEADERS = [
 
 const REPLY_HEADER_PARAMS = REPLY_METADATA_HEADERS.map((h) => `metadataHeaders=${h}`).join("&");
 
-/** Fetch a single Gmail message and return the sender email, or null if it should be skipped. */
-async function fetchAndFilterMessage(
+/** Fetch a single Gmail message and classify it as a reply, bounce, or ignorable noise. */
+async function fetchInboundMessage(
   msgId: string,
   authHeaders: Record<string, string>,
-): Promise<string | null> {
+): Promise<GmailInboundMessage> {
   const msgResponse = await fetchWithTimeout(
-    `${GMAIL_API_BASE}/messages/${msgId}?format=metadata&${REPLY_HEADER_PARAMS}`,
+    `${GMAIL_API_BASE}/messages/${msgId}?format=full&${REPLY_HEADER_PARAMS}`,
     { headers: authHeaders },
     10000,
   );
-  if (!msgResponse.ok) return null;
+  if (!msgResponse.ok) return { kind: "skip" };
 
-  const msgData = (await msgResponse.json()) as {
-    snippet?: string;
-    payload: { headers: Array<{ name: string; value: string }> };
-  };
+  const msgData = (await msgResponse.json()) as GmailFullMessage;
+  const bounceDetails = extractBounceDetails(msgData);
+  if (bounceDetails) {
+    return { kind: "bounce", ...bounceDetails };
+  }
+
+  const headers = msgData.payload?.headers ?? [];
+  const messageText = getMessageText(msgData);
 
   // Skip auto-replies (OOO, bounce notifications, auto-responders)
-  if (isAutoReply(msgData.payload.headers, msgData.snippet)) return null;
+  if (isAutoReply(headers, messageText)) return { kind: "skip" };
 
-  return extractSenderEmail(msgData.payload.headers);
+  const senderEmail = extractSenderEmail(headers);
+  return senderEmail ? { kind: "reply", senderEmail } : { kind: "skip" };
 }
 
 /**
@@ -365,19 +540,35 @@ async function processMessageBatch(
   messages: GmailMessageRef[],
   authHeaders: Record<string, string>,
   mailboxId: Id<"outreachMailboxes">,
-): Promise<number> {
-  let matched = 0;
+): Promise<{ replies: number; bounces: number }> {
+  let replies = 0;
+  let bounces = 0;
   for (const msg of messages) {
-    const senderEmail = await fetchAndFilterMessage(msg.id, authHeaders);
-    if (!senderEmail) continue;
-    const result = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForReply, {
-      senderEmail,
-      mailboxId,
-      gmailThreadId: msg.threadId,
-    });
-    if (result.matched) matched++;
+    const inboundMessage = await fetchInboundMessage(msg.id, authHeaders);
+    if (inboundMessage.kind === "skip") continue;
+
+    if (inboundMessage.kind === "reply") {
+      const result = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForReply, {
+        senderEmail: inboundMessage.senderEmail,
+        mailboxId,
+        gmailThreadId: msg.threadId,
+      });
+      if (result.matched) replies++;
+      continue;
+    }
+
+    for (const recipientEmail of inboundMessage.recipientEmails) {
+      const result = await ctx.runMutation(internal.outreach.gmail.findEnrollmentForBounce, {
+        bouncedRecipientEmail: recipientEmail,
+        mailboxId,
+        gmailThreadId: msg.threadId,
+        diagnosticCode: inboundMessage.diagnosticCode,
+        bounceReason: inboundMessage.reason,
+      });
+      if (result.matched) bounces++;
+    }
   }
-  return matched;
+  return { replies, bounces };
 }
 
 /** Paginate through Gmail messages and match replies to enrollments. */
@@ -386,8 +577,9 @@ async function pollGmailReplies(
   authHeaders: Record<string, string>,
   query: string,
   mailboxId: Id<"outreachMailboxes">,
-): Promise<{ checked: number; replies: number; completedCleanly: boolean }> {
+): Promise<{ checked: number; replies: number; bounces: number; completedCleanly: boolean }> {
   let replies = 0;
+  let bounces = 0;
   let totalChecked = 0;
   let pageToken: string | undefined;
   let completedCleanly = true;
@@ -400,13 +592,15 @@ async function pollGmailReplies(
     }
     if (pageResult.status === "empty") break;
 
-    replies += await processMessageBatch(ctx, pageResult.messages, authHeaders, mailboxId);
+    const batchResult = await processMessageBatch(ctx, pageResult.messages, authHeaders, mailboxId);
+    replies += batchResult.replies;
+    bounces += batchResult.bounces;
     totalChecked += pageResult.messages.length;
     pageToken = pageResult.nextPageToken;
     if (!pageToken) break;
   }
 
-  return { checked: totalChecked, replies, completedCleanly };
+  return { checked: totalChecked, replies, bounces, completedCleanly };
 }
 
 export const checkReplies = internalAction({
@@ -415,7 +609,7 @@ export const checkReplies = internalAction({
     const mailbox = await ctx.runMutation(internal.outreach.gmail.getMailboxTokens, {
       mailboxId: args.mailboxId,
     });
-    if (!mailbox?.accessToken) return { checked: 0, replies: 0 };
+    if (!mailbox?.accessToken) return { checked: 0, replies: 0, bounces: 0 };
 
     const refreshed = await tryRefreshToken(mailbox, ctx, args.mailboxId);
     const accessToken = refreshed ?? mailbox.accessToken;
@@ -437,12 +631,12 @@ export const checkReplies = internalAction({
           mailboxId: args.mailboxId,
         });
       }
-      return { checked: result.checked, replies: result.replies };
+      return { checked: result.checked, replies: result.replies, bounces: result.bounces };
     } catch (e) {
       logger.warn("Gmail reply polling failed", {
         error: e instanceof Error ? e.message : "unknown",
       });
-      return { checked: 0, replies: 0 };
+      return { checked: 0, replies: 0, bounces: 0 };
     }
   },
 });
@@ -457,15 +651,19 @@ export const checkAllMailboxReplies = internalAction({
     const mailboxes = await ctx.runQuery(internal.outreach.gmail.listActiveMailboxes, {});
 
     let totalReplies = 0;
+    let totalBounces = 0;
     for (const mailbox of mailboxes) {
       const result = await ctx.runAction(internal.outreach.gmail.checkReplies, {
         mailboxId: mailbox._id,
       });
       totalReplies += result.replies;
+      totalBounces += result.bounces;
     }
 
-    if (totalReplies > 0) {
-      logger.info(`Outreach reply detection: found ${totalReplies} new replies`);
+    if (totalReplies > 0 || totalBounces > 0) {
+      logger.info(
+        `Outreach inbox processing: found ${totalReplies} replies and ${totalBounces} bounces`,
+      );
     }
   },
 });
@@ -546,6 +744,32 @@ export const listActiveMailboxes = internalQuery({
   },
 });
 
+async function getActiveMailboxEnrollmentsForContact(
+  ctx: Pick<import("../_generated/server").MutationCtx, "db">,
+  contactId: Id<"outreachContacts">,
+  mailboxId: Id<"outreachMailboxes">,
+) {
+  const enrollments = await ctx.db
+    .query("outreachEnrollments")
+    .withIndex("by_contact", (q) => q.eq("contactId", contactId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  const activeEnrollments = enrollments.filter(
+    (enrollment) => enrollment.status === "active" || enrollment.status === "paused",
+  );
+
+  const enrollmentsWithSequence = await Promise.all(
+    activeEnrollments.map(async (enrollment) => ({
+      enrollment,
+      sequence: await ctx.db.get(enrollment.sequenceId),
+    })),
+  );
+
+  return enrollmentsWithSequence
+    .filter((entry) => entry.sequence?.mailboxId === mailboxId)
+    .map((entry) => entry.enrollment);
+}
+
 /**
  * Match an incoming reply to an active enrollment.
  * If matched, stops the enrollment and records the reply event.
@@ -571,14 +795,10 @@ export const findEnrollmentForReply = internalMutation({
 
     if (!contact) return { matched: false };
 
-    // Find an active enrollment for this contact
-    const enrollments = await ctx.db
-      .query("outreachEnrollments")
-      .withIndex("by_contact", (q) => q.eq("contactId", contact._id))
-      .take(BOUNDED_LIST_LIMIT);
-
-    const activeEnrollments = enrollments.filter(
-      (e) => e.status === "active" || e.status === "paused",
+    const activeEnrollments = await getActiveMailboxEnrollmentsForContact(
+      ctx,
+      contact._id,
+      args.mailboxId,
     );
 
     // Require thread match when threadId is available
@@ -613,6 +833,91 @@ export const findEnrollmentForReply = internalMutation({
 
     logger.info(
       `Outreach reply detected: ${args.senderEmail} replied to sequence ${activeEnrollment.sequenceId}`,
+    );
+
+    return { matched: true };
+  },
+});
+
+/** Match a Gmail bounce notification to an enrollment and suppress the failed recipient. */
+export const findEnrollmentForBounce = internalMutation({
+  args: {
+    bouncedRecipientEmail: v.string(),
+    mailboxId: v.id("outreachMailboxes"),
+    gmailThreadId: v.optional(v.string()),
+    diagnosticCode: v.optional(v.string()),
+    bounceReason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const mailbox = await ctx.db.get(args.mailboxId);
+    if (!mailbox) return { matched: false };
+
+    const normalizedEmail = args.bouncedRecipientEmail.toLowerCase().trim();
+    const contact = await ctx.db
+      .query("outreachContacts")
+      .withIndex("by_organization_email", (q) =>
+        q.eq("organizationId", mailbox.organizationId).eq("email", normalizedEmail),
+      )
+      .first();
+    if (!contact) return { matched: false };
+
+    const activeEnrollments = await getActiveMailboxEnrollmentsForContact(
+      ctx,
+      contact._id,
+      args.mailboxId,
+    );
+    if (activeEnrollments.length === 0) return { matched: false };
+
+    const threadId = args.gmailThreadId;
+    const matchedByThread = threadId
+      ? activeEnrollments.find((enrollment) => enrollment.gmailThreadIds?.includes(threadId))
+      : undefined;
+    const activeEnrollment =
+      matchedByThread ?? (activeEnrollments.length === 1 ? activeEnrollments[0] : undefined);
+    if (!activeEnrollment) return { matched: false };
+
+    await ctx.db.insert("outreachEvents", {
+      enrollmentId: activeEnrollment._id,
+      sequenceId: activeEnrollment.sequenceId,
+      contactId: contact._id,
+      organizationId: mailbox.organizationId,
+      type: "bounced",
+      step: activeEnrollment.currentStep,
+      metadata: {
+        bounceType: "hard",
+        diagnosticCode: args.diagnosticCode,
+        failedRecipient: normalizedEmail,
+        replyContent: args.bounceReason,
+      },
+      createdAt: Date.now(),
+    });
+
+    await stopEnrollment(ctx, activeEnrollment._id, "bounced");
+    await suppress(
+      ctx,
+      mailbox.organizationId,
+      normalizedEmail,
+      "hard_bounce",
+      activeEnrollment._id,
+    );
+
+    const sequence = await ctx.db.get(activeEnrollment.sequenceId);
+    const stats = sequence?.stats ?? {
+      enrolled: 0,
+      sent: 0,
+      opened: 0,
+      replied: 0,
+      bounced: 0,
+      unsubscribed: 0,
+    };
+    if (sequence) {
+      await ctx.db.patch(activeEnrollment.sequenceId, {
+        stats: { ...stats, bounced: stats.bounced + 1 },
+      });
+    }
+
+    logger.info(
+      `Outreach bounce detected: ${normalizedEmail} bounced on sequence ${activeEnrollment.sequenceId}`,
     );
 
     return { matched: true };
