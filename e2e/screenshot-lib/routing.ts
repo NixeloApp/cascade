@@ -156,7 +156,9 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-calendar-create-event-modal$/, "11-calendar", "-create-event-modal"],
   [/^filled-calendar-drag-and-drop$/, "11-calendar", "-drag-and-drop"],
   [/^filled-calendar-quick-add$/, "11-calendar", "-quick-add"],
-  // Project analytics, members, settings
+  // Org and project analytics, members, settings
+  [/^filled-org-analytics-sparse-data$/, "24-org-analytics", "-sparse-data"],
+  [/^filled-org-analytics-no-activity$/, "24-org-analytics", "-no-activity"],
   [/^filled-project-.+-analytics-sparse-data$/, "13-analytics", "-sparse-data"],
   [/^filled-project-.+-analytics-no-activity$/, "13-analytics", "-no-activity"],
   [/^filled-project-.+-analytics$/, "13-analytics", ""],
@@ -289,6 +291,7 @@ export const URL_PATTERNS = {
   notifications: routePattern(ROUTES.notifications.path, "\\/?$"),
   myIssues: routePattern(ROUTES.myIssues.path, "\\/?$"),
   orgCalendar: routePattern(ROUTES.calendar.path, "\\/?$"),
+  analytics: routePattern(ROUTES.analytics.path, "\\/?$"),
   invoices: routePattern(ROUTES.invoices.list.path, "\\/?$"),
   clients: routePattern(ROUTES.clients.list.path, "\\/?$"),
   meetings: routePattern(ROUTES.meetings.path, "\\/?$"),

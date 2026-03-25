@@ -10,7 +10,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { NotificationsPage, ProjectsPage, WorkspacesPage } from "../pages";
+import { AnalyticsPage, NotificationsPage, ProjectsPage, WorkspacesPage } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
 import { getLocatorCount, isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
@@ -102,7 +102,6 @@ export async function screenshotFilledStates(
   await takeScreenshot(page, p, "notifications", ROUTES.notifications.build(orgSlug));
   await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
   await takeScreenshot(page, p, "org-calendar", ROUTES.calendar.build(orgSlug));
-  await takeScreenshot(page, p, "org-analytics", ROUTES.analytics.build(orgSlug));
   await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
   await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
@@ -127,6 +126,96 @@ export async function screenshotFilledStates(
     "settings-notifications",
     `${ROUTES.settings.profile.build(orgSlug)}?tab=notifications`,
   );
+
+  if (projectKey) {
+    const orgAnalyticsCaptureNames = [
+      "org-analytics",
+      "org-analytics-sparse-data",
+      "org-analytics-no-activity",
+    ] as const;
+
+    if (shouldCaptureAny(p, [...orgAnalyticsCaptureNames])) {
+      await runCaptureStep("org analytics states", async () => {
+        const analyticsUrl = ROUTES.analytics.build(orgSlug);
+        const applyOrgAnalyticsState = async (
+          mode: "default" | "sparseData" | "noActivity",
+        ): Promise<void> => {
+          const result = await testUserService.configureOrgAnalyticsState(
+            orgSlug,
+            projectKey,
+            mode,
+          );
+          if (!result.success) {
+            throw new Error(
+              result.error ?? `Failed to configure org analytics screenshot state: ${mode}`,
+            );
+          }
+        };
+
+        const captureOrgAnalyticsState = async ({
+          capturePage,
+          expectedState,
+          name,
+        }: {
+          capturePage: Page;
+          expectedState: "canonical" | "noActivity";
+          name: (typeof orgAnalyticsCaptureNames)[number];
+        }): Promise<void> => {
+          await capturePage.goto(`${BASE_URL}${analyticsUrl}`, { waitUntil: "domcontentloaded" });
+          const analyticsPage = new AnalyticsPage(capturePage, orgSlug);
+          if (expectedState === "canonical") {
+            await analyticsPage.expectCanonicalState();
+          } else {
+            await analyticsPage.expectNoActivityState();
+          }
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, p, name);
+        };
+
+        await applyOrgAnalyticsState("default");
+
+        if (shouldCapture(p, "org-analytics")) {
+          await captureOrgAnalyticsState({
+            capturePage: page,
+            expectedState: "canonical",
+            name: "org-analytics",
+          });
+        }
+
+        if (shouldCapture(p, "org-analytics-sparse-data")) {
+          await applyOrgAnalyticsState("sparseData");
+          const sparsePage = await page.context().newPage();
+          try {
+            await captureOrgAnalyticsState({
+              capturePage: sparsePage,
+              expectedState: "canonical",
+              name: "org-analytics-sparse-data",
+            });
+          } finally {
+            await sparsePage.close();
+          }
+        }
+
+        if (shouldCapture(p, "org-analytics-no-activity")) {
+          await applyOrgAnalyticsState("noActivity");
+          const noActivityPage = await page.context().newPage();
+          try {
+            await captureOrgAnalyticsState({
+              capturePage: noActivityPage,
+              expectedState: "noActivity",
+              name: "org-analytics-no-activity",
+            });
+          } finally {
+            await noActivityPage.close();
+          }
+        }
+
+        await applyOrgAnalyticsState("default");
+      });
+    }
+  } else if (shouldCapture(p, "org-analytics")) {
+    await takeScreenshot(page, p, "org-analytics", ROUTES.analytics.build(orgSlug));
+  }
   await takeScreenshot(
     page,
     p,

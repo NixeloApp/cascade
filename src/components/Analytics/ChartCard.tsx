@@ -9,6 +9,7 @@ export function ChartCard({
   title,
   description,
   emptyState,
+  emptyStateTestId,
   testId,
   children,
 }: {
@@ -19,6 +20,7 @@ export function ChartCard({
     description: string;
     icon?: string | LucideIcon;
   };
+  emptyStateTestId?: string;
   testId?: string;
   children: React.ReactNode;
 }) {
@@ -31,6 +33,7 @@ export function ChartCard({
     >
       {emptyState ? (
         <EmptyState
+          data-testid={emptyStateTestId}
           icon={emptyState.icon ?? BarChart3}
           title={emptyState.title}
           description={emptyState.description}

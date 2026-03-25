@@ -263,6 +263,8 @@ const DRY_RUN_PAGES = [
   "filled-my-issues-loading",
   "filled-my-issues",
   "filled-org-calendar",
+  "filled-org-analytics-sparse-data",
+  "filled-org-analytics-no-activity",
   "filled-org-analytics",
   "filled-invoices",
   "filled-clients",

@@ -376,6 +376,10 @@ export const TEST_IDS = {
     CARD: "analytics-card",
     /** @see src/routes/_app.$orgSlug.projects.$projectKey.analytics.tsx */
     PAGE: "analytics-page",
+    /** @see src/routes/_auth/_app/$orgSlug/analytics.tsx */
+    ORG_PAGE: "org-analytics-page",
+    /** @see src/routes/_auth/_app/$orgSlug/analytics.tsx */
+    ORG_PERIOD_SELECT: "org-analytics-period-select",
     /** @see src/components/AnalyticsDashboard.tsx - page header */
     PAGE_HEADER: "analytics-page-header",
     /** @see src/components/AnalyticsDashboard.tsx - page description */
@@ -392,6 +396,28 @@ export const TEST_IDS = {
     METRIC_UNASSIGNED: "analytics-metric-unassigned",
     METRIC_AVG_VELOCITY: "analytics-metric-avg-velocity",
     METRIC_COMPLETED_SPRINTS: "analytics-metric-completed-sprints",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_METRIC_COMPLETED: "org-analytics-metric-completed",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_METRIC_UNASSIGNED: "org-analytics-metric-unassigned",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_METRIC_PROJECTS: "org-analytics-metric-projects",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_CHART_TYPE: "org-analytics-chart-type",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_CHART_PRIORITY: "org-analytics-chart-priority",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_CHART_PROJECTS: "org-analytics-chart-projects",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_TREND_SECTION: "org-analytics-trend-section",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_PROJECT_BREAKDOWN: "org-analytics-project-breakdown",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_EMPTY_STATE: "org-analytics-empty-state",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_PROJECT_BREAKDOWN_EMPTY: "org-analytics-project-breakdown-empty",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_TRUNCATION_NOTICE: "org-analytics-truncation-notice",
   },
 
   // ============================================================

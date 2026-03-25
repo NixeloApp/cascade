@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/Select";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/analytics")({
   component: AnalyticsPage,
@@ -66,7 +67,7 @@ function AnalyticsPage() {
       headerActions={
         <Flex align="center" gap="sm">
           <Select value={timePeriod} onValueChange={(v) => setTimePeriod(v as TimePeriod)}>
-            <SelectTrigger width="sm">
+            <SelectTrigger width="sm" data-testid={TEST_IDS.ANALYTICS.ORG_PERIOD_SELECT}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

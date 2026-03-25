@@ -1212,6 +1212,78 @@ async function resetSeededProjectAnalyticsState(
   };
 }
 
+async function clearSeededProjectAnalyticsState(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+  },
+): Promise<{
+  success: boolean;
+  activityCount?: number;
+  issueCount?: number;
+  projectId?: Id<"projects">;
+  sprintCount?: number;
+  error?: string;
+}> {
+  const now = Date.now();
+  const project = await ctx.db.get(args.projectId);
+  if (!project) {
+    return { success: false, error: `project not found: ${args.projectId}` };
+  }
+
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const { ownerUserId } = screenshotActors;
+  const existingSprints = await ctx.db
+    .query("sprints")
+    .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const sprint of existingSprints) {
+    await ctx.db.delete(sprint._id);
+  }
+
+  const existingIssues = await ctx.db
+    .query("issues")
+    .withIndex("by_project_deleted", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  let activityCount = 0;
+  for (const issue of existingIssues) {
+    const activities = await ctx.db
+      .query("issueActivity")
+      .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+      .take(BOUNDED_LIST_LIMIT);
+    activityCount += activities.length;
+
+    for (const activity of activities) {
+      await ctx.db.delete(activity._id);
+    }
+
+    await ctx.db.patch(issue._id, {
+      ...softDeleteFields(ownerUserId),
+      updatedAt: now,
+    });
+  }
+
+  await syncProjectIssueStats(ctx, args.projectId);
+
+  return {
+    success: true,
+    activityCount,
+    issueCount: 0,
+    projectId: args.projectId,
+    sprintCount: 0,
+  };
+}
+
 const SCREENSHOT_OUTREACH_MAILBOX = {
   dailySendLimit: 40,
   displayName: "Alex Sender",
@@ -4168,6 +4240,158 @@ export const updateProjectAnalyticsStateInternal = internalMutation({
     }
 
     return analyticsReset;
+  },
+});
+
+/**
+ * Reconfigure seeded org analytics data for screenshot capture.
+ * POST /e2e/configure-org-analytics-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "sparseData" | "noActivity",
+ * }
+ *
+ * Org analytics in screenshot runs is driven by the seeded demo project, so this
+ * reuses the same underlying issue/sprint/activity reset path as project analytics.
+ */
+export const configureOrgAnalyticsStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "sparseData", "noActivity"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid org analytics mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateOrgAnalyticsStateInternal, {
+      mode,
+      orgSlug,
+      projectKey,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateOrgAnalyticsStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("sparseData"), v.literal("noActivity")),
+    orgSlug: v.string(),
+    projectKey: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    activityCount: v.optional(v.number()),
+    issueCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    sprintCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const orgProjects = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    let targetAnalyticsReset: {
+      success: boolean;
+      activityCount?: number;
+      issueCount?: number;
+      projectId?: Id<"projects">;
+      sprintCount?: number;
+      error?: string;
+    } | null = null;
+
+    for (const orgProject of orgProjects) {
+      const shouldClearProject = orgProject._id !== project._id || args.mode === "noActivity";
+      const analyticsReset = shouldClearProject
+        ? await clearSeededProjectAnalyticsState(ctx, {
+            organizationId: organization._id,
+            projectId: orgProject._id,
+          })
+        : await resetSeededProjectAnalyticsState(ctx, {
+            mode: args.mode,
+            organizationId: organization._id,
+            projectId: orgProject._id,
+          });
+
+      if (!analyticsReset.success) {
+        return {
+          success: false,
+          error:
+            analyticsReset.error ??
+            `Failed to configure org analytics state: ${args.mode} for ${orgProject.key}`,
+        };
+      }
+
+      if (orgProject._id === project._id) {
+        targetAnalyticsReset = analyticsReset;
+      }
+    }
+
+    if (!targetAnalyticsReset) {
+      return {
+        success: false,
+        error: `Failed to configure org analytics state: ${args.mode}`,
+      };
+    }
+
+    return targetAnalyticsReset;
   },
 });
 

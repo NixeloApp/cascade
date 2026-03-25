@@ -2,7 +2,7 @@
 
 > **Route**: `/:orgSlug/analytics`
 > **Status**: IMPLEMENTED
-> **Last Updated**: 2026-03-22
+> **Last Updated**: 2026-03-25
 
 ---
 
@@ -50,20 +50,28 @@ The org analytics dashboard provides a high-level view of issue metrics, project
 2. **Loading gate**: While `analytics === undefined`, shows `<PageContent isLoading>`.
 3. **Dashboard component**: `OrganizationAnalyticsDashboard` is a pure presentational component that receives the full analytics payload as a prop. It contains no queries or mutations of its own.
 4. **Metric cards**: Four top-level KPI cards (Total Issues with highlight, Completed, Unassigned, Projects) using the `MetricCard` component with icons.
-5. **Bar charts**: Two side-by-side `ChartCard` + `BarChart` components show issue distribution by type and by priority. A third chart shows top-10 projects by issue count (conditional on having projects).
-6. **Project breakdown**: `ProjectBreakdownSection` renders a vertical list of `InsetPanel` rows, each showing project name, key, and issue count.
-7. **Truncation warning**: If `analytics.isProjectsTruncated` is true (>100 projects), an `InsetPanel` warning banner appears below the header.
+5. **Bar charts**: Two side-by-side `ChartCard` + `BarChart` components show issue distribution by type and by priority. A third chart shows top-10 projects by issue count, and all three switch to explicit empty states when the selected period has no work.
+6. **Project breakdown**: `ProjectBreakdownSection` renders a vertical list of compact rows for active projects, or an explicit empty state when the selected period has no project activity.
+7. **Truncation warning**: If `analytics.isProjectsTruncated` is true (>100 projects), a warning banner appears below the header.
 
 ---
 
 ## Screenshot Matrix
 
-| Viewport | Theme | Preview |
-|----------|-------|---------|
-| Desktop | Dark | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | ![](screenshots/desktop-light.png) |
-| Tablet | Light | ![](screenshots/tablet-light.png) |
-| Mobile | Light | ![](screenshots/mobile-light.png) |
+| Viewport | Theme | Variant | Preview |
+|----------|-------|---------|---------|
+| Desktop | Dark | Canonical | ![](screenshots/desktop-dark.png) |
+| Desktop | Dark | Sparse data | ![](screenshots/desktop-dark-sparse-data.png) |
+| Desktop | Dark | No activity | ![](screenshots/desktop-dark-no-activity.png) |
+| Desktop | Light | Canonical | ![](screenshots/desktop-light.png) |
+| Desktop | Light | Sparse data | ![](screenshots/desktop-light-sparse-data.png) |
+| Desktop | Light | No activity | ![](screenshots/desktop-light-no-activity.png) |
+| Tablet | Light | Canonical | ![](screenshots/tablet-light.png) |
+| Tablet | Light | Sparse data | ![](screenshots/tablet-light-sparse-data.png) |
+| Tablet | Light | No activity | ![](screenshots/tablet-light-no-activity.png) |
+| Mobile | Light | Canonical | ![](screenshots/mobile-light.png) |
+| Mobile | Light | Sparse data | ![](screenshots/mobile-light-sparse-data.png) |
+| Mobile | Light | No activity | ![](screenshots/mobile-light-no-activity.png) |
 
 ---
 

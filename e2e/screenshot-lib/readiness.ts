@@ -695,8 +695,11 @@ export async function waitForExpectedContent(
     return;
   }
 
-  // Org analytics uses PageHeader (not the project analytics component)
-  // so it falls through to the default fallback below
+  if (URL.analytics.test(url) || name === "org-analytics") {
+    await new AnalyticsPage(page, READINESS_ONLY_SLUG).waitUntilReady();
+    await waitForSpinnersHidden(page);
+    return;
+  }
 
   if (URL.projectRoadmap.test(url)) {
     await waitForRoadmapReady(page);

@@ -82,6 +82,7 @@ export interface DeleteSeededProjectIssueResult {
 
 export type ProjectInboxScreenshotState = "default" | "openEmpty" | "closedEmpty";
 export type ProjectAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
+export type OrgAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
 export type NotificationsScreenshotState =
   | "default"
   | "inboxEmpty"
@@ -106,6 +107,15 @@ export interface ConfigureNotificationsStateResult {
 }
 
 export interface ConfigureProjectAnalyticsStateResult {
+  success: boolean;
+  activityCount?: number;
+  issueCount?: number;
+  projectId?: string;
+  sprintCount?: number;
+  error?: string;
+}
+
+export interface ConfigureOrgAnalyticsStateResult {
   success: boolean;
   activityCount?: number;
   issueCount?: number;
@@ -518,6 +528,30 @@ export class TestUserService {
     } catch (error) {
       console.warn(
         `  ⚠️ Failed to configure analytics state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded org analytics data for screenshot capture.
+   */
+  async configureOrgAnalyticsState(
+    orgSlug: string,
+    projectKey: string,
+    mode: OrgAnalyticsScreenshotState,
+  ): Promise<ConfigureOrgAnalyticsStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureOrgAnalyticsState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure org analytics state ${mode} for ${projectKey} in ${orgSlug}:`,
         error,
       );
       return { success: false, error: String(error) };

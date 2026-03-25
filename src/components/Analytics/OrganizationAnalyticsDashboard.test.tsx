@@ -68,12 +68,64 @@ describe("OrganizationAnalyticsDashboard", () => {
       <OrganizationAnalyticsDashboard
         analytics={{
           ...baseAnalytics,
+          totalIssues: 0,
+          completedCount: 0,
+          unassignedCount: 0,
+          projectBreakdown: [],
+          issuesByType: {
+            task: 0,
+            bug: 0,
+            story: 0,
+            epic: 0,
+            subtask: 0,
+          },
+          issuesByPriority: {
+            highest: 0,
+            high: 0,
+            medium: 0,
+            low: 0,
+            lowest: 0,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Issues by Project (top 10)")).toBeInTheDocument();
+    expect(screen.getByText("Project Breakdown")).toBeInTheDocument();
+    expect(screen.getAllByText("No issue activity for this period")).toHaveLength(4);
+  });
+
+  it("shows an explicit no-project empty state when nothing is accessible", () => {
+    render(
+      <OrganizationAnalyticsDashboard
+        analytics={{
+          ...baseAnalytics,
+          totalIssues: 0,
+          completedCount: 0,
+          unassignedCount: 0,
+          projectCount: 0,
+          issuesByType: {
+            task: 0,
+            bug: 0,
+            story: 0,
+            epic: 0,
+            subtask: 0,
+          },
+          issuesByPriority: {
+            highest: 0,
+            high: 0,
+            medium: 0,
+            low: 0,
+            lowest: 0,
+          },
           projectBreakdown: [],
         }}
       />,
     );
 
-    expect(screen.queryByText("Issues by Project (top 10)")).not.toBeInTheDocument();
-    expect(screen.queryByText("Project Breakdown")).not.toBeInTheDocument();
+    expect(screen.getAllByText("No projects available")).toHaveLength(4);
+    expect(
+      screen.getAllByText("Join or create a project to populate organization-level analytics."),
+    ).toHaveLength(4);
   });
 });
