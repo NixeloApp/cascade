@@ -14,7 +14,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
-import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
+import { BOUNDED_LIST_LIMIT, collectInBatches } from "../lib/boundedQueries";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { logger } from "../lib/logger";
 import { DAY, MINUTE } from "../lib/timeUtils";
@@ -749,10 +749,12 @@ async function getActiveMailboxEnrollmentsForContact(
   contactId: Id<"outreachContacts">,
   mailboxId: Id<"outreachMailboxes">,
 ) {
-  const enrollments = await ctx.db
-    .query("outreachEnrollments")
-    .withIndex("by_contact", (q) => q.eq("contactId", contactId))
-    .take(BOUNDED_LIST_LIMIT);
+  const enrollments = await collectInBatches((cursor) =>
+    ctx.db
+      .query("outreachEnrollments")
+      .withIndex("by_contact", (q) => q.eq("contactId", contactId))
+      .paginate({ numItems: BOUNDED_LIST_LIMIT, cursor }),
+  );
 
   const activeEnrollments = enrollments.filter(
     (enrollment) => enrollment.status === "active" || enrollment.status === "paused",
@@ -768,6 +770,35 @@ async function getActiveMailboxEnrollmentsForContact(
   return enrollmentsWithSequence
     .filter((entry) => entry.sequence?.mailboxId === mailboxId)
     .map((entry) => entry.enrollment);
+}
+
+function classifyBounceType(params: { diagnosticCode?: string; reason?: string }): "hard" | "soft" {
+  const details = `${params.diagnosticCode ?? ""}\n${params.reason ?? ""}`.toLowerCase();
+  if (!details) {
+    return "soft";
+  }
+
+  if (
+    /\b5\.\d\.\d\b/.test(details) ||
+    /(^|[^0-9])5\d{2}([^0-9]|$)/.test(details) ||
+    /does not exist|not found|unknown user|no such user|invalid recipient|recipient address rejected/.test(
+      details,
+    )
+  ) {
+    return "hard";
+  }
+
+  if (
+    /\b4\.\d\.\d\b/.test(details) ||
+    /(^|[^0-9])4\d{2}([^0-9]|$)/.test(details) ||
+    /temporary|temporarily|try again|mailbox full|over quota|rate limit|resources temporarily unavailable/.test(
+      details,
+    )
+  ) {
+    return "soft";
+  }
+
+  return "soft";
 }
 
 /**
@@ -875,6 +906,10 @@ export const findEnrollmentForBounce = internalMutation({
     const activeEnrollment =
       matchedByThread ?? (activeEnrollments.length === 1 ? activeEnrollments[0] : undefined);
     if (!activeEnrollment) return { matched: false };
+    const bounceType = classifyBounceType({
+      diagnosticCode: args.diagnosticCode,
+      reason: args.bounceReason,
+    });
 
     await ctx.db.insert("outreachEvents", {
       enrollmentId: activeEnrollment._id,
@@ -884,7 +919,7 @@ export const findEnrollmentForBounce = internalMutation({
       type: "bounced",
       step: activeEnrollment.currentStep,
       metadata: {
-        bounceType: "hard",
+        bounceType,
         diagnosticCode: args.diagnosticCode,
         failedRecipient: normalizedEmail,
         replyContent: args.bounceReason,
@@ -892,14 +927,16 @@ export const findEnrollmentForBounce = internalMutation({
       createdAt: Date.now(),
     });
 
-    await stopEnrollment(ctx, activeEnrollment._id, "bounced");
-    await suppress(
-      ctx,
-      mailbox.organizationId,
-      normalizedEmail,
-      "hard_bounce",
-      activeEnrollment._id,
-    );
+    if (bounceType === "hard") {
+      await stopEnrollment(ctx, activeEnrollment._id, "bounced");
+      await suppress(
+        ctx,
+        mailbox.organizationId,
+        normalizedEmail,
+        "hard_bounce",
+        activeEnrollment._id,
+      );
+    }
 
     const sequence = await ctx.db.get(activeEnrollment.sequenceId);
     const stats = sequence?.stats ?? {
@@ -917,7 +954,7 @@ export const findEnrollmentForBounce = internalMutation({
     }
 
     logger.info(
-      `Outreach bounce detected: ${normalizedEmail} bounced on sequence ${activeEnrollment.sequenceId}`,
+      `Outreach ${bounceType} bounce detected: ${normalizedEmail} bounced on sequence ${activeEnrollment.sequenceId}`,
     );
 
     return { matched: true };

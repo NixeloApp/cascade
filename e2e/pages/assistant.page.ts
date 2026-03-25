@@ -37,16 +37,15 @@ export class AssistantPage extends BasePage {
     await expect
       .poll(
         async () => {
-          if (await isLocatorVisible(this.loadingState)) return "loading";
           if (await isLocatorVisible(this.snapshotCard)) return "ready";
           if (await isLocatorVisible(this.overviewEmptyState)) return "ready";
+          if (await isLocatorVisible(this.conversationsEmptyState)) return "ready";
           if (await isLocatorVisible(this.conversationsList)) return "ready";
-          if (await isLocatorVisible(this.content)) return "ready";
           return "pending";
         },
         { timeout: 12000 },
       )
-      .toMatch(/ready|loading/);
+      .toBe("ready");
   }
 
   async openConversationsTab(): Promise<void> {

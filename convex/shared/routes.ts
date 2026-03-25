@@ -88,6 +88,10 @@ export const ROUTES = {
     path: "/$orgSlug/outreach" as const,
     build: (orgSlug: string) => `/${orgSlug}/outreach`,
   },
+  outreachGoogleAuth: {
+    path: "/outreach/google/auth" as const,
+    build: () => "/outreach/google/auth",
+  },
   team: {
     path: "/$orgSlug/team" as const,
     build: (orgSlug: string) => `/${orgSlug}/team`,

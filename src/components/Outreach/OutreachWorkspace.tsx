@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { ROUTES } from "@convex/shared/routes";
 import type { FunctionReturnType } from "convex/server";
 import { useEffect, useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
@@ -36,6 +37,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { getConvexSiteUrl } from "@/lib/convex";
 import { formatDateTime as formatTimestamp } from "@/lib/formatting";
 import {
@@ -127,7 +130,14 @@ const DEFAULT_SEQUENCE_FORM: SequenceFormState = {
 };
 
 const MAX_SEQUENCE_STEPS = 5;
-const GMAIL_AUTH_URL = `${getConvexSiteUrl()}/outreach/google/auth`;
+const GMAIL_AUTH_ORIGIN = new URL(getConvexSiteUrl()).origin;
+
+function buildGmailAuthUrl(userId: Id<"users">, organizationId: Id<"organizations">): string {
+  const authUrl = new URL(ROUTES.outreachGoogleAuth.build(), getConvexSiteUrl());
+  authUrl.searchParams.set("userId", userId);
+  authUrl.searchParams.set("organizationId", organizationId);
+  return authUrl.toString();
+}
 
 function createSequenceFormStep(
   values?: Partial<Omit<SequenceFormStepState, "id">>,
@@ -261,6 +271,8 @@ function SectionTitle({
 
 /** Organization-level outreach workspace for managing mailboxes, sequences, contacts, and analytics. */
 export function OutreachWorkspace() {
+  const { organizationId } = useOrganization();
+  const { user: currentUser } = useCurrentUser();
   const [activeTab, setActiveTab] = useState<OutreachTab>("overview");
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -848,13 +860,19 @@ export function OutreachWorkspace() {
   }
 
   function handleConnectMailbox() {
+    if (!currentUser?._id) {
+      showError("We could not verify your account. Refresh and try again.");
+      return;
+    }
+
     const width = 620;
     const height = 760;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
+    const gmailAuthUrl = buildGmailAuthUrl(currentUser._id, organizationId);
 
     const popup = window.open(
-      GMAIL_AUTH_URL,
+      gmailAuthUrl,
       "Outreach Gmail OAuth",
       `width=${width},height=${height},left=${left},top=${top},popup=yes`,
     );
@@ -2566,7 +2584,7 @@ function useMailboxConnectedListener(
 ) {
   useEffect(() => {
     const handleMailboxConnected = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) {
+      if (event.origin !== GMAIL_AUTH_ORIGIN) {
         return;
       }
 

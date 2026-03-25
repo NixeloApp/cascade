@@ -1,9 +1,11 @@
 import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor, within } from "@/test/custom-render";
@@ -45,12 +47,19 @@ vi.mock("@convex/_generated/api", () => ({
         updateSequenceStatus: "outreach.sequences.updateSequenceStatus",
       },
     },
+    users: {
+      getCurrent: "users.getCurrent",
+    },
   },
 }));
 
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedMutation: vi.fn(),
   useAuthenticatedQuery: vi.fn(),
+}));
+
+vi.mock("@/hooks/useOrgContext", () => ({
+  useOrganization: vi.fn(),
 }));
 
 vi.mock("@/lib/convex", () => ({
@@ -64,6 +73,8 @@ vi.mock("@/lib/toast", () => ({
 
 const outreachApi = api.outreach;
 const OUTREACH_FORM_TEST_TIMEOUT_MS = 15_000;
+const TEST_USER_ID = "user_1" as Id<"users">;
+const TEST_ORGANIZATION_ID = "org_1" as Id<"organizations">;
 
 type MutationArgs = [] | [Record<string, unknown>?];
 type MutationProcedure = (...args: MutationArgs) => Promise<unknown>;
@@ -81,6 +92,7 @@ function createMutationMock(mockProcedure: Mock<MutationProcedure>): MutationMoc
 
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
+const mockUseOrganization = vi.mocked(useOrganization);
 const mockShowError = vi.mocked(showError);
 const mockShowSuccess = vi.mocked(showSuccess);
 
@@ -111,11 +123,11 @@ const mailbox = {
   minuteSendCount: 0,
   minuteSendLimit: 5,
   minuteWindowStartedAt: 1_700_000_000_000,
-  organizationId: "org_1",
+  organizationId: TEST_ORGANIZATION_ID,
   provider: "google" as const,
   refreshToken: "[redacted]",
   updatedAt: 1_700_000_000_000,
-  userId: "user_1",
+  userId: TEST_USER_ID,
 };
 
 const contact = {
@@ -123,12 +135,12 @@ const contact = {
   _id: "contact_1",
   company: "Acme",
   createdAt: 1_700_000_000_000,
-  createdBy: "user_1",
+  createdBy: TEST_USER_ID,
   customFields: { role: "Founder" },
   email: "alex@example.com",
   firstName: "Alex",
   lastName: "Stone",
-  organizationId: "org_1",
+  organizationId: TEST_ORGANIZATION_ID,
   source: "manual" as const,
   tags: ["vip"],
   timezone: "America/Chicago",
@@ -138,10 +150,10 @@ const sequence = {
   _creationTime: 1,
   _id: "sequence_1",
   createdAt: 1_700_000_000_000,
-  createdBy: "user_1",
+  createdBy: TEST_USER_ID,
   mailboxId: "mailbox_1",
   name: "Founder follow-up",
-  organizationId: "org_1",
+  organizationId: TEST_ORGANIZATION_ID,
   physicalAddress: "123 Main St, Chicago, IL 60601",
   stats: { bounced: 0, enrolled: 1, opened: 0, replied: 0, sent: 1, unsubscribed: 0 },
   status: "draft" as const,
@@ -162,7 +174,7 @@ const enrollment = {
   enrolledAt: 1_700_000_000_000,
   lastRepliedAt: undefined,
   nextSendAt: 1_700_000_100_000,
-  organizationId: "org_1",
+  organizationId: TEST_ORGANIZATION_ID,
   sequenceId: "sequence_1",
   status: "active" as const,
 };
@@ -260,6 +272,7 @@ function getDefaultQueryResult(query: unknown, args: unknown) {
     [outreachApi.analytics.getSequenceStats, args === "skip" ? undefined : sequenceStats],
     [outreachApi.analytics.getSequenceFunnel, args === "skip" ? undefined : sequenceFunnel],
     [outreachApi.analytics.getContactTimeline, args === "skip" ? undefined : timeline],
+    [api.users.getCurrent, { _id: TEST_USER_ID, email: "alex@example.com" }],
   ]);
   const result = queryHandlers.get(query);
   if (result === undefined && !queryHandlers.has(query)) {
@@ -285,6 +298,31 @@ function getEmptyWorkspaceOverview() {
     sequences: 0,
     unsubscribed: 0,
   };
+}
+
+function mockMailboxConnectionQueryState() {
+  mockUseAuthenticatedQuery.mockImplementation((query) => {
+    if (query === outreachApi.contacts.list) {
+      return [contact];
+    }
+    if (query === outreachApi.sequences.list) {
+      return [];
+    }
+    if (query === outreachApi.mailboxes.list) {
+      return [];
+    }
+    if (query === outreachApi.analytics.getMailboxHealth) {
+      return [];
+    }
+    if (query === outreachApi.analytics.getOrganizationOverview) {
+      return getEmptyWorkspaceOverview();
+    }
+    if (query === api.users.getCurrent) {
+      return { _id: TEST_USER_ID, email: "alex@example.com" };
+    }
+
+    return undefined;
+  });
 }
 
 describe("OutreachWorkspace", () => {
@@ -328,6 +366,14 @@ describe("OutreachWorkspace", () => {
       return buildMutationHookResult(mockProcedure);
     });
 
+    mockUseOrganization.mockReturnValue({
+      billingEnabled: true,
+      orgSlug: "acme",
+      organizationId: TEST_ORGANIZATION_ID,
+      organizationName: "Acme",
+      userRole: "owner",
+    });
+
     mockUseAuthenticatedQuery.mockImplementation((query, args) =>
       getDefaultQueryResult(query, args),
     );
@@ -335,37 +381,39 @@ describe("OutreachWorkspace", () => {
     vi.spyOn(window, "open").mockImplementation(() => window);
   });
 
-  it("opens the Gmail OAuth popup and accepts same-origin mailbox-connected messages", async () => {
+  it("opens the Gmail OAuth popup and accepts Convex-origin mailbox-connected messages", async () => {
     const user = userEvent.setup();
-    mockUseAuthenticatedQuery.mockImplementation((query) => {
-      if (query === outreachApi.contacts.list) {
-        return [contact];
-      }
-      if (query === outreachApi.sequences.list) {
-        return [];
-      }
-      if (query === outreachApi.mailboxes.list) {
-        return [];
-      }
-      if (query === outreachApi.analytics.getMailboxHealth) {
-        return [];
-      }
-      if (query === outreachApi.analytics.getOrganizationOverview) {
-        return getEmptyWorkspaceOverview();
-      }
-
-      return undefined;
-    });
+    mockMailboxConnectionQueryState();
 
     render(<OutreachWorkspace />);
 
     await user.click(screen.getAllByRole("button", { name: /connect gmail/i })[0]);
 
     expect(window.open).toHaveBeenCalledWith(
-      "https://demo.convex.site/outreach/google/auth",
+      "https://demo.convex.site/outreach/google/auth?userId=user_1&organizationId=org_1",
       "Outreach Gmail OAuth",
       expect.stringContaining("width=620"),
     );
+
+    await act(async () => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { mailboxId: "mailbox_2", type: "outreach-mailbox-connected" },
+          origin: "https://demo.convex.site",
+        }),
+      );
+    });
+
+    expect(mockShowSuccess).toHaveBeenCalledWith("Mailbox connected successfully");
+  });
+
+  it("ignores mailbox-connected messages from the app origin", async () => {
+    const user = userEvent.setup();
+    mockMailboxConnectionQueryState();
+
+    render(<OutreachWorkspace />);
+
+    await user.click(screen.getAllByRole("button", { name: /connect gmail/i })[0]);
 
     await act(async () => {
       window.dispatchEvent(
@@ -376,31 +424,13 @@ describe("OutreachWorkspace", () => {
       );
     });
 
-    expect(mockShowSuccess).toHaveBeenCalledWith("Mailbox connected successfully");
+    expect(mockShowSuccess).not.toHaveBeenCalled();
   });
 
   it("shows a popup error when Gmail OAuth is blocked", async () => {
     const user = userEvent.setup();
     vi.mocked(window.open).mockReturnValueOnce(null);
-    mockUseAuthenticatedQuery.mockImplementation((query) => {
-      if (query === outreachApi.contacts.list) {
-        return [contact];
-      }
-      if (query === outreachApi.sequences.list) {
-        return [];
-      }
-      if (query === outreachApi.mailboxes.list) {
-        return [];
-      }
-      if (query === outreachApi.analytics.getMailboxHealth) {
-        return [];
-      }
-      if (query === outreachApi.analytics.getOrganizationOverview) {
-        return getEmptyWorkspaceOverview();
-      }
-
-      return undefined;
-    });
+    mockMailboxConnectionQueryState();
 
     render(<OutreachWorkspace />);
 

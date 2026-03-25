@@ -328,7 +328,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async waitUntilReady(): Promise<void> {
-    await expect.poll(() => this.readProjectsViewState(), { timeout: 12000 }).not.toBe("pending");
+    await expect.poll(() => this.readProjectsViewState(), { timeout: 12000 }).toBe("ready");
   }
 
   async gotoProjectBoard(projectKey: string) {
@@ -1077,7 +1077,7 @@ export class ProjectsPage extends BasePage {
   async expectProjectsView(timeout = 10000) {
     await expect
       .poll(() => this.readProjectsViewState(), { timeout, intervals: [200, 500, 1000] })
-      .not.toBe("pending");
+      .toBe("ready");
   }
 
   async expectProjectsGridVisible(timeout = 10000) {
@@ -1103,9 +1103,9 @@ export class ProjectsPage extends BasePage {
     );
   }
 
-  private async readProjectsViewState(): Promise<"ready" | "pending"> {
+  private async readProjectsViewState(): Promise<"ready" | "loading" | "pending"> {
     if (await isLocatorVisible(this.projectsLoadingState)) {
-      return "ready";
+      return "loading";
     }
 
     if (await isLocatorVisible(this.projectsGrid)) {

@@ -489,4 +489,85 @@ describe("outreach gmail", () => {
     );
     expect(events).toHaveLength(0);
   });
+
+  it("keeps soft bounces active without suppressing the contact", async () => {
+    const { t, fixture } = await createOutreachFixture();
+
+    const result = await t.mutation(internal.outreach.gmail.findEnrollmentForBounce, {
+      bouncedRecipientEmail: "lead@example.com",
+      mailboxId: fixture.mailboxId,
+      diagnosticCode: "421 4.7.0 Temporary rate limit exceeded",
+      bounceReason: "Delivery temporarily delayed",
+    });
+
+    expect(result).toEqual({ matched: true });
+
+    const enrollment = await t.run(async (ctx) => ctx.db.get(fixture.enrollmentId));
+    expect(enrollment).not.toBeNull();
+    if (enrollment === null) throw new Error("enrollment is null");
+    expect(enrollment.status).toBe("active");
+
+    const suppressions = await t.run(async (ctx) =>
+      ctx.db
+        .query("outreachSuppressions")
+        .withIndex("by_organization_email", (q) =>
+          q.eq("organizationId", fixture.organizationId).eq("email", "lead@example.com"),
+        )
+        .collect(),
+    );
+    expect(suppressions).toHaveLength(0);
+
+    const events = await t.run(async (ctx) =>
+      ctx.db
+        .query("outreachEvents")
+        .withIndex("by_enrollment", (q) => q.eq("enrollmentId", fixture.enrollmentId))
+        .collect(),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe("bounced");
+    expect(events[0].metadata).toMatchObject({
+      bounceType: "soft",
+      failedRecipient: "lead@example.com",
+      diagnosticCode: "421 4.7.0 Temporary rate limit exceeded",
+      replyContent: "Delivery temporarily delayed",
+    });
+  });
+
+  it("still finds the active mailbox enrollment when older enrollments exceed the bounded slice", async () => {
+    const { t, fixture } = await createOutreachFixture();
+
+    for (let index = 0; index < 100; index += 1) {
+      const { sequenceId, enrollmentId } = await createSequenceAndEnrollment(t, {
+        userId: fixture.userId,
+        organizationId: fixture.organizationId,
+        mailboxId: fixture.mailboxId,
+        contactId: fixture.contactId,
+        sequenceName: `Historical Sequence ${index}`,
+      });
+
+      await t.run(async (ctx) => {
+        await ctx.db.patch(sequenceId, {
+          updatedAt: Date.now() - (index + 1) * 1_000,
+        });
+        await ctx.db.patch(enrollmentId, {
+          completedAt: Date.now() - (index + 1) * 1_000,
+          status: "replied",
+        });
+      });
+    }
+
+    const result = await t.mutation(internal.outreach.gmail.findEnrollmentForBounce, {
+      bouncedRecipientEmail: "lead@example.com",
+      mailboxId: fixture.mailboxId,
+      diagnosticCode: "550 5.1.1 User unknown",
+      bounceReason: "Mailbox unavailable",
+    });
+
+    expect(result).toEqual({ matched: true });
+
+    const enrollment = await t.run(async (ctx) => ctx.db.get(fixture.enrollmentId));
+    expect(enrollment).not.toBeNull();
+    if (enrollment === null) throw new Error("enrollment is null");
+    expect(enrollment.status).toBe("bounced");
+  });
 });

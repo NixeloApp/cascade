@@ -197,11 +197,15 @@ export async function screenshotFilledStates(
           await applyOrgAnalyticsState("sparseData");
           const sparsePage = await page.context().newPage();
           try {
-            await captureOrgAnalyticsState({
-              capturePage: sparsePage,
-              expectedState: "canonical",
-              name: "org-analytics-sparse-data",
-            });
+            try {
+              await captureOrgAnalyticsState({
+                capturePage: sparsePage,
+                expectedState: "canonical",
+                name: "org-analytics-sparse-data",
+              });
+            } finally {
+              await applyOrgAnalyticsState("default");
+            }
           } finally {
             await sparsePage.close();
           }
@@ -211,11 +215,15 @@ export async function screenshotFilledStates(
           await applyOrgAnalyticsState("noActivity");
           const noActivityPage = await page.context().newPage();
           try {
-            await captureOrgAnalyticsState({
-              capturePage: noActivityPage,
-              expectedState: "noActivity",
-              name: "org-analytics-no-activity",
-            });
+            try {
+              await captureOrgAnalyticsState({
+                capturePage: noActivityPage,
+                expectedState: "noActivity",
+                name: "org-analytics-no-activity",
+              });
+            } finally {
+              await applyOrgAnalyticsState("default");
+            }
           } finally {
             await noActivityPage.close();
           }
@@ -1541,53 +1549,65 @@ export async function screenshotFilledStates(
 
       await applyTimeTrackingState("default");
 
-      if (shouldCapture(p, "time-tracking-burn-rate")) {
-        await captureTimeTrackingState({
-          expectedState: "burn-rate",
-          name: "time-tracking-burn-rate",
-          requestedState: "burn-rate",
-        });
-      }
+      try {
+        if (shouldCapture(p, "time-tracking-burn-rate")) {
+          await captureTimeTrackingState({
+            expectedState: "burn-rate",
+            name: "time-tracking-burn-rate",
+            requestedState: "burn-rate",
+          });
+        }
 
-      if (shouldCapture(p, "time-tracking-rates")) {
-        await applyTimeTrackingState("ratesPopulated");
-        await captureTimeTrackingState({
-          expectedState: "entries",
-          afterReady: async (trackingPage) => {
-            await trackingPage.ratesTab.click();
-            await trackingPage.expectRatesState();
-          },
-          name: "time-tracking-rates",
-        });
+        if (shouldCapture(p, "time-tracking-rates")) {
+          await applyTimeTrackingState("ratesPopulated");
+          try {
+            await captureTimeTrackingState({
+              expectedState: "entries",
+              afterReady: async (trackingPage) => {
+                await trackingPage.ratesTab.click();
+                await trackingPage.expectRatesState();
+              },
+              name: "time-tracking-rates",
+            });
+          } finally {
+            await applyTimeTrackingState("default");
+          }
+        }
+
+        if (shouldCapture(p, "time-tracking-empty")) {
+          await applyTimeTrackingState("entriesEmpty");
+          try {
+            await captureTimeTrackingState({
+              expectedState: "entries",
+              name: "time-tracking-empty",
+            });
+          } finally {
+            await applyTimeTrackingState("default");
+          }
+        }
+
+        if (shouldCapture(p, "time-tracking-all-time")) {
+          await captureTimeTrackingState({
+            expectedState: "entries",
+            name: "time-tracking-all-time",
+            requestedState: "all-time",
+          });
+        }
+
+        if (shouldCapture(p, "time-tracking-truncated")) {
+          await applyTimeTrackingState("summaryTruncated");
+          try {
+            await captureTimeTrackingState({
+              expectedState: "entries",
+              name: "time-tracking-truncated",
+            });
+          } finally {
+            await applyTimeTrackingState("default");
+          }
+        }
+      } finally {
         await applyTimeTrackingState("default");
       }
-
-      if (shouldCapture(p, "time-tracking-empty")) {
-        await applyTimeTrackingState("entriesEmpty");
-        await captureTimeTrackingState({
-          expectedState: "entries",
-          name: "time-tracking-empty",
-        });
-        await applyTimeTrackingState("default");
-      }
-
-      if (shouldCapture(p, "time-tracking-all-time")) {
-        await captureTimeTrackingState({
-          expectedState: "entries",
-          name: "time-tracking-all-time",
-          requestedState: "all-time",
-        });
-      }
-
-      if (shouldCapture(p, "time-tracking-truncated")) {
-        await applyTimeTrackingState("summaryTruncated");
-        await captureTimeTrackingState({
-          expectedState: "entries",
-          name: "time-tracking-truncated",
-        });
-      }
-
-      await applyTimeTrackingState("default");
     });
   }
 
