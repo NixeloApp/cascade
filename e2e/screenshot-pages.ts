@@ -53,7 +53,7 @@ import {
 import { screenshotFilledStates } from "./screenshot-lib/filled-states";
 import { autoLogin } from "./screenshot-lib/helpers";
 import { screenshotEmptyStates, screenshotPublicPages } from "./screenshot-lib/public-pages";
-import { waitForExpectedContent } from "./screenshot-lib/readiness";
+import { waitForExpectedContent, waitForSpinnersHidden } from "./screenshot-lib/readiness";
 import { getGeneratedSpecFolders, resolveCaptureTarget } from "./screenshot-lib/routing";
 import { injectAuthTokens } from "./utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
@@ -184,16 +184,11 @@ async function captureFilledForConfig(
   await screenshotPublicPages(page, seedResult);
 
   try {
-    if (storageState) {
-      const dashboardUrl = `${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`;
-      try {
-        await page.goto(dashboardUrl, { waitUntil: "load" });
-        await waitForDashboardReady(page);
-      } catch {
-        await page.reload({ waitUntil: "load" });
-        await waitForDashboardReady(page);
-      }
-    } else if (!(await authenticateAndNavigate(page, orgSlug))) {
+    // Re-authenticate per filled-state config instead of relying solely on the
+    // setup-time storage snapshot. The screenshot run spans multiple fresh
+    // browser contexts, and re-establishing auth here is more deterministic
+    // for route-level captures than reusing a potentially stale token snapshot.
+    if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureState.captureFailures++;
       console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
       return;
@@ -322,6 +317,11 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-board",
   "filled-project-PROJ-backlog",
   "filled-project-PROJ-inbox",
+  "filled-project-PROJ-inbox-closed",
+  "filled-project-PROJ-inbox-bulk-selection",
+  "filled-project-PROJ-inbox-snooze-menu",
+  "filled-project-PROJ-inbox-decline-dialog",
+  "filled-project-PROJ-inbox-duplicate-dialog",
   "filled-project-PROJ-sprints",
   "filled-project-PROJ-roadmap",
   "filled-project-PROJ-calendar",

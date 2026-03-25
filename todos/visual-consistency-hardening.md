@@ -8,7 +8,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ## Remaining
 
-Documents workspace screenshot review now covers the canonical route plus template and search variants, and the issues route now has reviewed filtered, modal, side-panel, and loading captures across desktop/tablet/mobile. The remaining work here is broader page-by-page polish, true empty-state review depth, and cross-surface consistency rather than another blind core-route gap.
+Documents workspace screenshot review now covers the canonical route plus template and search variants, the issues route now has reviewed filtered, modal, side-panel, and loading captures across desktop/tablet/mobile, and the project inbox now has reviewed closed, bulk-selection, snooze, decline, and duplicate states across the full viewport matrix. The remaining work here is broader page-by-page polish, true empty-state review depth, and cross-surface consistency rather than another blind core-route gap.
 
 ### Screenshot-driven cleanup
 
@@ -24,6 +24,7 @@ Documents workspace screenshot review now covers the canonical route plus templa
 - [ ] Capture and approve real surface variants when they matter, not just the canonical route screenshot: empty, loading, error, modal, sheet, popover, dropdown, create, edit, confirm, destructive, blocked, filtered, selected, inline-edit, and expanded-detail states.
 - [ ] Audit existing screenshot folders for uneven matrices -- some pages already have desktop/tablet/mobile variants plus deep state captures, while others only have the canonical route and need explicit expansion
 - [ ] Treat "tablet/mobile missing from the reviewed matrix" as a real consistency gap, not just a documentation nicety
+- [ ] Backfill true empty-state review on routes that now have strong filled and interaction coverage but still only shallow empty-state validation, including project inbox
 
 ### Human-review blind spots
 

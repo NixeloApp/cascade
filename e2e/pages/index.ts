@@ -5,6 +5,7 @@ export { BasePage } from "./base.page";
 export { CalendarPage } from "./calendar.page";
 export { DashboardPage } from "./dashboard.page";
 export { DocumentsPage } from "./documents.page";
+export { InboxPage } from "./inbox.page";
 export { InvitePage } from "./invite.page";
 export { IssueDetailPage } from "./issue-detail.page";
 export { IssuesPage } from "./issues.page";

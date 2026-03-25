@@ -4811,6 +4811,7 @@ export const seedScreenshotDataInternal = internalMutation({
     ];
 
     const createdIssueKeys: string[] = [];
+    const createdIssueIdsByKey = new Map<string, Id<"issues">>();
 
     for (let i = 0; i < issueDefinitions.length; i++) {
       const def = issueDefinitions[i];
@@ -4821,8 +4822,10 @@ export const seedScreenshotDataInternal = internalMutation({
         .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), def.key)))
         .first();
 
+      let issueId: Id<"issues">;
+
       if (!existing) {
-        await ctx.db.insert("issues", {
+        issueId = await ctx.db.insert("issues", {
           projectId,
           organizationId: orgId,
           workspaceId,
@@ -4865,8 +4868,105 @@ export const seedScreenshotDataInternal = internalMutation({
           version: existing.version ?? 1,
           updatedAt: now,
         });
+        issueId = existing._id;
       }
       createdIssueKeys.push(def.key);
+      createdIssueIdsByKey.set(def.key, issueId);
+    }
+
+    const existingInboxIssues = await ctx.db
+      .query("inboxIssues")
+      .withIndex("by_project", (q) => q.eq("projectId", projectId))
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const inboxIssue of existingInboxIssues) {
+      await ctx.db.delete(inboxIssue._id);
+    }
+
+    const inboxSeedDefinitions: Array<{
+      createdBy: Id<"users">;
+      createdOffsetMs: number;
+      declineReason?: string;
+      duplicateOfKey?: string;
+      issueKey: string;
+      snoozedUntil?: number;
+      source: Doc<"inboxIssues">["source"];
+      sourceEmail?: string;
+      status: Doc<"inboxIssues">["status"];
+      triagedOffsetMs?: number;
+    }> = [
+      {
+        createdBy: userId,
+        createdOffsetMs: 5 * HOUR,
+        issueKey: "DEMO-7",
+        source: "in_app",
+        status: "pending",
+      },
+      {
+        createdBy: syntheticUserIds[0] ?? userId,
+        createdOffsetMs: 20 * HOUR,
+        issueKey: "DEMO-2",
+        snoozedUntil: now + 2 * DAY,
+        source: "email",
+        sourceEmail: "alerts@northstarlabs.example",
+        status: "snoozed",
+        triagedOffsetMs: 4 * HOUR,
+      },
+      {
+        createdBy: syntheticUserIds[1] ?? userId,
+        createdOffsetMs: 30 * HOUR,
+        issueKey: "DEMO-1",
+        source: "in_app",
+        status: "accepted",
+        triagedOffsetMs: 26 * HOUR,
+      },
+      {
+        createdBy: syntheticUserIds[0] ?? userId,
+        createdOffsetMs: 34 * HOUR,
+        declineReason: "Outside current launch scope",
+        issueKey: "DEMO-4",
+        source: "api",
+        sourceEmail: "feedback-hooks@nixelo.test",
+        status: "declined",
+        triagedOffsetMs: 22 * HOUR,
+      },
+      {
+        createdBy: userId,
+        createdOffsetMs: 40 * HOUR,
+        duplicateOfKey: "DEMO-3",
+        issueKey: "DEMO-6",
+        source: "form",
+        sourceEmail: "intake@nixelo.test",
+        status: "duplicate",
+        triagedOffsetMs: 21 * HOUR,
+      },
+    ];
+
+    for (const seed of inboxSeedDefinitions) {
+      const issueId = createdIssueIdsByKey.get(seed.issueKey);
+      if (!issueId) {
+        continue;
+      }
+
+      const duplicateOfId = seed.duplicateOfKey
+        ? createdIssueIdsByKey.get(seed.duplicateOfKey)
+        : undefined;
+
+      await ctx.db.insert("inboxIssues", {
+        projectId,
+        issueId,
+        status: seed.status,
+        source: seed.source,
+        sourceEmail: seed.sourceEmail,
+        snoozedUntil: seed.snoozedUntil,
+        duplicateOfId,
+        declineReason: seed.declineReason,
+        createdBy: seed.createdBy,
+        createdAt: now - seed.createdOffsetMs,
+        triagedAt: seed.triagedOffsetMs ? now - seed.triagedOffsetMs : undefined,
+        triagedBy: seed.triagedOffsetMs ? userId : undefined,
+        updatedAt: now - (seed.triagedOffsetMs ?? seed.createdOffsetMs),
+      });
     }
 
     // 8. Create documents (idempotent by title + project)

@@ -59,6 +59,7 @@ import {
   screenshotIssueInteractiveStates,
   screenshotIssuesStates,
   screenshotMeetingsStates,
+  screenshotProjectInboxStates,
   screenshotProjectsModal,
   screenshotSprintInteractiveStates,
 } from "./interactive-captures";
@@ -610,6 +611,18 @@ export async function screenshotFilledStates(
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-board-sprint-selector`);
         await page.keyboard.press("Escape");
       });
+    }
+
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-inbox-closed`,
+        `project-${normalizedProjectKey}-inbox-bulk-selection`,
+        `project-${normalizedProjectKey}-inbox-snooze-menu`,
+        `project-${normalizedProjectKey}-inbox-decline-dialog`,
+        `project-${normalizedProjectKey}-inbox-duplicate-dialog`,
+      ])
+    ) {
+      await screenshotProjectInboxStates(page, orgSlug, projectKey, p);
     }
 
     // Board interactive states

@@ -9,7 +9,14 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { DocumentsPage, IssuesPage, MeetingsPage, ProjectsPage } from "../pages";
+import {
+  DocumentsPage,
+  InboxPage,
+  IssuesPage,
+  MeetingsPage,
+  ProjectsPage,
+  SprintsPage,
+} from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import {
   dismissAllDialogs,
@@ -617,6 +624,102 @@ export async function screenshotIssuesStates(
   }
 }
 
+export async function screenshotProjectInboxStates(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const inboxUrl = ROUTES.projects.inbox.build(orgSlug, projectKey);
+  const closedTabName = `project-${normalizedProjectKey}-inbox-closed`;
+  const bulkSelectionName = `project-${normalizedProjectKey}-inbox-bulk-selection`;
+  const snoozeMenuName = `project-${normalizedProjectKey}-inbox-snooze-menu`;
+  const declineDialogName = `project-${normalizedProjectKey}-inbox-decline-dialog`;
+  const duplicateDialogName = `project-${normalizedProjectKey}-inbox-duplicate-dialog`;
+
+  if (
+    !shouldCaptureAny(prefix, [
+      closedTabName,
+      bulkSelectionName,
+      snoozeMenuName,
+      declineDialogName,
+      duplicateDialogName,
+    ])
+  ) {
+    return;
+  }
+
+  const inboxPage = new InboxPage(page, orgSlug, projectKey);
+  const openInbox = async () => {
+    await page.goto(`${BASE_URL}${inboxUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, inboxUrl, "projectInbox", prefix);
+    await waitForScreenshotReady(page);
+  };
+
+  if (shouldCapture(prefix, closedTabName)) {
+    await runCaptureStep("project inbox closed tab", async () => {
+      await openInbox();
+      await inboxPage.openClosedTab();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, closedTabName);
+    });
+  }
+
+  if (shouldCapture(prefix, bulkSelectionName)) {
+    await runCaptureStep("project inbox bulk selection", async () => {
+      await openInbox();
+      await inboxPage.selectFirstOpenIssue();
+      await expect(inboxPage.bulkActions).toBeVisible();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, bulkSelectionName);
+    });
+  }
+
+  if (shouldCapture(prefix, snoozeMenuName)) {
+    await runCaptureStep("project inbox snooze menu", async () => {
+      await openInbox();
+      await inboxPage.openFirstIssueSnoozeMenu();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, snoozeMenuName);
+      await page.keyboard.press("Escape");
+    });
+  }
+
+  if (shouldCapture(prefix, declineDialogName)) {
+    await runCaptureStep("project inbox decline dialog", async () => {
+      await page.evaluate(() => {
+        window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "decline-dialog");
+      });
+      await openInbox();
+      await page
+        .getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG)
+        .waitFor({ state: "visible", timeout: 12000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, declineDialogName);
+      await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG));
+    });
+  }
+
+  if (shouldCapture(prefix, duplicateDialogName)) {
+    await runCaptureStep("project inbox duplicate dialog", async () => {
+      await page.evaluate(() => {
+        window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "duplicate-dialog");
+      });
+      await openInbox();
+      await page
+        .getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG)
+        .waitFor({ state: "visible", timeout: 12000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, duplicateDialogName);
+      await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG));
+    });
+  }
+}
+
 export async function screenshotBoardInteractiveStates(
   page: Page,
   orgSlug: string,
@@ -935,25 +1038,15 @@ export async function screenshotSprintInteractiveStates(
   // Complete sprint modal
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-completion-modal`)) {
     await runCaptureStep("sprint completion modal", async () => {
-      const completeSprintButton = page
-        .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
-        .getByRole("button", { name: /^complete sprint$/i })
-        .first();
-      await completeSprintButton.waitFor({ state: "visible", timeout: 5000 });
-      await completeSprintButton.click();
-
-      const dialog = page.getByRole("dialog", { name: /^complete sprint$/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
-      await dialog
-        .getByText(/issues? not completed\. choose what to do with them\./i)
-        .waitFor({ state: "visible", timeout: 5000 });
+      const sprintsPage = new SprintsPage(page, orgSlug);
+      await sprintsPage.openCompletionDialog();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
         prefix,
         `project-${normalizedProjectKey}-sprints-completion-modal`,
       );
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, sprintsPage.completionDialog);
     });
   }
 }
@@ -981,16 +1074,11 @@ export async function screenshotIssueInteractiveStates(
     await issuesPage.issueCards.first().waitFor({ state: "visible", timeout: 5000 });
     await issuesPage.issueCards.first().click();
 
-    const issueDetailPanel = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
-    await issueDetailPanel.waitFor({ state: "visible", timeout: 5000 });
-    await issueDetailPanel
-      .getByText(/[A-Z][A-Z0-9]+-\d+/)
-      .first()
-      .waitFor({ timeout: 5000 });
+    await issuesPage.waitForDetailPanel();
     await waitForScreenshotReady(page);
     await captureCurrentView(page, prefix, "issues-side-panel");
 
-    await dismissIfOpen(page, issueDetailPanel);
+    await dismissIfOpen(page, issuesPage.detailModal);
     await issuesPage.switchToModalModeIfVisible();
   });
 }

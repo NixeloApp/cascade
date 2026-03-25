@@ -176,6 +176,11 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-.+-activity$/, "36-activity", ""],
   [/^filled-project-.+-billing$/, "37-billing", ""],
   [/^filled-project-.+-timesheet$/, "38-timesheet", ""],
+  [/^filled-project-.+-inbox-closed$/, "39-project-inbox", "-closed"],
+  [/^filled-project-.+-inbox-bulk-selection$/, "39-project-inbox", "-bulk-selection"],
+  [/^filled-project-.+-inbox-snooze-menu$/, "39-project-inbox", "-snooze-menu"],
+  [/^filled-project-.+-inbox-decline-dialog$/, "39-project-inbox", "-decline-dialog"],
+  [/^filled-project-.+-inbox-duplicate-dialog$/, "39-project-inbox", "-duplicate-dialog"],
   [/^filled-project-.+-inbox$/, "39-project-inbox", ""],
 ];
 

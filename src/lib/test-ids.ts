@@ -579,6 +579,31 @@ export const TEST_IDS = {
     CONTENT: "notifications-content",
   },
 
+  PROJECT_INBOX: {
+    /** @see src/components/InboxList.tsx */
+    CONTENT: "project-inbox-content",
+    /** @see src/components/InboxList.tsx */
+    SEARCH_INPUT: "project-inbox-search-input",
+    /** @see src/components/InboxList.tsx */
+    BULK_ACTIONS: "project-inbox-bulk-actions",
+    /** @see src/components/InboxList.tsx */
+    OPEN_EMPTY_STATE: "project-inbox-open-empty-state",
+    /** @see src/components/InboxList.tsx */
+    CLOSED_EMPTY_STATE: "project-inbox-closed-empty-state",
+    /** @see src/components/InboxList.tsx */
+    CLOSED_TAB: "project-inbox-closed-tab",
+    /** @see src/components/InboxList.tsx */
+    SNOOZE_MENU: "project-inbox-snooze-menu",
+    /** @see src/components/InboxList.tsx */
+    DECLINE_DIALOG: "project-inbox-decline-dialog",
+    /** @see src/components/InboxList.tsx */
+    CUSTOM_SNOOZE_DIALOG: "project-inbox-custom-snooze-dialog",
+    /** @see src/components/InboxList.tsx */
+    DUPLICATE_DIALOG: "project-inbox-duplicate-dialog",
+    /** @see src/components/InboxList.tsx */
+    ROW: "project-inbox-row",
+  },
+
   // ============================================================
   // Outreach
   // ============================================================

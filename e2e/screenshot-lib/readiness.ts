@@ -11,6 +11,7 @@ import { TEST_IDS } from "../../src/lib/test-ids";
 import { AnalyticsPage } from "../pages/analytics.page";
 import { BacklogPage } from "../pages/backlog.page";
 import { DocumentsPage } from "../pages/documents.page";
+import { InboxPage } from "../pages/inbox.page";
 import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
 import { OutreachPage } from "../pages/outreach.page";
@@ -695,6 +696,12 @@ export async function waitForExpectedContent(
 
   if (URL.projectRoadmap.test(url)) {
     await waitForRoadmapReady(page);
+    return;
+  }
+
+  if (URL.projectInbox.test(url) || name === "projectInbox") {
+    await new InboxPage(page, READINESS_ONLY_SLUG, READINESS_ONLY_SLUG).waitUntilReady();
+    await waitForSpinnersHidden(page);
     return;
   }
 
