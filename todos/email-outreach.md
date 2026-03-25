@@ -23,7 +23,6 @@
 
 ### Reliability / Compliance
 
-- [ ] Encrypt stored mailbox tokens.
 - [ ] Add expiring OAuth nonces.
 - [ ] Add mailbox-aware rate limiting.
 - [ ] Improve bounce classification with richer message parsing.

@@ -1835,7 +1835,7 @@ const applicationTables = {
     email: v.string(), // "mikhail@starthub.academy"
     displayName: v.string(), // For the From header
     accessToken: v.string(), // OAuth2 access token (encrypted)
-    refreshToken: v.optional(v.string()), // OAuth2 refresh token
+    refreshToken: v.optional(v.string()), // OAuth2 refresh token (encrypted)
     expiresAt: v.optional(v.number()), // Token expiry timestamp
     dailySendLimit: v.number(), // Default 50
     todaySendCount: v.number(), // Resets daily by cron

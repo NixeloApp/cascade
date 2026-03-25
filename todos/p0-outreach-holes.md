@@ -9,7 +9,6 @@ This file tracks the remaining blockers before outreach should be treated as use
 ## Security
 
 - [ ] Replace replayable HMAC-only OAuth state with DB-backed expiring nonces.
-- [ ] Encrypt OAuth access and refresh tokens at rest in `outreachMailboxes`.
 
 ## Product / UX
 
@@ -25,4 +24,5 @@ This file tracks the remaining blockers before outreach should be treated as use
 ## Notes
 
 - Tracking HTTP handlers are already wired in the router and are no longer a todo item.
+- OAuth mailbox tokens are now encrypted at rest and legacy plaintext rows self-heal on runtime access.
 - This file intentionally keeps only open blockers; completed outreach fixes belong in git history and tests, not here.

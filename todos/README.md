@@ -4,7 +4,7 @@
 
 ## Critical
 
-- [ ] [p0-outreach-holes.md](./p0-outreach-holes.md) — Outreach still has real launch blockers: token encryption at rest, expiring OAuth nonces, no frontend UI, and missing integration coverage.
+- [ ] [p0-outreach-holes.md](./p0-outreach-holes.md) — Outreach still has real launch blockers: expiring OAuth nonces, no frontend UI, and missing integration coverage.
 
 ## Infrastructure
 
@@ -30,8 +30,8 @@ Verified on this branch:
 |--------|-------|
 | Typecheck | pass |
 | Validators | 53/53 pass |
-| App tests (`vitest run`) | 4553 pass / 5 skipped |
-| Convex tests (`vitest.convex`) | 2108 pass / 3 skipped |
+| App tests (`vitest run`) | 4551 pass / 5 skipped |
+| Convex tests (`vitest.convex`) | 2106 pass / 3 skipped |
 | Page spec triplets | 41/41 present |
 | Screenshot harness shell (`filled-states.ts`) | 1452 lines |
 | TEST_ID constants / page-object files | 207 / 22 |

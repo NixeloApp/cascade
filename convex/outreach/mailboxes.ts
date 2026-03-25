@@ -15,6 +15,7 @@ import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { notFound, validation } from "../lib/errors";
 import { outreachMailboxProviders } from "../validators";
+import { encryptMailboxTokensForStorage } from "./mailboxTokens";
 
 // =============================================================================
 // Constants
@@ -80,6 +81,10 @@ export const createMailbox = authenticatedMutation({
   handler: async (ctx, args) => {
     const user = await ctx.db.get(ctx.userId);
     if (!user?.defaultOrganizationId) throw validation("organization", "No default organization");
+    const encryptedTokens = await encryptMailboxTokensForStorage({
+      accessToken: args.accessToken,
+      refreshToken: args.refreshToken,
+    });
 
     // Check if this mailbox is already connected
     const existing = await ctx.db
@@ -96,8 +101,8 @@ export const createMailbox = authenticatedMutation({
     if (alreadyConnected) {
       // Update tokens on existing connection
       await ctx.db.patch(alreadyConnected._id, {
-        accessToken: args.accessToken,
-        refreshToken: args.refreshToken,
+        accessToken: encryptedTokens.accessToken,
+        refreshToken: encryptedTokens.refreshToken,
         expiresAt: args.expiresAt,
         isActive: true,
         updatedAt: Date.now(),
@@ -111,8 +116,8 @@ export const createMailbox = authenticatedMutation({
       provider: args.provider,
       email: args.email.toLowerCase(),
       displayName: args.displayName,
-      accessToken: args.accessToken,
-      refreshToken: args.refreshToken,
+      accessToken: encryptedTokens.accessToken,
+      refreshToken: encryptedTokens.refreshToken,
       expiresAt: args.expiresAt,
       dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
       todaySendCount: 0,
@@ -144,6 +149,10 @@ export const createMailboxFromOAuth = internalMutation({
     if (!user) throw validation("userId", "User not found");
     const org = await ctx.db.get(args.organizationId);
     if (!org) throw validation("organizationId", "Organization not found");
+    const encryptedTokens = await encryptMailboxTokensForStorage({
+      accessToken: args.accessToken,
+      refreshToken: args.refreshToken,
+    });
 
     const existing = await ctx.db
       .query("outreachMailboxes")
@@ -158,8 +167,8 @@ export const createMailboxFromOAuth = internalMutation({
 
     if (alreadyConnected) {
       await ctx.db.patch(alreadyConnected._id, {
-        accessToken: args.accessToken,
-        refreshToken: args.refreshToken,
+        accessToken: encryptedTokens.accessToken,
+        refreshToken: encryptedTokens.refreshToken,
         expiresAt: args.expiresAt,
         isActive: true,
         updatedAt: Date.now(),
@@ -173,8 +182,8 @@ export const createMailboxFromOAuth = internalMutation({
       provider: args.provider,
       email: args.email.toLowerCase(),
       displayName: args.displayName,
-      accessToken: args.accessToken,
-      refreshToken: args.refreshToken,
+      accessToken: encryptedTokens.accessToken,
+      refreshToken: encryptedTokens.refreshToken,
       expiresAt: args.expiresAt,
       dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
       todaySendCount: 0,

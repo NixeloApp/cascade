@@ -20,6 +20,7 @@ import { logger } from "../lib/logger";
 import { DAY, MINUTE } from "../lib/timeUtils";
 import { stopEnrollment } from "./enrollments";
 import { isAutoReply } from "./helpers";
+import { encryptMailboxTokensForStorage, getDecryptedMailboxTokenSnapshot } from "./mailboxTokens";
 
 // =============================================================================
 // Gmail API Helpers
@@ -231,7 +232,7 @@ export const sendViaGmailAction = internalAction({
   },
   handler: async (ctx, args) => {
     // Get mailbox tokens
-    const mailbox = await ctx.runQuery(internal.outreach.gmail.getMailboxTokens, {
+    const mailbox = await ctx.runMutation(internal.outreach.gmail.getMailboxTokens, {
       mailboxId: args.mailboxId,
     });
 
@@ -411,7 +412,7 @@ async function pollGmailReplies(
 export const checkReplies = internalAction({
   args: { mailboxId: v.id("outreachMailboxes") },
   handler: async (ctx, args) => {
-    const mailbox = await ctx.runQuery(internal.outreach.gmail.getMailboxTokens, {
+    const mailbox = await ctx.runMutation(internal.outreach.gmail.getMailboxTokens, {
       mailboxId: args.mailboxId,
     });
     if (!mailbox?.accessToken) return { checked: 0, replies: 0 };
@@ -474,15 +475,27 @@ export const checkAllMailboxReplies = internalAction({
 // =============================================================================
 
 /** Get mailbox tokens for sending (internal — tokens never go to client) */
-export const getMailboxTokens = internalQuery({
+export const getMailboxTokens = internalMutation({
   args: { mailboxId: v.id("outreachMailboxes") },
   handler: async (ctx, args) => {
     const mailbox = await ctx.db.get(args.mailboxId);
     if (!mailbox?.isActive) return null;
-
-    return {
+    const tokenSnapshot = await getDecryptedMailboxTokenSnapshot({
       accessToken: mailbox.accessToken,
       refreshToken: mailbox.refreshToken,
+    });
+
+    if (tokenSnapshot.needsMigration) {
+      await ctx.db.patch(args.mailboxId, {
+        accessToken: tokenSnapshot.accessToken,
+        refreshToken: tokenSnapshot.refreshToken,
+        updatedAt: Date.now(),
+      });
+    }
+
+    return {
+      accessToken: tokenSnapshot.decryptedAccessToken,
+      refreshToken: tokenSnapshot.decryptedRefreshToken,
       expiresAt: mailbox.expiresAt,
       email: mailbox.email,
       displayName: mailbox.displayName,
@@ -499,8 +512,13 @@ export const updateMailboxTokens = internalMutation({
     expiresAt: v.number(),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.mailboxId, {
+    const encryptedTokens = await encryptMailboxTokensForStorage({
       accessToken: args.accessToken,
+      refreshToken: undefined,
+    });
+
+    await ctx.db.patch(args.mailboxId, {
+      accessToken: encryptedTokens.accessToken,
       expiresAt: args.expiresAt,
       updatedAt: Date.now(),
     });
