@@ -1,60 +1,28 @@
-# P0: Outreach Security & Correctness Holes
+# P0: Outreach Security & Launch Holes
 
 > **Priority:** P0
-> **Status:** Open — must fix before any user touches outreach
-> **Created:** 2026-03-25
+> **Status:** Open
+> **Last Updated:** 2026-03-24
 
-## Context
+This file tracks the remaining blockers before outreach should be treated as user-ready.
 
-The outreach module was merged to main (PR #928) with known P1 issues. PR #929 fixes most of them but introduced its own review comments. This doc tracks every known hole.
+## Security
 
-## Fixed in PR #929 (pending merge)
+- [ ] Replace replayable HMAC-only OAuth state with DB-backed expiring nonces.
+- [ ] Encrypt OAuth access and refresh tokens at rest in `outreachMailboxes`.
 
-All items below are fixed and pushed. Merge #929 to resolve.
+## Product / UX
 
-- [x] OAuth tokens no longer sent to browser — server-side storage via internal mutation
-- [x] HMAC-signed OAuth state — userId/organizationId can't be forged
-- [x] Click tracking uses Convex document `_id`s, not random UUIDs
-- [x] Reply correlation uses `gmailThreadIds` array (not overwritten per step)
-- [x] Transient send errors deferred (not hard-bounced)
-- [x] RFC 2822 header injection prevention (CR/LF stripped)
-- [x] Tracking domain passed through call chain (not hardcoded)
-- [x] Tracking domain sanitized before header interpolation
-- [x] Gmail pagination follows nextPageToken (up to 250 messages)
-- [x] Watermark only advances on fully completed polls
-- [x] Empty inbox polls still advance watermark (quiet mailboxes don't re-query 24h)
-- [x] OAuth response has Cache-Control: no-store
-- [x] OAuth postMessage restricted to SITE_URL origin
-- [x] Regex metacharacter escaping in custom field template keys
-- [x] `is:unread` removed from reply polling query
-- [x] createMailboxFromOAuth validates userId/organizationId exist in DB
+- [ ] Build the frontend surface for sequences, enrollments, contacts, mailboxes, tracking, and analytics.
+- [ ] Add mailbox-level rate limiting beyond the current daily cap so Gmail per-minute sending limits are respected.
+- [ ] Improve bounce handling beyond regex heuristics by parsing Gmail/DSN-style bounce signals.
 
-## Still Open — Must Fix
+## Testing
 
-### Security
+- [ ] Add send-pipeline integration coverage for pre-send validation, template rendering, tracking rewrite/injection, bounce handling, and reply matching.
+- [ ] Add OAuth flow coverage with a controllable mock provider or equivalent harness.
 
-- [ ] **OAuth state should use DB-stored nonces, not just HMAC** — Current HMAC approach signs userId+orgId with the Google client secret. This works but a dedicated `oauthStates` table with expiring nonces (as described in the research doc) would be more robust. The HMAC has no expiry — a signed state URL could theoretically be replayed.
-- [ ] **Token encryption at rest** — OAuth access/refresh tokens are stored as plaintext strings in the `outreachMailboxes` table. Industry standard is AES-256 encryption with a server-side key (env var). If the DB is compromised, all connected Gmail accounts are exposed.
+## Notes
 
-### Correctness
-
-- [ ] **No frontend UI exists** — The entire outreach module (sequences, enrollments, contacts, mailboxes, tracking, analytics, gmail, send engine) has zero frontend components. Users can't create sequences, connect mailboxes, or manage contacts. The backend is complete but untestable without UI.
-- [ ] **Click tracking redirect handler not wired** — The `handleClickRedirect` HTTP handler exists but may not be registered in the HTTP router. Needs verification.
-- [ ] **Open tracking pixel handler not wired** — Same as above for `handleOpenPixel`.
-- [ ] **Unsubscribe handler not wired** — Same for `handleUnsubscribeGet`/`handleUnsubscribePost`.
-- [ ] **No rate limiting on send engine** — The cron processes up to 20 enrollments per tick with no per-mailbox rate limiting beyond the daily cap. Gmail's per-minute sending limits could be hit.
-- [ ] **No bounce classification beyond pattern matching** — Hard bounce detection uses regex patterns. Should integrate with Gmail's bounce notification parsing (DSN messages) for accuracy.
-
-### Testing
-
-- [ ] **No integration tests for the send pipeline** — Unit tests only verify module exports. Need tests for: checkPreSend validation, template rendering with custom fields, click tracking URL rewriting, open pixel injection, bounce classification, reply matching with thread IDs.
-- [ ] **No E2E test for OAuth flow** — The popup-based OAuth flow can't be tested without a mock Google OAuth server.
-
-## Out of Scope (Post-MVP)
-
-- Email warmup network
-- Domain management (SPF/DKIM/DMARC wizard)
-- A/B testing
-- AI-powered email writing
-- Unified inbox
-- Microsoft Outlook support
+- Tracking HTTP handlers are already wired in the router and are no longer a todo item.
+- This file intentionally keeps only open blockers; completed outreach fixes belong in git history and tests, not here.

@@ -1,56 +1,36 @@
 # Tailwind-to-CVA Consolidation
 
 > **Priority:** P3
-> **Status:** Ongoing maintenance
+> **Status:** Ongoing ratchet
+> **Last Updated:** 2026-03-24
 
-## Current State
+## Current Baseline
 
-83 files / 120 violations baselined. History: 148/436 → 102/146 → 86/127 → 83/120. Validator ratchet blocks new violations.
+- Raw styling debt baseline: **73 files / 102 violations**
+- Validator ratchet is in place; the goal is to keep shrinking the baseline without forcing fake abstractions.
 
-Improvements this round:
-- Added `size` prop to `Progress` component (sm/md/lg) — eliminated 4 h-1.5 violations
-- Added `section`/`sectionCompact` padding to `Container` — eliminated 6 inline style violations in Landing pages
-- Converted `SIZE_CLASSES` object map in AIAssistantButton to a function — eliminated 3 hidden-class violations
-- Replaced `style={{ minWidth: 0 }}` with `className="min-w-0"` in 3 Landing components
-- Fixed `_match` → `fullMatch` unused parameter in outreach helpers
-- Added `helpers.ts` to color audit boundary (email templates need inline colors)
-- Parallelized sequential `ctx.db.insert` loop in sendEngine
-- Ratcheted baselines: removed 7 files entirely, lowered 8 files
+## Remaining
 
-## Styling Contract
+### Highest-Debt Files
 
-- Tailwind-first for static feature/page layout
-- `cva()` for shared primitive/component semantics only
-- If a pattern repeats, extract a component; if not, keep it raw Tailwind
-- Do not create local style objects or class-string hiding
+- [ ] `RoadmapView.tsx`
+- [ ] `IssueCard.tsx`
+- [ ] `calendar-body-month.tsx`
+- [ ] `RoadmapHeaderControls.tsx`
+- [ ] `DocumentTree.tsx`
+- [ ] `GlobalSearch.tsx`
+- [ ] `ProductShowcase.tsx`
+- [ ] `ProjectsList.tsx`
 
-## Top Violation Files
+### Main Violation Buckets
 
-| File | Count |
-|------|-------|
-| RoadmapView.tsx | 4 |
-| IssueCard.tsx | 4 |
-| calendar-body-month.tsx | 4 |
-| RoadmapHeaderControls.tsx | 3 |
-| DocumentTree.tsx | 3 |
-| GlobalSearch.tsx | 3 |
-| ProductShowcase.tsx | 3 |
-| ProjectsList.tsx | 3 |
+- [ ] Margin utilities that are still acceptable composition in some places but should be reviewed when touched.
+- [ ] Width utilities, especially repeated control widths that may justify semantic props.
+- [ ] Padding wrappers that may indicate repeated shell/layout patterns.
+- [ ] Height utilities around charts and overlays that may still need explicit ownership.
 
-## Remaining Violation Categories
+## Working Rule
 
-| Category | Count | Fix Strategy |
-|----------|-------|-------------|
-| Margin (mb-N, mt-N, ml-N) | 41 | Composition — mostly legitimate layout spacing |
-| Width (w-N) | 27 | Mostly SelectTrigger/dropdown widths — appropriate |
-| Padding (p-N, px-N, py-N) | 31 | Wrapper div padding — composition |
-| Height (h-N) | 11 | Mixed: chart sizing, SVG overlays |
-| Opacity (opacity-N) | 4 | Conditional state styling |
-| Other (flex, delay, animation) | 4 | Edge cases |
-
-## How to Fix
-
-Most remaining violations are legitimate composition-level Tailwind per the contract. Further reduction requires:
-- Adding more semantic props to primitives (diminishing returns)
-- Extracting repeated layout patterns into components (when patterns emerge)
-- Visual verification via `pnpm screenshots` for any spacing changes
+- [ ] Extract shared semantics into primitives/components only when repetition is real.
+- [ ] Keep one-off composition in raw Tailwind when abstraction would hide layout intent.
+- [ ] Verify spacing/layout changes visually with screenshots when the route is screenshot-owned.

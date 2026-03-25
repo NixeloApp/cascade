@@ -1,8 +1,9 @@
 # Plane Features To Evaluate
 
 > **Priority:** P3
-> **Status:** 1 item remaining
+> **Status:** Open
+> **Last Updated:** 2026-03-24
 
 ## Remaining
 
-- [ ] **External notification routing** — Slack/Pumble/webhook notifications wired to the notification preference system
+- [ ] External notification routing: wire Slack, Pumble, and webhook notifications into the notification preference system.

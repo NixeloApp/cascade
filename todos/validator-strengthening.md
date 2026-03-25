@@ -2,27 +2,20 @@
 
 > **Priority:** P3
 > **Status:** Ongoing improvement
+> **Last Updated:** 2026-03-24
 
-## Current State
+Current baseline: 53/53 validators pass.
 
-53/53 validators pass. Backend query debt: 0. All post-fetch JS filters resolved.
+## Remaining
 
-Key improvements shipped:
-- Per-token structural allowlist (not per-attribute)
-- Case-insensitive const-string detection
-- Compound indexes for export queries
-- Compliance truncation flag
+### Validator Framework
 
-## Remaining Improvement Ideas
-
-### Validator Suite Structure
-
-- [ ] Extract shared ratchet/baseline/reporting patterns into a common validator framework
-- [ ] Make blocking vs informational checks structurally obvious
-- [ ] Document validator authoring conventions
+- [ ] Extract shared ratchet, baseline, and reporting patterns into a clearer common validator framework.
+- [ ] Make blocking vs informational checks structurally obvious.
+- [ ] Document validator authoring conventions for future additions.
 
 ### Potential New Validators
 
-- [ ] Detect raw `Date.now()` in Convex mutations (should use server timestamps)
-- [ ] Detect unbounded `.collect()` without `.take()` limit
-- [ ] Cross-reference route definitions against ROUTES config for drift
+- [ ] Detect raw `Date.now()` usage in Convex mutations where server timestamps should be used more intentionally.
+- [ ] Detect unbounded `.collect()` usage when `.take()` or pagination should be required.
+- [ ] Cross-check route definitions against shared route config to catch drift.
