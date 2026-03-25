@@ -15,8 +15,17 @@ import {
   cleanupE2EWorkspacesEndpoint,
   cleanupRbacProjectEndpoint,
   cleanupTestUsersEndpoint,
+  configureAssistantStateEndpoint,
+  configureNotificationsStateEndpoint,
+  configureOrgAnalyticsStateEndpoint,
+  configureProjectAnalyticsStateEndpoint,
+  configureProjectInboxStateEndpoint,
+  configureProjectsStateEndpoint,
+  configureRoadmapStateEndpoint,
+  configureTimeTrackingStateEndpoint,
   createTestUserEndpoint,
   debugVerifyPasswordEndpoint,
+  deleteSeededProjectIssueEndpoint,
   deleteTestUserEndpoint,
   getLatestOTPEndpoint,
   googleOAuthLoginEndpoint,
@@ -353,6 +362,63 @@ http.route({
   path: "/e2e/seed-screenshot-data",
   method: "POST",
   handler: seedScreenshotDataEndpoint,
+});
+
+// Delete screenshot-created issues so later captures stay deterministic
+http.route({
+  path: "/e2e/delete-seeded-project-issue",
+  method: "POST",
+  handler: deleteSeededProjectIssueEndpoint,
+});
+
+// Reconfigure seeded projects list data for screenshot captures
+http.route({
+  path: "/e2e/configure-projects-state",
+  method: "POST",
+  handler: configureProjectsStateEndpoint,
+});
+
+// Reconfigure seeded project inbox data for screenshot captures
+http.route({
+  path: "/e2e/configure-project-inbox-state",
+  method: "POST",
+  handler: configureProjectInboxStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-roadmap-state",
+  method: "POST",
+  handler: configureRoadmapStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-time-tracking-state",
+  method: "POST",
+  handler: configureTimeTrackingStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-project-analytics-state",
+  method: "POST",
+  handler: configureProjectAnalyticsStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-org-analytics-state",
+  method: "POST",
+  handler: configureOrgAnalyticsStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-notifications-state",
+  method: "POST",
+  handler: configureNotificationsStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-assistant-state",
+  method: "POST",
+  handler: configureAssistantStateEndpoint,
 });
 
 // Batch cleanup - call repeatedly until done=true (avoids 32k read limit)

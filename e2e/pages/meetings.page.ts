@@ -16,6 +16,12 @@ export class MeetingsPage extends BasePage {
   readonly emptyStateDescription: Locator;
   readonly meetingsSearchInput: Locator;
   readonly transcriptSearchInput: Locator;
+  readonly scheduleButton: Locator;
+  readonly scheduleDialog: Locator;
+  readonly filterEmptyState: Locator;
+  readonly detailEmptyState: Locator;
+  readonly summaryProcessingState: Locator;
+  readonly statusFilter: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -28,6 +34,12 @@ export class MeetingsPage extends BasePage {
     this.emptyStateDescription = this.emptyStateTitle;
     this.meetingsSearchInput = page.getByTestId(TEST_IDS.MEETINGS.SEARCH_INPUT);
     this.transcriptSearchInput = page.getByTestId(TEST_IDS.MEETINGS.TRANSCRIPT_SEARCH);
+    this.scheduleButton = page.getByTestId(TEST_IDS.MEETINGS.SCHEDULE_BUTTON);
+    this.scheduleDialog = page.getByTestId(TEST_IDS.MEETINGS.SCHEDULE_DIALOG);
+    this.filterEmptyState = page.getByTestId(TEST_IDS.MEETINGS.FILTER_EMPTY_STATE);
+    this.detailEmptyState = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_EMPTY_STATE);
+    this.summaryProcessingState = page.getByTestId(TEST_IDS.MEETINGS.SUMMARY_PROCESSING_STATE);
+    this.statusFilter = page.getByRole("combobox", { name: "Filter by status" });
   }
 
   async goto() {
@@ -87,6 +99,36 @@ export class MeetingsPage extends BasePage {
 
   async filterTranscript(query: string) {
     await this.transcriptSearchInput.fill(query);
+  }
+
+  async searchMeetings(query: string) {
+    await this.meetingsSearchInput.fill(query);
+  }
+
+  async openScheduleDialog() {
+    await expect(this.scheduleButton).toBeVisible();
+    await this.scheduleButton.click();
+    await expect(this.scheduleDialog).toBeVisible();
+  }
+
+  async filterByStatus(statusLabel: string) {
+    await expect(this.statusFilter).toBeVisible();
+    await this.statusFilter.click();
+    const option = this.page.getByRole("option", {
+      name: new RegExp(`^${statusLabel}$`, "i"),
+    });
+    await expect(option).toBeVisible();
+    await option.click();
+    await expect(this.statusFilter).toContainText(new RegExp(statusLabel, "i"));
+  }
+
+  async expectFilteredEmptyState() {
+    await expect(this.filterEmptyState).toBeVisible();
+    await expect(this.detailEmptyState).toBeVisible();
+  }
+
+  async expectSummaryProcessingState() {
+    await expect(this.summaryProcessingState).toBeVisible();
   }
 
   async expectTranscriptMatch(text: string) {

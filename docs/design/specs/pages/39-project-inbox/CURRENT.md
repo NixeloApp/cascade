@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects/:key/inbox`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-23
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -34,14 +34,21 @@ or are created directly as inbox items by the system. The inbox is the gate betw
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 
-### Missing captures (should be added)
+### Reviewed interaction captures
 
-- Empty open tab ("No issues awaiting triage")
-- Empty closed tab ("No resolved inbox items")
-- Bulk action bar visible with checkboxes selected
-- Snooze duration dropdown open
-- Decline reason dialog
-- Mark-as-duplicate linking UI
+| State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
+|-------|--------------|---------------|--------------|--------------|
+| Closed tab | ![](screenshots/desktop-dark-closed.png) | ![](screenshots/desktop-light-closed.png) | ![](screenshots/tablet-light-closed.png) | ![](screenshots/mobile-light-closed.png) |
+| Bulk selection | ![](screenshots/desktop-dark-bulk-selection.png) | ![](screenshots/desktop-light-bulk-selection.png) | ![](screenshots/tablet-light-bulk-selection.png) | ![](screenshots/mobile-light-bulk-selection.png) |
+| Snooze menu | ![](screenshots/desktop-dark-snooze-menu.png) | ![](screenshots/desktop-light-snooze-menu.png) | ![](screenshots/tablet-light-snooze-menu.png) | ![](screenshots/mobile-light-snooze-menu.png) |
+| Decline dialog | ![](screenshots/desktop-dark-decline-dialog.png) | ![](screenshots/desktop-light-decline-dialog.png) | ![](screenshots/tablet-light-decline-dialog.png) | ![](screenshots/mobile-light-decline-dialog.png) |
+| Duplicate dialog | ![](screenshots/desktop-dark-duplicate-dialog.png) | ![](screenshots/desktop-light-duplicate-dialog.png) | ![](screenshots/tablet-light-duplicate-dialog.png) | ![](screenshots/mobile-light-duplicate-dialog.png) |
+| Empty open tab | ![](screenshots/desktop-dark-open-empty.png) | ![](screenshots/desktop-light-open-empty.png) | ![](screenshots/tablet-light-open-empty.png) | ![](screenshots/mobile-light-open-empty.png) |
+| Empty closed tab | ![](screenshots/desktop-dark-closed-empty.png) | ![](screenshots/desktop-light-closed-empty.png) | ![](screenshots/tablet-light-closed-empty.png) | ![](screenshots/mobile-light-closed-empty.png) |
+
+### Remaining gaps
+
+No known screenshot gaps for this route on the reviewed matrix.
 
 ---
 
@@ -90,7 +97,7 @@ or are created directly as inbox items by the system. The inbox is the gate betw
 - Thin route: resolves project by key, passes `projectId` to `InboxList`.
 - Loading and error states handled at route level.
 
-### 2. InboxList component (551 lines)
+### 2. InboxList component (1460 lines)
 
 The entire inbox UI lives in a single component with:
 
@@ -102,7 +109,8 @@ The entire inbox UI lives in a single component with:
 **Bulk actions:**
 - Selection checkboxes on each triageable row
 - "Select all" checkbox in the header
-- Bulk Accept / Bulk Decline / Bulk Snooze (1 week) buttons
+- Bulk Accept / Bulk Decline / Bulk Snooze buttons
+- Bulk Snooze supports presets and a custom date dialog
 - Only visible when at least one item is selected
 - Actions clear selection and show success toast with count
 
@@ -110,20 +118,26 @@ The entire inbox UI lives in a single component with:
 - Checkbox (open tab only, triageable items)
 - Status icon (color-coded: pending=warning, accepted=success, declined=error, snoozed=clock, duplicate=copy)
 - Issue key and title
-- Submitter info (name + email from triage notes)
+- Submitter info and intake source metadata
 - Relative timestamp
 - Status badge
+- Closed-state context badges for snoozed, declined, and duplicate outcomes
 - Overflow menu with context-appropriate actions
 
 **Per-issue actions (open tab):**
 - Accept — moves issue to project backlog
-- Decline — marks as declined (with optional reason)
-- Snooze — defers for 1 day, 3 days, or 1 week
-- Mark as Duplicate — links to an existing issue
+- Decline — opens a reason dialog before closing the item
+- Snooze — defers for 1 day, 3 days, 1 week, or a custom date
+- Mark as Duplicate — opens issue search within the project and links the item
 
 **Per-issue actions (closed tab):**
 - Reopen — returns to pending status
 - Remove — soft-deletes the inbox item
+
+**Empty-state actions:**
+- Search-empty state offers a direct "Clear search" recovery action
+- Open-empty state can jump directly to the closed tab when prior triage exists
+- Closed-empty state can jump back to the open queue when items still need review
 
 ### 3. Status configuration
 
@@ -142,15 +156,13 @@ duplicate -> Copy (secondary)          "Duplicate"
 ### States the current spec explicitly covers
 
 - Filled inbox with mixed-status items (4 viewports)
-
-### States that should be captured
-
-- Empty open tab
-- Empty closed tab
-- Bulk selection active with action bar
-- Snooze duration dropdown
-- Closed tab showing accepted/declined/duplicate items
-- Row with submitter metadata (email, name, triage notes)
+- Closed tab with resolved items (4 viewports)
+- Bulk selection action bar (4 viewports)
+- Snooze preset menu (4 viewports)
+- Decline reason dialog (4 viewports)
+- Duplicate search dialog (4 viewports)
+- Empty open tab (4 viewports)
+- Empty closed tab (4 viewports)
 
 ---
 
@@ -163,6 +175,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 | External intake integration | Issues from the public API surface naturally in this queue. |
 | Tab separation | Open vs closed is clean. No mixing of actionable and resolved items. |
 | Submitter context | Triage notes show who submitted and how (API, email). |
+| Recovery UX | Empty states now point directly to the next useful action instead of dead-ending. |
 
 ---
 
@@ -170,10 +183,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| ~~1~~ | ~~No search or filter~~ **Fixed** — search bar filters inbox items by issue title/key, empty states adapt to search context | ~~UX~~ | ~~MEDIUM~~ |
-| 2 | Snooze durations are hardcoded (1d, 3d, 1w). No custom date picker. | flexibility | LOW |
-| 3 | Decline reason is optional and not prominently surfaced in the UI. | accountability | LOW |
-| 4 | Mark-as-duplicate requires knowing the target issue key. No search picker. | UX | LOW |
+| 1 | `InboxList` now covers more of the real triage surface, but it is still a very large single component. | maintainability | MEDIUM |
 
 ---
 
@@ -182,7 +192,8 @@ duplicate -> Copy (secondary)          "Duplicate"
 | File | Lines | Purpose |
 |------|-------|---------|
 | `src/routes/.../inbox.tsx` | 29 | Route: project resolution |
-| `src/components/InboxList.tsx` | 551 | Full inbox UI: tabs, bulk actions, rows, actions |
+| `src/components/InboxList.tsx` | 1460 | Full inbox UI: tabs, bulk actions, rows, dialogs, duplicate search, empty-state recovery |
+| `e2e/pages/inbox.page.ts` | 128 | Page object for inbox route screenshot and E2E interactions |
 | `convex/inbox.ts` | -- | Backend: list, accept, decline, snooze, duplicate, reopen, remove, counts |
 | `convex/intake.ts` | -- | External submission: createExternal, token management |
 | `convex/http/intake.ts` | -- | HTTP endpoint: POST /api/intake |
@@ -202,7 +213,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 
 ## Summary
 
-The project inbox is a focused triage queue. It has clear accept/decline/snooze workflows,
-bulk operations for volume, tab separation for open vs resolved, and integration with the
-external intake API. The main UX gap is the lack of search within the inbox. The component
-is a single 551-line file that could benefit from splitting but is functionally complete.
+The project inbox is now a fuller triage surface with reviewed closed, bulk-selection,
+snooze-menu, decline-dialog, duplicate-search, and both empty-tab states across
+desktop/tablet/mobile. The main engineering debt is that the route still lives in a
+very large single component.

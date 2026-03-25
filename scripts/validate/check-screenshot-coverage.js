@@ -3,7 +3,7 @@
  *
  * Audits two visual-maintenance signals:
  *   1. Route coverage — compares routes defined in convex/shared/routes.ts
- *      against ROUTES references in e2e/screenshot-pages.ts.
+ *      against ROUTES references in the modular screenshot capture sources.
  *   2. Canonical spec variants — checks that each design spec screenshot
  *      directory contains the expected baseline captures.
  *
@@ -15,6 +15,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT } from "./utils.js";
+
+const SCREENSHOT_ROUTE_SOURCE_REL_PATHS = [
+  "e2e/screenshot-pages.ts",
+  "e2e/screenshot-lib/public-pages.ts",
+  "e2e/screenshot-lib/filled-states.ts",
+  "e2e/screenshot-lib/interactive-captures.ts",
+];
 
 // Routes that are intentionally not screenshotted
 const EXCLUDED_ROUTES = new Set([
@@ -29,6 +36,7 @@ const EXCLUDED_ROUTES = new Set([
   "workspaces.teams.list", // No standalone teams list page (only team detail sub-pages)
   "onboarding", // Requires fresh user state, can't capture with seeded test user
   "invoices.detail", // Requires creating an invoice first; list page is captured
+  "outreachGoogleAuth", // HTTP OAuth endpoint, not an app route
 ]);
 
 const EXPECTED_PAGE_SPEC_SCREENSHOTS = [
@@ -89,7 +97,7 @@ function extractRouteKeys(content) {
 }
 
 /**
- * Extract all ROUTES.xxx references from screenshot-pages.ts.
+ * Extract all ROUTES.xxx references from the screenshot capture sources.
  * Returns a Set of dotted keys like "documents.list", "signin", etc.
  *
  * Also detects URL-pattern-based coverage (regex helpers like isWorkspaceBacklogUrl)
@@ -161,7 +169,46 @@ function extractScreenshotRouteRefs(content) {
     }
   }
 
+  const TAB_LOOP_COVERAGE = [
+    {
+      arrayName: "tabs",
+      routePrefix: "projects",
+      usagePattern: /\/projects\/\$\{projectKey\}\/\$\{tab\}/,
+    },
+    {
+      arrayName: "wsTabs",
+      routePrefix: "workspaces",
+      usagePattern: /\$\{wsBase\}\/\$\{tab\}/,
+    },
+    {
+      arrayName: "teamTabs",
+      routePrefix: "workspaces.teams",
+      usagePattern: /\$\{teamBase\}\/\$\{tab\}/,
+    },
+  ];
+
+  for (const { arrayName, routePrefix, usagePattern } of TAB_LOOP_COVERAGE) {
+    const declarationPattern = new RegExp(
+      `const ${arrayName} = \\[([\\s\\S]*?)\\](?: as const)?;`,
+      "m",
+    );
+    const declarationMatch = content.match(declarationPattern);
+    if (!declarationMatch || !usagePattern.test(content)) {
+      continue;
+    }
+
+    for (const match of declarationMatch[1].matchAll(/["'`]([^"'`]+)["'`]/g)) {
+      refs.add(`${routePrefix}.${match[1]}`);
+    }
+  }
+
   return refs;
+}
+
+function loadScreenshotRouteSourceContents() {
+  return SCREENSHOT_ROUTE_SOURCE_REL_PATHS.map((relativePath) =>
+    fs.readFileSync(path.join(ROOT, relativePath), "utf8"),
+  );
 }
 
 function collectSpecScreenshotCoverageGaps() {
@@ -305,45 +352,56 @@ function collectModalScreenshotCoverageGaps() {
 
 export function run() {
   const routesFile = path.join(ROOT, "convex/shared/routes.ts");
-  const screenshotFile = path.join(ROOT, "e2e/screenshot-pages.ts");
+  const routesFileExists = fs.existsSync(routesFile);
+  const missingScreenshotRouteSources = SCREENSHOT_ROUTE_SOURCE_REL_PATHS.filter(
+    (relativePath) => !fs.existsSync(path.join(ROOT, relativePath)),
+  );
+  const canAuditRouteCoverage = routesFileExists && missingScreenshotRouteSources.length === 0;
+  const routesContent = routesFileExists ? fs.readFileSync(routesFile, "utf-8") : "";
+  const screenshotContents = canAuditRouteCoverage ? loadScreenshotRouteSourceContents() : [];
 
-  if (!fs.existsSync(routesFile) || !fs.existsSync(screenshotFile)) {
-    return { passed: true, errors: 0, detail: "files not found, skipped", messages: [] };
-  }
-
-  const routesContent = fs.readFileSync(routesFile, "utf-8");
-  const screenshotContent = fs.readFileSync(screenshotFile, "utf-8");
-
-  const allRouteKeys = extractRouteKeys(routesContent);
-  const capturedRefs = extractScreenshotRouteRefs(screenshotContent);
+  const allRouteKeys = routesFileExists ? extractRouteKeys(routesContent) : [];
+  const auditableRouteKeys = allRouteKeys.filter((key) => !EXCLUDED_ROUTES.has(key));
+  const capturedRefs = new Set(
+    screenshotContents.flatMap((content) => [...extractScreenshotRouteRefs(content)]),
+  );
   const missingSpecVariants = collectSpecScreenshotCoverageGaps();
   const missingPageSpecDocs = collectPageSpecDocGaps();
   const missingRequiredPageSpecs = collectRequiredPageSpecGaps();
   const missingModalSpecVariants = collectModalScreenshotCoverageGaps();
 
   const uncovered = [];
-  for (const key of allRouteKeys) {
-    if (EXCLUDED_ROUTES.has(key)) continue;
-    if (capturedRefs.has(key)) continue;
+  if (canAuditRouteCoverage) {
+    for (const key of auditableRouteKeys) {
+      if (capturedRefs.has(key)) continue;
 
-    // Check if a parent key is referenced (e.g. "issues" covers "issues.list")
-    const parts = key.split(".");
-    let parentCovered = false;
-    for (let i = 1; i < parts.length; i++) {
-      if (capturedRefs.has(parts.slice(0, i).join("."))) {
-        parentCovered = true;
-        break;
+      // Check if a parent key is referenced (e.g. "issues" covers "issues.list")
+      const parts = key.split(".");
+      let parentCovered = false;
+      for (let i = 1; i < parts.length; i++) {
+        if (capturedRefs.has(parts.slice(0, i).join("."))) {
+          parentCovered = true;
+          break;
+        }
       }
-    }
-    if (parentCovered) continue;
+      if (parentCovered) continue;
 
-    uncovered.push(key);
+      uncovered.push(key);
+    }
   }
 
   const messages = [];
-  if (uncovered.length > 0) {
+  if (!routesFileExists) {
     messages.push(
-      `${c.yellow}Routes without screenshot coverage (${uncovered.length}/${allRouteKeys.length}):${c.reset}`,
+      `${c.yellow}Route coverage skipped:${c.reset} missing ${c.dim}convex/shared/routes.ts${c.reset}`,
+    );
+  } else if (missingScreenshotRouteSources.length > 0) {
+    messages.push(
+      `${c.yellow}Route coverage skipped:${c.reset} missing screenshot route sources ${missingScreenshotRouteSources.map((relativePath) => `${c.dim}${relativePath}${c.reset}`).join(", ")}`,
+    );
+  } else if (uncovered.length > 0) {
+    messages.push(
+      `${c.yellow}Routes without screenshot coverage (${uncovered.length}/${auditableRouteKeys.length}):${c.reset}`,
     );
     for (const key of uncovered) {
       messages.push(`  ${c.dim}ROUTES.${key}${c.reset}`);
@@ -424,19 +482,21 @@ export function run() {
     passed: true,
     errors: 0,
     showMessagesOnPass:
+      !canAuditRouteCoverage ||
       uncovered.length > 0 ||
       missingSpecVariants.length > 0 ||
       missingPageSpecDocs.length > 0 ||
       missingRequiredPageSpecs.length > 0 ||
       missingModalSpecVariants.length > 0,
     detail:
+      !canAuditRouteCoverage ||
       uncovered.length > 0 ||
       missingSpecVariants.length > 0 ||
       missingPageSpecDocs.length > 0 ||
       missingRequiredPageSpecs.length > 0 ||
       missingModalSpecVariants.length > 0
-        ? `${allRouteKeys.length - uncovered.length}/${allRouteKeys.length} routes covered, ${specsWithCanonicalVariants}/${completeSpecFolders} page spec folders have canonical screenshots, ${missingModalSpecVariants.length === 0 ? "all" : "not all"} spec'd modals have canonical screenshots`
-        : `all ${allRouteKeys.length} routes covered, all ${completeSpecFolders} page spec folders have canonical screenshots, all spec'd modals have canonical screenshots`,
+        ? `${canAuditRouteCoverage ? `${auditableRouteKeys.length - uncovered.length}/${auditableRouteKeys.length} auditable routes covered` : "route coverage skipped"}, ${specsWithCanonicalVariants}/${completeSpecFolders} page spec folders have canonical screenshots, ${missingModalSpecVariants.length === 0 ? "all" : "not all"} spec'd modals have canonical screenshots`
+        : `all ${auditableRouteKeys.length} auditable routes covered, all ${completeSpecFolders} page spec folders have canonical screenshots, all spec'd modals have canonical screenshots`,
     messages,
   };
 }

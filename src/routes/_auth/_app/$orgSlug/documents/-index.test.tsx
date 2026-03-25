@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
 import {
   DocumentsListPage,
@@ -128,6 +129,34 @@ describe("DocumentsListPage", () => {
         orgSlug: "acme",
       }),
     );
+  });
+
+  it("renders a stable empty-state hook when the workspace has no documents", () => {
+    mockUseAuthenticatedQuery.mockReturnValue({
+      documents: [],
+      nextCursor: null,
+      hasMore: false,
+    });
+
+    render(<DocumentsListPage />);
+
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.EMPTY_STATE)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create Blank Document" })).toBeInTheDocument();
+  });
+
+  it("renders stable screenshot hooks and the search empty state", async () => {
+    const user = userEvent.setup();
+
+    render(<DocumentsListPage />);
+
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_SUMMARY)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_TEMPLATES_PANEL)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_RECENT_SECTION)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.WORKSPACE_LIBRARY_SECTION)).toBeInTheDocument();
+
+    await user.type(screen.getByRole("searchbox", { name: "Search documents" }), "missing");
+
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.SEARCH_EMPTY_STATE)).toBeInTheDocument();
   });
 
   it("filters recent documents by title or creator", async () => {

@@ -15,12 +15,11 @@ import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { notFound, validation } from "../lib/errors";
 import { outreachMailboxProviders } from "../validators";
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-const DEFAULT_DAILY_SEND_LIMIT = 50;
+import {
+  buildMailboxRateLimitDefaults,
+  DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
+} from "./mailboxRateLimits";
+import { encryptMailboxTokensForStorage } from "./mailboxTokens";
 
 // =============================================================================
 // Queries
@@ -80,6 +79,10 @@ export const createMailbox = authenticatedMutation({
   handler: async (ctx, args) => {
     const user = await ctx.db.get(ctx.userId);
     if (!user?.defaultOrganizationId) throw validation("organization", "No default organization");
+    const encryptedTokens = await encryptMailboxTokensForStorage({
+      accessToken: args.accessToken,
+      refreshToken: args.refreshToken,
+    });
 
     // Check if this mailbox is already connected
     const existing = await ctx.db
@@ -95,28 +98,31 @@ export const createMailbox = authenticatedMutation({
 
     if (alreadyConnected) {
       // Update tokens on existing connection
+      const updatedAt = Date.now();
       await ctx.db.patch(alreadyConnected._id, {
-        accessToken: args.accessToken,
-        refreshToken: args.refreshToken,
+        accessToken: encryptedTokens.accessToken,
+        refreshToken: encryptedTokens.refreshToken,
         expiresAt: args.expiresAt,
+        minuteSendLimit: alreadyConnected.minuteSendLimit ?? DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
+        minuteSendCount: alreadyConnected.minuteSendCount ?? 0,
+        minuteWindowStartedAt: alreadyConnected.minuteWindowStartedAt ?? updatedAt,
         isActive: true,
-        updatedAt: Date.now(),
+        updatedAt,
       });
       return alreadyConnected._id;
     }
 
+    const rateLimitDefaults = buildMailboxRateLimitDefaults();
     return await ctx.db.insert("outreachMailboxes", {
       userId: ctx.userId,
       organizationId: user.defaultOrganizationId,
       provider: args.provider,
       email: args.email.toLowerCase(),
       displayName: args.displayName,
-      accessToken: args.accessToken,
-      refreshToken: args.refreshToken,
+      accessToken: encryptedTokens.accessToken,
+      refreshToken: encryptedTokens.refreshToken,
       expiresAt: args.expiresAt,
-      dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
-      todaySendCount: 0,
-      todayResetAt: Date.now(),
+      ...rateLimitDefaults,
       isActive: true,
       updatedAt: Date.now(),
     });
@@ -144,6 +150,19 @@ export const createMailboxFromOAuth = internalMutation({
     if (!user) throw validation("userId", "User not found");
     const org = await ctx.db.get(args.organizationId);
     if (!org) throw validation("organizationId", "Organization not found");
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", args.organizationId).eq("userId", args.userId),
+      )
+      .unique();
+    if (!membership) {
+      throw validation("organizationId", "User is not a member of the organization");
+    }
+    const encryptedTokens = await encryptMailboxTokensForStorage({
+      accessToken: args.accessToken,
+      refreshToken: args.refreshToken,
+    });
 
     const existing = await ctx.db
       .query("outreachMailboxes")
@@ -157,28 +176,31 @@ export const createMailboxFromOAuth = internalMutation({
     );
 
     if (alreadyConnected) {
+      const updatedAt = Date.now();
       await ctx.db.patch(alreadyConnected._id, {
-        accessToken: args.accessToken,
-        refreshToken: args.refreshToken,
+        accessToken: encryptedTokens.accessToken,
+        refreshToken: encryptedTokens.refreshToken,
         expiresAt: args.expiresAt,
+        minuteSendLimit: alreadyConnected.minuteSendLimit ?? DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
+        minuteSendCount: alreadyConnected.minuteSendCount ?? 0,
+        minuteWindowStartedAt: alreadyConnected.minuteWindowStartedAt ?? updatedAt,
         isActive: true,
-        updatedAt: Date.now(),
+        updatedAt,
       });
       return alreadyConnected._id;
     }
 
+    const rateLimitDefaults = buildMailboxRateLimitDefaults();
     return await ctx.db.insert("outreachMailboxes", {
       userId: args.userId,
       organizationId: args.organizationId,
       provider: args.provider,
       email: args.email.toLowerCase(),
       displayName: args.displayName,
-      accessToken: args.accessToken,
-      refreshToken: args.refreshToken,
+      accessToken: encryptedTokens.accessToken,
+      refreshToken: encryptedTokens.refreshToken,
       expiresAt: args.expiresAt,
-      dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
-      todaySendCount: 0,
-      todayResetAt: Date.now(),
+      ...rateLimitDefaults,
       isActive: true,
       updatedAt: Date.now(),
     });

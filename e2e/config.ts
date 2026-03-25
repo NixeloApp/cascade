@@ -253,6 +253,24 @@ export const E2E_ENDPOINTS = {
   nukeTestUsers: `${CONVEX_SITE_URL}/e2e/nuke-test-users`,
   // Seed screenshot data (workspace, team, project, issues, documents)
   seedScreenshotData: `${CONVEX_SITE_URL}/e2e/seed-screenshot-data`,
+  // Delete a screenshot-created issue so later captures stay deterministic
+  deleteSeededProjectIssue: `${CONVEX_SITE_URL}/e2e/delete-seeded-project-issue`,
+  // Reconfigure seeded project-list membership states for screenshot captures
+  configureProjectsState: `${CONVEX_SITE_URL}/e2e/configure-projects-state`,
+  // Reconfigure seeded project inbox data for screenshot captures
+  configureProjectInboxState: `${CONVEX_SITE_URL}/e2e/configure-project-inbox-state`,
+  // Reconfigure seeded roadmap data for screenshot captures
+  configureRoadmapState: `${CONVEX_SITE_URL}/e2e/configure-roadmap-state`,
+  // Reconfigure seeded time tracking data for screenshot captures
+  configureTimeTrackingState: `${CONVEX_SITE_URL}/e2e/configure-time-tracking-state`,
+  // Reconfigure seeded project analytics data for screenshot captures
+  configureProjectAnalyticsState: `${CONVEX_SITE_URL}/e2e/configure-project-analytics-state`,
+  // Reconfigure seeded org analytics data for screenshot captures
+  configureOrgAnalyticsState: `${CONVEX_SITE_URL}/e2e/configure-org-analytics-state`,
+  // Reconfigure seeded notifications data for screenshot captures
+  configureNotificationsState: `${CONVEX_SITE_URL}/e2e/configure-notifications-state`,
+  // Reconfigure seeded assistant data for screenshot captures
+  configureAssistantState: `${CONVEX_SITE_URL}/e2e/configure-assistant-state`,
   // Reset meetings data for a specific E2E user
   resetMeetingsData: `${CONVEX_SITE_URL}/e2e/reset-meetings-data`,
   // Update a seeded project's workflow state for interactive screenshot capture

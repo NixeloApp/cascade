@@ -1,22 +1,83 @@
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("../lib/boundedQueries", () => ({
-  BOUNDED_LIST_LIMIT: 100,
-}));
+import { convexTest } from "convex-test";
+import { describe, expect, it } from "vitest";
+import { api, internal } from "../_generated/api";
+import schema from "../schema";
+import { modules } from "../testSetup.test-helper";
+import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "../testUtils";
 
 describe("outreach mailboxes", () => {
-  describe("module exports", () => {
-    it("exports query functions", async () => {
-      const mod = await import("./mailboxes");
-      expect(typeof mod.list).toBe("function");
-      expect(typeof mod.get).toBe("function");
+  it("stores OAuth mailbox tokens encrypted and redacts them from authenticated queries", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const { organizationId } = await createOrganizationAdmin(t, userId);
+    const asUser = asAuthenticatedUser(t, userId);
+
+    const mailboxId = await t.mutation(internal.outreach.mailboxes.createMailboxFromOAuth, {
+      userId,
+      organizationId,
+      provider: "google",
+      email: "founder@example.com",
+      displayName: "Founder",
+      accessToken: "plain-access-token",
+      refreshToken: "plain-refresh-token",
+      expiresAt: Date.now() + 60_000,
     });
 
-    it("exports mutation functions", async () => {
-      const mod = await import("./mailboxes");
-      expect(typeof mod.createMailbox).toBe("function");
-      expect(typeof mod.disconnect).toBe("function");
-      expect(typeof mod.updateLimit).toBe("function");
+    const rawMailbox = await t.run(async (ctx) => ctx.db.get(mailboxId));
+    expect(rawMailbox).not.toBeNull();
+    if (rawMailbox === null) throw new Error("rawMailbox is null");
+    expect(rawMailbox.accessToken).not.toBe("plain-access-token");
+    expect(rawMailbox.refreshToken).not.toBe("plain-refresh-token");
+
+    const listed = await asUser.query(api.outreach.mailboxes.list, {});
+    expect(listed).toHaveLength(1);
+    expect(listed[0].accessToken).toBe("[redacted]");
+    expect(listed[0].refreshToken).toBe("[redacted]");
+
+    const mailbox = await asUser.query(api.outreach.mailboxes.get, { mailboxId });
+    expect(mailbox?.accessToken).toBe("[redacted]");
+    expect(mailbox?.refreshToken).toBe("[redacted]");
+  });
+
+  it("encrypts tokens when authenticated createMailbox updates an existing mailbox", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const { organizationId } = await createOrganizationAdmin(t, userId);
+    const asUser = asAuthenticatedUser(t, userId);
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(userId, { defaultOrganizationId: organizationId });
     });
+
+    const firstMailboxId = await asUser.mutation(api.outreach.mailboxes.createMailbox, {
+      provider: "google",
+      email: "founder@example.com",
+      displayName: "Founder",
+      accessToken: "token-one",
+      refreshToken: "refresh-one",
+      expiresAt: Date.now() + 60_000,
+    });
+
+    const secondMailboxId = await asUser.mutation(api.outreach.mailboxes.createMailbox, {
+      provider: "google",
+      email: "founder@example.com",
+      displayName: "Founder Updated",
+      accessToken: "token-two",
+      refreshToken: "refresh-two",
+      expiresAt: Date.now() + 120_000,
+    });
+
+    expect(secondMailboxId).toBe(firstMailboxId);
+
+    const mailboxes = await t.run(async (ctx) =>
+      ctx.db
+        .query("outreachMailboxes")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect(),
+    );
+
+    expect(mailboxes).toHaveLength(1);
+    expect(mailboxes[0].accessToken).not.toBe("token-two");
+    expect(mailboxes[0].refreshToken).not.toBe("refresh-two");
   });
 });

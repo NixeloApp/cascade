@@ -9,6 +9,9 @@ import { BasePage } from "./base.page";
  * Handles the sprint management view with sprint cards and creation form.
  */
 export class SprintsPage extends BasePage {
+  readonly completeSprintButton: Locator;
+  readonly completionDialog: Locator;
+  readonly completionDialogDescription: Locator;
   readonly pageHeader: Locator;
   readonly createButton: Locator;
   readonly sprintCards: Locator;
@@ -17,6 +20,14 @@ export class SprintsPage extends BasePage {
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
+    this.completeSprintButton = page
+      .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
+      .getByRole("button", { name: /^complete sprint$/i })
+      .first();
+    this.completionDialog = page.getByRole("dialog", { name: /^complete sprint$/i });
+    this.completionDialogDescription = this.completionDialog.getByText(
+      /issues? not completed\. choose what to do with them\./i,
+    );
     this.pageHeader = page.getByTestId(TEST_IDS.SPRINT.PAGE_HEADER);
     this.createButton = page.getByTestId(TEST_IDS.SPRINT.CREATE_BUTTON);
     this.sprintCards = page.getByTestId(TEST_IDS.SPRINT.CARD);
@@ -46,5 +57,12 @@ export class SprintsPage extends BasePage {
         { timeout: 12000 },
       )
       .not.toBe("pending");
+  }
+
+  async openCompletionDialog(): Promise<void> {
+    await this.completeSprintButton.waitFor({ state: "visible", timeout: 5000 });
+    await this.completeSprintButton.click();
+    await this.completionDialog.waitFor({ state: "visible", timeout: 5000 });
+    await this.completionDialogDescription.waitFor({ state: "visible", timeout: 5000 });
   }
 }

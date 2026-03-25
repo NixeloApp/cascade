@@ -2,6 +2,7 @@ import { ChartCard } from "@/components/Analytics/ChartCard";
 import { MetricCard } from "@/components/Analytics/MetricCard";
 import { PageHeader, PageLayout, PageStack } from "@/components/layout";
 import { CardSection } from "@/components/ui/CardSection";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
@@ -58,37 +59,68 @@ interface OrganizationAnalyticsDashboardProps {
   headerActions?: React.ReactNode;
 }
 
-function ProjectBreakdownSection({
-  projectBreakdown,
-}: {
-  projectBreakdown: ProjectBreakdownItem[];
-}) {
-  if (projectBreakdown.length === 0) {
-    return null;
+function getOrgAnalyticsEmptyStateCopy(analytics: OrganizationAnalyticsData): {
+  title: string;
+  description: string;
+} {
+  if (analytics.projectCount === 0) {
+    return {
+      title: "No projects available",
+      description: "Join or create a project to populate organization-level analytics.",
+    };
   }
 
+  return {
+    title: "No issue activity for this period",
+    description:
+      "Try a broader time range or create work in one of your projects to populate these charts.",
+  };
+}
+
+function ProjectBreakdownSection({
+  projectBreakdown,
+  emptyState,
+}: {
+  projectBreakdown: ProjectBreakdownItem[];
+  emptyState?: {
+    title: string;
+    description: string;
+  };
+}) {
   return (
     <AnalyticsSection
       title="Project Breakdown"
       description={`Issue counts across ${projectBreakdown.length} active project${projectBreakdown.length === 1 ? "" : "s"}.`}
+      data-testid={TEST_IDS.ANALYTICS.ORG_PROJECT_BREAKDOWN}
     >
-      <Stack gap="sm">
-        {projectBreakdown.map((project) => (
-          <CardSection key={project.projectId} size="compact">
-            <Flex align="center" justify="between" gap="md">
-              <FlexItem flex="1">
-                <Stack gap="none">
-                  <Typography variant="label">{project.name}</Typography>
-                  <Typography variant="caption" color="tertiary">
-                    {project.key}
-                  </Typography>
-                </Stack>
-              </FlexItem>
-              <Typography variant="h4">{project.issueCount}</Typography>
-            </Flex>
-          </CardSection>
-        ))}
-      </Stack>
+      {projectBreakdown.length === 0 && emptyState ? (
+        <EmptyState
+          data-testid={TEST_IDS.ANALYTICS.ORG_PROJECT_BREAKDOWN_EMPTY}
+          icon={FolderKanban}
+          title={emptyState.title}
+          description={emptyState.description}
+          size="compact"
+          surface="bare"
+        />
+      ) : (
+        <Stack gap="sm">
+          {projectBreakdown.map((project) => (
+            <CardSection key={project.projectId} size="compact">
+              <Flex align="center" justify="between" gap="md">
+                <FlexItem flex="1">
+                  <Stack gap="none">
+                    <Typography variant="label">{project.name}</Typography>
+                    <Typography variant="caption" color="tertiary">
+                      {project.key}
+                    </Typography>
+                  </Stack>
+                </FlexItem>
+                <Typography variant="h4">{project.issueCount}</Typography>
+              </Flex>
+            </CardSection>
+          ))}
+        </Stack>
+      )}
     </AnalyticsSection>
   );
 }
@@ -161,19 +193,24 @@ export function OrganizationAnalyticsDashboard({
     label: project.key,
     value: project.issueCount,
   }));
+  const emptyStateCopy = getOrgAnalyticsEmptyStateCopy(analytics);
+  const hasAnyIssues = analytics.totalIssues > 0;
 
   return (
-    <PageLayout maxWidth="xl">
+    <PageLayout maxWidth="xl" data-testid={TEST_IDS.ANALYTICS.ORG_PAGE}>
       <PageStack>
-        <PageHeader
-          title="Analytics"
-          description="Organization-wide issue metrics and project health."
-          spacing="stack"
-          actions={headerActions}
-        />
+        <div data-testid={TEST_IDS.ANALYTICS.PAGE_HEADER}>
+          <PageHeader
+            title="Analytics"
+            description="Organization-wide issue metrics and project health."
+            spacing="stack"
+            actions={headerActions}
+          />
+        </div>
 
         {analytics.isProjectsTruncated ? (
           <CardSection
+            data-testid={TEST_IDS.ANALYTICS.ORG_TRUNCATION_NOTICE}
             size="compact"
             className="border-status-warning/20 bg-status-warning-bg/70 text-status-warning-text"
           >
@@ -191,29 +228,83 @@ export function OrganizationAnalyticsDashboard({
             highlight
             testId={TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES}
           />
-          <MetricCard title="Completed" value={analytics.completedCount} icon={CheckCircle} />
-          <MetricCard title="Unassigned" value={analytics.unassignedCount} icon={Users} />
-          <MetricCard title="Projects" value={analytics.projectCount} icon={FolderKanban} />
+          <MetricCard
+            title="Completed"
+            value={analytics.completedCount}
+            icon={CheckCircle}
+            testId={TEST_IDS.ANALYTICS.ORG_METRIC_COMPLETED}
+          />
+          <MetricCard
+            title="Unassigned"
+            value={analytics.unassignedCount}
+            icon={Users}
+            testId={TEST_IDS.ANALYTICS.ORG_METRIC_UNASSIGNED}
+          />
+          <MetricCard
+            title="Projects"
+            value={analytics.projectCount}
+            icon={FolderKanban}
+            testId={TEST_IDS.ANALYTICS.ORG_METRIC_PROJECTS}
+          />
         </Grid>
 
         <Grid cols={1} colsLg={2} gap="md">
-          <ChartCard title="Issues by Type">
+          <ChartCard
+            title="Issues by Type"
+            testId={TEST_IDS.ANALYTICS.ORG_CHART_TYPE}
+            emptyStateTestId={TEST_IDS.ANALYTICS.ORG_EMPTY_STATE}
+            emptyState={
+              hasAnyIssues
+                ? undefined
+                : {
+                    title: emptyStateCopy.title,
+                    description: emptyStateCopy.description,
+                  }
+            }
+          >
             <BarChart data={typeChartData} color="bg-brand" />
           </ChartCard>
-          <ChartCard title="Issues by Priority">
+          <ChartCard
+            title="Issues by Priority"
+            testId={TEST_IDS.ANALYTICS.ORG_CHART_PRIORITY}
+            emptyState={
+              hasAnyIssues
+                ? undefined
+                : {
+                    title: emptyStateCopy.title,
+                    description: emptyStateCopy.description,
+                  }
+            }
+          >
             <BarChart data={priorityChartData} color="bg-status-warning" />
           </ChartCard>
         </Grid>
 
-        {projectChartData.length > 0 ? (
-          <ChartCard title="Issues by Project (top 10)">
-            <BarChart data={projectChartData} color="bg-accent" />
-          </ChartCard>
+        <ChartCard
+          title="Issues by Project (top 10)"
+          testId={TEST_IDS.ANALYTICS.ORG_CHART_PROJECTS}
+          emptyState={
+            projectChartData.length > 0
+              ? undefined
+              : {
+                  title: emptyStateCopy.title,
+                  description: emptyStateCopy.description,
+                }
+          }
+        >
+          <BarChart data={projectChartData} color="bg-accent" />
+        </ChartCard>
+
+        {trend ? (
+          <div data-testid={TEST_IDS.ANALYTICS.ORG_TREND_SECTION}>
+            <TrendSection trend={trend} />
+          </div>
         ) : null}
 
-        {trend && <TrendSection trend={trend} />}
-
-        <ProjectBreakdownSection projectBreakdown={analytics.projectBreakdown} />
+        <ProjectBreakdownSection
+          projectBreakdown={analytics.projectBreakdown}
+          emptyState={emptyStateCopy}
+        />
       </PageStack>
     </PageLayout>
   );

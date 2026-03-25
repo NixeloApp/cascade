@@ -6,7 +6,7 @@
  *
  * Rules:
  * 1. In src/components: data-testid must use TEST_IDS.X.Y (not string literals)
- * 2. In e2e tests: getByTestId must use TEST_IDS.X.Y (not string literals)
+ * 2. In e2e tests and screenshot harness modules: getByTestId must use TEST_IDS.X.Y (not string literals)
  * 3. In e2e specs: getByTestId should be in page objects, not directly in spec files
  *
  * Enforced. Test ID issues are reported as plain errors.
@@ -16,6 +16,19 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
+
+function getExplicitScreenshotHarnessFiles() {
+  const screenshotHarnessFiles = new Set([path.join(ROOT, "e2e", "screenshot-pages.ts")]);
+  const screenshotLibDir = path.join(ROOT, "e2e", "screenshot-lib");
+
+  if (fs.existsSync(screenshotLibDir)) {
+    for (const file of walkDir(screenshotLibDir, { extensions: new Set([".ts"]) })) {
+      screenshotHarnessFiles.add(file);
+    }
+  }
+
+  return screenshotHarnessFiles;
+}
 
 export function run() {
   const SRC_COMPONENTS = path.join(ROOT, "src/components");
@@ -195,8 +208,12 @@ export function run() {
   }
 
   // Check E2E test files
-  const e2eFiles = walkDir(E2E_DIR, { extensions: new Set([".ts"]) });
-  for (const file of e2eFiles) {
+  const e2eFiles = new Set(walkDir(E2E_DIR, { extensions: new Set([".ts"]) }));
+  for (const file of getExplicitScreenshotHarnessFiles()) {
+    e2eFiles.add(file);
+  }
+
+  for (const file of [...e2eFiles].sort()) {
     const rel = relPath(file);
     // Skip allowed directories for constant checks
     if (ALLOWED_TESTID_DIRS.some((d) => rel.includes(d))) {

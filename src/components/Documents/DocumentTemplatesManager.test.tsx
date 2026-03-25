@@ -195,8 +195,14 @@ describe("DocumentTemplatesManager", () => {
     }
     await user.click(customTemplateButton);
 
-    expect(onSelectTemplate).toHaveBeenNthCalledWith(1, builtInTemplateId);
-    expect(onSelectTemplate).toHaveBeenNthCalledWith(2, customTemplateId);
+    expect(onSelectTemplate).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ _id: builtInTemplateId, name: "Sprint Review" }),
+    );
+    expect(onSelectTemplate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ _id: customTemplateId, name: "Architecture Decision" }),
+    );
   });
 
   it("creates a template with trimmed values", async () => {

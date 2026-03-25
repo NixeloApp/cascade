@@ -1,4 +1,5 @@
 import { Clock } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
@@ -28,6 +29,7 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
     <AnalyticsSection
       title="Recent Activity"
       description="The latest project updates flowing through issues and status changes."
+      data-testid={TEST_IDS.ANALYTICS.RECENT_ACTIVITY}
     >
       <Stack gap="md">
         {!activities || activities.length === 0 ? (

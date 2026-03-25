@@ -32,6 +32,7 @@ import { E2E_TIMEZONE } from "./constants";
 import {
   captureState,
   getStagedOutputSummary,
+  getStagingRoot,
   isConfigSelected,
   isCrashLikeError,
   promoteStagedScreenshots,
@@ -52,8 +53,8 @@ import {
 import { screenshotFilledStates } from "./screenshot-lib/filled-states";
 import { autoLogin } from "./screenshot-lib/helpers";
 import { screenshotEmptyStates, screenshotPublicPages } from "./screenshot-lib/public-pages";
-import { waitForExpectedContent } from "./screenshot-lib/readiness";
-import { getGeneratedSpecFolders } from "./screenshot-lib/routing";
+import { waitForExpectedContent, waitForSpinnersHidden } from "./screenshot-lib/readiness";
+import { getGeneratedSpecFolders, resolveCaptureTarget } from "./screenshot-lib/routing";
 import { injectAuthTokens } from "./utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
 import { waitForDashboardReady } from "./utils/wait-helpers";
@@ -124,9 +125,14 @@ async function captureEmptyForConfig(
 
   try {
     if (storageState) {
-      // Storage state carries auth — navigate directly to dashboard
-      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
-      await waitForDashboardReady(page);
+      const dashboardUrl = `${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`;
+      try {
+        await page.goto(dashboardUrl, { waitUntil: "load" });
+        await waitForDashboardReady(page);
+      } catch {
+        await page.reload({ waitUntil: "load" });
+        await waitForDashboardReady(page);
+      }
     } else if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureState.captureFailures++;
       console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
@@ -178,10 +184,11 @@ async function captureFilledForConfig(
   await screenshotPublicPages(page, seedResult);
 
   try {
-    if (storageState) {
-      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
-      await waitForDashboardReady(page);
-    } else if (!(await authenticateAndNavigate(page, orgSlug))) {
+    // Re-authenticate per filled-state config instead of relying solely on the
+    // setup-time storage snapshot. The screenshot run spans multiple fresh
+    // browser contexts, and re-establishing auth here is more deterministic
+    // for route-level captures than reusing a potentially stale token snapshot.
+    if (!(await authenticateAndNavigate(page, orgSlug))) {
       captureState.captureFailures++;
       console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
       return;
@@ -236,26 +243,62 @@ const DRY_RUN_PAGES = [
   "empty-invoices",
   "empty-clients",
   "empty-meetings",
+  "empty-outreach",
   "empty-settings",
   "empty-settings-profile",
   // Filled states — top-level
   "filled-dashboard",
   "filled-projects",
+  "filled-projects-single-project",
+  "filled-projects-empty",
+  "filled-projects-loading",
   "filled-issues",
   "filled-documents",
   "filled-documents-templates",
+  "filled-documents-search-filtered",
+  "filled-documents-search-empty",
   "filled-workspaces",
+  "filled-workspaces-search-empty",
   "filled-time-tracking",
+  "filled-time-tracking-burn-rate",
+  "filled-time-tracking-rates",
+  "filled-time-tracking-empty",
+  "filled-time-tracking-all-time",
+  "filled-time-tracking-truncated",
   "filled-notifications",
+  "filled-my-issues-filter-active",
+  "filled-my-issues-filtered-empty",
+  "filled-my-issues-loading",
   "filled-my-issues",
   "filled-org-calendar",
+  "filled-org-calendar-workspace-scope",
+  "filled-org-calendar-team-scope",
+  "filled-org-calendar-loading",
+  "filled-org-analytics-sparse-data",
+  "filled-org-analytics-no-activity",
   "filled-org-analytics",
   "filled-invoices",
+  "filled-invoices-filtered-empty",
+  "filled-invoices-create-draft-dialog",
+  "filled-invoices-loading",
   "filled-clients",
   "filled-meetings",
+  "filled-outreach",
+  "filled-outreach-sequences",
+  "filled-outreach-contacts",
+  "filled-outreach-mailboxes",
+  "filled-outreach-analytics",
+  "filled-outreach-contact-dialog",
+  "filled-outreach-import-dialog",
+  "filled-outreach-sequence-dialog",
+  "filled-outreach-enroll-dialog",
+  "filled-outreach-mailbox-disconnect-confirm",
   "filled-meetings-detail",
   "filled-meetings-transcript-search",
   "filled-meetings-memory-lens",
+  "filled-meetings-processing",
+  "filled-meetings-filter-empty",
+  "filled-meetings-schedule-dialog",
   "filled-settings",
   "filled-settings-profile",
   "filled-settings-integrations",
@@ -268,6 +311,10 @@ const DRY_RUN_PAGES = [
   "filled-authentication",
   "filled-add-ons",
   "filled-assistant",
+  "filled-assistant-conversations",
+  "filled-assistant-overview-empty",
+  "filled-assistant-conversations-empty",
+  "filled-assistant-loading",
   "filled-mcp-server",
   // Filled states — dashboard modals
   "filled-dashboard-omnibox",
@@ -282,6 +329,11 @@ const DRY_RUN_PAGES = [
   // Filled states — projects modals
   "filled-projects-create-project-modal",
   "filled-issues-side-panel",
+  "filled-issues-search-filtered",
+  "filled-issues-search-empty",
+  "filled-issues-filter-active",
+  "filled-issues-create-modal",
+  "filled-issues-loading",
   // Filled states — workspace modals
   "filled-workspaces-create-workspace-modal",
   "filled-workspace-create-team-modal",
@@ -289,11 +341,20 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-board",
   "filled-project-PROJ-backlog",
   "filled-project-PROJ-inbox",
+  "filled-project-PROJ-inbox-closed",
+  "filled-project-PROJ-inbox-bulk-selection",
+  "filled-project-PROJ-inbox-snooze-menu",
+  "filled-project-PROJ-inbox-decline-dialog",
+  "filled-project-PROJ-inbox-duplicate-dialog",
+  "filled-project-PROJ-inbox-open-empty",
+  "filled-project-PROJ-inbox-closed-empty",
   "filled-project-PROJ-sprints",
   "filled-project-PROJ-roadmap",
   "filled-project-PROJ-calendar",
   "filled-project-PROJ-activity",
   "filled-project-PROJ-analytics",
+  "filled-project-PROJ-analytics-sparse-data",
+  "filled-project-PROJ-analytics-no-activity",
   "filled-project-PROJ-billing",
   "filled-project-PROJ-timesheet",
   "filled-project-PROJ-members",
@@ -368,11 +429,19 @@ const DRY_RUN_PAGES = [
   "filled-team-TEAM-settings",
   // Filled states — roadmap interactive states
   "filled-project-PROJ-roadmap-timeline-selector",
+  "filled-project-PROJ-roadmap-grouped",
+  "filled-project-PROJ-roadmap-detail",
+  "filled-project-PROJ-roadmap-empty",
+  "filled-project-PROJ-roadmap-milestone",
   // Filled states — notification interactive states
   "filled-notification-popover",
   "filled-notification-snooze-popover",
   "filled-notifications-archived",
   "filled-notifications-filter-active",
+  "filled-notifications-inbox-empty",
+  "filled-notifications-archived-empty",
+  "filled-notifications-mark-all-read-loading",
+  "filled-notifications-unread-overflow",
   "filled-project-tree",
   // Filled states — navigation / shell states
   "filled-sidebar-collapsed",
@@ -586,7 +655,7 @@ async function run(): Promise<void> {
   }
 
   if (captureState.captureFailures > 0) {
-    fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+    fs.rmSync(getStagingRoot(), { recursive: true, force: true });
     captureState.stagingRootDir = "";
     throw new Error(
       `Screenshot capture had ${captureState.captureFailures} failure(s); staged output was not promoted`,
@@ -594,14 +663,14 @@ async function run(): Promise<void> {
   }
 
   if (captureState.totalScreenshots === 0) {
-    fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+    fs.rmSync(getStagingRoot(), { recursive: true, force: true });
     captureState.stagingRootDir = "";
     throw new Error("No screenshots matched the provided filters");
   }
 
   promoteStagedScreenshots();
   const outputSummary = getStagedOutputSummary();
-  fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+  fs.rmSync(getStagingRoot(), { recursive: true, force: true });
   captureState.stagingRootDir = "";
 
   const skipNote = captureState.captureSkips > 0 ? ` (${captureState.captureSkips} skipped)` : "";

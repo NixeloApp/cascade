@@ -7,11 +7,19 @@
  */
 
 import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ProjectsPage } from "../pages";
-import { getLocatorAttribute, getLocatorCount, isLocatorVisible } from "../utils/locator-state";
-import type { SeedScreenshotResult } from "../utils/test-user-service";
+import {
+  AnalyticsPage,
+  NotificationsPage,
+  ProjectsPage,
+  TimeTrackingPage,
+  WorkspacesPage,
+} from "../pages";
+import { OutreachPage } from "../pages/outreach.page";
+import { getLocatorCount, isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
+import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
   dismissIfOpen,
@@ -50,6 +58,25 @@ import {
   seedIssueDraft,
 } from "./helpers";
 import {
+  screenshotAssistantStates,
+  screenshotBoardInteractiveStates,
+  screenshotBoardModals,
+  screenshotDashboardLoadingState,
+  screenshotDashboardModals,
+  screenshotDocumentsStates,
+  screenshotInvoicesStates,
+  screenshotIssueInteractiveStates,
+  screenshotIssuesStates,
+  screenshotMeetingsStates,
+  screenshotMyIssuesStates,
+  screenshotOrgCalendarStates,
+  screenshotProjectInboxStates,
+  screenshotProjectsModal,
+  screenshotProjectsStates,
+  screenshotRoadmapStates,
+  screenshotSprintInteractiveStates,
+} from "./interactive-captures";
+import {
   focusCalendarTimedContentForCapture,
   getCalendarDragState,
   scrollSectionNearViewportTop,
@@ -77,7 +104,7 @@ export async function screenshotFilledStates(
 
   // Top-level pages
   await takeScreenshot(page, p, "dashboard", ROUTES.dashboard.build(orgSlug));
-  await takeScreenshot(page, p, "projects", ROUTES.projects.list.build(orgSlug));
+  await screenshotProjectsStates(page, orgSlug, p);
   await takeScreenshot(page, p, "issues", ROUTES.issues.list.build(orgSlug));
   await takeScreenshot(page, p, "documents", ROUTES.documents.list.build(orgSlug));
   await takeScreenshot(page, p, "documents-templates", ROUTES.documents.templates.build(orgSlug));
@@ -86,10 +113,10 @@ export async function screenshotFilledStates(
   await takeScreenshot(page, p, "notifications", ROUTES.notifications.build(orgSlug));
   await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
   await takeScreenshot(page, p, "org-calendar", ROUTES.calendar.build(orgSlug));
-  await takeScreenshot(page, p, "org-analytics", ROUTES.analytics.build(orgSlug));
-  await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
+  await screenshotInvoicesStates(page, orgSlug, p);
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
   await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
+  await takeScreenshot(page, p, "outreach", ROUTES.outreach.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(
@@ -110,6 +137,104 @@ export async function screenshotFilledStates(
     "settings-notifications",
     `${ROUTES.settings.profile.build(orgSlug)}?tab=notifications`,
   );
+
+  if (projectKey) {
+    const orgAnalyticsCaptureNames = [
+      "org-analytics",
+      "org-analytics-sparse-data",
+      "org-analytics-no-activity",
+    ] as const;
+
+    if (shouldCaptureAny(p, [...orgAnalyticsCaptureNames])) {
+      await runCaptureStep("org analytics states", async () => {
+        const analyticsUrl = ROUTES.analytics.build(orgSlug);
+        const applyOrgAnalyticsState = async (
+          mode: "default" | "sparseData" | "noActivity",
+        ): Promise<void> => {
+          const result = await testUserService.configureOrgAnalyticsState(
+            orgSlug,
+            projectKey,
+            mode,
+          );
+          if (!result.success) {
+            throw new Error(
+              result.error ?? `Failed to configure org analytics screenshot state: ${mode}`,
+            );
+          }
+        };
+
+        const captureOrgAnalyticsState = async ({
+          capturePage,
+          expectedState,
+          name,
+        }: {
+          capturePage: Page;
+          expectedState: "canonical" | "noActivity";
+          name: (typeof orgAnalyticsCaptureNames)[number];
+        }): Promise<void> => {
+          await capturePage.goto(`${BASE_URL}${analyticsUrl}`, { waitUntil: "domcontentloaded" });
+          const analyticsPage = new AnalyticsPage(capturePage, orgSlug);
+          if (expectedState === "canonical") {
+            await analyticsPage.expectCanonicalState();
+          } else {
+            await analyticsPage.expectNoActivityState();
+          }
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, p, name);
+        };
+
+        await applyOrgAnalyticsState("default");
+
+        if (shouldCapture(p, "org-analytics")) {
+          await captureOrgAnalyticsState({
+            capturePage: page,
+            expectedState: "canonical",
+            name: "org-analytics",
+          });
+        }
+
+        if (shouldCapture(p, "org-analytics-sparse-data")) {
+          await applyOrgAnalyticsState("sparseData");
+          const sparsePage = await page.context().newPage();
+          try {
+            try {
+              await captureOrgAnalyticsState({
+                capturePage: sparsePage,
+                expectedState: "canonical",
+                name: "org-analytics-sparse-data",
+              });
+            } finally {
+              await applyOrgAnalyticsState("default");
+            }
+          } finally {
+            await sparsePage.close();
+          }
+        }
+
+        if (shouldCapture(p, "org-analytics-no-activity")) {
+          await applyOrgAnalyticsState("noActivity");
+          const noActivityPage = await page.context().newPage();
+          try {
+            try {
+              await captureOrgAnalyticsState({
+                capturePage: noActivityPage,
+                expectedState: "noActivity",
+                name: "org-analytics-no-activity",
+              });
+            } finally {
+              await applyOrgAnalyticsState("default");
+            }
+          } finally {
+            await noActivityPage.close();
+          }
+        }
+
+        await applyOrgAnalyticsState("default");
+      });
+    }
+  } else if (shouldCapture(p, "org-analytics")) {
+    await takeScreenshot(page, p, "org-analytics", ROUTES.analytics.build(orgSlug));
+  }
   await takeScreenshot(
     page,
     p,
@@ -136,8 +261,19 @@ export async function screenshotFilledStates(
   );
   await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
   await takeScreenshot(page, p, "add-ons", ROUTES.addOns.build(orgSlug));
-  await takeScreenshot(page, p, "assistant", ROUTES.assistant.build(orgSlug));
   await takeScreenshot(page, p, "mcp-server", ROUTES.mcp.build(orgSlug));
+
+  if (
+    shouldCaptureAny(p, [
+      "assistant",
+      "assistant-conversations",
+      "assistant-overview-empty",
+      "assistant-conversations-empty",
+      "assistant-loading",
+    ])
+  ) {
+    await screenshotAssistantStates(page, orgSlug, p);
+  }
 
   if (
     shouldCaptureAny(p, [
@@ -155,10 +291,60 @@ export async function screenshotFilledStates(
     await screenshotProjectsModal(page, orgSlug, p);
   }
 
+  if (shouldCaptureAny(p, ["documents-search-filtered", "documents-search-empty"])) {
+    await screenshotDocumentsStates(page, orgSlug, p);
+  }
+
   if (
-    shouldCaptureAny(p, ["meetings-detail", "meetings-transcript-search", "meetings-memory-lens"])
+    shouldCaptureAny(p, [
+      "org-calendar-workspace-scope",
+      "org-calendar-team-scope",
+      "org-calendar-loading",
+      "my-issues-filter-active",
+      "my-issues-filtered-empty",
+      "my-issues-loading",
+    ])
+  ) {
+    await screenshotOrgCalendarStates(page, orgSlug, p);
+  }
+
+  if (
+    shouldCaptureAny(p, [
+      "my-issues-filter-active",
+      "my-issues-filtered-empty",
+      "my-issues-loading",
+    ])
+  ) {
+    await screenshotMyIssuesStates(page, orgSlug, p);
+  }
+
+  if (
+    shouldCaptureAny(p, [
+      "meetings-detail",
+      "meetings-transcript-search",
+      "meetings-memory-lens",
+      "meetings-processing",
+      "meetings-filter-empty",
+      "meetings-schedule-dialog",
+    ])
   ) {
     await screenshotMeetingsStates(page, orgSlug, p);
+  }
+
+  if (
+    shouldCaptureAny(p, [
+      "outreach-sequences",
+      "outreach-contacts",
+      "outreach-mailboxes",
+      "outreach-analytics",
+      "outreach-contact-dialog",
+      "outreach-import-dialog",
+      "outreach-sequence-dialog",
+      "outreach-enroll-dialog",
+      "outreach-mailbox-disconnect-confirm",
+    ])
+  ) {
+    await screenshotOutreachStates(page, orgSlug, p);
   }
 
   if (
@@ -254,10 +440,8 @@ export async function screenshotFilledStates(
       "backlog",
       "inbox",
       "sprints",
-      "roadmap",
       "calendar",
       "activity",
-      "analytics",
       "billing",
       "timesheet",
       "settings",
@@ -272,6 +456,129 @@ export async function screenshotFilledStates(
         `project-${normalizedProjectKey}-${tab}`,
         `/${orgSlug}/projects/${projectKey}/${tab}`,
       );
+    }
+
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-analytics`,
+        `project-${normalizedProjectKey}-analytics-sparse-data`,
+        `project-${normalizedProjectKey}-analytics-no-activity`,
+      ])
+    ) {
+      await runCaptureStep("project analytics states", async () => {
+        const analyticsUrl = ROUTES.projects.analytics.build(orgSlug, projectKey);
+
+        try {
+          const defaultStateResult = await testUserService.configureProjectAnalyticsState(
+            orgSlug,
+            projectKey,
+            "default",
+          );
+          if (!defaultStateResult.success) {
+            throw new Error(
+              defaultStateResult.error ?? "Failed to configure default analytics screenshot state",
+            );
+          }
+
+          if (shouldCapture(p, `project-${normalizedProjectKey}-analytics`)) {
+            await page.goto(`${BASE_URL}${analyticsUrl}`, {
+              waitUntil: "domcontentloaded",
+              timeout: 15000,
+            });
+            await waitForExpectedContent(
+              page,
+              analyticsUrl,
+              `project-${normalizedProjectKey}-analytics`,
+            );
+            const projectsPage = new ProjectsPage(page, orgSlug);
+            await projectsPage.expectAnalyticsChartsVisible();
+            await expect(projectsPage.analyticsRecentActivity).not.toContainText(
+              "No recent activity yet",
+            );
+            await waitForScreenshotReady(page);
+            await captureCurrentView(page, p, `project-${normalizedProjectKey}-analytics`);
+          }
+
+          if (shouldCapture(p, `project-${normalizedProjectKey}-analytics-sparse-data`)) {
+            const sparseStateResult = await testUserService.configureProjectAnalyticsState(
+              orgSlug,
+              projectKey,
+              "sparseData",
+            );
+            if (!sparseStateResult.success) {
+              throw new Error(
+                sparseStateResult.error ?? "Failed to configure sparse analytics screenshot state",
+              );
+            }
+
+            const sparsePage = await page.context().newPage();
+            try {
+              await sparsePage.goto(`${BASE_URL}${analyticsUrl}`, {
+                waitUntil: "domcontentloaded",
+                timeout: 15000,
+              });
+              await waitForExpectedContent(
+                sparsePage,
+                analyticsUrl,
+                `project-${normalizedProjectKey}-analytics`,
+              );
+              const projectsPage = new ProjectsPage(sparsePage, orgSlug);
+              await projectsPage.expectAnalyticsSparseDataState();
+              await waitForScreenshotReady(sparsePage);
+              await captureCurrentView(
+                sparsePage,
+                p,
+                `project-${normalizedProjectKey}-analytics-sparse-data`,
+              );
+            } finally {
+              if (!sparsePage.isClosed()) {
+                await sparsePage.close();
+              }
+            }
+          }
+
+          if (shouldCapture(p, `project-${normalizedProjectKey}-analytics-no-activity`)) {
+            const noActivityStateResult = await testUserService.configureProjectAnalyticsState(
+              orgSlug,
+              projectKey,
+              "noActivity",
+            );
+            if (!noActivityStateResult.success) {
+              throw new Error(
+                noActivityStateResult.error ??
+                  "Failed to configure no-activity analytics screenshot state",
+              );
+            }
+
+            const noActivityPage = await page.context().newPage();
+            try {
+              await noActivityPage.goto(`${BASE_URL}${analyticsUrl}`, {
+                waitUntil: "domcontentloaded",
+                timeout: 15000,
+              });
+              await waitForExpectedContent(
+                noActivityPage,
+                analyticsUrl,
+                `project-${normalizedProjectKey}-analytics`,
+              );
+              const projectsPage = new ProjectsPage(noActivityPage, orgSlug);
+              await projectsPage.expectAnalyticsNoActivityState();
+              await waitForScreenshotReady(noActivityPage);
+              await captureCurrentView(
+                noActivityPage,
+                p,
+                `project-${normalizedProjectKey}-analytics-no-activity`,
+              );
+            } finally {
+              if (!noActivityPage.isClosed()) {
+                await noActivityPage.close();
+              }
+            }
+          }
+        } finally {
+          await testUserService.configureProjectAnalyticsState(orgSlug, projectKey, "default");
+        }
+      });
     }
 
     if (
@@ -409,14 +716,12 @@ export async function screenshotFilledStates(
       });
     }
 
-    // NOTE: This capture creates a real issue in the seeded project. The issue
-    // persists for the rest of the run, which can affect issue counts in later
-    // board/sprint screenshots. A test API for issue deletion would fix this,
-    // but the impact is low since screenshots use seeded data per-run.
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-success-toast`)) {
       await runCaptureStep("create issue success toast", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         const issueTitle = "Screenshot toast issue";
+        let createdIssue = false;
+        let deferredError: Error | null = null;
         await page.goto(`${BASE_URL}${boardUrl}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
@@ -433,20 +738,50 @@ export async function screenshotFilledStates(
           .or(modal.getByRole("textbox", { name: /title/i }))
           .first();
         const submitButton = modal.getByRole("button", { name: /^create issue$/i }).last();
-        await titleInput.fill(issueTitle);
-        await submitButton.click();
-        await modal.waitFor({ state: "hidden", timeout: 8000 });
-        const successToast = page
-          .getByTestId(TEST_IDS.TOAST.SUCCESS)
-          .filter({ hasText: /issue created successfully/i })
-          .first();
-        await successToast.waitFor({ state: "visible", timeout: 8000 });
-        await waitForScreenshotReady(page);
-        await captureCurrentView(
-          page,
-          p,
-          `project-${normalizedProjectKey}-create-issue-success-toast`,
-        );
+        try {
+          await titleInput.fill(issueTitle);
+          await submitButton.click();
+          await modal.waitFor({ state: "hidden", timeout: 8000 });
+          createdIssue = true;
+          const successToast = page
+            .getByTestId(TEST_IDS.TOAST.SUCCESS)
+            .filter({ hasText: /issue created successfully/i })
+            .first();
+          await successToast.waitFor({ state: "visible", timeout: 8000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(
+            page,
+            p,
+            `project-${normalizedProjectKey}-create-issue-success-toast`,
+          );
+        } catch (error) {
+          deferredError = error instanceof Error ? error : new Error(String(error));
+        }
+
+        if (createdIssue && projectKey) {
+          const cleanupResult = await testUserService.deleteSeededProjectIssue(
+            orgSlug,
+            projectKey,
+            issueTitle,
+          );
+          if (!cleanupResult.success || (cleanupResult.deleted ?? 0) < 1) {
+            const cleanupError = new Error(
+              cleanupResult.error ??
+                `Failed to delete screenshot-created issue "${issueTitle}" after capture`,
+            );
+            if (deferredError) {
+              throw new AggregateError(
+                [deferredError, cleanupError],
+                "Create-issue success toast capture failed and cleanup did not complete",
+              );
+            }
+            throw cleanupError;
+          }
+        }
+
+        if (deferredError) {
+          throw deferredError;
+        }
       });
     }
 
@@ -543,6 +878,20 @@ export async function screenshotFilledStates(
       });
     }
 
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-inbox-closed`,
+        `project-${normalizedProjectKey}-inbox-bulk-selection`,
+        `project-${normalizedProjectKey}-inbox-snooze-menu`,
+        `project-${normalizedProjectKey}-inbox-decline-dialog`,
+        `project-${normalizedProjectKey}-inbox-duplicate-dialog`,
+        `project-${normalizedProjectKey}-inbox-open-empty`,
+        `project-${normalizedProjectKey}-inbox-closed-empty`,
+      ])
+    ) {
+      await screenshotProjectInboxStates(page, orgSlug, projectKey, p);
+    }
+
     // Board interactive states
     if (
       shouldCaptureAny(p, [
@@ -576,6 +925,18 @@ export async function screenshotFilledStates(
 
     if (shouldCaptureAny(p, ["issues-side-panel"])) {
       await screenshotIssueInteractiveStates(page, orgSlug, p);
+    }
+
+    if (
+      shouldCaptureAny(p, [
+        "issues-search-filtered",
+        "issues-search-empty",
+        "issues-filter-active",
+        "issues-create-modal",
+        "issues-loading",
+      ])
+    ) {
+      await screenshotIssuesStates(page, orgSlug, p);
     }
 
     // Calendar view modes
@@ -1018,16 +1379,32 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByText("Create Workspace");
+      const workspacesPage = new WorkspacesPage(page, orgSlug);
       const dialog = await openStableDialog(
         page,
-        trigger,
+        workspacesPage.newWorkspaceButton,
         page.getByRole("dialog", { name: /^create workspace$/i }),
         page.getByRole("dialog", { name: /^create workspace$/i }).getByLabel(/^workspace name$/i),
         "create workspace",
       );
       await captureCurrentView(page, p, "workspaces-create-workspace-modal");
       await dismissIfOpen(page, dialog);
+    });
+  }
+
+  if (shouldCapture(p, "workspaces-search-empty")) {
+    await runCaptureStep("workspaces search empty", async () => {
+      const workspacesUrl = ROUTES.workspaces.list.build(orgSlug);
+      const workspacesPage = new WorkspacesPage(page, orgSlug);
+      await page.goto(`${BASE_URL}${workspacesUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await waitForExpectedContent(page, workspacesUrl, "workspaces", p);
+      await waitForScreenshotReady(page);
+      await workspacesPage.search("zzzx-workspace-miss");
+      await workspacesPage.expectSearchEmptyState();
+      await captureCurrentView(page, p, "workspaces-search-empty");
     });
   }
 
@@ -1104,6 +1481,133 @@ export async function screenshotFilledStates(
         `project-${normalizedProjectKey}-import-export-modal-import`,
       );
       await dismissIfOpen(page, dialog);
+    });
+  }
+
+  const timeTrackingCaptureNames = [
+    "time-tracking-burn-rate",
+    "time-tracking-rates",
+    "time-tracking-empty",
+    "time-tracking-all-time",
+    "time-tracking-truncated",
+  ] as const;
+
+  if (projectKey && shouldCaptureAny(p, [...timeTrackingCaptureNames])) {
+    await runCaptureStep("time tracking review states", async () => {
+      const timeTrackingUrl = ROUTES.timeTracking.build(orgSlug);
+
+      const applyTimeTrackingState = async (
+        mode: "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated",
+      ): Promise<void> => {
+        const result = await testUserService.configureTimeTrackingState(orgSlug, projectKey, mode);
+        if (!result.success) {
+          throw new Error(
+            result.error ?? `Failed to configure time tracking screenshot state: ${mode}`,
+          );
+        }
+      };
+
+      const captureTimeTrackingState = async ({
+        afterReady,
+        expectedState,
+        name,
+        requestedState,
+      }: {
+        afterReady?: (trackingPage: TimeTrackingPage) => Promise<void>;
+        expectedState: "entries" | "burn-rate" | "rates";
+        name: (typeof timeTrackingCaptureNames)[number];
+        requestedState?: "all-time" | "burn-rate" | "rates";
+      }): Promise<void> => {
+        const capturePage = await page.context().newPage();
+        try {
+          if (requestedState) {
+            await capturePage.addInitScript((state: "all-time" | "burn-rate" | "rates") => {
+              window.sessionStorage.setItem("nixelo:e2e:time-tracking-state", state);
+            }, requestedState);
+          }
+          await capturePage.goto(`${BASE_URL}${timeTrackingUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          const trackingPage = new TimeTrackingPage(capturePage, orgSlug);
+          if (expectedState === "burn-rate") {
+            await trackingPage.expectBurnRateState();
+          } else if (expectedState === "rates") {
+            await trackingPage.expectRatesState();
+          } else {
+            await trackingPage.expectEntriesState();
+          }
+          if (afterReady) {
+            await afterReady(trackingPage);
+          }
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, p, name);
+        } finally {
+          await capturePage.close();
+        }
+      };
+
+      await applyTimeTrackingState("default");
+
+      try {
+        if (shouldCapture(p, "time-tracking-burn-rate")) {
+          await captureTimeTrackingState({
+            expectedState: "burn-rate",
+            name: "time-tracking-burn-rate",
+            requestedState: "burn-rate",
+          });
+        }
+
+        if (shouldCapture(p, "time-tracking-rates")) {
+          await applyTimeTrackingState("ratesPopulated");
+          try {
+            await captureTimeTrackingState({
+              expectedState: "entries",
+              afterReady: async (trackingPage) => {
+                await trackingPage.ratesTab.click();
+                await trackingPage.expectRatesState();
+              },
+              name: "time-tracking-rates",
+            });
+          } finally {
+            await applyTimeTrackingState("default");
+          }
+        }
+
+        if (shouldCapture(p, "time-tracking-empty")) {
+          await applyTimeTrackingState("entriesEmpty");
+          try {
+            await captureTimeTrackingState({
+              expectedState: "entries",
+              name: "time-tracking-empty",
+            });
+          } finally {
+            await applyTimeTrackingState("default");
+          }
+        }
+
+        if (shouldCapture(p, "time-tracking-all-time")) {
+          await captureTimeTrackingState({
+            expectedState: "entries",
+            name: "time-tracking-all-time",
+            requestedState: "all-time",
+          });
+        }
+
+        if (shouldCapture(p, "time-tracking-truncated")) {
+          await applyTimeTrackingState("summaryTruncated");
+          try {
+            await captureTimeTrackingState({
+              expectedState: "entries",
+              name: "time-tracking-truncated",
+            });
+          } finally {
+            await applyTimeTrackingState("default");
+          }
+        }
+      } finally {
+        await applyTimeTrackingState("default");
+      }
     });
   }
 
@@ -1227,38 +1731,103 @@ export async function screenshotFilledStates(
     });
   }
 
+  // ── Outreach state captures ──
+
+  async function screenshotOutreachStates(
+    currentPage: Page,
+    currentOrgSlug: string,
+    prefix: string,
+  ): Promise<void> {
+    const outreachPage = new OutreachPage(currentPage, currentOrgSlug);
+    await outreachPage.goto();
+
+    if (shouldCapture(prefix, "outreach-sequences")) {
+      await runCaptureStep("outreach sequences tab", async () => {
+        await outreachPage.openSection("sequences");
+        await captureCurrentView(currentPage, prefix, "outreach-sequences");
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-contacts")) {
+      await runCaptureStep("outreach contacts tab", async () => {
+        await outreachPage.openSection("contacts");
+        await outreachPage.waitForSeededContacts();
+        await captureCurrentView(currentPage, prefix, "outreach-contacts");
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-mailboxes")) {
+      await runCaptureStep("outreach mailboxes tab", async () => {
+        await outreachPage.openSection("mailboxes");
+        await outreachPage.waitForSeededMailbox();
+        await captureCurrentView(currentPage, prefix, "outreach-mailboxes");
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-analytics")) {
+      await runCaptureStep("outreach analytics tab", async () => {
+        await outreachPage.openSection("analytics");
+        await outreachPage.waitForAnalyticsContent();
+        await waitForScreenshotReady(currentPage);
+        await captureCurrentView(currentPage, prefix, "outreach-analytics");
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-contact-dialog")) {
+      await runCaptureStep("outreach contact dialog", async () => {
+        await outreachPage.openContactDialog();
+        await captureCurrentView(currentPage, prefix, "outreach-contact-dialog");
+        await dismissIfOpen(currentPage, outreachPage.contactDialog);
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-import-dialog")) {
+      await runCaptureStep("outreach import dialog", async () => {
+        await outreachPage.openImportDialog();
+        await captureCurrentView(currentPage, prefix, "outreach-import-dialog");
+        await dismissIfOpen(currentPage, outreachPage.importDialog);
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-sequence-dialog")) {
+      await runCaptureStep("outreach sequence dialog", async () => {
+        await outreachPage.openSequenceDialog();
+        await captureCurrentView(currentPage, prefix, "outreach-sequence-dialog");
+        await dismissIfOpen(currentPage, outreachPage.sequenceDialog);
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-enroll-dialog")) {
+      await runCaptureStep("outreach enroll dialog", async () => {
+        await outreachPage.openEnrollDialog();
+        await captureCurrentView(currentPage, prefix, "outreach-enroll-dialog");
+        await dismissIfOpen(currentPage, outreachPage.enrollDialog);
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-mailbox-disconnect-confirm")) {
+      await runCaptureStep("outreach mailbox disconnect confirm", async () => {
+        await outreachPage.openMailboxDisconnectConfirm();
+        await captureCurrentView(currentPage, prefix, "outreach-mailbox-disconnect-confirm");
+        await dismissIfOpen(currentPage, outreachPage.mailboxDisconnectConfirm);
+      });
+    }
+  }
+
   // ── Roadmap interactive states ──
 
-  if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-roadmap-timeline-selector`)) {
-    await runCaptureStep("roadmap timeline selector", async () => {
-      const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
-      await page.goto(`${BASE_URL}${roadmapUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, roadmapUrl, "roadmap");
-      await waitForScreenshotReady(page);
-      // Click the timeline span select trigger (shows "3 Months" by default)
-      const selectTrigger = page
-        .getByRole("combobox")
-        .filter({ hasText: /month|year/i })
-        .first();
-      await selectTrigger.waitFor({ state: "visible", timeout: 5000 });
-      await selectTrigger.click();
-      // Wait for dropdown options
-      await page
-        .getByRole("option", { name: /1 month/i })
-        .first()
-        .waitFor({ state: "visible", timeout: 3000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(
-        page,
-        p,
-        `project-${normalizedProjectKey}-roadmap-timeline-selector`,
-      );
-      // Close dropdown
-      await page.keyboard.press("Escape");
-    });
+  if (
+    projectKey &&
+    shouldCaptureAny(p, [
+      `project-${normalizedProjectKey}-roadmap`,
+      `project-${normalizedProjectKey}-roadmap-timeline-selector`,
+      `project-${normalizedProjectKey}-roadmap-grouped`,
+      `project-${normalizedProjectKey}-roadmap-detail`,
+      `project-${normalizedProjectKey}-roadmap-empty`,
+      `project-${normalizedProjectKey}-roadmap-milestone`,
+    ])
+  ) {
+    await screenshotRoadmapStates(page, orgSlug, projectKey, p);
   }
 
   // ── Notification interactive states ──
@@ -1296,7 +1865,9 @@ export async function screenshotFilledStates(
 
   async function waitForNotificationsContentReady(): Promise<void> {
     const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    const emptyState = page.getByText(/no notifications/i);
+    const emptyState = page
+      .getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE)
+      .or(page.getByTestId(TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE));
     const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
 
     await expect
@@ -1317,19 +1888,16 @@ export async function screenshotFilledStates(
   }
 
   async function waitForMentionsFilterState(): Promise<void> {
-    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
     const mentionNotification = page.getByText(/you were mentioned/i);
-    const emptyState = page.getByText(/no notifications/i);
+    const emptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
 
     await expect
       .poll(
         async () => {
-          const classes = (await getLocatorAttribute(mentionsFilter, "class", "")) ?? "";
-          const filterActive = classes.includes("bg-ui-bg-secondary");
           const mentionVisible = await isLocatorVisible(mentionNotification);
           const emptyVisible = await isLocatorVisible(emptyState);
 
-          return filterActive && (mentionVisible || emptyVisible) ? "ready" : "pending";
+          return mentionVisible || emptyVisible ? "ready" : "pending";
         },
         {
           timeout: 10000,
@@ -1339,6 +1907,30 @@ export async function screenshotFilledStates(
       .toBe("ready");
 
     await waitForAnimation(page);
+  }
+
+  async function openNotificationSnoozePopoverForCapture(): Promise<void> {
+    const firstNotification = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM).first();
+    const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
+    const snoozeMenuHeading = page.getByText(/snooze until/i);
+
+    await firstNotification.waitFor({ state: "visible", timeout: 5000 });
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await firstNotification.hover();
+      await waitForAnimation(page);
+      await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
+      await snoozeButton.focus();
+      await snoozeButton.press("Enter");
+
+      if (await waitForLocatorVisible(snoozeMenuHeading, 2000)) {
+        return;
+      }
+
+      await page.keyboard.press("Escape");
+    }
+
+    throw new Error("Notification snooze popover did not open");
   }
 
   // Notification popover (bell icon in header)
@@ -1369,17 +1961,7 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-
-      const firstNotification = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM).first();
-      await firstNotification.waitFor({ state: "visible", timeout: 5000 });
-      await firstNotification.hover();
-      await waitForAnimation(page);
-
-      const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
-      await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
-      await snoozeButton.click();
-
-      await page.getByText(/snooze until/i).waitFor({ state: "visible", timeout: 5000 });
+      await openNotificationSnoozePopoverForCapture();
       await waitForAnimation(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-snooze-popover");
@@ -1413,12 +1995,139 @@ export async function screenshotFilledStates(
       });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForNotificationsContentReady();
-      // Click the Mentions filter button
-      const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
-      await mentionsFilter.waitFor({ state: "visible", timeout: 5000 });
-      await mentionsFilter.click();
+      const notificationsPage = new NotificationsPage(page, orgSlug);
+      await notificationsPage.activateMentionsFilter();
       await waitForMentionsFilterState();
       await captureCurrentView(page, p, "notifications-filter-active");
+    });
+  }
+
+  if (shouldCapture(p, "notifications-inbox-empty") && projectKey) {
+    await runCaptureStep("notifications inbox empty", async () => {
+      const configureResult = await testUserService.configureNotificationsState(
+        orgSlug,
+        projectKey,
+        "inboxEmpty",
+      );
+      if (!configureResult.success) {
+        throw new Error(configureResult.error ?? "Failed to configure inbox-empty notifications");
+      }
+
+      try {
+        await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
+        const notificationsPage = new NotificationsPage(page, orgSlug);
+        await notificationsPage.expectInboxEmptyState();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, "notifications-inbox-empty");
+      } finally {
+        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+      }
+    });
+  }
+
+  if (shouldCapture(p, "notifications-archived-empty") && projectKey) {
+    await runCaptureStep("notifications archived empty", async () => {
+      const configureResult = await testUserService.configureNotificationsState(
+        orgSlug,
+        projectKey,
+        "archivedEmpty",
+      );
+      if (!configureResult.success) {
+        throw new Error(
+          configureResult.error ?? "Failed to configure archived-empty notifications",
+        );
+      }
+
+      try {
+        const archivedEmptyPage = await page.context().newPage();
+
+        try {
+          await archivedEmptyPage.addInitScript(() => {
+            window.sessionStorage.setItem("nixelo:e2e:notifications-state", "archived-tab");
+          });
+          await archivedEmptyPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          await waitForExpectedContent(
+            archivedEmptyPage,
+            ROUTES.notifications.build(orgSlug),
+            "notifications",
+          );
+          const notificationsPage = new NotificationsPage(archivedEmptyPage, orgSlug);
+          await waitForScreenshotReady(archivedEmptyPage);
+          await notificationsPage.expectArchivedEmptyState();
+          await captureCurrentView(archivedEmptyPage, p, "notifications-archived-empty");
+        } finally {
+          if (!archivedEmptyPage.isClosed()) {
+            await archivedEmptyPage.close();
+          }
+        }
+      } finally {
+        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+      }
+    });
+  }
+
+  if (shouldCapture(p, "notifications-unread-overflow") && projectKey) {
+    await runCaptureStep("notifications unread overflow", async () => {
+      const configureResult = await testUserService.configureNotificationsState(
+        orgSlug,
+        projectKey,
+        "unreadOverflow",
+      );
+      if (!configureResult.success) {
+        throw new Error(
+          configureResult.error ?? "Failed to configure unread-overflow notifications",
+        );
+      }
+
+      try {
+        await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
+        const notificationsPage = new NotificationsPage(page, orgSlug);
+        await notificationsPage.expectUnreadOverflowBadge();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, "notifications-unread-overflow");
+      } finally {
+        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+      }
+    });
+  }
+
+  if (shouldCapture(p, "notifications-mark-all-read-loading")) {
+    await runCaptureStep("notifications mark-all-read loading", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ = true;
+        });
+        await loadingPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(
+          loadingPage,
+          ROUTES.notifications.build(orgSlug),
+          "notifications",
+        );
+        const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
+        await expect(notificationsPage.markAllReadButton).toHaveAttribute("aria-busy", "true");
+        await waitForScreenshotReady(loadingPage);
+        await captureCurrentView(loadingPage, p, "notifications-mark-all-read-loading");
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
     });
   }
 }

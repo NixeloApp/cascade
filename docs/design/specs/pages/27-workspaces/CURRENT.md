@@ -1,28 +1,27 @@
 # Workspaces Page - Current State
 
 > **Route**: `/:orgSlug/workspaces`
-> **Status**: IMPLEMENTED
-> **Last Updated**: 2026-03-22
+> **Status**: REVIEWED
+> **Last Updated**: 2026-03-25
 
 ---
 
 ## Purpose
 
-The workspaces list page is the top-level organizational view for departments and business units. It answers:
+The workspaces list is the org-level structure view. It answers:
 
 - What workspaces exist in this organization?
-- How many teams and projects are in each workspace?
-- How is the organization structured at the department level?
-- How do I create a new workspace?
+- How many teams and projects sit inside each workspace?
+- How do I create a new workspace without dropping into a dead-end state?
 
 ---
 
 ## Route Anatomy
 
-```
+```text
 /:orgSlug/workspaces
 │
-├── PageLayout (maxWidth = dynamic: "md" for <=1 workspace, "lg" for >1)
+├── PageLayout
 │   ├── PageHeader
 │   │   ├── title = "Workspaces"
 │   │   ├── description = "Organize your organization into departments and teams"
@@ -31,49 +30,42 @@ The workspaces list page is the top-level organizational view for departments an
 │   ├── CreateWorkspaceModal (Dialog)
 │   │
 │   └── PageContent
-│       ├── [loading] isLoading spinner
-│       ├── [empty] EmptyState (icon=Building2, "No workspaces yet")
-│       │
-│       ├── [compact: <=1 workspace]
-│       │   └── Stack (gap="xl")
-│       │       ├── OverviewBand (eyebrow, title, description, metrics, aside)
-│       │       └── Grid (1-2 cols) → WorkspaceCard[] (compact=true)
-│       │
-│       └── [standard: >1 workspaces]
-│           └── Grid (12-col on lg)
-│               ├── div (col-span-7) → Grid → WorkspaceCard[]
-│               └── div (col-span-5) → OverviewBand (sidebar)
+│       ├── [loading] LoadingSpinner
+│       ├── [empty] EmptyState ("No workspaces yet")
+│       └── Stack
+│           ├── OverviewBand (workspace/team/project totals)
+│           ├── [1+ workspaces or active query] search row
+│           ├── [search active] match summary
+│           ├── [search miss] EmptyState ("No workspaces match …", clear action)
+│           └── [default] Grid → WorkspaceCard[]
 ```
 
 ---
 
 ## Current Composition Walkthrough
 
-1. **Route component**: `WorkspacesList` (305 lines) contains both the page composition and the `WorkspaceCard` inline component.
-2. **Query**: `api.workspaces.list` returns workspaces with `teamCount` and `projectCount` enrichment.
-3. **Computed metrics**: Total teams and projects are computed client-side via `.reduce()` over the workspace list.
-4. **Layout adaptation**: The page uses two distinct layouts:
-   - **Compact** (0-1 workspaces): Narrower max-width (`md`), `OverviewBand` above the card grid with onboarding guidance, cards use `compact=true` variant (12-col horizontal layout).
-   - **Standard** (2+ workspaces): Wider max-width (`lg`), 7/5 column split with cards on the left and `OverviewBand` as a sidebar on the right.
-5. **WorkspaceCard**: Two visual variants controlled by the `compact` prop:
-   - **Compact**: Horizontal 12-col grid with workspace info on the left (7 cols) and metric panels + footer on the right (5 cols). Includes description, badges, and an `InsetPanel` footer.
-   - **Standard**: Vertical card with icon, name, badge, description, metric panels, and a footer pushed to the bottom via `mt-auto`.
-6. **Create modal**: `CreateWorkspaceModal` is a `Dialog` with name and description fields. On success, navigates to the new workspace's teams list page.
-7. **Card elements**: Each card includes an `IconCircle` with the workspace emoji icon, `Badge` components for workspace slug and team count, `InsetPanel` metric panels for teams/projects, and a `Metadata` footer with counts.
+1. `WorkspacesList` owns the route composition, metrics, and search state.
+2. `api.workspaces.list` returns the enriched list with `teamCount` and `projectCount`.
+3. The route computes org-level totals client-side from the loaded workspace list.
+4. Search is case-insensitive across workspace name, slug, and description.
+5. Search is shown whenever the route has at least one workspace, or immediately once a query is active.
+6. Search misses render a full recovery state with a clear-search action instead of a dead text line.
+7. `CreateWorkspaceModal` trims the name, normalizes the slug through shared helpers, resets on close, and routes through the workspace detail path so creation is not hard-coupled to a specific landing tab.
+8. `WorkspaceCard` now uses shared sizing APIs cleanly instead of mixing `IconCircle` size props with raw size classes.
 
 ---
 
 ## Screenshot Matrix
 
-| Viewport | Theme | State | Preview |
-|----------|-------|-------|---------|
-| Desktop | Dark | Default | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | Default | ![](screenshots/desktop-light.png) |
-| Tablet | Light | Default | ![](screenshots/tablet-light.png) |
-| Mobile | Light | Default | ![](screenshots/mobile-light.png) |
-| Desktop | Dark | Create modal | ![](screenshots/desktop-dark-create-workspace-modal.png) |
-| Desktop | Light | Create modal | ![](screenshots/desktop-light-create-workspace-modal.png) |
-| Tablet | Light | Create modal | ![](screenshots/tablet-light-create-workspace-modal.png) |
+| State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
+|-------|--------------|---------------|--------------|--------------|
+| Default route | ![](screenshots/desktop-dark.png) | ![](screenshots/desktop-light.png) | ![](screenshots/tablet-light.png) | ![](screenshots/mobile-light.png) |
+| True empty state | ![](screenshots/desktop-dark-empty.png) | ![](screenshots/desktop-light-empty.png) | ![](screenshots/tablet-light-empty.png) | ![](screenshots/mobile-light-empty.png) |
+| Search-empty state | ![](screenshots/desktop-dark-search-empty.png) | ![](screenshots/desktop-light-search-empty.png) | ![](screenshots/tablet-light-search-empty.png) | ![](screenshots/mobile-light-search-empty.png) |
+| Create workspace modal | ![](screenshots/desktop-dark-create-workspace-modal.png) | ![](screenshots/desktop-light-create-workspace-modal.png) | ![](screenshots/tablet-light-create-workspace-modal.png) | ![](screenshots/mobile-light-create-workspace-modal.png) |
+
+The route now has reviewed empty, search-empty, and modal coverage across the full viewport matrix
+instead of only the default route plus a partial modal pass.
 
 ---
 
@@ -81,13 +73,12 @@ The workspaces list page is the top-level organizational view for departments an
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| ~~1~~ | ~~`WorkspaceCard` is 146 lines inline in route~~ **Fixed** — extracted to `src/components/Workspaces/WorkspaceCard.tsx` with sub-components and tests | ~~architecture~~ | ~~MEDIUM~~ |
-| ~~2~~ | ~~Compact vs standard layout complexity~~ **Fixed** — unified to single layout: OverviewBand on top, responsive card grid below. Removed `compact` prop and dual render paths from WorkspaceCard. | ~~complexity~~ | ~~MEDIUM~~ |
-| ~~3~~ | ~~AI coaching copy in OverviewBand aside~~ **Fixed** — removed "Recommended next step" / "Design principle" AI filler text | ~~content~~ | ~~MEDIUM~~ |
-| ~~4~~ | ~~Compact card over-designed with redundant badges~~ **Fixed** — removed "Workspace" badge, kept only slug badge and team count | ~~information density~~ | ~~MEDIUM~~ |
-| 5 | `IconCircle` uses `className="h-12 w-12"` arbitrary sizing alongside `size="md"` prop -- mixed sizing approaches | styling | LOW |
-| 6 | No search or filter for workspaces | scalability | LOW |
-| 7 | `handleWorkspaceCreated` navigates to teams list, but the workspace was just created and has no teams yet | UX | LOW |
+| ~~1~~ | ~~`WorkspaceCard` was inline in the route and harder to review or test~~ **Fixed** — card logic lives in `src/components/Workspaces/WorkspaceCard.tsx` | ~~architecture~~ | ~~MEDIUM~~ |
+| ~~2~~ | ~~The route spec only covered default + partial modal states~~ **Fixed** — the matrix now includes true empty, search-empty, and all four create-modal captures | ~~screenshot depth~~ | ~~MEDIUM~~ |
+| ~~3~~ | ~~Search miss state was just a text line without recovery action~~ **Fixed** — route now uses a real EmptyState with clear-search action | ~~empty-state quality~~ | ~~LOW~~ |
+| ~~4~~ | ~~Workspace creation was coupled directly to the teams route~~ **Fixed** — post-create handoff now routes through the workspace detail path | ~~UX coupling~~ | ~~LOW~~ |
+| 5 | Search still operates on the loaded client-side list rather than a server-backed query | scalability | LOW |
+| 6 | Very small organizations can still feel intentionally sparse because the route is a structure map, not a dense dashboard | composition density | LOW |
 
 ---
 
@@ -95,7 +86,18 @@ The workspaces list page is the top-level organizational view for departments an
 
 | File | Purpose |
 |------|---------|
-| `src/routes/_auth/_app/$orgSlug/workspaces/index.tsx` | Route component with inline WorkspaceCard (305 lines) |
-| `src/components/CreateWorkspaceModal.tsx` | Create workspace dialog (name, description) |
+| `src/routes/_auth/_app/$orgSlug/workspaces/index.tsx` | Route composition, metrics, search state, and create-modal handoff |
+| `src/components/CreateWorkspaceModal.tsx` | Create workspace dialog with shared slug/reset behavior |
+| `src/components/Workspaces/WorkspaceCard.tsx` | Shared workspace card |
+| `src/lib/workspaces.ts` | Shared slug and search helpers |
+| `e2e/pages/workspaces.page.ts` | Workspaces page-object readiness and interactions |
+| `e2e/screenshot-lib/filled-states.ts` | Workspaces modal/search-empty screenshot capture |
 | `convex/workspaces.ts` | Workspace CRUD and `list` query with team/project counts |
-| `src/config/routes.ts` | `ROUTES.workspaces.*` for navigation |
+
+---
+
+## Summary
+
+Workspaces is now a reviewed core surface instead of a mostly-canonical screenshot baseline. The
+remaining work is future scalability and broader composition polish, not missing route states or
+spec drift.

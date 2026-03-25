@@ -32,7 +32,7 @@ function WorkspaceIcon({ icon }: { icon: string | undefined }) {
     <IconCircle
       size="md"
       variant="soft"
-      className="size-12 border border-ui-border/60 text-2xl shadow-soft"
+      className="border border-ui-border/60 text-2xl shadow-soft"
     >
       <span aria-hidden="true">{icon}</span>
     </IconCircle>

@@ -1,5 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render as customRender } from "../test/custom-render";
 import { ProjectsList } from "./ProjectsList";
 
@@ -68,6 +69,7 @@ describe("ProjectsList", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.__NIXELO_E2E_PROJECTS_LOADING__ = false;
   });
 
   it("renders loading spinner when loading first page", () => {
@@ -78,11 +80,8 @@ describe("ProjectsList", () => {
     });
 
     customRender(<ProjectsList onCreateClick={mockOnCreateClick} />);
-
-    // Look for spinner (assuming LoadingSpinner renders something identifiable or we can check container)
-    // The spinner component usually has a specific role or testid, but since we didn't mock it,
-    // let's check for the container structure if we can't find the spinner easily.
-    // However, looking at the code, it renders LoadingSpinner.
+    expect(screen.getByTestId(TEST_IDS.PROJECT.LOADING_STATE)).toBeInTheDocument();
+    expect(screen.getAllByTestId(TEST_IDS.LOADING.SKELETON).length).toBeGreaterThan(0);
   });
 
   it("renders empty state when no projects found", () => {
@@ -127,6 +126,7 @@ describe("ProjectsList", () => {
 
     customRender(<ProjectsList onCreateClick={mockOnCreateClick} />);
 
+    expect(screen.getByTestId(TEST_IDS.PROJECT.SINGLE_PROJECT_OVERVIEW)).toBeInTheDocument();
     expect(screen.getByText("Primary workspace project")).toBeInTheDocument();
     expect(screen.getByText("Connected surfaces")).toBeInTheDocument();
     expect(screen.getByText("Workspace coverage")).toBeInTheDocument();
@@ -163,5 +163,32 @@ describe("ProjectsList", () => {
 
     fireEvent.click(loadMoreButton);
     expect(mockLoadMore).toHaveBeenCalledWith(20);
+  });
+
+  it("renders the multi-project grid when multiple projects are available", () => {
+    mockUsePaginatedQuery.mockReturnValue({
+      results: mockProjects,
+      status: "Exhausted",
+      loadMore: mockLoadMore,
+    });
+
+    customRender(<ProjectsList onCreateClick={mockOnCreateClick} />);
+
+    expect(screen.getByTestId(TEST_IDS.PROJECT.GRID)).toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.PROJECT.SINGLE_PROJECT_OVERVIEW)).not.toBeInTheDocument();
+  });
+
+  it("honors the E2E loading override", () => {
+    window.__NIXELO_E2E_PROJECTS_LOADING__ = true;
+    mockUsePaginatedQuery.mockReturnValue({
+      results: mockProjects,
+      status: "Exhausted",
+      loadMore: mockLoadMore,
+    });
+
+    customRender(<ProjectsList onCreateClick={mockOnCreateClick} />);
+
+    expect(screen.getByTestId(TEST_IDS.PROJECT.LOADING_STATE)).toBeInTheDocument();
+    expect(screen.queryByText("Project 1")).not.toBeInTheDocument();
   });
 });

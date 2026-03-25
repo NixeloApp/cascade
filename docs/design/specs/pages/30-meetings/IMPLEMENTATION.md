@@ -36,6 +36,8 @@
   - `filled-meetings-detail`
   - `filled-meetings-transcript-search`
   - `filled-meetings-memory-lens`
+- Only keep per-viewport variants that visibly change the captured composition. Do not track mobile or
+  tablet aliases that collapse to the same above-the-fold screenshot as the canonical route.
 
 ---
 

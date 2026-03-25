@@ -15,10 +15,14 @@ export class CalendarPage extends BasePage {
   // ===================
   readonly calendar: Locator;
   readonly calendarGrid: Locator;
+  readonly content: Locator;
+  readonly loadingState: Locator;
   readonly todayButton: Locator;
   readonly prevButton: Locator;
   readonly nextButton: Locator;
   readonly monthYearLabel: Locator;
+  readonly workspaceFilter: Locator;
+  readonly teamFilter: Locator;
 
   // ===================
   // Locators - View Toggles
@@ -62,10 +66,14 @@ export class CalendarPage extends BasePage {
     // Calendar view
     this.calendar = page.getByTestId(TEST_IDS.CALENDAR.ROOT);
     this.calendarGrid = page.getByTestId(TEST_IDS.CALENDAR.GRID);
+    this.content = page.getByTestId(TEST_IDS.ORG_CALENDAR.CONTENT);
+    this.loadingState = page.getByTestId(TEST_IDS.ORG_CALENDAR.LOADING_STATE);
     this.todayButton = page.getByTestId(TEST_IDS.CALENDAR.TODAY_BUTTON);
     this.prevButton = page.getByTestId(TEST_IDS.CALENDAR.PREV_BUTTON);
     this.nextButton = page.getByTestId(TEST_IDS.CALENDAR.NEXT_BUTTON);
     this.monthYearLabel = page.getByTestId(TEST_IDS.CALENDAR.HEADER_DATE);
+    this.workspaceFilter = page.getByTestId(TEST_IDS.ORG_CALENDAR.WORKSPACE_FILTER);
+    this.teamFilter = page.getByTestId(TEST_IDS.ORG_CALENDAR.TEAM_FILTER);
 
     // View toggles
     this.monthViewButton = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH);
@@ -112,6 +120,9 @@ export class CalendarPage extends BasePage {
   }
 
   async waitUntilReady(): Promise<void> {
+    if ((await this.content.count()) > 0) {
+      await this.content.waitFor({ state: "visible", timeout: 12000 });
+    }
     await this.weekViewButton.waitFor({ state: "visible", timeout: 12000 });
     await this.todayButton.waitFor({ state: "visible", timeout: 12000 });
   }
@@ -142,6 +153,35 @@ export class CalendarPage extends BasePage {
 
   async switchToDayView() {
     await this.dayViewButton.click();
+  }
+
+  async selectWorkspace(name: string) {
+    await this.workspaceFilter.scrollIntoViewIfNeeded();
+    await this.workspaceFilter.click();
+    await this.page.getByRole("option", { name }).click();
+    await expect(this.pageHeaderTitle).toHaveText("Workspace scope");
+    await expect(this.workspaceFilter).toContainText(name);
+    await expect(this.calendar).toBeVisible();
+  }
+
+  async selectTeam(name: string) {
+    await this.teamFilter.scrollIntoViewIfNeeded();
+    await this.teamFilter.click();
+    await this.page.getByRole("option", { name }).click();
+    await expect(this.pageHeaderTitle).toHaveText("Team scope");
+    await expect(this.teamFilter).toContainText(name);
+    await expect(this.calendar).toBeVisible();
+  }
+
+  async expectWorkspaceScope(name: string) {
+    await expect(this.pageHeaderTitle).toHaveText("Workspace scope");
+    await expect(this.workspaceFilter).toContainText(name);
+    await expect(this.teamFilter).toBeEnabled();
+  }
+
+  async expectTeamScope(name: string) {
+    await expect(this.pageHeaderTitle).toHaveText("Team scope");
+    await expect(this.teamFilter).toContainText(name);
   }
 
   // ===================

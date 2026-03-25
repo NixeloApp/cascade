@@ -6,10 +6,24 @@
  */
 
 import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ProjectsPage } from "../pages";
+import {
+  AssistantPage,
+  CalendarPage,
+  DocumentsPage,
+  InboxPage,
+  InvoicesPage,
+  IssuesPage,
+  MeetingsPage,
+  MyIssuesPage,
+  ProjectsPage,
+  RoadmapPage,
+  SprintsPage,
+} from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
+import { testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
   dismissIfOpen,
@@ -24,7 +38,11 @@ import {
   shouldCaptureAny,
 } from "./capture";
 import { BASE_URL } from "./config";
-import { openOmnibox, openStableDialog } from "./dialog-helpers";
+import {
+  openOmnibox,
+  openStableDialog,
+  waitForCreateIssueModalScreenshotReady,
+} from "./dialog-helpers";
 import { waitForBoardReady, waitForExpectedContent } from "./readiness";
 
 export async function screenshotDashboardModals(
@@ -172,6 +190,89 @@ export async function screenshotDashboardLoadingState(
   });
 }
 
+export async function screenshotOrgCalendarStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const workspaceScopeName = "org-calendar-workspace-scope";
+  const teamScopeName = "org-calendar-team-scope";
+  const loadingStateName = "org-calendar-loading";
+
+  if (!shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName, loadingStateName])) {
+    return;
+  }
+
+  const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
+
+  if (shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName])) {
+    await runCaptureStep("org calendar filtered scope states", async () => {
+      await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
+      await waitForScreenshotReady(page);
+
+      const calendarPage = new CalendarPage(page, orgSlug);
+
+      if (shouldCapture(prefix, workspaceScopeName)) {
+        await calendarPage.selectWorkspace("Product");
+        await calendarPage.expectWorkspaceScope("Product");
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, workspaceScopeName);
+      }
+
+      if (shouldCapture(prefix, teamScopeName)) {
+        await calendarPage.selectWorkspace("Product");
+        await calendarPage.selectTeam("Engineering");
+        await calendarPage.expectTeamScope("Engineering");
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, teamScopeName);
+      }
+    });
+  }
+
+  if (shouldCapture(prefix, loadingStateName)) {
+    await runCaptureStep("org calendar loading state", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_ORG_CALENDAR_LOADING__ = true;
+        });
+
+        await loadingPage.goto(`${BASE_URL}${orgCalendarUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await loadingPage.waitForURL(
+          (currentUrl) => /\/[^/]+\/calendar$/.test(new URL(currentUrl).pathname),
+          {
+            timeout: 15000,
+          },
+        );
+        await loadingPage
+          .getByTestId(TEST_IDS.ORG_CALENDAR.LOADING_STATE)
+          .waitFor({ state: "visible", timeout: 12000 });
+        await expect
+          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThanOrEqual(10);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, loadingStateName, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
+}
+
 export async function screenshotProjectsModal(
   page: Page,
   orgSlug: string,
@@ -179,6 +280,11 @@ export async function screenshotProjectsModal(
 ): Promise<void> {
   if (!shouldCapture(prefix, "projects-create-project-modal")) {
     return;
+  }
+
+  const projectsState = await testUserService.configureProjectsState(orgSlug, "default");
+  if (!projectsState.success) {
+    throw new Error(projectsState.error ?? "Failed to restore default projects state");
   }
 
   await page.goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
@@ -195,6 +301,476 @@ export async function screenshotProjectsModal(
     await captureCurrentView(page, prefix, "projects-create-project-modal");
     await projectsPage.closeCreateProjectFormIfOpen();
   });
+}
+
+export async function screenshotProjectsStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const captureNames = {
+    canonical: "projects",
+    empty: "projects-empty",
+    loading: "projects-loading",
+    singleProject: "projects-single-project",
+  } as const;
+
+  if (!shouldCaptureAny(prefix, Object.values(captureNames))) {
+    return;
+  }
+
+  const projectsUrl = ROUTES.projects.list.build(orgSlug);
+
+  const configureProjectsState = async (mode: "default" | "single" | "empty") => {
+    const result = await testUserService.configureProjectsState(orgSlug, mode);
+    if (!result.success) {
+      throw new Error(result.error ?? `Failed to configure projects state: ${mode}`);
+    }
+  };
+
+  const openProjectsPage = async (mode: "default" | "single" | "empty") => {
+    await configureProjectsState(mode);
+    await page.goto(`${BASE_URL}${projectsUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, projectsUrl, "projects");
+    const projectsPage = new ProjectsPage(page, orgSlug);
+    await projectsPage.expectProjectsView();
+    return projectsPage;
+  };
+
+  try {
+    if (shouldCapture(prefix, captureNames.canonical)) {
+      await runCaptureStep("projects canonical", async () => {
+        const projectsPage = await openProjectsPage("default");
+        await projectsPage.expectProjectsGridVisible();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.canonical);
+      });
+    }
+
+    if (shouldCapture(prefix, captureNames.singleProject)) {
+      await runCaptureStep("projects single-project overview", async () => {
+        const projectsPage = await openProjectsPage("single");
+        await projectsPage.expectSingleProjectOverviewVisible();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.singleProject);
+      });
+    }
+
+    if (shouldCapture(prefix, captureNames.empty)) {
+      await runCaptureStep("projects empty", async () => {
+        const projectsPage = await openProjectsPage("empty");
+        await projectsPage.expectProjectsEmptyStateVisible();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.empty);
+      });
+    }
+
+    if (shouldCapture(prefix, captureNames.loading)) {
+      await runCaptureStep("projects loading", async () => {
+        const loadingPage = await page.context().newPage();
+
+        try {
+          await loadingPage.addInitScript(() => {
+            window.__NIXELO_E2E_PROJECTS_LOADING__ = true;
+          });
+
+          await loadingPage.goto(`${BASE_URL}${projectsUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
+          await loadingProjectsPage.expectProjectsLoadingStateVisible(12000);
+          await expect
+            .poll(
+              () => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(),
+              {
+                timeout: 12000,
+              },
+            )
+            .toBeGreaterThan(0);
+          await waitForAnimation(loadingPage);
+          await captureCurrentView(loadingPage, prefix, captureNames.loading, {
+            skipReadyCheck: true,
+          });
+        } finally {
+          if (!loadingPage.isClosed()) {
+            await loadingPage.close();
+          }
+        }
+      });
+    }
+  } finally {
+    await configureProjectsState("default");
+  }
+}
+
+export async function screenshotInvoicesStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const invoicesE2EStateStorageKey = "nixelo:e2e:invoices-state";
+  const captureNames = {
+    canonical: "invoices",
+    createDialog: "invoices-create-draft-dialog",
+    filteredEmpty: "invoices-filtered-empty",
+    loading: "invoices-loading",
+  } as const;
+
+  if (!shouldCaptureAny(prefix, Object.values(captureNames))) {
+    return;
+  }
+
+  const invoicesUrl = ROUTES.invoices.list.build(orgSlug);
+
+  const openInvoicesPage = async (
+    targetPage: Page = page,
+    requestedState?: "create-dialog" | "filtered-empty",
+  ) => {
+    if (requestedState) {
+      await targetPage.evaluate(
+        ([storageKey, state]) => {
+          window.sessionStorage.setItem(storageKey, state);
+        },
+        [invoicesE2EStateStorageKey, requestedState] as const,
+      );
+    }
+
+    await targetPage.goto(`${BASE_URL}${invoicesUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(targetPage, invoicesUrl, "invoices");
+    const invoicesPage = new InvoicesPage(targetPage, orgSlug);
+    await invoicesPage.waitUntilReady();
+    return invoicesPage;
+  };
+
+  if (shouldCapture(prefix, captureNames.canonical)) {
+    await runCaptureStep("invoices canonical", async () => {
+      const invoicesPage = await openInvoicesPage();
+      await invoicesPage.expectTableVisible();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.canonical);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.filteredEmpty)) {
+    await runCaptureStep("invoices filtered empty", async () => {
+      const invoicesPage = await openInvoicesPage(page, "filtered-empty");
+      await invoicesPage.expectFilteredEmptyStateVisible();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.filteredEmpty);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.createDialog)) {
+    await runCaptureStep("invoices create dialog", async () => {
+      const invoicesPage = await openInvoicesPage(page, "create-dialog");
+      await expect(invoicesPage.createDialog).toBeVisible();
+      await waitForAnimation(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.createDialog);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.loading)) {
+    await runCaptureStep("invoices loading", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_INVOICES_LOADING__ = true;
+        });
+
+        const loadingInvoicesPage = await openInvoicesPage(loadingPage);
+        await loadingInvoicesPage.expectLoadingStateVisible();
+        await expect
+          .poll(() => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThan(0);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, captureNames.loading, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
+}
+
+export async function screenshotAssistantStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const captureNames = {
+    canonical: "assistant",
+    conversations: "assistant-conversations",
+    conversationsEmpty: "assistant-conversations-empty",
+    loading: "assistant-loading",
+    overviewEmpty: "assistant-overview-empty",
+  } as const;
+
+  if (!shouldCaptureAny(prefix, Object.values(captureNames))) {
+    return;
+  }
+
+  const assistantUrl = ROUTES.assistant.build(orgSlug);
+
+  const configureAssistantState = async (mode: "default" | "empty") => {
+    const result = await testUserService.configureAssistantState(orgSlug, mode);
+    if (!result.success) {
+      throw new Error(result.error ?? `Failed to configure assistant state: ${mode}`);
+    }
+  };
+
+  const withAssistantState = async <T>(mode: "default" | "empty", run: () => Promise<T>) => {
+    await configureAssistantState(mode);
+    try {
+      return await run();
+    } finally {
+      await configureAssistantState("default");
+    }
+  };
+
+  const openAssistantPage = async () => {
+    await page.goto(`${BASE_URL}${assistantUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, assistantUrl, "assistant");
+    const assistantPage = new AssistantPage(page, orgSlug);
+    await assistantPage.waitUntilReady();
+    return assistantPage;
+  };
+
+  if (shouldCapture(prefix, captureNames.canonical)) {
+    await runCaptureStep("assistant canonical", async () => {
+      await withAssistantState("default", async () => {
+        const assistantPage = await openAssistantPage();
+        await assistantPage.snapshotCard.waitFor({ timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.canonical);
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.conversations)) {
+    await runCaptureStep("assistant conversations", async () => {
+      await withAssistantState("default", async () => {
+        const assistantPage = await openAssistantPage();
+        await assistantPage.openConversationsTab();
+        await assistantPage.conversationsList.waitFor({ timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.conversations);
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.overviewEmpty)) {
+    await runCaptureStep("assistant overview empty", async () => {
+      await withAssistantState("empty", async () => {
+        const assistantPage = await openAssistantPage();
+        await assistantPage.overviewEmptyState.waitFor({ timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.overviewEmpty);
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.conversationsEmpty)) {
+    await runCaptureStep("assistant conversations empty", async () => {
+      await withAssistantState("empty", async () => {
+        const assistantPage = await openAssistantPage();
+        await assistantPage.openConversationsTab();
+        await assistantPage.conversationsEmptyState.waitFor({ timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.conversationsEmpty);
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.loading)) {
+    await runCaptureStep("assistant loading", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_ASSISTANT_LOADING__ = true;
+        });
+
+        await loadingPage.goto(`${BASE_URL}${assistantUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
+        await loadingAssistantPage.loadingState.waitFor({ state: "visible", timeout: 12000 });
+        await expect
+          .poll(() => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThan(0);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, captureNames.loading, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
+}
+
+export async function screenshotRoadmapStates(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const captureNames = {
+    canonical: `project-${normalizedProjectKey}-roadmap`,
+    detail: `project-${normalizedProjectKey}-roadmap-detail`,
+    empty: `project-${normalizedProjectKey}-roadmap-empty`,
+    grouped: `project-${normalizedProjectKey}-roadmap-grouped`,
+    milestone: `project-${normalizedProjectKey}-roadmap-milestone`,
+    timelineSelector: `project-${normalizedProjectKey}-roadmap-timeline-selector`,
+  } as const;
+
+  if (!shouldCaptureAny(prefix, Object.values(captureNames))) {
+    return;
+  }
+
+  const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
+
+  const configureRoadmapState = async (mode: "default" | "empty" | "milestone") => {
+    const result = await testUserService.configureRoadmapState(orgSlug, projectKey, mode);
+    if (!result.success) {
+      throw new Error(result.error ?? `Failed to configure roadmap state: ${mode}`);
+    }
+  };
+
+  const withRoadmapPage = async <T>({
+    bootState,
+    mode,
+    run,
+  }: {
+    bootState?: "detail" | "group-status";
+    mode: "default" | "empty" | "milestone";
+    run: (capturePage: Page, roadmapPage: RoadmapPage) => Promise<T>;
+  }): Promise<T> => {
+    await configureRoadmapState(mode);
+    const captureUrl = new URL(`${BASE_URL}${roadmapUrl}`);
+    if (bootState) {
+      captureUrl.searchParams.set("e2e-roadmap", bootState);
+    }
+
+    try {
+      await page.goto(captureUrl.toString(), {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await waitForExpectedContent(page, roadmapUrl, "roadmap");
+      const roadmapPage = new RoadmapPage(page, orgSlug);
+      return await run(page, roadmapPage);
+    } finally {
+      await configureRoadmapState("default");
+    }
+  };
+
+  if (shouldCapture(prefix, captureNames.canonical)) {
+    await runCaptureStep("roadmap canonical", async () => {
+      await withRoadmapPage({
+        mode: "default",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectTimelineState();
+          await roadmapPage.expectDependencyLinesVisible();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.canonical);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.timelineSelector)) {
+    await runCaptureStep("roadmap timeline selector", async () => {
+      await withRoadmapPage({
+        mode: "default",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectTimelineState();
+          await roadmapPage.expectDependencyLinesVisible();
+          await roadmapPage.openTimelineSpanSelector();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.timelineSelector);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.grouped)) {
+    await runCaptureStep("roadmap grouped", async () => {
+      await withRoadmapPage({
+        bootState: "group-status",
+        mode: "default",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectGroupedState();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.grouped);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.detail)) {
+    await runCaptureStep("roadmap detail", async () => {
+      await withRoadmapPage({
+        mode: "default",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.openIssueDetail("DEMO-2");
+          await roadmapPage.expectDetailState();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.detail);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.empty)) {
+    await runCaptureStep("roadmap empty", async () => {
+      await withRoadmapPage({
+        mode: "empty",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectEmptyState();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.empty);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.milestone)) {
+    await runCaptureStep("roadmap milestone", async () => {
+      await withRoadmapPage({
+        mode: "milestone",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectMilestoneState();
+          await roadmapPage.expectDependencyLinesVisible();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.milestone);
+        },
+      });
+    });
+  }
 }
 
 export async function screenshotBoardModals(
@@ -298,13 +874,31 @@ export async function screenshotMeetingsStates(
   const meetingsDetailName = "meetings-detail";
   const transcriptSearchName = "meetings-transcript-search";
   const memoryLensName = "meetings-memory-lens";
+  const processingName = "meetings-processing";
+  const filterEmptyName = "meetings-filter-empty";
+  const scheduleDialogName = "meetings-schedule-dialog";
   const detailTimeoutMs = 15000;
+  const isDesktopCapture = captureState.currentConfigPrefix.startsWith("desktop-");
+  const isTabletCapture = captureState.currentConfigPrefix === "tablet-light";
+  const shouldCaptureDetailState = isDesktopCapture;
+  const shouldCaptureFilterEmptyState = isDesktopCapture;
+  const shouldCaptureScheduleDialogState = isDesktopCapture || isTabletCapture;
 
-  if (!shouldCaptureAny(prefix, [meetingsDetailName, transcriptSearchName, memoryLensName])) {
+  if (
+    !shouldCaptureAny(prefix, [
+      meetingsDetailName,
+      transcriptSearchName,
+      memoryLensName,
+      processingName,
+      filterEmptyName,
+      scheduleDialogName,
+    ])
+  ) {
     return;
   }
 
   const meetingsUrl = ROUTES.meetings.build(orgSlug);
+  const meetingsPage = new MeetingsPage(page, orgSlug);
   const recentMeetingsSection = page.getByTestId(TEST_IDS.MEETINGS.RECENT_SECTION);
   const meetingDetailSection = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
   const meetingMemorySection = page.getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION);
@@ -315,7 +909,7 @@ export async function screenshotMeetingsStates(
     await waitForScreenshotReady(page);
   };
 
-  if (shouldCapture(prefix, meetingsDetailName)) {
+  if (shouldCaptureDetailState && shouldCapture(prefix, meetingsDetailName)) {
     await runCaptureStep("meetings detail", async () => {
       await openMeetingsForCapture();
       const clientLaunchReviewCard = recentMeetingsSection
@@ -393,6 +987,443 @@ export async function screenshotMeetingsStates(
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, memoryLensName);
     });
+  }
+
+  if (shouldCapture(prefix, processingName)) {
+    await runCaptureStep("meetings processing detail", async () => {
+      await openMeetingsForCapture();
+      await meetingsPage.filterByStatus("Processing");
+      await meetingsPage.expectRecordingVisible("Go-live Support Runbook");
+      await meetingsPage.openRecording("Go-live Support Runbook");
+      await meetingsPage.expectRecordingDetail("Go-live Support Runbook");
+      await meetingsPage.expectSummaryProcessingState();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, processingName);
+    });
+  }
+
+  if (shouldCaptureFilterEmptyState && shouldCapture(prefix, filterEmptyName)) {
+    await runCaptureStep("meetings filter empty state", async () => {
+      await openMeetingsForCapture();
+      await meetingsPage.searchMeetings("zzzz-no-results");
+      await meetingsPage.expectFilteredEmptyState();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, filterEmptyName);
+    });
+  }
+
+  if (shouldCaptureScheduleDialogState && shouldCapture(prefix, scheduleDialogName)) {
+    await runCaptureStep("meetings schedule dialog", async () => {
+      await openMeetingsForCapture();
+      await dismissAllDialogs(page);
+      await meetingsPage.openScheduleDialog();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, scheduleDialogName);
+      await dismissIfOpen(page, meetingsPage.scheduleDialog);
+    });
+  }
+}
+
+export async function screenshotDocumentsStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const filteredSearchName = "documents-search-filtered";
+  const emptySearchName = "documents-search-empty";
+
+  if (!shouldCaptureAny(prefix, [filteredSearchName, emptySearchName])) {
+    return;
+  }
+
+  const documentsUrl = ROUTES.documents.list.build(orgSlug);
+  const documentsPage = new DocumentsPage(page, orgSlug);
+
+  const openDocumentsForCapture = async () => {
+    await page.goto(`${BASE_URL}${documentsUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, documentsUrl, "documents", prefix);
+    await waitForScreenshotReady(page);
+    await documentsPage.expectDocumentsView();
+  };
+
+  if (shouldCapture(prefix, filteredSearchName)) {
+    await runCaptureStep("documents filtered search", async () => {
+      await openDocumentsForCapture();
+      await documentsPage.searchDocuments("requirements");
+      await documentsPage.expectSearchResultVisible("Project Requirements");
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, filteredSearchName);
+    });
+  }
+
+  if (shouldCapture(prefix, emptySearchName)) {
+    await runCaptureStep("documents empty search", async () => {
+      await openDocumentsForCapture();
+      await documentsPage.searchDocuments("zzzz-no-results");
+      await documentsPage.expectSearchEmptyState();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, emptySearchName);
+    });
+  }
+}
+
+export async function screenshotIssuesStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const filteredSearchName = "issues-search-filtered";
+  const emptySearchName = "issues-search-empty";
+  const statusFilterName = "issues-filter-active";
+  const createModalName = "issues-create-modal";
+  const loadingStateName = "issues-loading";
+
+  if (
+    !shouldCaptureAny(prefix, [
+      filteredSearchName,
+      emptySearchName,
+      statusFilterName,
+      createModalName,
+      loadingStateName,
+    ])
+  ) {
+    return;
+  }
+
+  const issuesUrl = ROUTES.issues.list.build(orgSlug);
+  const issuesPage = new IssuesPage(page, orgSlug);
+
+  const openIssuesForCapture = async () => {
+    await page.goto(`${BASE_URL}${issuesUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, issuesUrl, "issues", prefix);
+    await waitForScreenshotReady(page);
+  };
+
+  if (shouldCapture(prefix, filteredSearchName)) {
+    await runCaptureStep("issues filtered search", async () => {
+      await openIssuesForCapture();
+      await issuesPage.searchIssues("login");
+      await issuesPage.expectSearchResultVisible("Fix login timeout on mobile");
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, filteredSearchName);
+    });
+  }
+
+  if (shouldCapture(prefix, emptySearchName)) {
+    await runCaptureStep("issues empty search", async () => {
+      await openIssuesForCapture();
+      await issuesPage.searchIssues("zzzz-no-results");
+      await issuesPage.expectSearchEmptyState();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, emptySearchName);
+    });
+  }
+
+  if (shouldCapture(prefix, statusFilterName)) {
+    await runCaptureStep("issues status filter", async () => {
+      await openIssuesForCapture();
+      await issuesPage.filterByStatus("To Do");
+      await issuesPage.expectSearchResultVisible("Add dark mode support");
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, statusFilterName);
+    });
+  }
+
+  if (shouldCapture(prefix, createModalName)) {
+    await runCaptureStep("issues create modal", async () => {
+      await openIssuesForCapture();
+      await dismissAllDialogs(page);
+      const createIssueDialog = page.getByRole("dialog", { name: /^create issue$/i });
+      await openStableDialog(
+        page,
+        issuesPage.createIssueButton,
+        createIssueDialog,
+        issuesPage.issueTitleInput,
+        "issues create issue",
+      );
+      await waitForCreateIssueModalScreenshotReady(page, issuesPage);
+      await captureCurrentView(page, prefix, createModalName);
+      await dismissIfOpen(page, createIssueDialog);
+    });
+  }
+
+  if (shouldCapture(prefix, loadingStateName)) {
+    await runCaptureStep("issues loading state", async () => {
+      const loadingPage = await page.context().newPage();
+      const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_ISSUES_LOADING__ = true;
+        });
+
+        await loadingPage.goto(`${BASE_URL}${issuesUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await loadingPage.waitForURL(
+          (currentUrl) => /\/[^/]+\/issues$/.test(new URL(currentUrl).pathname),
+          {
+            timeout: 15000,
+          },
+        );
+        await loadingIssuesPage.searchInput.waitFor({ state: "visible", timeout: 12000 });
+        await loadingIssuesPage.createIssueButton.waitFor({ state: "visible", timeout: 12000 });
+        await expect
+          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThanOrEqual(1);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, loadingStateName, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
+}
+
+export async function screenshotMyIssuesStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const filterActiveName = "my-issues-filter-active";
+  const filteredEmptyName = "my-issues-filtered-empty";
+  const loadingStateName = "my-issues-loading";
+
+  if (!shouldCaptureAny(prefix, [filterActiveName, filteredEmptyName, loadingStateName])) {
+    return;
+  }
+
+  const myIssuesUrl = ROUTES.myIssues.build(orgSlug);
+  const myIssuesPage = new MyIssuesPage(page, orgSlug);
+
+  const openMyIssuesForCapture = async () => {
+    await page.goto(`${BASE_URL}${myIssuesUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, myIssuesUrl, "my-issues", prefix);
+    await waitForScreenshotReady(page);
+    await myIssuesPage.waitUntilReady();
+  };
+
+  if (shouldCapture(prefix, filterActiveName)) {
+    await runCaptureStep("my issues filter active", async () => {
+      await openMyIssuesForCapture();
+      await myIssuesPage.filterByPriority("High");
+      await myIssuesPage.expectFilterSummaryVisible();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, filterActiveName);
+    });
+  }
+
+  if (shouldCapture(prefix, filteredEmptyName)) {
+    await runCaptureStep("my issues filtered empty state", async () => {
+      const filteredEmptyPage = await page.context().newPage();
+
+      try {
+        await filteredEmptyPage.addInitScript(() => {
+          window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filtered-empty");
+        });
+
+        const filteredEmptyMyIssuesPage = new MyIssuesPage(filteredEmptyPage, orgSlug);
+        await filteredEmptyPage.goto(`${BASE_URL}${myIssuesUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(filteredEmptyPage, myIssuesUrl, "my-issues", prefix);
+        await waitForScreenshotReady(filteredEmptyPage);
+        await filteredEmptyMyIssuesPage.waitUntilReady();
+        await filteredEmptyMyIssuesPage.expectFilteredEmptyState();
+        await captureCurrentView(filteredEmptyPage, prefix, filteredEmptyName);
+      } finally {
+        if (!filteredEmptyPage.isClosed()) {
+          await filteredEmptyPage.close();
+        }
+      }
+    });
+  }
+
+  if (shouldCapture(prefix, loadingStateName)) {
+    await runCaptureStep("my issues loading state", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_MY_ISSUES_LOADING__ = true;
+        });
+
+        await loadingPage.goto(`${BASE_URL}${myIssuesUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await loadingPage.waitForURL(
+          (currentUrl) => /\/[^/]+\/my-issues$/.test(new URL(currentUrl).pathname),
+          {
+            timeout: 15000,
+          },
+        );
+        await expect
+          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThanOrEqual(1);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, loadingStateName, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
+}
+
+export async function screenshotProjectInboxStates(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const inboxUrl = ROUTES.projects.inbox.build(orgSlug, projectKey);
+  const closedTabName = `project-${normalizedProjectKey}-inbox-closed`;
+  const bulkSelectionName = `project-${normalizedProjectKey}-inbox-bulk-selection`;
+  const snoozeMenuName = `project-${normalizedProjectKey}-inbox-snooze-menu`;
+  const declineDialogName = `project-${normalizedProjectKey}-inbox-decline-dialog`;
+  const duplicateDialogName = `project-${normalizedProjectKey}-inbox-duplicate-dialog`;
+  const openEmptyName = `project-${normalizedProjectKey}-inbox-open-empty`;
+  const closedEmptyName = `project-${normalizedProjectKey}-inbox-closed-empty`;
+
+  if (
+    !shouldCaptureAny(prefix, [
+      closedTabName,
+      bulkSelectionName,
+      snoozeMenuName,
+      declineDialogName,
+      duplicateDialogName,
+      openEmptyName,
+      closedEmptyName,
+    ])
+  ) {
+    return;
+  }
+
+  const inboxPage = new InboxPage(page, orgSlug, projectKey);
+  const ensureInboxState = async (mode: "default" | "openEmpty" | "closedEmpty") => {
+    const result = await testUserService.configureProjectInboxState(orgSlug, projectKey, mode);
+    if (!result.success) {
+      throw new Error(result.error || `Failed to configure project inbox state: ${mode}`);
+    }
+  };
+  const openInbox = async () => {
+    await page.goto(`${BASE_URL}${inboxUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, inboxUrl, "projectInbox", prefix);
+    await waitForScreenshotReady(page);
+  };
+  await ensureInboxState("default");
+
+  try {
+    if (shouldCapture(prefix, closedTabName)) {
+      await runCaptureStep("project inbox closed tab", async () => {
+        await openInbox();
+        await inboxPage.openClosedTab();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, closedTabName);
+      });
+    }
+
+    if (shouldCapture(prefix, bulkSelectionName)) {
+      await runCaptureStep("project inbox bulk selection", async () => {
+        await openInbox();
+        await inboxPage.selectFirstOpenIssue();
+        await expect(inboxPage.bulkActions).toBeVisible();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, bulkSelectionName);
+      });
+    }
+
+    if (shouldCapture(prefix, snoozeMenuName)) {
+      await runCaptureStep("project inbox snooze menu", async () => {
+        await openInbox();
+        await inboxPage.openFirstIssueSnoozeMenu();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, snoozeMenuName);
+        await page.keyboard.press("Escape");
+      });
+    }
+
+    if (shouldCapture(prefix, declineDialogName)) {
+      await runCaptureStep("project inbox decline dialog", async () => {
+        await page.evaluate(() => {
+          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "decline-dialog");
+        });
+        await openInbox();
+        await page
+          .getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG)
+          .waitFor({ state: "visible", timeout: 12000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, declineDialogName);
+        await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG));
+      });
+    }
+
+    if (shouldCapture(prefix, duplicateDialogName)) {
+      await runCaptureStep("project inbox duplicate dialog", async () => {
+        await page.evaluate(() => {
+          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "duplicate-dialog");
+        });
+        await openInbox();
+        await page
+          .getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG)
+          .waitFor({ state: "visible", timeout: 12000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, duplicateDialogName);
+        await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG));
+      });
+    }
+
+    if (shouldCapture(prefix, openEmptyName)) {
+      await runCaptureStep("project inbox open empty state", async () => {
+        await ensureInboxState("openEmpty");
+        await openInbox();
+        await inboxPage.expectOpenEmptyState();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, openEmptyName);
+      });
+    }
+
+    if (shouldCapture(prefix, closedEmptyName)) {
+      await runCaptureStep("project inbox closed empty state", async () => {
+        await ensureInboxState("closedEmpty");
+        await page.evaluate(() => {
+          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "closed-tab");
+        });
+        await openInbox();
+        await inboxPage.expectClosedEmptyState();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, closedEmptyName);
+      });
+    }
+  } finally {
+    await ensureInboxState("default");
   }
 }
 
@@ -714,25 +1745,15 @@ export async function screenshotSprintInteractiveStates(
   // Complete sprint modal
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-completion-modal`)) {
     await runCaptureStep("sprint completion modal", async () => {
-      const completeSprintButton = page
-        .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
-        .getByRole("button", { name: /^complete sprint$/i })
-        .first();
-      await completeSprintButton.waitFor({ state: "visible", timeout: 5000 });
-      await completeSprintButton.click();
-
-      const dialog = page.getByRole("dialog", { name: /^complete sprint$/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
-      await dialog
-        .getByText(/issues? not completed\. choose what to do with them\./i)
-        .waitFor({ state: "visible", timeout: 5000 });
+      const sprintsPage = new SprintsPage(page, orgSlug);
+      await sprintsPage.openCompletionDialog();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
         prefix,
         `project-${normalizedProjectKey}-sprints-completion-modal`,
       );
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, sprintsPage.completionDialog);
     });
   }
 }
@@ -753,35 +1774,19 @@ export async function screenshotIssueInteractiveStates(
     await waitForExpectedContent(page, issuesUrl, "issues", prefix);
     await waitForScreenshotReady(page);
 
-    const toggleBtn = page
-      .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
-      .getByRole("button", { name: /switch to side panel view/i })
-      .first();
-    await toggleBtn.waitFor({ state: "visible", timeout: 8000 });
-    await toggleBtn.click();
+    const issuesPage = new IssuesPage(page, orgSlug);
+    await issuesPage.switchToSidePanelMode();
     await waitForScreenshotReady(page);
 
-    const issueCard = page
-      .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
-      .getByTestId(TEST_IDS.ISSUE.CARD)
-      .first();
-    await issueCard.waitFor({ state: "visible", timeout: 5000 });
-    await issueCard.click();
+    await issuesPage.issueCards.first().waitFor({ state: "visible", timeout: 5000 });
+    await issuesPage.issueCards.first().click();
 
-    const issueDetailPanel = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
-    await issueDetailPanel.waitFor({ state: "visible", timeout: 5000 });
-    await issueDetailPanel
-      .getByText(/[A-Z][A-Z0-9]+-\d+/)
-      .first()
-      .waitFor({ timeout: 5000 });
+    await issuesPage.waitForDetailPanel();
     await waitForScreenshotReady(page);
     await captureCurrentView(page, prefix, "issues-side-panel");
 
-    await dismissIfOpen(page, issueDetailPanel);
-    const resetBtn = page.getByRole("button", { name: /switch to modal view/i });
-    if (await isLocatorVisible(resetBtn)) {
-      await resetBtn.click();
-    }
+    await dismissIfOpen(page, issuesPage.detailModal);
+    await issuesPage.switchToModalModeIfVisible();
   });
 }
 

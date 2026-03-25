@@ -4,6 +4,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { CreateWorkspaceModal } from "@/components/CreateWorkspaceModal";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
@@ -14,13 +15,20 @@ import { WorkspaceCard } from "@/components/Workspaces/WorkspaceCard";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { Building2, X } from "@/lib/icons";
+import { Building2, SearchX, X } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
+import {
+  filterWorkspaces,
+  getWorkspaceSearchEmptyState,
+  getWorkspaceSearchSummary,
+  shouldShowWorkspaceSearch,
+} from "@/lib/workspaces";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/")({
   component: WorkspacesList,
 });
 
-function WorkspacesList() {
+export function WorkspacesList() {
   const { organizationId, orgSlug } = useOrganization();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -31,15 +39,7 @@ function WorkspacesList() {
 
   const filteredWorkspaces = useMemo(() => {
     if (!workspaces) return undefined;
-    if (!deferredQuery.trim()) return workspaces;
-
-    const query = deferredQuery.toLowerCase().trim();
-    return workspaces.filter(
-      (ws) =>
-        ws.name.toLowerCase().includes(query) ||
-        ws.description?.toLowerCase().includes(query) ||
-        ws.slug.toLowerCase().includes(query),
-    );
+    return filterWorkspaces(workspaces, deferredQuery);
   }, [workspaces, deferredQuery]);
 
   const workspaceCount = workspaces?.length ?? 0;
@@ -47,11 +47,13 @@ function WorkspacesList() {
   const totalProjects =
     workspaces?.reduce((sum, workspace) => sum + workspace.projectCount, 0) ?? 0;
   const hasSearch = searchQuery.trim().length > 0;
+  const showSearch = shouldShowWorkspaceSearch(workspaceCount, searchQuery);
   const matchCount = filteredWorkspaces?.length ?? 0;
+  const searchEmptyState = hasSearch ? getWorkspaceSearchEmptyState(searchQuery) : null;
 
   const handleWorkspaceCreated = (slug: string) => {
     navigate({
-      to: ROUTES.workspaces.teams.list.path,
+      to: ROUTES.workspaces.detail.path,
       params: { orgSlug, workspaceSlug: slug },
     });
   };
@@ -81,6 +83,7 @@ function WorkspacesList() {
           icon: Building2,
           title: "No workspaces yet",
           description: "Create your first workspace to organize teams and projects",
+          "data-testid": TEST_IDS.WORKSPACE.EMPTY_STATE,
           action: (
             <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               + Create Workspace
@@ -100,9 +103,10 @@ function WorkspacesList() {
             ]}
           />
 
-          {workspaceCount > 3 && (
+          {showSearch && (
             <Flex gap="sm" align="center">
               <Input
+                data-testid={TEST_IDS.WORKSPACE.SEARCH_INPUT}
                 type="text"
                 variant="search"
                 value={searchQuery}
@@ -124,7 +128,7 @@ function WorkspacesList() {
 
           {hasSearch && (
             <Typography variant="small" color="secondary">
-              {matchCount} workspace{matchCount !== 1 ? "s" : ""} matching "{searchQuery.trim()}"
+              {getWorkspaceSearchSummary(matchCount, searchQuery)}
             </Typography>
           )}
 
@@ -135,9 +139,19 @@ function WorkspacesList() {
               ))}
             </Grid>
           ) : hasSearch ? (
-            <Typography variant="small" color="secondary" className="py-8 text-center">
-              No workspaces match your search. Try a different term.
-            </Typography>
+            <EmptyState
+              icon={SearchX}
+              title={searchEmptyState?.title ?? "No workspaces match your search"}
+              description={
+                searchEmptyState?.description ??
+                "Try a different workspace name, slug, or description."
+              }
+              data-testid={TEST_IDS.WORKSPACE.SEARCH_EMPTY_STATE}
+              action={{
+                label: "Clear search",
+                onClick: () => setSearchQuery(""),
+              }}
+            />
           ) : null}
         </Stack>
       </PageContent>

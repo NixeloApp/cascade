@@ -15,6 +15,9 @@ import { BasePage } from "./base.page";
  * Handles top-level department/workspace management
  */
 export class WorkspacesPage extends BasePage {
+  readonly emptyState: Locator;
+  readonly searchEmptyState: Locator;
+  readonly searchInput: Locator;
   readonly newWorkspaceButton: Locator;
   readonly workspaceCards: Locator;
   readonly workspaceTabs: Locator;
@@ -27,6 +30,9 @@ export class WorkspacesPage extends BasePage {
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
 
+    this.emptyState = page.getByTestId(TEST_IDS.WORKSPACE.EMPTY_STATE);
+    this.searchEmptyState = page.getByTestId(TEST_IDS.WORKSPACE.SEARCH_EMPTY_STATE);
+    this.searchInput = page.getByTestId(TEST_IDS.WORKSPACE.SEARCH_INPUT);
     this.newWorkspaceButton = page
       .getByRole("main")
       .getByRole("button", { name: /\+ Create Workspace|Create Workspace/i })
@@ -64,7 +70,9 @@ export class WorkspacesPage extends BasePage {
         async () => {
           const cardCount = await getLocatorCount(this.workspaceCards);
           if (cardCount > 0) return "ready";
-          return (await isLocatorVisible(this.page.getByText(/no workspaces yet/i)))
+          return (await isLocatorVisible(this.emptyState)) ||
+            (await isLocatorVisible(this.searchEmptyState)) ||
+            (await isLocatorVisible(this.page.getByText(/no workspaces yet/i)))
             ? "ready"
             : "pending";
         },
@@ -97,6 +105,12 @@ export class WorkspacesPage extends BasePage {
 
   async closeCreateWorkspaceDialogIfOpen(dialog = getWorkspaceDialogElements(this.page).dialog) {
     await dismissWorkspaceDialogIfOpen(this.page, dialog);
+  }
+
+  async openCreateWorkspaceDialog() {
+    await this.ensureWorkspacesView();
+    await this.clickNewWorkspaceButton();
+    return getWorkspaceDialogElements(this.page).dialog;
   }
 
   async expectWorkspacesView() {
@@ -188,6 +202,20 @@ export class WorkspacesPage extends BasePage {
 
   async expectWorkspaceCount(count: number) {
     await expect(this.workspaceCards).toHaveCount(count);
+  }
+
+  async search(query: string) {
+    await expect(this.searchInput).toBeVisible();
+    await this.searchInput.fill(query);
+  }
+
+  async clearSearch() {
+    await expect(this.searchInput).toBeVisible();
+    await this.searchInput.clear();
+  }
+
+  async expectSearchEmptyState() {
+    await expect(this.searchEmptyState).toBeVisible();
   }
 
   private async waitForWorkspacesView(timeout = 3000) {

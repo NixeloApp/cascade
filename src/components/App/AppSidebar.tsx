@@ -48,6 +48,7 @@ import {
   PanelLeftOpen,
   Plus,
   Puzzle,
+  Send,
   Server,
   Settings,
   ShieldCheck,
@@ -783,6 +784,15 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     icon={Mic}
                     label="Meetings"
                     isActive={isActive(ROUTES.meetings.path.replace("/$orgSlug", ""))}
+                    isCollapsed={showCollapsed}
+                    onClick={handleNavClick}
+                  />
+                  <NavItem
+                    to={ROUTES.outreach.path}
+                    params={{ orgSlug }}
+                    icon={Send}
+                    label="Outreach"
+                    isActive={isActive(ROUTES.outreach.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />

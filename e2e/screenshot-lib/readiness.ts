@@ -11,13 +11,19 @@ import { TEST_IDS } from "../../src/lib/test-ids";
 import { AnalyticsPage } from "../pages/analytics.page";
 import { BacklogPage } from "../pages/backlog.page";
 import { DocumentsPage } from "../pages/documents.page";
+import { InboxPage } from "../pages/inbox.page";
 import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
+import { OutreachPage } from "../pages/outreach.page";
 import { ProjectsPage } from "../pages/projects.page";
 import { RoadmapPage } from "../pages/roadmap.page";
 import { TeamPage } from "../pages/team.page";
 import { WorkspacesPage } from "../pages/workspaces.page";
-import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import {
+  getLocatorCount,
+  getPageHeaderOrGenericEmptyState,
+  isLocatorVisible,
+} from "../utils/locator-state";
 import {
   waitForAnimation,
   waitForDashboardReady,
@@ -673,6 +679,12 @@ export async function waitForExpectedContent(
     return;
   }
 
+  if (name === "documents-templates" || /\/[^/]+\/documents\/templates\/?$/.test(url)) {
+    await new DocumentsPage(page, READINESS_ONLY_SLUG).waitForTemplatesReady();
+    await waitForSpinnersHidden(page);
+    return;
+  }
+
   if (URL.documentEditor.test(url) || name === "document-editor") {
     await waitForDocumentEditorReady(page);
     return;
@@ -683,20 +695,31 @@ export async function waitForExpectedContent(
     return;
   }
 
-  // Org analytics uses PageHeader (not the project analytics component)
-  // so it falls through to the default fallback below
+  if (URL.analytics.test(url) || name === "org-analytics") {
+    await new AnalyticsPage(page, READINESS_ONLY_SLUG).waitUntilReady();
+    await waitForSpinnersHidden(page);
+    return;
+  }
 
   if (URL.projectRoadmap.test(url)) {
     await waitForRoadmapReady(page);
     return;
   }
 
+  if (URL.projectInbox.test(url) || name === "projectInbox") {
+    await new InboxPage(page, READINESS_ONLY_SLUG, READINESS_ONLY_SLUG).waitUntilReady();
+    await waitForSpinnersHidden(page);
+    return;
+  }
+
   if (URL.notifications.test(url) || name === "notifications") {
     await waitForDashboardReady(page);
     const headerTitle = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
+    const archivedTab = page.getByRole("tab", { name: /archived/i });
     const inboxTab = page.getByRole("tab", { name: /inbox/i });
+    const archivedEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE);
+    const inboxEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
     const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    const emptyState = page.getByText(/no notifications/i);
     const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
     await expect
       .poll(
@@ -709,9 +732,17 @@ export async function waitForExpectedContent(
       .poll(
         async () => {
           const mentionsVisible = await isLocatorVisible(mentionsFilter);
+          const archivedSelected = (await archivedTab.getAttribute("aria-selected")) === "true";
           const itemCount = await getLocatorCount(notificationItems);
-          const emptyVisible = await isLocatorVisible(emptyState);
-          return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
+          const inboxEmptyVisible = await isLocatorVisible(inboxEmptyState);
+          const archivedEmptyVisible = await isLocatorVisible(archivedEmptyState);
+          if (mentionsVisible && (itemCount > 0 || inboxEmptyVisible)) {
+            return "ready";
+          }
+          if (archivedSelected && (itemCount > 0 || archivedEmptyVisible)) {
+            return "ready";
+          }
+          return "pending";
         },
         { timeout: 10000 },
       )
@@ -728,6 +759,12 @@ export async function waitForExpectedContent(
       .or(page.getByText(/no meeting recordings yet/i))
       .first()
       .waitFor({ state: "visible", timeout: 12000 });
+    await waitForSpinnersHidden(page);
+    return;
+  }
+
+  if (URL.outreach.test(url) || name === "outreach" || name.startsWith("outreach-")) {
+    await new OutreachPage(page, READINESS_ONLY_SLUG).waitUntilReady();
     await waitForSpinnersHidden(page);
     return;
   }
@@ -807,10 +844,6 @@ export async function waitForExpectedContent(
   // workspace wiki, team settings, team wiki, document templates,
   // project activity, project timesheet, project sprints, project
   // billing, project settings, project members
-  await page
-    .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-    .or(page.getByText(/no .+yet|nothing here yet/i))
-    .first()
-    .waitFor({ state: "visible", timeout: 20000 });
+  await getPageHeaderOrGenericEmptyState(page).waitFor({ state: "visible", timeout: 20000 });
   await waitForSpinnersHidden(page);
 }

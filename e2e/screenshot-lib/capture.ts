@@ -183,6 +183,10 @@ function ensureStagingRoot(): string {
   return captureState.stagingRootDir;
 }
 
+export function getStagingRoot(): string {
+  return ensureStagingRoot();
+}
+
 export function getStagedScreenshotPath(finalPath: string): string {
   const relativePath = path.relative(process.cwd(), finalPath);
   const stagedPath = path.join(ensureStagingRoot(), relativePath);

@@ -10,11 +10,12 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDurationHuman } from "@/lib/formatting";
 import { BarChart3 } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { PageControls, PageControlsGroup, PageControlsRow, PageStack } from "../layout";
 import { EmptyState } from "../ui/EmptyState";
 import { Label } from "../ui/Label";
@@ -38,6 +39,7 @@ interface TimeTrackingPageProps {
 
 type TimeTrackingTab = "entries" | "burn-rate" | "rates";
 type TimeTrackingDateRange = "week" | "month" | "all";
+type TimeTrackingE2EState = "burn-rate" | "rates" | "all-time";
 
 interface TimeEntrySummary {
   totalDuration: number;
@@ -60,6 +62,65 @@ const DATE_RANGE_LABELS: Record<TimeTrackingDateRange, string> = {
   month: "Last 30 Days",
   all: "All Time",
 };
+
+const TIME_TRACKING_E2E_STATE_STORAGE_KEY = "nixelo:e2e:time-tracking-state";
+
+declare global {
+  interface Window {
+    __NIXELO_E2E_TIME_TRACKING_STATE__?: TimeTrackingE2EState;
+  }
+}
+
+type TimeTrackingInitialState = {
+  activeTab: TimeTrackingTab;
+  dateRange: TimeTrackingDateRange;
+  selectFirstProject: boolean;
+};
+
+function consumeTimeTrackingE2ERequestedState(): TimeTrackingInitialState {
+  const defaultState: TimeTrackingInitialState = {
+    activeTab: "entries",
+    dateRange: "week",
+    selectFirstProject: false,
+  };
+
+  if (typeof window === "undefined") {
+    return defaultState;
+  }
+
+  try {
+    const requestedState =
+      window.__NIXELO_E2E_TIME_TRACKING_STATE__ ??
+      window.sessionStorage.getItem(TIME_TRACKING_E2E_STATE_STORAGE_KEY);
+    delete window.__NIXELO_E2E_TIME_TRACKING_STATE__;
+    window.sessionStorage.removeItem(TIME_TRACKING_E2E_STATE_STORAGE_KEY);
+
+    switch (requestedState as TimeTrackingE2EState | null) {
+      case "burn-rate":
+        return {
+          activeTab: "burn-rate",
+          dateRange: "week",
+          selectFirstProject: true,
+        };
+      case "rates":
+        return {
+          activeTab: "rates",
+          dateRange: "week",
+          selectFirstProject: true,
+        };
+      case "all-time":
+        return {
+          activeTab: "entries",
+          dateRange: "all",
+          selectFirstProject: false,
+        };
+      default:
+        return defaultState;
+    }
+  } catch {
+    return defaultState;
+  }
+}
 
 function getDateRangeBounds(range: TimeTrackingDateRange): {
   startDate: number | undefined;
@@ -139,36 +200,44 @@ function TimeTrackingOverview({
   const scopeDescription = getScopeDescription(selectedProject);
 
   return (
-    <OverviewBand
-      eyebrow="Operations pulse"
-      title="Track time with enough context to understand cost, not just duration."
-      description="Use one workspace-level view for recent entries, burn, and rates so delivery health stays visible while the team is still moving."
-      metrics={[
-        {
-          label: "Logged",
-          value: loggedValue,
-          detail: dateRange === "all" ? "Across all saved entries" : rangeLabel,
-        },
-        {
-          label: "Entries",
-          value: isTruncated ? `${entryCount}+` : entryCount,
-          detail: entriesDetail,
-        },
-        {
-          label: "Billable",
-          value: billableValue,
-          detail: billingEnabled ? "Tracked billable value" : "Billable time captured",
-        },
-      ]}
-      aside={
-        <Stack gap="sm">
-          <Typography variant="label">Current scope</Typography>
-          <Typography variant="small" color="secondary">
-            {scopeDescription}
-          </Typography>
-        </Stack>
-      }
-    />
+    <div data-testid={TEST_IDS.TIME_TRACKING.OVERVIEW}>
+      <OverviewBand
+        eyebrow="Operations pulse"
+        title="Track time with enough context to understand cost, not just duration."
+        description="Use one workspace-level view for recent entries, burn, and rates so delivery health stays visible while the team is still moving."
+        metrics={[
+          {
+            label: "Logged",
+            value: <span data-testid={TEST_IDS.TIME_TRACKING.SUMMARY_LOGGED}>{loggedValue}</span>,
+            detail: dateRange === "all" ? "Across all saved entries" : rangeLabel,
+          },
+          {
+            label: "Entries",
+            value: (
+              <span data-testid={TEST_IDS.TIME_TRACKING.SUMMARY_ENTRIES}>
+                {isTruncated ? `${entryCount}+` : entryCount}
+              </span>
+            ),
+            detail: entriesDetail,
+          },
+          {
+            label: "Billable",
+            value: (
+              <span data-testid={TEST_IDS.TIME_TRACKING.SUMMARY_BILLABLE}>{billableValue}</span>
+            ),
+            detail: billingEnabled ? "Tracked billable value" : "Billable time captured",
+          },
+        ]}
+        aside={
+          <Stack gap="sm">
+            <Typography variant="label">Current scope</Typography>
+            <Typography variant="small" color="secondary">
+              {scopeDescription}
+            </Typography>
+          </Stack>
+        }
+      />
+    </div>
   );
 }
 
@@ -204,7 +273,13 @@ function TimeTrackingControls({
           className="border-b border-ui-border"
         >
           <TabsList variant="underline" className="gap-6">
-            <TabsTrigger value="entries" variant="underline" size="underlineCompact" tone="indigo">
+            <TabsTrigger
+              value="entries"
+              variant="underline"
+              size="underlineCompact"
+              tone="indigo"
+              data-testid={TEST_IDS.TIME_TRACKING.TAB_ENTRIES}
+            >
               Time Entries
             </TabsTrigger>
             {canSeeSensitiveTabs && (
@@ -214,6 +289,7 @@ function TimeTrackingControls({
                   variant="underline"
                   size="underlineCompact"
                   tone="indigo"
+                  data-testid={TEST_IDS.TIME_TRACKING.TAB_BURN_RATE}
                 >
                   Burn Rate & Costs
                 </TabsTrigger>
@@ -222,6 +298,7 @@ function TimeTrackingControls({
                   variant="underline"
                   size="underlineCompact"
                   tone="indigo"
+                  data-testid={TEST_IDS.TIME_TRACKING.TAB_RATES}
                 >
                   Hourly Rates
                 </TabsTrigger>
@@ -241,7 +318,10 @@ function TimeTrackingControls({
                 onProjectChange(value === "all" ? "all" : (value as Id<"projects">))
               }
             >
-              <SelectTrigger id="tracking-project-filter">
+              <SelectTrigger
+                id="tracking-project-filter"
+                data-testid={TEST_IDS.TIME_TRACKING.PROJECT_FILTER}
+              >
                 <SelectValue placeholder="Select project..." />
               </SelectTrigger>
               <SelectContent>
@@ -263,7 +343,10 @@ function TimeTrackingControls({
               value={dateRange}
               onValueChange={(value) => onDateRangeChange(value as TimeTrackingDateRange)}
             >
-              <SelectTrigger id="tracking-date-range">
+              <SelectTrigger
+                id="tracking-date-range"
+                data-testid={TEST_IDS.TIME_TRACKING.DATE_RANGE_FILTER}
+              >
                 <SelectValue placeholder="Select range..." />
               </SelectTrigger>
               <SelectContent>
@@ -338,11 +421,14 @@ function TimeTrackingContent({
 
 /** Main time tracking page with entries, burn rate, and rates tabs. */
 export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTrackingPageProps) {
-  const [activeTab, setActiveTab] = useState<TimeTrackingTab>("entries");
+  const [initialState] = useState<TimeTrackingInitialState>(() =>
+    consumeTimeTrackingE2ERequestedState(),
+  );
+  const [activeTab, setActiveTab] = useState<TimeTrackingTab>(initialState.activeTab);
   const [selectedProject, setSelectedProject] = useState<Id<"projects"> | "all">(
     projectId ?? "all",
   );
-  const [dateRange, setDateRange] = useState<TimeTrackingDateRange>("week");
+  const [dateRange, setDateRange] = useState<TimeTrackingDateRange>(initialState.dateRange);
 
   // Get billing setting from organization context
   const { billingEnabled } = useOrganization();
@@ -352,6 +438,17 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
     api.projects.getCurrentUserProjects,
     projectId ? "skip" : {},
   );
+
+  useEffect(() => {
+    if (projectId || !initialState.selectFirstProject || selectedProject !== "all") {
+      return;
+    }
+
+    const firstProjectId = projects?.page?.[0]?._id;
+    if (firstProjectId) {
+      setSelectedProject(firstProjectId);
+    }
+  }, [initialState.selectFirstProject, projectId, projects?.page, selectedProject]);
 
   // Determine if user can see sensitive tabs (burn rate, hourly rates)
   const canSeeSensitiveTabs = isGlobalAdmin || userRole === "admin";
@@ -368,7 +465,7 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   });
 
   return (
-    <PageStack>
+    <PageStack data-testid={TEST_IDS.TIME_TRACKING.CONTENT}>
       {summary !== undefined && (
         <TimeTrackingOverview
           billingEnabled={billingEnabled}

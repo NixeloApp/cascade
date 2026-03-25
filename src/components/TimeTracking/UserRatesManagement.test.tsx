@@ -35,8 +35,16 @@ vi.mock("../ui/Badge", () => ({
 }));
 
 vi.mock("../ui/Button", () => ({
-  Button: ({ children, onClick }: { children: ReactNode; onClick?: () => void }) => (
-    <button type="button" onClick={onClick}>
+  Button: ({
+    children,
+    disabled,
+    onClick,
+  }: {
+    children: ReactNode;
+    disabled?: boolean;
+    onClick?: () => void;
+  }) => (
+    <button type="button" onClick={onClick} disabled={disabled}>
       {children}
     </button>
   ),
@@ -329,12 +337,13 @@ describe("UserRatesManagement", () => {
     });
   });
 
-  it("returns null when the current user query is unavailable", () => {
+  it("keeps the rates surface visible while the current user query is unavailable", () => {
     currentUser = undefined;
 
-    const { container } = render(<UserRatesManagement />);
+    render(<UserRatesManagement />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText("Hourly Rates")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Set My Rate" })).toBeDisabled();
   });
 
   it("renders the empty state and validates hourly rate input before saving", async () => {

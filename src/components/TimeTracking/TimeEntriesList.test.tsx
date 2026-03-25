@@ -1,5 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 
 // Mock toast
@@ -75,6 +76,8 @@ describe("TimeEntriesList", () => {
 
       render(<TimeEntriesList />);
 
+      expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.ENTRIES_LIST)).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.ENTRIES_EMPTY_STATE)).toBeInTheDocument();
       expect(screen.getByText("No time entries")).toBeInTheDocument();
       expect(screen.getByText("Start tracking time to see entries here.")).toBeInTheDocument();
     });
@@ -86,6 +89,7 @@ describe("TimeEntriesList", () => {
 
       render(<TimeEntriesList />);
 
+      expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.ENTRIES_LIST)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Add Time Entry/i })).toBeInTheDocument();
     });
 

@@ -1,8 +1,8 @@
 # Meetings Page - Current State
 
 > **Route**: `/:slug/meetings`
-> **Status**: REVIEWED for core route and deep-state screenshot coverage
-> **Last Updated**: 2026-03-21
+> **Status**: REVIEWED for core route, deep-state, and operational overlay/state coverage
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -38,12 +38,16 @@ workspace that feeds later product/document workflows.
 
 | State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
 |------|---------------|---------------|--------------|--------------|
-| Selected-recording detail | `desktop-dark-detail.png` | `desktop-light-detail.png` | `tablet-light-detail.png` | `mobile-light-detail.png` |
+| Selected-recording detail | `desktop-dark-detail.png` | `desktop-light-detail.png` | `n/a` | `n/a` |
 | Memory-lens filter state | `desktop-dark-memory-lens.png` | `desktop-light-memory-lens.png` | `tablet-light-memory-lens.png` | `mobile-light-memory-lens.png` |
 | Transcript search state | `desktop-dark-transcript-search.png` | `desktop-light-transcript-search.png` | `tablet-light-transcript-search.png` | `mobile-light-transcript-search.png` |
+| Processing detail state | `desktop-dark-processing.png` | `desktop-light-processing.png` | `tablet-light-processing.png` | `mobile-light-processing.png` |
+| Filter-empty state | `desktop-dark-filter-empty.png` | `desktop-light-filter-empty.png` | `n/a` | `n/a` |
+| Schedule dialog state | `desktop-dark-schedule-dialog.png` | `desktop-light-schedule-dialog.png` | `tablet-light-schedule-dialog.png` | `n/a` |
 
-These screenshot states are already captured and approved. The earlier note claiming the meetings
-baselines were still missing is no longer true.
+These screenshot states are now captured and reviewed where they are visually distinct. Small-screen
+detail and filter-empty variants are intentionally not tracked because they collapse to the same
+above-the-fold composition as the canonical view.
 
 ---
 
@@ -126,17 +130,16 @@ This column is the review and handoff side of the route.
 - Alternate selected-recording detail state
 - Transcript search state
 - Memory-lens filtered state
+- Summary-processing detail state
+- Filter-empty / no-match state
+- Schedule dialog state
 - Empty state with no recordings yet
 
 ### Important implementation states that still matter even without dedicated screenshots
 
-- recording still processing
 - failed/cancelled states
 - action-item project assignment state
-- schedule dialog validation states
-
-Those are supported by the route logic, but the current visual review set is centered on the main
-workspace states above.
+- schedule dialog validation/toast states
 
 ---
 
@@ -144,9 +147,9 @@ workspace states above.
 
 | Area | Current Read |
 |------|--------------|
-| Screenshot depth | Good. This route now has real deep-state screenshots instead of a single canonical page image. |
+| Screenshot depth | Strong. This route covers canonical, deep-state, overlay, and in-progress detail states, while avoiding redundant small-screen captures that do not change the visible composition. |
 | Route purpose | Clear. The page reads as a review/search workspace, not a generic transcript dump. |
-| State coverage | Better than many other product routes because transcript search and memory lens are explicitly reviewed. |
+| State coverage | Better than many other product routes because search, memory lens, processing, and scheduling are explicitly reviewed. |
 
 ---
 
@@ -154,9 +157,9 @@ workspace states above.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Meeting-to-document handoff is still a product backlog item, so the route stops at review/action extraction rather than completing the doc workflow | product flow | HIGH |
-| 2 | Dense detail states can still feel busy on smaller widths because summary, transcript, and action items all compete for the same right-column attention | detail composition | MEDIUM |
-| 3 | The route is current visually, but the spec still needs future expansion once meeting-to-doc and richer schedule flows land | documentation follow-up | LOW |
+| 1 | Dense detail states can still feel busy on smaller widths because summary, transcript, and action items all compete for the same right-column attention | detail composition | MEDIUM |
+| 2 | Failed/cancelled capture quality still depends on future deterministic seed coverage if those states become a regular review target | state coverage follow-up | LOW |
+| 3 | The spec will need another refresh if multi-platform capture or richer bot lifecycle UI changes the route anatomy | documentation follow-up | LOW |
 
 ---
 
@@ -167,7 +170,7 @@ workspace states above.
 | `src/routes/_auth/_app/$orgSlug/meetings.tsx` | Route wrapper and page-level actions |
 | `src/components/Meetings/MeetingsWorkspace.tsx` | Main meetings workspace |
 | `e2e/screenshot-pages.ts` | Canonical and deep-state meetings screenshot capture |
-| `todos/meeting-intelligence.md` | Remaining product backlog for meeting-to-doc and related flows |
+| `todos/meeting-intelligence.md` | Remaining backlog for provider rollout and multi-platform capture |
 
 ---
 
@@ -175,12 +178,13 @@ workspace states above.
 
 - Treat this as a dense operational workspace, not a transcript viewer.
 - Do not delete the deep-state screenshots; they are the real value of this spec.
-- The next meaningful spec expansion should happen when meeting-to-doc is real, because that
-  changes the route's end-to-end story more than another cosmetic pass would.
+- The next meaningful spec expansion should happen when multi-platform capture or richer failed job
+  handling lands, because that changes the route anatomy more than another cosmetic tweak would.
 
 ---
 
 ## Summary
 
-The meetings spec is now current. Core route coverage and deep-state screenshots are real and
-approved. The remaining gap is product-flow depth, not missing baseline captures.
+The meetings spec is now current. Core route coverage, deep-state screenshots, schedule overlay,
+processing detail, and filter-empty review are all real. The remaining gaps are broader platform
+breadth and provider rollout, not missing route-state captures.

@@ -32,6 +32,10 @@ export class ProjectsPage extends BasePage {
   readonly projectList: Locator;
   readonly projectItems: Locator;
   readonly projectsPageHeading: Locator;
+  readonly projectsGrid: Locator;
+  readonly projectsEmptyState: Locator;
+  readonly projectsLoadingState: Locator;
+  readonly singleProjectOverview: Locator;
 
   // ===================
   // Locators - Create Project Form
@@ -107,6 +111,8 @@ export class ProjectsPage extends BasePage {
   readonly analyticsIssuesByTypeChart: Locator;
   readonly analyticsIssuesByPriorityChart: Locator;
   readonly analyticsTeamVelocityChart: Locator;
+  readonly analyticsAssigneeChart: Locator;
+  readonly analyticsRecentActivity: Locator;
   readonly analyticsNoCompletedSprintsMessage: Locator;
   readonly roadmapViewToggle: Locator;
   readonly roadmapEpicFilter: Locator;
@@ -143,6 +149,10 @@ export class ProjectsPage extends BasePage {
       name: /add new|create|\+/i,
     });
     this.projectsPageHeading = page.getByRole("heading", { name: /^projects$/i });
+    this.projectsGrid = page.getByTestId(TEST_IDS.PROJECT.GRID);
+    this.projectsEmptyState = page.getByTestId(TEST_IDS.PROJECT.EMPTY_STATE);
+    this.projectsLoadingState = page.getByTestId(TEST_IDS.PROJECT.LOADING_STATE);
+    this.singleProjectOverview = page.getByTestId(TEST_IDS.PROJECT.SINGLE_PROJECT_OVERVIEW);
     this.projectList = page
       .getByTestId(TEST_IDS.NAV.WORKSPACE_LIST)
       .or(this.sidebar.locator("ul, [role='list']").first());
@@ -246,6 +256,8 @@ export class ProjectsPage extends BasePage {
     this.analyticsIssuesByTypeChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_TYPE);
     this.analyticsIssuesByPriorityChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_PRIORITY);
     this.analyticsTeamVelocityChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_VELOCITY);
+    this.analyticsAssigneeChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_ASSIGNEE);
+    this.analyticsRecentActivity = page.getByTestId(TEST_IDS.ANALYTICS.RECENT_ACTIVITY);
     this.analyticsNoCompletedSprintsMessage = page.getByText("No completed sprints yet");
     this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
     this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });
@@ -316,24 +328,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async waitUntilReady(): Promise<void> {
-    await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
-    await this.page.getByRole("button", { name: /create project/i }).waitFor({
-      state: "visible",
-      timeout: 12000,
-    });
-    await expect
-      .poll(
-        async () => {
-          const cardCount = await this.page.getByTestId(TEST_IDS.PROJECT.CARD).count();
-          if (cardCount > 0) return "ready";
-          const emptyVisible = await this.page
-            .getByTestId(TEST_IDS.PROJECT.EMPTY_STATE)
-            .isVisible();
-          return emptyVisible ? "ready" : "pending";
-        },
-        { timeout: 12000 },
-      )
-      .toBe("ready");
+    await expect.poll(() => this.readProjectsViewState(), { timeout: 12000 }).toBe("ready");
   }
 
   async gotoProjectBoard(projectKey: string) {
@@ -705,6 +700,19 @@ export class ProjectsPage extends BasePage {
     await expect(this.analyticsTeamVelocityChart).toBeVisible();
   }
 
+  async expectAnalyticsSparseDataState() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsAssigneeChart).toContainText("No assigned work yet");
+    await expect(this.analyticsTeamVelocityChart).toContainText("No sprint history yet");
+    await expect(this.analyticsRecentActivity).toContainText("No recent activity yet");
+  }
+
+  async expectAnalyticsNoActivityState() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsRecentActivity).toContainText("No recent activity yet");
+    await expect(this.analyticsAssigneeChart).not.toContainText("No assigned work yet");
+  }
+
   async getAnalyticsTotalIssuesCount() {
     await this.expectAnalyticsLoaded();
     const valueText = (await this.analyticsTotalIssuesMetric.textContent()) ?? "";
@@ -1069,7 +1077,23 @@ export class ProjectsPage extends BasePage {
   async expectProjectsView(timeout = 10000) {
     await expect
       .poll(() => this.readProjectsViewState(), { timeout, intervals: [200, 500, 1000] })
-      .not.toBe("pending");
+      .toBe("ready");
+  }
+
+  async expectProjectsGridVisible(timeout = 10000) {
+    await this.projectsGrid.waitFor({ state: "visible", timeout });
+  }
+
+  async expectProjectsEmptyStateVisible(timeout = 10000) {
+    await this.projectsEmptyState.waitFor({ state: "visible", timeout });
+  }
+
+  async expectSingleProjectOverviewVisible(timeout = 10000) {
+    await this.singleProjectOverview.waitFor({ state: "visible", timeout });
+  }
+
+  async expectProjectsLoadingStateVisible(timeout = 10000) {
+    await this.projectsLoadingState.waitFor({ state: "visible", timeout });
   }
 
   async hasCreateProjectEntryPoint() {
@@ -1079,7 +1103,23 @@ export class ProjectsPage extends BasePage {
     );
   }
 
-  private async readProjectsViewState(): Promise<"ready" | "pending"> {
+  private async readProjectsViewState(): Promise<"ready" | "loading" | "pending"> {
+    if (await isLocatorVisible(this.projectsLoadingState)) {
+      return "loading";
+    }
+
+    if (await isLocatorVisible(this.projectsGrid)) {
+      return "ready";
+    }
+
+    if (await isLocatorVisible(this.singleProjectOverview)) {
+      return "ready";
+    }
+
+    if (await isLocatorVisible(this.projectsEmptyState)) {
+      return "ready";
+    }
+
     if (await this.hasCreateProjectEntryPoint()) {
       return "ready";
     }

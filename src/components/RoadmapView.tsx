@@ -9,6 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
+import type { FunctionReturnType } from "convex/server";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
@@ -35,6 +36,16 @@ interface RoadmapViewProps {
   projectId: Id<"projects">;
   sprintId?: Id<"sprints">;
   canEdit?: boolean;
+}
+
+type RoadmapE2EState = "detail" | "group-status";
+
+const ROADMAP_E2E_STATE_STORAGE_KEY = "nixelo:e2e:roadmap-state";
+
+declare global {
+  interface Window {
+    __NIXELO_E2E_ROADMAP_STATE__?: RoadmapE2EState;
+  }
 }
 
 import type {
@@ -105,6 +116,56 @@ function useRoadmapRowController() {
   }
 
   return controller;
+}
+
+function consumeRoadmapE2ERequestedState(): RoadmapE2EState | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const requestedSearchParam = new URLSearchParams(window.location.search).get("e2e-roadmap");
+    if (requestedSearchParam === "detail" || requestedSearchParam === "group-status") {
+      return requestedSearchParam;
+    }
+
+    const requestedState =
+      window.__NIXELO_E2E_ROADMAP_STATE__ ??
+      window.sessionStorage.getItem(ROADMAP_E2E_STATE_STORAGE_KEY);
+    delete window.__NIXELO_E2E_ROADMAP_STATE__;
+    window.sessionStorage.removeItem(ROADMAP_E2E_STATE_STORAGE_KEY);
+
+    if (requestedState === "detail" || requestedState === "group-status") {
+      return requestedState;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getPreferredRoadmapIssueId(
+  issues: RoadmapIssue[] | undefined,
+  issueLinks: FunctionReturnType<typeof api.issueLinks.getForProject> | undefined,
+): Id<"issues"> | null {
+  if (!issues || issues.length === 0) {
+    return null;
+  }
+
+  const demoIssue = issues.find((issue) => issue.key === "DEMO-2");
+  if (demoIssue) {
+    return demoIssue._id;
+  }
+
+  const issueIdsWithLinks = new Set<string>();
+  for (const link of issueLinks?.links ?? []) {
+    issueIdsWithLinks.add(link.fromIssueId.toString());
+    issueIdsWithLinks.add(link.toIssueId.toString());
+  }
+
+  const linkedIssue = issues.find((issue) => issueIdsWithLinks.has(issue._id.toString()));
+  return linkedIssue?._id ?? issues[0]?._id ?? null;
 }
 
 function RoadmapVirtualizedRow({
@@ -205,6 +266,7 @@ function RoadmapTimelineContainer({
             title="Roadmap is ready for planning"
             description="No issues with due dates to display yet. Add due dates in your board or backlog to populate this timeline view."
             className="m-6 min-h-96 max-w-none border-dashed"
+            data-testid={TEST_IDS.ROADMAP.EMPTY_STATE}
           />
         ) : (
           <div className="h-full overflow-x-auto">
@@ -263,6 +325,7 @@ function RoadmapTimelineContainer({
 
                 {showDependencies && dependencyLines.length > 0 ? (
                   <svg
+                    data-testid={TEST_IDS.ROADMAP.DEPENDENCY_LINES}
                     className="pointer-events-none absolute top-0"
                     style={{
                       left: ISSUE_INFO_COLUMN_WIDTH,
@@ -425,6 +488,10 @@ function useRoadmapTimelineInteractions({
 /** Compute dependency lines from issue links */
 /** Gantt-style roadmap view with issue timeline bars and dependency lines. */
 export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapViewProps) {
+  const [requestedE2EState] = useState<RoadmapE2EState | null>(() =>
+    consumeRoadmapE2ERequestedState(),
+  );
+  const [hasAppliedE2EState, setHasAppliedE2EState] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("months");
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
@@ -604,6 +671,37 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     setCollapsedGroupKeys([]);
   };
 
+  useEffect(() => {
+    if (hasAppliedE2EState) {
+      return;
+    }
+
+    if (!filteredIssues) {
+      return;
+    }
+
+    if (!requestedE2EState) {
+      setHasAppliedE2EState(true);
+      return;
+    }
+
+    if (requestedE2EState === "group-status") {
+      setGroupBy("status");
+      setCollapsedGroupKeys([]);
+      setCollapsedParentIssueIds([]);
+      setHasAppliedE2EState(true);
+      return;
+    }
+
+    const preferredIssueId = getPreferredRoadmapIssueId(filteredIssues, issueLinks);
+    if (requestedE2EState === "detail") {
+      if (preferredIssueId) {
+        setSelectedIssue(preferredIssueId);
+      }
+      setHasAppliedE2EState(true);
+    }
+  }, [filteredIssues, hasAppliedE2EState, issueLinks, requestedE2EState]);
+
   // Loading State
   if (!(project && filteredIssues && epics)) {
     return <RoadmapLoadingState />;
@@ -611,81 +709,83 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
   return (
     <PageLayout fullHeight className="overflow-hidden">
-      <Flex direction="column" className="h-full">
-        {/* Header */}
-        <Flex align="center" justify="between" mb="lg" className="shrink-0">
-          <Stack gap="xs">
-            <Typography variant="h2">Roadmap</Typography>
-            <Typography variant="small" color="secondary">
-              Visualize issue timeline and dependencies across {timelineRangeLabel}
-            </Typography>
-          </Stack>
+      <div className="h-full" data-testid={TEST_IDS.ROADMAP.CONTENT}>
+        <Flex direction="column" className="h-full">
+          {/* Header */}
+          <Flex align="center" justify="between" mb="lg" className="shrink-0">
+            <Stack gap="xs">
+              <Typography variant="h2">Roadmap</Typography>
+              <Typography variant="small" color="secondary">
+                Visualize issue timeline and dependencies across {timelineRangeLabel}
+              </Typography>
+            </Stack>
 
-          <RoadmapHeaderControls
-            epics={epics}
-            filterEpic={filterEpic}
-            fitTimelineWindow={fitTimelineWindow}
-            groupBy={groupBy}
-            nextWindowLabel={nextWindowLabel}
-            onFilterEpicChange={setFilterEpic}
-            onFitToIssues={handleFitToIssues}
-            onGroupByChange={handleGroupByChange}
-            onNextWindow={handleNextWindow}
-            onPreviousWindow={handlePreviousWindow}
-            onTimelineSpanChange={setTimelineSpan}
-            onTimelineZoomChange={setTimelineZoom}
-            onToday={() => setTimelineAnchorDate(new Date())}
-            onToggleDependencies={() => setShowDependencies((current) => !current)}
-            onViewModeChange={setViewMode}
-            previousWindowLabel={previousWindowLabel}
+            <RoadmapHeaderControls
+              epics={epics}
+              filterEpic={filterEpic}
+              fitTimelineWindow={fitTimelineWindow}
+              groupBy={groupBy}
+              nextWindowLabel={nextWindowLabel}
+              onFilterEpicChange={setFilterEpic}
+              onFitToIssues={handleFitToIssues}
+              onGroupByChange={handleGroupByChange}
+              onNextWindow={handleNextWindow}
+              onPreviousWindow={handlePreviousWindow}
+              onTimelineSpanChange={setTimelineSpan}
+              onTimelineZoomChange={setTimelineZoom}
+              onToday={() => setTimelineAnchorDate(new Date())}
+              onToggleDependencies={() => setShowDependencies((current) => !current)}
+              onViewModeChange={setViewMode}
+              previousWindowLabel={previousWindowLabel}
+              showDependencies={showDependencies}
+              timelineRangeLabel={timelineRangeLabel}
+              timelineSpan={timelineSpan}
+              timelineZoom={timelineZoom}
+              viewMode={viewMode}
+            />
+          </Flex>
+
+          {activeRoadmapIssue ? (
+            <RoadmapDependencyPanel
+              key={activeRoadmapIssue._id}
+              activeIssue={activeRoadmapIssue}
+              availableTargetIssues={availableRoadmapDependencyTargets}
+              blockedBy={activeRoadmapIssueDependencies.blockedBy}
+              blocks={activeRoadmapIssueDependencies.blocks}
+              canEdit={canEdit}
+              onFocusIssue={setSelectedIssue}
+            />
+          ) : null}
+
+          <RoadmapTimelineContainer
+            activeIssueId={activeRoadmapIssueId}
+            dependencyLines={dependencyLines}
+            filteredIssues={filteredIssues}
+            listRef={listRef}
+            roadmapRowController={roadmapRowController}
             showDependencies={showDependencies}
-            timelineRangeLabel={timelineRangeLabel}
-            timelineSpan={timelineSpan}
-            timelineZoom={timelineZoom}
-            viewMode={viewMode}
+            timelineHeaderCells={timelineHeaderCells}
+            timelineLayoutWidth={timelineLayoutWidth}
+            timelineRows={timelineRows}
+            timelineBucketWidth={timelineBucketWidth}
+            todayMarkerOffsetPx={todayMarkerOffsetPx}
           />
+
+          {/* Issue Detail */}
+          {selectedIssue && (
+            <IssueDetailViewer
+              issueId={selectedIssue}
+              open={true}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setSelectedIssue(null);
+                }
+              }}
+              canEdit={canEdit}
+            />
+          )}
         </Flex>
-
-        {activeRoadmapIssue ? (
-          <RoadmapDependencyPanel
-            key={activeRoadmapIssue._id}
-            activeIssue={activeRoadmapIssue}
-            availableTargetIssues={availableRoadmapDependencyTargets}
-            blockedBy={activeRoadmapIssueDependencies.blockedBy}
-            blocks={activeRoadmapIssueDependencies.blocks}
-            canEdit={canEdit}
-            onFocusIssue={setSelectedIssue}
-          />
-        ) : null}
-
-        <RoadmapTimelineContainer
-          activeIssueId={activeRoadmapIssueId}
-          dependencyLines={dependencyLines}
-          filteredIssues={filteredIssues}
-          listRef={listRef}
-          roadmapRowController={roadmapRowController}
-          showDependencies={showDependencies}
-          timelineHeaderCells={timelineHeaderCells}
-          timelineLayoutWidth={timelineLayoutWidth}
-          timelineRows={timelineRows}
-          timelineBucketWidth={timelineBucketWidth}
-          todayMarkerOffsetPx={todayMarkerOffsetPx}
-        />
-
-        {/* Issue Detail */}
-        {selectedIssue && (
-          <IssueDetailViewer
-            issueId={selectedIssue}
-            open={true}
-            onOpenChange={(open) => {
-              if (!open) {
-                setSelectedIssue(null);
-              }
-            }}
-            canEdit={canEdit}
-          />
-        )}
-      </Flex>
+      </div>
     </PageLayout>
   );
 }

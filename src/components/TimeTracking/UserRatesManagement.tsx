@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatCurrency } from "@/lib/formatting";
 import { DollarSign } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -47,6 +48,7 @@ export function UserRatesManagement() {
   const [currency, setCurrency] = useState("USD");
   const [rateType, setRateType] = useState<"internal" | "billable">("internal");
   const [notes, setNotes] = useState("");
+  const canEditOwnRate = currentUser !== undefined;
 
   const handleCloseModal = () => {
     setShowAddRate(false);
@@ -83,12 +85,8 @@ export function UserRatesManagement() {
     }
   };
 
-  if (!currentUser) {
-    return null;
-  }
-
   return (
-    <Flex direction="column" gap="xl">
+    <Flex direction="column" gap="xl" data-testid={TEST_IDS.TIME_TRACKING.RATES_PANEL}>
       {/* Header */}
       <Flex justify="between" align="center">
         <Stack gap="xs">
@@ -97,7 +95,7 @@ export function UserRatesManagement() {
             Manage hourly rates for cost tracking and burn rate calculations
           </Typography>
         </Stack>
-        <Button onClick={() => setShowAddRate(true)} variant="primary">
+        <Button onClick={() => setShowAddRate(true)} variant="primary" disabled={!canEditOwnRate}>
           Set My Rate
         </Button>
       </Flex>
@@ -150,7 +148,11 @@ export function UserRatesManagement() {
           icon={DollarSign}
           title="No hourly rates set"
           description="Set your hourly rate to enable cost tracking and burn rate calculations."
-          action={{ label: "Set My Rate", onClick: () => setShowAddRate(true) }}
+          action={
+            canEditOwnRate
+              ? { label: "Set My Rate", onClick: () => setShowAddRate(true) }
+              : undefined
+          }
         />
       )}
 

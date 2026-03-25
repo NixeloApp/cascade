@@ -32,6 +32,18 @@ export const TEST_IDS = {
   ISSUE: {
     /** @see src/components/IssueCard.tsx */
     CARD: "issue-card",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    SEARCH_INPUT: "issue-search-input",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    STATUS_FILTER: "issue-status-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    PRIORITY_FILTER: "issue-priority-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    TYPE_FILTER: "issue-type-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    FILTER_SUMMARY: "issue-filter-summary",
+    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
+    SEARCH_EMPTY_STATE: "issue-search-empty-state",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     CREATE_TRIGGER: "issue-create-trigger",
     /** @see src/components/IssueDetail/CreateIssueModal.tsx */
@@ -95,6 +107,10 @@ export const TEST_IDS = {
     NAME: "workspace-name",
     /** @see src/routes/_app.$orgSlug.workspaces.index.tsx */
     EMPTY_STATE: "workspace-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
+    SEARCH_INPUT: "workspace-search-input",
+    /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
+    SEARCH_EMPTY_STATE: "workspace-search-empty-state",
   },
 
   // ============================================================
@@ -205,7 +221,13 @@ export const TEST_IDS = {
     /** @see src/components/ProjectsList.tsx */
     CARD: "project-card",
     /** @see src/components/ProjectsList.tsx */
+    GRID: "project-grid",
+    /** @see src/components/ProjectsList.tsx */
     EMPTY_STATE: "project-empty-state",
+    /** @see src/components/ProjectsList.tsx */
+    LOADING_STATE: "project-loading-state",
+    /** @see src/components/ProjectsList.tsx */
+    SINGLE_PROJECT_OVERVIEW: "project-single-project-overview",
   },
 
   // ============================================================
@@ -289,6 +311,17 @@ export const TEST_IDS = {
     MODE_MONTH: "calendar-mode-month",
   },
 
+  ORG_CALENDAR: {
+    /** @see src/routes/_auth/_app/$orgSlug/calendar.tsx */
+    CONTENT: "org-calendar-content",
+    /** @see src/routes/_auth/_app/$orgSlug/calendar.tsx */
+    LOADING_STATE: "org-calendar-loading-state",
+    /** @see src/routes/_auth/_app/$orgSlug/calendar.tsx */
+    TEAM_FILTER: "org-calendar-team-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/calendar.tsx */
+    WORKSPACE_FILTER: "org-calendar-workspace-filter",
+  },
+
   // ============================================================
   // Debug / Dev Tools
   // ============================================================
@@ -336,19 +369,31 @@ export const TEST_IDS = {
 
   ROADMAP: {
     /** @see src/components/RoadmapView.tsx */
+    CONTENT: "roadmap-content",
+    /** @see src/components/RoadmapView.tsx */
     TIMELINE_CANVAS: "roadmap-timeline-canvas",
     /** @see src/components/RoadmapView.tsx */
     ISSUE_HEADER: "roadmap-issue-header",
     /** @see src/components/RoadmapView.tsx */
     ISSUE_COLUMN: "roadmap-issue-column",
     /** @see src/components/RoadmapView.tsx */
+    EMPTY_STATE: "roadmap-empty-state",
+    /** @see src/components/RoadmapView.tsx */
     DEPENDENCY_PANEL: "roadmap-dependency-panel",
+    /** @see src/components/RoadmapView.tsx */
+    DEPENDENCY_LINES: "roadmap-dependency-lines",
     /** @see src/components/RoadmapView.tsx */
     TODAY_MARKER_HEADER: "roadmap-today-marker-header",
     /** @see src/components/RoadmapView.tsx */
     TODAY_MARKER_BODY: "roadmap-today-marker-body",
     /** @see src/components/RoadmapView.tsx */
     RANGE_LABEL: "roadmap-range-label",
+    /** @see src/components/Roadmap/RoadmapHeaderControls.tsx */
+    GROUP_BY_SELECT: "roadmap-group-by-select",
+    /** @see src/components/Roadmap/RoadmapHeaderControls.tsx */
+    TIMELINE_SPAN_SELECT: "roadmap-timeline-span-select",
+    /** @see src/components/Roadmap/RoadmapHeaderControls.tsx */
+    DEPENDENCIES_TOGGLE: "roadmap-dependencies-toggle",
   },
 
   // ============================================================
@@ -360,6 +405,10 @@ export const TEST_IDS = {
     CARD: "analytics-card",
     /** @see src/routes/_app.$orgSlug.projects.$projectKey.analytics.tsx */
     PAGE: "analytics-page",
+    /** @see src/routes/_auth/_app/$orgSlug/analytics.tsx */
+    ORG_PAGE: "org-analytics-page",
+    /** @see src/routes/_auth/_app/$orgSlug/analytics.tsx */
+    ORG_PERIOD_SELECT: "org-analytics-period-select",
     /** @see src/components/AnalyticsDashboard.tsx - page header */
     PAGE_HEADER: "analytics-page-header",
     /** @see src/components/AnalyticsDashboard.tsx - page description */
@@ -369,11 +418,35 @@ export const TEST_IDS = {
     CHART_TYPE: "analytics-chart-type",
     CHART_PRIORITY: "analytics-chart-priority",
     CHART_VELOCITY: "analytics-chart-velocity",
+    CHART_ASSIGNEE: "analytics-chart-assignee",
+    RECENT_ACTIVITY: "analytics-recent-activity",
     /** Metric card labels */
     METRIC_TOTAL_ISSUES: "analytics-metric-total-issues",
     METRIC_UNASSIGNED: "analytics-metric-unassigned",
     METRIC_AVG_VELOCITY: "analytics-metric-avg-velocity",
     METRIC_COMPLETED_SPRINTS: "analytics-metric-completed-sprints",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_METRIC_COMPLETED: "org-analytics-metric-completed",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_METRIC_UNASSIGNED: "org-analytics-metric-unassigned",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_METRIC_PROJECTS: "org-analytics-metric-projects",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_CHART_TYPE: "org-analytics-chart-type",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_CHART_PRIORITY: "org-analytics-chart-priority",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_CHART_PROJECTS: "org-analytics-chart-projects",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_TREND_SECTION: "org-analytics-trend-section",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_PROJECT_BREAKDOWN: "org-analytics-project-breakdown",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_EMPTY_STATE: "org-analytics-empty-state",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_PROJECT_BREAKDOWN_EMPTY: "org-analytics-project-breakdown-empty",
+    /** @see src/components/Analytics/OrganizationAnalyticsDashboard.tsx */
+    ORG_TRUNCATION_NOTICE: "org-analytics-truncation-notice",
   },
 
   // ============================================================
@@ -537,6 +610,18 @@ export const TEST_IDS = {
     SEARCH_INPUT: "document-search-input",
     /** @see src/components/Documents/DocumentSidebar.tsx */
     TEMPLATE_MODAL: "document-template-modal",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    WORKSPACE_SUMMARY: "documents-workspace-summary",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    WORKSPACE_TEMPLATES_PANEL: "documents-workspace-templates-panel",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    WORKSPACE_RECENT_SECTION: "documents-workspace-recent-section",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    WORKSPACE_LIBRARY_SECTION: "documents-workspace-library-section",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    EMPTY_STATE: "documents-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
+    SEARCH_EMPTY_STATE: "documents-search-empty-state",
   },
 
   // ============================================================
@@ -544,17 +629,190 @@ export const TEST_IDS = {
   // ============================================================
 
   TIME_TRACKING: {
-    /** @see src/components/TimeTracking/ManualTimeEntryModal.tsx */
+    /** @see src/components/TimeTracking/TimeEntryModal.tsx */
     ENTRY_FORM: "time-entry-form",
-    /** @see src/routes/_app.$orgSlug.time-tracking.tsx */
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
     CONTENT: "time-tracking-content",
-    /** @see src/components/TimeTracker.tsx */
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    OVERVIEW: "time-tracking-overview",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    SUMMARY_LOGGED: "time-tracking-summary-logged",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    SUMMARY_ENTRIES: "time-tracking-summary-entries",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    SUMMARY_BILLABLE: "time-tracking-summary-billable",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    PROJECT_FILTER: "time-tracking-project-filter",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    DATE_RANGE_FILTER: "time-tracking-date-range-filter",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    TAB_ENTRIES: "time-tracking-tab-entries",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    TAB_BURN_RATE: "time-tracking-tab-burn-rate",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    TAB_RATES: "time-tracking-tab-rates",
+    /** @see src/components/TimeTracking/TimeEntriesList.tsx */
     ENTRIES_LIST: "time-tracking-entries-list",
+    /** @see src/components/TimeTracking/TimeEntriesList.tsx */
+    ENTRIES_EMPTY_STATE: "time-tracking-entries-empty-state",
+    /** @see src/components/TimeTracking/BurnRateDashboard.tsx */
+    BURN_RATE_PANEL: "time-tracking-burn-rate-panel",
+    /** @see src/components/TimeTracking/UserRatesManagement.tsx */
+    RATES_PANEL: "time-tracking-rates-panel",
   },
 
   NOTIFICATIONS: {
     /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
     CONTENT: "notifications-content",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    INBOX_EMPTY_STATE: "notifications-inbox-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    ARCHIVED_EMPTY_STATE: "notifications-archived-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    UNREAD_BADGE: "notifications-unread-badge",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    MARK_ALL_READ_BUTTON: "notifications-mark-all-read-button",
+    /** @see src/routes/_auth/_app/$orgSlug/notifications.tsx */
+    ARCHIVE_ALL_BUTTON: "notifications-archive-all-button",
+  },
+
+  INVOICES: {
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    CONTENT: "invoices-content",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    TABLE: "invoices-table",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER: "invoices-status-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    EMPTY_STATE: "invoices-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    FILTERED_EMPTY_STATE: "invoices-filtered-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    LOADING_STATE: "invoices-loading-state",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    CREATE_DIALOG: "invoices-create-dialog",
+  },
+
+  ASSISTANT: {
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONTENT: "assistant-content",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    LOADING_STATE: "assistant-loading-state",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    OVERVIEW_TAB: "assistant-overview-tab",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONVERSATIONS_TAB: "assistant-conversations-tab",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    OVERVIEW_PANEL: "assistant-overview-panel",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONVERSATIONS_PANEL: "assistant-conversations-panel",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    SNAPSHOT_CARD: "assistant-snapshot-card",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    OVERVIEW_EMPTY_STATE: "assistant-overview-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONVERSATIONS_EMPTY_STATE: "assistant-conversations-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONVERSATIONS_LIST: "assistant-conversations-list",
+  },
+
+  MY_ISSUES: {
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    CONTENT: "my-issues-content",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    PRIORITY_FILTER: "my-issues-priority-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    DUE_DATE_FILTER: "my-issues-due-date-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    GROUP_BY_CONTROL: "my-issues-group-by-control",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    FILTER_SUMMARY: "my-issues-filter-summary",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    EMPTY_STATE: "my-issues-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    FILTER_EMPTY_STATE: "my-issues-filter-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    COLUMN: "my-issues-column",
+  },
+
+  PROJECT_INBOX: {
+    /** @see src/components/InboxList.tsx */
+    CONTENT: "project-inbox-content",
+    /** @see src/components/InboxList.tsx */
+    SEARCH_INPUT: "project-inbox-search-input",
+    /** @see src/components/InboxList.tsx */
+    BULK_ACTIONS: "project-inbox-bulk-actions",
+    /** @see src/components/InboxList.tsx */
+    OPEN_EMPTY_STATE: "project-inbox-open-empty-state",
+    /** @see src/components/InboxList.tsx */
+    CLOSED_EMPTY_STATE: "project-inbox-closed-empty-state",
+    /** @see src/components/InboxList.tsx */
+    CLOSED_TAB: "project-inbox-closed-tab",
+    /** @see src/components/InboxList.tsx */
+    SNOOZE_MENU: "project-inbox-snooze-menu",
+    /** @see src/components/InboxList.tsx */
+    DECLINE_DIALOG: "project-inbox-decline-dialog",
+    /** @see src/components/InboxList.tsx */
+    CUSTOM_SNOOZE_DIALOG: "project-inbox-custom-snooze-dialog",
+    /** @see src/components/InboxList.tsx */
+    DUPLICATE_DIALOG: "project-inbox-duplicate-dialog",
+    /** @see src/components/InboxList.tsx */
+    ROW: "project-inbox-row",
+  },
+
+  // ============================================================
+  // Outreach
+  // ============================================================
+
+  OUTREACH: {
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ROOT: "outreach-root",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    LAUNCH_CHECKLIST: "outreach-launch-checklist",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_IMPORT_CONTACTS: "outreach-action-import-contacts",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_NEW_CONTACT: "outreach-action-new-contact",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_NEW_SEQUENCE: "outreach-action-new-sequence",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_ENROLL_CONTACTS: "outreach-action-enroll-contacts",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_OVERVIEW: "outreach-tab-overview",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_SEQUENCES: "outreach-tab-sequences",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_CONTACTS: "outreach-tab-contacts",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_MAILBOXES: "outreach-tab-mailboxes",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    TAB_ANALYTICS: "outreach-tab-analytics",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    OVERVIEW_SECTION: "outreach-overview-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    SEQUENCES_LIST: "outreach-sequences-list",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    SEQUENCE_DETAIL: "outreach-sequence-detail",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    CONTACTS_SECTION: "outreach-contacts-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    MAILBOXES_SECTION: "outreach-mailboxes-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ANALYTICS_SECTION: "outreach-analytics-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    CONTACT_DIALOG: "outreach-contact-dialog",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    IMPORT_DIALOG: "outreach-import-dialog",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    SEQUENCE_DIALOG: "outreach-sequence-dialog",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ENROLL_DIALOG: "outreach-enroll-dialog",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    MAILBOX_CARD: "outreach-mailbox-card",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    MAILBOX_DISCONNECT_BUTTON: "outreach-mailbox-disconnect-button",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    MAILBOX_DISCONNECT_CONFIRM: "outreach-mailbox-disconnect-confirm",
   },
 
   // ============================================================
@@ -578,6 +836,16 @@ export const TEST_IDS = {
     TRANSCRIPT_SEARCH: "meetings-transcript-search",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - action items section */
     ACTION_ITEMS_SECTION: "meetings-action-items-section",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - schedule recording button */
+    SCHEDULE_BUTTON: "meetings-schedule-button",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - schedule recording dialog */
+    SCHEDULE_DIALOG: "meetings-schedule-dialog",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - filtered empty state */
+    FILTER_EMPTY_STATE: "meetings-filter-empty-state",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - detail placeholder empty state */
+    DETAIL_EMPTY_STATE: "meetings-detail-empty-state",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - summary processing placeholder */
+    SUMMARY_PROCESSING_STATE: "meetings-summary-processing-state",
   },
 
   // ============================================================

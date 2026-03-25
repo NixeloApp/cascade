@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/documents`
 > **Status**: REVIEWED, with follow-up polish only
-> **Last Updated**: 2026-03-21
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -22,6 +22,8 @@ The documents route is no longer just a tree browser. It is now a real documents
 
 ## Screenshot Matrix
 
+### Canonical workspace
+
 | Viewport | Theme | Preview |
 |----------|-------|---------|
 | Desktop | Dark | ![](screenshots/desktop-dark.png) |
@@ -29,8 +31,32 @@ The documents route is no longer just a tree browser. It is now a real documents
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 
-There are no extra reviewed modal or branch-state screenshots in this spec folder yet; the
-canonical review is the route itself across the standard viewport matrix.
+### Templates route
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-templates.png) |
+| Desktop | Light | ![](screenshots/desktop-light-templates.png) |
+| Tablet | Light | ![](screenshots/tablet-light-templates.png) |
+| Mobile | Light | ![](screenshots/mobile-light-templates.png) |
+
+### Filtered search
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-search-filtered.png) |
+| Desktop | Light | ![](screenshots/desktop-light-search-filtered.png) |
+| Tablet | Light | ![](screenshots/tablet-light-search-filtered.png) |
+| Mobile | Light | ![](screenshots/mobile-light-search-filtered.png) |
+
+### Search empty state
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-search-empty.png) |
+| Desktop | Light | ![](screenshots/desktop-light-search-empty.png) |
+| Tablet | Light | ![](screenshots/tablet-light-search-empty.png) |
+| Mobile | Light | ![](screenshots/mobile-light-search-empty.png) |
 
 ---
 
@@ -110,13 +136,15 @@ canonical review is the route itself across the standard viewport matrix.
 ### Canonical route states covered by the current implementation
 
 - Filled workspace with overview, recent docs, and tree
+- Templates route gallery
 - Search-filtered recent-doc list
+- Search empty state
 - Empty library state
 - Blank-document creation success path
 - Blank-document creation failure path
 
-The screenshot spec currently only captures the canonical route layout, but the route tests cover
-the filtered, success, and failure behaviors directly.
+The screenshot spec now covers the workspace, templates route, filtered search, and no-results
+search state. Route tests still cover the create success/failure paths directly.
 
 ---
 
@@ -127,6 +155,7 @@ the filtered, success, and failure behaviors directly.
 | Route purpose | Clear. The page now reads as a documents workspace rather than a generic file tree. |
 | Actionability | Strong. Blank document creation and templates are obvious on first scan. |
 | Shared-shell discipline | Good. The route uses shared page/header/layout primitives instead of one-off chrome. |
+| Review depth | Improved. Search and templates are now in the reviewed screenshot matrix instead of living only in route tests. |
 | Responsive behavior | Tablet/mobile continue to preserve the primary/secondary distinction without inventing extra route-only UI. |
 
 ---
@@ -135,9 +164,9 @@ the filtered, success, and failure behaviors directly.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Empty state now captured. Filtered search and template-heavy states still missing (need new E2E screenshot specs). | screenshot coverage | LOW |
-| 2 | The summary band is useful, but in light mode the top workspace card can still feel a touch broader and flatter than the denser recent-doc list beneath it | route composition | LOW |
-| 3 | The library side rail is operationally correct, but the visual difference between "recent docs" and "library" could be stronger in first-glance screenshots | hierarchy | LOW |
+| 1 | The summary band is useful, but in light mode the top workspace card can still feel a touch broader and flatter than the denser recent-doc list beneath it | route composition | LOW |
+| 2 | The library side rail is operationally correct, but the visual difference between "recent docs" and "library" could be stronger in first-glance screenshots | hierarchy | LOW |
+| 3 | The true empty workspace is still validated by route behavior/tests more than by a checked-in reviewed screenshot, so empty-state polish can still hide between spec refreshes | review depth | LOW |
 
 ---
 
@@ -149,6 +178,7 @@ the filtered, success, and failure behaviors directly.
 | `src/components/Documents/DocumentTree.tsx` | Hierarchical library tree |
 | `src/routes/_auth/_app/$orgSlug/documents/$id.tsx` | Downstream document detail route |
 | `src/routes/_auth/_app/$orgSlug/documents/templates.tsx` | Templates route entry point |
+| `e2e/screenshot-lib/interactive-captures.ts` | Search-state screenshot capture |
 | `e2e/screenshot-pages.ts` | Canonical route screenshot capture |
 
 ---
@@ -157,9 +187,9 @@ the filtered, success, and failure behaviors directly.
 
 - Keep this route as a workspace, not a tree page with extra cards glued on.
 - If more screenshot states are added, the next worthwhile captures are:
-  - filtered recent-doc search
   - true empty state
-  - template jump-off emphasis
+  - template empty state or template create/edit flows
+  - document creation success/error overlays if that workflow becomes visually richer
 - Do not collapse recent-doc search and library tree into the same surface; they solve different
   navigation problems.
 
@@ -167,6 +197,6 @@ the filtered, success, and failure behaviors directly.
 
 ## Summary
 
-The documents page is current and materially better than the old tree-only route. The remaining
-gap is mostly review depth: the workspace anatomy is right, but the screenshot spec should grow to
-cover more than the single canonical filled state.
+The documents page is current and materially better than the old tree-only route. The screenshot
+spec now covers the meaningful filled route variants instead of only the canonical workspace. The
+remaining work is minor polish plus a future reviewed empty-state pass if the route changes again.

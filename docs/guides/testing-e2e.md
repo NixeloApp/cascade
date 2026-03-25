@@ -102,7 +102,7 @@ Critical-path E2E coverage (`auth`, `issues`, `board`, `documents`, `search`) mu
 Policy:
 - Do not commit `test.skip(...)` or `test.describe.skip(...)` for critical-path specs.
 - If a test must be gated, use an explicit runtime precondition with a clear reason (for example missing OAuth secrets in local runs), and scope it to non-critical integrations.
-- Treat persistent skips as debt: track them in `todos/e2e-reliability-overhaul.md` with owner + next action.
+- Treat persistent skips as debt: track them in `todos/e2e-overhaul.md` with owner + next action.
 
 Audit commands:
 
@@ -127,7 +127,7 @@ Rules:
 
 ## E2E TODO Update Protocol
 
-After each full-suite reliability run (`pnpm exec playwright test --reporter=line`), update `todos/e2e-reliability-overhaul.md` in the same change set:
+After each full-suite reliability run (`pnpm exec playwright test --reporter=line`), update `todos/e2e-overhaul.md` in the same change set:
 
 - Set `Last Updated` to the run date.
 - Record exact outcome (`passed/failed`, duration, skip count if any).

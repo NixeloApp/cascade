@@ -63,7 +63,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
   const workspacesLabel = count === 1 ? "project" : "projects";
 
   return (
-    <DashboardPanel surface="inset" data-testid={TEST_IDS.DASHBOARD.WORKSPACES_LIST}>
+    <DashboardPanel data-testid={TEST_IDS.DASHBOARD.WORKSPACES_LIST}>
       <DashboardPanelHeader title="Workspaces" description={`${count} active ${workspacesLabel}`} />
       <DashboardPanelBody>
         {!projects ? (

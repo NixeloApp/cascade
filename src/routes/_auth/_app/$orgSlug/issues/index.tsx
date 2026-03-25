@@ -32,10 +32,17 @@ import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Plus, SearchX, X } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/")({
   component: AllIssuesPage,
 });
+
+declare global {
+  interface Window {
+    __NIXELO_E2E_ISSUES_LOADING__?: boolean;
+  }
+}
 
 const PRIORITY_OPTIONS = [
   { value: "all", label: "All Priorities" },
@@ -46,6 +53,10 @@ const TYPE_OPTIONS = [
   { value: "all", label: "All Types" },
   ...ISSUE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) })),
 ];
+
+function isE2EIssuesLoadingOverrideEnabled(): boolean {
+  return typeof window !== "undefined" && window.__NIXELO_E2E_ISSUES_LOADING__ === true;
+}
 
 // =============================================================================
 // Filter Hook
@@ -84,6 +95,58 @@ function useIssueFilters() {
   };
 }
 
+function useIssueResults(
+  organizationId: Id<"organizations"> | null,
+  filters: ReturnType<typeof useIssueFilters>,
+) {
+  const statusOptions = useAuthenticatedQuery(
+    api.projects.getOrganizationWorkflowStates,
+    organizationId ? { organizationId } : "skip",
+  );
+
+  const paginatedQueryArgs =
+    organizationId && !filters.isSearching
+      ? {
+          organizationId,
+          status: filters.statusFilter,
+          priority: filters.priorityFilter,
+          type: filters.typeFilter,
+        }
+      : "skip";
+
+  const searchQueryArgs =
+    organizationId && filters.isSearching
+      ? {
+          organizationId,
+          query: filters.deferredSearch,
+          status: filters.statusFilter,
+          priority: filters.priorityFilter,
+          type: filters.typeFilter,
+        }
+      : "skip";
+
+  const {
+    results: paginatedIssues,
+    status,
+    loadMore,
+  } = usePaginatedQuery(api.issues.listOrganizationIssues, paginatedQueryArgs, {
+    initialNumItems: 20,
+  });
+
+  const searchResults = useAuthenticatedQuery(api.issues.searchOrganizationIssues, searchQueryArgs);
+  const isLoading =
+    isE2EIssuesLoadingOverrideEnabled() ||
+    (filters.isSearching ? searchResults === undefined : status === "LoadingFirstPage");
+
+  return {
+    filteredIssues: filters.isSearching ? (searchResults ?? []) : paginatedIssues,
+    isLoading,
+    loadMore,
+    status,
+    statusOptions: statusOptions ?? [],
+  };
+}
+
 // =============================================================================
 // Filter Bar
 // =============================================================================
@@ -100,6 +163,7 @@ function IssueFilterBar({
       <PageControlsRow>
         <FlexItem flex="1">
           <Input
+            data-testid={TEST_IDS.ISSUE.SEARCH_INPUT}
             placeholder="Search issues..."
             value={filters.searchQuery}
             onChange={(e) => filters.setSearchQuery(e.target.value)}
@@ -112,7 +176,11 @@ function IssueFilterBar({
             value={filters.statusFilter || "all"}
             onValueChange={(v) => filters.setStatusFilter(v === "all" ? undefined : v)}
           >
-            <SelectTrigger width="sm">
+            <SelectTrigger
+              width="sm"
+              aria-label="Issue status filter"
+              data-testid={TEST_IDS.ISSUE.STATUS_FILTER}
+            >
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -129,7 +197,11 @@ function IssueFilterBar({
             value={filters.priorityFilter || "all"}
             onValueChange={(v) => filters.setPriorityFilter(v === "all" ? undefined : v)}
           >
-            <SelectTrigger width="sm">
+            <SelectTrigger
+              width="sm"
+              aria-label="Issue priority filter"
+              data-testid={TEST_IDS.ISSUE.PRIORITY_FILTER}
+            >
               <SelectValue placeholder="All Priorities" />
             </SelectTrigger>
             <SelectContent>
@@ -145,7 +217,11 @@ function IssueFilterBar({
             value={filters.typeFilter || "all"}
             onValueChange={(v) => filters.setTypeFilter(v === "all" ? undefined : v)}
           >
-            <SelectTrigger width="sm">
+            <SelectTrigger
+              width="sm"
+              aria-label="Issue type filter"
+              data-testid={TEST_IDS.ISSUE.TYPE_FILTER}
+            >
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -183,46 +259,10 @@ export function AllIssuesPage() {
   const filters = useIssueFilters();
 
   const { organizationId } = useOrganization();
-
-  const statusOptions = useAuthenticatedQuery(
-    api.projects.getOrganizationWorkflowStates,
-    organizationId ? { organizationId } : "skip",
+  const { filteredIssues, isLoading, loadMore, status, statusOptions } = useIssueResults(
+    organizationId,
+    filters,
   );
-
-  const {
-    results: paginatedIssues,
-    status,
-    loadMore,
-  } = usePaginatedQuery(
-    api.issues.listOrganizationIssues,
-    organizationId && !filters.isSearching
-      ? {
-          organizationId,
-          status: filters.statusFilter,
-          priority: filters.priorityFilter,
-          type: filters.typeFilter,
-        }
-      : "skip",
-    { initialNumItems: 20 },
-  );
-
-  const searchResults = useAuthenticatedQuery(
-    api.issues.searchOrganizationIssues,
-    organizationId && filters.isSearching
-      ? {
-          organizationId,
-          query: filters.deferredSearch,
-          status: filters.statusFilter,
-          priority: filters.priorityFilter,
-          type: filters.typeFilter,
-        }
-      : "skip",
-  );
-
-  const isLoading = filters.isSearching
-    ? searchResults === undefined
-    : status === "LoadingFirstPage";
-  const filteredIssues = filters.isSearching ? (searchResults ?? []) : paginatedIssues;
 
   return (
     <PageLayout>
@@ -244,10 +284,14 @@ export function AllIssuesPage() {
           }
         />
 
-        <IssueFilterBar filters={filters} statusOptions={statusOptions ?? []} />
+        <IssueFilterBar filters={filters} statusOptions={statusOptions} />
 
         {filters.hasActiveFilters && (
-          <Typography variant="caption" color="tertiary">
+          <Typography
+            variant="caption"
+            color="tertiary"
+            data-testid={TEST_IDS.ISSUE.FILTER_SUMMARY}
+          >
             {filteredIssues.length} issue{filteredIssues.length !== 1 ? "s" : ""} matching filters
           </Typography>
         )}
@@ -261,6 +305,9 @@ export function AllIssuesPage() {
             description: filters.hasActiveFilters
               ? "Try adjusting your filters or clearing them."
               : "Create your first issue to get started.",
+            "data-testid": filters.hasActiveFilters
+              ? TEST_IDS.ISSUE.SEARCH_EMPTY_STATE
+              : TEST_IDS.ISSUE.EMPTY_STATE,
           }}
         >
           <Grid cols={1} colsMd={2} colsLg={3} colsXl={4} gap="lg">

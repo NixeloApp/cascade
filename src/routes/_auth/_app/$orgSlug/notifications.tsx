@@ -41,12 +41,20 @@ import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Archive, Bell, CheckCheck, Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
+
 export const Route = createFileRoute("/_auth/_app/$orgSlug/notifications")({
   component: NotificationsPage,
 });
 
+declare global {
+  interface Window {
+    __NIXELO_E2E_NOTIFICATIONS_LOADING__?: boolean;
+  }
+}
+
 /** Notification filter categories */
 type NotificationFilter = "all" | "mentions" | "assigned" | "comments" | "updates";
+type NotificationsE2EState = "archived-tab";
 
 /** Map filter categories to notification types */
 const FILTER_TYPE_MAP: Record<NotificationFilter, string[] | null> = {
@@ -66,6 +74,104 @@ const DATE_GROUP_LABELS: Record<DateGroup, string> = {
   this_week: "This Week",
   older: "Older",
 };
+const NOTIFICATIONS_E2E_STATE_STORAGE_KEY = "nixelo:e2e:notifications-state";
+
+interface NotificationEmptyStateConfig {
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  description: string;
+  icon: typeof Archive | typeof Inbox;
+  testId: string;
+  title: string;
+}
+
+function isE2ENotificationsLoadingOverrideEnabled(): boolean {
+  return typeof window !== "undefined" && window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ === true;
+}
+
+function consumeNotificationsE2ERequestedTab(): "inbox" | "archived" {
+  if (typeof window === "undefined") {
+    return "inbox";
+  }
+
+  try {
+    const requestedState = window.sessionStorage.getItem(NOTIFICATIONS_E2E_STATE_STORAGE_KEY);
+    window.sessionStorage.removeItem(NOTIFICATIONS_E2E_STATE_STORAGE_KEY);
+    if ((requestedState as NotificationsE2EState | null) === "archived-tab") {
+      return "archived";
+    }
+  } catch {
+    return "inbox";
+  }
+
+  return "inbox";
+}
+
+function getUnreadNotificationsDescription(unreadCount: number | null | undefined): string {
+  if (unreadCount != null && unreadCount > 0) {
+    return `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`;
+  }
+
+  return "You're all caught up";
+}
+
+function getNotificationEmptyStateConfig(args: {
+  activeTab: "inbox" | "archived";
+  filter: NotificationFilter;
+  hasArchivedNotifications: boolean;
+  hasInboxNotifications: boolean;
+  onClearFilter: () => void;
+  onSwitchToArchived: () => void;
+  onSwitchToInbox: () => void;
+}): NotificationEmptyStateConfig {
+  if (args.activeTab === "archived") {
+    return {
+      action: args.hasInboxNotifications
+        ? {
+            label: "View inbox",
+            onClick: args.onSwitchToInbox,
+          }
+        : undefined,
+      description: args.hasInboxNotifications
+        ? "Your active notifications are still waiting in the inbox."
+        : "Archived notifications will appear here once you clear something out of the inbox.",
+      icon: Archive,
+      testId: TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE,
+      title: "No archived notifications",
+    };
+  }
+
+  if (args.filter !== "all") {
+    return {
+      action: {
+        label: "Clear filter",
+        onClick: args.onClearFilter,
+      },
+      description:
+        "Try another category or clear the current filter to see the rest of your inbox.",
+      icon: Inbox,
+      testId: TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE,
+      title: "No matching notifications",
+    };
+  }
+
+  return {
+    action: args.hasArchivedNotifications
+      ? {
+          label: "View archived",
+          onClick: args.onSwitchToArchived,
+        }
+      : undefined,
+    description: args.hasArchivedNotifications
+      ? "Inbox notifications are cleared for now. Archived updates are still available."
+      : "New notifications will appear here as activity needs your attention.",
+    icon: Inbox,
+    testId: TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE,
+    title: "You're all caught up",
+  };
+}
 
 /** Determine which date group a timestamp belongs to */
 function getDateGroup(timestamp: number): DateGroup {
@@ -94,9 +200,13 @@ function groupNotificationsByDate(
 
 /** Full-page notifications hub with filters, tabs, and per-notification actions. */
 export function NotificationsPage() {
-  const [bulkActionLoading, setBulkActionLoading] = useState<"markAll" | "archiveAll" | null>(null);
+  const [bulkActionLoading, setBulkActionLoading] = useState<"markAll" | "archiveAll" | null>(() =>
+    isE2ENotificationsLoadingOverrideEnabled() ? "markAll" : null,
+  );
   const [filter, setFilter] = useState<NotificationFilter>("all");
-  const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
+  const [activeTab, setActiveTab] = useState<"inbox" | "archived">(
+    consumeNotificationsE2ERequestedTab,
+  );
   const orgContext = useOrganizationOptional();
   const { canAct } = useAuthReady();
 
@@ -212,13 +322,23 @@ export function NotificationsPage() {
 
   const renderNotificationList = (notifs: NotificationWithActor[], isArchived = false) => {
     if (!notifs || notifs.length === 0) {
+      const emptyState = getNotificationEmptyStateConfig({
+        activeTab: isArchived ? "archived" : "inbox",
+        filter,
+        hasArchivedNotifications: archivedNotifications.length > 0,
+        hasInboxNotifications: notifications.length > 0,
+        onClearFilter: () => setFilter("all"),
+        onSwitchToArchived: () => setActiveTab("archived"),
+        onSwitchToInbox: () => setActiveTab("inbox"),
+      });
+
       return (
         <EmptyState
-          icon={isArchived ? Archive : Inbox}
-          title={isArchived ? "No archived notifications" : "No notifications"}
-          description={
-            isArchived ? "Archived notifications will appear here" : "You're all caught up!"
-          }
+          data-testid={emptyState.testId}
+          icon={emptyState.icon}
+          title={emptyState.title}
+          description={emptyState.description}
+          action={emptyState.action}
         />
       );
     }
@@ -280,15 +400,12 @@ export function NotificationsPage() {
         <PageHeader
           title="Notifications"
           spacing="stack"
-          description={
-            unreadCount != null && unreadCount > 0
-              ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
-              : "You're all caught up"
-          }
+          description={getUnreadNotificationsDescription(unreadCount)}
           actions={
             <Flex gap="sm">
               {activeTab === "inbox" && unreadCount != null && unreadCount > 0 && (
                 <Button
+                  data-testid={TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON}
                   variant="ghost"
                   size="sm"
                   onClick={handleMarkAllAsRead}
@@ -301,6 +418,7 @@ export function NotificationsPage() {
               )}
               {activeTab === "inbox" && notifications.length > 0 && (
                 <Button
+                  data-testid={TEST_IDS.NOTIFICATIONS.ARCHIVE_ALL_BUTTON}
                   variant="ghost"
                   size="sm"
                   onClick={handleArchiveAll}
@@ -326,7 +444,12 @@ export function NotificationsPage() {
                         <Icon icon={Bell} size="sm" />
                         Inbox
                         {unreadCount != null && unreadCount > 0 && (
-                          <Badge variant="brand" size="sm" shape="pill">
+                          <Badge
+                            data-testid={TEST_IDS.NOTIFICATIONS.UNREAD_BADGE}
+                            variant="brand"
+                            size="sm"
+                            shape="pill"
+                          >
                             {unreadCount > 99 ? "99+" : unreadCount}
                           </Badge>
                         )}

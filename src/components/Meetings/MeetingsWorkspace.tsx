@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { PageContent } from "@/components/layout";
+import { Avatar, type AvatarProps } from "@/components/ui/Avatar";
 import { Badge, type BadgeProps } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -41,6 +42,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
+import { useSeededDocumentCreation } from "@/hooks/useSeededDocumentCreation";
 import {
   formatDateTime,
   formatDurationHuman,
@@ -50,6 +52,13 @@ import {
 import { Calendar, CheckCircle, ChevronRight, FileText, Mic, XCircle } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
+import {
+  buildTranscriptTurns,
+  listTranscriptSpeakers,
+  type ResolvedMeetingPerson,
+  resolveActionItemAssignee,
+} from "./meetingAttribution";
+import { buildMeetingDocumentTitle, createMeetingDocumentValue } from "./meetingDocument";
 
 type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[number];
 type MeetingSearchItem = FunctionReturnType<typeof api.meetingBot.searchRecordings>[number];
@@ -237,6 +246,84 @@ function formatTranscriptTimestamp(seconds: number) {
   return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
+function getMeetingPersonAvatarVariant(person: ResolvedMeetingPerson): AvatarProps["variant"] {
+  if (person.isHost) return "brand";
+  if (person.isExternal) return "accent";
+  if (person.source === "unknown") return "neutral";
+  return "soft";
+}
+
+function MeetingPersonBadges({
+  person,
+  includeInternal = false,
+}: {
+  person: ResolvedMeetingPerson;
+  includeInternal?: boolean;
+}) {
+  const showInternal = includeInternal && person.source === "participant" && !person.isExternal;
+
+  if (!(person.isHost || person.isExternal || showInternal || person.source === "label")) {
+    return null;
+  }
+
+  return (
+    <Flex gap="xs" wrap>
+      {person.isHost && (
+        <Badge size="sm" variant="brand">
+          Host
+        </Badge>
+      )}
+      {person.isExternal && (
+        <Badge size="sm" variant="accent">
+          External
+        </Badge>
+      )}
+      {showInternal && (
+        <Badge size="sm" variant="secondary">
+          Internal
+        </Badge>
+      )}
+      {person.source === "label" && (
+        <Badge size="sm" variant="neutral">
+          Speaker label
+        </Badge>
+      )}
+    </Flex>
+  );
+}
+
+function MeetingPersonSummary({
+  person,
+  caption,
+  includeInternal = false,
+}: {
+  person: ResolvedMeetingPerson;
+  caption?: string;
+  includeInternal?: boolean;
+}) {
+  return (
+    <Flex align="center" gap="sm" wrap>
+      <Avatar
+        name={person.displayName}
+        email={person.email}
+        size="sm"
+        variant={getMeetingPersonAvatarVariant(person)}
+      />
+      <Stack gap="xs">
+        <Flex align="center" gap="xs" wrap>
+          <Typography variant="small">{person.displayName}</Typography>
+          <MeetingPersonBadges person={person} includeInternal={includeInternal} />
+        </Flex>
+        {(person.email || caption) && (
+          <Typography variant="caption" color="secondary">
+            {person.email ?? caption}
+          </Typography>
+        )}
+      </Stack>
+    </Flex>
+  );
+}
+
 function filterMemoryItemsByProject<T extends { projectId?: Id<"projects"> }>(
   items: T[],
   projectId: ProjectFilter,
@@ -331,16 +418,6 @@ function hasTranscriptSegments(
   segments: MeetingTranscript["segments"],
 ): segments is [MeetingTranscriptSegment, ...MeetingTranscriptSegment[]] {
   return segments.some((segment) => segment.text.trim().length > 0);
-}
-
-function matchesTranscriptSegment(segment: MeetingTranscriptSegment, query: string) {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) return true;
-
-  return (
-    segment.text.toLowerCase().includes(normalizedQuery) ||
-    segment.speaker?.toLowerCase().includes(normalizedQuery) === true
-  );
 }
 
 function getTranscriptSegmentKey(segment: MeetingTranscriptSegment, index: number) {
@@ -719,13 +796,24 @@ function MeetingProjectContext({
   );
 }
 
-function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }) {
+function TranscriptSegmentList({
+  transcript,
+  participants,
+}: {
+  transcript: MeetingTranscript;
+  participants: MeetingParticipants;
+}) {
   const [query, setQuery] = useState("");
   const segmentRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const normalizedQuery = query.trim();
-  const filteredSegments = transcript.segments.filter(
-    (segment) =>
-      segment.text.trim().length > 0 && matchesTranscriptSegment(segment, normalizedQuery),
+  const transcriptTurns = buildTranscriptTurns(transcript.segments, participants, normalizedQuery);
+  const filteredSegments = transcriptTurns.flatMap((turn) => turn.segments);
+  const transcriptSpeakers = listTranscriptSpeakers(transcript.segments, participants);
+  const segmentKeyBySegment = new Map(
+    filteredSegments.map((segment, index) => [segment, getTranscriptSegmentKey(segment, index)]),
+  );
+  const speakerBySegment = new Map(
+    transcriptTurns.flatMap((turn) => turn.segments.map((segment) => [segment, turn.speaker])),
   );
 
   if (!hasTranscriptSegments(transcript.segments)) {
@@ -744,7 +832,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
         <Stack gap="sm">
           <Flex justify="between" align="center" gap="sm" wrap>
             <Typography variant="caption" color="secondary">
-              Segmented transcript with timestamps.
+              Speaker-attributed transcript with timestamps.
             </Typography>
             <Flex gap="xs" wrap>
               <Badge size="sm">{transcript.segments.length} segments</Badge>
@@ -755,11 +843,40 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
             </Flex>
           </Flex>
 
+          {transcriptSpeakers.length > 0 && (
+            <Stack gap="xs">
+              <Typography variant="caption" color="secondary">
+                Speakers in this meeting
+              </Typography>
+              <Flex gap="xs" wrap>
+                {transcriptSpeakers.map((speaker) => (
+                  <CardSection key={speaker.key} size="compact">
+                    <Flex align="center" gap="sm" wrap>
+                      <Avatar
+                        name={speaker.displayName}
+                        email={speaker.email}
+                        size="xs"
+                        variant={getMeetingPersonAvatarVariant(speaker)}
+                      />
+                      <Stack gap="xs">
+                        <Typography variant="caption">{speaker.displayName}</Typography>
+                        <Typography variant="caption" color="secondary">
+                          {speaker.segmentCount} segment{speaker.segmentCount === 1 ? "" : "s"}
+                        </Typography>
+                      </Stack>
+                      <MeetingPersonBadges person={speaker} />
+                    </Flex>
+                  </CardSection>
+                ))}
+              </Flex>
+            </Stack>
+          )}
+
           <Input
             variant="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Filter transcript segments"
+            placeholder="Filter transcript by phrase, speaker, or email"
             aria-label="Search transcript"
             data-testid={TEST_IDS.MEETINGS.TRANSCRIPT_SEARCH}
           />
@@ -770,9 +887,11 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
             </Typography>
             <Flex gap="xs" wrap>
               {filteredSegments.map((segment, index) => {
-                const segmentKey = getTranscriptSegmentKey(segment, index);
+                const segmentKey =
+                  segmentKeyBySegment.get(segment) ?? getTranscriptSegmentKey(segment, index);
+                const resolvedSpeaker = speakerBySegment.get(segment);
                 const segmentLabel = `${formatTranscriptTimestamp(segment.startTime)}${
-                  segment.speaker ? ` ${segment.speaker}` : ""
+                  resolvedSpeaker ? ` ${resolvedSpeaker.displayName}` : ""
                 }`;
 
                 return (
@@ -805,40 +924,56 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
               icon={FileText}
               size="compact"
               title="No transcript matches"
-              description="Try a different phrase or speaker name."
+              description="Try a different phrase, speaker name, or attendee email."
             />
           ) : (
             <List as="ol" gap="sm">
-              {filteredSegments.map((segment, index) => {
-                const segmentKey = getTranscriptSegmentKey(segment, index);
-
-                return (
-                  <li
-                    key={segmentKey}
-                    ref={(element) => {
-                      segmentRefs.current[segmentKey] = element;
-                    }}
-                  >
-                    <CardSection size="compact">
-                      <Stack gap="xs">
-                        <Flex justify="between" align="start" gap="sm" wrap>
-                          <Flex gap="xs" wrap>
-                            <Badge size="sm">{formatTranscriptTimestamp(segment.startTime)}</Badge>
-                            <Badge size="sm">
-                              {formatTranscriptTimestamp(segment.startTime)} -{" "}
-                              {formatTranscriptTimestamp(segment.endTime)}
-                            </Badge>
-                            {segment.speaker && <Badge size="sm">{segment.speaker}</Badge>}
-                          </Flex>
+              {transcriptTurns.map((turn) => (
+                <li key={turn.key}>
+                  <CardSection size="compact">
+                    <Stack gap="sm">
+                      <Flex justify="between" align="start" gap="sm" wrap>
+                        <MeetingPersonSummary person={turn.speaker} />
+                        <Flex gap="xs" wrap>
+                          <Badge size="sm">
+                            {formatTranscriptTimestamp(turn.startTime)} -{" "}
+                            {formatTranscriptTimestamp(turn.endTime)}
+                          </Badge>
+                          {turn.segments.length > 1 && (
+                            <Badge size="sm">{turn.segments.length} segments</Badge>
+                          )}
                         </Flex>
-                        <Typography variant="caption" color="secondary">
-                          {segment.text}
-                        </Typography>
-                      </Stack>
-                    </CardSection>
-                  </li>
-                );
-              })}
+                      </Flex>
+
+                      <List gap="xs">
+                        {turn.segments.map((segment, index) => {
+                          const segmentKey =
+                            segmentKeyBySegment.get(segment) ??
+                            getTranscriptSegmentKey(segment, index);
+
+                          return (
+                            <li
+                              key={segmentKey}
+                              ref={(element) => {
+                                segmentRefs.current[segmentKey] = element;
+                              }}
+                            >
+                              <Stack gap="xs">
+                                <Typography variant="caption" color="secondary">
+                                  {formatTranscriptTimestamp(segment.startTime)}
+                                </Typography>
+                                <Typography variant="caption" color="secondary">
+                                  {segment.text}
+                                </Typography>
+                              </Stack>
+                            </li>
+                          );
+                        })}
+                      </List>
+                    </Stack>
+                  </CardSection>
+                </li>
+              ))}
             </List>
           )}
         </ScrollArea>
@@ -912,6 +1047,7 @@ function ActionItemCard({
   actionItem,
   index,
   summaryId,
+  participants,
   availableProjects,
   selectedProjectId,
   canCreateIssue,
@@ -922,6 +1058,7 @@ function ActionItemCard({
   actionItem: MeetingSummary["actionItems"][number];
   index: number;
   summaryId: Id<"meetingSummaries">;
+  participants: MeetingParticipants;
   availableProjects: ProjectOption[] | undefined;
   selectedProjectId: Id<"projects"> | null | undefined;
   canCreateIssue: boolean;
@@ -929,13 +1066,21 @@ function ActionItemCard({
   onProjectChange: (projectId: Id<"projects">) => void;
   onCreateIssue: (actionItemIndex: number) => void;
 }) {
+  const resolvedAssignee = resolveActionItemAssignee(actionItem, participants);
+
   return (
     <Card variant="soft" padding="sm">
       <Stack gap="xs">
         <Flex justify="between" align="start" gap="sm">
           <Typography variant="small">{actionItem.description}</Typography>
-          {actionItem.assignee && <Badge size="sm">{actionItem.assignee}</Badge>}
         </Flex>
+        {resolvedAssignee && (
+          <MeetingPersonSummary
+            person={resolvedAssignee}
+            includeInternal
+            caption="Assigned follow-up owner"
+          />
+        )}
         <Flex gap="xs" wrap>
           {actionItem.dueDate && <Badge size="sm">Due: {actionItem.dueDate}</Badge>}
           {actionItem.priority && <Badge size="sm">Priority: {actionItem.priority}</Badge>}
@@ -1001,10 +1146,12 @@ function ActionItemsSection({
   summary,
   defaultProjectId,
   projects,
+  participants,
 }: {
   summary: MeetingSummary;
   defaultProjectId: Id<"projects"> | undefined;
   projects: ProjectOption[] | undefined;
+  participants: MeetingParticipants;
 }) {
   const { mutate: createIssueFromActionItem, canAct } = useAuthenticatedMutation(
     api.meetingBot.createIssueFromActionItem,
@@ -1053,6 +1200,7 @@ function ActionItemsSection({
               actionItem={item}
               index={index}
               summaryId={summary._id}
+              participants={participants}
               availableProjects={projects}
               selectedProjectId={selectedProjectIds[index]}
               canCreateIssue={canAct}
@@ -1155,10 +1303,11 @@ function SummarySections({
           size="compact"
           title="Summary is still being generated"
           description="The transcript is available below while the summary is processing."
+          data-testid={TEST_IDS.MEETINGS.SUMMARY_PROCESSING_STATE}
         />
         {transcript && (
           <CollapsibleDetail title="Transcript" defaultOpen>
-            <TranscriptSegmentList transcript={transcript} />
+            <TranscriptSegmentList transcript={transcript} participants={recording.participants} />
           </CollapsibleDetail>
         )}
       </Stack>
@@ -1186,6 +1335,7 @@ function SummarySections({
           summary={summary}
           defaultProjectId={recording.projectId}
           projects={projects}
+          participants={recording.participants}
         />
       </CollapsibleDetail>
 
@@ -1245,7 +1395,7 @@ function SummarySections({
 
       {transcript && (
         <CollapsibleDetail title="Transcript" defaultOpen>
-          <TranscriptSegmentList transcript={transcript} />
+          <TranscriptSegmentList transcript={transcript} participants={recording.participants} />
         </CollapsibleDetail>
       )}
     </Stack>
@@ -1259,6 +1409,25 @@ function RecordingDetailPanel({
   recording: MeetingDetail | undefined;
   projects: ProjectOption[] | undefined;
 }) {
+  const { createSeededDocumentAndOpen, isCreatingDocument } = useSeededDocumentCreation();
+
+  const handleCreateMeetingDocument = async (meeting: NonNullable<MeetingDetail>) => {
+    try {
+      const created = await createSeededDocumentAndOpen({
+        title: buildMeetingDocumentTitle(meeting),
+        projectId: meeting.projectId,
+        isPublic: meeting.projectId ? meeting.isPublic : false,
+        value: createMeetingDocumentValue(meeting),
+      });
+
+      if (created) {
+        showSuccess("Meeting document created");
+      }
+    } catch (error) {
+      showError(error, "Failed to create meeting document");
+    }
+  };
+
   if (recording == null) {
     return (
       <Card variant="soft" padding="xl">
@@ -1282,7 +1451,17 @@ function RecordingDetailPanel({
                 </Typography>
               </Stack>
             </FlexItem>
-            <StatusBadge status={recording.status} />
+            <Flex gap="sm" align="center" wrap>
+              <Button
+                variant="secondary"
+                size="sm"
+                isLoading={isCreatingDocument}
+                onClick={() => void handleCreateMeetingDocument(recording)}
+              >
+                Create doc
+              </Button>
+              <StatusBadge status={recording.status} />
+            </Flex>
           </Flex>
 
           <Metadata>
@@ -1399,6 +1578,7 @@ function ScheduleRecordingDialog({
       onOpenChange={handleOpenChange}
       title="Schedule Recording"
       description="Create an ad-hoc meeting recording from a direct meeting URL."
+      data-testid={TEST_IDS.MEETINGS.SCHEDULE_DIALOG}
       footer={
         <>
           <Button
@@ -1601,7 +1781,12 @@ export function MeetingsWorkspace() {
                 <Typography variant="caption" color="secondary">
                   Schedule from calendar or add an ad-hoc meeting URL here.
                 </Typography>
-                <Button variant="secondary" size="sm" onClick={() => setIsScheduleDialogOpen(true)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsScheduleDialogOpen(true)}
+                  data-testid={TEST_IDS.MEETINGS.SCHEDULE_BUTTON}
+                >
                   Schedule Recording
                 </Button>
               </Flex>
@@ -1701,6 +1886,7 @@ export function MeetingsWorkspace() {
                   size="compact"
                   title="No meetings match these filters"
                   description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
+                  data-testid={TEST_IDS.MEETINGS.FILTER_EMPTY_STATE}
                 />
               ) : (
                 <List gap="sm">
@@ -1732,6 +1918,7 @@ export function MeetingsWorkspace() {
                 size="compact"
                 title="Select a meeting"
                 description="Choose a recording from the list to inspect its details."
+                data-testid={TEST_IDS.MEETINGS.DETAIL_EMPTY_STATE}
               />
             )}
           </Section>

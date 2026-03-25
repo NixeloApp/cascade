@@ -145,6 +145,7 @@ export {
   Rows3,
   Search,
   SearchX,
+  Send,
   Server,
   Settings,
   Settings2,

@@ -19,8 +19,8 @@ import { internalAction, internalMutation, internalQuery } from "../_generated/s
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { logger } from "../lib/logger";
 import { MINUTE } from "../lib/timeUtils";
-import { isSuppressed } from "./contacts";
-import { advanceEnrollment } from "./enrollments";
+import { isSuppressed, suppress } from "./contacts";
+import { advanceEnrollment, stopEnrollment } from "./enrollments";
 import {
   buildComplianceFooter,
   extractTrackableUrls,
@@ -28,6 +28,11 @@ import {
   renderTemplate,
   rewriteUrlsWithTrackingIds,
 } from "./helpers";
+import {
+  buildMailboxSendReservationPatch,
+  buildMailboxSuccessfulSendPatch,
+  getMailboxRateLimitSnapshot,
+} from "./mailboxRateLimits";
 
 // =============================================================================
 // Constants
@@ -166,16 +171,16 @@ export const checkPreSend = internalMutation({
     const mailbox = await ctx.db.get(sequence.mailboxId);
     if (!mailbox?.isActive) return fail;
 
-    // Check daily send limit
-    const today = new Date().toISOString().slice(0, 10);
-    const resetDate = new Date(mailbox.todayResetAt).toISOString().slice(0, 10);
-    const todaySendCount = today === resetDate ? mailbox.todaySendCount : 0;
+    const rateLimits = getMailboxRateLimitSnapshot(mailbox);
 
-    if (todaySendCount >= mailbox.dailySendLimit) return fail;
+    if (rateLimits.todaySendCount >= mailbox.dailySendLimit) return fail;
+    if (rateLimits.minuteSendCount >= rateLimits.minuteSendLimit) return fail;
 
     // Validate step exists
     const step = sequence.steps[enrollment.currentStep];
     if (!step) return fail;
+
+    await ctx.db.patch(sequence.mailboxId, buildMailboxSendReservationPatch(mailbox));
 
     // Render template
     const renderedSubject = renderTemplate(step.subject, contact);
@@ -296,13 +301,7 @@ async function recordSuccessfulSend(ctx: MutationCtx, args: SendResultArgs) {
 
   const mailbox = await ctx.db.get(args.mailboxId);
   if (mailbox) {
-    const today = new Date().toISOString().slice(0, 10);
-    const resetDate = new Date(mailbox.todayResetAt).toISOString().slice(0, 10);
-    const currentCount = today === resetDate ? mailbox.todaySendCount : 0;
-    await ctx.db.patch(args.mailboxId, {
-      todaySendCount: currentCount + 1,
-      todayResetAt: today === resetDate ? mailbox.todayResetAt : Date.now(),
-    });
+    await ctx.db.patch(args.mailboxId, buildMailboxSuccessfulSendPatch(mailbox));
   }
 
   const sequence = await ctx.db.get(args.sequenceId);
@@ -343,6 +342,8 @@ function isHardBounce(error: string | undefined): boolean {
 
 async function recordFailedSend(ctx: MutationCtx, args: SendResultArgs & { error?: string }) {
   if (isHardBounce(args.error)) {
+    const contact = await ctx.db.get(args.contactId);
+
     // Permanent failure — mark as bounced and stop the enrollment
     await ctx.db.insert("outreachEvents", {
       enrollmentId: args.enrollmentId,
@@ -351,20 +352,32 @@ async function recordFailedSend(ctx: MutationCtx, args: SendResultArgs & { error
       organizationId: args.organizationId,
       type: "bounced",
       step: args.step,
-      metadata: { bounceType: "hard" },
+      metadata: {
+        bounceType: "hard",
+        failedRecipient: contact?.email,
+        replyContent: args.error,
+      },
       createdAt: Date.now(),
     });
 
-    await ctx.db.patch(args.enrollmentId, {
-      status: "bounced",
-      completedAt: Date.now(),
-      nextSendAt: undefined,
-    });
+    await stopEnrollment(ctx, args.enrollmentId, "bounced");
+
+    if (contact) {
+      await suppress(ctx, args.organizationId, contact.email, "hard_bounce", args.enrollmentId);
+    }
 
     const sequence = await ctx.db.get(args.sequenceId);
-    if (sequence?.stats) {
+    const stats = sequence?.stats ?? {
+      enrolled: 0,
+      sent: 0,
+      opened: 0,
+      replied: 0,
+      bounced: 0,
+      unsubscribed: 0,
+    };
+    if (sequence) {
       await ctx.db.patch(args.sequenceId, {
-        stats: { ...sequence.stats, bounced: sequence.stats.bounced + 1 },
+        stats: { ...stats, bounced: stats.bounced + 1 },
       });
     }
   } else {

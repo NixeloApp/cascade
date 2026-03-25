@@ -11,7 +11,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
 import { Grid, GridItem } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
@@ -115,7 +114,7 @@ function DashboardMainContent({
   sidebarVisible: boolean;
 }) {
   return (
-    <Grid cols={1} colsLg={12} gap="lg">
+    <Grid cols={1} colsLg={12} gap="md">
       <GridItem colSpanLg={sidebarVisible ? 8 : 12}>
         <MyIssuesList
           myIssues={myIssues}
@@ -131,7 +130,7 @@ function DashboardMainContent({
 
       {sidebarVisible && (
         <GridItem colSpanLg={4}>
-          <Stack gap="lg">
+          <Stack gap="md">
             {showWorkspaces && (
               <WorkspacesList projects={myProjects} projectNavigation={projectNavigation} />
             )}
@@ -274,6 +273,27 @@ function useDashboardData(issueFilter: IssueFilter) {
   };
 }
 
+function DashboardHeaderBand({
+  completedCount,
+  focusTask,
+  showStats,
+  stats,
+  userName,
+}: {
+  completedCount: number | undefined;
+  focusTask: ReturnType<typeof useDashboardData>["focusTask"];
+  showStats: boolean;
+  stats: ReturnType<typeof useDashboardData>["stats"];
+  userName: string | undefined;
+}) {
+  return (
+    <Stack gap="xl">
+      <Greeting userName={userName} completedCount={completedCount} />
+      <DashboardOverview focusTask={focusTask} showStats={showStats} stats={stats} />
+    </Stack>
+  );
+}
+
 /** Main dashboard page with focus task, stats, issues, and activity. */
 export function Dashboard() {
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("assigned");
@@ -297,41 +317,33 @@ export function Dashboard() {
   } = useDashboardData(issueFilter);
 
   return (
-    <Card
-      recipe="dashboardShell"
-      padding="lg"
-      data-testid={TEST_IDS.DASHBOARD.CONTENT}
-      className="overflow-hidden border-ui-border/55 bg-linear-to-b from-ui-bg via-ui-bg-secondary/65 to-ui-bg-soft/55 px-4 py-5 shadow-elevated sm:px-6 sm:py-6"
-    >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-brand-subtle/24 via-ui-bg-secondary/12 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-8 top-20 h-px bg-ui-border/35" />
-      <div className="pointer-events-none absolute left-8 top-10 size-28 rounded-full bg-ui-bg-elevated/80 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 top-8 size-36 rounded-full bg-brand-subtle/12 blur-3xl" />
-
-      <div className="relative">
-        <Stack gap="2xl">
-          <Greeting userName={user?.name} completedCount={stats?.completedThisWeek} />
-
-          <DashboardOverview focusTask={focusTask} showStats={showStats} stats={stats} />
-          <DashboardMainContent
-            displayIssues={displayIssues}
-            issueFilter={issueFilter}
-            issueNavigation={issueNavigation}
-            loadMoreMyIssues={loadMoreMyIssues}
-            myCreatedIssues={myCreatedIssues}
-            myIssues={myIssues}
-            myIssuesStatus={myIssuesStatus}
-            myProjects={myProjects}
-            projectNavigation={projectNavigation}
-            recentActivity={recentActivity}
-            setIssueFilter={setIssueFilter}
-            showRecentActivity={showRecentActivity}
-            showWorkspaces={showWorkspaces}
-            sidebarVisible={sidebarVisible}
-          />
-        </Stack>
-      </div>
-    </Card>
+    <div data-testid={TEST_IDS.DASHBOARD.CONTENT}>
+      <Stack gap="xl">
+        <DashboardHeaderBand
+          completedCount={stats?.completedThisWeek}
+          focusTask={focusTask}
+          showStats={showStats}
+          stats={stats}
+          userName={user?.name}
+        />
+        <DashboardMainContent
+          displayIssues={displayIssues}
+          issueFilter={issueFilter}
+          issueNavigation={issueNavigation}
+          loadMoreMyIssues={loadMoreMyIssues}
+          myCreatedIssues={myCreatedIssues}
+          myIssues={myIssues}
+          myIssuesStatus={myIssuesStatus}
+          myProjects={myProjects}
+          projectNavigation={projectNavigation}
+          recentActivity={recentActivity}
+          setIssueFilter={setIssueFilter}
+          showRecentActivity={showRecentActivity}
+          showWorkspaces={showWorkspaces}
+          sidebarVisible={sidebarVisible}
+        />
+      </Stack>
+    </div>
   );
 }
 

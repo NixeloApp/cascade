@@ -5,6 +5,7 @@ import { createContext, useContext } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
 import { TimeTrackingPage } from "./TimeTrackingPage";
 
@@ -84,8 +85,16 @@ vi.mock("../ui/Select", () => ({
       <div>{children}</div>
     </SelectContext.Provider>
   ),
-  SelectTrigger: ({ children, id }: { children: ReactNode; id?: string }) => (
-    <button id={id} type="button">
+  SelectTrigger: ({
+    children,
+    id,
+    "data-testid": dataTestId,
+  }: {
+    children: ReactNode;
+    id?: string;
+    "data-testid"?: string;
+  }) => (
+    <button id={id} type="button" data-testid={dataTestId}>
       {children}
     </button>
   ),
@@ -105,7 +114,13 @@ vi.mock("../ui/Select", () => ({
 }));
 
 vi.mock("../ui/Stack", () => ({
-  Stack: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Stack: ({
+    children,
+    "data-testid": dataTestId,
+  }: {
+    children: ReactNode;
+    "data-testid"?: string;
+  }) => <div data-testid={dataTestId}>{children}</div>,
 }));
 
 vi.mock("../ui/Tabs", () => ({
@@ -123,11 +138,20 @@ vi.mock("../ui/Tabs", () => ({
     </TabsContext.Provider>
   ),
   TabsList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  TabsTrigger: ({ children, value }: { children: ReactNode; value: string }) => {
+  TabsTrigger: ({
+    children,
+    value,
+    "data-testid": dataTestId,
+  }: {
+    children: ReactNode;
+    value: string;
+    "data-testid"?: string;
+  }) => {
     const context = useContext(TabsContext);
     return (
       <button
         type="button"
+        data-testid={dataTestId}
         aria-pressed={context.value === value}
         onClick={() => context.onValueChange?.(value)}
       >
@@ -172,6 +196,7 @@ const mockUseOrganization = vi.mocked(useOrganization);
 
 const projectId = "project_1" as Id<"projects">;
 const secondProjectId = "project_2" as Id<"projects">;
+const TIME_TRACKING_E2E_STATE_STORAGE_KEY = "nixelo:e2e:time-tracking-state";
 
 let currentProjects:
   | {
@@ -194,6 +219,7 @@ let currentSummary:
 describe("TimeTrackingPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.sessionStorage.clear();
     currentProjects = {
       page: [
         { _id: projectId, name: "Core Platform" },
@@ -248,6 +274,18 @@ describe("TimeTrackingPage", () => {
     expect(screen.getByText("All Projects")).toBeInTheDocument();
     expect(screen.getAllByText("Last 7 Days").length).toBeGreaterThan(0);
     expect(screen.getByText(/^entries:all:/)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.CONTENT)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.OVERVIEW)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.PROJECT_FILTER)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.DATE_RANGE_FILTER)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.TAB_ENTRIES)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.TAB_BURN_RATE)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.TAB_RATES)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.SUMMARY_LOGGED)).toHaveTextContent("3h");
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.SUMMARY_ENTRIES)).toHaveTextContent("12");
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.SUMMARY_BILLABLE)).toHaveTextContent(
+      "$2,400.00",
+    );
   });
 
   it("updates project and date filters for the entries tab and forwards them to child data surfaces", async () => {
@@ -310,5 +348,41 @@ describe("TimeTrackingPage", () => {
     expect(screen.queryByText("Hourly Rates")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Project")).not.toBeInTheDocument();
     expect(mockUseAuthenticatedQuery).toHaveBeenCalledWith(expect.anything(), "skip");
+  });
+
+  it("adds truncation suffixes to overview metrics when the summary is partial", () => {
+    currentSummary = {
+      totalDuration: (4 * HOUR) / SECOND,
+      billableDuration: (2 * HOUR) / SECOND,
+      totalCost: 1800,
+      entryCount: 500,
+      isTruncated: true,
+    };
+
+    render(<TimeTrackingPage userRole="admin" />);
+
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.SUMMARY_LOGGED)).toHaveTextContent("4h+");
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.SUMMARY_ENTRIES)).toHaveTextContent("500+");
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.SUMMARY_BILLABLE)).toHaveTextContent(
+      "$1,800.00+",
+    );
+  });
+
+  it("boots into the all-time review state when requested by the screenshot harness", () => {
+    window.sessionStorage.setItem(TIME_TRACKING_E2E_STATE_STORAGE_KEY, "all-time");
+
+    render(<TimeTrackingPage userRole="admin" />);
+
+    expect(screen.getByText(/^entries:all:none:none:billing$/)).toBeInTheDocument();
+  });
+
+  it("boots into the burn-rate review state and preselects the first project", async () => {
+    window.sessionStorage.setItem(TIME_TRACKING_E2E_STATE_STORAGE_KEY, "burn-rate");
+
+    render(<TimeTrackingPage userRole="admin" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(`burn-rate:${projectId}`)).toBeInTheDocument();
+    });
   });
 });

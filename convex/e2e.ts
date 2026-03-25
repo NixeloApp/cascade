@@ -27,8 +27,10 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
-import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { syncProjectIssueStats } from "./lib/projectIssueStats";
+import { notDeleted, restoreFields, softDeleteFields } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
+import { encryptMailboxTokensForStorage } from "./outreach/mailboxTokens";
 import { type CalendarEventColor, otpCodeTypes, workflowCategories } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
@@ -37,6 +39,418 @@ const TEST_USER_EXPIRATION_MS = HOUR;
 import { api } from "./_generated/api";
 
 type ScreenshotDocumentNode = Record<string, unknown>;
+type SeededInboxActorKey = "owner" | "alex" | "sarah";
+type SeededProjectInboxMode = "default" | "openEmpty" | "closedEmpty";
+type SeededProjectAnalyticsMode = "default" | "sparseData" | "noActivity";
+type SeededNotificationsMode = "default" | "inboxEmpty" | "archivedEmpty" | "unreadOverflow";
+type SeededRoadmapMode = "default" | "empty" | "milestone";
+type SeededTimeTrackingMode = "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated";
+type SeededAssistantMode = "default" | "empty";
+type SeededInvoiceClient = "portal" | "none";
+
+interface SeededInvoiceLineItemDefinition {
+  description: string;
+  quantity: number;
+  rate: number;
+}
+
+interface SeededInvoiceDefinition {
+  client: SeededInvoiceClient;
+  dueOffsetDays: number;
+  issueOffsetDays: number;
+  lineItems: SeededInvoiceLineItemDefinition[];
+  notes?: string;
+  number: string;
+  paidOffsetDays?: number;
+  sentOffsetDays?: number;
+  status: Doc<"invoices">["status"];
+}
+
+interface SeededInboxDefinition {
+  createdBy: SeededInboxActorKey;
+  createdOffsetMs: number;
+  declineReason?: string;
+  duplicateOfKey?: string;
+  issueKey: string;
+  snoozedUntil?: number;
+  source: Doc<"inboxIssues">["source"];
+  sourceEmail?: string;
+  status: Doc<"inboxIssues">["status"];
+  triagedOffsetMs?: number;
+}
+
+interface SeededNotificationDefinition {
+  actor: SeededInboxActorKey;
+  hoursAgo: number;
+  isArchived?: boolean;
+  isRead: boolean;
+  issueKey?: string;
+  message: string;
+  title: string;
+  type: string;
+}
+
+interface SeededAnalyticsSprintDefinition {
+  endDate: number;
+  goal: string;
+  name: string;
+  startDate: number;
+  status: Doc<"sprints">["status"];
+}
+
+interface SeededAnalyticsIssueDefinition {
+  assignedTo: SeededInboxActorKey | null;
+  dueDate?: number;
+  key: string;
+  priority: Doc<"issues">["priority"];
+  sprintName?: string;
+  status: string;
+  storyPoints?: number;
+  title: string;
+  type: Doc<"issues">["type"];
+}
+
+interface SeededAnalyticsActivityDefinition {
+  action: Doc<"issueActivity">["action"];
+  actor: SeededInboxActorKey;
+  field?: string;
+  issueKey: string;
+  newValue?: string;
+  oldValue?: string;
+  timestamp: number;
+}
+
+interface SeededTimeTrackingEntryDefinition {
+  activity: string;
+  billable: boolean;
+  dayOffset: number;
+  description: string;
+  durationHours: number;
+  hourlyRate?: number;
+}
+
+interface SeededTimeTrackingRateDefinition {
+  currency: string;
+  hourlyRate: number;
+  notes?: string;
+  projectScoped: boolean;
+  rateType: Doc<"userRates">["rateType"];
+}
+
+interface SeededAssistantUsageDefinition {
+  completionTokens: number;
+  estimatedCost: number;
+  model: string;
+  operation: Doc<"aiUsage">["operation"];
+  projectKey?: "DEMO" | "OPS";
+  promptTokens: number;
+  provider: Doc<"aiUsage">["provider"];
+  responseTime: number;
+  success: boolean;
+}
+
+interface SeededAssistantChatDefinition {
+  messagePairs: Array<{
+    assistant: string;
+    user: string;
+  }>;
+  projectKey?: "DEMO" | "OPS";
+  title: string;
+  updatedOffsetMs: number;
+}
+
+interface SeededRoadmapIssueDefinition {
+  dueOffsetDays?: number;
+  key: string;
+  startOffsetDays?: number;
+}
+
+interface SeededRoadmapLinkDefinition {
+  fromKey: string;
+  toKey: string;
+}
+
+type SeededProjectsRouteMode = "default" | "single" | "empty";
+
+const SCREENSHOT_INVOICE_DEFINITIONS: SeededInvoiceDefinition[] = [
+  {
+    client: "portal",
+    dueOffsetDays: 9,
+    issueOffsetDays: -5,
+    lineItems: [
+      {
+        description: "Discovery sprint and kickoff workshop",
+        quantity: 1,
+        rate: 2400,
+      },
+    ],
+    notes: "Pending approval before delivery handoff.",
+    number: "INV-2026-901",
+    status: "draft",
+  },
+  {
+    client: "portal",
+    dueOffsetDays: 14,
+    issueOffsetDays: -12,
+    lineItems: [
+      {
+        description: "Implementation week 1",
+        quantity: 18,
+        rate: 185,
+      },
+    ],
+    notes: "Sent with project recap and milestone notes.",
+    number: "INV-2026-902",
+    sentOffsetDays: -6,
+    status: "sent",
+  },
+  {
+    client: "none",
+    dueOffsetDays: 3,
+    issueOffsetDays: -10,
+    lineItems: [
+      {
+        description: "Strategy review retainer",
+        quantity: 8,
+        rate: 150,
+      },
+    ],
+    number: "INV-2026-903",
+    paidOffsetDays: -2,
+    sentOffsetDays: -7,
+    status: "paid",
+  },
+];
+
+const SCREENSHOT_TIME_TRACKING_BASE_ENTRIES: SeededTimeTrackingEntryDefinition[] = [
+  {
+    activity: "Development",
+    billable: true,
+    dayOffset: -2,
+    description: "CI/CD pipeline setup and configuration",
+    durationHours: 4,
+    hourlyRate: 150,
+  },
+  {
+    activity: "Development",
+    billable: true,
+    dayOffset: -1,
+    description: "Bug investigation: login timeout on mobile",
+    durationHours: 3,
+    hourlyRate: 150,
+  },
+  {
+    activity: "Code Review",
+    billable: true,
+    dayOffset: -1,
+    description: "Dashboard design review with team",
+    durationHours: 1.5,
+    hourlyRate: 150,
+  },
+  {
+    activity: "Meeting",
+    billable: false,
+    dayOffset: 0,
+    description: "Sprint planning meeting",
+    durationHours: 1,
+  },
+  {
+    activity: "Development",
+    billable: true,
+    dayOffset: 0,
+    description: "Mobile login fix implementation",
+    durationHours: 2.5,
+    hourlyRate: 150,
+  },
+];
+
+const SCREENSHOT_TIME_TRACKING_REVIEW_RATES: SeededTimeTrackingRateDefinition[] = [
+  {
+    currency: "USD",
+    hourlyRate: 125,
+    notes: "Default internal delivery cost",
+    projectScoped: false,
+    rateType: "internal",
+  },
+  {
+    currency: "USD",
+    hourlyRate: 180,
+    notes: "Client-facing override for screenshot review",
+    projectScoped: true,
+    rateType: "billable",
+  },
+];
+
+const SCREENSHOT_ROADMAP_BASE_ISSUES: SeededRoadmapIssueDefinition[] = [
+  { key: "DEMO-1", startOffsetDays: -5, dueOffsetDays: -2 },
+  { key: "DEMO-2", startOffsetDays: -1, dueOffsetDays: 1 },
+  { key: "DEMO-3", startOffsetDays: 0, dueOffsetDays: 3 },
+  { key: "DEMO-4", startOffsetDays: 4, dueOffsetDays: 7 },
+  { key: "DEMO-7", startOffsetDays: 1, dueOffsetDays: 2 },
+];
+
+const SCREENSHOT_ROADMAP_LINKS: SeededRoadmapLinkDefinition[] = [
+  { fromKey: "DEMO-2", toKey: "DEMO-3" },
+  { fromKey: "DEMO-7", toKey: "DEMO-4" },
+];
+
+const SCREENSHOT_ASSISTANT_USAGE_DEFAULT: SeededAssistantUsageDefinition[] = [
+  {
+    completionTokens: 920,
+    estimatedCost: 164,
+    model: "claude-3-5-sonnet",
+    operation: "chat",
+    projectKey: "DEMO",
+    promptTokens: 1480,
+    provider: "anthropic",
+    responseTime: 382,
+    success: true,
+  },
+  {
+    completionTokens: 410,
+    estimatedCost: 96,
+    model: "claude-3-5-haiku",
+    operation: "suggestion",
+    projectKey: "DEMO",
+    promptTokens: 680,
+    provider: "anthropic",
+    responseTime: 244,
+    success: true,
+  },
+  {
+    completionTokens: 590,
+    estimatedCost: 128,
+    model: "gpt-4.1-mini",
+    operation: "analysis",
+    projectKey: "OPS",
+    promptTokens: 980,
+    provider: "openai",
+    responseTime: 466,
+    success: true,
+  },
+  {
+    completionTokens: 360,
+    estimatedCost: 74,
+    model: "gpt-4.1-mini",
+    operation: "automation",
+    projectKey: "OPS",
+    promptTokens: 520,
+    provider: "openai",
+    responseTime: 311,
+    success: true,
+  },
+  {
+    completionTokens: 720,
+    estimatedCost: 138,
+    model: "claude-3-5-sonnet",
+    operation: "chat",
+    promptTokens: 1120,
+    provider: "anthropic",
+    responseTime: 401,
+    success: true,
+  },
+];
+
+const SCREENSHOT_ASSISTANT_CHATS_DEFAULT: SeededAssistantChatDefinition[] = [
+  {
+    messagePairs: [
+      {
+        user: "What are the top launch blockers for the demo project?",
+        assistant:
+          "Pricing approval and onboarding copy polish remain the top blockers before launch.",
+      },
+      {
+        user: "Turn that into a leadership-ready summary.",
+        assistant:
+          "Leadership summary: only two blockers remain, both owned, and neither changes the Thursday review checkpoint.",
+      },
+    ],
+    projectKey: "DEMO",
+    title: "Launch blockers summary",
+    updatedOffsetMs: 30 * MINUTE,
+  },
+  {
+    messagePairs: [
+      {
+        user: "Draft a client handoff checklist for OPS.",
+        assistant:
+          "Created a handoff checklist covering kickoff notes, support routing, and approval sign-off.",
+      },
+      {
+        user: "What still needs confirmation?",
+        assistant:
+          "Weekend support coverage and final portal permissions still need confirmation before go-live.",
+      },
+    ],
+    projectKey: "OPS",
+    title: "Client handoff checklist",
+    updatedOffsetMs: 90 * MINUTE,
+  },
+  {
+    messagePairs: [
+      {
+        user: "Summarize recent AI usage across the workspace.",
+        assistant:
+          "Usage is split between chat, analysis, and automation, with Anthropic handling most token volume.",
+      },
+    ],
+    title: "Workspace usage snapshot",
+    updatedOffsetMs: 3 * HOUR,
+  },
+];
+
+function buildSeededRoadmapIssueDefinitions(
+  mode: SeededRoadmapMode,
+): SeededRoadmapIssueDefinition[] {
+  if (mode === "empty") {
+    return [];
+  }
+
+  if (mode === "milestone") {
+    return SCREENSHOT_ROADMAP_BASE_ISSUES.map((definition) =>
+      definition.key === "DEMO-7"
+        ? { ...definition, startOffsetDays: undefined, dueOffsetDays: 2 }
+        : definition,
+    );
+  }
+
+  return SCREENSHOT_ROADMAP_BASE_ISSUES;
+}
+
+function getDayStartMs(timestamp: number): number {
+  const date = new Date(timestamp);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+function buildSeededTimeTrackingEntryDefinitions(
+  mode: SeededTimeTrackingMode,
+): SeededTimeTrackingEntryDefinition[] {
+  if (mode === "entriesEmpty") {
+    return [];
+  }
+
+  const baseEntries = [...SCREENSHOT_TIME_TRACKING_BASE_ENTRIES];
+  if (mode !== "summaryTruncated") {
+    return baseEntries;
+  }
+
+  const targetEntryCount = 501;
+  const overflowEntryCount = Math.max(targetEntryCount - baseEntries.length, 0);
+
+  for (let index = 0; index < overflowEntryCount; index += 1) {
+    baseEntries.push({
+      activity: index % 5 === 0 ? "Review" : "Development",
+      billable: true,
+      dayOffset: -(index % 7),
+      description: `Screenshot overflow entry ${String(index + 1).padStart(3, "0")}`,
+      durationHours: 0.5,
+      hourlyRate: 120,
+    });
+  }
+
+  return baseEntries;
+}
 
 function screenshotText(text: string): ScreenshotDocumentNode {
   return { type: "text", text };
@@ -161,6 +575,1558 @@ const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
   },
 };
 
+const SCREENSHOT_INBOX_SYNTHETIC_EMAILS = {
+  alex: "alex-rivera-screenshots@inbox.mailtrap.io",
+  sarah: "sarah-kim-screenshots@inbox.mailtrap.io",
+} as const;
+
+function buildSeededProjectAnalyticsSprintDefinitions(
+  mode: SeededProjectAnalyticsMode,
+  now: number,
+): SeededAnalyticsSprintDefinition[] {
+  if (mode === "sparseData") {
+    return [
+      {
+        endDate: now + 4 * DAY,
+        goal: "Tighten the launch checklist before the next release review.",
+        name: "Sprint 1",
+        startDate: now - 3 * DAY,
+        status: "active",
+      },
+    ];
+  }
+
+  return [
+    {
+      endDate: now + WEEK,
+      goal: "Launch MVP features",
+      name: "Sprint 1",
+      startDate: now - WEEK,
+      status: "active",
+    },
+    {
+      endDate: now - 2 * WEEK,
+      goal: "Close delivery blockers before rollout week.",
+      name: "Launch Prep",
+      startDate: now - 3 * WEEK,
+      status: "completed",
+    },
+    {
+      endDate: now - 4 * WEEK,
+      goal: "Stabilize the project shell and baseline workflows.",
+      name: "Foundation",
+      startDate: now - 5 * WEEK,
+      status: "completed",
+    },
+  ];
+}
+
+function buildSeededProjectAnalyticsIssueDefinitions(
+  mode: SeededProjectAnalyticsMode,
+  now: number,
+): SeededAnalyticsIssueDefinition[] {
+  if (mode === "sparseData") {
+    return [
+      {
+        assignedTo: null,
+        dueDate: now + DAY,
+        key: "DEMO-2",
+        priority: "highest",
+        sprintName: "Sprint 1",
+        status: "in-progress",
+        title: "Fix login timeout on mobile",
+        type: "bug",
+      },
+      {
+        assignedTo: null,
+        dueDate: now + 4 * DAY,
+        key: "DEMO-4",
+        priority: "medium",
+        sprintName: "Sprint 1",
+        status: "todo",
+        title: "Add dark mode support",
+        type: "story",
+      },
+      {
+        assignedTo: null,
+        dueDate: now + 6 * DAY,
+        key: "DEMO-7",
+        priority: "high",
+        status: "todo",
+        title: "Improve release checklist",
+        type: "task",
+      },
+    ];
+  }
+
+  return [
+    {
+      assignedTo: "owner",
+      dueDate: now - 2 * DAY,
+      key: "DEMO-1",
+      priority: "high",
+      sprintName: "Launch Prep",
+      status: "done",
+      storyPoints: 8,
+      title: "Set up CI/CD pipeline",
+      type: "task",
+    },
+    {
+      assignedTo: "alex",
+      dueDate: now + DAY,
+      key: "DEMO-2",
+      priority: "highest",
+      sprintName: "Sprint 1",
+      status: "in-progress",
+      title: "Fix login timeout on mobile",
+      type: "bug",
+    },
+    {
+      assignedTo: "sarah",
+      dueDate: now + 3 * DAY,
+      key: "DEMO-3",
+      priority: "medium",
+      sprintName: "Sprint 1",
+      status: "in-review",
+      title: "Design new dashboard layout",
+      type: "story",
+    },
+    {
+      assignedTo: null,
+      dueDate: now + 7 * DAY,
+      key: "DEMO-4",
+      priority: "medium",
+      sprintName: "Sprint 1",
+      status: "todo",
+      title: "Add dark mode support",
+      type: "story",
+    },
+    {
+      assignedTo: "owner",
+      key: "DEMO-5",
+      priority: "high",
+      sprintName: "Foundation",
+      status: "done",
+      storyPoints: 5,
+      title: "Database query optimization",
+      type: "task",
+    },
+    {
+      assignedTo: null,
+      key: "DEMO-6",
+      priority: "low",
+      status: "todo",
+      title: "User onboarding flow",
+      type: "epic",
+    },
+    {
+      assignedTo: "owner",
+      dueDate: now + 2 * DAY,
+      key: "DEMO-7",
+      priority: "high",
+      sprintName: "Sprint 1",
+      status: "todo",
+      title: "Improve release checklist",
+      type: "task",
+    },
+  ];
+}
+
+function buildSeededProjectAnalyticsActivityDefinitions(
+  mode: SeededProjectAnalyticsMode,
+  now: number,
+): SeededAnalyticsActivityDefinition[] {
+  if (mode !== "default") {
+    return [];
+  }
+
+  return [
+    {
+      action: "updated",
+      actor: "alex",
+      field: "status",
+      issueKey: "DEMO-2",
+      newValue: "In Progress",
+      oldValue: "Todo",
+      timestamp: now - 45 * MINUTE,
+    },
+    {
+      action: "commented",
+      actor: "sarah",
+      issueKey: "DEMO-3",
+      timestamp: now - 2 * HOUR,
+    },
+    {
+      action: "updated",
+      actor: "owner",
+      field: "priority",
+      issueKey: "DEMO-7",
+      newValue: "High",
+      oldValue: "Medium",
+      timestamp: now - 5 * HOUR,
+    },
+  ];
+}
+
+function buildSeededProjectInboxDefinitions(
+  mode: SeededProjectInboxMode,
+  now: number,
+): SeededInboxDefinition[] {
+  if (mode === "openEmpty") {
+    return [
+      {
+        createdBy: "owner",
+        createdOffsetMs: 5 * HOUR,
+        issueKey: "DEMO-7",
+        source: "in_app",
+        status: "accepted",
+        triagedOffsetMs: 2 * HOUR,
+      },
+      {
+        createdBy: "alex",
+        createdOffsetMs: 20 * HOUR,
+        declineReason: "Queued for a later release instead of the current triage lane",
+        issueKey: "DEMO-2",
+        source: "email",
+        sourceEmail: "alerts@northstarlabs.example",
+        status: "declined",
+        triagedOffsetMs: 4 * HOUR,
+      },
+      {
+        createdBy: "sarah",
+        createdOffsetMs: 30 * HOUR,
+        issueKey: "DEMO-1",
+        source: "in_app",
+        status: "accepted",
+        triagedOffsetMs: 26 * HOUR,
+      },
+      {
+        createdBy: "alex",
+        createdOffsetMs: 34 * HOUR,
+        declineReason: "Outside current launch scope",
+        issueKey: "DEMO-4",
+        source: "api",
+        sourceEmail: "feedback-hooks@nixelo.test",
+        status: "declined",
+        triagedOffsetMs: 22 * HOUR,
+      },
+      {
+        createdBy: "owner",
+        createdOffsetMs: 40 * HOUR,
+        duplicateOfKey: "DEMO-3",
+        issueKey: "DEMO-6",
+        source: "form",
+        sourceEmail: "intake@nixelo.test",
+        status: "duplicate",
+        triagedOffsetMs: 21 * HOUR,
+      },
+    ];
+  }
+
+  if (mode === "closedEmpty") {
+    return [
+      {
+        createdBy: "owner",
+        createdOffsetMs: 5 * HOUR,
+        issueKey: "DEMO-7",
+        source: "in_app",
+        status: "pending",
+      },
+      {
+        createdBy: "alex",
+        createdOffsetMs: 20 * HOUR,
+        issueKey: "DEMO-2",
+        snoozedUntil: now + 2 * DAY,
+        source: "email",
+        sourceEmail: "alerts@northstarlabs.example",
+        status: "snoozed",
+        triagedOffsetMs: 4 * HOUR,
+      },
+      {
+        createdBy: "sarah",
+        createdOffsetMs: 30 * HOUR,
+        issueKey: "DEMO-1",
+        source: "in_app",
+        status: "pending",
+      },
+      {
+        createdBy: "alex",
+        createdOffsetMs: 34 * HOUR,
+        issueKey: "DEMO-4",
+        snoozedUntil: now + 5 * DAY,
+        source: "api",
+        sourceEmail: "feedback-hooks@nixelo.test",
+        status: "snoozed",
+        triagedOffsetMs: 6 * HOUR,
+      },
+      {
+        createdBy: "owner",
+        createdOffsetMs: 40 * HOUR,
+        issueKey: "DEMO-6",
+        source: "form",
+        sourceEmail: "intake@nixelo.test",
+        status: "pending",
+      },
+    ];
+  }
+
+  return [
+    {
+      createdBy: "owner",
+      createdOffsetMs: 5 * HOUR,
+      issueKey: "DEMO-7",
+      source: "in_app",
+      status: "pending",
+    },
+    {
+      createdBy: "alex",
+      createdOffsetMs: 20 * HOUR,
+      issueKey: "DEMO-2",
+      snoozedUntil: now + 2 * DAY,
+      source: "email",
+      sourceEmail: "alerts@northstarlabs.example",
+      status: "snoozed",
+      triagedOffsetMs: 4 * HOUR,
+    },
+    {
+      createdBy: "sarah",
+      createdOffsetMs: 30 * HOUR,
+      issueKey: "DEMO-1",
+      source: "in_app",
+      status: "accepted",
+      triagedOffsetMs: 26 * HOUR,
+    },
+    {
+      createdBy: "alex",
+      createdOffsetMs: 34 * HOUR,
+      declineReason: "Outside current launch scope",
+      issueKey: "DEMO-4",
+      source: "api",
+      sourceEmail: "feedback-hooks@nixelo.test",
+      status: "declined",
+      triagedOffsetMs: 22 * HOUR,
+    },
+    {
+      createdBy: "owner",
+      createdOffsetMs: 40 * HOUR,
+      duplicateOfKey: "DEMO-3",
+      issueKey: "DEMO-6",
+      source: "form",
+      sourceEmail: "intake@nixelo.test",
+      status: "duplicate",
+      triagedOffsetMs: 21 * HOUR,
+    },
+  ];
+}
+
+function countSeededInboxIssues(definitions: SeededInboxDefinition[]) {
+  let openCount = 0;
+  let closedCount = 0;
+
+  for (const definition of definitions) {
+    if (definition.status === "pending" || definition.status === "snoozed") {
+      openCount += 1;
+    } else {
+      closedCount += 1;
+    }
+  }
+
+  return { closedCount, openCount };
+}
+
+function buildSeededNotificationDefinitions(
+  mode: SeededNotificationsMode,
+): SeededNotificationDefinition[] {
+  if (mode === "inboxEmpty") {
+    return [
+      {
+        actor: "alex",
+        hoursAgo: 4,
+        isArchived: true,
+        isRead: true,
+        issueKey: "DEMO-1",
+        message:
+          "Alex archived the DEMO-1 handoff once the checklist was captured in the sprint note.",
+        title: "Checklist handoff archived",
+        type: "issue_status_changed",
+      },
+      {
+        actor: "sarah",
+        hoursAgo: 12,
+        isArchived: true,
+        isRead: true,
+        issueKey: "DEMO-3",
+        message: "Sarah archived the DEMO-3 comment thread after the launch note was finalized.",
+        title: "Comment thread archived",
+        type: "issue_commented",
+      },
+      {
+        actor: "owner",
+        hoursAgo: 28,
+        isArchived: true,
+        isRead: true,
+        issueKey: "DEMO-7",
+        message:
+          "The release checklist reminder moved into the archive after the owner reviewed it.",
+        title: "Release reminder archived",
+        type: "issue_assigned",
+      },
+    ];
+  }
+
+  if (mode === "archivedEmpty") {
+    return [
+      {
+        actor: "owner",
+        hoursAgo: 1,
+        isRead: false,
+        issueKey: "DEMO-1",
+        message: "DEMO-1 needs a final owner confirmation before the rollout checklist closes.",
+        title: "Owner confirmation requested",
+        type: "issue_assigned",
+      },
+      {
+        actor: "alex",
+        hoursAgo: 3,
+        isRead: false,
+        issueKey: "DEMO-3",
+        message:
+          'Alex left a new launch comment: "Please recheck the acceptance copy before we ship."',
+        title: "Launch copy comment",
+        type: "issue_commented",
+      },
+      {
+        actor: "sarah",
+        hoursAgo: 9,
+        isRead: true,
+        issueKey: "DEMO-5",
+        message: "Sarah mentioned you in the database optimization thread for one final review.",
+        title: "Review mention from Sarah",
+        type: "issue_mentioned",
+      },
+    ];
+  }
+
+  if (mode === "unreadOverflow") {
+    const overflowTypes = [
+      "issue_assigned",
+      "issue_commented",
+      "issue_mentioned",
+      "issue_status_changed",
+    ] as const;
+
+    return Array.from({ length: 100 }, (_, index) => {
+      const issueKey = `DEMO-${(index % 7) + 1}`;
+      const ordinal = index + 1;
+      return {
+        actor: index % 3 === 0 ? "owner" : index % 3 === 1 ? "alex" : "sarah",
+        hoursAgo: (index % 48) + 1,
+        isRead: false,
+        issueKey,
+        message: `Overflow notification ${ordinal} keeps the unread badge pinned above ninety-nine for screenshot review.`,
+        title: `Overflow notification ${ordinal}`,
+        type: overflowTypes[index % overflowTypes.length],
+      };
+    });
+  }
+
+  return [
+    {
+      actor: "owner",
+      hoursAgo: 1,
+      isRead: false,
+      issueKey: "DEMO-1",
+      message: "DEMO-1: Set up CI/CD pipeline was assigned to you",
+      title: "Issue assigned to you",
+      type: "issue_assigned",
+    },
+    {
+      actor: "alex",
+      hoursAgo: 3,
+      isRead: false,
+      issueKey: "DEMO-3",
+      message: 'Alex Rivera commented: "Dashboard layout looks great, merging now."',
+      title: "New comment on DEMO-3",
+      type: "issue_commented",
+    },
+    {
+      actor: "sarah",
+      hoursAgo: 8,
+      isRead: false,
+      issueKey: "DEMO-5",
+      message: "Sarah Kim mentioned you in DEMO-5: Database query optimization",
+      title: "You were mentioned",
+      type: "issue_mentioned",
+    },
+    {
+      actor: "owner",
+      hoursAgo: 24,
+      isRead: true,
+      issueKey: "DEMO-2",
+      message: "DEMO-2: Fix login timeout moved from In Progress to In Review",
+      title: "Issue status updated",
+      type: "issue_status_changed",
+    },
+    {
+      actor: "alex",
+      hoursAgo: 48,
+      isRead: true,
+      issueKey: "DEMO-7",
+      message: "Sprint 1 has started with 5 issues assigned",
+      title: "Sprint started",
+      type: "sprint_started",
+    },
+  ];
+}
+
+function countSeededNotifications(definitions: SeededNotificationDefinition[]) {
+  let archivedCount = 0;
+  let unreadCount = 0;
+  let visibleCount = 0;
+
+  for (const definition of definitions) {
+    if (definition.isArchived) {
+      archivedCount += 1;
+      continue;
+    }
+
+    visibleCount += 1;
+    if (!definition.isRead) {
+      unreadCount += 1;
+    }
+  }
+
+  return { archivedCount, unreadCount, visibleCount };
+}
+
+async function resolveSeededInboxUserId(
+  ctx: MutationCtx,
+  email: string,
+): Promise<Id<"users"> | null> {
+  const user = await ctx.db
+    .query("users")
+    .withIndex("email", (q) => q.eq("email", email))
+    .first();
+  return user?._id ?? null;
+}
+
+async function resolveSeededScreenshotActors(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    issueIdsByKey?: ReadonlyMap<string, Id<"issues">>;
+  },
+): Promise<
+  | {
+      success: true;
+      actorIds: Record<SeededInboxActorKey, Id<"users">>;
+      ownerUserId: Id<"users">;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const issueIdsByKey = new Map<string, Id<"issues">>(args.issueIdsByKey ?? []);
+  if (!issueIdsByKey.has("DEMO-7")) {
+    const projectIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const issue of projectIssues) {
+      if (!issueIdsByKey.has(issue.key)) {
+        issueIdsByKey.set(issue.key, issue._id);
+      }
+    }
+  }
+
+  const ownerIssueId = issueIdsByKey.get("DEMO-7");
+  const ownerIssue = ownerIssueId ? await ctx.db.get(ownerIssueId) : null;
+  const fallbackMember = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+    .take(1);
+  const ownerUserId = ownerIssue?.reporterId ?? fallbackMember[0]?.userId;
+
+  if (!ownerUserId) {
+    return { success: false, error: "Unable to resolve screenshot owner user" };
+  }
+
+  return {
+    success: true,
+    ownerUserId,
+    actorIds: {
+      owner: ownerUserId,
+      alex:
+        (await resolveSeededInboxUserId(ctx, SCREENSHOT_INBOX_SYNTHETIC_EMAILS.alex)) ??
+        ownerUserId,
+      sarah:
+        (await resolveSeededInboxUserId(ctx, SCREENSHOT_INBOX_SYNTHETIC_EMAILS.sarah)) ??
+        ownerUserId,
+    },
+  };
+}
+
+async function resetSeededProjectInboxIssues(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    mode: SeededProjectInboxMode;
+    issueIdsByKey?: ReadonlyMap<string, Id<"issues">>;
+  },
+): Promise<{ success: boolean; openCount?: number; closedCount?: number; error?: string }> {
+  const now = Date.now();
+  const definitions = buildSeededProjectInboxDefinitions(args.mode, now);
+  const requiredIssueKeys = new Set<string>();
+
+  for (const definition of definitions) {
+    requiredIssueKeys.add(definition.issueKey);
+    if (definition.duplicateOfKey) {
+      requiredIssueKeys.add(definition.duplicateOfKey);
+    }
+  }
+
+  const issueIdsByKey = new Map<string, Id<"issues">>(args.issueIdsByKey ?? []);
+  if (issueIdsByKey.size < requiredIssueKeys.size) {
+    const projectIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const issue of projectIssues) {
+      if (requiredIssueKeys.has(issue.key)) {
+        issueIdsByKey.set(issue.key, issue._id);
+      }
+    }
+  }
+
+  const missingIssueKey = [...requiredIssueKeys].find((issueKey) => !issueIdsByKey.has(issueKey));
+  if (missingIssueKey) {
+    return {
+      success: false,
+      error: `seeded inbox issue not found for screenshot state: ${missingIssueKey}`,
+    };
+  }
+
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+    issueIdsByKey,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+  const { actorIds, ownerUserId } = screenshotActors;
+
+  const existingInboxIssues = await ctx.db
+    .query("inboxIssues")
+    .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const inboxIssue of existingInboxIssues) {
+    await ctx.db.delete(inboxIssue._id);
+  }
+
+  for (const definition of definitions) {
+    const issueId = issueIdsByKey.get(definition.issueKey);
+    if (!issueId) {
+      return {
+        success: false,
+        error: `seeded inbox issue not found after validation: ${definition.issueKey}`,
+      };
+    }
+
+    const duplicateOfId = definition.duplicateOfKey
+      ? issueIdsByKey.get(definition.duplicateOfKey)
+      : undefined;
+
+    await ctx.db.insert("inboxIssues", {
+      projectId: args.projectId,
+      issueId,
+      status: definition.status,
+      source: definition.source,
+      sourceEmail: definition.sourceEmail,
+      snoozedUntil: definition.snoozedUntil,
+      duplicateOfId,
+      declineReason: definition.declineReason,
+      createdBy: actorIds[definition.createdBy],
+      createdAt: now - definition.createdOffsetMs,
+      triagedAt: definition.triagedOffsetMs ? now - definition.triagedOffsetMs : undefined,
+      triagedBy: definition.triagedOffsetMs ? ownerUserId : undefined,
+      updatedAt: now - (definition.triagedOffsetMs ?? definition.createdOffsetMs),
+    });
+  }
+
+  return {
+    success: true,
+    ...countSeededInboxIssues(definitions),
+  };
+}
+
+function buildSeededAssistantUsageDefinitions(
+  mode: SeededAssistantMode,
+): SeededAssistantUsageDefinition[] {
+  return mode === "empty" ? [] : SCREENSHOT_ASSISTANT_USAGE_DEFAULT;
+}
+
+function buildSeededAssistantChatDefinitions(
+  mode: SeededAssistantMode,
+): SeededAssistantChatDefinition[] {
+  return mode === "empty" ? [] : SCREENSHOT_ASSISTANT_CHATS_DEFAULT;
+}
+
+async function resetSeededAssistantState(
+  ctx: MutationCtx,
+  args: {
+    mode: SeededAssistantMode;
+    now: number;
+    primaryProjectId: Id<"projects">;
+    secondaryProjectId: Id<"projects">;
+    userId: Id<"users">;
+  },
+): Promise<{
+  success: boolean;
+  chatCount?: number;
+  requestCount?: number;
+  error?: string;
+}> {
+  const usageRecords = await ctx.db
+    .query("aiUsage")
+    .withIndex("by_user", (q) => q.eq("userId", args.userId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const usage of usageRecords) {
+    await ctx.db.delete(usage._id);
+  }
+
+  while (true) {
+    const chats = await ctx.db
+      .query("aiChats")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .take(BOUNDED_LIST_LIMIT);
+
+    if (chats.length === 0) {
+      break;
+    }
+
+    for (const chat of chats) {
+      const messages = await ctx.db
+        .query("aiMessages")
+        .withIndex("by_chat", (q) => q.eq("chatId", chat._id))
+        .take(BOUNDED_LIST_LIMIT);
+
+      for (const message of messages) {
+        await ctx.db.delete(message._id);
+      }
+
+      await ctx.db.delete(chat._id);
+    }
+  }
+
+  const projectIdsByKey = {
+    DEMO: args.primaryProjectId,
+    OPS: args.secondaryProjectId,
+  } as const;
+
+  const usageDefinitions = buildSeededAssistantUsageDefinitions(args.mode);
+  for (const definition of usageDefinitions) {
+    await ctx.db.insert("aiUsage", {
+      completionTokens: definition.completionTokens,
+      errorMessage: definition.success ? undefined : "Seeded assistant request failed",
+      estimatedCost: definition.estimatedCost,
+      model: definition.model,
+      operation: definition.operation,
+      projectId: definition.projectKey ? projectIdsByKey[definition.projectKey] : undefined,
+      promptTokens: definition.promptTokens,
+      provider: definition.provider,
+      responseTime: definition.responseTime,
+      success: definition.success,
+      totalTokens: definition.promptTokens + definition.completionTokens,
+      userId: args.userId,
+    });
+  }
+
+  const chatDefinitions = buildSeededAssistantChatDefinitions(args.mode);
+  for (const definition of chatDefinitions) {
+    const chatId = await ctx.db.insert("aiChats", {
+      projectId: definition.projectKey ? projectIdsByKey[definition.projectKey] : undefined,
+      title: definition.title,
+      updatedAt: args.now - definition.updatedOffsetMs,
+      userId: args.userId,
+    });
+
+    for (const pair of definition.messagePairs) {
+      await ctx.db.insert("aiMessages", {
+        chatId,
+        content: pair.user,
+        role: "user",
+      });
+      await ctx.db.insert("aiMessages", {
+        chatId,
+        content: pair.assistant,
+        modelUsed: definition.projectKey ? "claude-3-5-sonnet" : "gpt-4.1-mini",
+        responseTime: 380,
+        role: "assistant",
+        tokensUsed: 480,
+      });
+    }
+  }
+
+  return {
+    success: true,
+    chatCount: chatDefinitions.length,
+    requestCount: usageDefinitions.length,
+  };
+}
+
+async function syncSeededProjectMembershipForRouteState(
+  ctx: MutationCtx,
+  args: {
+    actorId: Id<"users">;
+    projectId: Id<"projects">;
+    shouldBeVisible: boolean;
+    userId: Id<"users">;
+  },
+): Promise<void> {
+  const memberships = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_project_user", (q) =>
+      q.eq("projectId", args.projectId).eq("userId", args.userId),
+    )
+    .take(BOUNDED_LIST_LIMIT);
+
+  const sortedMemberships = [...memberships].sort((a, b) => b._creationTime - a._creationTime);
+
+  if (!args.shouldBeVisible) {
+    for (const membership of sortedMemberships) {
+      if (!membership.isDeleted) {
+        await ctx.db.patch(membership._id, softDeleteFields(args.actorId));
+      }
+    }
+    return;
+  }
+
+  const [primaryMembership, ...duplicateMemberships] = sortedMemberships;
+  if (!primaryMembership) {
+    await ctx.db.insert("projectMembers", {
+      addedBy: args.actorId,
+      projectId: args.projectId,
+      role: "admin",
+      userId: args.userId,
+    });
+    return;
+  }
+
+  await ctx.db.patch(primaryMembership._id, {
+    addedBy: args.actorId,
+    deletedAt: undefined,
+    deletedBy: undefined,
+    isDeleted: undefined,
+    role: "admin",
+  });
+
+  for (const membership of duplicateMemberships) {
+    if (!membership.isDeleted) {
+      await ctx.db.patch(membership._id, softDeleteFields(args.actorId));
+    }
+  }
+}
+
+async function resetSeededProjectsRouteState(
+  ctx: MutationCtx,
+  args: {
+    mode: SeededProjectsRouteMode;
+    ownerUserId: Id<"users">;
+    primaryProjectId: Id<"projects">;
+    secondaryProjectId: Id<"projects">;
+  },
+): Promise<{ success: boolean; visibleProjectCount?: number; error?: string }> {
+  const showPrimaryProject = args.mode !== "empty";
+  const showSecondaryProject = args.mode === "default";
+
+  await syncSeededProjectMembershipForRouteState(ctx, {
+    actorId: args.ownerUserId,
+    projectId: args.primaryProjectId,
+    shouldBeVisible: showPrimaryProject,
+    userId: args.ownerUserId,
+  });
+  await syncSeededProjectMembershipForRouteState(ctx, {
+    actorId: args.ownerUserId,
+    projectId: args.secondaryProjectId,
+    shouldBeVisible: showSecondaryProject,
+    userId: args.ownerUserId,
+  });
+
+  return {
+    success: true,
+    visibleProjectCount: Number(showPrimaryProject) + Number(showSecondaryProject),
+  };
+}
+
+async function resetSeededNotificationsForUser(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    mode: SeededNotificationsMode;
+    issueIdsByKey?: ReadonlyMap<string, Id<"issues">>;
+  },
+): Promise<{
+  success: boolean;
+  archivedCount?: number;
+  unreadCount?: number;
+  visibleCount?: number;
+  error?: string;
+}> {
+  const definitions = buildSeededNotificationDefinitions(args.mode);
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+    issueIdsByKey: args.issueIdsByKey,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const requiredIssueKeys = new Set(
+    definitions
+      .map((definition) => definition.issueKey)
+      .filter((issueKey): issueKey is string => issueKey !== undefined),
+  );
+  const issueIdsByKey = new Map<string, Id<"issues">>(args.issueIdsByKey ?? []);
+
+  if (issueIdsByKey.size < requiredIssueKeys.size) {
+    const projectIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const issue of projectIssues) {
+      if (requiredIssueKeys.has(issue.key)) {
+        issueIdsByKey.set(issue.key, issue._id);
+      }
+    }
+  }
+
+  const missingIssueKey = [...requiredIssueKeys].find((issueKey) => !issueIdsByKey.has(issueKey));
+  if (missingIssueKey) {
+    return {
+      success: false,
+      error: `seeded notification issue not found for screenshot state: ${missingIssueKey}`,
+    };
+  }
+
+  const existingNotifications = await ctx.db
+    .query("notifications")
+    .withIndex("by_user", (q) => q.eq("userId", screenshotActors.ownerUserId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const notification of existingNotifications) {
+    if (notification.projectId === args.projectId) {
+      await ctx.db.delete(notification._id);
+    }
+  }
+
+  const now = Date.now();
+  for (const definition of definitions) {
+    await ctx.db.insert("notifications", {
+      userId: screenshotActors.ownerUserId,
+      type: definition.type,
+      title: definition.title,
+      message: definition.message,
+      issueId: definition.issueKey ? issueIdsByKey.get(definition.issueKey) : undefined,
+      projectId: args.projectId,
+      actorId: screenshotActors.actorIds[definition.actor],
+      isRead: definition.isRead,
+      isArchived: definition.isArchived,
+      archivedAt: definition.isArchived ? now - definition.hoursAgo * HOUR : undefined,
+    });
+  }
+
+  return {
+    success: true,
+    ...countSeededNotifications(definitions),
+  };
+}
+
+async function resetSeededRoadmapState(
+  ctx: MutationCtx,
+  args: {
+    mode: SeededRoadmapMode;
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+  },
+): Promise<{
+  success: boolean;
+  issueCount?: number;
+  linkCount?: number;
+  projectId?: Id<"projects">;
+  error?: string;
+}> {
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const projectIssues = await ctx.db
+    .query("issues")
+    .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  if (projectIssues.length === 0) {
+    return { success: false, error: `No project issues found for roadmap mode ${args.mode}` };
+  }
+
+  const issueIdsByKey = new Map(projectIssues.map((issue) => [issue.key, issue._id]));
+  const roadmapDefinitions = buildSeededRoadmapIssueDefinitions(args.mode);
+  const roadmapDefinitionsByKey = new Map(
+    roadmapDefinitions.map((definition) => [definition.key, definition]),
+  );
+  const now = Date.now();
+  const dayStartMs = getDayStartMs(now);
+
+  for (const issue of projectIssues) {
+    const definition = roadmapDefinitionsByKey.get(issue.key);
+    const startDate =
+      definition?.startOffsetDays !== undefined
+        ? dayStartMs + definition.startOffsetDays * DAY
+        : undefined;
+    const dueDate =
+      definition?.dueOffsetDays !== undefined
+        ? dayStartMs + definition.dueOffsetDays * DAY
+        : undefined;
+
+    await ctx.db.patch(issue._id, {
+      dueDate,
+      startDate,
+      updatedAt: now,
+    });
+  }
+
+  const projectIssueIds = new Set(projectIssues.map((issue) => issue._id.toString()));
+  const deletedLinkIds = new Set<string>();
+  for (const issue of projectIssues) {
+    const outgoingLinks = await ctx.db
+      .query("issueLinks")
+      .withIndex("by_from_issue", (q) => q.eq("fromIssueId", issue._id))
+      .take(BOUNDED_LIST_LIMIT);
+    const incomingLinks = await ctx.db
+      .query("issueLinks")
+      .withIndex("by_to_issue", (q) => q.eq("toIssueId", issue._id))
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const link of [...outgoingLinks, ...incomingLinks]) {
+      if (deletedLinkIds.has(link._id.toString())) {
+        continue;
+      }
+
+      if (
+        projectIssueIds.has(link.fromIssueId.toString()) &&
+        projectIssueIds.has(link.toIssueId.toString())
+      ) {
+        deletedLinkIds.add(link._id.toString());
+        await ctx.db.delete(link._id);
+      }
+    }
+  }
+
+  if (args.mode !== "empty") {
+    for (const link of SCREENSHOT_ROADMAP_LINKS) {
+      const fromIssueId = issueIdsByKey.get(link.fromKey);
+      const toIssueId = issueIdsByKey.get(link.toKey);
+      if (!(fromIssueId && toIssueId)) {
+        return {
+          success: false,
+          error: `Missing seeded issue for roadmap link ${link.fromKey} -> ${link.toKey}`,
+        };
+      }
+
+      await ctx.db.insert("issueLinks", {
+        createdBy: screenshotActors.ownerUserId,
+        fromIssueId,
+        isDeleted: false,
+        linkType: "blocks",
+        toIssueId,
+      });
+    }
+  }
+
+  return {
+    success: true,
+    issueCount: roadmapDefinitions.length,
+    linkCount: args.mode === "empty" ? 0 : SCREENSHOT_ROADMAP_LINKS.length,
+    projectId: args.projectId,
+  };
+}
+
+async function resetSeededTimeTrackingState(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    mode: SeededTimeTrackingMode;
+  },
+): Promise<{
+  success: boolean;
+  entryCount?: number;
+  projectId?: Id<"projects">;
+  rateCount?: number;
+  error?: string;
+}> {
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const { ownerUserId } = screenshotActors;
+  const now = Date.now();
+  const dayStartMs = getDayStartMs(now);
+
+  while (true) {
+    const existingEntries = await ctx.db
+      .query("timeEntries")
+      .withIndex("by_user_project", (q) =>
+        q.eq("userId", ownerUserId).eq("projectId", args.projectId),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+
+    if (existingEntries.length === 0) {
+      break;
+    }
+
+    for (const entry of existingEntries) {
+      await ctx.db.delete(entry._id);
+    }
+  }
+
+  const existingRates = await ctx.db
+    .query("userRates")
+    .withIndex("by_user", (q) => q.eq("userId", ownerUserId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const rate of existingRates) {
+    if (rate.projectId === undefined || rate.projectId === args.projectId) {
+      await ctx.db.delete(rate._id);
+    }
+  }
+
+  const entryDefinitions = buildSeededTimeTrackingEntryDefinitions(args.mode);
+  for (let index = 0; index < entryDefinitions.length; index += 1) {
+    const entry = entryDefinitions[index];
+    const entryDate = dayStartMs + entry.dayOffset * DAY;
+    const durationSeconds = entry.durationHours * 3600;
+    const minuteOffset = index % 120;
+    const startTime = entryDate + 9 * HOUR + minuteOffset * MINUTE;
+    const endTime = startTime + durationSeconds * SECOND;
+    const totalCost =
+      entry.billable && entry.hourlyRate ? entry.durationHours * entry.hourlyRate : undefined;
+
+    await ctx.db.insert("timeEntries", {
+      billable: entry.billable,
+      billed: false,
+      currency: "USD",
+      date: entryDate,
+      description: entry.description,
+      duration: durationSeconds,
+      endTime,
+      hourlyRate: entry.hourlyRate,
+      isApproved: false,
+      isEquityHour: false,
+      isLocked: false,
+      projectId: args.projectId,
+      startTime,
+      tags: [],
+      totalCost,
+      updatedAt: now,
+      userId: ownerUserId,
+      activity: entry.activity,
+    });
+  }
+
+  const rateDefinitions =
+    args.mode === "ratesPopulated" ? SCREENSHOT_TIME_TRACKING_REVIEW_RATES : [];
+  for (let index = 0; index < rateDefinitions.length; index += 1) {
+    const rate = rateDefinitions[index];
+    await ctx.db.insert("userRates", {
+      currency: rate.currency,
+      effectiveFrom: now - index * MINUTE,
+      effectiveTo: undefined,
+      hourlyRate: rate.hourlyRate,
+      notes: rate.notes,
+      projectId: rate.projectScoped ? args.projectId : undefined,
+      rateType: rate.rateType,
+      setBy: ownerUserId,
+      updatedAt: now,
+      userId: ownerUserId,
+    });
+  }
+
+  return {
+    success: true,
+    entryCount: entryDefinitions.length,
+    projectId: args.projectId,
+    rateCount: rateDefinitions.length,
+  };
+}
+
+async function resetSeededProjectAnalyticsState(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    mode: SeededProjectAnalyticsMode;
+  },
+): Promise<{
+  success: boolean;
+  activityCount?: number;
+  issueCount?: number;
+  projectId?: Id<"projects">;
+  sprintCount?: number;
+  error?: string;
+}> {
+  const now = Date.now();
+  const project = await ctx.db.get(args.projectId);
+  if (!project) {
+    return { success: false, error: `project not found: ${args.projectId}` };
+  }
+
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const { actorIds, ownerUserId } = screenshotActors;
+  const sprintDefinitions = buildSeededProjectAnalyticsSprintDefinitions(args.mode, now);
+  const issueDefinitions = buildSeededProjectAnalyticsIssueDefinitions(args.mode, now);
+  const activityDefinitions = buildSeededProjectAnalyticsActivityDefinitions(args.mode, now);
+  const desiredSprintNames = new Set(sprintDefinitions.map((definition) => definition.name));
+  const desiredIssueKeys = new Set(issueDefinitions.map((definition) => definition.key));
+
+  const existingSprints = await ctx.db
+    .query("sprints")
+    .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+  const existingSprintsByName = new Map(existingSprints.map((sprint) => [sprint.name, sprint]));
+  const sprintIdsByName = new Map<string, Id<"sprints">>();
+
+  for (const definition of sprintDefinitions) {
+    const existingSprint = existingSprintsByName.get(definition.name);
+
+    if (existingSprint) {
+      await ctx.db.patch(existingSprint._id, {
+        ...restoreFields(),
+        endDate: definition.endDate,
+        goal: definition.goal,
+        name: definition.name,
+        projectId: args.projectId,
+        startDate: definition.startDate,
+        status: definition.status,
+        updatedAt: now,
+      });
+      sprintIdsByName.set(definition.name, existingSprint._id);
+      continue;
+    }
+
+    const sprintId = await ctx.db.insert("sprints", {
+      createdBy: ownerUserId,
+      endDate: definition.endDate,
+      goal: definition.goal,
+      name: definition.name,
+      projectId: args.projectId,
+      startDate: definition.startDate,
+      status: definition.status,
+      updatedAt: now,
+    });
+    sprintIdsByName.set(definition.name, sprintId);
+  }
+
+  for (const sprint of existingSprints) {
+    if (desiredSprintNames.has(sprint.name)) {
+      continue;
+    }
+
+    await ctx.db.delete(sprint._id);
+  }
+
+  const existingIssues = await ctx.db
+    .query("issues")
+    .withIndex("by_project_deleted", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+  const existingIssuesByKey = new Map(existingIssues.map((issue) => [issue.key, issue]));
+  const issueIdsByKey = new Map<string, Id<"issues">>();
+
+  for (let index = 0; index < issueDefinitions.length; index += 1) {
+    const definition = issueDefinitions[index];
+    const existingIssue = existingIssuesByKey.get(definition.key);
+    const assigneeId = definition.assignedTo === null ? undefined : actorIds[definition.assignedTo];
+    const sprintId = definition.sprintName ? sprintIdsByName.get(definition.sprintName) : undefined;
+    const updatedAt =
+      activityDefinitions.find((activity) => activity.issueKey === definition.key)?.timestamp ??
+      now;
+
+    if (definition.sprintName && !sprintId) {
+      return {
+        success: false,
+        error: `missing sprint "${definition.sprintName}" for analytics state ${args.mode}`,
+      };
+    }
+
+    if (existingIssue) {
+      await ctx.db.patch(existingIssue._id, {
+        ...restoreFields(),
+        assigneeId,
+        attachments: [],
+        dueDate: definition.dueDate,
+        labels: [],
+        linkedDocuments: [],
+        order: index,
+        organizationId: args.organizationId,
+        priority: definition.priority,
+        projectId: args.projectId,
+        reporterId: ownerUserId,
+        searchContent: definition.title,
+        sprintId,
+        status: definition.status,
+        storyPoints: definition.storyPoints,
+        teamId: project.teamId,
+        title: definition.title,
+        type: definition.type,
+        updatedAt,
+        version: existingIssue.version ?? 1,
+        workspaceId: project.workspaceId,
+      });
+      issueIdsByKey.set(definition.key, existingIssue._id);
+      continue;
+    }
+
+    const issueId = await ctx.db.insert("issues", {
+      assigneeId,
+      attachments: [],
+      dueDate: definition.dueDate,
+      key: definition.key,
+      labels: [],
+      linkedDocuments: [],
+      order: index,
+      organizationId: args.organizationId,
+      priority: definition.priority,
+      projectId: args.projectId,
+      reporterId: ownerUserId,
+      searchContent: definition.title,
+      sprintId,
+      status: definition.status,
+      storyPoints: definition.storyPoints,
+      teamId: project.teamId,
+      title: definition.title,
+      type: definition.type,
+      updatedAt,
+      version: 1,
+      workspaceId: project.workspaceId,
+    });
+    issueIdsByKey.set(definition.key, issueId);
+  }
+
+  for (const issue of existingIssues) {
+    if (desiredIssueKeys.has(issue.key)) {
+      continue;
+    }
+
+    await ctx.db.patch(issue._id, {
+      ...softDeleteFields(ownerUserId),
+      updatedAt: now,
+    });
+  }
+
+  for (const issue of existingIssues) {
+    const activities = await ctx.db
+      .query("issueActivity")
+      .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const activity of activities) {
+      await ctx.db.delete(activity._id);
+    }
+  }
+
+  for (const activity of activityDefinitions) {
+    const issueId = issueIdsByKey.get(activity.issueKey);
+    if (!issueId) {
+      return {
+        success: false,
+        error: `missing issue "${activity.issueKey}" for analytics activity state ${args.mode}`,
+      };
+    }
+
+    await ctx.db.insert("issueActivity", {
+      action: activity.action,
+      field: activity.field,
+      issueId,
+      newValue: activity.newValue,
+      oldValue: activity.oldValue,
+      userId: actorIds[activity.actor],
+    });
+  }
+
+  await syncProjectIssueStats(ctx, args.projectId);
+
+  return {
+    success: true,
+    activityCount: activityDefinitions.length,
+    issueCount: issueDefinitions.length,
+    projectId: args.projectId,
+    sprintCount: sprintDefinitions.length,
+  };
+}
+
+async function clearSeededProjectAnalyticsState(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+  },
+): Promise<{
+  success: boolean;
+  activityCount?: number;
+  issueCount?: number;
+  projectId?: Id<"projects">;
+  sprintCount?: number;
+  error?: string;
+}> {
+  const now = Date.now();
+  const project = await ctx.db.get(args.projectId);
+  if (!project) {
+    return { success: false, error: `project not found: ${args.projectId}` };
+  }
+
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const { ownerUserId } = screenshotActors;
+  const existingSprints = await ctx.db
+    .query("sprints")
+    .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const sprint of existingSprints) {
+    await ctx.db.delete(sprint._id);
+  }
+
+  const existingIssues = await ctx.db
+    .query("issues")
+    .withIndex("by_project_deleted", (q) => q.eq("projectId", args.projectId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  let activityCount = 0;
+  for (const issue of existingIssues) {
+    const activities = await ctx.db
+      .query("issueActivity")
+      .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+      .take(BOUNDED_LIST_LIMIT);
+    activityCount += activities.length;
+
+    for (const activity of activities) {
+      await ctx.db.delete(activity._id);
+    }
+
+    await ctx.db.patch(issue._id, {
+      ...softDeleteFields(ownerUserId),
+      updatedAt: now,
+    });
+  }
+
+  await syncProjectIssueStats(ctx, args.projectId);
+
+  return {
+    success: true,
+    activityCount,
+    issueCount: 0,
+    projectId: args.projectId,
+    sprintCount: 0,
+  };
+}
+
+const SCREENSHOT_OUTREACH_MAILBOX = {
+  dailySendLimit: 40,
+  displayName: "Alex Sender",
+  email: "alex.sender.screenshots@nixelo.test",
+  minuteSendCount: 2,
+  minuteSendLimit: 5,
+  todaySendCount: 14,
+} as const;
+
+const SCREENSHOT_OUTREACH_CONTACTS = [
+  {
+    company: "Northstar Labs",
+    customFields: { persona: "Founder", segment: "Expansion" },
+    email: "jamie.rivera.screenshots@nixelo.test",
+    firstName: "Jamie",
+    lastName: "Rivera",
+    tags: ["vip", "saas"],
+    timezone: "America/Chicago",
+  },
+  {
+    company: "Orbit Health",
+    customFields: { persona: "RevOps", segment: "Pipeline" },
+    email: "taylor.north.screenshots@nixelo.test",
+    firstName: "Taylor",
+    lastName: "North",
+    tags: ["revops", "pilot"],
+    timezone: "America/New_York",
+  },
+  {
+    company: "Summit Grid",
+    customFields: { persona: "Operations", segment: "Activation" },
+    email: "casey.lee.screenshots@nixelo.test",
+    firstName: "Casey",
+    lastName: "Lee",
+    tags: ["ops", "expansion"],
+    timezone: "America/Denver",
+  },
+  {
+    company: "Lumen Works",
+    customFields: { persona: "CEO", segment: "Warm" },
+    email: "morgan.hale.screenshots@nixelo.test",
+    firstName: "Morgan",
+    lastName: "Hale",
+    tags: ["warm", "founder"],
+    timezone: "America/Los_Angeles",
+  },
+  {
+    company: "Beacon Point",
+    customFields: { persona: "Marketing", segment: "Paused" },
+    email: "avery.shah.screenshots@nixelo.test",
+    firstName: "Avery",
+    lastName: "Shah",
+    tags: ["marketing", "nurture"],
+    timezone: "Europe/London",
+  },
+] as const;
+
+const SCREENSHOT_OUTREACH_SEQUENCE_NAMES = [
+  "Launch Expansion Sequence",
+  "Founder Follow-up Pilot",
+] as const;
+
 /**
  * Check if email is a test email
  */
@@ -178,6 +2144,503 @@ function generateInvitePreviewToken(): string {
   const timestamp = Date.now().toString(36);
   const randomPart = crypto.randomUUID().replace(/-/g, "");
   return `invite_${timestamp}_${randomPart}`;
+}
+
+async function deleteOutreachEnrollmentGraph(
+  ctx: MutationCtx,
+  enrollmentId: Id<"outreachEnrollments">,
+): Promise<void> {
+  const [events, trackingLinks] = await Promise.all([
+    ctx.db
+      .query("outreachEvents")
+      .withIndex("by_enrollment", (q) => q.eq("enrollmentId", enrollmentId))
+      .collect(),
+    ctx.db
+      .query("outreachTrackingLinks")
+      .withIndex("by_enrollment", (q) => q.eq("enrollmentId", enrollmentId))
+      .collect(),
+  ]);
+
+  for (const event of events) {
+    await ctx.db.delete(event._id);
+  }
+
+  for (const trackingLink of trackingLinks) {
+    await ctx.db.delete(trackingLink._id);
+  }
+
+  await ctx.db.delete(enrollmentId);
+}
+
+async function deleteOutreachSequenceGraph(
+  ctx: MutationCtx,
+  sequenceId: Id<"outreachSequences">,
+): Promise<void> {
+  const enrollments = await ctx.db
+    .query("outreachEnrollments")
+    .withIndex("by_sequence", (q) => q.eq("sequenceId", sequenceId))
+    .collect();
+
+  for (const enrollment of enrollments) {
+    await deleteOutreachEnrollmentGraph(ctx, enrollment._id);
+  }
+
+  await ctx.db.delete(sequenceId);
+}
+
+async function seedScreenshotOutreachData(
+  ctx: MutationCtx,
+  args: {
+    now: number;
+    organizationId: Id<"organizations">;
+    userId: Id<"users">;
+  },
+): Promise<void> {
+  const { now, organizationId, userId } = args;
+  const seededContactEmails = new Set<string>(
+    SCREENSHOT_OUTREACH_CONTACTS.map((contact) => contact.email),
+  );
+  const seededSequenceNames = new Set<string>(SCREENSHOT_OUTREACH_SEQUENCE_NAMES);
+
+  const existingSequences = await ctx.db
+    .query("outreachSequences")
+    .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const sequence of existingSequences) {
+    if (seededSequenceNames.has(sequence.name)) {
+      await deleteOutreachSequenceGraph(ctx, sequence._id);
+    }
+  }
+
+  for (const email of seededContactEmails) {
+    const existingContacts = await ctx.db
+      .query("outreachContacts")
+      .withIndex("by_organization_email", (q) =>
+        q.eq("organizationId", organizationId).eq("email", email),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const contact of existingContacts) {
+      await ctx.db.delete(contact._id);
+    }
+
+    const suppressions = await ctx.db
+      .query("outreachSuppressions")
+      .withIndex("by_organization_email", (q) =>
+        q.eq("organizationId", organizationId).eq("email", email),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const suppression of suppressions) {
+      await ctx.db.delete(suppression._id);
+    }
+  }
+
+  const existingMailboxes = await ctx.db
+    .query("outreachMailboxes")
+    .withIndex("by_user_provider", (q) => q.eq("userId", userId).eq("provider", "google"))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const mailbox of existingMailboxes) {
+    if (mailbox.email === SCREENSHOT_OUTREACH_MAILBOX.email) {
+      await ctx.db.delete(mailbox._id);
+    }
+  }
+
+  const encryptedMailboxTokens = await encryptMailboxTokensForStorage({
+    accessToken: "screenshot-google-access-token",
+    refreshToken: "screenshot-google-refresh-token",
+  });
+
+  const mailboxId = await ctx.db.insert("outreachMailboxes", {
+    userId,
+    organizationId,
+    provider: "google",
+    email: SCREENSHOT_OUTREACH_MAILBOX.email,
+    displayName: SCREENSHOT_OUTREACH_MAILBOX.displayName,
+    accessToken: encryptedMailboxTokens.accessToken,
+    refreshToken: encryptedMailboxTokens.refreshToken,
+    expiresAt: now + DAY,
+    dailySendLimit: SCREENSHOT_OUTREACH_MAILBOX.dailySendLimit,
+    todaySendCount: SCREENSHOT_OUTREACH_MAILBOX.todaySendCount,
+    todayResetAt: now,
+    minuteSendLimit: SCREENSHOT_OUTREACH_MAILBOX.minuteSendLimit,
+    minuteSendCount: SCREENSHOT_OUTREACH_MAILBOX.minuteSendCount,
+    minuteWindowStartedAt: now,
+    isActive: true,
+    lastHealthCheckAt: now - 10 * MINUTE,
+    updatedAt: now - 5 * MINUTE,
+  });
+
+  const contactIds = new Map<string, Id<"outreachContacts">>();
+  for (const [index, contact] of SCREENSHOT_OUTREACH_CONTACTS.entries()) {
+    const contactId = await ctx.db.insert("outreachContacts", {
+      organizationId,
+      email: contact.email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      company: contact.company,
+      timezone: contact.timezone,
+      customFields: contact.customFields,
+      tags: [...contact.tags],
+      source: "manual",
+      createdBy: userId,
+      createdAt: now - (index + 1) * HOUR,
+    });
+    contactIds.set(contact.email, contactId);
+  }
+
+  const getContactId = (email: string): Id<"outreachContacts"> => {
+    const contactId = contactIds.get(email);
+    if (!contactId) {
+      throw new Error(`Missing seeded outreach contact: ${email}`);
+    }
+    return contactId;
+  };
+
+  const launchSequenceId = await ctx.db.insert("outreachSequences", {
+    organizationId,
+    createdBy: userId,
+    name: "Launch Expansion Sequence",
+    status: "active",
+    mailboxId,
+    steps: [
+      {
+        order: 0,
+        subject: "Launch notes for {{company}}",
+        body: "Hi {{firstName}}, I pulled together a concise launch brief for {{company}} and thought it might help your rollout team.",
+        delayDays: 0,
+      },
+      {
+        order: 1,
+        subject: "Customer rollout story for {{company}}",
+        body: "Following up with a rollout example that matches the activation work you mentioned for {{company}}.",
+        delayDays: 3,
+      },
+      {
+        order: 2,
+        subject: "Should I close the loop?",
+        body: "If the timing is off I can close the loop for now, otherwise I can send the implementation checklist.",
+        delayDays: 5,
+      },
+    ],
+    physicalAddress: "500 Market Street, Austin, TX 78701",
+    trackingDomain: "links.nixelo.test",
+    stats: {
+      enrolled: 3,
+      sent: 4,
+      opened: 4,
+      replied: 1,
+      bounced: 0,
+      unsubscribed: 0,
+    },
+    createdAt: now - 3 * DAY,
+    updatedAt: now - 30 * MINUTE,
+  });
+
+  const founderSequenceId = await ctx.db.insert("outreachSequences", {
+    organizationId,
+    createdBy: userId,
+    name: "Founder Follow-up Pilot",
+    status: "paused",
+    mailboxId,
+    steps: [
+      {
+        order: 0,
+        subject: "Founder follow-up for {{company}}",
+        body: "Hi {{firstName}}, sending a concise follow-up on the founder workflow we discussed.",
+        delayDays: 0,
+      },
+      {
+        order: 1,
+        subject: "Still relevant for {{company}}?",
+        body: "Wanted to check whether the founder workflow is still a priority this quarter.",
+        delayDays: 4,
+      },
+    ],
+    physicalAddress: "500 Market Street, Austin, TX 78701",
+    trackingDomain: "pilot-links.nixelo.test",
+    stats: {
+      enrolled: 2,
+      sent: 2,
+      opened: 1,
+      replied: 0,
+      bounced: 1,
+      unsubscribed: 0,
+    },
+    createdAt: now - 2 * DAY,
+    updatedAt: now - 2 * HOUR,
+  });
+
+  const launchEnrollmentOneId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: launchSequenceId,
+    contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 2,
+    status: "active",
+    nextSendAt: now + 2 * DAY,
+    enrolledAt: now - 36 * HOUR,
+    completedAt: undefined,
+    lastSentAt: now - 6 * HOUR,
+    lastOpenedAt: now - 4 * HOUR,
+    lastClickedAt: now - 4 * HOUR,
+    lastRepliedAt: undefined,
+    gmailThreadIds: ["thread-launch-expansion-1"],
+  });
+
+  const launchTrackingLinkRealId = await ctx.db.insert("outreachTrackingLinks", {
+    enrollmentId: launchEnrollmentOneId,
+    step: 0,
+    originalUrl: "https://nixelo.test/customer-story",
+    createdAt: now - 28 * HOUR,
+  });
+
+  const launchEnrollmentTwoId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: launchSequenceId,
+    contactId: getContactId("taylor.north.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 0,
+    status: "replied",
+    nextSendAt: undefined,
+    enrolledAt: now - 30 * HOUR,
+    completedAt: now - 22 * HOUR,
+    lastSentAt: now - 26 * HOUR,
+    lastOpenedAt: now - 24 * HOUR,
+    lastClickedAt: undefined,
+    lastRepliedAt: now - 22 * HOUR,
+    gmailThreadIds: ["thread-launch-expansion-2"],
+  });
+
+  const launchEnrollmentThreeId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: launchSequenceId,
+    contactId: getContactId("casey.lee.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 1,
+    status: "active",
+    nextSendAt: now + DAY,
+    enrolledAt: now - 14 * HOUR,
+    completedAt: undefined,
+    lastSentAt: now - 10 * HOUR,
+    lastOpenedAt: now - 8 * HOUR,
+    lastClickedAt: undefined,
+    lastRepliedAt: undefined,
+    gmailThreadIds: ["thread-launch-expansion-3"],
+  });
+
+  const founderEnrollmentOneId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: founderSequenceId,
+    contactId: getContactId("morgan.hale.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 0,
+    status: "bounced",
+    nextSendAt: undefined,
+    enrolledAt: now - 18 * HOUR,
+    completedAt: now - 17 * HOUR,
+    lastSentAt: now - 17 * HOUR,
+    lastOpenedAt: undefined,
+    lastClickedAt: undefined,
+    lastRepliedAt: undefined,
+    gmailThreadIds: ["thread-founder-pilot-1"],
+  });
+
+  const founderEnrollmentTwoId = await ctx.db.insert("outreachEnrollments", {
+    sequenceId: founderSequenceId,
+    contactId: getContactId("avery.shah.screenshots@nixelo.test"),
+    organizationId,
+    currentStep: 1,
+    status: "paused",
+    nextSendAt: now + 3 * DAY,
+    enrolledAt: now - 12 * HOUR,
+    completedAt: undefined,
+    lastSentAt: now - 9 * HOUR,
+    lastOpenedAt: now - 8 * HOUR,
+    lastClickedAt: undefined,
+    lastRepliedAt: undefined,
+    gmailThreadIds: ["thread-founder-pilot-2"],
+  });
+
+  const outreachEvents: Array<{
+    enrollmentId: Id<"outreachEnrollments">;
+    sequenceId: Id<"outreachSequences">;
+    contactId: Id<"outreachContacts">;
+    organizationId: Id<"organizations">;
+    type: "sent" | "opened" | "clicked" | "replied" | "bounced";
+    step: number;
+    trackingLinkId?: Id<"outreachTrackingLinks">;
+    metadata?: {
+      bounceType?: string;
+      diagnosticCode?: string;
+      failedRecipient?: string;
+      linkUrl?: string;
+      replyContent?: string;
+      userAgent?: string;
+    };
+    createdAt: number;
+  }> = [
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 28 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 27 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "clicked",
+      step: 0,
+      trackingLinkId: launchTrackingLinkRealId,
+      metadata: { linkUrl: "https://nixelo.test/customer-story" },
+      createdAt: now - 26 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 1,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 6 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentOneId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("jamie.rivera.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 1,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 4 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentTwoId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("taylor.north.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 26 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentTwoId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("taylor.north.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 24 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentTwoId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("taylor.north.screenshots@nixelo.test"),
+      organizationId,
+      type: "replied",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { replyContent: "This is timely. Send the implementation checklist." },
+      createdAt: now - 22 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentThreeId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("casey.lee.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 10 * HOUR,
+    },
+    {
+      enrollmentId: launchEnrollmentThreeId,
+      sequenceId: launchSequenceId,
+      contactId: getContactId("casey.lee.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 8 * HOUR,
+    },
+    {
+      enrollmentId: founderEnrollmentOneId,
+      sequenceId: founderSequenceId,
+      contactId: getContactId("morgan.hale.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 17 * HOUR,
+    },
+    {
+      enrollmentId: founderEnrollmentOneId,
+      sequenceId: founderSequenceId,
+      contactId: getContactId("morgan.hale.screenshots@nixelo.test"),
+      organizationId,
+      type: "bounced",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: {
+        bounceType: "hard",
+        diagnosticCode: "550 5.1.1 mailbox unavailable",
+        failedRecipient: "morgan.hale.screenshots@nixelo.test",
+      },
+      createdAt: now - 16 * HOUR,
+    },
+    {
+      enrollmentId: founderEnrollmentTwoId,
+      sequenceId: founderSequenceId,
+      contactId: getContactId("avery.shah.screenshots@nixelo.test"),
+      organizationId,
+      type: "sent",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: undefined,
+      createdAt: now - 9 * HOUR,
+    },
+    {
+      enrollmentId: founderEnrollmentTwoId,
+      sequenceId: founderSequenceId,
+      contactId: getContactId("avery.shah.screenshots@nixelo.test"),
+      organizationId,
+      type: "opened",
+      step: 0,
+      trackingLinkId: undefined,
+      metadata: { userAgent: "Mozilla/5.0" },
+      createdAt: now - 8 * HOUR,
+    },
+  ];
+
+  for (const event of outreachEvents) {
+    await ctx.db.insert("outreachEvents", event);
+  }
 }
 
 async function deleteMeetingRecordingGraph(
@@ -2213,6 +4676,1091 @@ export const checkProjectIssueDuplicatesInternal = internalQuery({
   },
 });
 
+/**
+ * Delete a screenshot-created issue so later captures stay deterministic.
+ * POST /e2e/delete-seeded-project-issue
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   issueTitle: string,
+ * }
+ */
+export const deleteSeededProjectIssueEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, issueTitle } = body;
+
+    if (!(orgSlug && projectKey && issueTitle)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or issueTitle" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.deleteSeededProjectIssueInternal, {
+      orgSlug,
+      projectKey,
+      issueTitle,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const deleteSeededProjectIssueInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    issueTitle: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    deleted: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const candidateIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_project_deleted", (q) => q.eq("projectId", project._id).eq("isDeleted", false))
+      .order("desc")
+      .take(50);
+
+    const issuesToDelete = candidateIssues.filter((issue) => issue.title === args.issueTitle);
+    if (issuesToDelete.length === 0) {
+      return {
+        success: false,
+        error: `issue not found: ${args.issueTitle} in ${args.projectKey}`,
+      };
+    }
+
+    await Promise.all(
+      issuesToDelete.map((issue) =>
+        ctx.db.patch(issue._id, {
+          ...softDeleteFields(issue.reporterId),
+          updatedAt: Date.now(),
+        }),
+      ),
+    );
+
+    await syncProjectIssueStats(ctx, project._id);
+
+    return {
+      success: true,
+      deleted: issuesToDelete.length,
+    };
+  },
+});
+
+/**
+ * Reconfigure seeded roadmap data for screenshot capture.
+ * POST /e2e/configure-roadmap-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "empty" | "milestone",
+ * }
+ */
+export const configureRoadmapStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "empty", "milestone"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid roadmap mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateRoadmapStateInternal, {
+      mode,
+      orgSlug,
+      projectKey,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateRoadmapStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("empty"), v.literal("milestone")),
+    orgSlug: v.string(),
+    projectKey: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    issueCount: v.optional(v.number()),
+    linkCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    return await resetSeededRoadmapState(ctx, {
+      mode: args.mode,
+      organizationId: organization._id,
+      projectId: project._id,
+    });
+  },
+});
+
+/**
+ * Reconfigure seeded time tracking data for screenshot capture.
+ * POST /e2e/configure-time-tracking-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated",
+ * }
+ */
+export const configureTimeTrackingStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "entriesEmpty", "ratesPopulated", "summaryTruncated"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid time tracking mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateTimeTrackingStateInternal, {
+      mode,
+      orgSlug,
+      projectKey,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateTimeTrackingStateInternal = internalMutation({
+  args: {
+    mode: v.union(
+      v.literal("default"),
+      v.literal("entriesEmpty"),
+      v.literal("ratesPopulated"),
+      v.literal("summaryTruncated"),
+    ),
+    orgSlug: v.string(),
+    projectKey: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    entryCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    rateCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const timeTrackingReset = await resetSeededTimeTrackingState(ctx, {
+      mode: args.mode,
+      organizationId: organization._id,
+      projectId: project._id,
+    });
+
+    if (!timeTrackingReset.success) {
+      return {
+        success: false,
+        error: timeTrackingReset.error ?? `Failed to configure time tracking state: ${args.mode}`,
+      };
+    }
+
+    return timeTrackingReset;
+  },
+});
+
+/**
+ * Reconfigure a seeded project's inbox data for screenshot capture.
+ * POST /e2e/configure-project-inbox-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "openEmpty" | "closedEmpty",
+ * }
+ */
+export const configureProjectInboxStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "openEmpty", "closedEmpty"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid project inbox mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectInboxStateInternal, {
+      orgSlug,
+      projectKey,
+      mode,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectInboxStateInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    mode: v.union(v.literal("default"), v.literal("openEmpty"), v.literal("closedEmpty")),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    closedCount: v.optional(v.number()),
+    openCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const inboxReset = await resetSeededProjectInboxIssues(ctx, {
+      organizationId: organization._id,
+      projectId: project._id,
+      mode: args.mode,
+    });
+
+    if (!inboxReset.success) {
+      return {
+        success: false,
+        error: inboxReset.error ?? `Failed to configure project inbox state: ${args.mode}`,
+      };
+    }
+
+    return {
+      success: true,
+      projectId: project._id,
+      openCount: inboxReset.openCount,
+      closedCount: inboxReset.closedCount,
+    };
+  },
+});
+
+/**
+ * Reconfigure seeded projects-list membership data for screenshot capture.
+ * POST /e2e/configure-projects-state
+ * Body: {
+ *   orgSlug: string,
+ *   mode: "default" | "single" | "empty",
+ * }
+ */
+export const configureProjectsStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, mode } = body;
+
+    if (!(orgSlug && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "single", "empty"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid projects mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectsStateInternal, {
+      mode,
+      orgSlug,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectsStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("single"), v.literal("empty")),
+    orgSlug: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    visibleProjectCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const primaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), "DEMO")))
+      .first();
+    const secondaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), "OPS")))
+      .first();
+
+    if (!(primaryProject && secondaryProject)) {
+      return {
+        success: false,
+        error: `seeded projects not found in ${args.orgSlug}`,
+      };
+    }
+
+    const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+      organizationId: organization._id,
+      projectId: primaryProject._id,
+    });
+    if (!screenshotActors.success) {
+      return {
+        success: false,
+        error: screenshotActors.error,
+      };
+    }
+
+    return await resetSeededProjectsRouteState(ctx, {
+      mode: args.mode,
+      ownerUserId: screenshotActors.ownerUserId,
+      primaryProjectId: primaryProject._id,
+      secondaryProjectId: secondaryProject._id,
+    });
+  },
+});
+
+/**
+ * Reconfigure a seeded project's analytics data for screenshot capture.
+ * POST /e2e/configure-project-analytics-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "sparseData" | "noActivity",
+ * }
+ */
+export const configureProjectAnalyticsStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "sparseData", "noActivity"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid project analytics mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectAnalyticsStateInternal, {
+      mode,
+      orgSlug,
+      projectKey,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectAnalyticsStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("sparseData"), v.literal("noActivity")),
+    orgSlug: v.string(),
+    projectKey: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    activityCount: v.optional(v.number()),
+    issueCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    sprintCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const analyticsReset = await resetSeededProjectAnalyticsState(ctx, {
+      mode: args.mode,
+      organizationId: organization._id,
+      projectId: project._id,
+    });
+
+    if (!analyticsReset.success) {
+      return {
+        success: false,
+        error: analyticsReset.error ?? `Failed to configure project analytics state: ${args.mode}`,
+      };
+    }
+
+    return analyticsReset;
+  },
+});
+
+/**
+ * Reconfigure seeded org analytics data for screenshot capture.
+ * POST /e2e/configure-org-analytics-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "sparseData" | "noActivity",
+ * }
+ *
+ * Org analytics in screenshot runs is driven by the seeded demo project, so this
+ * reuses the same underlying issue/sprint/activity reset path as project analytics.
+ */
+export const configureOrgAnalyticsStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "sparseData", "noActivity"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid org analytics mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateOrgAnalyticsStateInternal, {
+      mode,
+      orgSlug,
+      projectKey,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateOrgAnalyticsStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("sparseData"), v.literal("noActivity")),
+    orgSlug: v.string(),
+    projectKey: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    activityCount: v.optional(v.number()),
+    issueCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    sprintCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const orgProjects = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    let targetAnalyticsReset: {
+      success: boolean;
+      activityCount?: number;
+      issueCount?: number;
+      projectId?: Id<"projects">;
+      sprintCount?: number;
+      error?: string;
+    } | null = null;
+
+    for (const orgProject of orgProjects) {
+      const shouldClearProject = orgProject._id !== project._id || args.mode === "noActivity";
+      const analyticsReset = shouldClearProject
+        ? await clearSeededProjectAnalyticsState(ctx, {
+            organizationId: organization._id,
+            projectId: orgProject._id,
+          })
+        : await resetSeededProjectAnalyticsState(ctx, {
+            mode: args.mode,
+            organizationId: organization._id,
+            projectId: orgProject._id,
+          });
+
+      if (!analyticsReset.success) {
+        return {
+          success: false,
+          error:
+            analyticsReset.error ??
+            `Failed to configure org analytics state: ${args.mode} for ${orgProject.key}`,
+        };
+      }
+
+      if (orgProject._id === project._id) {
+        targetAnalyticsReset = analyticsReset;
+      }
+    }
+
+    if (!targetAnalyticsReset) {
+      return {
+        success: false,
+        error: `Failed to configure org analytics state: ${args.mode}`,
+      };
+    }
+
+    return targetAnalyticsReset;
+  },
+});
+
+/**
+ * Reconfigure seeded notifications data for screenshot capture.
+ * POST /e2e/configure-notifications-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "inboxEmpty" | "archivedEmpty" | "unreadOverflow",
+ * }
+ */
+export const configureNotificationsStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "inboxEmpty", "archivedEmpty", "unreadOverflow"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid notifications mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateNotificationsStateInternal, {
+      orgSlug,
+      projectKey,
+      mode,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateNotificationsStateInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    mode: v.union(
+      v.literal("default"),
+      v.literal("inboxEmpty"),
+      v.literal("archivedEmpty"),
+      v.literal("unreadOverflow"),
+    ),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    archivedCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    unreadCount: v.optional(v.number()),
+    visibleCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const notificationReset = await resetSeededNotificationsForUser(ctx, {
+      organizationId: organization._id,
+      projectId: project._id,
+      mode: args.mode,
+    });
+
+    if (!notificationReset.success) {
+      return {
+        success: false,
+        error: notificationReset.error ?? `Failed to configure notifications state: ${args.mode}`,
+      };
+    }
+
+    return {
+      success: true,
+      projectId: project._id,
+      visibleCount: notificationReset.visibleCount,
+      archivedCount: notificationReset.archivedCount,
+      unreadCount: notificationReset.unreadCount,
+    };
+  },
+});
+
+/**
+ * Reconfigure seeded assistant data for screenshot capture.
+ * POST /e2e/configure-assistant-state
+ * Body: {
+ *   orgSlug: string,
+ *   mode: "default" | "empty",
+ * }
+ */
+export const configureAssistantStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, mode } = body;
+
+    if (!(orgSlug && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "empty"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid assistant mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateAssistantStateInternal, {
+      mode,
+      orgSlug,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateAssistantStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("empty")),
+    orgSlug: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    chatCount: v.optional(v.number()),
+    requestCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const primaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), "DEMO")))
+      .first();
+    const secondaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), "OPS")))
+      .first();
+
+    if (!(primaryProject && secondaryProject)) {
+      return {
+        success: false,
+        error: `seeded assistant projects not found in ${args.orgSlug}`,
+      };
+    }
+
+    const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+      organizationId: organization._id,
+      projectId: primaryProject._id,
+    });
+    if (!screenshotActors.success) {
+      return {
+        success: false,
+        error: screenshotActors.error,
+      };
+    }
+
+    const assistantReset = await resetSeededAssistantState(ctx, {
+      mode: args.mode,
+      now: Date.now(),
+      primaryProjectId: primaryProject._id,
+      secondaryProjectId: secondaryProject._id,
+      userId: screenshotActors.ownerUserId,
+    });
+
+    if (!assistantReset.success) {
+      return {
+        success: false,
+        error: assistantReset.error ?? `Failed to configure assistant state: ${args.mode}`,
+      };
+    }
+
+    return assistantReset;
+  },
+});
+
 export const updateProjectWorkflowStatesInternal = internalMutation({
   args: {
     orgSlug: v.string(),
@@ -3230,6 +6778,84 @@ export const nukeAllTestUsersInternal = internalMutation({
  * Internal mutation to cleanup expired test OTP codes
  * Called by cron job to prevent testOtpCodes table from growing indefinitely
  */
+function getUtcDayBoundaries(
+  baseTimestamp: number,
+  offsetDays: number,
+): { end: number; start: number } {
+  const baseDate = new Date(baseTimestamp);
+  const start = Date.UTC(
+    baseDate.getUTCFullYear(),
+    baseDate.getUTCMonth(),
+    baseDate.getUTCDate() + offsetDays,
+  );
+  return {
+    end: start + DAY - 1,
+    start,
+  };
+}
+
+async function resetSeededInvoicesForScreenshot(
+  ctx: MutationCtx,
+  args: {
+    createdBy: Id<"users">;
+    now: number;
+    organizationId: Id<"organizations">;
+    portalClientId: Id<"clients">;
+  },
+) {
+  while (true) {
+    const existingInvoices = await ctx.db
+      .query("invoices")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .take(BOUNDED_LIST_LIMIT);
+
+    if (existingInvoices.length === 0) {
+      break;
+    }
+
+    for (const invoice of existingInvoices) {
+      await ctx.db.delete(invoice._id);
+    }
+  }
+
+  for (const definition of SCREENSHOT_INVOICE_DEFINITIONS) {
+    const issueDate = getUtcDayBoundaries(args.now, definition.issueOffsetDays).start;
+    const dueDate = getUtcDayBoundaries(args.now, definition.dueOffsetDays).end;
+    const lineItems = definition.lineItems.map((lineItem) => ({
+      amount: lineItem.quantity * lineItem.rate,
+      description: lineItem.description,
+      quantity: lineItem.quantity,
+      rate: lineItem.rate,
+    }));
+    const subtotal = lineItems.reduce((sum, lineItem) => sum + lineItem.amount, 0);
+
+    await ctx.db.insert("invoices", {
+      clientId: definition.client === "portal" ? args.portalClientId : undefined,
+      createdBy: args.createdBy,
+      dueDate,
+      issueDate,
+      lineItems,
+      notes: definition.notes,
+      number: definition.number,
+      organizationId: args.organizationId,
+      paidAt:
+        definition.status === "paid" && definition.paidOffsetDays !== undefined
+          ? getUtcDayBoundaries(args.now, definition.paidOffsetDays).start
+          : undefined,
+      pdfUrl: undefined,
+      sentAt:
+        definition.status !== "draft" && definition.sentOffsetDays !== undefined
+          ? getUtcDayBoundaries(args.now, definition.sentOffsetDays).start
+          : undefined,
+      status: definition.status,
+      subtotal,
+      tax: undefined,
+      total: subtotal,
+      updatedAt: args.now,
+    });
+  }
+}
+
 /**
  * Seed screenshot data for visual regression testing
  * POST /e2e/seed-screenshot-data
@@ -3915,6 +7541,13 @@ export const seedScreenshotDataInternal = internalMutation({
       updatedAt: now,
     });
 
+    await resetSeededInvoicesForScreenshot(ctx, {
+      createdBy: userId,
+      now,
+      organizationId: orgId,
+      portalClientId: portalClient._id,
+    });
+
     // Normalize OPS project membership: remove stale members from previous runs
     // (autoLogin recreates the screenshot user, so old membership rows accumulate)
     const opsMembers = await ctx.db
@@ -4132,6 +7765,7 @@ export const seedScreenshotDataInternal = internalMutation({
     ];
 
     const createdIssueKeys: string[] = [];
+    const createdIssueIdsByKey = new Map<string, Id<"issues">>();
 
     for (let i = 0; i < issueDefinitions.length; i++) {
       const def = issueDefinitions[i];
@@ -4142,8 +7776,10 @@ export const seedScreenshotDataInternal = internalMutation({
         .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), def.key)))
         .first();
 
+      let issueId: Id<"issues">;
+
       if (!existing) {
-        await ctx.db.insert("issues", {
+        issueId = await ctx.db.insert("issues", {
           projectId,
           organizationId: orgId,
           workspaceId,
@@ -4186,8 +7822,24 @@ export const seedScreenshotDataInternal = internalMutation({
           version: existing.version ?? 1,
           updatedAt: now,
         });
+        issueId = existing._id;
       }
       createdIssueKeys.push(def.key);
+      createdIssueIdsByKey.set(def.key, issueId);
+    }
+
+    const inboxReset = await resetSeededProjectInboxIssues(ctx, {
+      organizationId: orgId,
+      projectId,
+      mode: "default",
+      issueIdsByKey: createdIssueIdsByKey,
+    });
+
+    if (!inboxReset.success) {
+      return {
+        success: false,
+        error: inboxReset.error ?? "Failed to seed project inbox screenshot state",
+      };
     }
 
     // 8. Create documents (idempotent by title + project)
@@ -4456,6 +8108,7 @@ export const seedScreenshotDataInternal = internalMutation({
         await ctx.db.patch(existing._id, {
           organizationId: orgId,
           workspaceId,
+          teamId,
           projectId,
           description: cal.description,
           startTime,
@@ -4472,6 +8125,7 @@ export const seedScreenshotDataInternal = internalMutation({
         await ctx.db.insert("calendarEvents", {
           organizationId: orgId,
           workspaceId,
+          teamId,
           projectId,
           title: cal.title,
           description: cal.description,
@@ -4578,63 +8232,31 @@ export const seedScreenshotDataInternal = internalMutation({
       }
     }
 
-    // 10b. Create notifications (idempotent by type + title substring)
-    const notificationDefs: Array<{
-      type: string;
-      title: string;
-      body: string;
-      hoursAgo: number;
-    }> = [
-      {
-        type: "issue_assigned",
-        title: "Issue assigned to you",
-        body: "DEMO-1: Set up CI/CD pipeline was assigned to you",
-        hoursAgo: 1,
-      },
-      {
-        type: "issue_commented",
-        title: "New comment on DEMO-3",
-        body: 'Alex Rivera commented: "Dashboard layout looks great, merging now."',
-        hoursAgo: 3,
-      },
-      {
-        type: "issue_mentioned",
-        title: "You were mentioned",
-        body: "Sarah Kim mentioned you in DEMO-5: Database query optimization",
-        hoursAgo: 8,
-      },
-      {
-        type: "issue_status_changed",
-        title: "Issue status updated",
-        body: "DEMO-2: Fix login timeout moved from In Progress to In Review",
-        hoursAgo: 24,
-      },
-      {
-        type: "sprint_started",
-        title: "Sprint started",
-        body: "Sprint 1 has started with 5 issues assigned",
-        hoursAgo: 48,
-      },
-    ];
+    const assistantReset = await resetSeededAssistantState(ctx, {
+      mode: "default",
+      now,
+      primaryProjectId: projectId,
+      secondaryProjectId,
+      userId,
+    });
+    if (!assistantReset.success) {
+      return {
+        success: false,
+        error: assistantReset.error ?? "Failed to seed assistant screenshot state",
+      };
+    }
 
-    for (const notif of notificationDefs) {
-      const existing = await ctx.db
-        .query("notifications")
-        .withIndex("by_user_active", (q) => q.eq("userId", userId).eq("isDeleted", undefined))
-        .filter((q) => q.eq(q.field("title"), notif.title))
-        .first();
-
-      if (!existing) {
-        await ctx.db.insert("notifications", {
-          userId,
-          type: notif.type,
-          title: notif.title,
-          message: notif.body,
-          isRead: notif.hoursAgo > 12,
-          projectId,
-          actorId: syntheticUserIds[0],
-        });
-      }
+    const notificationsReset = await resetSeededNotificationsForUser(ctx, {
+      organizationId: orgId,
+      projectId,
+      mode: "default",
+      issueIdsByKey: createdIssueIdsByKey,
+    });
+    if (!notificationsReset.success) {
+      return {
+        success: false,
+        error: notificationsReset.error ?? "Failed to seed notifications screenshot state",
+      };
     }
 
     // 10c. Create meetings workspace data with two completed recordings spanning
@@ -4810,6 +8432,62 @@ export const seedScreenshotDataInternal = internalMutation({
           },
         ],
       },
+      {
+        title: "Go-live Support Runbook",
+        meetingUrl: "https://meet.google.com/go-live-support-runbook",
+        meetingPlatform: "google_meet" as const,
+        projectId: secondaryProjectId,
+        scheduledStartTime: now - 30 * MINUTE,
+        actualStartTime: now - 25 * MINUTE,
+        actualEndTime: undefined,
+        duration: undefined,
+        status: "processing" as const,
+        fullText:
+          "The team is still aligning on support coverage, escalation routing, and the final handoff packet before launch.",
+        segments: [
+          {
+            startTime: 0,
+            endTime: 26,
+            speaker: "Emily Chen",
+            speakerUserId: userId,
+            text: "Let's confirm the support rotation before launch so escalation routing is clear for the weekend window.",
+            confidence: 0.96,
+          },
+          {
+            startTime: 27,
+            endTime: 54,
+            speaker: "Sarah Kim",
+            speakerUserId: sarahUserId,
+            text: "I'm still collecting the final handoff packet details, so the summary should stay in progress until the call wraps.",
+            confidence: 0.95,
+          },
+        ],
+        summary: null,
+        participants: [
+          {
+            displayName: "Emily Chen",
+            email: args.email,
+            userId,
+            joinedAt: now - 25 * MINUTE,
+            leftAt: undefined,
+            speakingTime: 8 * MINUTE,
+            speakingPercentage: 48,
+            isHost: true,
+            isExternal: false,
+          },
+          {
+            displayName: "Sarah Kim",
+            email: "sarah-kim-screenshots@inbox.mailtrap.io",
+            userId: sarahUserId,
+            joinedAt: now - 25 * MINUTE,
+            leftAt: undefined,
+            speakingTime: 7 * MINUTE,
+            speakingPercentage: 41,
+            isHost: false,
+            isExternal: false,
+          },
+        ],
+      },
     ];
 
     for (const meeting of [...meetingSeedDefinitions].reverse()) {
@@ -4818,7 +8496,7 @@ export const seedScreenshotDataInternal = internalMutation({
         meetingPlatform: meeting.meetingPlatform,
         title: meeting.title,
         duration: meeting.duration,
-        status: "completed",
+        status: meeting.status ?? "completed",
         scheduledStartTime: meeting.scheduledStartTime,
         actualStartTime: meeting.actualStartTime,
         actualEndTime: meeting.actualEndTime,
@@ -4842,21 +8520,23 @@ export const seedScreenshotDataInternal = internalMutation({
         speakerCount: 2,
       });
 
-      await ctx.db.insert("meetingSummaries", {
-        recordingId,
-        transcriptId,
-        executiveSummary: meeting.summary.executiveSummary,
-        keyPoints: meeting.summary.keyPoints,
-        actionItems: meeting.summary.actionItems,
-        decisions: meeting.summary.decisions,
-        openQuestions: meeting.summary.openQuestions,
-        topics: meeting.summary.topics,
-        overallSentiment: meeting.summary.overallSentiment,
-        modelUsed: meeting.summary.modelUsed,
-        promptTokens: 420,
-        completionTokens: 188,
-        processingTime: 8 * SECOND,
-      });
+      if (meeting.summary) {
+        await ctx.db.insert("meetingSummaries", {
+          recordingId,
+          transcriptId,
+          executiveSummary: meeting.summary.executiveSummary,
+          keyPoints: meeting.summary.keyPoints,
+          actionItems: meeting.summary.actionItems,
+          decisions: meeting.summary.decisions,
+          openQuestions: meeting.summary.openQuestions,
+          topics: meeting.summary.topics,
+          overallSentiment: meeting.summary.overallSentiment,
+          modelUsed: meeting.summary.modelUsed,
+          promptTokens: 420,
+          completionTokens: 188,
+          processingTime: 8 * SECOND,
+        });
+      }
 
       for (const participant of meeting.participants) {
         await ctx.db.insert("meetingParticipants", {
@@ -4873,6 +8553,12 @@ export const seedScreenshotDataInternal = internalMutation({
         });
       }
     }
+
+    await seedScreenshotOutreachData(ctx, {
+      now,
+      organizationId: orgId,
+      userId,
+    });
 
     // 11. Return result
     return {

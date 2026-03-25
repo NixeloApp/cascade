@@ -74,6 +74,93 @@ export interface CheckProjectIssueDuplicatesResult {
   error?: string;
 }
 
+export interface DeleteSeededProjectIssueResult {
+  success: boolean;
+  deleted?: number;
+  error?: string;
+}
+
+export type TimeTrackingScreenshotState =
+  | "default"
+  | "entriesEmpty"
+  | "ratesPopulated"
+  | "summaryTruncated";
+export type ProjectListScreenshotState = "default" | "single" | "empty";
+export type RoadmapScreenshotState = "default" | "empty" | "milestone";
+export type ProjectInboxScreenshotState = "default" | "openEmpty" | "closedEmpty";
+export type ProjectAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
+export type OrgAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
+export type NotificationsScreenshotState =
+  | "default"
+  | "inboxEmpty"
+  | "archivedEmpty"
+  | "unreadOverflow";
+export type AssistantScreenshotState = "default" | "empty";
+
+export interface ConfigureProjectInboxStateResult {
+  success: boolean;
+  closedCount?: number;
+  openCount?: number;
+  projectId?: string;
+  error?: string;
+}
+
+export interface ConfigureProjectsStateResult {
+  success: boolean;
+  visibleProjectCount?: number;
+  error?: string;
+}
+
+export interface ConfigureRoadmapStateResult {
+  success: boolean;
+  issueCount?: number;
+  linkCount?: number;
+  projectId?: string;
+  error?: string;
+}
+
+export interface ConfigureTimeTrackingStateResult {
+  success: boolean;
+  entryCount?: number;
+  projectId?: string;
+  rateCount?: number;
+  error?: string;
+}
+
+export interface ConfigureNotificationsStateResult {
+  success: boolean;
+  archivedCount?: number;
+  unreadCount?: number;
+  visibleCount?: number;
+  projectId?: string;
+  error?: string;
+}
+
+export interface ConfigureProjectAnalyticsStateResult {
+  success: boolean;
+  activityCount?: number;
+  issueCount?: number;
+  projectId?: string;
+  sprintCount?: number;
+  error?: string;
+}
+
+export interface ConfigureOrgAnalyticsStateResult {
+  success: boolean;
+  activityCount?: number;
+  issueCount?: number;
+  projectId?: string;
+  sprintCount?: number;
+  error?: string;
+}
+
+export interface ConfigureAssistantStateResult {
+  success: boolean;
+  chatCount?: number;
+  requestCount?: number;
+  error?: string;
+}
+
 export interface E2EWorkflowState {
   id: string;
   name: string;
@@ -408,6 +495,212 @@ export class TestUserService {
       return await response.json();
     } catch (error) {
       console.warn(`  ⚠️ Failed to seed screenshot data:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Delete a screenshot-created issue so later captures keep seeded counts stable.
+   */
+  async deleteSeededProjectIssue(
+    orgSlug: string,
+    projectKey: string,
+    issueTitle: string,
+  ): Promise<DeleteSeededProjectIssueResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.deleteSeededProjectIssue, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, issueTitle }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to delete seeded screenshot issue "${issueTitle}" for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure a seeded project inbox for screenshot capture.
+   */
+  async configureProjectInboxState(
+    orgSlug: string,
+    projectKey: string,
+    mode: ProjectInboxScreenshotState,
+  ): Promise<ConfigureProjectInboxStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureProjectInboxState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure project inbox state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded projects list data for screenshot capture.
+   */
+  async configureProjectsState(
+    orgSlug: string,
+    mode: ProjectListScreenshotState,
+  ): Promise<ConfigureProjectsStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureProjectsState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to configure projects state ${mode} for ${orgSlug}:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded roadmap data for screenshot capture.
+   */
+  async configureRoadmapState(
+    orgSlug: string,
+    projectKey: string,
+    mode: RoadmapScreenshotState,
+  ): Promise<ConfigureRoadmapStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureRoadmapState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure roadmap state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded time tracking data for screenshot capture.
+   */
+  async configureTimeTrackingState(
+    orgSlug: string,
+    projectKey: string,
+    mode: TimeTrackingScreenshotState,
+  ): Promise<ConfigureTimeTrackingStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureTimeTrackingState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure time tracking state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure a seeded project's analytics data for screenshot capture.
+   */
+  async configureProjectAnalyticsState(
+    orgSlug: string,
+    projectKey: string,
+    mode: ProjectAnalyticsScreenshotState,
+  ): Promise<ConfigureProjectAnalyticsStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureProjectAnalyticsState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure analytics state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded org analytics data for screenshot capture.
+   */
+  async configureOrgAnalyticsState(
+    orgSlug: string,
+    projectKey: string,
+    mode: OrgAnalyticsScreenshotState,
+  ): Promise<ConfigureOrgAnalyticsStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureOrgAnalyticsState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure org analytics state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded notifications data for screenshot capture.
+   */
+  async configureNotificationsState(
+    orgSlug: string,
+    projectKey: string,
+    mode: NotificationsScreenshotState,
+  ): Promise<ConfigureNotificationsStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureNotificationsState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure notifications state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  async configureAssistantState(
+    orgSlug: string,
+    mode: AssistantScreenshotState,
+  ): Promise<ConfigureAssistantStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureAssistantState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, mode }),
+      });
+      const result = (await response.json()) as ConfigureAssistantStateResult;
+      return result;
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to configure assistant state (${mode}):`, error);
       return { success: false, error: String(error) };
     }
   }

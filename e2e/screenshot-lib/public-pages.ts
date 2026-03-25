@@ -90,6 +90,7 @@ export async function screenshotEmptyStates(page: Page, orgSlug: string): Promis
     "invoices",
     "clients",
     "meetings",
+    "outreach",
     "settings",
     "settings-profile",
   ];
@@ -111,6 +112,7 @@ export async function screenshotEmptyStates(page: Page, orgSlug: string): Promis
   await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
   await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
+  await takeScreenshot(page, p, "outreach", ROUTES.outreach.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
 }

@@ -1,8 +1,8 @@
 # Org Calendar Page - Current State
 
 > **Route**: `/:orgSlug/calendar`
-> **Status**: IMPLEMENTED
-> **Last Updated**: 2026-03-22
+> **Status**: REVIEWED
+> **Last Updated**: 2026-03-25
 
 ---
 
@@ -25,51 +25,47 @@ The org calendar provides a single unified view of calendar events across all wo
 │   ├── PageHeader
 │   │   ├── title = dynamic scope label ("Organization scope" | "Workspace scope" | "Team scope")
 │   │   └── actions
-│   │       ├── Select (Workspace filter: "All workspaces" | per-workspace)
-│   │       └── Select (Team filter: "All teams" | per-team, filtered by workspace)
+│   │       └── OrganizationCalendarFilterControls
+│   │           ├── Select (Workspace filter: "All workspaces" | per-workspace)
+│   │           └── Select (Team filter: "All teams" | per-team, filtered by workspace)
 │   │
-│   └── Suspense
-│       └── CalendarView (lazy-loaded)
-│           ├── organizationId (when no workspace selected)
-│           ├── workspaceId (when workspace selected)
-│           ├── teamId (when team selected)
-│           └── colorByScope ("workspace" | "team" | undefined)
+│   └── div[data-testid=TEST_IDS.ORG_CALENDAR.CONTENT]
+│       └── Suspense
+│           ├── fallback = OrganizationCalendarLoadingBody
+│           └── CalendarView (lazy-loaded)
+│               ├── organizationId
+│               ├── workspaceId? (when workspace selected)
+│               ├── teamId? (when team selected)
+│               └── colorByScope ("workspace" | "team" | undefined)
 ```
 
 ---
 
 ## Current Composition Walkthrough
 
-1. **Route bootstrap**: `OrganizationCalendarPage` calls `useOrganization()` to get `organizationId`, then fires two queries in parallel: `api.workspaces.list` and `api.teams.getOrganizationTeams`.
-2. **Loading gate**: While either query is `undefined`, renders `<PageContent isLoading>`.
-3. **Filter state**: Two `useState` hooks manage `selectedWorkspaceId` and `selectedTeamId`, both defaulting to `"all"`.
-4. **Team cascading**: When a workspace is selected, the team dropdown is filtered to only show teams belonging to that workspace. Selecting a workspace resets `selectedTeamId` to `"all"`.
-5. **Scope label**: The `PageHeader` title dynamically reflects the filter state -- "Team scope", "Workspace scope", or "Organization scope".
-6. **Color scope**: Events are color-coded by workspace when viewing the full org, by team when viewing a single workspace, and use default colors when viewing a single team.
-7. **CalendarView**: Lazy-loaded via `React.lazy`. Renders the shared calendar component with day/week/month modes, event CRUD modals, and drag-to-reschedule.
+1. **Route bootstrap**: `OrganizationCalendarPage` calls `useOrganization()` for `organizationId`, then loads `api.workspaces.list` and `api.teams.getOrganizationTeams` in parallel.
+2. **Search-backed filters**: The route validates `workspace` and `team` search params, derives the effective selection from those params, and rewrites stale combinations back to a valid URL state once workspace/team data resolves.
+3. **Workspace-scoped team list**: The team query is already scoped by the selected workspace, so the team filter only offers teams that belong to the active workspace. With no workspace selected, the team filter is disabled and shows "Select workspace first".
+4. **Calendar-shaped loading**: The route shows a calendar-specific skeleton for both initial query load and lazy `CalendarView` load instead of a generic spinner shell.
+5. **Scope label and color behavior**: The header title reflects org/workspace/team scope, and `CalendarView` receives `colorByScope="workspace"` for org scope, `colorByScope="team"` for workspace scope, and default coloring for a single team.
+6. **CalendarView**: Still lazy-loaded via `React.lazy`, keeping day/week/month modes, event CRUD modals, and drag-to-reschedule inside the shared calendar surface.
 
 ---
 
 ## Screenshot Matrix
 
-| Viewport | Theme | Preview |
-|----------|-------|---------|
-| Desktop | Dark | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | ![](screenshots/desktop-light.png) |
-| Tablet | Light | ![](screenshots/tablet-light.png) |
-| Mobile | Light | ![](screenshots/mobile-light.png) |
+| State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
+|-------|--------------|---------------|--------------|--------------|
+| Canonical org scope | ![](screenshots/desktop-dark.png) | ![](screenshots/desktop-light.png) | ![](screenshots/tablet-light.png) | ![](screenshots/mobile-light.png) |
+| Workspace scope | ![](screenshots/desktop-dark-workspace-scope.png) | ![](screenshots/desktop-light-workspace-scope.png) | ![](screenshots/tablet-light-workspace-scope.png) | ![](screenshots/mobile-light-workspace-scope.png) |
+| Team scope | ![](screenshots/desktop-dark-team-scope.png) | ![](screenshots/desktop-light-team-scope.png) | ![](screenshots/tablet-light-team-scope.png) | ![](screenshots/mobile-light-team-scope.png) |
+| Loading | ![](screenshots/desktop-dark-loading.png) | ![](screenshots/desktop-light-loading.png) | ![](screenshots/tablet-light-loading.png) | ![](screenshots/mobile-light-loading.png) |
 
 ---
 
 ## Current Problems
 
-| # | Problem | Area | Severity |
-|---|---------|------|----------|
-| 1 | Filter dropdowns use `className="w-full sm:w-56"` -- arbitrary width may not align with design tokens | styling | LOW |
-| 2 | CalendarView is lazy-loaded but the Suspense fallback is a generic loading spinner with no skeleton layout | loading UX | LOW |
-| ~~3~~ | ~~No URL-based filter persistence~~ **Fixed** — workspace/team filters stored in URL search params via `validateSearch`, survive navigation | ~~state~~ | ~~MEDIUM~~ |
-| 4 | Team filter is not disabled when no workspace is selected (it shows all org teams, which can be a long list) | UX | LOW |
-| 5 | Scope label in header changes dynamically but there is no visual transition | polish | LOW |
+No route-specific defects are currently tracked for org calendar on this branch. Remaining work belongs to the broader cross-surface visual consistency pass.
 
 ---
 
@@ -77,7 +73,7 @@ The org calendar provides a single unified view of calendar events across all wo
 
 | File | Purpose |
 |------|---------|
-| `src/routes/_auth/_app/$orgSlug/calendar.tsx` | Route component (104 lines) |
+| `src/routes/_auth/_app/$orgSlug/calendar.tsx` | Route component (339 lines) with search-param normalization, scoped filters, and calendar-shaped loading state |
 | `src/components/Calendar/CalendarView.tsx` | Shared calendar view with day/week/month modes |
 | `src/components/Calendar/CreateEventModal.tsx` | Event creation modal |
 | `src/components/Calendar/EventDetailsModal.tsx` | Event details/edit modal |
@@ -85,3 +81,5 @@ The org calendar provides a single unified view of calendar events across all wo
 | `convex/calendarEvents.ts` | Calendar event queries and mutations |
 | `convex/workspaces.ts` | Workspace list query |
 | `convex/teams.ts` | Team list query (`getOrganizationTeams`) |
+| `src/routes/_auth/_app/$orgSlug/-calendar.test.tsx` | Route-level tests for loading, filter semantics, and stale-search normalization |
+| `e2e/pages/calendar.page.ts` | Calendar page object for workspace/team scope interactions |

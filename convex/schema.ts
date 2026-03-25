@@ -1835,11 +1835,14 @@ const applicationTables = {
     email: v.string(), // "mikhail@starthub.academy"
     displayName: v.string(), // For the From header
     accessToken: v.string(), // OAuth2 access token (encrypted)
-    refreshToken: v.optional(v.string()), // OAuth2 refresh token
+    refreshToken: v.optional(v.string()), // OAuth2 refresh token (encrypted)
     expiresAt: v.optional(v.number()), // Token expiry timestamp
     dailySendLimit: v.number(), // Default 50
     todaySendCount: v.number(), // Resets daily by cron
     todayResetAt: v.number(), // Date of last counter reset
+    minuteSendLimit: v.optional(v.number()), // Optional during rollout; defaults at runtime
+    minuteSendCount: v.optional(v.number()), // Reserved send attempts in the current minute window
+    minuteWindowStartedAt: v.optional(v.number()), // Start of the current minute throttle window
     isActive: v.boolean(), // Can this mailbox send?
     lastHealthCheckAt: v.optional(v.number()),
     updatedAt: v.number(),
@@ -1848,6 +1851,18 @@ const applicationTables = {
     .index("by_organization", ["organizationId"])
     .index("by_user_provider", ["userId", "provider"])
     .index("by_active", ["isActive"]),
+
+  // Single-use OAuth state nonces for outreach mailbox connection flows
+  outreachOAuthNonces: defineTable({
+    provider: outreachMailboxProviders,
+    stateToken: v.string(),
+    userId: v.id("users"),
+    organizationId: v.id("organizations"),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_state_token", ["stateToken"])
+    .index("by_expires_at", ["expiresAt"]),
 
   // Contacts/leads for outreach campaigns
   outreachContacts: defineTable({
