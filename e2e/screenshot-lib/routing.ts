@@ -42,6 +42,9 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-my-issues-filter-active$/, "20-my-issues", "-filter-active"],
   [/^filled-my-issues-filtered-empty$/, "20-my-issues", "-filtered-empty"],
   [/^filled-my-issues-loading$/, "20-my-issues", "-loading"],
+  [/^filled-invoices-filtered-empty$/, "25-invoices", "-filtered-empty"],
+  [/^filled-invoices-create-draft-dialog$/, "25-invoices", "-create-draft-dialog"],
+  [/^filled-invoices-loading$/, "25-invoices", "-loading"],
   // Workspace modals
   [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
   [/^filled-workspaces-search-empty$/, "27-workspaces", "-search-empty"],

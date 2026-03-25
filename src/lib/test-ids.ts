@@ -674,6 +674,23 @@ export const TEST_IDS = {
     ARCHIVE_ALL_BUTTON: "notifications-archive-all-button",
   },
 
+  INVOICES: {
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    CONTENT: "invoices-content",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    TABLE: "invoices-table",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER: "invoices-status-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    EMPTY_STATE: "invoices-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    FILTERED_EMPTY_STATE: "invoices-filtered-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    LOADING_STATE: "invoices-loading-state",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    CREATE_DIALOG: "invoices-create-dialog",
+  },
+
   ASSISTANT: {
     /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
     CONTENT: "assistant-content",

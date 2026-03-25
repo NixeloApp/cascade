@@ -14,6 +14,7 @@ import {
   CalendarPage,
   DocumentsPage,
   InboxPage,
+  InvoicesPage,
   IssuesPage,
   MeetingsPage,
   MyIssuesPage,
@@ -403,6 +404,105 @@ export async function screenshotProjectsStates(
     }
   } finally {
     await configureProjectsState("default");
+  }
+}
+
+export async function screenshotInvoicesStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const invoicesE2EStateStorageKey = "nixelo:e2e:invoices-state";
+  const captureNames = {
+    canonical: "invoices",
+    createDialog: "invoices-create-draft-dialog",
+    filteredEmpty: "invoices-filtered-empty",
+    loading: "invoices-loading",
+  } as const;
+
+  if (!shouldCaptureAny(prefix, Object.values(captureNames))) {
+    return;
+  }
+
+  const invoicesUrl = ROUTES.invoices.list.build(orgSlug);
+
+  const openInvoicesPage = async (
+    targetPage: Page = page,
+    requestedState?: "create-dialog" | "filtered-empty",
+  ) => {
+    if (requestedState) {
+      await targetPage.evaluate(
+        ([storageKey, state]) => {
+          window.sessionStorage.setItem(storageKey, state);
+        },
+        [invoicesE2EStateStorageKey, requestedState] as const,
+      );
+    }
+
+    await targetPage.goto(`${BASE_URL}${invoicesUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(targetPage, invoicesUrl, "invoices");
+    const invoicesPage = new InvoicesPage(targetPage, orgSlug);
+    await invoicesPage.waitUntilReady();
+    return invoicesPage;
+  };
+
+  if (shouldCapture(prefix, captureNames.canonical)) {
+    await runCaptureStep("invoices canonical", async () => {
+      const invoicesPage = await openInvoicesPage();
+      await invoicesPage.expectTableVisible();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.canonical);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.filteredEmpty)) {
+    await runCaptureStep("invoices filtered empty", async () => {
+      const invoicesPage = await openInvoicesPage(page, "filtered-empty");
+      await invoicesPage.expectFilteredEmptyStateVisible();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.filteredEmpty);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.createDialog)) {
+    await runCaptureStep("invoices create dialog", async () => {
+      const invoicesPage = await openInvoicesPage(page, "create-dialog");
+      await expect(invoicesPage.createDialog).toBeVisible();
+      await waitForAnimation(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.createDialog);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.loading)) {
+    await runCaptureStep("invoices loading", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_INVOICES_LOADING__ = true;
+        });
+
+        const loadingInvoicesPage = await openInvoicesPage(loadingPage);
+        await loadingInvoicesPage.expectLoadingStateVisible();
+        await expect
+          .poll(() => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThan(0);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, captureNames.loading, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
   }
 }
 

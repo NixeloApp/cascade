@@ -3,7 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
-import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import { PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import {
   Table,
@@ -34,6 +35,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDate, formatDateForInput } from "@/lib/formatting";
 import { FileText } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { DAY, WEEK } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -41,6 +43,85 @@ type InvoiceStatusFilter = "all" | "draft" | "sent" | "paid" | "overdue";
 type InvoiceListItem = FunctionReturnType<typeof api.invoices.list>[number];
 
 const NO_CLIENT = "__none__";
+const INVOICE_STATUS_OPTIONS: Array<{ label: string; value: InvoiceStatusFilter }> = [
+  { label: "All statuses", value: "all" },
+  { label: "Draft", value: "draft" },
+  { label: "Sent", value: "sent" },
+  { label: "Paid", value: "paid" },
+  { label: "Overdue", value: "overdue" },
+];
+const INVOICES_E2E_STATE_STORAGE_KEY = "nixelo:e2e:invoices-state";
+
+declare global {
+  interface Window {
+    __NIXELO_E2E_INVOICES_LOADING__?: boolean;
+  }
+}
+
+type InvoicesE2EState = "create-dialog" | "filtered-empty";
+
+function isE2EInvoicesLoadingOverrideEnabled(): boolean {
+  return typeof window !== "undefined" && window.__NIXELO_E2E_INVOICES_LOADING__ === true;
+}
+
+function consumeInvoicesE2ERequestedState(): {
+  showCreateDialog: boolean;
+  status: InvoiceStatusFilter;
+} {
+  const defaultState = {
+    showCreateDialog: false,
+    status: "all" as InvoiceStatusFilter,
+  };
+
+  if (typeof window === "undefined") {
+    return defaultState;
+  }
+
+  try {
+    const requestedState = window.sessionStorage.getItem(INVOICES_E2E_STATE_STORAGE_KEY);
+    window.sessionStorage.removeItem(INVOICES_E2E_STATE_STORAGE_KEY);
+
+    if ((requestedState as InvoicesE2EState | null) === "filtered-empty") {
+      return {
+        showCreateDialog: false,
+        status: "overdue",
+      };
+    }
+
+    if ((requestedState as InvoicesE2EState | null) === "create-dialog") {
+      return {
+        showCreateDialog: true,
+        status: "all",
+      };
+    }
+  } catch {
+    return defaultState;
+  }
+
+  return defaultState;
+}
+
+export function getInvoiceEmptyStateConfig(args: {
+  onClearFilter: () => void;
+  onCreateDraft: () => void;
+  status: InvoiceStatusFilter;
+}) {
+  return {
+    action:
+      args.status === "all"
+        ? { label: "New draft", onClick: args.onCreateDraft }
+        : { label: "Clear filter", onClick: args.onClearFilter },
+    description:
+      args.status === "all"
+        ? "Create a draft invoice to get started with billing."
+        : `No invoices match the "${args.status}" filter.`,
+    testId:
+      args.status === "all"
+        ? TEST_IDS.INVOICES.EMPTY_STATE
+        : TEST_IDS.INVOICES.FILTERED_EMPTY_STATE,
+    title: args.status === "all" ? "No invoices yet" : `No ${args.status} invoices`,
+  };
+}
 
 function getStatusBadgeVariant(status: string) {
   switch (status) {
@@ -57,8 +138,8 @@ function getStatusBadgeVariant(status: string) {
 
 function InvoiceTable({ invoices, orgSlug }: { invoices: InvoiceListItem[]; orgSlug: string }) {
   return (
-    <Card padding="none">
-      <Table>
+    <Card padding="none" data-testid={TEST_IDS.INVOICES.CONTENT}>
+      <Table data-testid={TEST_IDS.INVOICES.TABLE}>
         <TableHeader>
           <TableRow>
             <TableHead>Invoice</TableHead>
@@ -70,10 +151,10 @@ function InvoiceTable({ invoices, orgSlug }: { invoices: InvoiceListItem[]; orgS
         </TableHeader>
         <TableBody>
           {invoices.map((invoice) => (
-            <TableRow key={invoice._id} className="cursor-pointer hover:bg-ui-bg-hover">
+            <TableRow key={invoice._id}>
               <TableCell>
                 <Link to={ROUTES.invoices.detail.path} params={{ orgSlug, invoiceId: invoice._id }}>
-                  <Typography variant="label" className="text-brand">
+                  <Typography variant="label" color="brand">
                     {invoice.number}
                   </Typography>
                 </Link>
@@ -102,6 +183,51 @@ function InvoiceTable({ invoices, orgSlug }: { invoices: InvoiceListItem[]; orgS
               </TableCell>
             </TableRow>
           ))}
+        </TableBody>
+      </Table>
+    </Card>
+  );
+}
+
+function InvoicesLoadingState() {
+  return (
+    <Card padding="none" data-testid={TEST_IDS.INVOICES.LOADING_STATE}>
+      <Table aria-hidden="true">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Invoice</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-right">Due</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {["invoice-loading-row-1", "invoice-loading-row-2", "invoice-loading-row-3"].map(
+            (rowId) => (
+              <TableRow key={rowId}>
+                <TableCell>
+                  <Skeleton className="h-5 w-28" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-32" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-16" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Flex justify="end">
+                    <Skeleton className="h-4 w-20" />
+                  </Flex>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Flex justify="end">
+                    <Skeleton className="h-4 w-24" />
+                  </Flex>
+                </TableCell>
+              </TableRow>
+            ),
+          )}
         </TableBody>
       </Table>
     </Card>
@@ -185,6 +311,7 @@ function CreateDraftDialog({
       title="Create Draft Invoice"
       description="Set up a new draft invoice. You can add more line items after creation."
       size="md"
+      data-testid={TEST_IDS.INVOICES.CREATE_DIALOG}
     >
       <Stack gap="md">
         {clients && clients.length > 0 ? (
@@ -263,11 +390,12 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/invoices/")({
   component: InvoicesListPage,
 });
 
-function InvoicesListPage() {
+export function InvoicesListPage() {
   const { orgSlug, organizationId } = useOrganization();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<InvoiceStatusFilter>("all");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [initialState] = useState(consumeInvoicesE2ERequestedState);
+  const [status, setStatus] = useState<InvoiceStatusFilter>(initialState.status);
+  const [showCreateDialog, setShowCreateDialog] = useState(initialState.showCreateDialog);
 
   const invoices = useAuthenticatedQuery(api.invoices.list, {
     organizationId,
@@ -276,6 +404,7 @@ function InvoicesListPage() {
   const clients = useAuthenticatedQuery(api.clients.list, { organizationId }) as
     | Doc<"clients">[]
     | undefined;
+  const isLoading = isE2EInvoicesLoadingOverrideEnabled() || invoices === undefined;
 
   const handleCreated = (invoiceId: Id<"invoices">) => {
     navigate({
@@ -283,10 +412,11 @@ function InvoicesListPage() {
       params: { orgSlug, invoiceId },
     });
   };
-
-  if (!invoices) {
-    return <PageContent isLoading>{null}</PageContent>;
-  }
+  const emptyState = getInvoiceEmptyStateConfig({
+    onClearFilter: () => setStatus("all"),
+    onCreateDraft: () => setShowCreateDialog(true),
+    status,
+  });
 
   return (
     <PageLayout>
@@ -298,19 +428,26 @@ function InvoicesListPage() {
             <Select
               value={status}
               onValueChange={(value) => setStatus(value as InvoiceStatusFilter)}
+              disabled={isLoading}
             >
-              <SelectTrigger width="sm" aria-label="Invoice status filter">
+              <SelectTrigger
+                width="sm"
+                aria-label="Invoice status filter"
+                data-testid={TEST_IDS.INVOICES.STATUS_FILTER}
+              >
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
+                {INVOICE_STATUS_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Button onClick={() => setShowCreateDialog(true)}>New draft</Button>
+            <Button onClick={() => setShowCreateDialog(true)} disabled={isLoading}>
+              New draft
+            </Button>
           </Flex>
         }
       />
@@ -323,20 +460,15 @@ function InvoicesListPage() {
         organizationId={organizationId}
       />
 
-      {invoices.length === 0 ? (
+      {isLoading ? (
+        <InvoicesLoadingState />
+      ) : invoices.length === 0 ? (
         <EmptyState
+          data-testid={emptyState.testId}
           icon={FileText}
-          title={status === "all" ? "No invoices yet" : `No ${status} invoices`}
-          description={
-            status === "all"
-              ? "Create a draft invoice to get started with billing."
-              : `No invoices match the "${status}" filter.`
-          }
-          action={
-            status === "all"
-              ? { label: "New draft", onClick: () => setShowCreateDialog(true) }
-              : { label: "Clear filter", onClick: () => setStatus("all") }
-          }
+          title={emptyState.title}
+          description={emptyState.description}
+          action={emptyState.action}
         />
       ) : (
         <InvoiceTable invoices={invoices} orgSlug={orgSlug} />

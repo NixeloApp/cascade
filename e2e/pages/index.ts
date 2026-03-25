@@ -8,6 +8,7 @@ export { DashboardPage } from "./dashboard.page";
 export { DocumentsPage } from "./documents.page";
 export { InboxPage } from "./inbox.page";
 export { InvitePage } from "./invite.page";
+export { InvoicesPage } from "./invoices.page";
 export { IssueDetailPage } from "./issue-detail.page";
 export { IssuesPage } from "./issues.page";
 export { LandingPage } from "./landing.page";

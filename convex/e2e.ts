@@ -46,6 +46,25 @@ type SeededNotificationsMode = "default" | "inboxEmpty" | "archivedEmpty" | "unr
 type SeededRoadmapMode = "default" | "empty" | "milestone";
 type SeededTimeTrackingMode = "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated";
 type SeededAssistantMode = "default" | "empty";
+type SeededInvoiceClient = "portal" | "none";
+
+interface SeededInvoiceLineItemDefinition {
+  description: string;
+  quantity: number;
+  rate: number;
+}
+
+interface SeededInvoiceDefinition {
+  client: SeededInvoiceClient;
+  dueOffsetDays: number;
+  issueOffsetDays: number;
+  lineItems: SeededInvoiceLineItemDefinition[];
+  notes?: string;
+  number: string;
+  paidOffsetDays?: number;
+  sentOffsetDays?: number;
+  status: Doc<"invoices">["status"];
+}
 
 interface SeededInboxDefinition {
   createdBy: SeededInboxActorKey;
@@ -152,6 +171,56 @@ interface SeededRoadmapLinkDefinition {
 }
 
 type SeededProjectsRouteMode = "default" | "single" | "empty";
+
+const SCREENSHOT_INVOICE_DEFINITIONS: SeededInvoiceDefinition[] = [
+  {
+    client: "portal",
+    dueOffsetDays: 9,
+    issueOffsetDays: -5,
+    lineItems: [
+      {
+        description: "Discovery sprint and kickoff workshop",
+        quantity: 1,
+        rate: 2400,
+      },
+    ],
+    notes: "Pending approval before delivery handoff.",
+    number: "INV-2026-901",
+    status: "draft",
+  },
+  {
+    client: "portal",
+    dueOffsetDays: 14,
+    issueOffsetDays: -12,
+    lineItems: [
+      {
+        description: "Implementation week 1",
+        quantity: 18,
+        rate: 185,
+      },
+    ],
+    notes: "Sent with project recap and milestone notes.",
+    number: "INV-2026-902",
+    sentOffsetDays: -6,
+    status: "sent",
+  },
+  {
+    client: "none",
+    dueOffsetDays: 3,
+    issueOffsetDays: -10,
+    lineItems: [
+      {
+        description: "Strategy review retainer",
+        quantity: 8,
+        rate: 150,
+      },
+    ],
+    number: "INV-2026-903",
+    paidOffsetDays: -2,
+    sentOffsetDays: -7,
+    status: "paid",
+  },
+];
 
 const SCREENSHOT_TIME_TRACKING_BASE_ENTRIES: SeededTimeTrackingEntryDefinition[] = [
   {
@@ -6709,6 +6778,84 @@ export const nukeAllTestUsersInternal = internalMutation({
  * Internal mutation to cleanup expired test OTP codes
  * Called by cron job to prevent testOtpCodes table from growing indefinitely
  */
+function getUtcDayBoundaries(
+  baseTimestamp: number,
+  offsetDays: number,
+): { end: number; start: number } {
+  const baseDate = new Date(baseTimestamp);
+  const start = Date.UTC(
+    baseDate.getUTCFullYear(),
+    baseDate.getUTCMonth(),
+    baseDate.getUTCDate() + offsetDays,
+  );
+  return {
+    end: start + DAY - 1,
+    start,
+  };
+}
+
+async function resetSeededInvoicesForScreenshot(
+  ctx: MutationCtx,
+  args: {
+    createdBy: Id<"users">;
+    now: number;
+    organizationId: Id<"organizations">;
+    portalClientId: Id<"clients">;
+  },
+) {
+  while (true) {
+    const existingInvoices = await ctx.db
+      .query("invoices")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .take(BOUNDED_LIST_LIMIT);
+
+    if (existingInvoices.length === 0) {
+      break;
+    }
+
+    for (const invoice of existingInvoices) {
+      await ctx.db.delete(invoice._id);
+    }
+  }
+
+  for (const definition of SCREENSHOT_INVOICE_DEFINITIONS) {
+    const issueDate = getUtcDayBoundaries(args.now, definition.issueOffsetDays).start;
+    const dueDate = getUtcDayBoundaries(args.now, definition.dueOffsetDays).end;
+    const lineItems = definition.lineItems.map((lineItem) => ({
+      amount: lineItem.quantity * lineItem.rate,
+      description: lineItem.description,
+      quantity: lineItem.quantity,
+      rate: lineItem.rate,
+    }));
+    const subtotal = lineItems.reduce((sum, lineItem) => sum + lineItem.amount, 0);
+
+    await ctx.db.insert("invoices", {
+      clientId: definition.client === "portal" ? args.portalClientId : undefined,
+      createdBy: args.createdBy,
+      dueDate,
+      issueDate,
+      lineItems,
+      notes: definition.notes,
+      number: definition.number,
+      organizationId: args.organizationId,
+      paidAt:
+        definition.status === "paid" && definition.paidOffsetDays !== undefined
+          ? getUtcDayBoundaries(args.now, definition.paidOffsetDays).start
+          : undefined,
+      pdfUrl: undefined,
+      sentAt:
+        definition.status !== "draft" && definition.sentOffsetDays !== undefined
+          ? getUtcDayBoundaries(args.now, definition.sentOffsetDays).start
+          : undefined,
+      status: definition.status,
+      subtotal,
+      tax: undefined,
+      total: subtotal,
+      updatedAt: args.now,
+    });
+  }
+}
+
 /**
  * Seed screenshot data for visual regression testing
  * POST /e2e/seed-screenshot-data
@@ -7392,6 +7539,13 @@ export const seedScreenshotDataInternal = internalMutation({
       revokedAt: undefined,
       createdBy: userId,
       updatedAt: now,
+    });
+
+    await resetSeededInvoicesForScreenshot(ctx, {
+      createdBy: userId,
+      now,
+      organizationId: orgId,
+      portalClientId: portalClient._id,
     });
 
     // Normalize OPS project membership: remove stale members from previous runs

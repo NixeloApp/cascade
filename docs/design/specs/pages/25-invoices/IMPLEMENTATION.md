@@ -8,13 +8,8 @@
 
 | Query | Source | Args | Purpose |
 |-------|--------|------|---------|
-| `api.invoices.list` | `convex/invoices.ts` | `{ organizationId, status? }` | Fetch invoices with optional status filter |
-
-### Query Return Shape
-
-```typescript
-Doc<"invoices">[] // Array of invoice documents with: _id, number, status, total, dueDate, issueDate, lineItems, clientId, etc.
-```
+| `api.invoices.list` | `convex/invoices.ts` | `{ organizationId, status? }` | Returns a bounded descending invoice list with joined client names |
+| `api.clients.list` | `convex/clients.ts` | `{ organizationId }` | Hydrates the draft-dialog client picker |
 
 ---
 
@@ -22,7 +17,7 @@ Doc<"invoices">[] // Array of invoice documents with: _id, number, status, total
 
 | Mutation | Source | Args | Purpose |
 |----------|--------|------|---------|
-| `api.invoices.create` | `convex/invoices.ts` | `{ organizationId, issueDate, dueDate, lineItems }` | Create a new draft invoice with default line items |
+| `api.invoices.create` | `convex/invoices.ts` | `{ clientId?, issueDate, dueDate, lineItems }` | Creates a draft invoice and redirects into detail editing |
 
 ---
 
@@ -30,56 +25,51 @@ Doc<"invoices">[] // Array of invoice documents with: _id, number, status, total
 
 | State | Type | Location | Purpose |
 |-------|------|----------|---------|
-| `status` | `"all" \| "draft" \| "sent" \| "paid" \| "overdue"` | Route `useState` | Filter invoices by status |
+| `status` | `InvoiceStatusFilter` | route `useState` | Controls the status-scoped invoice query |
+| `showCreateDialog` | `boolean` | route `useState` | Controls draft-dialog visibility |
+| `__NIXELO_E2E_INVOICES_LOADING__` | `boolean` | `window` | Forces the loading shell during screenshot capture |
+| `nixelo:e2e:invoices-state` | `"filtered-empty" \| "create-dialog"` | `sessionStorage` | Bootstraps deterministic screenshot-only route states |
 
 ---
 
 ## Component Tree
 
 ```
-InvoicesListPage (route)
+InvoicesListPage
 ├── PageLayout
 │   ├── PageHeader
-│   │   ├── title: "Invoices"
-│   │   ├── description: "Create, track, and deliver agency invoices."
 │   │   └── actions
-│   │       ├── Select (status filter)
-│   │       │   ├── SelectTrigger (aria-label: "Invoice status filter")
-│   │       │   └── SelectContent
-│   │       │       └── SelectItem[] (all, draft, sent, paid, overdue)
-│   │       └── Button ("New draft", onClick: handleCreateDraft)
+│   │       ├── SelectTrigger[data-testid=invoices-status-filter]
+│   │       └── Button("New draft")
 │   │
-│   ├── [branch: empty]
-│   │   └── EmptyState
-│   │       ├── icon: FileText
-│   │       ├── title: dynamic
-│   │       └── action: "New draft" or "Clear filter"
+│   ├── CreateDraftDialog
+│   │   ├── optional client select
+│   │   ├── issue / due date inputs
+│   │   ├── description input
+│   │   └── rate input
 │   │
-│   └── [branch: populated]
-│       └── Grid (cols=1, lg:cols=2)
-│           └── Card[] (per invoice)
-│               ├── CardHeader → CardTitle (invoice.number)
-│               └── CardContent
-│                   ├── Typography (status)
-│                   ├── Typography (total)
-│                   ├── Typography (due date)
-│                   └── Link (to invoice detail)
+│   └── body
+│       ├── InvoicesLoadingState[data-testid=invoices-loading-state]
+│       ├── EmptyState[data-testid=invoices-empty-state]
+│       ├── EmptyState[data-testid=invoices-filtered-empty-state]
+│       └── InvoiceTable[data-testid=invoices-content]
+│           └── Table[data-testid=invoices-table]
 ```
 
 ---
 
-## Permissions
+## E2E / Screenshot Support
 
-- **Authentication**: Required. Route is under `_auth` layout guard.
-- **Organization membership**: Required. `invoices.list` is an `organizationQuery` that validates membership.
-- **Create invoice**: Uses `useAuthenticatedMutation` which requires org membership. The backend `invoices.create` may require admin role (uses `organizationAdminMutation` wrapper).
-- **Role-based visibility**: All org members can view invoices. Only admins can create/modify.
+| File | Responsibility |
+|------|----------------|
+| `convex/e2e.ts` | Resets the E2E org's invoice list to a deterministic seeded set |
+| `e2e/pages/invoices.page.ts` | Route-specific readiness and invoice locators |
+| `e2e/screenshot-lib/interactive-captures.ts` | Captures canonical, filtered-empty, create-dialog, and loading states |
+| `e2e/screenshot-lib/routing.ts` | Routes invoice state captures into `25-invoices` with suffixes |
 
 ---
 
-## Data Flow
+## Notes
 
-1. Route mounts, queries `invoices.list` with `organizationId` and current `status` filter.
-2. User changes status filter -> local state updates -> query re-fires with new `status` arg.
-3. User clicks "New draft" -> `handleCreateDraft` calls `invoices.create` with default values -> toast feedback -> list reactively updates via Convex subscription.
-4. User clicks "Open invoice" link -> navigates to `ROUTES.invoices.detail` with `invoiceId` param.
+- Invoice screenshot seeding intentionally owns the entire E2E org invoice list so route captures stay deterministic even if other tests created drafts earlier in the run.
+- The route no longer relies on a generic `PageContent isLoading` placeholder; loading screenshots now reflect the actual table surface.

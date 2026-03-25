@@ -64,6 +64,7 @@ import {
   screenshotDashboardLoadingState,
   screenshotDashboardModals,
   screenshotDocumentsStates,
+  screenshotInvoicesStates,
   screenshotIssueInteractiveStates,
   screenshotIssuesStates,
   screenshotMeetingsStates,
@@ -112,7 +113,7 @@ export async function screenshotFilledStates(
   await takeScreenshot(page, p, "notifications", ROUTES.notifications.build(orgSlug));
   await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
   await takeScreenshot(page, p, "org-calendar", ROUTES.calendar.build(orgSlug));
-  await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
+  await screenshotInvoicesStates(page, orgSlug, p);
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
   await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
   await takeScreenshot(page, p, "outreach", ROUTES.outreach.build(orgSlug));
