@@ -12,6 +12,7 @@ Related docs:
 ## Current State
 
 - Google Meet-first capture exists with a richer backend than UI.
+- Meeting detail now resolves transcript speakers and action-item owners against participant metadata, with speaker-attributed transcript turns and search that understands attendee emails.
 - Provider rotation exists across recurring free tiers, one-time credit tiers, and paid fallback.
 - Deepgram and AssemblyAI are integrated but still need real key setup and runtime verification.
 - Meeting-to-doc is still blocked by document/editor reality gaps.
@@ -20,8 +21,6 @@ Related docs:
 
 ### Immediate Product / UX
 
-- [ ] Show speaker labels in the transcript UI.
-- [ ] Use speaker labels in summary/action-item attribution.
 - [ ] Add meeting-to-doc flow once document/template initialization is reliable.
 - [ ] Do a real screenshot / visual QA pass for meetings states.
 

@@ -6,8 +6,9 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { OrgContext, type OrgContextType } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showSuccess } from "@/lib/toast";
-import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
+import { fireEvent, render, screen, waitFor, within } from "@/test/custom-render";
 import {
   filterMeetingMemory,
   filterMeetingRecordings,
@@ -52,6 +53,8 @@ const recordingId = "recording_1" as Id<"meetingRecordings">;
 const summaryId = "summary_1" as Id<"meetingSummaries">;
 const projectId = "project_1" as Id<"projects">;
 const organizationId = "organization_1" as Id<"organizations">;
+const alexUserId = "user_alex" as Id<"users">;
+const priyaUserId = "user_priya" as Id<"users">;
 const createIssueFromActionItem = vi.fn();
 const scheduleRecording = vi.fn();
 const organizationContext: OrgContextType = {
@@ -125,13 +128,27 @@ function buildDetail(overrides: Partial<MeetingDetail> = {}): MeetingDetail {
         recordingId,
         displayName: "Alex",
         email: "alex@example.com",
-        userId: undefined,
+        userId: alexUserId,
         joinedAt: undefined,
         leftAt: undefined,
         speakingTime: undefined,
         speakingPercentage: undefined,
         isHost: true,
         isExternal: false,
+      },
+      {
+        _id: "participant_2" as Id<"meetingParticipants">,
+        _creationTime: 1_710_000_000_000,
+        recordingId,
+        displayName: "Priya",
+        email: "priya@example.com",
+        userId: priyaUserId,
+        joinedAt: undefined,
+        leftAt: undefined,
+        speakingTime: undefined,
+        speakingPercentage: undefined,
+        isHost: false,
+        isExternal: true,
       },
     ],
     transcript: {
@@ -144,7 +161,7 @@ function buildDetail(overrides: Partial<MeetingDetail> = {}): MeetingDetail {
           startTime: 0,
           endTime: 12,
           speaker: "Alex",
-          speakerUserId: undefined,
+          speakerUserId: alexUserId,
           text: "Thanks everyone for joining the weekly product review.",
           confidence: 0.96,
         },
@@ -152,7 +169,7 @@ function buildDetail(overrides: Partial<MeetingDetail> = {}): MeetingDetail {
           startTime: 12,
           endTime: 25,
           speaker: "Priya",
-          speakerUserId: undefined,
+          speakerUserId: priyaUserId,
           text: "We aligned on the narrower launch scope and next implementation steps.",
           confidence: 0.93,
         },
@@ -174,7 +191,7 @@ function buildDetail(overrides: Partial<MeetingDetail> = {}): MeetingDetail {
         {
           description: "Update the spec",
           assignee: "Alex",
-          assigneeUserId: undefined,
+          assigneeUserId: alexUserId,
           dueDate: "2026-03-20",
           priority: "high",
           issueCreated: undefined,
@@ -382,8 +399,11 @@ describe("MeetingsWorkspace", () => {
     expect(screen.getAllByText("Update the spec").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("Do we need Zoom support in v1?").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("Alex").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("Segmented transcript with timestamps.")).toBeInTheDocument();
+    expect(screen.getByText("Speaker-attributed transcript with timestamps.")).toBeInTheDocument();
+    expect(screen.getByText("Speakers in this meeting")).toBeInTheDocument();
+    expect(screen.getAllByText("alex@example.com").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("0:00 - 0:12")).toBeInTheDocument();
+    expect(screen.getByText("0:12 - 0:25")).toBeInTheDocument();
     expect(
       screen.getByText("Thanks everyone for joining the weekly product review."),
     ).toBeInTheDocument();
@@ -491,6 +511,28 @@ describe("MeetingsWorkspace", () => {
       screen.getByText("We aligned on the narrower launch scope and next implementation steps."),
     ).toBeInTheDocument();
     expect(screen.getByText("1 matches")).toBeInTheDocument();
+  });
+
+  it("matches transcript speakers and assignees against participant metadata", () => {
+    installMeetingQueryMock({});
+
+    renderMeetingsWorkspace();
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search transcript" }), {
+      target: { value: "priya@example.com" },
+    });
+
+    expect(
+      screen.getByText("We aligned on the narrower launch scope and next implementation steps."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Thanks everyone for joining the weekly product review."),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText("External").length).toBeGreaterThanOrEqual(1);
+
+    const actionItemsSection = screen.getByTestId(TEST_IDS.MEETINGS.ACTION_ITEMS_SECTION);
+    expect(within(actionItemsSection).getByText("alex@example.com")).toBeInTheDocument();
+    expect(within(actionItemsSection).getByText("Internal")).toBeInTheDocument();
   });
 
   it("jumps to transcript segments from the transcript navigation strip", () => {
