@@ -127,7 +127,7 @@ export function RoadmapHeaderControls({
           value={String(timelineSpan)}
           onValueChange={(value) => onTimelineSpanChange(Number(value) as TimelineSpan)}
         >
-          <SelectTrigger width="sm">
+          <SelectTrigger width="sm" data-testid={TEST_IDS.ROADMAP.TIMELINE_SPAN_SELECT}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -140,7 +140,7 @@ export function RoadmapHeaderControls({
         </Select>
 
         <Select value={groupBy} onValueChange={(value) => onGroupByChange(value as GroupBy)}>
-          <SelectTrigger width="md">
+          <SelectTrigger width="md" data-testid={TEST_IDS.ROADMAP.GROUP_BY_SELECT}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -178,6 +178,7 @@ export function RoadmapHeaderControls({
           size="sm"
           onClick={onToggleDependencies}
           title={showDependencies ? "Hide dependency lines" : "Show dependency lines"}
+          data-testid={TEST_IDS.ROADMAP.DEPENDENCIES_TOGGLE}
         >
           <Icon icon={LinkIcon} size="sm" />
         </Button>

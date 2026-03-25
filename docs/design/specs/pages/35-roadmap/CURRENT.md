@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects/:key/roadmap`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-23
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -38,16 +38,10 @@ edge-resize, dependency arrows, zoom, grouping, and epic filtering.
 | State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
 |-------|-------------|---------------|--------------|--------------|
 | Timeline selector open | `desktop-dark-timeline-selector.png` | `desktop-light-timeline-selector.png` | `tablet-light-timeline-selector.png` | `mobile-light-timeline-selector.png` |
-
-### Missing captures (should be added)
-
-- Empty state (no issues with due dates)
-- Drag-in-progress (bar being moved)
-- Resize-in-progress (edge being dragged)
-- Dependency arrows visible between linked issues
-- Group-by active (by status, assignee, priority, or epic)
-- Issue detail panel open from roadmap click
-- Milestone marker (single-day issue)
+| Grouped by status | `desktop-dark-grouped.png` | `desktop-light-grouped.png` | `tablet-light-grouped.png` | `mobile-light-grouped.png` |
+| Issue detail open | `desktop-dark-detail.png` | `desktop-light-detail.png` | `tablet-light-detail.png` | `mobile-light-detail.png` |
+| Empty roadmap | `desktop-dark-empty.png` | `desktop-light-empty.png` | `tablet-light-empty.png` | `mobile-light-empty.png` |
+| Milestone marker | `desktop-dark-milestone.png` | `desktop-light-milestone.png` | `tablet-light-milestone.png` | `mobile-light-milestone.png` |
 
 ---
 
@@ -96,7 +90,7 @@ edge-resize, dependency arrows, zoom, grouping, and epic filtering.
 ### 1. Route wrapper (51 lines)
 
 - Thin route: resolves project by key, finds active sprint, passes `canEdit` prop.
-- `RoadmapView` is lazy-loaded (2671 lines).
+- `RoadmapView` is lazy-loaded (791 lines).
 - `canEdit` is true for editor+ roles, false for viewers.
 
 ### 2. Toolbar controls
@@ -161,20 +155,18 @@ The toolbar is dense with controls, organized in rows:
 
 ### States the current spec explicitly covers
 
-- Filled timeline with bars across multiple months (4 viewports)
+- Filled timeline with dependency arrows across multiple months (4 viewports)
 - Timeline span selector open (4 viewports)
+- Grouped-by-status timeline (4 viewports)
+- Issue detail modal open from roadmap click (4 viewports)
+- Empty state with no dated issues (4 viewports)
+- Milestone marker rendering (4 viewports)
 
-### States that should be captured
+### Follow-up states still worth review
 
-- Empty state (no issues with due dates)
-- Drag and resize in progress
-- Dependency arrows between linked issues
-- Group-by with collapsed/expanded groups
-- Epic filter applied
-- Issue detail modal open from roadmap
-- Milestone markers
-- Week view mode
-- Compact and expanded zoom levels
+- Drag-in-progress and resize-in-progress snapshots, if we want transient interaction review beyond the existing unit coverage
+- Week-view, compact zoom, and expanded zoom variants if screenshot review starts surfacing timeline-density drift there
+- Epic-filter-specific review if a future product pass changes the grouping/filter shell significantly
 
 ---
 
@@ -185,7 +177,8 @@ The toolbar is dense with controls, organized in rows:
 | Feature completeness | Drag-resize, dependency arrows, zoom, grouping, epic filter, keyboard nav, milestones. Full Gantt. |
 | Date math | Clean percentage-based positioning. No pixel rounding issues. |
 | Toolbar density | Many controls but well-organized in two rows. |
-| Performance | Lazy-loaded component (2671 lines). Uses `useRef` for timeline container. |
+| Screenshot trust | Strong. The reviewed matrix now covers dependency-linked, grouped, detail-open, empty, milestone, and selector-open states across the full viewport set. |
+| Performance | Lazy-loaded component (791 lines). Uses `useRef` for timeline container. |
 | Dependency visualization | SVG overlay with opacity dimming and active highlighting. |
 
 ---
@@ -194,7 +187,7 @@ The toolbar is dense with controls, organized in rows:
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| ~~1~~ | ~~2671 lines in a single file~~ **Fixed** — decomposed into 7 files in `src/components/Roadmap/` (types, utils, rows, header, dependency panel, loading state, today marker). Main file is 775 lines. | ~~architecture~~ | ~~MEDIUM~~ |
+| ~~1~~ | ~~2671 lines in a single file~~ **Fixed** — decomposed into `src/components/Roadmap/` support modules. Main file is now 791 lines and the reviewed screenshot matrix covers the route's real operating states instead of a shallow canonical-only baseline. | ~~architecture~~ | ~~MEDIUM~~ |
 | 2 | Mobile/tablet experience is limited for a dense Gantt chart. Drag interactions are designed for mouse, not touch. | responsive | MEDIUM |
 | 3 | No undo for drag/resize operations. Accidental drags save immediately. | UX | LOW |
 | 4 | Dependency arrows can overlap and become hard to trace in dense timelines. | visualization | LOW |
@@ -206,11 +199,13 @@ The toolbar is dense with controls, organized in rows:
 | File | Lines | Purpose |
 |------|-------|---------|
 | `src/routes/_auth/_app/$orgSlug/projects/$key/roadmap.tsx` | 51 | Route: project resolution, canEdit, lazy load |
-| `src/components/RoadmapView.tsx` | 2671 | Full Gantt chart: toolbar, timeline, bars, dependencies, interactions |
+| `src/components/RoadmapView.tsx` | 791 | Main Gantt shell: toolbar, timeline container, dependency overlay, and interactions |
+| `src/components/Roadmap/` | split | Header controls, rows, dependency panel, today marker, types, and timeline utilities |
 | `src/components/RoadmapView.test.tsx` | ~600 | Timeline rendering, dependency lines, issue detail viewer |
 | `convex/issues/queries.ts` | — | `listRoadmapIssues` query with filters |
 | `convex/issueLinks.ts` | — | `getForProject` dependency query |
-| `e2e/screenshot-pages.ts` | — | `filled-roadmap` + `filled-roadmap-timeline-selector` specs |
+| `convex/e2e.ts` | — | E2E-only roadmap state controller for deterministic default, empty, and milestone seeded variants |
+| `e2e/screenshot-pages.ts` | — | Canonical plus grouped, detail, empty, milestone, and selector states |
 
 ---
 
@@ -226,7 +221,7 @@ The toolbar is dense with controls, organized in rows:
 
 ## Summary
 
-The roadmap is the most complex single component in the application (2671 lines). It is a
-fully interactive Gantt chart with drag-to-move, edge-resize, dependency arrows, zoom levels,
-grouping, epic filtering, keyboard navigation, and milestone markers. The main architectural
-concern is the single-file size. The feature set is complete and does not need additions.
+The roadmap is still one of the densest product surfaces, but it is no longer a shallow
+reviewed route. The current spec now covers the dependency-linked canonical timeline plus
+grouped, detail-open, empty, milestone, and selector-open states across desktop/tablet/mobile.
+The remaining roadmap work is mostly targeted UX polish rather than missing review coverage.

@@ -69,6 +69,7 @@ import {
   screenshotMyIssuesStates,
   screenshotProjectInboxStates,
   screenshotProjectsModal,
+  screenshotRoadmapStates,
   screenshotSprintInteractiveStates,
 } from "./interactive-captures";
 import {
@@ -403,7 +404,6 @@ export async function screenshotFilledStates(
       "backlog",
       "inbox",
       "sprints",
-      "roadmap",
       "calendar",
       "activity",
       "billing",
@@ -1768,36 +1768,18 @@ export async function screenshotFilledStates(
 
   // ── Roadmap interactive states ──
 
-  if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-roadmap-timeline-selector`)) {
-    await runCaptureStep("roadmap timeline selector", async () => {
-      const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
-      await page.goto(`${BASE_URL}${roadmapUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, roadmapUrl, "roadmap");
-      await waitForScreenshotReady(page);
-      // Click the timeline span select trigger (shows "3 Months" by default)
-      const selectTrigger = page
-        .getByRole("combobox")
-        .filter({ hasText: /month|year/i })
-        .first();
-      await selectTrigger.waitFor({ state: "visible", timeout: 5000 });
-      await selectTrigger.click();
-      // Wait for dropdown options
-      await page
-        .getByRole("option", { name: /1 month/i })
-        .first()
-        .waitFor({ state: "visible", timeout: 3000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(
-        page,
-        p,
-        `project-${normalizedProjectKey}-roadmap-timeline-selector`,
-      );
-      // Close dropdown
-      await page.keyboard.press("Escape");
-    });
+  if (
+    projectKey &&
+    shouldCaptureAny(p, [
+      `project-${normalizedProjectKey}-roadmap`,
+      `project-${normalizedProjectKey}-roadmap-timeline-selector`,
+      `project-${normalizedProjectKey}-roadmap-grouped`,
+      `project-${normalizedProjectKey}-roadmap-detail`,
+      `project-${normalizedProjectKey}-roadmap-empty`,
+      `project-${normalizedProjectKey}-roadmap-milestone`,
+    ])
+  ) {
+    await screenshotRoadmapStates(page, orgSlug, projectKey, p);
   }
 
   // ── Notification interactive states ──

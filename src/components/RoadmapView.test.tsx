@@ -58,8 +58,15 @@ vi.mock("./ui/Select", () => ({
       <div>{children}</div>
     </SelectContext.Provider>
   ),
-  SelectTrigger: ({ children, className }: { children: ReactNode; className?: string }) => (
-    <button type="button" className={className}>
+  SelectTrigger: ({
+    children,
+    className,
+    ...props
+  }: {
+    children: ReactNode;
+    className?: string;
+  } & Record<string, unknown>) => (
+    <button type="button" className={className} {...props}>
       {children}
     </button>
   ),
@@ -251,6 +258,8 @@ describe("RoadmapView", () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(now);
+    window.sessionStorage.clear();
+    delete window.__NIXELO_E2E_ROADMAP_STATE__;
     updateIssueDates.mockResolvedValue(undefined);
     createIssueLink.mockResolvedValue({ linkId: "new_link" as Id<"issueLinks"> });
     removeIssueLink.mockResolvedValue({ success: true, deleted: true });
@@ -281,6 +290,8 @@ describe("RoadmapView", () => {
   });
 
   afterEach(() => {
+    window.sessionStorage.clear();
+    delete window.__NIXELO_E2E_ROADMAP_STATE__;
     vi.restoreAllMocks();
   });
 
@@ -296,7 +307,83 @@ describe("RoadmapView", () => {
         "No issues with due dates to display yet. Add due dates in your board or backlog to populate this timeline view.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ROADMAP.EMPTY_STATE)).toBeInTheDocument();
     expect(screen.queryByLabelText("Issue dependency lines")).not.toBeInTheDocument();
+  });
+
+  it("applies the grouped roadmap screenshot boot state", () => {
+    window.sessionStorage.setItem("nixelo:e2e:roadmap-state", "group-status");
+
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "DEMO-2",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+        {
+          _id: issue2Id,
+          key: "DEMO-3",
+          title: "Ship migration",
+          status: "in-progress",
+          startDate: Date.UTC(2026, 2, 18),
+          dueDate: Date.UTC(2026, 2, 28),
+          type: "story",
+          priority: "high",
+          assignee: { name: "Sam Lee" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    expect(screen.getByTestId("roadmap-group-status:todo")).toBeInTheDocument();
+    expect(screen.getByTestId("roadmap-group-status:in-progress")).toBeInTheDocument();
+    expect(window.sessionStorage.getItem("nixelo:e2e:roadmap-state")).toBeNull();
+  });
+
+  it("applies the detail roadmap screenshot boot state", async () => {
+    window.sessionStorage.setItem("nixelo:e2e:roadmap-state", "detail");
+
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "DEMO-2",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+        {
+          _id: issue2Id,
+          key: "DEMO-3",
+          title: "Ship migration",
+          status: "in-progress",
+          startDate: Date.UTC(2026, 2, 18),
+          dueDate: Date.UTC(2026, 2, 28),
+          type: "story",
+          priority: "high",
+          assignee: { name: "Sam Lee" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    await act(async () => {});
+
+    expect(screen.getByTestId("issue-detail-viewer")).toHaveTextContent(issue1Id);
+    expect(window.sessionStorage.getItem("nixelo:e2e:roadmap-state")).toBeNull();
   });
 
   it("renders timeline rows, dependency lines, and closes the issue detail viewer", async () => {

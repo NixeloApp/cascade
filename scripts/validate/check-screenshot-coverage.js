@@ -20,6 +20,7 @@ const SCREENSHOT_ROUTE_SOURCE_REL_PATHS = [
   "e2e/screenshot-pages.ts",
   "e2e/screenshot-lib/public-pages.ts",
   "e2e/screenshot-lib/filled-states.ts",
+  "e2e/screenshot-lib/interactive-captures.ts",
 ];
 
 // Routes that are intentionally not screenshotted

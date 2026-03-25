@@ -85,6 +85,7 @@ export type TimeTrackingScreenshotState =
   | "entriesEmpty"
   | "ratesPopulated"
   | "summaryTruncated";
+export type RoadmapScreenshotState = "default" | "empty" | "milestone";
 export type ProjectInboxScreenshotState = "default" | "openEmpty" | "closedEmpty";
 export type ProjectAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
 export type OrgAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
@@ -98,6 +99,14 @@ export interface ConfigureProjectInboxStateResult {
   success: boolean;
   closedCount?: number;
   openCount?: number;
+  projectId?: string;
+  error?: string;
+}
+
+export interface ConfigureRoadmapStateResult {
+  success: boolean;
+  issueCount?: number;
+  linkCount?: number;
   projectId?: string;
   error?: string;
 }
@@ -517,6 +526,30 @@ export class TestUserService {
     } catch (error) {
       console.warn(
         `  ⚠️ Failed to configure project inbox state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded roadmap data for screenshot capture.
+   */
+  async configureRoadmapState(
+    orgSlug: string,
+    projectKey: string,
+    mode: RoadmapScreenshotState,
+  ): Promise<ConfigureRoadmapStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureRoadmapState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure roadmap state ${mode} for ${projectKey} in ${orgSlug}:`,
         error,
       );
       return { success: false, error: String(error) };

@@ -257,6 +257,8 @@ export const E2E_ENDPOINTS = {
   deleteSeededProjectIssue: `${CONVEX_SITE_URL}/e2e/delete-seeded-project-issue`,
   // Reconfigure seeded project inbox data for screenshot captures
   configureProjectInboxState: `${CONVEX_SITE_URL}/e2e/configure-project-inbox-state`,
+  // Reconfigure seeded roadmap data for screenshot captures
+  configureRoadmapState: `${CONVEX_SITE_URL}/e2e/configure-roadmap-state`,
   // Reconfigure seeded time tracking data for screenshot captures
   configureTimeTrackingState: `${CONVEX_SITE_URL}/e2e/configure-time-tracking-state`,
   // Reconfigure seeded project analytics data for screenshot captures

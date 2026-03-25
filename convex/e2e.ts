@@ -43,6 +43,7 @@ type SeededInboxActorKey = "owner" | "alex" | "sarah";
 type SeededProjectInboxMode = "default" | "openEmpty" | "closedEmpty";
 type SeededProjectAnalyticsMode = "default" | "sparseData" | "noActivity";
 type SeededNotificationsMode = "default" | "inboxEmpty" | "archivedEmpty" | "unreadOverflow";
+type SeededRoadmapMode = "default" | "empty" | "milestone";
 type SeededTimeTrackingMode = "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated";
 
 interface SeededInboxDefinition {
@@ -116,6 +117,17 @@ interface SeededTimeTrackingRateDefinition {
   rateType: Doc<"userRates">["rateType"];
 }
 
+interface SeededRoadmapIssueDefinition {
+  dueOffsetDays?: number;
+  key: string;
+  startOffsetDays?: number;
+}
+
+interface SeededRoadmapLinkDefinition {
+  fromKey: string;
+  toKey: string;
+}
+
 const SCREENSHOT_TIME_TRACKING_BASE_ENTRIES: SeededTimeTrackingEntryDefinition[] = [
   {
     activity: "Development",
@@ -174,6 +186,37 @@ const SCREENSHOT_TIME_TRACKING_REVIEW_RATES: SeededTimeTrackingRateDefinition[] 
     rateType: "billable",
   },
 ];
+
+const SCREENSHOT_ROADMAP_BASE_ISSUES: SeededRoadmapIssueDefinition[] = [
+  { key: "DEMO-1", startOffsetDays: -5, dueOffsetDays: -2 },
+  { key: "DEMO-2", startOffsetDays: -1, dueOffsetDays: 1 },
+  { key: "DEMO-3", startOffsetDays: 0, dueOffsetDays: 3 },
+  { key: "DEMO-4", startOffsetDays: 4, dueOffsetDays: 7 },
+  { key: "DEMO-7", startOffsetDays: 1, dueOffsetDays: 2 },
+];
+
+const SCREENSHOT_ROADMAP_LINKS: SeededRoadmapLinkDefinition[] = [
+  { fromKey: "DEMO-2", toKey: "DEMO-3" },
+  { fromKey: "DEMO-7", toKey: "DEMO-4" },
+];
+
+function buildSeededRoadmapIssueDefinitions(
+  mode: SeededRoadmapMode,
+): SeededRoadmapIssueDefinition[] {
+  if (mode === "empty") {
+    return [];
+  }
+
+  if (mode === "milestone") {
+    return SCREENSHOT_ROADMAP_BASE_ISSUES.map((definition) =>
+      definition.key === "DEMO-7"
+        ? { ...definition, startOffsetDays: undefined, dueOffsetDays: 2 }
+        : definition,
+    );
+  }
+
+  return SCREENSHOT_ROADMAP_BASE_ISSUES;
+}
 
 function getDayStartMs(timestamp: number): number {
   const date = new Date(timestamp);
@@ -1110,6 +1153,120 @@ async function resetSeededNotificationsForUser(
   return {
     success: true,
     ...countSeededNotifications(definitions),
+  };
+}
+
+async function resetSeededRoadmapState(
+  ctx: MutationCtx,
+  args: {
+    mode: SeededRoadmapMode;
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+  },
+): Promise<{
+  success: boolean;
+  issueCount?: number;
+  linkCount?: number;
+  projectId?: Id<"projects">;
+  error?: string;
+}> {
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const projectIssues = await ctx.db
+    .query("issues")
+    .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  if (projectIssues.length === 0) {
+    return { success: false, error: `No project issues found for roadmap mode ${args.mode}` };
+  }
+
+  const issueIdsByKey = new Map(projectIssues.map((issue) => [issue.key, issue._id]));
+  const roadmapDefinitions = buildSeededRoadmapIssueDefinitions(args.mode);
+  const roadmapDefinitionsByKey = new Map(
+    roadmapDefinitions.map((definition) => [definition.key, definition]),
+  );
+  const now = Date.now();
+  const dayStartMs = getDayStartMs(now);
+
+  for (const issue of projectIssues) {
+    const definition = roadmapDefinitionsByKey.get(issue.key);
+    const startDate =
+      definition?.startOffsetDays !== undefined
+        ? dayStartMs + definition.startOffsetDays * DAY
+        : undefined;
+    const dueDate =
+      definition?.dueOffsetDays !== undefined
+        ? dayStartMs + definition.dueOffsetDays * DAY
+        : undefined;
+
+    await ctx.db.patch(issue._id, {
+      dueDate,
+      startDate,
+      updatedAt: now,
+    });
+  }
+
+  const projectIssueIds = new Set(projectIssues.map((issue) => issue._id.toString()));
+  const deletedLinkIds = new Set<string>();
+  for (const issue of projectIssues) {
+    const outgoingLinks = await ctx.db
+      .query("issueLinks")
+      .withIndex("by_from_issue", (q) => q.eq("fromIssueId", issue._id))
+      .take(BOUNDED_LIST_LIMIT);
+    const incomingLinks = await ctx.db
+      .query("issueLinks")
+      .withIndex("by_to_issue", (q) => q.eq("toIssueId", issue._id))
+      .take(BOUNDED_LIST_LIMIT);
+
+    for (const link of [...outgoingLinks, ...incomingLinks]) {
+      if (deletedLinkIds.has(link._id.toString())) {
+        continue;
+      }
+
+      if (
+        projectIssueIds.has(link.fromIssueId.toString()) &&
+        projectIssueIds.has(link.toIssueId.toString())
+      ) {
+        deletedLinkIds.add(link._id.toString());
+        await ctx.db.delete(link._id);
+      }
+    }
+  }
+
+  if (args.mode !== "empty") {
+    for (const link of SCREENSHOT_ROADMAP_LINKS) {
+      const fromIssueId = issueIdsByKey.get(link.fromKey);
+      const toIssueId = issueIdsByKey.get(link.toKey);
+      if (!(fromIssueId && toIssueId)) {
+        return {
+          success: false,
+          error: `Missing seeded issue for roadmap link ${link.fromKey} -> ${link.toKey}`,
+        };
+      }
+
+      await ctx.db.insert("issueLinks", {
+        createdBy: screenshotActors.ownerUserId,
+        fromIssueId,
+        isDeleted: false,
+        linkType: "blocks",
+        toIssueId,
+      });
+    }
+  }
+
+  return {
+    success: true,
+    issueCount: roadmapDefinitions.length,
+    linkCount: args.mode === "empty" ? 0 : SCREENSHOT_ROADMAP_LINKS.length,
+    projectId: args.projectId,
   };
 }
 
@@ -4235,6 +4392,109 @@ export const deleteSeededProjectIssueInternal = internalMutation({
       success: true,
       deleted: issuesToDelete.length,
     };
+  },
+});
+
+/**
+ * Reconfigure seeded roadmap data for screenshot capture.
+ * POST /e2e/configure-roadmap-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "empty" | "milestone",
+ * }
+ */
+export const configureRoadmapStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "empty", "milestone"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid roadmap mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateRoadmapStateInternal, {
+      mode,
+      orgSlug,
+      projectKey,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateRoadmapStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("empty"), v.literal("milestone")),
+    orgSlug: v.string(),
+    projectKey: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    issueCount: v.optional(v.number()),
+    linkCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    return await resetSeededRoadmapState(ctx, {
+      mode: args.mode,
+      organizationId: organization._id,
+      projectId: project._id,
+    });
   },
 });
 

@@ -192,6 +192,10 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   // Project roadmap, activity, billing, timesheet, inbox
   [/^filled-project-.+-roadmap$/, "35-roadmap", ""],
   [/^filled-project-.+-roadmap-timeline-selector$/, "35-roadmap", "-timeline-selector"],
+  [/^filled-project-.+-roadmap-grouped$/, "35-roadmap", "-grouped"],
+  [/^filled-project-.+-roadmap-detail$/, "35-roadmap", "-detail"],
+  [/^filled-project-.+-roadmap-empty$/, "35-roadmap", "-empty"],
+  [/^filled-project-.+-roadmap-milestone$/, "35-roadmap", "-milestone"],
   [/^filled-project-.+-activity$/, "36-activity", ""],
   [/^filled-project-.+-billing$/, "37-billing", ""],
   [/^filled-project-.+-timesheet$/, "38-timesheet", ""],

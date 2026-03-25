@@ -1,7 +1,7 @@
 # Roadmap Page - Implementation
 
 > **Route file**: `src/routes/_auth/_app/$orgSlug/projects/$key/roadmap.tsx`
-> **Last Updated**: 2026-03-23
+> **Last Updated**: 2026-03-25
 
 ---
 
@@ -15,7 +15,7 @@
 | `api.issues.listEpics` | `useAuthenticatedQuery` | Epic list for the filter dropdown |
 | `api.issueLinks.getForProject` | `useAuthenticatedQuery` | Issue dependency links for arrow rendering |
 | `api.sprints.listByProject` | `useAuthenticatedQuery` | Sprint list (route finds active sprint) |
-| `api.projects.getProject` | `useAuthenticatedQuery` | Project workflow states |
+| `api.projects.getProject` | `useAuthenticatedQuery` | Project metadata for the route heading and guardrail context |
 
 ### Mutations
 
@@ -41,6 +41,11 @@ Route state (useState):
 Interaction state (useRoadmapTimelineInteractions hook):
 +-- dragging: DragState                  # Active bar drag
 +-- resizing: ResizeState                # Active edge resize
+
+One-shot screenshot boot support:
++-- `?e2e-roadmap=group-status`          # Force grouped roadmap review state
++-- session storage / query-param `detail` support for deterministic detail-open review
++-- Convex E2E endpoint can reseed `default`, `empty`, and `milestone` roadmap data
 ```
 
 ---
@@ -154,5 +159,6 @@ timeline but cannot move or resize bars.
 
 | Test File | Coverage |
 |-----------|----------|
-| `src/components/RoadmapView.test.tsx` | Timeline rendering, dependency lines, issue detail |
-| `e2e/screenshot-pages.ts` | `filled-roadmap` + timeline selector specs |
+| `src/components/RoadmapView.test.tsx` | Timeline rendering, dependency lines, issue detail, and screenshot boot states |
+| `convex/e2e.ts` | E2E-only roadmap state controller for deterministic default, empty, and milestone variants |
+| `e2e/screenshot-pages.ts` | Canonical, timeline-selector, grouped, detail, empty, and milestone roadmap specs |

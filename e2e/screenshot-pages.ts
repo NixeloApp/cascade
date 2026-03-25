@@ -416,6 +416,10 @@ const DRY_RUN_PAGES = [
   "filled-team-TEAM-settings",
   // Filled states — roadmap interactive states
   "filled-project-PROJ-roadmap-timeline-selector",
+  "filled-project-PROJ-roadmap-grouped",
+  "filled-project-PROJ-roadmap-detail",
+  "filled-project-PROJ-roadmap-empty",
+  "filled-project-PROJ-roadmap-milestone",
   // Filled states — notification interactive states
   "filled-notification-popover",
   "filled-notification-snooze-popover",

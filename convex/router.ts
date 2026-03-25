@@ -19,6 +19,7 @@ import {
   configureOrgAnalyticsStateEndpoint,
   configureProjectAnalyticsStateEndpoint,
   configureProjectInboxStateEndpoint,
+  configureRoadmapStateEndpoint,
   configureTimeTrackingStateEndpoint,
   createTestUserEndpoint,
   debugVerifyPasswordEndpoint,
@@ -373,6 +374,12 @@ http.route({
   path: "/e2e/configure-project-inbox-state",
   method: "POST",
   handler: configureProjectInboxStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-roadmap-state",
+  method: "POST",
+  handler: configureRoadmapStateEndpoint,
 });
 
 http.route({

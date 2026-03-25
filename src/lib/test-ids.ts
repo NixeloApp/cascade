@@ -352,19 +352,31 @@ export const TEST_IDS = {
 
   ROADMAP: {
     /** @see src/components/RoadmapView.tsx */
+    CONTENT: "roadmap-content",
+    /** @see src/components/RoadmapView.tsx */
     TIMELINE_CANVAS: "roadmap-timeline-canvas",
     /** @see src/components/RoadmapView.tsx */
     ISSUE_HEADER: "roadmap-issue-header",
     /** @see src/components/RoadmapView.tsx */
     ISSUE_COLUMN: "roadmap-issue-column",
     /** @see src/components/RoadmapView.tsx */
+    EMPTY_STATE: "roadmap-empty-state",
+    /** @see src/components/RoadmapView.tsx */
     DEPENDENCY_PANEL: "roadmap-dependency-panel",
+    /** @see src/components/RoadmapView.tsx */
+    DEPENDENCY_LINES: "roadmap-dependency-lines",
     /** @see src/components/RoadmapView.tsx */
     TODAY_MARKER_HEADER: "roadmap-today-marker-header",
     /** @see src/components/RoadmapView.tsx */
     TODAY_MARKER_BODY: "roadmap-today-marker-body",
     /** @see src/components/RoadmapView.tsx */
     RANGE_LABEL: "roadmap-range-label",
+    /** @see src/components/Roadmap/RoadmapHeaderControls.tsx */
+    GROUP_BY_SELECT: "roadmap-group-by-select",
+    /** @see src/components/Roadmap/RoadmapHeaderControls.tsx */
+    TIMELINE_SPAN_SELECT: "roadmap-timeline-span-select",
+    /** @see src/components/Roadmap/RoadmapHeaderControls.tsx */
+    DEPENDENCIES_TOGGLE: "roadmap-dependencies-toggle",
   },
 
   // ============================================================

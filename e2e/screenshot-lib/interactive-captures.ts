@@ -16,6 +16,7 @@ import {
   MeetingsPage,
   MyIssuesPage,
   ProjectsPage,
+  RoadmapPage,
   SprintsPage,
 } from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
@@ -209,6 +210,150 @@ export async function screenshotProjectsModal(
     await captureCurrentView(page, prefix, "projects-create-project-modal");
     await projectsPage.closeCreateProjectFormIfOpen();
   });
+}
+
+export async function screenshotRoadmapStates(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const captureNames = {
+    canonical: `project-${normalizedProjectKey}-roadmap`,
+    detail: `project-${normalizedProjectKey}-roadmap-detail`,
+    empty: `project-${normalizedProjectKey}-roadmap-empty`,
+    grouped: `project-${normalizedProjectKey}-roadmap-grouped`,
+    milestone: `project-${normalizedProjectKey}-roadmap-milestone`,
+    timelineSelector: `project-${normalizedProjectKey}-roadmap-timeline-selector`,
+  } as const;
+
+  if (!shouldCaptureAny(prefix, Object.values(captureNames))) {
+    return;
+  }
+
+  const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
+
+  const configureRoadmapState = async (mode: "default" | "empty" | "milestone") => {
+    const result = await testUserService.configureRoadmapState(orgSlug, projectKey, mode);
+    if (!result.success) {
+      throw new Error(result.error ?? `Failed to configure roadmap state: ${mode}`);
+    }
+  };
+
+  const withRoadmapPage = async <T>({
+    bootState,
+    mode,
+    run,
+  }: {
+    bootState?: "detail" | "group-status";
+    mode: "default" | "empty" | "milestone";
+    run: (capturePage: Page, roadmapPage: RoadmapPage) => Promise<T>;
+  }): Promise<T> => {
+    await configureRoadmapState(mode);
+    const captureUrl = new URL(`${BASE_URL}${roadmapUrl}`);
+    if (bootState) {
+      captureUrl.searchParams.set("e2e-roadmap", bootState);
+    }
+
+    try {
+      await page.goto(captureUrl.toString(), {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await waitForExpectedContent(page, roadmapUrl, "roadmap");
+      const roadmapPage = new RoadmapPage(page, orgSlug);
+      return await run(page, roadmapPage);
+    } finally {
+      // no-op: route-scoped query param boot state is discarded on the next navigation
+    }
+  };
+
+  if (shouldCapture(prefix, captureNames.canonical)) {
+    await runCaptureStep("roadmap canonical", async () => {
+      await withRoadmapPage({
+        mode: "default",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectTimelineState();
+          await roadmapPage.expectDependencyLinesVisible();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.canonical);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.timelineSelector)) {
+    await runCaptureStep("roadmap timeline selector", async () => {
+      await withRoadmapPage({
+        mode: "default",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectTimelineState();
+          await roadmapPage.expectDependencyLinesVisible();
+          await roadmapPage.openTimelineSpanSelector();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.timelineSelector);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.grouped)) {
+    await runCaptureStep("roadmap grouped", async () => {
+      await withRoadmapPage({
+        bootState: "group-status",
+        mode: "default",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectGroupedState();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.grouped);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.detail)) {
+    await runCaptureStep("roadmap detail", async () => {
+      await withRoadmapPage({
+        mode: "default",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.openIssueDetail("DEMO-2");
+          await roadmapPage.expectDetailState();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.detail);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.empty)) {
+    await runCaptureStep("roadmap empty", async () => {
+      await withRoadmapPage({
+        mode: "empty",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectEmptyState();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.empty);
+        },
+      });
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.milestone)) {
+    await runCaptureStep("roadmap milestone", async () => {
+      await withRoadmapPage({
+        mode: "milestone",
+        run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectMilestoneState();
+          await roadmapPage.expectDependencyLinesVisible();
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, prefix, captureNames.milestone);
+        },
+      });
+    });
+  }
+
+  await configureRoadmapState("default");
 }
 
 export async function screenshotBoardModals(
