@@ -27,6 +27,7 @@ import { Route as AuthAppOrgSlugRouteRouteImport } from './routes/_auth/_app/$or
 import { Route as AuthAppOrgSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/index'
 import { Route as PortalTokenProjectsProjectIdRouteImport } from './routes/portal.$token.projects.$projectId'
 import { Route as AuthAppOrgSlugTimeTrackingRouteImport } from './routes/_auth/_app/$orgSlug/time-tracking'
+import { Route as AuthAppOrgSlugOutreachRouteImport } from './routes/_auth/_app/$orgSlug/outreach'
 import { Route as AuthAppOrgSlugNotificationsRouteImport } from './routes/_auth/_app/$orgSlug/notifications'
 import { Route as AuthAppOrgSlugMyIssuesRouteImport } from './routes/_auth/_app/$orgSlug/my-issues'
 import { Route as AuthAppOrgSlugMeetingsRouteImport } from './routes/_auth/_app/$orgSlug/meetings'
@@ -168,6 +169,11 @@ const AuthAppOrgSlugTimeTrackingRoute =
     path: '/time-tracking',
     getParentRoute: () => AuthAppOrgSlugRouteRoute,
   } as any)
+const AuthAppOrgSlugOutreachRoute = AuthAppOrgSlugOutreachRouteImport.update({
+  id: '/outreach',
+  path: '/outreach',
+  getParentRoute: () => AuthAppOrgSlugRouteRoute,
+} as any)
 const AuthAppOrgSlugNotificationsRoute =
   AuthAppOrgSlugNotificationsRouteImport.update({
     id: '/notifications',
@@ -489,6 +495,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/meetings': typeof AuthAppOrgSlugMeetingsRoute
   '/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
+  '/$orgSlug/outreach': typeof AuthAppOrgSlugOutreachRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
   '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/$orgSlug/': typeof AuthAppOrgSlugIndexRoute
@@ -556,6 +563,7 @@ export interface FileRoutesByTo {
   '/$orgSlug/meetings': typeof AuthAppOrgSlugMeetingsRoute
   '/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
+  '/$orgSlug/outreach': typeof AuthAppOrgSlugOutreachRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
   '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/$orgSlug': typeof AuthAppOrgSlugIndexRoute
@@ -624,6 +632,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/meetings': typeof AuthAppOrgSlugMeetingsRoute
   '/_auth/_app/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/_auth/_app/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
+  '/_auth/_app/$orgSlug/outreach': typeof AuthAppOrgSlugOutreachRoute
   '/_auth/_app/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
   '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/_auth/_app/$orgSlug/': typeof AuthAppOrgSlugIndexRoute
@@ -694,6 +703,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/meetings'
     | '/$orgSlug/my-issues'
     | '/$orgSlug/notifications'
+    | '/$orgSlug/outreach'
     | '/$orgSlug/time-tracking'
     | '/portal/$token/projects/$projectId'
     | '/$orgSlug/'
@@ -761,6 +771,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/meetings'
     | '/$orgSlug/my-issues'
     | '/$orgSlug/notifications'
+    | '/$orgSlug/outreach'
     | '/$orgSlug/time-tracking'
     | '/portal/$token/projects/$projectId'
     | '/$orgSlug'
@@ -828,6 +839,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/meetings'
     | '/_auth/_app/$orgSlug/my-issues'
     | '/_auth/_app/$orgSlug/notifications'
+    | '/_auth/_app/$orgSlug/outreach'
     | '/_auth/_app/$orgSlug/time-tracking'
     | '/portal/$token/projects/$projectId'
     | '/_auth/_app/$orgSlug/'
@@ -1013,6 +1025,13 @@ declare module '@tanstack/react-router' {
       path: '/time-tracking'
       fullPath: '/$orgSlug/time-tracking'
       preLoaderRoute: typeof AuthAppOrgSlugTimeTrackingRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/outreach': {
+      id: '/_auth/_app/$orgSlug/outreach'
+      path: '/outreach'
+      fullPath: '/$orgSlug/outreach'
+      preLoaderRoute: typeof AuthAppOrgSlugOutreachRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/notifications': {
@@ -1490,6 +1509,7 @@ interface AuthAppOrgSlugRouteRouteChildren {
   AuthAppOrgSlugMeetingsRoute: typeof AuthAppOrgSlugMeetingsRoute
   AuthAppOrgSlugMyIssuesRoute: typeof AuthAppOrgSlugMyIssuesRoute
   AuthAppOrgSlugNotificationsRoute: typeof AuthAppOrgSlugNotificationsRoute
+  AuthAppOrgSlugOutreachRoute: typeof AuthAppOrgSlugOutreachRoute
   AuthAppOrgSlugTimeTrackingRoute: typeof AuthAppOrgSlugTimeTrackingRoute
   AuthAppOrgSlugIndexRoute: typeof AuthAppOrgSlugIndexRoute
   AuthAppOrgSlugProjectsKeyRouteRoute: typeof AuthAppOrgSlugProjectsKeyRouteRouteWithChildren
@@ -1519,6 +1539,7 @@ const AuthAppOrgSlugRouteRouteChildren: AuthAppOrgSlugRouteRouteChildren = {
   AuthAppOrgSlugMeetingsRoute: AuthAppOrgSlugMeetingsRoute,
   AuthAppOrgSlugMyIssuesRoute: AuthAppOrgSlugMyIssuesRoute,
   AuthAppOrgSlugNotificationsRoute: AuthAppOrgSlugNotificationsRoute,
+  AuthAppOrgSlugOutreachRoute: AuthAppOrgSlugOutreachRoute,
   AuthAppOrgSlugTimeTrackingRoute: AuthAppOrgSlugTimeTrackingRoute,
   AuthAppOrgSlugIndexRoute: AuthAppOrgSlugIndexRoute,
   AuthAppOrgSlugProjectsKeyRouteRoute:

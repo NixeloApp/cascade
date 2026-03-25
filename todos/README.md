@@ -4,7 +4,7 @@
 
 ## Critical
 
-- [ ] [p0-outreach-holes.md](./p0-outreach-holes.md) — Outreach still has one real launch blocker: no frontend UI for sequences, contacts, mailboxes, tracking, and analytics.
+No open critical items on this branch.
 
 ## Infrastructure
 
@@ -16,7 +16,7 @@
 ## Features
 
 - [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Speaker-labeled UI, meeting-to-doc, and multi-platform capture remain open.
-- [ ] [email-outreach.md](./email-outreach.md) — Gmail-first backend exists; product UI, hardening, and richer reliability work remain.
+- [ ] [email-outreach.md](./email-outreach.md) — Gmail-first outreach is now usable end-to-end; remaining work is reliability polish, richer analytics, and provider expansion.
 - [ ] [offline-pwa.md](./offline-pwa.md) — Push verification, optimistic UI, and replay/idempotency polish.
 - [ ] [cal-com-features.md](./cal-com-features.md) — AI scheduling, MCP/chat scheduling ideas, branding, and portal/domain controls.
 - [ ] [plane-features.md](./plane-features.md) — External notification routing.
@@ -30,7 +30,7 @@ Verified on this branch:
 |--------|-------|
 | Typecheck | pass |
 | Validators | 53/53 pass |
-| App tests (`vitest run`) | 4561 pass / 5 skipped |
+| App tests (`vitest run`) | 4570 pass / 5 skipped |
 | Convex tests (`vitest.convex`) | 2116 pass / 3 skipped |
 | Page spec triplets | 41/41 present |
 | Screenshot harness shell (`filled-states.ts`) | 1452 lines |

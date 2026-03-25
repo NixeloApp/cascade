@@ -84,6 +84,10 @@ export const ROUTES = {
     path: "/$orgSlug/meetings" as const,
     build: (orgSlug: string) => `/${orgSlug}/meetings`,
   },
+  outreach: {
+    path: "/$orgSlug/outreach" as const,
+    build: (orgSlug: string) => `/${orgSlug}/outreach`,
+  },
   team: {
     path: "/$orgSlug/team" as const,
     build: (orgSlug: string) => `/${orgSlug}/team`,
