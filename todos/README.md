@@ -1,6 +1,6 @@
 # Nixelo Todo Index
 
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
 ## Critical
 
@@ -8,7 +8,7 @@ No open critical items on this branch.
 
 ## Infrastructure
 
-- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — E2E and screenshot infrastructure now has modular validator guardrails; remaining work is CI split decisions and selector ratchets.
+- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — E2E and screenshot infrastructure now has modular validator guardrails plus raw-selector ratchets; remaining work is the optional CI split decision.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven product polish and human review debt.
 - [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing raw Tailwind ratchet and primitive extraction where repetition justifies it.
 - [ ] [validator-strengthening.md](./validator-strengthening.md) — Framework cleanup plus a few missing validator ideas.
@@ -29,7 +29,7 @@ Verified on this branch:
 | Metric | Value |
 |--------|-------|
 | Typecheck | pass |
-| Validators | 54/54 pass |
+| Validators | 55/55 pass |
 | App tests (`vitest run`) | 4588 pass / 5 skipped |
 | Convex tests (`vitest.convex`) | 2116 pass / 3 skipped |
 | Page spec triplets | 41/41 present |

@@ -17,45 +17,46 @@
  *  13. Test ID constants       — ensures data-testid uses TEST_IDS constants, not strings
  *  14. E2E hard rules          — waitForTimeout, Promise sleep, force:true, XPath, page.$
  *  15. E2E quality             — catches broad selectors, networkidle, waitForSelector
- *  16. UI patterns             — DialogDescription in dialogs, AuthPageLayout for auth pages
- *  17. Route constants         — use ROUTES from @/config/routes instead of hardcoded paths
- *  18. Convex patterns         — Envelope Pattern returns, security checks, test destructuring
- *  19. Convex naming           — function naming conventions (get/list/create/update/delete)
- *  20. Component naming        — PascalCase components, {Component}Props interfaces
- *  21. Component props         — consistent prop naming across component definitions
- *  22. Duplicate components    — detect components with same name in different directories
- *  23. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva(), feature-local style bundles, weighted class-string style bundles, degenerate single-use helpers, and oversized shared CVA variant axes
- *  24. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
- *  25. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
- *  26. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
- *  27. Recipe drift            — repeated visual shell patterns must move behind owned recipes
- *  28. JSDoc coverage          — exported functions/components should have JSDoc documentation
- *  29. Import paths            — validates import path conventions
- *  30. Hook patterns           — custom hooks should follow consistent patterns
- *  31. Async patterns          — consistent error handling in async operations
- *  32. Time constants          — enforces use of timeUtils constants instead of magic numbers
- *  33. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
- *  34. Test coverage           — critical files should have corresponding tests
- *  35. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
- *  36. Native confirm()        — ensure custom dialogs used instead of native confirm()
- *  37. Convex hooks            — validates Convex hook usage patterns
- *  38. Console usage           — bans console.* in production code
- *  39. Tech debt               — tracks TODO/FIXME/HACK comments
- *  40. Nested Cards            — bans Cards nested inside other Cards
- *  41. Border Radius           — enforces consistent border radius usage
- *  42. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
- *  43. Screenshot harness structure — ratchets private helper counts in screenshot modules
- *  44. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
- *  45. Typography drift        — blocks Typography/style drift outside owned primitives
- *  46. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
- *  47. Shared shape drift      — blocks repeated inline entity summary shapes
- *  48. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
- *  49. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
- *  50. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
- *  51. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
- *  52. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
- *  53. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
- *  54. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
+ *  16. E2E raw locator ratchet — ratchets direct page-level selector creation outside sanctioned page-object/locator layers
+ *  17. UI patterns             — DialogDescription in dialogs, AuthPageLayout for auth pages
+ *  18. Route constants         — use ROUTES from @/config/routes instead of hardcoded paths
+ *  19. Convex patterns         — Envelope Pattern returns, security checks, test destructuring
+ *  20. Convex naming           — function naming conventions (get/list/create/update/delete)
+ *  21. Component naming        — PascalCase components, {Component}Props interfaces
+ *  22. Component props         — consistent prop naming across component definitions
+ *  23. Duplicate components    — detect components with same name in different directories
+ *  24. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva(), feature-local style bundles, weighted class-string style bundles, degenerate single-use helpers, and oversized shared CVA variant axes
+ *  25. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
+ *  26. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
+ *  27. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  28. Recipe drift            — repeated visual shell patterns must move behind owned recipes
+ *  29. JSDoc coverage          — exported functions/components should have JSDoc documentation
+ *  30. Import paths            — validates import path conventions
+ *  31. Hook patterns           — custom hooks should follow consistent patterns
+ *  32. Async patterns          — consistent error handling in async operations
+ *  33. Time constants          — enforces use of timeUtils constants instead of magic numbers
+ *  34. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
+ *  35. Test coverage           — critical files should have corresponding tests
+ *  36. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  37. Native confirm()        — ensure custom dialogs used instead of native confirm()
+ *  38. Convex hooks            — validates Convex hook usage patterns
+ *  39. Console usage           — bans console.* in production code
+ *  40. Tech debt               — tracks TODO/FIXME/HACK comments
+ *  41. Nested Cards            — bans Cards nested inside other Cards
+ *  42. Border Radius           — enforces consistent border radius usage
+ *  43. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
+ *  44. Screenshot harness structure — ratchets private helper counts in screenshot modules
+ *  45. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
+ *  46. Typography drift        — blocks Typography/style drift outside owned primitives
+ *  47. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
+ *  48. Shared shape drift      — blocks repeated inline entity summary shapes
+ *  49. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
+ *  50. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
+ *  51. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
+ *  52. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  53. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
+ *  54. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
+ *  55. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -172,6 +173,10 @@ const checks = [
   {
     name: "E2E quality",
     modulePath: new URL("./validate/check-e2e-quality.js", import.meta.url).href,
+  },
+  {
+    name: "E2E raw locator ratchet",
+    modulePath: new URL("./validate/check-e2e-raw-locators.js", import.meta.url).href,
   },
   {
     name: "UI patterns",
