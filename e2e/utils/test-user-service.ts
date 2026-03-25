@@ -80,6 +80,11 @@ export interface DeleteSeededProjectIssueResult {
   error?: string;
 }
 
+export type TimeTrackingScreenshotState =
+  | "default"
+  | "entriesEmpty"
+  | "ratesPopulated"
+  | "summaryTruncated";
 export type ProjectInboxScreenshotState = "default" | "openEmpty" | "closedEmpty";
 export type ProjectAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
 export type OrgAnalyticsScreenshotState = "default" | "sparseData" | "noActivity";
@@ -94,6 +99,14 @@ export interface ConfigureProjectInboxStateResult {
   closedCount?: number;
   openCount?: number;
   projectId?: string;
+  error?: string;
+}
+
+export interface ConfigureTimeTrackingStateResult {
+  success: boolean;
+  entryCount?: number;
+  projectId?: string;
+  rateCount?: number;
   error?: string;
 }
 
@@ -504,6 +517,30 @@ export class TestUserService {
     } catch (error) {
       console.warn(
         `  ⚠️ Failed to configure project inbox state ${mode} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reconfigure seeded time tracking data for screenshot capture.
+   */
+  async configureTimeTrackingState(
+    orgSlug: string,
+    projectKey: string,
+    mode: TimeTrackingScreenshotState,
+  ): Promise<ConfigureTimeTrackingStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureTimeTrackingState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to configure time tracking state ${mode} for ${projectKey} in ${orgSlug}:`,
         error,
       );
       return { success: false, error: String(error) };

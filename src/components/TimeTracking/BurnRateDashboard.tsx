@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import type { LucideIcon } from "@/lib/icons";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -120,7 +121,7 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
   }
 
   return (
-    <Flex direction="column" gap="xl">
+    <Flex direction="column" gap="xl" data-testid={TEST_IDS.TIME_TRACKING.BURN_RATE_PANEL}>
       {/* Header with date range selector */}
       <Flex justify="between" align="center">
         <Typography variant="h2">Burn Rate & Team Costs</Typography>

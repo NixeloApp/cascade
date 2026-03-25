@@ -10,7 +10,13 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { AnalyticsPage, NotificationsPage, ProjectsPage, WorkspacesPage } from "../pages";
+import {
+  AnalyticsPage,
+  NotificationsPage,
+  ProjectsPage,
+  TimeTrackingPage,
+  WorkspacesPage,
+} from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
 import { getLocatorCount, isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
@@ -1439,6 +1445,121 @@ export async function screenshotFilledStates(
         `project-${normalizedProjectKey}-import-export-modal-import`,
       );
       await dismissIfOpen(page, dialog);
+    });
+  }
+
+  const timeTrackingCaptureNames = [
+    "time-tracking-burn-rate",
+    "time-tracking-rates",
+    "time-tracking-empty",
+    "time-tracking-all-time",
+    "time-tracking-truncated",
+  ] as const;
+
+  if (projectKey && shouldCaptureAny(p, [...timeTrackingCaptureNames])) {
+    await runCaptureStep("time tracking review states", async () => {
+      const timeTrackingUrl = ROUTES.timeTracking.build(orgSlug);
+
+      const applyTimeTrackingState = async (
+        mode: "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated",
+      ): Promise<void> => {
+        const result = await testUserService.configureTimeTrackingState(orgSlug, projectKey, mode);
+        if (!result.success) {
+          throw new Error(
+            result.error ?? `Failed to configure time tracking screenshot state: ${mode}`,
+          );
+        }
+      };
+
+      const captureTimeTrackingState = async ({
+        afterReady,
+        expectedState,
+        name,
+        requestedState,
+      }: {
+        afterReady?: (trackingPage: TimeTrackingPage) => Promise<void>;
+        expectedState: "entries" | "burn-rate" | "rates";
+        name: (typeof timeTrackingCaptureNames)[number];
+        requestedState?: "all-time" | "burn-rate" | "rates";
+      }): Promise<void> => {
+        const capturePage = await page.context().newPage();
+        try {
+          if (requestedState) {
+            await capturePage.addInitScript((state: "all-time" | "burn-rate" | "rates") => {
+              window.sessionStorage.setItem("nixelo:e2e:time-tracking-state", state);
+            }, requestedState);
+          }
+          await capturePage.goto(`${BASE_URL}${timeTrackingUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          const trackingPage = new TimeTrackingPage(capturePage, orgSlug);
+          if (expectedState === "burn-rate") {
+            await trackingPage.expectBurnRateState();
+          } else if (expectedState === "rates") {
+            await trackingPage.expectRatesState();
+          } else {
+            await trackingPage.expectEntriesState();
+          }
+          if (afterReady) {
+            await afterReady(trackingPage);
+          }
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, p, name);
+        } finally {
+          await capturePage.close();
+        }
+      };
+
+      await applyTimeTrackingState("default");
+
+      if (shouldCapture(p, "time-tracking-burn-rate")) {
+        await captureTimeTrackingState({
+          expectedState: "burn-rate",
+          name: "time-tracking-burn-rate",
+          requestedState: "burn-rate",
+        });
+      }
+
+      if (shouldCapture(p, "time-tracking-rates")) {
+        await applyTimeTrackingState("ratesPopulated");
+        await captureTimeTrackingState({
+          expectedState: "entries",
+          afterReady: async (trackingPage) => {
+            await trackingPage.ratesTab.click();
+            await trackingPage.expectRatesState();
+          },
+          name: "time-tracking-rates",
+        });
+        await applyTimeTrackingState("default");
+      }
+
+      if (shouldCapture(p, "time-tracking-empty")) {
+        await applyTimeTrackingState("entriesEmpty");
+        await captureTimeTrackingState({
+          expectedState: "entries",
+          name: "time-tracking-empty",
+        });
+        await applyTimeTrackingState("default");
+      }
+
+      if (shouldCapture(p, "time-tracking-all-time")) {
+        await captureTimeTrackingState({
+          expectedState: "entries",
+          name: "time-tracking-all-time",
+          requestedState: "all-time",
+        });
+      }
+
+      if (shouldCapture(p, "time-tracking-truncated")) {
+        await applyTimeTrackingState("summaryTruncated");
+        await captureTimeTrackingState({
+          expectedState: "entries",
+          name: "time-tracking-truncated",
+        });
+      }
+
+      await applyTimeTrackingState("default");
     });
   }
 

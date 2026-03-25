@@ -1,7 +1,7 @@
 # Time Tracking Page - Implementation
 
 > **Route file**: `src/routes/_auth/_app/$orgSlug/time-tracking.tsx`
-> **Last Updated**: 2026-03-23
+> **Last Updated**: 2026-03-25
 
 ---
 
@@ -12,18 +12,22 @@
 | Query | Source | Purpose |
 |-------|--------|---------|
 | `api.users.isOrganizationAdmin` | `useAuthenticatedQuery` | Admin gate (route redirects non-admins) |
-| `api.timeTracking.getSummary` | `useAuthenticatedQuery` | Overview metrics (duration, cost, count, isTruncated) |
-| `api.timeTracking.list` | `useAuthenticatedQuery` | Time entries for the entries tab |
-| `api.projects.listUserProjects` | `useAuthenticatedQuery` | Project dropdown options |
+| `api.timeTracking.getTimeEntrySummary` | `useAuthenticatedQuery` | Overview metrics (duration, count, billable value, `isTruncated`) |
+| `api.timeTracking.listTimeEntries` | `useAuthenticatedQuery` | Time entries for the entries tab |
+| `api.timeTracking.getBurnRate` | `useAuthenticatedQuery` | Project burn-rate summary cards |
+| `api.timeTracking.getTeamCosts` | `useAuthenticatedQuery` | Team cost breakdown on the burn-rate tab |
+| `api.timeTracking.listUserRates` | `useAuthenticatedQuery` | Active rate rows for the rates tab |
+| `api.projects.getCurrentUserProjects` | `useAuthenticatedQuery` | Project dropdown options |
+| `api.auth.loggedInUser` | `useAuthenticatedQuery` | Current user identity for rate editing |
 
 ### Mutations
 
 | Mutation | Purpose |
 |----------|---------|
-| `api.timeTracking.create` | Log new time entry (manual modal) |
-| `api.timeTracking.update` | Edit existing entry |
-| `api.timeTracking.delete` | Remove entry |
-| `api.timeTracking.updateUserRate` | Set hourly rate for a user |
+| `api.timeTracking.createTimeEntry` | Log a new time entry from the shared modal |
+| `api.timeTracking.startTimer` | Start a live timer from the shared modal |
+| `api.timeTracking.deleteTimeEntry` | Remove an existing entry |
+| `api.timeTracking.setUserRate` | Set a default or project-scoped user rate |
 
 ### State Management
 
@@ -32,6 +36,11 @@ Route state (useState):
 +-- activeTab: "entries" | "burn-rate" | "rates"
 +-- selectedProject: Id<"projects"> | "all"
 +-- dateRange: "week" | "month" | "all"
+
+One-shot screenshot overrides can also bootstrap:
++-- activeTab from session storage (`burn-rate`, `rates`)
++-- dateRange from session storage (`all-time`)
++-- selectedProject to the first visible project for burn-rate review
 ```
 
 Date range maps to query bounds:
@@ -48,23 +57,23 @@ Date range maps to query bounds:
 ```text
 TimeTrackingPageRoute (route, admin gate)
 +-- TimeTrackingPage (422 lines)
-    +-- OverviewBand (4 summary metrics)
+    +-- OverviewBand (3 summary metrics with truncation markers)
     +-- PageControls
     |   +-- Select (project filter)
     |   +-- Select (date range)
     +-- Tabs
         +-- TabsTrigger "entries" (always visible)
-        +-- TabsTrigger "burn-rate" (admin + project selected)
-        +-- TabsTrigger "rates" (admin + project selected)
+        +-- TabsTrigger "burn-rate" (admin)
+        +-- TabsTrigger "rates" (admin)
         +-- TimeEntriesList (286 lines)
-        |   +-- Entry rows with edit/delete
-        |   +-- "Log Time" button -> ManualTimeEntryModal
+        |   +-- Grouped entry rows with delete
+        |   +-- "Add Time Entry" button -> TimeEntryModal
         +-- BurnRateDashboard (277 lines)
-        |   +-- Cost over time chart
-        |   +-- Budget vs actual
+        |   +-- Summary cards
+        |   +-- Hours / billable panels
         |   +-- Team cost breakdown
         +-- UserRatesManagement (291 lines)
-            +-- Rate table with add/edit
+            +-- Active rate list with empty-state fallback
             +-- Default + project-specific rates
 ```
 
@@ -74,11 +83,12 @@ TimeTrackingPageRoute (route, admin gate)
 
 ```text
 canSeeSensitiveTabs = isGlobalAdmin || userRole === "admin"
-showBurnRate = canSeeSensitiveTabs && selectedProject !== "all"
-showRates = canSeeSensitiveTabs && selectedProject !== "all"
+showBurnRatePrompt = canSeeSensitiveTabs && activeTab === "burn-rate" && selectedProject === "all"
+showRates = canSeeSensitiveTabs && activeTab === "rates"
 ```
 
-When tabs are hidden, `activeTab` falls back to "entries" automatically.
+The burn-rate tab stays visible for admins and swaps between the project-selection prompt and
+the project-scoped dashboard. The rates tab stays visible and does not require a project filter.
 
 ---
 
@@ -98,10 +108,9 @@ When tabs are hidden, `activeTab` falls back to "entries" automatically.
 
 | Test File | Coverage |
 |-----------|----------|
-| `TimeTrackingPage.test.tsx` | Tabs, filters, overview metrics, truncation |
+| `TimeTrackingPage.test.tsx` | Tabs, filters, overview metrics, truncation, screenshot boot states |
 | `TimeEntriesList.test.tsx` | Entry rendering, actions |
 | `BurnRateDashboard.test.tsx` | Chart rendering, cost breakdown |
-| `UserRatesManagement.test.tsx` | Rate table, add/edit validation |
-| `ManualTimeEntryModal.test.tsx` | Form validation, submission |
-| `TimeEntryModal.test.tsx` | Edit form, validation |
-| `e2e/screenshot-pages.ts` | `filled-time-tracking` spec |
+| `UserRatesManagement.test.tsx` | Rate table, add/edit validation, auth-gap fallback rendering |
+| `TimeEntryModal.test.tsx` | Shared timer/log-time form validation and submission |
+| `e2e/screenshot-pages.ts` | `filled-time-tracking` spec with burn-rate, rates, empty, all-time, truncated, and modal states |

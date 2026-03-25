@@ -43,6 +43,11 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
   [/^filled-workspaces-search-empty$/, "27-workspaces", "-search-empty"],
   [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
+  [/^filled-time-tracking-burn-rate$/, "22-time-tracking", "-burn-rate"],
+  [/^filled-time-tracking-rates$/, "22-time-tracking", "-rates"],
+  [/^filled-time-tracking-empty$/, "22-time-tracking", "-empty"],
+  [/^filled-time-tracking-all-time$/, "22-time-tracking", "-all-time"],
+  [/^filled-time-tracking-truncated$/, "22-time-tracking", "-truncated"],
   [/^filled-time-tracking-manual-entry-modal$/, "22-time-tracking", "-manual-entry-modal"],
   // Settings pages
   [/^filled-settings-profile-avatar-upload-modal$/, "12-settings", "-profile-avatar-upload-modal"],

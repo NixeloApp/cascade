@@ -19,6 +19,7 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatCurrency, formatDate } from "@/lib/formatting";
 import { Clock, Download, FileText, Folder, Lock, Plus, Trash } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -187,12 +188,13 @@ export function TimeEntriesList({
 
   if (entries.length === 0) {
     return (
-      <Flex direction="column" gap="xl">
+      <Flex direction="column" gap="xl" data-testid={TEST_IDS.TIME_TRACKING.ENTRIES_LIST}>
         {headerCard}
         <EmptyState
           icon={Clock}
           title="No time entries"
           description="Start tracking time to see entries here."
+          data-testid={TEST_IDS.TIME_TRACKING.ENTRIES_EMPTY_STATE}
         />
         <TimeEntryModal
           open={showManualEntryModal}
@@ -205,7 +207,7 @@ export function TimeEntriesList({
   }
 
   return (
-    <Flex direction="column" gap="xl">
+    <Flex direction="column" gap="xl" data-testid={TEST_IDS.TIME_TRACKING.ENTRIES_LIST}>
       {headerCard}
 
       {groupedEntries.map(({ date: isoDate, entries: dateEntries, duration }) => (

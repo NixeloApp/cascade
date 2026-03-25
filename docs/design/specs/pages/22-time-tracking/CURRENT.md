@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/time-tracking`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-23
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -38,17 +38,12 @@ tabbed view.
 
 | State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
 |-------|-------------|---------------|--------------|--------------|
+| Burn rate tab | `desktop-dark-burn-rate.png` | `desktop-light-burn-rate.png` | `tablet-light-burn-rate.png` | `mobile-light-burn-rate.png` |
+| User rates tab | `desktop-dark-rates.png` | `desktop-light-rates.png` | `tablet-light-rates.png` | `mobile-light-rates.png` |
+| Empty entries | `desktop-dark-empty.png` | `desktop-light-empty.png` | `tablet-light-empty.png` | `mobile-light-empty.png` |
+| All-time range | `desktop-dark-all-time.png` | `desktop-light-all-time.png` | `tablet-light-all-time.png` | `mobile-light-all-time.png` |
+| Truncated summary metrics | `desktop-dark-truncated.png` | `desktop-light-truncated.png` | `tablet-light-truncated.png` | `mobile-light-truncated.png` |
 | Manual entry modal | `desktop-dark-manual-entry-modal.png` | `desktop-light-manual-entry-modal.png` | `tablet-light-manual-entry-modal.png` | `mobile-light-manual-entry-modal.png` |
-
-### Missing captures (should be added)
-
-- Burn rate tab active
-- User rates tab active
-- Empty state (no time entries)
-- Project filter applied
-- Date range selector (week/month/all)
-- Time entry edit modal
-- Truncation indicator ("+" suffix on metrics)
 
 ---
 
@@ -103,20 +98,20 @@ tabbed view.
 
 ### 2. Overview band
 
-- `OverviewBand` component showing 4 summary metrics:
+- `OverviewBand` component showing 3 summary metrics:
   - **Logged** — total duration in human-readable format (e.g., "42h 30m")
-  - **Billable** — billable duration only (if billing enabled)
-  - **Cost** — total cost in currency format
   - **Entries** — entry count
+  - **Billable** — billable duration or tracked billable value
 - Each metric shows "+" suffix when data is truncated beyond query limits.
 - Metrics respect the selected date range and project filter.
-- Data from `api.timeTracking.getSummary` query.
+- Data from `api.timeTracking.getTimeEntrySummary` query.
 
 ### 3. Controls
 
 - **Project filter**: Select dropdown — "All Projects" or specific project.
-  When "All Projects" is selected, burn rate and user rates tabs may be hidden
-  (they require a project context).
+  The entries tab works org-wide. Burn-rate review states auto-select the seeded project for
+  screenshot capture, while the product still shows a project-selection prompt when burn
+  analysis is opened on "All Projects".
 - **Date range**: Select — "Last 7 Days", "Last 30 Days", "All Time".
   Maps to WEEK, MONTH, or no date bound for the query.
 
@@ -125,27 +120,26 @@ tabbed view.
 Three tabs with role-gated visibility:
 
 - **Entries** — always visible. `TimeEntriesList` (286 lines).
-  - Table of time entries with date, duration, issue, user, notes.
-  - Edit and delete actions per entry.
-  - "Log Time" button opens `ManualTimeEntryModal`.
+  - Grouped list of time entries with date, duration, issue, badges, and delete actions.
+  - "Add Time Entry" button opens the shared `TimeEntryModal`.
 
 - **Burn Rate** — visible for admin+ when a specific project is selected.
   `BurnRateDashboard` (277 lines).
-  - Cost chart over time.
-  - Budget vs actual comparison.
+  - Burn-rate summary cards.
+  - Hours and billable summary.
   - Team member cost breakdown.
 
-- **User Rates** — visible for admin+ when a specific project is selected.
+- **User Rates** — visible for admin+.
   `UserRatesManagement` (291 lines).
-  - Table of user hourly rates.
-  - Add/edit rates per user.
-  - Default rate and project-specific overrides.
+  - Current active rate list.
+  - Default and project-specific overrides.
+  - Add/edit modal for the current user's rates.
 
 ### 5. Manual time entry modal
 
-- `ManualTimeEntryModal` (540 lines) — full time entry form.
+- `TimeEntryModal` — shared log-time form used here and from the timer widget.
 - Fields: project, issue, date, duration (hours:minutes), notes, billable toggle.
-- Validation via `manualTimeEntryValidation.ts`.
+- Validation via `timeEntryValidation.ts` and `useTimeEntryForm.ts`.
 - Also accessible from the global timer widget in the app header.
 
 ---
@@ -155,17 +149,12 @@ Three tabs with role-gated visibility:
 ### States the current spec explicitly covers
 
 - Entries tab with populated list (4 viewports)
+- Burn rate tab with seeded project selected (4 viewports)
+- User rates tab with seeded active rates (4 viewports)
+- Empty entries state (4 viewports)
+- All-time date-range state (4 viewports)
+- Truncated metric state showing "+" suffixes (4 viewports)
 - Manual time entry modal open (4 viewports)
-
-### States that should be captured
-
-- Burn rate tab with charts
-- User rates tab with rate table
-- Empty entries state
-- Project filter applied
-- Date range changed
-- Truncation indicators on metrics
-- Time entry edit modal
 
 ---
 
@@ -187,7 +176,7 @@ Three tabs with role-gated visibility:
 |---|---------|------|----------|
 | ~~1~~ | ~~Confusing empty state for project-scoped tabs~~ **Fixed** — replaced inline SVG prompt with proper EmptyState component that clearly directs users to select a project | ~~UX~~ | ~~MEDIUM~~ |
 | ~~2~~ | ~~No CSV export for time entries~~ **Fixed** — Export CSV button in TimeEntriesList header, generates CSV with date, description, issue, duration, billable status, rate, cost | ~~feature gap~~ | ~~MEDIUM~~ |
-| 3 | ManualTimeEntryModal is 540 lines. Could benefit from splitting form logic from modal chrome. | architecture | LOW |
+| 3 | `TimeEntryModal` still carries a lot of form chrome and input orchestration in one place. | architecture | LOW |
 | ~~4~~ | ~~ProjectTimesheet stub~~ **Fixed** — deleted pass-through wrapper. Route now lazy-imports TimeTrackingPage directly. | ~~dead code~~ | ~~LOW~~ |
 
 ---
@@ -201,10 +190,8 @@ Three tabs with role-gated visibility:
 | `src/components/TimeTracking/TimeEntriesList.tsx` | 286 | Time entry table with actions |
 | `src/components/TimeTracking/BurnRateDashboard.tsx` | 277 | Cost analytics charts |
 | `src/components/TimeTracking/UserRatesManagement.tsx` | 291 | Hourly rate configuration |
-| `src/components/TimeTracking/ManualTimeEntryModal.tsx` | 540 | Time entry creation form |
-| `src/components/TimeTracking/TimeEntryModal.tsx` | 524 | Time entry edit form |
+| `src/components/TimeTracking/TimeEntryModal.tsx` | -- | Shared log-time modal used on this route and from the timer widget |
 | `src/components/TimeTracking/TimerWidget.tsx` | -- | Global timer in app header |
-| `src/components/TimeTracker/BillingReport.tsx` | -- | Billing report with CSV export |
 | `e2e/screenshot-pages.ts` | -- | `filled-time-tracking` spec |
 
 ---
@@ -223,5 +210,5 @@ Three tabs with role-gated visibility:
 
 The time tracking page is a mature admin dashboard combining time entry management, burn rate
 analytics, and user rate configuration. The OverviewBand gives instant summary metrics, tabs
-separate concerns cleanly, and the admin gate prevents data leaks. Main gaps are the hidden
-tabs when no project is selected and the lack of direct CSV export from the entries tab.
+separate concerns cleanly, the admin gate prevents data leaks, and the reviewed screenshot
+matrix now covers the route's real operating states instead of only the canonical entries view.

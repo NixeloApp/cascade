@@ -13,6 +13,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { ACTIVITY_TYPES } from "@/lib/constants";
 import { formatDateForInput, formatDurationHuman } from "@/lib/formatting";
 import { Clock, Hourglass, Play, X } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -359,6 +360,7 @@ export function TimeEntryModal({
     >
       <Stack
         as="form"
+        data-testid={TEST_IDS.TIME_TRACKING.ENTRY_FORM}
         id="time-entry-form"
         gap="md"
         onSubmit={(e) => {

@@ -43,6 +43,7 @@ type SeededInboxActorKey = "owner" | "alex" | "sarah";
 type SeededProjectInboxMode = "default" | "openEmpty" | "closedEmpty";
 type SeededProjectAnalyticsMode = "default" | "sparseData" | "noActivity";
 type SeededNotificationsMode = "default" | "inboxEmpty" | "archivedEmpty" | "unreadOverflow";
+type SeededTimeTrackingMode = "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated";
 
 interface SeededInboxDefinition {
   createdBy: SeededInboxActorKey;
@@ -96,6 +97,117 @@ interface SeededAnalyticsActivityDefinition {
   newValue?: string;
   oldValue?: string;
   timestamp: number;
+}
+
+interface SeededTimeTrackingEntryDefinition {
+  activity: string;
+  billable: boolean;
+  dayOffset: number;
+  description: string;
+  durationHours: number;
+  hourlyRate?: number;
+}
+
+interface SeededTimeTrackingRateDefinition {
+  currency: string;
+  hourlyRate: number;
+  notes?: string;
+  projectScoped: boolean;
+  rateType: Doc<"userRates">["rateType"];
+}
+
+const SCREENSHOT_TIME_TRACKING_BASE_ENTRIES: SeededTimeTrackingEntryDefinition[] = [
+  {
+    activity: "Development",
+    billable: true,
+    dayOffset: -2,
+    description: "CI/CD pipeline setup and configuration",
+    durationHours: 4,
+    hourlyRate: 150,
+  },
+  {
+    activity: "Development",
+    billable: true,
+    dayOffset: -1,
+    description: "Bug investigation: login timeout on mobile",
+    durationHours: 3,
+    hourlyRate: 150,
+  },
+  {
+    activity: "Code Review",
+    billable: true,
+    dayOffset: -1,
+    description: "Dashboard design review with team",
+    durationHours: 1.5,
+    hourlyRate: 150,
+  },
+  {
+    activity: "Meeting",
+    billable: false,
+    dayOffset: 0,
+    description: "Sprint planning meeting",
+    durationHours: 1,
+  },
+  {
+    activity: "Development",
+    billable: true,
+    dayOffset: 0,
+    description: "Mobile login fix implementation",
+    durationHours: 2.5,
+    hourlyRate: 150,
+  },
+];
+
+const SCREENSHOT_TIME_TRACKING_REVIEW_RATES: SeededTimeTrackingRateDefinition[] = [
+  {
+    currency: "USD",
+    hourlyRate: 125,
+    notes: "Default internal delivery cost",
+    projectScoped: false,
+    rateType: "internal",
+  },
+  {
+    currency: "USD",
+    hourlyRate: 180,
+    notes: "Client-facing override for screenshot review",
+    projectScoped: true,
+    rateType: "billable",
+  },
+];
+
+function getDayStartMs(timestamp: number): number {
+  const date = new Date(timestamp);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+function buildSeededTimeTrackingEntryDefinitions(
+  mode: SeededTimeTrackingMode,
+): SeededTimeTrackingEntryDefinition[] {
+  if (mode === "entriesEmpty") {
+    return [];
+  }
+
+  const baseEntries = [...SCREENSHOT_TIME_TRACKING_BASE_ENTRIES];
+  if (mode !== "summaryTruncated") {
+    return baseEntries;
+  }
+
+  const targetEntryCount = 501;
+  const overflowEntryCount = Math.max(targetEntryCount - baseEntries.length, 0);
+
+  for (let index = 0; index < overflowEntryCount; index += 1) {
+    baseEntries.push({
+      activity: index % 5 === 0 ? "Review" : "Development",
+      billable: true,
+      dayOffset: -(index % 7),
+      description: `Screenshot overflow entry ${String(index + 1).padStart(3, "0")}`,
+      durationHours: 0.5,
+      hourlyRate: 120,
+    });
+  }
+
+  return baseEntries;
 }
 
 function screenshotText(text: string): ScreenshotDocumentNode {
@@ -998,6 +1110,119 @@ async function resetSeededNotificationsForUser(
   return {
     success: true,
     ...countSeededNotifications(definitions),
+  };
+}
+
+async function resetSeededTimeTrackingState(
+  ctx: MutationCtx,
+  args: {
+    organizationId: Id<"organizations">;
+    projectId: Id<"projects">;
+    mode: SeededTimeTrackingMode;
+  },
+): Promise<{
+  success: boolean;
+  entryCount?: number;
+  projectId?: Id<"projects">;
+  rateCount?: number;
+  error?: string;
+}> {
+  const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+    organizationId: args.organizationId,
+    projectId: args.projectId,
+  });
+  if (!screenshotActors.success) {
+    return { success: false, error: screenshotActors.error };
+  }
+
+  const { ownerUserId } = screenshotActors;
+  const now = Date.now();
+  const dayStartMs = getDayStartMs(now);
+
+  while (true) {
+    const existingEntries = await ctx.db
+      .query("timeEntries")
+      .withIndex("by_user_project", (q) =>
+        q.eq("userId", ownerUserId).eq("projectId", args.projectId),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+
+    if (existingEntries.length === 0) {
+      break;
+    }
+
+    for (const entry of existingEntries) {
+      await ctx.db.delete(entry._id);
+    }
+  }
+
+  const existingRates = await ctx.db
+    .query("userRates")
+    .withIndex("by_user", (q) => q.eq("userId", ownerUserId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const rate of existingRates) {
+    if (rate.projectId === undefined || rate.projectId === args.projectId) {
+      await ctx.db.delete(rate._id);
+    }
+  }
+
+  const entryDefinitions = buildSeededTimeTrackingEntryDefinitions(args.mode);
+  for (let index = 0; index < entryDefinitions.length; index += 1) {
+    const entry = entryDefinitions[index];
+    const entryDate = dayStartMs + entry.dayOffset * DAY;
+    const durationSeconds = entry.durationHours * 3600;
+    const minuteOffset = index % 120;
+    const startTime = entryDate + 9 * HOUR + minuteOffset * MINUTE;
+    const endTime = startTime + durationSeconds * SECOND;
+    const totalCost =
+      entry.billable && entry.hourlyRate ? entry.durationHours * entry.hourlyRate : undefined;
+
+    await ctx.db.insert("timeEntries", {
+      billable: entry.billable,
+      billed: false,
+      currency: "USD",
+      date: entryDate,
+      description: entry.description,
+      duration: durationSeconds,
+      endTime,
+      hourlyRate: entry.hourlyRate,
+      isApproved: false,
+      isEquityHour: false,
+      isLocked: false,
+      projectId: args.projectId,
+      startTime,
+      tags: [],
+      totalCost,
+      updatedAt: now,
+      userId: ownerUserId,
+      activity: entry.activity,
+    });
+  }
+
+  const rateDefinitions =
+    args.mode === "ratesPopulated" ? SCREENSHOT_TIME_TRACKING_REVIEW_RATES : [];
+  for (let index = 0; index < rateDefinitions.length; index += 1) {
+    const rate = rateDefinitions[index];
+    await ctx.db.insert("userRates", {
+      currency: rate.currency,
+      effectiveFrom: now - index * MINUTE,
+      effectiveTo: undefined,
+      hourlyRate: rate.hourlyRate,
+      notes: rate.notes,
+      projectId: rate.projectScoped ? args.projectId : undefined,
+      rateType: rate.rateType,
+      setBy: ownerUserId,
+      updatedAt: now,
+      userId: ownerUserId,
+    });
+  }
+
+  return {
+    success: true,
+    entryCount: entryDefinitions.length,
+    projectId: args.projectId,
+    rateCount: rateDefinitions.length,
   };
 }
 
@@ -4010,6 +4235,123 @@ export const deleteSeededProjectIssueInternal = internalMutation({
       success: true,
       deleted: issuesToDelete.length,
     };
+  },
+});
+
+/**
+ * Reconfigure seeded time tracking data for screenshot capture.
+ * POST /e2e/configure-time-tracking-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   mode: "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated",
+ * }
+ */
+export const configureTimeTrackingStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, mode } = body;
+
+    if (!(orgSlug && projectKey && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "entriesEmpty", "ratesPopulated", "summaryTruncated"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid time tracking mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateTimeTrackingStateInternal, {
+      mode,
+      orgSlug,
+      projectKey,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateTimeTrackingStateInternal = internalMutation({
+  args: {
+    mode: v.union(
+      v.literal("default"),
+      v.literal("entriesEmpty"),
+      v.literal("ratesPopulated"),
+      v.literal("summaryTruncated"),
+    ),
+    orgSlug: v.string(),
+    projectKey: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    entryCount: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    rateCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const timeTrackingReset = await resetSeededTimeTrackingState(ctx, {
+      mode: args.mode,
+      organizationId: organization._id,
+      projectId: project._id,
+    });
+
+    if (!timeTrackingReset.success) {
+      return {
+        success: false,
+        error: timeTrackingReset.error ?? `Failed to configure time tracking state: ${args.mode}`,
+      };
+    }
+
+    return timeTrackingReset;
   },
 });
 

@@ -19,6 +19,7 @@ import {
   configureOrgAnalyticsStateEndpoint,
   configureProjectAnalyticsStateEndpoint,
   configureProjectInboxStateEndpoint,
+  configureTimeTrackingStateEndpoint,
   createTestUserEndpoint,
   debugVerifyPasswordEndpoint,
   deleteSeededProjectIssueEndpoint,
@@ -372,6 +373,12 @@ http.route({
   path: "/e2e/configure-project-inbox-state",
   method: "POST",
   handler: configureProjectInboxStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-time-tracking-state",
+  method: "POST",
+  handler: configureTimeTrackingStateEndpoint,
 });
 
 http.route({

@@ -598,12 +598,36 @@ export const TEST_IDS = {
   // ============================================================
 
   TIME_TRACKING: {
-    /** @see src/components/TimeTracking/ManualTimeEntryModal.tsx */
+    /** @see src/components/TimeTracking/TimeEntryModal.tsx */
     ENTRY_FORM: "time-entry-form",
-    /** @see src/routes/_app.$orgSlug.time-tracking.tsx */
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
     CONTENT: "time-tracking-content",
-    /** @see src/components/TimeTracker.tsx */
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    OVERVIEW: "time-tracking-overview",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    SUMMARY_LOGGED: "time-tracking-summary-logged",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    SUMMARY_ENTRIES: "time-tracking-summary-entries",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    SUMMARY_BILLABLE: "time-tracking-summary-billable",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    PROJECT_FILTER: "time-tracking-project-filter",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    DATE_RANGE_FILTER: "time-tracking-date-range-filter",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    TAB_ENTRIES: "time-tracking-tab-entries",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    TAB_BURN_RATE: "time-tracking-tab-burn-rate",
+    /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
+    TAB_RATES: "time-tracking-tab-rates",
+    /** @see src/components/TimeTracking/TimeEntriesList.tsx */
     ENTRIES_LIST: "time-tracking-entries-list",
+    /** @see src/components/TimeTracking/TimeEntriesList.tsx */
+    ENTRIES_EMPTY_STATE: "time-tracking-entries-empty-state",
+    /** @see src/components/TimeTracking/BurnRateDashboard.tsx */
+    BURN_RATE_PANEL: "time-tracking-burn-rate-panel",
+    /** @see src/components/TimeTracking/UserRatesManagement.tsx */
+    RATES_PANEL: "time-tracking-rates-panel",
   },
 
   NOTIFICATIONS: {
