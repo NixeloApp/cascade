@@ -47,6 +47,7 @@ const BOUNCE_BODY_PATTERNS = [
   /final-recipient:/i,
   /\bstatus:\s*5\.\d\.\d\b/i,
 ];
+const BOUNCE_EVENT_FALLBACK_DEDUP_WINDOW_MS = 5 * MINUTE;
 const BOUNCE_RECIPIENT_PATTERNS = [
   /Final-Recipient:\s*rfc822;\s*<?([^>\s;]+@[^>\s;]+)>?/gi,
   /Original-Recipient:\s*rfc822;\s*<?([^>\s;]+@[^>\s;]+)>?/gi,
@@ -884,6 +885,7 @@ export const findEnrollmentForBounce = internalMutation({
   handler: async (ctx, args) => {
     const mailbox = await ctx.db.get(args.mailboxId);
     if (!mailbox) return { matched: false };
+    const now = Date.now();
 
     const normalizedEmail = args.bouncedRecipientEmail.toLowerCase().trim();
     const contact = await ctx.db
@@ -923,7 +925,12 @@ export const findEnrollmentForBounce = internalMutation({
           (event) =>
             event.type === "bounced" && event.metadata?.gmailMessageId === args.gmailMessageId,
         )
-      : false;
+      : existingBounceEvents.some(
+          (event) =>
+            event.type === "bounced" &&
+            event.metadata?.failedRecipient === normalizedEmail &&
+            event.createdAt >= now - BOUNCE_EVENT_FALLBACK_DEDUP_WINDOW_MS,
+        );
     if (alreadyRecorded) {
       return { matched: false };
     }
@@ -942,7 +949,7 @@ export const findEnrollmentForBounce = internalMutation({
         gmailMessageId: args.gmailMessageId,
         replyContent: args.bounceReason,
       },
-      createdAt: Date.now(),
+      createdAt: now,
     });
 
     if (bounceType === "hard") {

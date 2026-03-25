@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { MINUTE } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createOrganizationAdmin, createTestUser } from "../testUtils";
@@ -624,6 +625,52 @@ describe("outreach gmail", () => {
       failedRecipient: "lead@example.com",
       gmailMessageId: "soft-bounce-message",
     });
+  });
+
+  it("deduplicates repeated bounce matches without a Gmail message id within the fallback window", async () => {
+    const { t, fixture } = await createOutreachFixture();
+
+    const firstResult = await t.mutation(internal.outreach.gmail.findEnrollmentForBounce, {
+      bouncedRecipientEmail: "lead@example.com",
+      mailboxId: fixture.mailboxId,
+      diagnosticCode: "421 4.7.0 Temporary rate limit exceeded",
+      bounceReason: "Delivery temporarily delayed",
+    });
+
+    vi.advanceTimersByTime(2 * MINUTE);
+
+    const secondResult = await t.mutation(internal.outreach.gmail.findEnrollmentForBounce, {
+      bouncedRecipientEmail: "lead@example.com",
+      mailboxId: fixture.mailboxId,
+      diagnosticCode: "421 4.7.0 Temporary rate limit exceeded",
+      bounceReason: "Delivery temporarily delayed",
+    });
+
+    expect(firstResult).toEqual({ matched: true });
+    expect(secondResult).toEqual({ matched: false });
+
+    const enrollment = await t.run(async (ctx) => ctx.db.get(fixture.enrollmentId));
+    expect(enrollment).not.toBeNull();
+    if (enrollment === null) throw new Error("enrollment is null");
+    expect(enrollment.status).toBe("active");
+
+    const sequence = await t.run(async (ctx) => ctx.db.get(fixture.sequenceId));
+    expect(sequence).not.toBeNull();
+    if (sequence === null) throw new Error("sequence is null");
+    expect(sequence.stats?.bounced).toBe(1);
+
+    const events = await t.run(async (ctx) =>
+      ctx.db
+        .query("outreachEvents")
+        .withIndex("by_enrollment", (q) => q.eq("enrollmentId", fixture.enrollmentId))
+        .collect(),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0].metadata).toMatchObject({
+      bounceType: "soft",
+      failedRecipient: "lead@example.com",
+    });
+    expect(events[0].metadata?.gmailMessageId).toBeUndefined();
   });
 
   it("still finds the active mailbox enrollment when older enrollments exceed the bounded slice", async () => {
