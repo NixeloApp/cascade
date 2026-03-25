@@ -46,7 +46,7 @@ function TeamsList() {
           icon: Users,
           title: "No teams yet",
           description: "Create your first team to start organizing work",
-          action: <Button variant="primary">+ Create Team</Button>,
+          actions: <Button variant="primary">+ Create Team</Button>,
         }}
       >
         <Grid cols={1} colsMd={2} colsLg={3} gap="xl">

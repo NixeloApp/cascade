@@ -140,7 +140,7 @@ describe("DocumentsListPage", () => {
 
     render(<DocumentsListPage />);
 
-    expect(screen.getByTestId(TEST_IDS.DOCUMENT.EMPTY_STATE)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create Blank Document" })).toBeInTheDocument();
   });
 

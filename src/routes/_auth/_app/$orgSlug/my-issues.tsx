@@ -310,7 +310,6 @@ export function MyIssuesBoardPage() {
             title: "No issues assigned to you yet",
             description:
               "Assigned work from your projects will show up here so you can scan it by status or project.",
-            "data-testid": TEST_IDS.MY_ISSUES.EMPTY_STATE,
           }}
         >
           {null}
@@ -323,11 +322,11 @@ export function MyIssuesBoardPage() {
             title: "No issues match these filters",
             description:
               "Try another priority or due-date combination, or clear the current filters to see the rest of your work.",
-            action: {
-              label: "Clear filters",
-              onClick: resetFilters,
-            },
-            "data-testid": TEST_IDS.MY_ISSUES.FILTER_EMPTY_STATE,
+            actions: (
+              <Button type="button" onClick={resetFilters}>
+                Clear filters
+              </Button>
+            ),
           }}
         >
           {null}

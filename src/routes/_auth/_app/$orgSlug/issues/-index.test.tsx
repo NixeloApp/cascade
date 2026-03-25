@@ -62,12 +62,12 @@ vi.mock("@/components/layout", () => ({
     children: ReactNode;
     isLoading?: boolean;
     isEmpty?: boolean;
-    emptyState?: { title: string; "data-testid"?: string };
+    emptyState?: { title: string };
   }) =>
     isLoading ? (
       <div data-testid="issues-page-loading">Loading</div>
     ) : (
-      <div data-testid={isEmpty ? emptyState?.["data-testid"] : undefined}>
+      <div data-testid={isEmpty ? TEST_IDS.PAGE.EMPTY_STATE : undefined}>
         {isEmpty ? emptyState?.title : children}
       </div>
     ),
@@ -282,7 +282,7 @@ describe("AllIssuesPage", () => {
     expect(await screen.findByTestId(TEST_IDS.ISSUE.FILTER_SUMMARY)).toHaveTextContent(
       "0 issues matching filters",
     );
-    expect(await screen.findByTestId(TEST_IDS.ISSUE.SEARCH_EMPTY_STATE)).toBeInTheDocument();
+    expect(await screen.findByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
   });
 
   it("forces the loading state when the E2E loading override is enabled", () => {

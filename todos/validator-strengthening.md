@@ -2,9 +2,9 @@
 
 > **Priority:** P3
 > **Status:** Ongoing improvement
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
-Current baseline: 53/53 validators pass.
+Current baseline: 55/55 validators pass.
 
 ## Remaining
 

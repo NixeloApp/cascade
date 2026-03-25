@@ -142,8 +142,7 @@ export function DocumentsListPage() {
           title: "No documents yet",
           description:
             "Start with a template or create a blank document to capture specs, notes, and handoffs.",
-          "data-testid": TEST_IDS.DOCUMENT.EMPTY_STATE,
-          action: (
+          actions: (
             <Flex align="center" gap="sm" wrap>
               <Button onClick={() => void handleCreateDocument()}>Create Blank Document</Button>
               <Button asChild variant="secondary">

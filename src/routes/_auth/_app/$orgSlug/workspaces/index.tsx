@@ -83,8 +83,7 @@ export function WorkspacesList() {
           icon: Building2,
           title: "No workspaces yet",
           description: "Create your first workspace to organize teams and projects",
-          "data-testid": TEST_IDS.WORKSPACE.EMPTY_STATE,
-          action: (
+          actions: (
             <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               + Create Workspace
             </Button>

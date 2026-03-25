@@ -1,7 +1,7 @@
 # Offline / PWA
 
 > **Status:** Core infrastructure shipped; verification and polish remain
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
 Related docs:
 

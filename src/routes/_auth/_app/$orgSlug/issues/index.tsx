@@ -305,9 +305,6 @@ export function AllIssuesPage() {
             description: filters.hasActiveFilters
               ? "Try adjusting your filters or clearing them."
               : "Create your first issue to get started.",
-            "data-testid": filters.hasActiveFilters
-              ? TEST_IDS.ISSUE.SEARCH_EMPTY_STATE
-              : TEST_IDS.ISSUE.EMPTY_STATE,
           }}
         >
           <Grid cols={1} colsMd={2} colsLg={3} colsXl={4} gap="lg">

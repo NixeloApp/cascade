@@ -5,13 +5,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { LucideIcon } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface EmptyStateConfig {
   icon: LucideIcon;
   title: string;
   description?: string;
-  action?: ReactNode | { label: string; onClick: () => void };
-  "data-testid"?: string;
+  actions?: ReactNode;
 }
 
 interface PageContentProps {
@@ -46,8 +46,8 @@ export function PageContent({
         icon={emptyState.icon}
         title={emptyState.title}
         description={emptyState.description}
-        action={emptyState.action}
-        data-testid={emptyState["data-testid"]}
+        action={emptyState.actions}
+        data-testid={TEST_IDS.PAGE.EMPTY_STATE}
       />
     );
   }

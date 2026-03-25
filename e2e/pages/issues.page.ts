@@ -19,8 +19,7 @@ export class IssuesPage extends BasePage {
   readonly priorityFilter: Locator;
   readonly typeFilter: Locator;
   readonly filterSummary: Locator;
-  readonly searchEmptyState: Locator;
-  readonly emptyState: Locator;
+  readonly pageEmptyState: Locator;
   readonly createIssueModal: Locator;
   readonly issueTitleInput: Locator;
   readonly sidePanelToggle: Locator;
@@ -37,8 +36,7 @@ export class IssuesPage extends BasePage {
     this.priorityFilter = page.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER);
     this.typeFilter = page.getByTestId(TEST_IDS.ISSUE.TYPE_FILTER);
     this.filterSummary = page.getByTestId(TEST_IDS.ISSUE.FILTER_SUMMARY);
-    this.searchEmptyState = page.getByTestId(TEST_IDS.ISSUE.SEARCH_EMPTY_STATE);
-    this.emptyState = page.getByTestId(TEST_IDS.ISSUE.EMPTY_STATE);
+    this.pageEmptyState = page.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
     this.createIssueModal = page.getByTestId(TEST_IDS.ISSUE.CREATE_MODAL);
     this.issueTitleInput = page.getByTestId(TEST_IDS.ISSUE.CREATE_TITLE_INPUT);
     this.sidePanelToggle = page.getByRole("button", { name: /switch to side panel view/i }).first();
@@ -59,9 +57,7 @@ export class IssuesPage extends BasePage {
         async () => {
           const cardCount = await getLocatorCount(this.issueCards);
           if (cardCount > 0) return "ready";
-          return (await isLocatorVisible(this.searchEmptyState.or(this.emptyState)))
-            ? "empty"
-            : "pending";
+          return (await isLocatorVisible(this.pageEmptyState)) ? "empty" : "pending";
         },
         { timeout: 12000 },
       )
@@ -99,7 +95,8 @@ export class IssuesPage extends BasePage {
   }
 
   async expectSearchEmptyState(): Promise<void> {
-    await expect(this.searchEmptyState).toBeVisible();
+    await expect(this.pageEmptyState).toBeVisible();
+    await expect(this.pageEmptyState).toContainText("No issues found");
   }
 
   async expectFilterSummaryVisible(): Promise<void> {

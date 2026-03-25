@@ -1,5 +1,6 @@
 import { Inbox } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { PageContent } from "./PageContent";
 
@@ -21,16 +22,18 @@ describe("PageContent", () => {
           icon: Inbox,
           title: "Nothing here yet",
           description: "Create your first item to get started.",
-          action: {
-            label: "Create item",
-            onClick,
-          },
+          actions: (
+            <button type="button" onClick={onClick}>
+              Create item
+            </button>
+          ),
         }}
       >
         Hidden content
       </PageContent>,
     );
 
+    expect(screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Nothing here yet" })).toBeInTheDocument();
     expect(screen.getByText("Create your first item to get started.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create item" })).toBeInTheDocument();

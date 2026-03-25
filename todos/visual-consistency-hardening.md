@@ -35,12 +35,13 @@ Documents workspace screenshot review now covers the canonical route plus templa
 - [ ] icon tone/color consistency -- shared semantic icon tones should read as one system, without one-off raw `text-*` icon overrides drifting across pages
 - [ ] remaining raw Tailwind baseline shrink as touched files are cleaned up
 - [ ] shared shell discipline -- stop panel/card nesting and other accidental composition patterns that make surfaces feel inconsistent
+- [ ] Collapse full-page empty-state/shell patterns into a cleaner shared API so routes stop passing bespoke structure and test hooks.
 - [ ] "looks polished but not like our product" review pass -- screenshots should catch when a surface is visually coherent but still too custom, decorative, or unlike the real app
 - [ ] spec-currentness drift -- CURRENT.md files must track the actual branch route and screenshot matrix instead of falling behind and becoming desktop-only summaries
 
 ## Exit Criteria
 
-- [ ] The visual-consistency validator runs with zero meaningful drift findings or an intentionally tiny known set
-- [ ] Screenshot review no longer has obvious uncaptured consistency holes for important surfaces, including tablet/mobile and major feature states
-- [ ] The remaining human-review blind spots are either covered by guardrails or tracked as explicit debt
-- [ ] Screenshot review no longer surfaces obvious "what is this layout doing?" moments on core routes and dialogs
+- [ ] The visual-consistency validator runs with zero meaningful drift findings or an intentionally tiny known set.
+- [ ] Screenshot review no longer has obvious uncaptured consistency holes for important surfaces, including tablet/mobile and major feature states.
+- [ ] The remaining human-review blind spots are either covered by guardrails or tracked as explicit debt.
+- [ ] Screenshot review no longer surfaces obvious "what is this layout doing?" moments on core routes and dialogs.

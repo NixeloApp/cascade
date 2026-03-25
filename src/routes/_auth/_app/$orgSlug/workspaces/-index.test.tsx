@@ -56,17 +56,16 @@ vi.mock("@/components/layout", () => ({
     emptyState?: {
       title: string;
       description?: string;
-      action?: ReactNode;
-      "data-testid"?: string;
+      actions?: ReactNode;
     };
   }) =>
     isLoading ? (
       <div>Loading</div>
     ) : isEmpty ? (
-      <div data-testid={emptyState?.["data-testid"]}>
+      <div data-testid={TEST_IDS.PAGE.EMPTY_STATE}>
         <div>{emptyState?.title}</div>
         <div>{emptyState?.description}</div>
-        {emptyState?.action}
+        {emptyState?.actions}
       </div>
     ) : (
       <div>{children}</div>
@@ -223,7 +222,7 @@ describe("WorkspacesList", () => {
 
     render(<WorkspacesList />);
 
-    expect(screen.getByTestId(TEST_IDS.WORKSPACE.EMPTY_STATE)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
     expect(screen.getByText("No workspaces yet")).toBeInTheDocument();
   });
 
