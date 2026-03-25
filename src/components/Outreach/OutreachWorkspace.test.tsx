@@ -433,6 +433,47 @@ describe("OutreachWorkspace", () => {
   });
 
   it(
+    "renders stable outreach dialog and destructive-state hooks",
+    async () => {
+      const user = userEvent.setup();
+
+      render(<OutreachWorkspace />);
+
+      await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_CONTACTS));
+      expect(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_IMPORT_CONTACTS)[0]).toBeVisible();
+      expect(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_NEW_CONTACT)[0]).toBeVisible();
+
+      await user.click(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_NEW_CONTACT)[0]);
+      expect(await screen.findByTestId(TEST_IDS.OUTREACH.CONTACT_DIALOG)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /cancel/i }));
+
+      await user.click(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_IMPORT_CONTACTS)[0]);
+      expect(await screen.findByTestId(TEST_IDS.OUTREACH.IMPORT_DIALOG)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /cancel/i }));
+
+      await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_SEQUENCES));
+      expect(screen.getByTestId(TEST_IDS.OUTREACH.ACTION_NEW_SEQUENCE)).toBeVisible();
+      expect(screen.getByTestId(TEST_IDS.OUTREACH.ACTION_ENROLL_CONTACTS)).toBeVisible();
+
+      await user.click(screen.getByTestId(TEST_IDS.OUTREACH.ACTION_NEW_SEQUENCE));
+      expect(await screen.findByTestId(TEST_IDS.OUTREACH.SEQUENCE_DIALOG)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /cancel/i }));
+
+      await user.click(screen.getByTestId(TEST_IDS.OUTREACH.ACTION_ENROLL_CONTACTS));
+      expect(await screen.findByTestId(TEST_IDS.OUTREACH.ENROLL_DIALOG)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /cancel/i }));
+
+      await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_MAILBOXES));
+      expect(await screen.findByTestId(TEST_IDS.OUTREACH.MAILBOX_CARD)).toBeInTheDocument();
+      await user.click(screen.getAllByTestId(TEST_IDS.OUTREACH.MAILBOX_DISCONNECT_BUTTON)[0]);
+      expect(
+        await screen.findByTestId(TEST_IDS.OUTREACH.MAILBOX_DISCONNECT_CONFIRM),
+      ).toBeInTheDocument();
+    },
+    OUTREACH_FORM_TEST_TIMEOUT_MS,
+  );
+
+  it(
     "creates a contact with parsed tags and custom fields",
     async () => {
       const user = userEvent.setup();

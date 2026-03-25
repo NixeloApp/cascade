@@ -809,6 +809,7 @@ export function OutreachWorkspace() {
         message="Disconnecting clears the stored access tokens and stops future sends from this mailbox."
         confirmLabel="Disconnect"
         variant="danger"
+        data-testid={TEST_IDS.OUTREACH.MAILBOX_DISCONNECT_CONFIRM}
       />
     </PageLayout>
   );
@@ -1239,6 +1240,7 @@ function SelectedSequencePanel({
                 size="sm"
                 onClick={onOpenEnrollDialog}
                 disabled={contacts.length === 0}
+                data-testid={TEST_IDS.OUTREACH.ACTION_ENROLL_CONTACTS}
               >
                 Enroll Contacts
               </Button>
@@ -1509,11 +1511,20 @@ function ContactsTabContent({
             description="Store recipient data, tags, and template variables for outreach."
             action={
               <Flex gap="sm" wrap>
-                <Button variant="secondary" size="sm" onClick={onImportContacts}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={onImportContacts}
+                  data-testid={TEST_IDS.OUTREACH.ACTION_IMPORT_CONTACTS}
+                >
                   <Icon icon={Upload} size="sm" />
                   Import CSV
                 </Button>
-                <Button size="sm" onClick={onNewContact}>
+                <Button
+                  size="sm"
+                  onClick={onNewContact}
+                  data-testid={TEST_IDS.OUTREACH.ACTION_NEW_CONTACT}
+                >
                   <Icon icon={UserPlus} size="sm" />
                   New Contact
                 </Button>
@@ -1661,7 +1672,7 @@ function MailboxCard({
   const inputId = `mailbox-daily-limit-${mailbox._id}`;
 
   return (
-    <Card padding="md" variant="soft">
+    <Card padding="md" variant="soft" data-testid={TEST_IDS.OUTREACH.MAILBOX_CARD}>
       <Stack gap="md">
         <Flex justify="between" align="start" gap="sm">
           <Stack gap="xs">
@@ -1713,7 +1724,12 @@ function MailboxCard({
           <Typography variant="meta" as="span">
             Last refreshed {formatOutreachDateTime(mailbox.updatedAt)}
           </Typography>
-          <Button size="sm" variant="danger" onClick={() => onDisconnectMailbox(mailbox)}>
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={() => onDisconnectMailbox(mailbox)}
+            data-testid={TEST_IDS.OUTREACH.MAILBOX_DISCONNECT_BUTTON}
+          >
             Disconnect
           </Button>
         </Flex>
@@ -2011,6 +2027,7 @@ function ContactDialogContent({
       title={editingContact ? "Edit Contact" : "New Contact"}
       description="Store recipient details, tags, and custom fields used in outreach templates."
       size="lg"
+      data-testid={TEST_IDS.OUTREACH.CONTACT_DIALOG}
       footer={
         <Flex justify="end" gap="sm" className="w-full">
           <Button variant="secondary" onClick={onClose}>
@@ -2096,6 +2113,7 @@ function ImportContactsDialogContent({
       title="Import Contacts"
       description="Paste or upload a CSV with an email column. Unknown columns become custom fields automatically."
       size="lg"
+      data-testid={TEST_IDS.OUTREACH.IMPORT_DIALOG}
       footer={
         <Flex justify="end" gap="sm" className="w-full">
           <Button variant="secondary" onClick={onClose}>
@@ -2191,6 +2209,7 @@ function SequenceDialogContent({
       title={editingSequence ? "Edit Sequence" : "New Sequence"}
       description="Define the sender, compliance details, and timed follow-up steps for this outreach campaign."
       size="2xl"
+      data-testid={TEST_IDS.OUTREACH.SEQUENCE_DIALOG}
       footer={
         <Flex justify="between" align="center" className="w-full" gap="sm">
           <Button
@@ -2321,6 +2340,7 @@ function EnrollContactsDialogContent({
       title="Enroll Contacts"
       description="Pick one or more contacts who should start this sequence."
       size="lg"
+      data-testid={TEST_IDS.OUTREACH.ENROLL_DIALOG}
       footer={
         <Flex justify="end" gap="sm" className="w-full">
           <Button variant="secondary" onClick={onClose}>
@@ -2610,11 +2630,20 @@ function getHeaderActions({
   if (activeTab === "contacts") {
     return (
       <Flex gap="sm" wrap>
-        <Button variant="secondary" size="sm" onClick={onImportContacts}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onImportContacts}
+          data-testid={TEST_IDS.OUTREACH.ACTION_IMPORT_CONTACTS}
+        >
           <Icon icon={Upload} size="sm" />
           Import CSV
         </Button>
-        <Button size="sm" onClick={onCreateContact}>
+        <Button
+          size="sm"
+          onClick={onCreateContact}
+          data-testid={TEST_IDS.OUTREACH.ACTION_NEW_CONTACT}
+        >
           <Icon icon={Plus} size="sm" />
           New Contact
         </Button>
@@ -2640,7 +2669,11 @@ function getHeaderActions({
             Connect Gmail
           </Button>
         ) : null}
-        <Button size="sm" onClick={onCreateSequence}>
+        <Button
+          size="sm"
+          onClick={onCreateSequence}
+          data-testid={TEST_IDS.OUTREACH.ACTION_NEW_SEQUENCE}
+        >
           <Icon icon={Plus} size="sm" />
           New Sequence
         </Button>
@@ -2656,11 +2689,20 @@ function getHeaderActions({
           Connect Gmail
         </Button>
       ) : null}
-      <Button variant="secondary" size="sm" onClick={onImportContacts}>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={onImportContacts}
+        data-testid={TEST_IDS.OUTREACH.ACTION_IMPORT_CONTACTS}
+      >
         <Icon icon={Upload} size="sm" />
         Import CSV
       </Button>
-      <Button size="sm" onClick={onCreateSequence}>
+      <Button
+        size="sm"
+        onClick={onCreateSequence}
+        data-testid={TEST_IDS.OUTREACH.ACTION_NEW_SEQUENCE}
+      >
         <Icon icon={Rocket} size="sm" />
         New Sequence
       </Button>

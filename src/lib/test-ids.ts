@@ -567,6 +567,14 @@ export const TEST_IDS = {
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     LAUNCH_CHECKLIST: "outreach-launch-checklist",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_IMPORT_CONTACTS: "outreach-action-import-contacts",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_NEW_CONTACT: "outreach-action-new-contact",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_NEW_SEQUENCE: "outreach-action-new-sequence",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_ENROLL_CONTACTS: "outreach-action-enroll-contacts",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
     TAB_OVERVIEW: "outreach-tab-overview",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     TAB_SEQUENCES: "outreach-tab-sequences",
@@ -588,6 +596,20 @@ export const TEST_IDS = {
     MAILBOXES_SECTION: "outreach-mailboxes-section",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ANALYTICS_SECTION: "outreach-analytics-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    CONTACT_DIALOG: "outreach-contact-dialog",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    IMPORT_DIALOG: "outreach-import-dialog",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    SEQUENCE_DIALOG: "outreach-sequence-dialog",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ENROLL_DIALOG: "outreach-enroll-dialog",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    MAILBOX_CARD: "outreach-mailbox-card",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    MAILBOX_DISCONNECT_BUTTON: "outreach-mailbox-disconnect-button",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    MAILBOX_DISCONNECT_CONFIRM: "outreach-mailbox-disconnect-confirm",
   },
 
   // ============================================================

@@ -169,6 +169,11 @@ export async function screenshotFilledStates(
       "outreach-contacts",
       "outreach-mailboxes",
       "outreach-analytics",
+      "outreach-contact-dialog",
+      "outreach-import-dialog",
+      "outreach-sequence-dialog",
+      "outreach-enroll-dialog",
+      "outreach-mailbox-disconnect-confirm",
     ])
   ) {
     await screenshotOutreachStates(page, orgSlug, p);
@@ -1307,6 +1312,46 @@ export async function screenshotFilledStates(
         await outreachPage.waitForAnalyticsContent();
         await waitForScreenshotReady(currentPage);
         await captureCurrentView(currentPage, prefix, "outreach-analytics");
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-contact-dialog")) {
+      await runCaptureStep("outreach contact dialog", async () => {
+        await outreachPage.openContactDialog();
+        await captureCurrentView(currentPage, prefix, "outreach-contact-dialog");
+        await dismissIfOpen(currentPage, outreachPage.contactDialog);
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-import-dialog")) {
+      await runCaptureStep("outreach import dialog", async () => {
+        await outreachPage.openImportDialog();
+        await captureCurrentView(currentPage, prefix, "outreach-import-dialog");
+        await dismissIfOpen(currentPage, outreachPage.importDialog);
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-sequence-dialog")) {
+      await runCaptureStep("outreach sequence dialog", async () => {
+        await outreachPage.openSequenceDialog();
+        await captureCurrentView(currentPage, prefix, "outreach-sequence-dialog");
+        await dismissIfOpen(currentPage, outreachPage.sequenceDialog);
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-enroll-dialog")) {
+      await runCaptureStep("outreach enroll dialog", async () => {
+        await outreachPage.openEnrollDialog();
+        await captureCurrentView(currentPage, prefix, "outreach-enroll-dialog");
+        await dismissIfOpen(currentPage, outreachPage.enrollDialog);
+      });
+    }
+
+    if (shouldCapture(prefix, "outreach-mailbox-disconnect-confirm")) {
+      await runCaptureStep("outreach mailbox disconnect confirm", async () => {
+        await outreachPage.openMailboxDisconnectConfirm();
+        await captureCurrentView(currentPage, prefix, "outreach-mailbox-disconnect-confirm");
+        await dismissIfOpen(currentPage, outreachPage.mailboxDisconnectConfirm);
       });
     }
   }
