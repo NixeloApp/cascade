@@ -91,7 +91,7 @@ export function MyIssuesList({
   const isLoadingMore = status === "LoadingMore";
 
   return (
-    <DashboardPanel surface="inset" className="h-full">
+    <DashboardPanel className="h-full">
       <DashboardPanelHeader
         title={
           <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>

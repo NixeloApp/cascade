@@ -5,7 +5,6 @@ import { ArrowRight } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
-import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { DashboardPanel, DashboardPanelBody, DashboardPanelHeader } from "./DashboardPanel";
 
@@ -38,59 +37,52 @@ export function FocusZone({ task }: FocusZoneProps) {
   };
 
   return (
-    <Stack gap="sm">
-      <DashboardPanel
-        surface="inset"
-        hoverable
-        onClick={handleClick}
-        aria-label={`Focus task: ${task.title}`}
-      >
-        <DashboardPanelHeader
-          padding="md"
-          title="Focus item"
-          description="Keep the highest-impact task moving before lower-priority work dilutes the week."
-          badge={
-            <Badge variant="neutral" shape="pill">
-              Highest-impact next step
-            </Badge>
-          }
-        />
-        <DashboardPanelBody padding="md">
-          <Stack gap="md">
-            <Flex justify="between" align="start" gap="md">
-              <Stack gap="sm" className="min-w-0">
-                <Flex align="center" gap="sm" wrap>
-                  <Badge variant="primary" className="w-fit">
-                    {task.priority.toUpperCase()}
-                  </Badge>
-                  <Badge variant="neutral" shape="pill">
-                    {task.status}
-                  </Badge>
-                </Flex>
-                <Typography variant="h4" className="max-w-xl text-balance">
-                  {task.title}
-                </Typography>
-              </Stack>
-              <Typography variant="inlineCode" color="secondary" className="shrink-0">
-                {task.key}
+    <DashboardPanel hoverable onClick={handleClick} aria-label={`Focus task: ${task.title}`}>
+      <DashboardPanelHeader
+        padding="md"
+        title="Focus item"
+        description="Keep the highest-impact task moving before lower-priority work dilutes the week."
+        badge={
+          <Badge variant="neutral" shape="pill">
+            Highest-impact next step
+          </Badge>
+        }
+      />
+      <DashboardPanelBody padding="md">
+        <Flex direction="column" gap="md">
+          <Flex justify="between" align="start" gap="md">
+            <Flex direction="column" gap="sm" className="min-w-0">
+              <Flex align="center" gap="sm" wrap>
+                <Badge variant="primary" className="w-fit">
+                  {task.priority.toUpperCase()}
+                </Badge>
+                <Badge variant="neutral" shape="pill">
+                  {task.status}
+                </Badge>
+              </Flex>
+              <Typography variant="h4" className="max-w-xl text-balance">
+                {task.title}
               </Typography>
             </Flex>
+            <Typography variant="inlineCode" color="secondary" className="shrink-0">
+              {task.key}
+            </Typography>
+          </Flex>
 
-            <Flex justify="between" align="end" gap="md" wrap>
-              <Stack gap="xs">
-                <Typography variant="eyebrowWide">Project</Typography>
-                <Typography variant="small">{task.projectName}</Typography>
-              </Stack>
-              <Flex justify="end" align="center" gap="xs" className="shrink-0">
-                <Typography variant="label" className="text-brand">
-                  Open board
-                </Typography>
-                <Icon icon={ArrowRight} size="sm" tone="brand" />
-              </Flex>
+          <Flex justify="between" align="end" gap="md" wrap>
+            <Flex direction="column" gap="xs">
+              <Typography variant="eyebrowWide">Project</Typography>
+              <Typography variant="small">{task.projectName}</Typography>
             </Flex>
-          </Stack>
-        </DashboardPanelBody>
-      </DashboardPanel>
-    </Stack>
+            <Flex justify="end" align="center" gap="xs" className="shrink-0">
+              <Typography variant="label" className="text-brand">
+                Open board
+              </Typography>
+              <Icon icon={ArrowRight} size="sm" tone="brand" />
+            </Flex>
+          </Flex>
+        </Flex>
+      </DashboardPanelBody>
+    </DashboardPanel>
   );
 }

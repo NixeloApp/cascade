@@ -1,8 +1,8 @@
 # Dashboard Page - Current State
 
 > **Route**: `/:slug/dashboard`
-> **Status**: REVIEWED, with follow-up shell simplification still worth doing
-> **Last Updated**: 2026-03-21
+> **Status**: REVIEWED, with shell ownership simplified
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -19,7 +19,7 @@ immediately:
 4. Which workspaces and recent activity matter enough to jump into next?
 
 This route is no longer a generic hero card plus filler panels. It now behaves like an actual
-workspace surface, but some local shell treatment is still heavier than the content really needs.
+workspace surface, and the route-level chrome no longer competes with the actual work panels.
 
 ---
 
@@ -74,6 +74,9 @@ capture is intentional rather than a race condition.
 │  │ load more                                                  │                            │ │
 │  │                                                            │ RecentActivity             │ │
 │  │                                                            │ latest org/project actions │ │
+│  │                                                            │                            │ │
+│  │                                                            │ Stickies                   │ │
+│  │                                                            │ quick notes                │ │
 │  └────────────────────────────────────────────────────────────┴────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -88,6 +91,8 @@ capture is intentional rather than a race condition.
   shortcuts, timer, notifications, and avatar controls.
 - The dashboard surface itself is built inside `PageLayout` discipline instead of inventing a
   route-only layout system.
+- The route no longer wraps everything in a special dashboard-only hero shell with additional
+  gradient overlays and blur blobs. The panels now own the visual treatment.
 
 ### 2. Greeting and top-level framing
 
@@ -99,8 +104,10 @@ capture is intentional rather than a race condition.
 
 - `FocusZone` is the first workload artifact. It is not decorative; it is the route's answer to
   "what should I look at first?"
-- `QuickStats` sits beside it inside a shared `DashboardPanel`, which makes capacity, throughput,
-  and pressure visible without making the route feel like a metrics-only dashboard.
+- `QuickStats` sits beside it inside the same shared panel system, which makes capacity,
+  throughput, and pressure visible without making the route feel like a metrics-only dashboard.
+- The overview band now uses the standard dashboard panel surface instead of a heavier inset
+  treatment, so the first row reads like work UI rather than a showcase hero.
 
 ### 4. Main work surface
 
@@ -112,8 +119,11 @@ capture is intentional rather than a race condition.
 ### 5. Secondary side rail
 
 - `WorkspacesList` is the jump surface for active projects.
+- `Stickies` is a lightweight quick-capture panel in the rail.
 - `RecentActivity` gives a compact cross-project activity rail.
 - The side rail is optional and route-configurable through dashboard layout settings.
+- Rail spacing is tighter than earlier branch state so it reads as one supporting column instead
+  of three detached cards.
 
 ---
 
@@ -146,7 +156,7 @@ Those cases still need to work, but they are not the canonical visual review bas
 |------|--------------|
 | Work surface hierarchy | Much stronger than the old hero-ish dashboard. The route now reads like a workspace, not a marketing overview card. |
 | Screenshot trustworthiness | High. The route and overlay captures now represent real seeded content and deterministic loading behavior. |
-| Shared shell discipline | Better than earlier branch state because the route uses the same page rhythm as other authenticated surfaces. |
+| Shared shell discipline | Better than earlier branch state because the route uses the same page rhythm as other authenticated surfaces and does not double-wrap the whole page in dashboard-only chrome. |
 | Responsive behavior | Mobile and tablet no longer collapse into unusable chrome-first captures. |
 
 ---
@@ -155,11 +165,11 @@ Those cases still need to work, but they are not the canonical visual review bas
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | The main dashboard shell still leans too hard on decorative gradients, blur blobs, and local shell overrides layered on top of `dashboardShell` | `src/components/Dashboard.tsx` | MEDIUM |
-| 2 | The route is calmer than before, but the first card stack still carries more visual treatment than the content volume requires | overview shell / `DashboardPanel` usage | MEDIUM |
-| 3 | Desktop light mode is structurally valid, but the right rail can still look slightly detached from the primary work list | overall composition | LOW |
+| 1 | Desktop light mode can still make the right rail feel slightly lighter-weight than the main feed when all three rail panels are visible | overall composition | LOW |
+| 2 | `Stickies` is useful, but it still has the most "personal widget" energy in the route and can feel a bit more casual than the rest of the dashboard system | rail cohesion | LOW |
 
-This is now a real product-surface critique, not a harness failure or missing-content problem.
+The dashboard no longer has a route-level shell credibility problem. The remaining work is
+fine-grained panel cohesion, not a structural route gap.
 
 ---
 
@@ -184,16 +194,14 @@ This is now a real product-surface critique, not a harness failure or missing-co
 ## Review Guidance
 
 - Do not regress this route back toward a "hero card plus stats" composition.
-- Do not solve dashboard polish by adding more decorative shell layers.
-- If the shell still feels too art-directed, simplify ownership:
-  - either `dashboardShell` owns the treatment
-  - or the route should use a simpler shared shell
-  - but not `recipe + large local shell overrides + multiple absolute decorative layers`
+- Do not solve dashboard polish by adding more decorative route-level shell layers back in.
+- If further cleanup happens, keep panel ownership simple: child panels own the treatment, not a
+  page-wide wrapper plus another set of panel surfaces.
 
 ---
 
 ## Summary
 
-The dashboard is current, reviewable, and structurally sound. The remaining work is not about
-missing content or broken screenshots. It is about simplifying shell ownership so the route keeps
-reading like an operational workspace instead of a slightly over-styled dashboard showcase.
+The dashboard is current, reviewable, and structurally sound. The biggest branch-level dashboard
+issue was over-owned shell chrome, and that is now resolved. Remaining work is low-severity panel
+cohesion rather than route credibility or screenshot debt.

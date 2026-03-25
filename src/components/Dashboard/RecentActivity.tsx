@@ -29,7 +29,7 @@ interface RecentActivityProps {
  */
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <DashboardPanel surface="inset" data-testid={TEST_IDS.DASHBOARD.RECENT_ACTIVITY}>
+    <DashboardPanel data-testid={TEST_IDS.DASHBOARD.RECENT_ACTIVITY}>
       <DashboardPanelHeader
         title="Recent activity"
         description="Latest updates across projects and teammates"
