@@ -820,8 +820,6 @@ export const TEST_IDS = {
     MEMORY_SECTION: "meetings-memory-section",
     /** @see src/routes/_app.$orgSlug.meetings.tsx */
     RECORDING_CARD: "meetings-recording-card",
-    /** @see src/components/Meetings/MeetingsWorkspace.tsx - empty state */
-    EMPTY_STATE: "meetings-empty-state",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - search input */
     SEARCH_INPUT: "meetings-search-input",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - transcript search */

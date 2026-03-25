@@ -1,6 +1,7 @@
 import type { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
+import userEvent from "@testing-library/user-event";
 import type { FunctionReturnType } from "convex/server";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -78,6 +79,23 @@ function renderMeetingsWorkspace() {
       <MeetingsWorkspace />
     </OrgContext.Provider>,
   );
+}
+
+function mockMeetingViewport(isWide: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: isWide,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
 }
 
 function buildProjectItem(overrides: Partial<ProjectItem> = {}): ProjectItem {
@@ -351,6 +369,7 @@ function installMeetingQueryMock({
 describe("MeetingsWorkspace", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMeetingViewport(true);
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
       value: mockScrollIntoView,
       configurable: true,
@@ -525,6 +544,40 @@ describe("MeetingsWorkspace", () => {
       screen.getByText("We aligned on the narrower launch scope and next implementation steps."),
     ).toBeInTheDocument();
     expect(screen.getByText("1 matches")).toBeInTheDocument();
+  });
+
+  it("focuses one detail pane at a time on narrow widths", async () => {
+    const user = userEvent.setup();
+    mockMeetingViewport(false);
+    installMeetingQueryMock({});
+
+    renderMeetingsWorkspace();
+    const meetingDetailSection = screen.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
+    const getActiveDetailPanel = () => within(meetingDetailSection).getByRole("tabpanel");
+
+    expect(screen.getByRole("tab", { name: "Actions" })).toHaveAttribute("data-state", "active");
+    expect(within(getActiveDetailPanel()).getByText("Update the spec")).toBeVisible();
+
+    await user.click(screen.getByRole("tab", { name: "People" }));
+
+    await waitFor(() => {
+      expect(within(getActiveDetailPanel()).getByText("Host")).toBeVisible();
+    });
+
+    expect(within(getActiveDetailPanel()).getByText("Host")).toBeVisible();
+    expect(within(getActiveDetailPanel()).queryByText("Update the spec")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Transcript" }));
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search transcript" }), {
+      target: { value: "narrower" },
+    });
+
+    expect(
+      within(getActiveDetailPanel()).getByText(
+        "We aligned on the narrower launch scope and next implementation steps.",
+      ),
+    ).toBeVisible();
+    expect(within(getActiveDetailPanel()).queryByText("Update the spec")).not.toBeInTheDocument();
   });
 
   it("matches transcript speakers and assignees against participant metadata", () => {
@@ -825,6 +878,7 @@ describe("MeetingsWorkspace", () => {
   });
 
   it("shows the transcript-first processing state when a summary is not ready yet", () => {
+    mockMeetingViewport(false);
     installMeetingQueryMock({
       listRecordings: [buildListItem({ status: "processing", title: "Go-live Support Runbook" })],
       detail: buildDetail({
@@ -838,6 +892,7 @@ describe("MeetingsWorkspace", () => {
 
     expect(screen.getByTestId(TEST_IDS.MEETINGS.SUMMARY_PROCESSING_STATE)).toBeInTheDocument();
     expect(screen.getByText("Summary is still being generated")).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Transcript" })).not.toBeInTheDocument();
     expect(
       screen.getByText("Thanks everyone for joining the weekly product review."),
     ).toBeInTheDocument();

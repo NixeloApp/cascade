@@ -12,8 +12,7 @@ export class MeetingsPage extends BasePage {
   readonly detailSection: Locator;
   readonly memorySection: Locator;
   readonly actionItemsSection: Locator;
-  readonly emptyStateTitle: Locator;
-  readonly emptyStateDescription: Locator;
+  readonly pageEmptyState: Locator;
   readonly meetingsSearchInput: Locator;
   readonly transcriptSearchInput: Locator;
   readonly scheduleButton: Locator;
@@ -30,8 +29,7 @@ export class MeetingsPage extends BasePage {
     this.detailSection = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
     this.memorySection = page.getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION);
     this.actionItemsSection = page.getByTestId(TEST_IDS.MEETINGS.ACTION_ITEMS_SECTION);
-    this.emptyStateTitle = page.getByTestId(TEST_IDS.MEETINGS.EMPTY_STATE);
-    this.emptyStateDescription = this.emptyStateTitle;
+    this.pageEmptyState = page.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
     this.meetingsSearchInput = page.getByTestId(TEST_IDS.MEETINGS.SEARCH_INPUT);
     this.transcriptSearchInput = page.getByTestId(TEST_IDS.MEETINGS.TRANSCRIPT_SEARCH);
     this.scheduleButton = page.getByTestId(TEST_IDS.MEETINGS.SCHEDULE_BUTTON);
@@ -58,7 +56,7 @@ export class MeetingsPage extends BasePage {
     await expect
       .poll(
         async () => {
-          if (await isLocatorVisible(this.emptyStateTitle)) {
+          if (await isLocatorVisible(this.pageEmptyState)) {
             return "empty";
           }
 
@@ -76,8 +74,7 @@ export class MeetingsPage extends BasePage {
   }
 
   async expectEmptyState() {
-    await expect(this.emptyStateTitle).toBeVisible();
-    await expect(this.emptyStateDescription).toBeVisible();
+    await expect(this.pageEmptyState).toBeVisible();
   }
 
   async expectRecordingVisible(title: string) {
@@ -90,14 +87,37 @@ export class MeetingsPage extends BasePage {
       .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
       .filter({ hasText: new RegExp(title, "i") })
       .first();
-    await card.click();
+    await card.evaluate((element) => {
+      if (element instanceof HTMLElement) {
+        element.click();
+      }
+    });
   }
 
   async expectRecordingDetail(title: string) {
     await expect(this.detailSection.getByText(title, { exact: true })).toBeVisible();
   }
 
+  private detailTab(label: string) {
+    return this.detailSection.getByRole("tab", { name: new RegExp(`^${label}$`, "i") }).first();
+  }
+
+  async openDetailTabIfPresent(label: string) {
+    const tab = this.detailTab(label);
+    if (!(await isLocatorVisible(tab))) {
+      return;
+    }
+
+    await tab.evaluate((element) => {
+      if (element instanceof HTMLElement) {
+        element.click();
+      }
+    });
+    await expect(tab).toHaveAttribute("data-state", "active");
+  }
+
   async filterTranscript(query: string) {
+    await this.openDetailTabIfPresent("Transcript");
     await this.transcriptSearchInput.fill(query);
   }
 
@@ -113,12 +133,20 @@ export class MeetingsPage extends BasePage {
 
   async filterByStatus(statusLabel: string) {
     await expect(this.statusFilter).toBeVisible();
-    await this.statusFilter.click();
+    await this.statusFilter.evaluate((element) => {
+      if (element instanceof HTMLElement) {
+        element.click();
+      }
+    });
     const option = this.page.getByRole("option", {
       name: new RegExp(`^${statusLabel}$`, "i"),
     });
     await expect(option).toBeVisible();
-    await option.click();
+    await option.evaluate((element) => {
+      if (element instanceof HTMLElement) {
+        element.click();
+      }
+    });
     await expect(this.statusFilter).toContainText(new RegExp(statusLabel, "i"));
   }
 
@@ -136,7 +164,17 @@ export class MeetingsPage extends BasePage {
   }
 
   async filterMemoryByProject(projectKey: string) {
-    await this.memorySection.getByRole("button").filter({ hasText: projectKey }).first().click();
+    const lensButton = this.memorySection
+      .locator("button")
+      .filter({ hasText: new RegExp(projectKey, "i") })
+      .first();
+
+    await lensButton.waitFor({ state: "visible", timeout: 10000 });
+    await lensButton.evaluate((element) => {
+      if (element instanceof HTMLElement) {
+        element.click();
+      }
+    });
   }
 
   async expectMemoryDescription(text: string) {
@@ -155,12 +193,14 @@ export class MeetingsPage extends BasePage {
   }
 
   async expectActionItemCreateIssueEnabled(description: string) {
+    await this.openDetailTabIfPresent("Actions");
     await expect(
       this.getActionItem(description).getByRole("button", { name: /^create issue$/i }),
     ).toBeEnabled();
   }
 
   async createIssueFromActionItem(description: string) {
+    await this.openDetailTabIfPresent("Actions");
     await this.getActionItem(description)
       .getByRole("button", { name: /^create issue$/i })
       .click();
@@ -168,6 +208,7 @@ export class MeetingsPage extends BasePage {
   }
 
   async expectLinkedIssue(description: string, issueKey: string, issueTitle: string) {
+    await this.openDetailTabIfPresent("Actions");
     const actionItem = this.getActionItem(description);
     await expect(actionItem.getByText("Issue linked")).toBeVisible();
     await expect(actionItem.getByText(issueKey, { exact: false })).toBeVisible();
@@ -176,6 +217,7 @@ export class MeetingsPage extends BasePage {
   }
 
   async openLinkedIssue(description: string) {
+    await this.openDetailTabIfPresent("Actions");
     await this.getActionItem(description)
       .getByRole("link", { name: /open issue/i })
       .click();
