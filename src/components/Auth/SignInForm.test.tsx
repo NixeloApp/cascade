@@ -61,6 +61,7 @@ describe("SignInForm", () => {
 
     expect(screen.getByText("Sign in")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /forgot password/i })).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT)).toHaveFocus();
   });
 
   it("calls signIn and navigates on successful submission", async () => {
@@ -120,7 +121,34 @@ describe("SignInForm", () => {
     fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(showError).toHaveBeenCalledWith("Could not sign in. Please check your credentials.");
+      expect(showError).toHaveBeenCalledWith(
+        "Could not sign in. Please check your credentials and try again.",
+      );
+    });
+  });
+
+  it("shows verification guidance for unverified email errors", async () => {
+    mockSignIn.mockRejectedValue(new Error("Please verify your email before signing in"));
+
+    render(<SignInForm />);
+
+    fireEvent.click(screen.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON));
+
+    await waitFor(() => {
+      expect(screen.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT)).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT), {
+      target: { value: "password123" },
+    });
+
+    fireEvent.submit(screen.getByTestId(TEST_IDS.AUTH.FORM));
+
+    await waitFor(() => {
+      expect(showError).toHaveBeenCalledWith("Verify your email before signing in.");
     });
   });
 });

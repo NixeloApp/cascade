@@ -26,7 +26,7 @@ export const WAIT_TIMEOUTS = {
   animation: 300,
   /** Wait for React hydration on cold starts */
   reactHydration: 500,
-  /** Wait for form ready state (SignInForm/SignUpForm have 350ms delay) */
+  /** Wait for auth form expansion/reveal to settle */
   formReady: 400,
   /** Wait for page navigation to settle */
   navigation: 1000,

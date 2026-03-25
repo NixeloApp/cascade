@@ -3,12 +3,15 @@ import { render, screen } from "@/test/custom-render";
 import { AuthStepIndicator } from "./AuthStepIndicator";
 
 describe("AuthStepIndicator", () => {
-  it("renders one segment per step", () => {
-    render(<AuthStepIndicator currentStep={1} totalSteps={4} />);
+  it("renders one pill per step and marks completed progress", () => {
+    const { container } = render(<AuthStepIndicator currentStep={1} totalSteps={3} />);
 
-    const progress = screen.getByLabelText("Authentication progress");
+    expect(screen.getByLabelText("Authentication progress")).toBeInTheDocument();
 
-    expect(progress).toBeInTheDocument();
-    expect(progress.childElementCount).toBe(4);
+    const pills = container.querySelectorAll("span[aria-hidden='true']");
+    expect(pills).toHaveLength(3);
+    expect(pills[0]).toHaveClass("w-6", "bg-brand");
+    expect(pills[1]).toHaveClass("w-6", "bg-brand");
+    expect(pills[2]).toHaveClass("w-4", "bg-ui-border");
   });
 });

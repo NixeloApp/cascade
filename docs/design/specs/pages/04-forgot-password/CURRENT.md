@@ -1,11 +1,10 @@
 # Forgot Password Page - Current State
 
 > **Route**: `/forgot-password`
-> **Status**: REVIEWED, with reset-step sparsity still worth one more pass
-> **Last Updated**: 2026-03-21
+> **Status**: REVIEWED
+> **Last Updated**: 2026-03-25
 
-
-> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
+> **Spec Contract**: Keep this file aligned with the real shared auth shell rather than older split-layout assumptions.
 
 ---
 
@@ -22,30 +21,26 @@
 
 ## Current UI
 
-- Forgot-password now shares the cleaner auth shell used by sign-in and signup.
-- Step 1 uses `Reset your password` with the sign-in link in the subtitle row.
-- Step 2 switches to `Check your email` and preserves the requested email address through session storage.
-- The reset flow sits inside the same elevated auth panel with compact legal links at the bottom.
-- The reset-step screenshot is now deterministic instead of depending on session-storage-only local flow.
+- Forgot-password now clearly lives in the same centered public auth shell as sign-in and signup.
+- The entry state keeps the task narrow: headline, sign-in link, email field, submit button, and compact legal footer.
+- The reset step persists the requested email and swaps to the OTP/new-password flow without changing shells.
+- The reviewed screenshots are now consistent with the current branch layout instead of the older auth marketing-rail treatment.
 
 ---
 
 ## Recent Improvements
 
-- Removed the old back-link pattern and the busier card stack.
-- The reset request and reset-code views now inherit the same calmer auth shell.
-- Subtitle links are in the right place instead of floating below the form.
-- Theme parity is much closer to the rest of the auth suite.
+- Screenshot matrix was refreshed against the actual branch UI.
+- The reset-step review path remains deterministic through the route-driven search/session-state flow.
+- Shared auth-shell drift is gone from this spec; it now describes the same compact stack used by the other public auth pages.
 
 ---
 
-## Remaining Gaps
+## Problems
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The reset-code step is still visually sparse once the user reaches the second state | `ResetPasswordForm` | MEDIUM |
-| Desktop light mode still over-emphasizes the marketing rail for a utility flow | Shared auth shell | MEDIUM |
-| This page does not need much shell, so the panel can still be simplified further | Shared auth shell | LOW |
+| The reset-code step is still more utilitarian than polished on wide desktop because it is mostly form controls and little supporting structure | reset state | LOW |
 
 ---
 
@@ -53,4 +48,11 @@
 
 - `src/routes/forgot-password.tsx`
 - `src/components/Auth/AuthPageLayout.tsx`
+- `src/components/Auth/ForgotPasswordForm.tsx`
 - `src/components/Auth/ResetPasswordForm.tsx`
+
+---
+
+## Summary
+
+Forgot-password is in the right shell and the reviewed screenshots are current again. The remaining issue is minor polish in the reset-code state rather than structural inconsistency.

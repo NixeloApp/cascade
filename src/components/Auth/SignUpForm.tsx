@@ -8,17 +8,15 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
-import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
-import { Mail } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
-import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
+import { AuthEmailFormSection } from "./AuthEmailFormSection";
 import { AuthMethodDivider } from "./AuthMethodDivider";
 import { AuthStepIndicator } from "./AuthStepIndicator";
 import { EmailVerificationForm } from "./EmailVerificationForm";
@@ -86,68 +84,76 @@ function SignUpVerificationStep({
   );
 }
 
-function SignUpEmailButton({
+function SignUpEmailFields({
+  password,
+  emailInputRef,
+  setPassword,
+}: {
+  password: string;
+  emailInputRef: React.RefObject<HTMLInputElement | null>;
+  setPassword: (value: string) => void;
+}) {
+  return (
+    <Stack gap="md">
+      <Input
+        ref={emailInputRef}
+        type="email"
+        name="email"
+        placeholder="Email"
+        autoComplete="email"
+        className="transition-default"
+        data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
+      />
+      <Input
+        type="password"
+        name="password"
+        placeholder="Password"
+        minLength={8}
+        autoComplete="new-password"
+        className="transition-default"
+        data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      {password ? (
+        <PasswordStrengthIndicator password={password} />
+      ) : (
+        <Typography variant="caption" color="tertiary">
+          Use at least 8 characters.
+        </Typography>
+      )}
+    </Stack>
+  );
+}
+
+function SignUpEmailStep({
   password,
   showEmailForm,
   submitting,
+  emailInputRef,
   setPassword,
   handleShowEmailForm,
 }: {
   password: string;
   showEmailForm: boolean;
   submitting: boolean;
+  emailInputRef: React.RefObject<HTMLInputElement | null>;
   setPassword: (value: string) => void;
   handleShowEmailForm: () => void;
 }) {
   return (
-    <Flex direction="column">
-      <div
-        data-testid={showEmailForm ? TEST_IDS.AUTH.EMAIL_FORM : undefined}
-        className={cn(
-          "overflow-hidden transition-all duration-medium ease-out",
-          showEmailForm ? "mb-4 max-h-64 opacity-100" : "max-h-0 opacity-0",
-        )}
-      >
-        <Flex direction="column" className="overflow-hidden gap-form-field">
-          <Input
-            type="email"
-            name="email"
-            placeholder="Email"
-            className="transition-default"
-            data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
-          />
-          <Input
-            type="password"
-            name="password"
-            placeholder="Password"
-            minLength={8}
-            className="transition-default"
-            data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {password ? (
-            <PasswordStrengthIndicator password={password} />
-          ) : (
-            <Typography variant="caption" color="tertiary">
-              Must be at least 8 characters
-            </Typography>
-          )}
-        </Flex>
-      </div>
-      <Button
-        type={showEmailForm ? "submit" : "button"}
-        onClick={!showEmailForm ? handleShowEmailForm : undefined}
-        variant={showEmailForm ? "primary" : "secondary"}
-        size="lg"
-        className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
-        isLoading={showEmailForm && submitting}
-        leftIcon={!showEmailForm ? <Icon icon={Mail} size="md" /> : undefined}
-        data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
-      >
-        {showEmailForm ? "Create account" : "Continue with email"}
-      </Button>
-    </Flex>
+    <AuthEmailFormSection
+      open={showEmailForm}
+      submitting={submitting}
+      submitLabel="Create account"
+      onRequestOpen={handleShowEmailForm}
+    >
+      <SignUpEmailFields
+        password={password}
+        emailInputRef={emailInputRef}
+        setPassword={setPassword}
+      />
+    </AuthEmailFormSection>
   );
 }
 
@@ -162,6 +168,7 @@ export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
   const [password, setPassword] = useState("");
   const [showVerification, setShowVerification] = useState(Boolean(initialVerificationEmail));
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!initialVerificationEmail) {
@@ -171,6 +178,14 @@ export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
     setEmail(initialVerificationEmail);
     setShowVerification(true);
   }, [initialVerificationEmail]);
+
+  useEffect(() => {
+    if (!showEmailForm || showVerification) {
+      return;
+    }
+
+    emailInputRef.current?.focus();
+  }, [showEmailForm, showVerification]);
 
   const handleShowEmailForm = () => {
     setShowEmailForm(true);
@@ -221,13 +236,11 @@ export function SignUpForm({ initialVerificationEmail }: SignUpFormProps) {
       <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign up with Google" />
       <AuthMethodDivider />
       <form onSubmit={handleSubmit} data-testid={TEST_IDS.AUTH.FORM}>
-        {showEmailForm ? (
-          <span data-testid={TEST_IDS.AUTH.FORM_READY} hidden aria-hidden="true" />
-        ) : null}
-        <SignUpEmailButton
+        <SignUpEmailStep
           password={password}
           showEmailForm={showEmailForm}
           submitting={submitting}
+          emailInputRef={emailInputRef}
           setPassword={setPassword}
           handleShowEmailForm={handleShowEmailForm}
         />

@@ -203,10 +203,6 @@ const cardRecipeVariants = cva("", {
         "rounded-3xl border-ui-border/55 bg-linear-to-b from-ui-bg-elevated/82 to-ui-bg-soft/58 shadow-soft backdrop-blur-sm",
       authFormShell:
         "relative rounded-3xl border-ui-border/65 bg-ui-bg-elevated/96 shadow-soft backdrop-blur-sm",
-      authStepIndicator:
-        "h-1.5 w-4 rounded-full border-transparent bg-ui-border shadow-none transition-all duration-medium",
-      authStepIndicatorActive:
-        "h-1.5 w-6 rounded-full border-transparent bg-brand shadow-none transition-all duration-medium",
       authStrengthSegment:
         "h-1 rounded-full border-transparent bg-ui-border shadow-none transition-colors",
       authStrengthSegmentError:

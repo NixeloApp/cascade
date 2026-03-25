@@ -68,6 +68,7 @@ describe("SignUpForm", () => {
     });
 
     expect(screen.getByText("Create account")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT)).toHaveFocus();
   });
 
   it("shows verification form after successful sign up", async () => {
