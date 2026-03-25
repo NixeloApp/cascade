@@ -3,7 +3,7 @@
  *
  * Audits two visual-maintenance signals:
  *   1. Route coverage — compares routes defined in convex/shared/routes.ts
- *      against ROUTES references in e2e/screenshot-pages.ts.
+ *      against ROUTES references in the modular screenshot capture sources.
  *   2. Canonical spec variants — checks that each design spec screenshot
  *      directory contains the expected baseline captures.
  *
@@ -15,6 +15,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT } from "./utils.js";
+
+const SCREENSHOT_ROUTE_SOURCE_REL_PATHS = [
+  "e2e/screenshot-pages.ts",
+  "e2e/screenshot-lib/public-pages.ts",
+  "e2e/screenshot-lib/filled-states.ts",
+];
 
 // Routes that are intentionally not screenshotted
 const EXCLUDED_ROUTES = new Set([
@@ -89,7 +95,7 @@ function extractRouteKeys(content) {
 }
 
 /**
- * Extract all ROUTES.xxx references from screenshot-pages.ts.
+ * Extract all ROUTES.xxx references from the screenshot capture sources.
  * Returns a Set of dotted keys like "documents.list", "signin", etc.
  *
  * Also detects URL-pattern-based coverage (regex helpers like isWorkspaceBacklogUrl)
@@ -161,7 +167,46 @@ function extractScreenshotRouteRefs(content) {
     }
   }
 
+  const TAB_LOOP_COVERAGE = [
+    {
+      arrayName: "tabs",
+      routePrefix: "projects",
+      usagePattern: /\/projects\/\$\{projectKey\}\/\$\{tab\}/,
+    },
+    {
+      arrayName: "wsTabs",
+      routePrefix: "workspaces",
+      usagePattern: /\$\{wsBase\}\/\$\{tab\}/,
+    },
+    {
+      arrayName: "teamTabs",
+      routePrefix: "workspaces.teams",
+      usagePattern: /\$\{teamBase\}\/\$\{tab\}/,
+    },
+  ];
+
+  for (const { arrayName, routePrefix, usagePattern } of TAB_LOOP_COVERAGE) {
+    const declarationPattern = new RegExp(
+      `const ${arrayName} = \\[([\\s\\S]*?)\\](?: as const)?;`,
+      "m",
+    );
+    const declarationMatch = content.match(declarationPattern);
+    if (!declarationMatch || !usagePattern.test(content)) {
+      continue;
+    }
+
+    for (const match of declarationMatch[1].matchAll(/["'`]([^"'`]+)["'`]/g)) {
+      refs.add(`${routePrefix}.${match[1]}`);
+    }
+  }
+
   return refs;
+}
+
+function loadScreenshotRouteSourceContent() {
+  return SCREENSHOT_ROUTE_SOURCE_REL_PATHS.map((relativePath) =>
+    fs.readFileSync(path.join(ROOT, relativePath), "utf8"),
+  ).join("\n");
 }
 
 function collectSpecScreenshotCoverageGaps() {
@@ -305,14 +350,16 @@ function collectModalScreenshotCoverageGaps() {
 
 export function run() {
   const routesFile = path.join(ROOT, "convex/shared/routes.ts");
-  const screenshotFile = path.join(ROOT, "e2e/screenshot-pages.ts");
+  const missingScreenshotRouteSources = SCREENSHOT_ROUTE_SOURCE_REL_PATHS.filter(
+    (relativePath) => !fs.existsSync(path.join(ROOT, relativePath)),
+  );
 
-  if (!fs.existsSync(routesFile) || !fs.existsSync(screenshotFile)) {
+  if (!fs.existsSync(routesFile) || missingScreenshotRouteSources.length > 0) {
     return { passed: true, errors: 0, detail: "files not found, skipped", messages: [] };
   }
 
   const routesContent = fs.readFileSync(routesFile, "utf-8");
-  const screenshotContent = fs.readFileSync(screenshotFile, "utf-8");
+  const screenshotContent = loadScreenshotRouteSourceContent();
 
   const allRouteKeys = extractRouteKeys(routesContent);
   const capturedRefs = extractScreenshotRouteRefs(screenshotContent);

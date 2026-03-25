@@ -8,7 +8,7 @@ No open critical items on this branch.
 
 ## Infrastructure
 
-- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — E2E and screenshot infrastructure is mostly complete; remaining work is CI guardrails and selector ratchets.
+- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — E2E and screenshot infrastructure now has modular validator guardrails; remaining work is CI split decisions and selector ratchets.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot-driven product polish and human review debt.
 - [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Ongoing raw Tailwind ratchet and primitive extraction where repetition justifies it.
 - [ ] [validator-strengthening.md](./validator-strengthening.md) — Framework cleanup plus a few missing validator ideas.
@@ -29,7 +29,7 @@ Verified on this branch:
 | Metric | Value |
 |--------|-------|
 | Typecheck | pass |
-| Validators | 53/53 pass |
+| Validators | 54/54 pass |
 | App tests (`vitest run`) | 4570 pass / 5 skipped |
 | Convex tests (`vitest.convex`) | 2116 pass / 3 skipped |
 | Page spec triplets | 41/41 present |
