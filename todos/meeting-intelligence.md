@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** In Progress
-> **Last Updated:** 2026-03-24
+> **Last Updated:** 2026-03-25
 
 Related docs:
 
@@ -14,14 +14,11 @@ Related docs:
 - Google Meet-first capture exists with a richer backend than UI.
 - Meeting detail now resolves transcript speakers and action-item owners against participant metadata, with speaker-attributed transcript turns and search that understands attendee emails.
 - Meeting detail can now export a seeded document with meeting metadata, summary, action items, participants, and transcript context.
+- The meetings route now has reviewed screenshots for canonical, detail, transcript search, memory lens, processing, filter-empty, and schedule-dialog states across desktop/tablet/mobile baselines.
 - Provider rotation exists across recurring free tiers, one-time credit tiers, and paid fallback.
 - Deepgram and AssemblyAI are integrated but still need real key setup and runtime verification.
 
 ## Remaining
-
-### Immediate Product / UX
-
-- [ ] Do a real screenshot / visual QA pass for meetings states.
 
 ### Product / Infra Follow-Up
 

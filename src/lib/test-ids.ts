@@ -633,6 +633,16 @@ export const TEST_IDS = {
     TRANSCRIPT_SEARCH: "meetings-transcript-search",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - action items section */
     ACTION_ITEMS_SECTION: "meetings-action-items-section",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - schedule recording button */
+    SCHEDULE_BUTTON: "meetings-schedule-button",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - schedule recording dialog */
+    SCHEDULE_DIALOG: "meetings-schedule-dialog",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - filtered empty state */
+    FILTER_EMPTY_STATE: "meetings-filter-empty-state",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - detail placeholder empty state */
+    DETAIL_EMPTY_STATE: "meetings-detail-empty-state",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx - summary processing placeholder */
+    SUMMARY_PROCESSING_STATE: "meetings-summary-processing-state",
   },
 
   // ============================================================

@@ -798,4 +798,48 @@ describe("MeetingsWorkspace", () => {
       });
     });
   });
+
+  it("renders stable screenshot hooks for schedule, filtered-empty, and detail placeholder states", async () => {
+    installMeetingQueryMock({
+      searchQuery: "zzzz-no-results",
+      searchResults: [],
+    });
+
+    renderMeetingsWorkspace();
+
+    expect(screen.getByTestId(TEST_IDS.MEETINGS.SCHEDULE_BUTTON)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId(TEST_IDS.MEETINGS.SCHEDULE_BUTTON));
+    expect(screen.getByTestId(TEST_IDS.MEETINGS.SCHEDULE_DIALOG)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search meetings" }), {
+      target: { value: "zzzz-no-results" },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId(TEST_IDS.MEETINGS.FILTER_EMPTY_STATE)).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.MEETINGS.DETAIL_EMPTY_STATE)).toBeInTheDocument();
+    });
+  });
+
+  it("shows the transcript-first processing state when a summary is not ready yet", () => {
+    installMeetingQueryMock({
+      listRecordings: [buildListItem({ status: "processing", title: "Go-live Support Runbook" })],
+      detail: buildDetail({
+        status: "processing",
+        title: "Go-live Support Runbook",
+        summary: null,
+      }),
+    });
+
+    renderMeetingsWorkspace();
+
+    expect(screen.getByTestId(TEST_IDS.MEETINGS.SUMMARY_PROCESSING_STATE)).toBeInTheDocument();
+    expect(screen.getByText("Summary is still being generated")).toBeInTheDocument();
+    expect(
+      screen.getByText("Thanks everyone for joining the weekly product review."),
+    ).toBeInTheDocument();
+  });
 });

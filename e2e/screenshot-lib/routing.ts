@@ -57,6 +57,9 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-meetings-detail$/, "30-meetings", "-detail"],
   [/^filled-meetings-transcript-search$/, "30-meetings", "-transcript-search"],
   [/^filled-meetings-memory-lens$/, "30-meetings", "-memory-lens"],
+  [/^filled-meetings-processing$/, "30-meetings", "-processing"],
+  [/^filled-meetings-filter-empty$/, "30-meetings", "-filter-empty"],
+  [/^filled-meetings-schedule-dialog$/, "30-meetings", "-schedule-dialog"],
   // Outreach
   [/^filled-outreach-sequences$/, "41-outreach", "-sequences"],
   [/^filled-outreach-contacts$/, "41-outreach", "-contacts"],

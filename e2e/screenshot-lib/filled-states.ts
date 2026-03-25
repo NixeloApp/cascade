@@ -51,6 +51,16 @@ import {
   seedIssueDraft,
 } from "./helpers";
 import {
+  screenshotBoardInteractiveStates,
+  screenshotBoardModals,
+  screenshotDashboardLoadingState,
+  screenshotDashboardModals,
+  screenshotIssueInteractiveStates,
+  screenshotMeetingsStates,
+  screenshotProjectsModal,
+  screenshotSprintInteractiveStates,
+} from "./interactive-captures";
+import {
   focusCalendarTimedContentForCapture,
   getCalendarDragState,
   scrollSectionNearViewportTop,
@@ -158,7 +168,14 @@ export async function screenshotFilledStates(
   }
 
   if (
-    shouldCaptureAny(p, ["meetings-detail", "meetings-transcript-search", "meetings-memory-lens"])
+    shouldCaptureAny(p, [
+      "meetings-detail",
+      "meetings-transcript-search",
+      "meetings-memory-lens",
+      "meetings-processing",
+      "meetings-filter-empty",
+      "meetings-schedule-dialog",
+    ])
   ) {
     await screenshotMeetingsStates(page, orgSlug, p);
   }

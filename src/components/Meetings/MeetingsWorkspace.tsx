@@ -1303,6 +1303,7 @@ function SummarySections({
           size="compact"
           title="Summary is still being generated"
           description="The transcript is available below while the summary is processing."
+          data-testid={TEST_IDS.MEETINGS.SUMMARY_PROCESSING_STATE}
         />
         {transcript && (
           <CollapsibleDetail title="Transcript" defaultOpen>
@@ -1577,6 +1578,7 @@ function ScheduleRecordingDialog({
       onOpenChange={handleOpenChange}
       title="Schedule Recording"
       description="Create an ad-hoc meeting recording from a direct meeting URL."
+      data-testid={TEST_IDS.MEETINGS.SCHEDULE_DIALOG}
       footer={
         <>
           <Button
@@ -1779,7 +1781,12 @@ export function MeetingsWorkspace() {
                 <Typography variant="caption" color="secondary">
                   Schedule from calendar or add an ad-hoc meeting URL here.
                 </Typography>
-                <Button variant="secondary" size="sm" onClick={() => setIsScheduleDialogOpen(true)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsScheduleDialogOpen(true)}
+                  data-testid={TEST_IDS.MEETINGS.SCHEDULE_BUTTON}
+                >
                   Schedule Recording
                 </Button>
               </Flex>
@@ -1879,6 +1886,7 @@ export function MeetingsWorkspace() {
                   size="compact"
                   title="No meetings match these filters"
                   description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
+                  data-testid={TEST_IDS.MEETINGS.FILTER_EMPTY_STATE}
                 />
               ) : (
                 <List gap="sm">
@@ -1910,6 +1918,7 @@ export function MeetingsWorkspace() {
                 size="compact"
                 title="Select a meeting"
                 description="Choose a recording from the list to inspect its details."
+                data-testid={TEST_IDS.MEETINGS.DETAIL_EMPTY_STATE}
               />
             )}
           </Section>

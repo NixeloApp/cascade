@@ -8,7 +8,7 @@
 import type { Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ProjectsPage } from "../pages";
+import { MeetingsPage, ProjectsPage } from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import {
   dismissAllDialogs,
@@ -298,13 +298,26 @@ export async function screenshotMeetingsStates(
   const meetingsDetailName = "meetings-detail";
   const transcriptSearchName = "meetings-transcript-search";
   const memoryLensName = "meetings-memory-lens";
+  const processingName = "meetings-processing";
+  const filterEmptyName = "meetings-filter-empty";
+  const scheduleDialogName = "meetings-schedule-dialog";
   const detailTimeoutMs = 15000;
 
-  if (!shouldCaptureAny(prefix, [meetingsDetailName, transcriptSearchName, memoryLensName])) {
+  if (
+    !shouldCaptureAny(prefix, [
+      meetingsDetailName,
+      transcriptSearchName,
+      memoryLensName,
+      processingName,
+      filterEmptyName,
+      scheduleDialogName,
+    ])
+  ) {
     return;
   }
 
   const meetingsUrl = ROUTES.meetings.build(orgSlug);
+  const meetingsPage = new MeetingsPage(page, orgSlug);
   const recentMeetingsSection = page.getByTestId(TEST_IDS.MEETINGS.RECENT_SECTION);
   const meetingDetailSection = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
   const meetingMemorySection = page.getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION);
@@ -392,6 +405,40 @@ export async function screenshotMeetingsStates(
         .waitFor({ state: "visible", timeout: detailTimeoutMs });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, memoryLensName);
+    });
+  }
+
+  if (shouldCapture(prefix, processingName)) {
+    await runCaptureStep("meetings processing detail", async () => {
+      await openMeetingsForCapture();
+      await meetingsPage.filterByStatus("Processing");
+      await meetingsPage.expectRecordingVisible("Go-live Support Runbook");
+      await meetingsPage.openRecording("Go-live Support Runbook");
+      await meetingsPage.expectRecordingDetail("Go-live Support Runbook");
+      await meetingsPage.expectSummaryProcessingState();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, processingName);
+    });
+  }
+
+  if (shouldCapture(prefix, filterEmptyName)) {
+    await runCaptureStep("meetings filter empty state", async () => {
+      await openMeetingsForCapture();
+      await meetingsPage.searchMeetings("zzzz-no-results");
+      await meetingsPage.expectFilteredEmptyState();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, filterEmptyName);
+    });
+  }
+
+  if (shouldCapture(prefix, scheduleDialogName)) {
+    await runCaptureStep("meetings schedule dialog", async () => {
+      await openMeetingsForCapture();
+      await dismissAllDialogs(page);
+      await meetingsPage.openScheduleDialog();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, scheduleDialogName);
+      await dismissIfOpen(page, meetingsPage.scheduleDialog);
     });
   }
 }

@@ -5489,6 +5489,62 @@ export const seedScreenshotDataInternal = internalMutation({
           },
         ],
       },
+      {
+        title: "Go-live Support Runbook",
+        meetingUrl: "https://meet.google.com/go-live-support-runbook",
+        meetingPlatform: "google_meet" as const,
+        projectId: secondaryProjectId,
+        scheduledStartTime: now - 30 * MINUTE,
+        actualStartTime: now - 25 * MINUTE,
+        actualEndTime: undefined,
+        duration: undefined,
+        status: "processing" as const,
+        fullText:
+          "The team is still aligning on support coverage, escalation routing, and the final handoff packet before launch.",
+        segments: [
+          {
+            startTime: 0,
+            endTime: 26,
+            speaker: "Emily Chen",
+            speakerUserId: userId,
+            text: "Let's confirm the support rotation before launch so escalation routing is clear for the weekend window.",
+            confidence: 0.96,
+          },
+          {
+            startTime: 27,
+            endTime: 54,
+            speaker: "Sarah Kim",
+            speakerUserId: sarahUserId,
+            text: "I'm still collecting the final handoff packet details, so the summary should stay in progress until the call wraps.",
+            confidence: 0.95,
+          },
+        ],
+        summary: null,
+        participants: [
+          {
+            displayName: "Emily Chen",
+            email: args.email,
+            userId,
+            joinedAt: now - 25 * MINUTE,
+            leftAt: undefined,
+            speakingTime: 8 * MINUTE,
+            speakingPercentage: 48,
+            isHost: true,
+            isExternal: false,
+          },
+          {
+            displayName: "Sarah Kim",
+            email: "sarah-kim-screenshots@inbox.mailtrap.io",
+            userId: sarahUserId,
+            joinedAt: now - 25 * MINUTE,
+            leftAt: undefined,
+            speakingTime: 7 * MINUTE,
+            speakingPercentage: 41,
+            isHost: false,
+            isExternal: false,
+          },
+        ],
+      },
     ];
 
     for (const meeting of [...meetingSeedDefinitions].reverse()) {
@@ -5497,7 +5553,7 @@ export const seedScreenshotDataInternal = internalMutation({
         meetingPlatform: meeting.meetingPlatform,
         title: meeting.title,
         duration: meeting.duration,
-        status: "completed",
+        status: meeting.status ?? "completed",
         scheduledStartTime: meeting.scheduledStartTime,
         actualStartTime: meeting.actualStartTime,
         actualEndTime: meeting.actualEndTime,
@@ -5521,21 +5577,23 @@ export const seedScreenshotDataInternal = internalMutation({
         speakerCount: 2,
       });
 
-      await ctx.db.insert("meetingSummaries", {
-        recordingId,
-        transcriptId,
-        executiveSummary: meeting.summary.executiveSummary,
-        keyPoints: meeting.summary.keyPoints,
-        actionItems: meeting.summary.actionItems,
-        decisions: meeting.summary.decisions,
-        openQuestions: meeting.summary.openQuestions,
-        topics: meeting.summary.topics,
-        overallSentiment: meeting.summary.overallSentiment,
-        modelUsed: meeting.summary.modelUsed,
-        promptTokens: 420,
-        completionTokens: 188,
-        processingTime: 8 * SECOND,
-      });
+      if (meeting.summary) {
+        await ctx.db.insert("meetingSummaries", {
+          recordingId,
+          transcriptId,
+          executiveSummary: meeting.summary.executiveSummary,
+          keyPoints: meeting.summary.keyPoints,
+          actionItems: meeting.summary.actionItems,
+          decisions: meeting.summary.decisions,
+          openQuestions: meeting.summary.openQuestions,
+          topics: meeting.summary.topics,
+          overallSentiment: meeting.summary.overallSentiment,
+          modelUsed: meeting.summary.modelUsed,
+          promptTokens: 420,
+          completionTokens: 188,
+          processingTime: 8 * SECOND,
+        });
+      }
 
       for (const participant of meeting.participants) {
         await ctx.db.insert("meetingParticipants", {
