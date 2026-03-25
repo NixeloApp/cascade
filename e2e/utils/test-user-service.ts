@@ -94,6 +94,7 @@ export type NotificationsScreenshotState =
   | "inboxEmpty"
   | "archivedEmpty"
   | "unreadOverflow";
+export type AssistantScreenshotState = "default" | "empty";
 
 export interface ConfigureProjectInboxStateResult {
   success: boolean;
@@ -143,6 +144,13 @@ export interface ConfigureOrgAnalyticsStateResult {
   issueCount?: number;
   projectId?: string;
   sprintCount?: number;
+  error?: string;
+}
+
+export interface ConfigureAssistantStateResult {
+  success: boolean;
+  chatCount?: number;
+  requestCount?: number;
   error?: string;
 }
 
@@ -648,6 +656,24 @@ export class TestUserService {
         `  ⚠️ Failed to configure notifications state ${mode} for ${projectKey} in ${orgSlug}:`,
         error,
       );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  async configureAssistantState(
+    orgSlug: string,
+    mode: AssistantScreenshotState,
+  ): Promise<ConfigureAssistantStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureAssistantState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, mode }),
+      });
+      const result = (await response.json()) as ConfigureAssistantStateResult;
+      return result;
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to configure assistant state (${mode}):`, error);
       return { success: false, error: String(error) };
     }
   }

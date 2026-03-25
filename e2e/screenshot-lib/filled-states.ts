@@ -58,6 +58,7 @@ import {
   seedIssueDraft,
 } from "./helpers";
 import {
+  screenshotAssistantStates,
   screenshotBoardInteractiveStates,
   screenshotBoardModals,
   screenshotDashboardLoadingState,
@@ -250,8 +251,19 @@ export async function screenshotFilledStates(
   );
   await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
   await takeScreenshot(page, p, "add-ons", ROUTES.addOns.build(orgSlug));
-  await takeScreenshot(page, p, "assistant", ROUTES.assistant.build(orgSlug));
   await takeScreenshot(page, p, "mcp-server", ROUTES.mcp.build(orgSlug));
+
+  if (
+    shouldCaptureAny(p, [
+      "assistant",
+      "assistant-conversations",
+      "assistant-overview-empty",
+      "assistant-conversations-empty",
+      "assistant-loading",
+    ])
+  ) {
+    await screenshotAssistantStates(page, orgSlug, p);
+  }
 
   if (
     shouldCaptureAny(p, [

@@ -1,82 +1,40 @@
-# AI Assistant Page - Current State
+# Assistant - Current State
 
-> **Route**: `/:slug/assistant`
-> **Status**: IMPLEMENTED -- static UI with hardcoded data, no backend wiring
-> **Last Updated**: 2026-03-22
-
----
+> **Route**: `/:orgSlug/assistant`
+> **Status**: REVIEWED, seeded, and screenshot-covered
+> **Last Updated**: 2026-03-25
 
 ## Purpose
 
-Management interface for the workspace AI assistant. Displays usage statistics
-(spend, questions answered, success rate), a configuration form (system prompt,
-model selection, support email, help button toggle), and a billing/upgrade tab.
-All data is currently hardcoded -- there is no backend integration.
-
----
+Workspace-level AI activity overview. The route shows real usage totals, provider and operation
+breakdowns, a read-only workspace snapshot, and a recent conversation list. It no longer pretends
+to be a persistent configuration screen.
 
 ## Route Anatomy
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ AppSidebar                    PageLayout (maxWidth="xl")                    │
-│ ┌─────────────────────────────────────────────────────────────────────────┐  │
-│ │ PageHeader  title="Assistant"                                         │  │
-│ │             description="Manage your AI assistant..."                 │  │
-│ ├─────────────────────────────────────────────────────────────────────────┤  │
-│ │                                                                       │  │
-│ │  AssistantStats (3-column Grid)                                       │  │
-│ │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                   │  │
-│ │  │ Spend        │ │ Questions    │ │ Answered     │                   │  │
-│ │  │ $42.50 +12%  │ │ 1,240  +5%  │ │ 1,180  95%   │                   │  │
-│ │  │ Card w/ left │ │              │ │ Success Rate │                   │  │
-│ │  │ green border │ │              │ │              │                   │  │
-│ │  └──────────────┘ └──────────────┘ └──────────────┘                   │  │
-│ │                                                                       │  │
-│ │  AssistantConfig (Tabs)                                               │  │
-│ │  ┌──────────────────────────────────────────────────────────────────┐  │  │
-│ │  │ [General]  [Billing]                                            │  │  │
-│ │  ├──────────────────────────────────────────────────────────────────┤  │  │
-│ │  │                                                                 │  │  │
-│ │  │  General tab:                                                   │  │  │
-│ │  │   StatusCard  Bot icon + Switch (enabled/disabled)              │  │  │
-│ │  │   ConfigCard  System Prompt textarea                            │  │  │
-│ │  │               Model select | Support Email input                │  │  │
-│ │  │               Show Help Button toggle                           │  │  │
-│ │  │                                                                 │  │  │
-│ │  │  Billing tab:                                                   │  │  │
-│ │  │   Upgrade to Pro banner (brandSolid CTA)                        │  │  │
-│ │  │   Usage chart placeholder (dashed-border empty box)             │  │  │
-│ │  │                                                                 │  │  │
-│ │  └──────────────────────────────────────────────────────────────────┘  │  │
-│ │                                                                       │  │
-│ └─────────────────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────┘
+AppSidebar / Org shell
+└── PageLayout (maxWidth="xl")
+    ├── PageHeader
+    │   ├── title = "Assistant"
+    │   ├── description = "Workspace-level AI usage..."
+    │   └── pill badge = "Powered by AI"
+    └── Tabs
+        ├── Overview
+        │   ├── AssistantStats (3 cards)
+        │   ├── AssistantSnapshotCard
+        │   └── OperationBreakdown
+        │       ├── By Operation
+        │       └── By Provider
+        └── Conversations
+            └── RecentChats
+                ├── compact chat rows when seeded data exists
+                └── embedded empty state when no chats exist
 ```
 
----
+## Reviewed Screenshot Matrix
 
-## Composition Walkthrough
-
-1. **PageLayout** with `maxWidth="xl"` constrains content width.
-2. **PageHeader** renders title and a short description.
-3. **AssistantStats** renders a 3-column responsive `Grid` of metric `Card`s.
-   Each card has a green left-border accent (`bg-status-success`), an icon, a large
-   value, and a trend `Badge`. Data is hardcoded inline.
-4. **AssistantConfig** renders a `Tabs` component with two tabs:
-   - **General tab**:
-     - Status card with `IconCircle` (success/muted), description, and a `Switch` toggle.
-     - Configuration card with `Textarea` (system prompt), `Select` (model), `Input`
-       (support email), and a `Switch` (help button toggle). Disabled when assistant
-       is toggled off (opacity + pointer-events-none).
-   - **Billing tab**:
-     - Upgrade-to-Pro banner card with `IconCircle` (brand), description, and
-       `Button` (brandSolid).
-     - Usage card with a dashed-border placeholder div where a chart will go.
-
----
-
-## Screenshot Matrix
+### Canonical overview
 
 | Viewport | Theme | Preview |
 |----------|-------|---------|
@@ -85,31 +43,74 @@ All data is currently hardcoded -- there is no backend integration.
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
 
----
+### Conversations tab
 
-## Problems
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-conversations.png) |
+| Desktop | Light | ![](screenshots/desktop-light-conversations.png) |
+| Tablet | Light | ![](screenshots/tablet-light-conversations.png) |
+| Mobile | Light | ![](screenshots/mobile-light-conversations.png) |
+
+### No-activity overview
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-overview-empty.png) |
+| Desktop | Light | ![](screenshots/desktop-light-overview-empty.png) |
+| Tablet | Light | ![](screenshots/tablet-light-overview-empty.png) |
+| Mobile | Light | ![](screenshots/mobile-light-overview-empty.png) |
+
+### Empty conversations
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-conversations-empty.png) |
+| Desktop | Light | ![](screenshots/desktop-light-conversations-empty.png) |
+| Tablet | Light | ![](screenshots/tablet-light-conversations-empty.png) |
+| Mobile | Light | ![](screenshots/mobile-light-conversations-empty.png) |
+
+### Loading
+
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark-loading.png) |
+| Desktop | Light | ![](screenshots/desktop-light-loading.png) |
+| Tablet | Light | ![](screenshots/tablet-light-loading.png) |
+| Mobile | Light | ![](screenshots/mobile-light-loading.png) |
+
+## Current Behavior
+
+1. `getUsageStats` drives the overview cards, provider split, operation split, and snapshot copy.
+2. `getUserChats` drives the conversations tab.
+3. The route is intentionally read-only. The fake toggle/config controls are gone.
+4. When usage is empty, the overview keeps honest zero-value stats and swaps the lower section to a
+   real no-activity empty state.
+5. When conversations are empty, the tab keeps its shell and shows an embedded empty state instead
+   of a blank card.
+6. Screenshot runs seed deterministic usage and chat data, plus an E2E-only empty mode and loading
+   override, so this spec is not relying on incidental history.
+
+## Current Problems
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| ~~1~~ | ~~All stats are hardcoded~~ **Fixed** — wired to `getUsageStats` (total cost, requests, success rate, tokens, response time) and `getUserChats` | ~~HIGH~~ |
-| ~~2~~ | ~~Model list with no integration~~ **Fixed** — removed fake model selector, shows real provider breakdown from usage data | ~~HIGH~~ |
-| ~~3~~ | ~~Billing tab placeholder~~ **Removed** — was fake UI with no backend | ~~MEDIUM~~ |
-| ~~4~~ | ~~Usage chart placeholder~~ **Replaced** with operation/provider breakdown cards using real data | ~~MEDIUM~~ |
-| ~~5~~ | ~~Config form not persisted~~ **Fixed** — removed fake config form, page now shows real data | ~~HIGH~~ |
-
----
+| 1 | The route is now honest and reviewable, but it is still a summary surface only. There is no drill-in from this page into full assistant conversation detail. | product depth | LOW |
+| 2 | Admin/configuration controls are intentionally absent after removing the fake UI. If real assistant settings return later, they should ship as real persisted workflows, not cosmetic toggles. | future scope | LOW |
 
 ## Source Files
 
 | File | Purpose |
 |------|---------|
-| `src/routes/_auth/_app/$orgSlug/assistant.tsx` | Route + all components (277 lines) |
-| `src/components/layout/PageLayout.tsx` | Page shell |
-| `src/components/ui/Card.tsx` | Card primitives |
-| `src/components/ui/Tabs.tsx` | Tab primitives |
-| `src/components/ui/Select.tsx` | Select dropdown |
-| `src/components/ui/Switch.tsx` | Toggle switch |
-| `src/components/ui/Textarea.tsx` | Textarea input |
-| `src/components/ui/Badge.tsx` | Trend badges |
-| `src/components/ui/Dot.tsx` | Pulsing status dot |
-| `src/components/ui/IconCircle.tsx` | Circular icon wrapper |
+| `src/routes/_auth/_app/$orgSlug/assistant.tsx` | Route UI, loading shell, snapshot copy, overview/conversations tabs |
+| `src/routes/_auth/_app/$orgSlug/-assistant.test.tsx` | Route behavior coverage |
+| `src/lib/test-ids.ts` | Stable assistant route hooks |
+| `e2e/pages/assistant.page.ts` | Assistant page object |
+| `e2e/screenshot-lib/interactive-captures.ts` | Assistant screenshot states |
+| `convex/e2e.ts` | Seeded assistant usage/chat state and E2E reset endpoint |
+
+## Summary
+
+The assistant route is no longer a stale fake-management page with a canonical-only screenshot. It
+is now a real, seeded, reviewable workspace AI activity surface with honest empty/loading states and
+full viewport-matrix coverage for both overview and conversations.

@@ -668,6 +668,29 @@ export const TEST_IDS = {
     ARCHIVE_ALL_BUTTON: "notifications-archive-all-button",
   },
 
+  ASSISTANT: {
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONTENT: "assistant-content",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    LOADING_STATE: "assistant-loading-state",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    OVERVIEW_TAB: "assistant-overview-tab",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONVERSATIONS_TAB: "assistant-conversations-tab",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    OVERVIEW_PANEL: "assistant-overview-panel",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONVERSATIONS_PANEL: "assistant-conversations-panel",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    SNAPSHOT_CARD: "assistant-snapshot-card",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    OVERVIEW_EMPTY_STATE: "assistant-overview-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONVERSATIONS_EMPTY_STATE: "assistant-conversations-empty-state",
+    /** @see src/routes/_auth/_app/$orgSlug/assistant.tsx */
+    CONVERSATIONS_LIST: "assistant-conversations-list",
+  },
+
   MY_ISSUES: {
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     CONTENT: "my-issues-content",

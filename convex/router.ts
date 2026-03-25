@@ -15,6 +15,7 @@ import {
   cleanupE2EWorkspacesEndpoint,
   cleanupRbacProjectEndpoint,
   cleanupTestUsersEndpoint,
+  configureAssistantStateEndpoint,
   configureNotificationsStateEndpoint,
   configureOrgAnalyticsStateEndpoint,
   configureProjectAnalyticsStateEndpoint,
@@ -404,6 +405,12 @@ http.route({
   path: "/e2e/configure-notifications-state",
   method: "POST",
   handler: configureNotificationsStateEndpoint,
+});
+
+http.route({
+  path: "/e2e/configure-assistant-state",
+  method: "POST",
+  handler: configureAssistantStateEndpoint,
 });
 
 // Batch cleanup - call repeatedly until done=true (avoids 32k read limit)

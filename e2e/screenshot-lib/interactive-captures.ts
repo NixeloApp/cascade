@@ -10,6 +10,7 @@ import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
+  AssistantPage,
   CalendarPage,
   DocumentsPage,
   InboxPage,
@@ -294,6 +295,117 @@ export async function screenshotProjectsModal(
     await captureCurrentView(page, prefix, "projects-create-project-modal");
     await projectsPage.closeCreateProjectFormIfOpen();
   });
+}
+
+export async function screenshotAssistantStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const captureNames = {
+    canonical: "assistant",
+    conversations: "assistant-conversations",
+    conversationsEmpty: "assistant-conversations-empty",
+    loading: "assistant-loading",
+    overviewEmpty: "assistant-overview-empty",
+  } as const;
+
+  if (!shouldCaptureAny(prefix, Object.values(captureNames))) {
+    return;
+  }
+
+  const assistantUrl = ROUTES.assistant.build(orgSlug);
+
+  const configureAssistantState = async (mode: "default" | "empty") => {
+    const result = await testUserService.configureAssistantState(orgSlug, mode);
+    if (!result.success) {
+      throw new Error(result.error ?? `Failed to configure assistant state: ${mode}`);
+    }
+  };
+
+  const openAssistantPage = async (mode: "default" | "empty") => {
+    await configureAssistantState(mode);
+    await page.goto(`${BASE_URL}${assistantUrl}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+    await waitForExpectedContent(page, assistantUrl, "assistant");
+    const assistantPage = new AssistantPage(page, orgSlug);
+    await assistantPage.waitUntilReady();
+    return assistantPage;
+  };
+
+  if (shouldCapture(prefix, captureNames.canonical)) {
+    await runCaptureStep("assistant canonical", async () => {
+      const assistantPage = await openAssistantPage("default");
+      await assistantPage.snapshotCard.waitFor({ timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.canonical);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.conversations)) {
+    await runCaptureStep("assistant conversations", async () => {
+      const assistantPage = await openAssistantPage("default");
+      await assistantPage.openConversationsTab();
+      await assistantPage.conversationsList.waitFor({ timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.conversations);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.overviewEmpty)) {
+    await runCaptureStep("assistant overview empty", async () => {
+      const assistantPage = await openAssistantPage("empty");
+      await assistantPage.overviewEmptyState.waitFor({ timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.overviewEmpty);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.conversationsEmpty)) {
+    await runCaptureStep("assistant conversations empty", async () => {
+      const assistantPage = await openAssistantPage("empty");
+      await assistantPage.openConversationsTab();
+      await assistantPage.conversationsEmptyState.waitFor({ timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureNames.conversationsEmpty);
+    });
+  }
+
+  if (shouldCapture(prefix, captureNames.loading)) {
+    await runCaptureStep("assistant loading", async () => {
+      const loadingPage = await page.context().newPage();
+
+      try {
+        await loadingPage.addInitScript(() => {
+          window.__NIXELO_E2E_ASSISTANT_LOADING__ = true;
+        });
+
+        await loadingPage.goto(`${BASE_URL}${assistantUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
+        await loadingAssistantPage.loadingState.waitFor({ state: "visible", timeout: 12000 });
+        await expect
+          .poll(() => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(), {
+            timeout: 12000,
+          })
+          .toBeGreaterThan(0);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, captureNames.loading, {
+          skipReadyCheck: true,
+        });
+      } finally {
+        if (!loadingPage.isClosed()) {
+          await loadingPage.close();
+        }
+      }
+    });
+  }
+
+  await configureAssistantState("default");
 }
 
 export async function screenshotRoadmapStates(

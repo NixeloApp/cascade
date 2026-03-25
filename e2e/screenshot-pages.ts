@@ -305,6 +305,10 @@ const DRY_RUN_PAGES = [
   "filled-authentication",
   "filled-add-ons",
   "filled-assistant",
+  "filled-assistant-conversations",
+  "filled-assistant-overview-empty",
+  "filled-assistant-conversations-empty",
+  "filled-assistant-loading",
   "filled-mcp-server",
   // Filled states — dashboard modals
   "filled-dashboard-omnibox",

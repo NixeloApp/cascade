@@ -95,6 +95,11 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-outreach-sequence-dialog$/, "41-outreach", "-sequence-dialog"],
   [/^filled-outreach-enroll-dialog$/, "41-outreach", "-enroll-dialog"],
   [/^filled-outreach-mailbox-disconnect-confirm$/, "41-outreach", "-mailbox-disconnect-confirm"],
+  // Assistant
+  [/^filled-assistant-conversations$/, "33-assistant", "-conversations"],
+  [/^filled-assistant-overview-empty$/, "33-assistant", "-overview-empty"],
+  [/^filled-assistant-conversations-empty$/, "33-assistant", "-conversations-empty"],
+  [/^filled-assistant-loading$/, "33-assistant", "-loading"],
   // Misc filled states
   [/^filled-project-tree$/, "29-team-detail", "-project-tree"],
   [/^filled-mobile-hamburger$/, "04-dashboard", "-mobile-hamburger"],

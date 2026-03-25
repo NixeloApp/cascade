@@ -45,6 +45,7 @@ type SeededProjectAnalyticsMode = "default" | "sparseData" | "noActivity";
 type SeededNotificationsMode = "default" | "inboxEmpty" | "archivedEmpty" | "unreadOverflow";
 type SeededRoadmapMode = "default" | "empty" | "milestone";
 type SeededTimeTrackingMode = "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated";
+type SeededAssistantMode = "default" | "empty";
 
 interface SeededInboxDefinition {
   createdBy: SeededInboxActorKey;
@@ -115,6 +116,28 @@ interface SeededTimeTrackingRateDefinition {
   notes?: string;
   projectScoped: boolean;
   rateType: Doc<"userRates">["rateType"];
+}
+
+interface SeededAssistantUsageDefinition {
+  completionTokens: number;
+  estimatedCost: number;
+  model: string;
+  operation: Doc<"aiUsage">["operation"];
+  projectKey?: "DEMO" | "OPS";
+  promptTokens: number;
+  provider: Doc<"aiUsage">["provider"];
+  responseTime: number;
+  success: boolean;
+}
+
+interface SeededAssistantChatDefinition {
+  messagePairs: Array<{
+    assistant: string;
+    user: string;
+  }>;
+  projectKey?: "DEMO" | "OPS";
+  title: string;
+  updatedOffsetMs: number;
 }
 
 interface SeededRoadmapIssueDefinition {
@@ -198,6 +221,111 @@ const SCREENSHOT_ROADMAP_BASE_ISSUES: SeededRoadmapIssueDefinition[] = [
 const SCREENSHOT_ROADMAP_LINKS: SeededRoadmapLinkDefinition[] = [
   { fromKey: "DEMO-2", toKey: "DEMO-3" },
   { fromKey: "DEMO-7", toKey: "DEMO-4" },
+];
+
+const SCREENSHOT_ASSISTANT_USAGE_DEFAULT: SeededAssistantUsageDefinition[] = [
+  {
+    completionTokens: 920,
+    estimatedCost: 164,
+    model: "claude-3-5-sonnet",
+    operation: "chat",
+    projectKey: "DEMO",
+    promptTokens: 1480,
+    provider: "anthropic",
+    responseTime: 382,
+    success: true,
+  },
+  {
+    completionTokens: 410,
+    estimatedCost: 96,
+    model: "claude-3-5-haiku",
+    operation: "suggestion",
+    projectKey: "DEMO",
+    promptTokens: 680,
+    provider: "anthropic",
+    responseTime: 244,
+    success: true,
+  },
+  {
+    completionTokens: 590,
+    estimatedCost: 128,
+    model: "gpt-4.1-mini",
+    operation: "analysis",
+    projectKey: "OPS",
+    promptTokens: 980,
+    provider: "openai",
+    responseTime: 466,
+    success: true,
+  },
+  {
+    completionTokens: 360,
+    estimatedCost: 74,
+    model: "gpt-4.1-mini",
+    operation: "automation",
+    projectKey: "OPS",
+    promptTokens: 520,
+    provider: "openai",
+    responseTime: 311,
+    success: true,
+  },
+  {
+    completionTokens: 720,
+    estimatedCost: 138,
+    model: "claude-3-5-sonnet",
+    operation: "chat",
+    promptTokens: 1120,
+    provider: "anthropic",
+    responseTime: 401,
+    success: true,
+  },
+];
+
+const SCREENSHOT_ASSISTANT_CHATS_DEFAULT: SeededAssistantChatDefinition[] = [
+  {
+    messagePairs: [
+      {
+        user: "What are the top launch blockers for the demo project?",
+        assistant:
+          "Pricing approval and onboarding copy polish remain the top blockers before launch.",
+      },
+      {
+        user: "Turn that into a leadership-ready summary.",
+        assistant:
+          "Leadership summary: only two blockers remain, both owned, and neither changes the Thursday review checkpoint.",
+      },
+    ],
+    projectKey: "DEMO",
+    title: "Launch blockers summary",
+    updatedOffsetMs: 30 * MINUTE,
+  },
+  {
+    messagePairs: [
+      {
+        user: "Draft a client handoff checklist for OPS.",
+        assistant:
+          "Created a handoff checklist covering kickoff notes, support routing, and approval sign-off.",
+      },
+      {
+        user: "What still needs confirmation?",
+        assistant:
+          "Weekend support coverage and final portal permissions still need confirmation before go-live.",
+      },
+    ],
+    projectKey: "OPS",
+    title: "Client handoff checklist",
+    updatedOffsetMs: 90 * MINUTE,
+  },
+  {
+    messagePairs: [
+      {
+        user: "Summarize recent AI usage across the workspace.",
+        assistant:
+          "Usage is split between chat, analysis, and automation, with Anthropic handling most token volume.",
+      },
+    ],
+    title: "Workspace usage snapshot",
+    updatedOffsetMs: 3 * HOUR,
+  },
 ];
 
 function buildSeededRoadmapIssueDefinitions(
@@ -1066,6 +1194,122 @@ async function resetSeededProjectInboxIssues(
   return {
     success: true,
     ...countSeededInboxIssues(definitions),
+  };
+}
+
+function buildSeededAssistantUsageDefinitions(
+  mode: SeededAssistantMode,
+): SeededAssistantUsageDefinition[] {
+  return mode === "empty" ? [] : SCREENSHOT_ASSISTANT_USAGE_DEFAULT;
+}
+
+function buildSeededAssistantChatDefinitions(
+  mode: SeededAssistantMode,
+): SeededAssistantChatDefinition[] {
+  return mode === "empty" ? [] : SCREENSHOT_ASSISTANT_CHATS_DEFAULT;
+}
+
+async function resetSeededAssistantState(
+  ctx: MutationCtx,
+  args: {
+    mode: SeededAssistantMode;
+    now: number;
+    primaryProjectId: Id<"projects">;
+    secondaryProjectId: Id<"projects">;
+    userId: Id<"users">;
+  },
+): Promise<{
+  success: boolean;
+  chatCount?: number;
+  requestCount?: number;
+  error?: string;
+}> {
+  const usageRecords = await ctx.db
+    .query("aiUsage")
+    .withIndex("by_user", (q) => q.eq("userId", args.userId))
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const usage of usageRecords) {
+    await ctx.db.delete(usage._id);
+  }
+
+  while (true) {
+    const chats = await ctx.db
+      .query("aiChats")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .take(BOUNDED_LIST_LIMIT);
+
+    if (chats.length === 0) {
+      break;
+    }
+
+    for (const chat of chats) {
+      const messages = await ctx.db
+        .query("aiMessages")
+        .withIndex("by_chat", (q) => q.eq("chatId", chat._id))
+        .take(BOUNDED_LIST_LIMIT);
+
+      for (const message of messages) {
+        await ctx.db.delete(message._id);
+      }
+
+      await ctx.db.delete(chat._id);
+    }
+  }
+
+  const projectIdsByKey = {
+    DEMO: args.primaryProjectId,
+    OPS: args.secondaryProjectId,
+  } as const;
+
+  const usageDefinitions = buildSeededAssistantUsageDefinitions(args.mode);
+  for (const definition of usageDefinitions) {
+    await ctx.db.insert("aiUsage", {
+      completionTokens: definition.completionTokens,
+      errorMessage: definition.success ? undefined : "Seeded assistant request failed",
+      estimatedCost: definition.estimatedCost,
+      model: definition.model,
+      operation: definition.operation,
+      projectId: definition.projectKey ? projectIdsByKey[definition.projectKey] : undefined,
+      promptTokens: definition.promptTokens,
+      provider: definition.provider,
+      responseTime: definition.responseTime,
+      success: definition.success,
+      totalTokens: definition.promptTokens + definition.completionTokens,
+      userId: args.userId,
+    });
+  }
+
+  const chatDefinitions = buildSeededAssistantChatDefinitions(args.mode);
+  for (const definition of chatDefinitions) {
+    const chatId = await ctx.db.insert("aiChats", {
+      projectId: definition.projectKey ? projectIdsByKey[definition.projectKey] : undefined,
+      title: definition.title,
+      updatedAt: args.now - definition.updatedOffsetMs,
+      userId: args.userId,
+    });
+
+    for (const pair of definition.messagePairs) {
+      await ctx.db.insert("aiMessages", {
+        chatId,
+        content: pair.user,
+        role: "user",
+      });
+      await ctx.db.insert("aiMessages", {
+        chatId,
+        content: pair.assistant,
+        modelUsed: definition.projectKey ? "claude-3-5-sonnet" : "gpt-4.1-mini",
+        responseTime: 380,
+        role: "assistant",
+        tokensUsed: 480,
+      });
+    }
+  }
+
+  return {
+    success: true,
+    chatCount: chatDefinitions.length,
+    requestCount: usageDefinitions.length,
   };
 }
 
@@ -5121,6 +5365,132 @@ export const updateNotificationsStateInternal = internalMutation({
   },
 });
 
+/**
+ * Reconfigure seeded assistant data for screenshot capture.
+ * POST /e2e/configure-assistant-state
+ * Body: {
+ *   orgSlug: string,
+ *   mode: "default" | "empty",
+ * }
+ */
+export const configureAssistantStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, mode } = body;
+
+    if (!(orgSlug && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default", "empty"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid assistant mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateAssistantStateInternal, {
+      mode,
+      orgSlug,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateAssistantStateInternal = internalMutation({
+  args: {
+    mode: v.union(v.literal("default"), v.literal("empty")),
+    orgSlug: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    chatCount: v.optional(v.number()),
+    requestCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const primaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), "DEMO")))
+      .first();
+    const secondaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), "OPS")))
+      .first();
+
+    if (!(primaryProject && secondaryProject)) {
+      return {
+        success: false,
+        error: `seeded assistant projects not found in ${args.orgSlug}`,
+      };
+    }
+
+    const screenshotActors = await resolveSeededScreenshotActors(ctx, {
+      organizationId: organization._id,
+      projectId: primaryProject._id,
+    });
+    if (!screenshotActors.success) {
+      return {
+        success: false,
+        error: screenshotActors.error,
+      };
+    }
+
+    const assistantReset = await resetSeededAssistantState(ctx, {
+      mode: args.mode,
+      now: Date.now(),
+      primaryProjectId: primaryProject._id,
+      secondaryProjectId: secondaryProject._id,
+      userId: screenshotActors.ownerUserId,
+    });
+
+    if (!assistantReset.success) {
+      return {
+        success: false,
+        error: assistantReset.error ?? `Failed to configure assistant state: ${args.mode}`,
+      };
+    }
+
+    return assistantReset;
+  },
+});
+
 export const updateProjectWorkflowStatesInternal = internalMutation({
   args: {
     orgSlug: v.string(),
@@ -7505,6 +7875,20 @@ export const seedScreenshotDataInternal = internalMutation({
           updatedAt: now,
         });
       }
+    }
+
+    const assistantReset = await resetSeededAssistantState(ctx, {
+      mode: "default",
+      now,
+      primaryProjectId: projectId,
+      secondaryProjectId,
+      userId,
+    });
+    if (!assistantReset.success) {
+      return {
+        success: false,
+        error: assistantReset.error ?? "Failed to seed assistant screenshot state",
+      };
     }
 
     const notificationsReset = await resetSeededNotificationsForUser(ctx, {

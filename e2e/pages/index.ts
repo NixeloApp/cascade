@@ -1,4 +1,5 @@
 export { AnalyticsPage } from "./analytics.page";
+export { AssistantPage } from "./assistant.page";
 export { AuthPage } from "./auth.page";
 export { BacklogPage } from "./backlog.page";
 export { BasePage } from "./base.page";
