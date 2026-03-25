@@ -532,8 +532,16 @@ export async function screenshotAssistantStates(
     }
   };
 
-  const openAssistantPage = async (mode: "default" | "empty") => {
+  const withAssistantState = async <T>(mode: "default" | "empty", run: () => Promise<T>) => {
     await configureAssistantState(mode);
+    try {
+      return await run();
+    } finally {
+      await configureAssistantState("default");
+    }
+  };
+
+  const openAssistantPage = async () => {
     await page.goto(`${BASE_URL}${assistantUrl}`, {
       waitUntil: "domcontentloaded",
       timeout: 15000,
@@ -546,39 +554,47 @@ export async function screenshotAssistantStates(
 
   if (shouldCapture(prefix, captureNames.canonical)) {
     await runCaptureStep("assistant canonical", async () => {
-      const assistantPage = await openAssistantPage("default");
-      await assistantPage.snapshotCard.waitFor({ timeout: 5000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, captureNames.canonical);
+      await withAssistantState("default", async () => {
+        const assistantPage = await openAssistantPage();
+        await assistantPage.snapshotCard.waitFor({ timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.canonical);
+      });
     });
   }
 
   if (shouldCapture(prefix, captureNames.conversations)) {
     await runCaptureStep("assistant conversations", async () => {
-      const assistantPage = await openAssistantPage("default");
-      await assistantPage.openConversationsTab();
-      await assistantPage.conversationsList.waitFor({ timeout: 5000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, captureNames.conversations);
+      await withAssistantState("default", async () => {
+        const assistantPage = await openAssistantPage();
+        await assistantPage.openConversationsTab();
+        await assistantPage.conversationsList.waitFor({ timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.conversations);
+      });
     });
   }
 
   if (shouldCapture(prefix, captureNames.overviewEmpty)) {
     await runCaptureStep("assistant overview empty", async () => {
-      const assistantPage = await openAssistantPage("empty");
-      await assistantPage.overviewEmptyState.waitFor({ timeout: 5000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, captureNames.overviewEmpty);
+      await withAssistantState("empty", async () => {
+        const assistantPage = await openAssistantPage();
+        await assistantPage.overviewEmptyState.waitFor({ timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.overviewEmpty);
+      });
     });
   }
 
   if (shouldCapture(prefix, captureNames.conversationsEmpty)) {
     await runCaptureStep("assistant conversations empty", async () => {
-      const assistantPage = await openAssistantPage("empty");
-      await assistantPage.openConversationsTab();
-      await assistantPage.conversationsEmptyState.waitFor({ timeout: 5000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, captureNames.conversationsEmpty);
+      await withAssistantState("empty", async () => {
+        const assistantPage = await openAssistantPage();
+        await assistantPage.openConversationsTab();
+        await assistantPage.conversationsEmptyState.waitFor({ timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, captureNames.conversationsEmpty);
+      });
     });
   }
 
@@ -613,8 +629,6 @@ export async function screenshotAssistantStates(
       }
     });
   }
-
-  await configureAssistantState("default");
 }
 
 export async function screenshotRoadmapStates(
@@ -670,7 +684,7 @@ export async function screenshotRoadmapStates(
       const roadmapPage = new RoadmapPage(page, orgSlug);
       return await run(page, roadmapPage);
     } finally {
-      // no-op: route-scoped query param boot state is discarded on the next navigation
+      await configureRoadmapState("default");
     }
   };
 
@@ -757,8 +771,6 @@ export async function screenshotRoadmapStates(
       });
     });
   }
-
-  await configureRoadmapState("default");
 }
 
 export async function screenshotBoardModals(

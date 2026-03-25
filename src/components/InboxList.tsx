@@ -1234,9 +1234,10 @@ export function InboxList({ projectId }: InboxListProps) {
     );
   }
 
-  const selectedVisibleCount = filteredIssues.filter((item) =>
-    selection.selectedIds.has(item._id),
-  ).length;
+  const selectedIssueIds = filteredIssues
+    .filter((item) => isTriageable(item) && selection.selectedIds.has(item._id))
+    .map((item) => item._id);
+  const selectedVisibleCount = selectedIssueIds.length;
   const triageableCount = filteredIssues.filter(isTriageable).length;
 
   const handleTabChange = (tab: string) => {
@@ -1251,8 +1252,6 @@ export function InboxList({ projectId }: InboxListProps) {
     dialogs.closeDialog();
     setSearchQuery(value);
   };
-
-  const selectedIssueIds = [...selection.selectedIds];
 
   return (
     <>

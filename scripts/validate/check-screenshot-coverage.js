@@ -36,6 +36,7 @@ const EXCLUDED_ROUTES = new Set([
   "workspaces.teams.list", // No standalone teams list page (only team detail sub-pages)
   "onboarding", // Requires fresh user state, can't capture with seeded test user
   "invoices.detail", // Requires creating an invoice first; list page is captured
+  "outreachGoogleAuth", // HTTP OAuth endpoint, not an app route
 ]);
 
 const EXPECTED_PAGE_SPEC_SCREENSHOTS = [
@@ -204,10 +205,10 @@ function extractScreenshotRouteRefs(content) {
   return refs;
 }
 
-function loadScreenshotRouteSourceContent() {
+function loadScreenshotRouteSourceContents() {
   return SCREENSHOT_ROUTE_SOURCE_REL_PATHS.map((relativePath) =>
     fs.readFileSync(path.join(ROOT, relativePath), "utf8"),
-  ).join("\n");
+  );
 }
 
 function collectSpecScreenshotCoverageGaps() {
@@ -351,45 +352,54 @@ function collectModalScreenshotCoverageGaps() {
 
 export function run() {
   const routesFile = path.join(ROOT, "convex/shared/routes.ts");
+  const routesFileExists = fs.existsSync(routesFile);
   const missingScreenshotRouteSources = SCREENSHOT_ROUTE_SOURCE_REL_PATHS.filter(
     (relativePath) => !fs.existsSync(path.join(ROOT, relativePath)),
   );
+  const canAuditRouteCoverage = routesFileExists && missingScreenshotRouteSources.length === 0;
+  const routesContent = routesFileExists ? fs.readFileSync(routesFile, "utf-8") : "";
+  const screenshotContents = canAuditRouteCoverage ? loadScreenshotRouteSourceContents() : [];
 
-  if (!fs.existsSync(routesFile) || missingScreenshotRouteSources.length > 0) {
-    return { passed: true, errors: 0, detail: "files not found, skipped", messages: [] };
-  }
-
-  const routesContent = fs.readFileSync(routesFile, "utf-8");
-  const screenshotContent = loadScreenshotRouteSourceContent();
-
-  const allRouteKeys = extractRouteKeys(routesContent);
-  const capturedRefs = extractScreenshotRouteRefs(screenshotContent);
+  const allRouteKeys = routesFileExists ? extractRouteKeys(routesContent) : [];
+  const capturedRefs = new Set(
+    screenshotContents.flatMap((content) => [...extractScreenshotRouteRefs(content)]),
+  );
   const missingSpecVariants = collectSpecScreenshotCoverageGaps();
   const missingPageSpecDocs = collectPageSpecDocGaps();
   const missingRequiredPageSpecs = collectRequiredPageSpecGaps();
   const missingModalSpecVariants = collectModalScreenshotCoverageGaps();
 
   const uncovered = [];
-  for (const key of allRouteKeys) {
-    if (EXCLUDED_ROUTES.has(key)) continue;
-    if (capturedRefs.has(key)) continue;
+  if (canAuditRouteCoverage) {
+    for (const key of allRouteKeys) {
+      if (EXCLUDED_ROUTES.has(key)) continue;
+      if (capturedRefs.has(key)) continue;
 
-    // Check if a parent key is referenced (e.g. "issues" covers "issues.list")
-    const parts = key.split(".");
-    let parentCovered = false;
-    for (let i = 1; i < parts.length; i++) {
-      if (capturedRefs.has(parts.slice(0, i).join("."))) {
-        parentCovered = true;
-        break;
+      // Check if a parent key is referenced (e.g. "issues" covers "issues.list")
+      const parts = key.split(".");
+      let parentCovered = false;
+      for (let i = 1; i < parts.length; i++) {
+        if (capturedRefs.has(parts.slice(0, i).join("."))) {
+          parentCovered = true;
+          break;
+        }
       }
-    }
-    if (parentCovered) continue;
+      if (parentCovered) continue;
 
-    uncovered.push(key);
+      uncovered.push(key);
+    }
   }
 
   const messages = [];
-  if (uncovered.length > 0) {
+  if (!routesFileExists) {
+    messages.push(
+      `${c.yellow}Route coverage skipped:${c.reset} missing ${c.dim}convex/shared/routes.ts${c.reset}`,
+    );
+  } else if (missingScreenshotRouteSources.length > 0) {
+    messages.push(
+      `${c.yellow}Route coverage skipped:${c.reset} missing screenshot route sources ${missingScreenshotRouteSources.map((relativePath) => `${c.dim}${relativePath}${c.reset}`).join(", ")}`,
+    );
+  } else if (uncovered.length > 0) {
     messages.push(
       `${c.yellow}Routes without screenshot coverage (${uncovered.length}/${allRouteKeys.length}):${c.reset}`,
     );
@@ -472,18 +482,20 @@ export function run() {
     passed: true,
     errors: 0,
     showMessagesOnPass:
+      !canAuditRouteCoverage ||
       uncovered.length > 0 ||
       missingSpecVariants.length > 0 ||
       missingPageSpecDocs.length > 0 ||
       missingRequiredPageSpecs.length > 0 ||
       missingModalSpecVariants.length > 0,
     detail:
+      !canAuditRouteCoverage ||
       uncovered.length > 0 ||
       missingSpecVariants.length > 0 ||
       missingPageSpecDocs.length > 0 ||
       missingRequiredPageSpecs.length > 0 ||
       missingModalSpecVariants.length > 0
-        ? `${allRouteKeys.length - uncovered.length}/${allRouteKeys.length} routes covered, ${specsWithCanonicalVariants}/${completeSpecFolders} page spec folders have canonical screenshots, ${missingModalSpecVariants.length === 0 ? "all" : "not all"} spec'd modals have canonical screenshots`
+        ? `${canAuditRouteCoverage ? `${allRouteKeys.length - uncovered.length}/${allRouteKeys.length} routes covered` : "route coverage skipped"}, ${specsWithCanonicalVariants}/${completeSpecFolders} page spec folders have canonical screenshots, ${missingModalSpecVariants.length === 0 ? "all" : "not all"} spec'd modals have canonical screenshots`
         : `all ${allRouteKeys.length} routes covered, all ${completeSpecFolders} page spec folders have canonical screenshots, all spec'd modals have canonical screenshots`,
     messages,
   };
