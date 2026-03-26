@@ -21,9 +21,6 @@
 
 ### Tier 1: Dense repeated local composition
 
-- [ ] `src/components/Documents/DocumentTree.tsx`
-  Current shape: ~422 lines, ~21 `className=` sites.
-  Cleanup target: normalize row indentation/interaction shells and stop repeating tree-row spacing logic.
 - [ ] `src/components/Landing/ProductShowcase.tsx`
   Current shape: ~362 lines, ~22 `className=` sites.
   Cleanup target: remove repeated presentation wrappers and consolidate repeated showcase card anatomy.
