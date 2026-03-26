@@ -179,12 +179,23 @@ export function NotificationItem({
       className="group relative animate-fade-in last:border-0"
       data-testid={TEST_IDS.NOTIFICATION.ITEM}
     >
-      <Flex align="start" gap="md">
-        <FlexItem shrink={false}>{getNotificationIcon(notification.type)}</FlexItem>
+      <Flex direction="column" directionSm="row" gap="md" alignSm="start">
+        <Flex flex="1" align="start" gap="md" className="min-w-0">
+          <FlexItem shrink={false}>{getNotificationIcon(notification.type)}</FlexItem>
+          <ContentWrapper />
+        </Flex>
 
-        <ContentWrapper />
-
-        <Flex direction="column" gap="xs" className="shrink-0">
+        <Flex
+          data-testid={TEST_IDS.NOTIFICATION.ACTIONS}
+          directionSm="column"
+          gap="xs"
+          align="center"
+          alignSm="end"
+          justify="end"
+          justifySm="start"
+          pt="sm"
+          className="border-t border-ui-border/60 sm:ml-auto sm:shrink-0 sm:border-t-0"
+        >
           {!notification.isRead && (
             <Tooltip content="Mark as read">
               <IconButton

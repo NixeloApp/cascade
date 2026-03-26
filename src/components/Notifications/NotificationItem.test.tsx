@@ -59,11 +59,6 @@ vi.mock("@/components/ui/Card", () => ({
   } & React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
 }));
 
-vi.mock("@/components/ui/Flex", () => ({
-  Flex: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  FlexItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-}));
-
 vi.mock("@/components/ui/IconButton", () => ({
   IconButton: ({
     children,
@@ -199,6 +194,43 @@ describe("NotificationItem", () => {
     expect(archive).toHaveBeenCalledWith(notificationId);
     expect(remove).toHaveBeenCalledWith(notificationId);
     expect(markAsRead).not.toHaveBeenCalled();
+  });
+
+  it("keeps notification actions in a mobile footer row that flips to a desktop rail", () => {
+    render(
+      <NotificationItem
+        notification={{
+          _id: notificationId,
+          _creationTime: 1_700_000_000_000,
+          userId: "user_1" as Id<"users">,
+          type: "document_shared",
+          title: "Document shared",
+          message: "A spec was shared with you",
+          issueId: undefined,
+          documentId,
+          actorId: undefined,
+          actorName: undefined,
+          isRead: true,
+          isArchived: false,
+          snoozedUntil: undefined,
+        }}
+        onMarkAsRead={markAsRead}
+        onArchive={archive}
+        onDelete={remove}
+        orgSlug="acme"
+      />,
+    );
+
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATION.ACTIONS)).toHaveClass(
+      "flex",
+      "items-center",
+      "justify-end",
+      "border-t",
+      "pt-2",
+      "sm:flex-col",
+      "sm:items-end",
+      "sm:border-t-0",
+    );
   });
 
   it("snoozes using the selected duration and closes over the current time", async () => {

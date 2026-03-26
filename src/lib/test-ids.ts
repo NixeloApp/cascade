@@ -480,6 +480,8 @@ export const TEST_IDS = {
   NOTIFICATION: {
     /** @see src/components/Notifications/NotificationItem.tsx */
     ITEM: "notification-item",
+    /** @see src/components/Notifications/NotificationItem.tsx */
+    ACTIONS: "notification-item-actions",
   },
 
   // ============================================================
