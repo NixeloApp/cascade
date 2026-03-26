@@ -311,6 +311,21 @@ describe("RoadmapView", () => {
     expect(screen.queryByLabelText("Issue dependency lines")).not.toBeInTheDocument();
   });
 
+  it("stacks the roadmap title and controls on narrow layouts while preserving desktop classes", () => {
+    mockRoadmapQueries();
+
+    render(<RoadmapView projectId={projectId} canEdit />);
+
+    expect(screen.getByTestId(TEST_IDS.ROADMAP.HEADER)).toHaveClass(
+      "flex-col",
+      "items-start",
+      "sm:flex-row",
+      "sm:items-center",
+      "sm:justify-between",
+    );
+    expect(screen.getByTestId(TEST_IDS.ROADMAP.HEADER_CONTROLS)).toHaveClass("w-full", "sm:w-auto");
+  });
+
   it("applies the grouped roadmap screenshot boot state", () => {
     window.sessionStorage.setItem("nixelo:e2e:roadmap-state", "group-status");
 

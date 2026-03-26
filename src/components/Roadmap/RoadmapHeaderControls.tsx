@@ -1,6 +1,7 @@
 /** Toolbar controls for the Roadmap view — filters, timeline navigation, zoom, grouping. */
 
 import type { Id } from "@convex/_generated/dataModel";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { ChevronLeft, ChevronRight, LinkIcon } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Button } from "../ui/Button";
@@ -80,7 +81,9 @@ type RoadmapFilterControlsProps = Pick<
   | "onTimelineSpanChange"
   | "timelineRangeLabel"
   | "timelineSpan"
->;
+> & {
+  isNarrowViewport: boolean;
+};
 
 type RoadmapDisplayControlsProps = Pick<
   RoadmapHeaderControlsProps,
@@ -90,7 +93,9 @@ type RoadmapDisplayControlsProps = Pick<
   | "showDependencies"
   | "timelineZoom"
   | "viewMode"
->;
+> & {
+  isNarrowViewport: boolean;
+};
 
 function RoadmapWindowControls({
   fitTimelineWindow,
@@ -102,7 +107,13 @@ function RoadmapWindowControls({
   previousWindowLabel,
 }: RoadmapWindowControlsProps) {
   return (
-    <Flex align="center" gap="xs">
+    <Flex
+      align="center"
+      justify="between"
+      gap="xs"
+      wrap
+      className="w-full sm:w-auto sm:justify-start"
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -141,7 +152,7 @@ function RoadmapTimelineRangeLabel({ timelineRangeLabel }: { timelineRangeLabel:
     <Typography
       variant="label"
       color="secondary"
-      className="min-w-36"
+      className="w-full min-w-0 sm:w-auto sm:min-w-36"
       data-testid={TEST_IDS.ROADMAP.RANGE_LABEL}
     >
       {timelineRangeLabel}
@@ -153,12 +164,17 @@ function RoadmapFilterControls({
   epics,
   filterEpic,
   groupBy,
+  isNarrowViewport,
   onFilterEpicChange,
   onGroupByChange,
   onTimelineSpanChange,
   timelineRangeLabel,
   timelineSpan,
 }: RoadmapFilterControlsProps) {
+  const epicFilterWidth = isNarrowViewport ? "full" : "md";
+  const timelineSpanWidth = isNarrowViewport ? "full" : "sm";
+  const groupByWidth = isNarrowViewport ? "full" : "md";
+
   const handleEpicChange = (value: string) => {
     onFilterEpicChange(value === "all" ? "all" : (value as Id<"issues">));
   };
@@ -177,11 +193,15 @@ function RoadmapFilterControls({
   };
 
   return (
-    <>
+    <Flex
+      direction="column"
+      gap="sm"
+      className="w-full sm:w-auto sm:flex-row sm:flex-wrap sm:items-center"
+    >
       <RoadmapTimelineRangeLabel timelineRangeLabel={timelineRangeLabel} />
 
       <Select value={filterEpic === "all" ? "all" : filterEpic} onValueChange={handleEpicChange}>
-        <SelectTrigger width="md">
+        <SelectTrigger width={epicFilterWidth}>
           <SelectValue placeholder="All Epics" />
         </SelectTrigger>
         <SelectContent>
@@ -195,7 +215,10 @@ function RoadmapFilterControls({
       </Select>
 
       <Select value={String(timelineSpan)} onValueChange={handleTimelineSpanChange}>
-        <SelectTrigger width="sm" data-testid={TEST_IDS.ROADMAP.TIMELINE_SPAN_SELECT}>
+        <SelectTrigger
+          width={timelineSpanWidth}
+          data-testid={TEST_IDS.ROADMAP.TIMELINE_SPAN_SELECT}
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -208,7 +231,7 @@ function RoadmapFilterControls({
       </Select>
 
       <Select value={groupBy} onValueChange={handleGroupByChange}>
-        <SelectTrigger width="md" data-testid={TEST_IDS.ROADMAP.GROUP_BY_SELECT}>
+        <SelectTrigger width={groupByWidth} data-testid={TEST_IDS.ROADMAP.GROUP_BY_SELECT}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -219,11 +242,12 @@ function RoadmapFilterControls({
           ))}
         </SelectContent>
       </Select>
-    </>
+    </Flex>
   );
 }
 
 function RoadmapDisplayControls({
+  isNarrowViewport,
   onTimelineZoomChange,
   onToggleDependencies,
   onViewModeChange,
@@ -231,6 +255,8 @@ function RoadmapDisplayControls({
   timelineZoom,
   viewMode,
 }: RoadmapDisplayControlsProps) {
+  const segmentedControlWidth = isNarrowViewport ? "fill" : "auto";
+
   const handleViewModeChange = (value: string) => {
     if (isViewMode(value)) {
       onViewModeChange(value);
@@ -244,8 +270,18 @@ function RoadmapDisplayControls({
   };
 
   return (
-    <>
-      <SegmentedControl value={viewMode} onValueChange={handleViewModeChange} size="sm">
+    <Flex
+      direction="column"
+      gap="sm"
+      className="w-full sm:w-auto sm:flex-row sm:flex-wrap sm:items-center"
+    >
+      <SegmentedControl
+        value={viewMode}
+        onValueChange={handleViewModeChange}
+        size="sm"
+        width={segmentedControlWidth}
+        className="w-full sm:w-auto"
+      >
         {VIEW_MODE_OPTIONS.map((option) => (
           <SegmentedControlItem key={option.value} value={option.value}>
             {option.label}
@@ -253,7 +289,13 @@ function RoadmapDisplayControls({
         ))}
       </SegmentedControl>
 
-      <SegmentedControl value={timelineZoom} onValueChange={handleTimelineZoomChange} size="sm">
+      <SegmentedControl
+        value={timelineZoom}
+        onValueChange={handleTimelineZoomChange}
+        size="sm"
+        width={segmentedControlWidth}
+        className="w-full sm:w-auto"
+      >
         {TIMELINE_ZOOM_OPTIONS.map((option) => (
           <SegmentedControlItem key={option.value} value={option.value}>
             {option.label}
@@ -266,11 +308,12 @@ function RoadmapDisplayControls({
         size="sm"
         onClick={onToggleDependencies}
         title={showDependencies ? "Hide dependency lines" : "Show dependency lines"}
+        className="w-full sm:w-auto"
         data-testid={TEST_IDS.ROADMAP.DEPENDENCIES_TOGGLE}
       >
         <Icon icon={LinkIcon} size="sm" />
       </Button>
-    </>
+    </Flex>
   );
 }
 
@@ -298,9 +341,17 @@ export function RoadmapHeaderControls({
   timelineZoom,
   viewMode,
 }: RoadmapHeaderControlsProps) {
+  const isNarrowViewport = useMediaQuery("(max-width: 639px)");
+
   return (
-    <Card recipe="controlRail" padding="xs" radius="full">
-      <Flex align="center" gap="sm" wrap>
+    <Card
+      recipe="controlRail"
+      padding="xs"
+      radius={isNarrowViewport ? "lg" : "full"}
+      className="w-full sm:w-auto"
+      data-testid={TEST_IDS.ROADMAP.HEADER_CONTROLS}
+    >
+      <Flex direction="column" gap="sm" className="w-full sm:flex-row sm:flex-wrap sm:items-center">
         <RoadmapWindowControls
           fitTimelineWindow={fitTimelineWindow}
           nextWindowLabel={nextWindowLabel}
@@ -314,6 +365,7 @@ export function RoadmapHeaderControls({
           epics={epics}
           filterEpic={filterEpic}
           groupBy={groupBy}
+          isNarrowViewport={isNarrowViewport}
           onFilterEpicChange={onFilterEpicChange}
           onGroupByChange={onGroupByChange}
           onTimelineSpanChange={onTimelineSpanChange}
@@ -321,6 +373,7 @@ export function RoadmapHeaderControls({
           timelineSpan={timelineSpan}
         />
         <RoadmapDisplayControls
+          isNarrowViewport={isNarrowViewport}
           onTimelineZoomChange={onTimelineZoomChange}
           onToggleDependencies={onToggleDependencies}
           onViewModeChange={onViewModeChange}

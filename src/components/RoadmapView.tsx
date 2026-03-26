@@ -478,7 +478,18 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       <div className="h-full" data-testid={TEST_IDS.ROADMAP.CONTENT}>
         <Flex direction="column" className="h-full">
           {/* Header */}
-          <Flex align="center" justify="between" mb="lg" className="shrink-0">
+          <Flex
+            direction="column"
+            directionSm="row"
+            align="start"
+            alignSm="center"
+            justifySm="between"
+            gap="sm"
+            gapSm="lg"
+            mb="lg"
+            className="shrink-0"
+            data-testid={TEST_IDS.ROADMAP.HEADER}
+          >
             <Stack gap="xs">
               <Typography variant="h2">Roadmap</Typography>
               <Typography variant="small" color="secondary">

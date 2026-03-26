@@ -377,6 +377,10 @@ export const TEST_IDS = {
 
   ROADMAP: {
     /** @see src/components/RoadmapView.tsx */
+    HEADER: "roadmap-header",
+    /** @see src/components/Roadmap/RoadmapHeaderControls.tsx */
+    HEADER_CONTROLS: "roadmap-header-controls",
+    /** @see src/components/RoadmapView.tsx */
     CONTENT: "roadmap-content",
     /** @see src/components/RoadmapView.tsx */
     TIMELINE_CANVAS: "roadmap-timeline-canvas",

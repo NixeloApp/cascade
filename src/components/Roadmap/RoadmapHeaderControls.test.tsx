@@ -2,6 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { fireEvent, render, screen } from "@/test/custom-render";
 import { RoadmapHeaderControls } from "./RoadmapHeaderControls";
 
@@ -10,6 +11,14 @@ const SelectContext = createContext<{
   onValueChange?: (value: string) => void;
   value?: string;
 }>({});
+
+const selectWidthClasses = {
+  full: "w-full",
+  xs: "w-24",
+  sm: "w-36",
+  md: "w-48",
+  lg: "w-56",
+} as const;
 
 const SegmentedControlContext = createContext<{
   onValueChange?: (value: string) => void;
@@ -35,12 +44,20 @@ vi.mock("../ui/Select", () => ({
   SelectTrigger: ({
     children,
     className,
+    width,
     ...props
   }: {
     children: ReactNode;
     className?: string;
+    width?: keyof typeof selectWidthClasses;
   } & Record<string, unknown>) => (
-    <button type="button" className={className} {...props}>
+    <button
+      type="button"
+      className={[width ? selectWidthClasses[width] : undefined, className]
+        .filter(Boolean)
+        .join(" ")}
+      {...props}
+    >
       {children}
     </button>
   ),
@@ -160,5 +177,49 @@ describe("RoadmapHeaderControls", () => {
     expect(props.onViewModeChange).toHaveBeenCalledWith("weeks");
     expect(props.onTimelineZoomChange).toHaveBeenCalledWith("expanded");
     expect(props.onFitToIssues).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the controls full-width and stacked cleanly on narrow layouts", () => {
+    const props = createProps();
+    const originalMatchMedia = window.matchMedia;
+
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: (query: string) => ({
+        matches: query === "(max-width: 639px)",
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }),
+    });
+
+    try {
+      render(<RoadmapHeaderControls {...props} />);
+
+      expect(screen.getByTestId(TEST_IDS.ROADMAP.HEADER_CONTROLS)).toHaveClass(
+        "w-full",
+        "sm:w-auto",
+      );
+      expect(screen.getByTestId(TEST_IDS.ROADMAP.RANGE_LABEL)).toHaveClass(
+        "w-full",
+        "sm:w-auto",
+        "sm:min-w-36",
+      );
+      expect(screen.getByTestId(TEST_IDS.ROADMAP.TIMELINE_SPAN_SELECT)).toHaveClass("w-full");
+      expect(screen.getByTestId(TEST_IDS.ROADMAP.GROUP_BY_SELECT)).toHaveClass("w-full");
+      expect(screen.getByTestId(TEST_IDS.ROADMAP.DEPENDENCIES_TOGGLE)).toHaveClass(
+        "w-full",
+        "sm:w-auto",
+      );
+    } finally {
+      Object.defineProperty(window, "matchMedia", {
+        configurable: true,
+        value: originalMatchMedia,
+      });
+    }
   });
 });
