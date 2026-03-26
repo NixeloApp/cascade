@@ -19,13 +19,7 @@
 
 ## Priority Order
 
-### Tier 1: Highest cleanup value
-
-- [ ] `src/components/RoadmapView.tsx`
-  Current shape: ~791 lines, ~15 `className=` sites.
-  Cleanup target: reduce oversized shell logic, separate timeline chrome from issue-row rendering, and remove repeated roadmap-specific structural wrappers before considering any new primitive.
-
-### Tier 2: Dense repeated local composition
+### Tier 1: Dense repeated local composition
 
 - [ ] `src/components/Documents/DocumentTree.tsx`
   Current shape: ~422 lines, ~21 `className=` sites.
@@ -37,7 +31,7 @@
   Current shape: ~565 lines, ~19 `className=` sites.
   Cleanup target: remove card-on-card drift and normalize repeated metadata/action row composition.
 
-### Tier 3: Smaller follow-up passes
+### Tier 2: Smaller follow-up passes
 
 - [ ] `src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx`
   Current shape: ~272 lines, ~16 `className=` sites.

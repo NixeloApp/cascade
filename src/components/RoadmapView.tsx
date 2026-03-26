@@ -10,23 +10,21 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { List, type ListImperativeAPI } from "react-window";
+import { useEffect, useRef, useState } from "react";
+import type { ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
-import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Flex } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
-import { CalendarDays } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { IssueDetailViewer } from "./IssueDetailViewer";
-import { RoadmapDependencyPanel, renderDependencyLine } from "./Roadmap/RoadmapDependencyPanel";
+import { RoadmapDependencyPanel } from "./Roadmap/RoadmapDependencyPanel";
 import { RoadmapHeaderControls } from "./Roadmap/RoadmapHeaderControls";
 import { RoadmapLoadingState } from "./Roadmap/RoadmapLoadingState";
-import { RoadmapGroupRow, RoadmapIssueRow } from "./Roadmap/RoadmapRows";
-import { renderRoadmapTodayMarker } from "./Roadmap/RoadmapTodayMarker";
-import { Card, getCardRecipeClassName } from "./ui/Card";
-import { EmptyState } from "./ui/EmptyState";
-import { Grid } from "./ui/Grid";
+import {
+  type RoadmapRowController,
+  RoadmapTimelineSurface,
+} from "./Roadmap/RoadmapTimelineSurface";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -49,23 +47,15 @@ declare global {
 }
 
 import type {
-  DependencyLine,
   DragState,
   GroupBy,
   ResizeState,
   RoadmapIssue,
-  RoadmapIssueRowProps,
-  TimelineHeaderCell,
-  TimelineRow,
   TimelineSpan,
   TimelineZoom,
   ViewMode,
 } from "./Roadmap/types";
-import {
-  ISSUE_INFO_COLUMN_WIDTH,
-  ROADMAP_ROW_HEIGHT,
-  TIMELINE_BUCKET_WIDTH,
-} from "./Roadmap/types";
+import { TIMELINE_BUCKET_WIDTH } from "./Roadmap/types";
 import {
   buildDragPatch,
   buildIssueLookupMap,
@@ -77,7 +67,6 @@ import {
   buildWeekHeaderCells,
   computeDependencyLines,
   getAvailableRoadmapDependencyTargets,
-  getStickyHeaderColumnClassName,
   getTimelineFitWindow,
   getTimelineLayoutWidth,
   getTimelineRangeLabel,
@@ -87,36 +76,6 @@ import {
 } from "./Roadmap/utils";
 
 /** Build a map of issue ID to issue for O(1) lookups */
-
-type RoadmapRowData = {
-  rows: TimelineRow[];
-  activeIssueId: Id<"issues"> | null;
-};
-
-type RoadmapRowController = {
-  canEdit: boolean;
-  draggingIssueId?: Id<"issues">;
-  getPositionOnTimeline: (date: number) => number;
-  onBarDragStart: RoadmapIssueRowProps["onBarDragStart"];
-  onOpenIssue: (issueId: Id<"issues">) => void;
-  onResizeStart: RoadmapIssueRowProps["onResizeStart"];
-  onToggleChildren: (issueId: Id<"issues">) => void;
-  onToggleGroup: (groupKey: string) => void;
-  resizingIssueId?: Id<"issues">;
-  roadmapIssueById: Map<string, RoadmapIssue>;
-  timelineRef: React.RefObject<HTMLDivElement | null>;
-};
-
-const RoadmapRowControllerContext = createContext<RoadmapRowController | null>(null);
-
-function useRoadmapRowController() {
-  const controller = useContext(RoadmapRowControllerContext);
-  if (controller === null) {
-    throw new Error("Roadmap row controller is missing");
-  }
-
-  return controller;
-}
 
 function consumeRoadmapE2ERequestedState(): RoadmapE2EState | null {
   if (typeof window === "undefined") {
@@ -166,199 +125,6 @@ function getPreferredRoadmapIssueId(
 
   const linkedIssue = issues.find((issue) => issueIdsWithLinks.has(issue._id.toString()));
   return linkedIssue?._id ?? issues[0]?._id ?? null;
-}
-
-function RoadmapVirtualizedRow({
-  rows,
-  activeIssueId,
-  index,
-  style,
-}: RoadmapRowData & {
-  index: number;
-  style: React.CSSProperties;
-}) {
-  const {
-    canEdit,
-    draggingIssueId,
-    getPositionOnTimeline,
-    onBarDragStart,
-    onOpenIssue,
-    onResizeStart,
-    onToggleChildren,
-    onToggleGroup,
-    resizingIssueId,
-    roadmapIssueById,
-    timelineRef,
-  } = useRoadmapRowController();
-  const row = rows[index];
-  if (!row) return null;
-
-  if (row.type === "group") {
-    return (
-      <RoadmapGroupRow
-        getPositionOnTimeline={getPositionOnTimeline}
-        group={row.group}
-        onToggle={onToggleGroup}
-        style={style}
-      />
-    );
-  }
-
-  return (
-    <RoadmapIssueRow
-      canEdit={canEdit}
-      childCount={row.childCount}
-      childrenCollapsed={row.childrenCollapsed}
-      depth={row.depth}
-      draggingIssueId={draggingIssueId}
-      getPositionOnTimeline={getPositionOnTimeline}
-      hasChildren={row.hasChildren}
-      issue={row.issue}
-      onBarDragStart={onBarDragStart}
-      onOpenIssue={onOpenIssue}
-      onToggleChildren={onToggleChildren}
-      onResizeStart={onResizeStart}
-      resizingIssueId={resizingIssueId}
-      selected={row.issue._id === activeIssueId}
-      summaryCompletedCount={row.summaryCompletedCount}
-      summaryDueDate={row.summaryDueDate}
-      summaryStartDate={row.summaryStartDate}
-      style={style}
-      timelineRef={timelineRef}
-      parentIssue={
-        row.parentIssueId ? (roadmapIssueById.get(row.parentIssueId.toString()) ?? null) : null
-      }
-    />
-  );
-}
-
-function RoadmapTimelineContainer({
-  activeIssueId,
-  dependencyLines,
-  filteredIssues,
-  listRef,
-  roadmapRowController,
-  showDependencies,
-  timelineHeaderCells,
-  timelineLayoutWidth,
-  timelineRows,
-  timelineBucketWidth,
-  todayMarkerOffsetPx,
-}: {
-  activeIssueId: Id<"issues"> | null;
-  dependencyLines: DependencyLine[];
-  filteredIssues: RoadmapIssue[];
-  listRef: React.RefObject<ListImperativeAPI | null>;
-  roadmapRowController: RoadmapRowController;
-  showDependencies: boolean;
-  timelineHeaderCells: TimelineHeaderCell[];
-  timelineLayoutWidth: number;
-  timelineRows: TimelineRow[];
-  timelineBucketWidth: number;
-  todayMarkerOffsetPx: number | null;
-}) {
-  return (
-    <Card variant="default" padding="none" className="flex-1 overflow-hidden">
-      <FlexItem flex="1">
-        {filteredIssues.length === 0 ? (
-          <EmptyState
-            icon={CalendarDays}
-            title="Roadmap is ready for planning"
-            description="No issues with due dates to display yet. Add due dates in your board or backlog to populate this timeline view."
-            className="m-6 min-h-96 max-w-none border-dashed"
-            data-testid={TEST_IDS.ROADMAP.EMPTY_STATE}
-          />
-        ) : (
-          <div className="h-full overflow-x-auto">
-            <div
-              data-testid={TEST_IDS.ROADMAP.TIMELINE_CANVAS}
-              className="min-w-full"
-              style={{ width: `${timelineLayoutWidth}px` }}
-            >
-              <div className={getCardRecipeClassName("roadmapTimelineHeaderStrip")}>
-                <div className="relative">
-                  {renderRoadmapTodayMarker(todayMarkerOffsetPx, "header")}
-                  <Flex>
-                    <FlexItem
-                      shrink={false}
-                      className={getStickyHeaderColumnClassName()}
-                      data-testid={TEST_IDS.ROADMAP.ISSUE_HEADER}
-                    >
-                      <Typography variant="label">Issue</Typography>
-                    </FlexItem>
-                    <FlexItem flex="1">
-                      <Grid
-                        gap="none"
-                        templateColumns={`repeat(${timelineHeaderCells.length}, minmax(${timelineBucketWidth}px, 1fr))`}
-                      >
-                        {timelineHeaderCells.map((headerCell) => (
-                          <div
-                            key={headerCell.key}
-                            className={getCardRecipeClassName("roadmapMonthHeaderCell")}
-                          >
-                            <Typography variant="label" className="text-center">
-                              {headerCell.label}
-                            </Typography>
-                          </div>
-                        ))}
-                      </Grid>
-                    </FlexItem>
-                  </Flex>
-                </div>
-              </div>
-
-              <div className="relative">
-                {renderRoadmapTodayMarker(todayMarkerOffsetPx, "body")}
-                <RoadmapRowControllerContext.Provider value={roadmapRowController}>
-                  <List<RoadmapRowData>
-                    listRef={listRef}
-                    style={{ height: 600, width: "100%" }}
-                    rowCount={timelineRows.length}
-                    rowHeight={ROADMAP_ROW_HEIGHT}
-                    rowProps={{
-                      rows: timelineRows,
-                      activeIssueId,
-                    }}
-                    rowComponent={RoadmapVirtualizedRow}
-                  />
-                </RoadmapRowControllerContext.Provider>
-
-                {showDependencies && dependencyLines.length > 0 ? (
-                  <svg
-                    data-testid={TEST_IDS.ROADMAP.DEPENDENCY_LINES}
-                    className="pointer-events-none absolute top-0"
-                    style={{
-                      left: ISSUE_INFO_COLUMN_WIDTH,
-                      width: `calc(100% - ${ISSUE_INFO_COLUMN_WIDTH}px)`,
-                      height: 600,
-                    }}
-                    role="img"
-                    aria-label="Issue dependency lines"
-                  >
-                    <defs>
-                      <marker
-                        id="arrowhead"
-                        markerWidth="6"
-                        markerHeight="4"
-                        refX="5"
-                        refY="2"
-                        orient="auto"
-                      >
-                        <polygon points="0 0, 6 2, 0 4" fill="var(--color-status-warning)" />
-                      </marker>
-                    </defs>
-                    {dependencyLines.map((line) =>
-                      renderDependencyLine(line, activeIssueId?.toString() ?? null),
-                    )}
-                  </svg>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        )}
-      </FlexItem>
-    </Card>
-  );
 }
 
 function useRoadmapTimelineInteractions({
@@ -757,7 +523,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
             />
           ) : null}
 
-          <RoadmapTimelineContainer
+          <RoadmapTimelineSurface
             activeIssueId={activeRoadmapIssueId}
             dependencyLines={dependencyLines}
             filteredIssues={filteredIssues}
