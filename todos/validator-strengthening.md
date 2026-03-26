@@ -12,17 +12,7 @@
 
 ## Remaining
 
-### 1. Tighten unbounded `.collect()` detection
-
-- [ ] Replace the current local-context heuristic in `scripts/validate/check-queries.js` with a stricter model for app code.
-- [ ] Target behavior:
-  - default: block plain `.collect()` in normal query/mutation code
-  - allow explicit bounded helper/wrapper patterns
-  - allow clearly named cleanup/batch-processing flows only when the exception is obvious in code, not just because a nearby `.take()` happened elsewhere in the same snippet
-- [ ] Why this matters:
-  the current validator still relies on nearby-text checks and can be fooled by context that is not actually bounding the `collect()`.
-
-### 2. Lifecycle timestamp ownership validator
+### 1. Lifecycle timestamp ownership validator
 
 - [ ] Add a validator for raw lifecycle timestamp bundles in Convex write paths.
 - [ ] Scope:
@@ -37,7 +27,6 @@
 
 ## Execution Order
 
-- [ ] Tighten `.collect()` first because the validator already exists and needs sharper ownership rules rather than a new framework.
 - [ ] Add the lifecycle timestamp validator after the ownership helpers are explicit enough to enforce without noise.
 
 ## Done Criteria

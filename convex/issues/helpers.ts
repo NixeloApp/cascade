@@ -139,6 +139,7 @@ async function scanHighestIssueNumber(
   // Must scan all issues — the by_project index sorts by creation time,
   // not by key number. Issues created out of order (e.g., imports) would
   // cause .order("desc").first() to return a lower-numbered key.
+  // @convex-validation-ignore UNBOUNDED_COLLECT: bootstrap scan must inspect every legacy issue key once.
   const issues = await ctx.db
     .query("issues")
     .withIndex("by_project", (q) => q.eq("projectId", projectId))
