@@ -21,9 +21,6 @@
 
 ### Tier 1: Dense repeated local composition
 
-- [ ] `src/components/Landing/ProductShowcase.tsx`
-  Current shape: ~362 lines, ~22 `className=` sites.
-  Cleanup target: remove repeated presentation wrappers and consolidate repeated showcase card anatomy.
 - [ ] `src/components/IssueDetail/IssueCard.tsx`
   Current shape: ~565 lines, ~19 `className=` sites.
   Cleanup target: remove card-on-card drift and normalize repeated metadata/action row composition.
