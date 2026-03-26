@@ -22,13 +22,12 @@ export function useOfflineAddComment() {
     attachments?: Id<"_storage">[],
   ): Promise<{ queued: boolean; commentId?: Id<"issueComments"> }> => {
     const clientRequestId = createCommentClientRequestId();
-    const queueArgs = { issueId, content, mentions, clientRequestId };
+    const queueArgs = { issueId, content, mentions, attachments, clientRequestId };
 
     if (!isOnline) {
       if (!userId) {
         throw new Error("Cannot queue offline mutation without an authenticated user");
       }
-      // Attachments are not supported offline (can't queue file uploads)
       await queueAddComment(queueArgs, userId);
       showInfo("Comment queued — will post when you reconnect");
       return { queued: true };

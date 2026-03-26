@@ -78,6 +78,7 @@ const PERMANENT_FAILURE_PATTERNS = [
   /is deleted/i,
   /revoked/i,
   /unsupported offline mutation/i,
+  /clientrequestid was already used for a different comment/i,
 ] as const;
 
 const offlineQueueListeners = new Set<OfflineQueueListener>();
@@ -136,6 +137,9 @@ export function getFailureReason(error: unknown): string {
   }
   if (/unsupported offline mutation/i.test(message)) {
     return "This action type is not supported for offline replay";
+  }
+  if (/clientrequestid was already used for a different comment/i.test(message)) {
+    return "This queued comment conflicts with an already-submitted request";
   }
 
   return message;

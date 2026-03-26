@@ -1822,7 +1822,9 @@ function RecordingDetailPanel({
       {isWideDetailLayout || !recording.summary ? (
         <>
           <SummarySections recording={recording} projects={projects} />
-          {recording.summary && <ParticipantsSection participants={recording.participants} />}
+          {recording.participants.length > 0 && (
+            <ParticipantsSection participants={recording.participants} />
+          )}
         </>
       ) : (
         <FocusedMeetingDetailSections recording={recording} projects={projects} />

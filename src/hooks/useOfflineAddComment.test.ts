@@ -79,6 +79,7 @@ describe("useOfflineAddComment", () => {
       issueId: "issue-123",
       content: "Great work!",
       mentions: undefined,
+      attachments: undefined,
       clientRequestId: "comment-request-123",
     });
     expect(mockQueueAddComment).not.toHaveBeenCalled();
@@ -101,6 +102,7 @@ describe("useOfflineAddComment", () => {
         issueId: "issue-456",
         content: "Will fix this",
         mentions: undefined,
+        attachments: undefined,
         clientRequestId: "comment-request-123",
       },
       "test-user-id",
@@ -111,6 +113,7 @@ describe("useOfflineAddComment", () => {
   });
 
   it("queues the same client request ID when a live submit drops offline mid-request", async () => {
+    const attachmentIds = ["storage-123" as Id<"_storage">];
     mockMutation = Object.assign(
       vi.fn(() => Promise.reject(new Error("Network dropped during submit"))),
       { withOptimisticUpdate: () => mockMutation },
@@ -130,7 +133,12 @@ describe("useOfflineAddComment", () => {
     let response: Awaited<ReturnType<typeof result.current.addComment>> | undefined;
 
     await act(async () => {
-      response = await result.current.addComment("issue-987" as Id<"issues">, "Retry me");
+      response = await result.current.addComment(
+        "issue-987" as Id<"issues">,
+        "Retry me",
+        undefined,
+        attachmentIds,
+      );
     });
 
     expect(response).toEqual({ queued: true });
@@ -138,7 +146,7 @@ describe("useOfflineAddComment", () => {
       issueId: "issue-987",
       content: "Retry me",
       mentions: undefined,
-      attachments: undefined,
+      attachments: attachmentIds,
       clientRequestId: "comment-request-123",
     });
     expect(mockQueueAddComment).toHaveBeenCalledWith(
@@ -146,6 +154,7 @@ describe("useOfflineAddComment", () => {
         issueId: "issue-987",
         content: "Retry me",
         mentions: undefined,
+        attachments: attachmentIds,
         clientRequestId: "comment-request-123",
       },
       "test-user-id",

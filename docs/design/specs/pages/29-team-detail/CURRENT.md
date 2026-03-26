@@ -79,30 +79,26 @@ The team detail page is the working surface for a single team within a workspace
 
 | Viewport | Theme | Tab | Preview |
 |----------|-------|-----|---------|
-| Desktop | Dark | Board | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | Board | ![](screenshots/desktop-light.png) |
-| Tablet | Light | Board | ![](screenshots/tablet-light.png) |
-| Mobile | Light | Board | ![](screenshots/mobile-light.png) |
-| Desktop | Dark | Board | ![](screenshots/desktop-dark-board.png) |
-| Desktop | Light | Board | ![](screenshots/desktop-light-board.png) |
-| Tablet | Light | Board | ![](screenshots/tablet-light-board.png) |
-| Mobile | Light | Board | ![](screenshots/mobile-light-board.png) |
-| Desktop | Dark | Calendar | ![](screenshots/desktop-dark-calendar.png) |
-| Desktop | Light | Calendar | ![](screenshots/desktop-light-calendar.png) |
-| Tablet | Light | Calendar | ![](screenshots/tablet-light-calendar.png) |
-| Mobile | Light | Calendar | ![](screenshots/mobile-light-calendar.png) |
-| Desktop | Dark | Wiki | ![](screenshots/desktop-dark-wiki.png) |
-| Desktop | Light | Wiki | ![](screenshots/desktop-light-wiki.png) |
-| Tablet | Light | Wiki | ![](screenshots/tablet-light-wiki.png) |
-| Mobile | Light | Wiki | ![](screenshots/mobile-light-wiki.png) |
-| Desktop | Dark | Settings | ![](screenshots/desktop-dark-settings.png) |
-| Desktop | Light | Settings | ![](screenshots/desktop-light-settings.png) |
-| Tablet | Light | Settings | ![](screenshots/tablet-light-settings.png) |
-| Mobile | Light | Settings | ![](screenshots/mobile-light-settings.png) |
-| Desktop | Dark | Project tree | ![](screenshots/desktop-dark-project-tree.png) |
-| Desktop | Light | Project tree | ![](screenshots/desktop-light-project-tree.png) |
-| Tablet | Light | Project tree | ![](screenshots/tablet-light-project-tree.png) |
-| Mobile | Light | Project tree | ![](screenshots/mobile-light-project-tree.png) |
+| Desktop | Dark | Board | ![Team detail board - desktop dark](screenshots/desktop-dark-board.png) |
+| Desktop | Light | Board | ![Team detail board - desktop light](screenshots/desktop-light-board.png) |
+| Tablet | Light | Board | ![Team detail board - tablet light](screenshots/tablet-light-board.png) |
+| Mobile | Light | Board | ![Team detail board - mobile light](screenshots/mobile-light-board.png) |
+| Desktop | Dark | Calendar | ![Team detail calendar - desktop dark](screenshots/desktop-dark-calendar.png) |
+| Desktop | Light | Calendar | ![Team detail calendar - desktop light](screenshots/desktop-light-calendar.png) |
+| Tablet | Light | Calendar | ![Team detail calendar - tablet light](screenshots/tablet-light-calendar.png) |
+| Mobile | Light | Calendar | ![Team detail calendar - mobile light](screenshots/mobile-light-calendar.png) |
+| Desktop | Dark | Wiki | ![Team detail wiki - desktop dark](screenshots/desktop-dark-wiki.png) |
+| Desktop | Light | Wiki | ![Team detail wiki - desktop light](screenshots/desktop-light-wiki.png) |
+| Tablet | Light | Wiki | ![Team detail wiki - tablet light](screenshots/tablet-light-wiki.png) |
+| Mobile | Light | Wiki | ![Team detail wiki - mobile light](screenshots/mobile-light-wiki.png) |
+| Desktop | Dark | Settings | ![Team detail settings - desktop dark](screenshots/desktop-dark-settings.png) |
+| Desktop | Light | Settings | ![Team detail settings - desktop light](screenshots/desktop-light-settings.png) |
+| Tablet | Light | Settings | ![Team detail settings - tablet light](screenshots/tablet-light-settings.png) |
+| Mobile | Light | Settings | ![Team detail settings - mobile light](screenshots/mobile-light-settings.png) |
+| Desktop | Dark | Project tree | ![Team detail project tree - desktop dark](screenshots/desktop-dark-project-tree.png) |
+| Desktop | Light | Project tree | ![Team detail project tree - desktop light](screenshots/desktop-light-project-tree.png) |
+| Tablet | Light | Project tree | ![Team detail project tree - tablet light](screenshots/tablet-light-project-tree.png) |
+| Mobile | Light | Project tree | ![Team detail project tree - mobile light](screenshots/mobile-light-project-tree.png) |
 
 ---
 

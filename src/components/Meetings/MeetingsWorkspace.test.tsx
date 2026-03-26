@@ -893,6 +893,9 @@ describe("MeetingsWorkspace", () => {
     expect(screen.getByTestId(TEST_IDS.MEETINGS.SUMMARY_PROCESSING_STATE)).toBeInTheDocument();
     expect(screen.getByText("Summary is still being generated")).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Transcript" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Participants" })).toBeInTheDocument();
+    expect(screen.getAllByText("Alex").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Priya").length).toBeGreaterThan(0);
     expect(
       screen.getByText("Thanks everyone for joining the weekly product review."),
     ).toBeInTheDocument();

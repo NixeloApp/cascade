@@ -35,8 +35,9 @@ export function isAddCommentArgs(value: unknown): value is AddCommentArgs {
     typeof obj.issueId === "string" &&
     typeof obj.content === "string" &&
     (obj.mentions === undefined || isStringArray(obj.mentions)) &&
-    obj.attachments === undefined &&
-    (obj.clientRequestId === undefined || typeof obj.clientRequestId === "string")
+    (obj.attachments === undefined || isStringArray(obj.attachments)) &&
+    (obj.clientRequestId === undefined ||
+      (typeof obj.clientRequestId === "string" && obj.clientRequestId.trim().length > 0))
   );
 }
 
@@ -76,11 +77,11 @@ export async function replayAddComment(
   args: Record<string, unknown>,
 ): Promise<void> {
   const validated = validateAddCommentArgs(args);
-  // Skip attachments for offline replay — file uploads can't be queued.
   await client.mutation(api.issues.addComment, {
     issueId: validated.issueId,
     content: validated.content,
     mentions: validated.mentions,
+    attachments: validated.attachments,
     clientRequestId: validated.clientRequestId,
   });
 }

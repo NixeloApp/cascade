@@ -32,6 +32,7 @@ describe("offlineComments", () => {
       issueId: "issue-123",
       content: "Queued comment",
       mentions: ["user-1"],
+      attachments: ["storage-1"],
       clientRequestId: "issue-comment:dedup-1",
     });
 
@@ -39,6 +40,7 @@ describe("offlineComments", () => {
       issueId: "issue-123",
       content: "Queued comment",
       mentions: ["user-1"],
+      attachments: ["storage-1"],
       clientRequestId: "issue-comment:dedup-1",
     });
   });
@@ -53,12 +55,22 @@ describe("offlineComments", () => {
     ).toBeNull();
   });
 
-  it("rejects queued payloads with unsupported attachments", () => {
+  it("rejects queued payloads with malformed attachments", () => {
     expect(
       parseAddCommentArgs({
         issueId: "issue-123",
         content: "Queued comment",
-        attachments: ["storage-1"],
+        attachments: ["storage-1", 7],
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects queued payloads with blank client request IDs", () => {
+    expect(
+      parseAddCommentArgs({
+        issueId: "issue-123",
+        content: "Queued comment",
+        clientRequestId: "   ",
       }),
     ).toBeNull();
   });

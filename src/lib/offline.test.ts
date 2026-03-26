@@ -252,6 +252,12 @@ describe("isPermanentFailure", () => {
     expect(isPermanentFailure(new Error("Validation failed: title required"))).toBe(true);
   });
 
+  it("classifies replay key conflicts as permanent", () => {
+    expect(
+      isPermanentFailure(new Error("clientRequestId was already used for a different comment")),
+    ).toBe(true);
+  });
+
   it("classifies network errors as transient", () => {
     expect(isPermanentFailure(new Error("Failed to fetch"))).toBe(false);
     expect(isPermanentFailure(new Error("Network request failed"))).toBe(false);
@@ -271,6 +277,9 @@ describe("getFailureReason", () => {
     expect(getFailureReason(new Error("Forbidden"))).toBe(
       "You no longer have permission for this action",
     );
+    expect(
+      getFailureReason(new Error("clientRequestId was already used for a different comment")),
+    ).toBe("This queued comment conflicts with an already-submitted request");
   });
 
   it("passes through transient error messages as-is", () => {
