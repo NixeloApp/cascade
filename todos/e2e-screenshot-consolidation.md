@@ -10,6 +10,12 @@
 - [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
 - [ ] PR CI is paying for expensive screenshot recapture work even though local and CI `static` already validate screenshot artifact integrity. We should not keep a second heavyweight pipeline unless it is clearly worth the cost.
 - [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
+- [ ] The current raw-locator baseline proves the screenshot harness is still acting like a parallel framework.
+  Current hotspots:
+  - `e2e/screenshot-lib/filled-states.ts` (`79`)
+  - `e2e/screenshot-lib/readiness.ts` (`64`)
+  - `e2e/screenshot-lib/interactive-captures.ts` (`46`)
+  - `e2e/screenshot-lib/helpers.ts` (`14`)
 
 ## Target Architecture
 
@@ -37,6 +43,7 @@
   - reusable pieces that should become normal E2E/page-object helpers
   - screenshot-only wrappers that should stay thin
   - harness-only complexity that should be deleted
+- [ ] Replace raw locator usage in screenshot helpers with shared page-object helpers or route-specific readiness contracts until the screenshot-specific raw-locator baseline is near zero.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement the same waits already owned by page objects or route-specific E2E utilities.
 - [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
 - [ ] Make screenshot targets reference shared page-object/state helpers instead of bespoke ad hoc logic whenever the same route/state is already covered elsewhere.
@@ -68,7 +75,11 @@
   - E2E owns reusable state setup
   - screenshots consume reusable state setup
   - static validates approved artifacts
-- [ ] Add validator coverage where helpful so screenshot-only helper sprawl cannot quietly grow again.
+- [ ] Add validator coverage so screenshot-only helper sprawl cannot quietly grow again.
+  At minimum:
+  - ratchet screenshot-specific raw locators downward
+  - block new screenshot-only route/state helpers when an E2E/page-object helper already exists
+  - block new production component hooks added only for screenshot capture without a documented exception
 - [ ] Explicitly document that screenshots are not a second E2E framework.
 
 ## Exit Criteria
