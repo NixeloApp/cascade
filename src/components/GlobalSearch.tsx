@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { type ComponentProps, useEffect, useState } from "react";
+import { type ComponentProps, type ReactNode, useEffect, useState } from "react";
 import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -53,6 +53,242 @@ type SearchResult =
       description?: string;
       type: "document";
     };
+
+function SearchRowIconShell({
+  children,
+  className,
+  padding = "none",
+  tone = "default",
+}: {
+  children: ReactNode;
+  className?: string;
+  padding?: ComponentProps<typeof Card>["padding"];
+  tone?: "default" | "muted";
+}) {
+  return (
+    <Card
+      recipe="controlStrip"
+      padding={padding}
+      className={cn(
+        "flex size-9 shrink-0 items-center justify-center",
+        tone === "muted" ? "text-ui-text-tertiary" : undefined,
+        className,
+      )}
+    >
+      {children}
+    </Card>
+  );
+}
+
+function SearchListRow({
+  description,
+  icon,
+  meta,
+  onSelect,
+  trailingAlign = "center",
+  title,
+  trailing,
+  value,
+  testId,
+}: {
+  description?: ReactNode;
+  icon: ReactNode;
+  meta?: ReactNode;
+  onSelect: () => void;
+  trailingAlign?: "start" | "center";
+  title: ReactNode;
+  trailing?: ReactNode;
+  value: string;
+  testId?: string;
+}) {
+  return (
+    <CommandItem
+      value={value}
+      onSelect={onSelect}
+      className="cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
+      data-testid={testId}
+    >
+      <Flex align="start" gap="md" className="w-full">
+        {icon}
+        <FlexItem flex="1" className="min-w-0">
+          {meta ? (
+            <Flex align="center" gap="sm" wrap>
+              {meta}
+            </Flex>
+          ) : null}
+          <Typography variant="label" as="p" className={cn(meta ? "mt-1.5 truncate" : "truncate")}>
+            {title}
+          </Typography>
+          {description ? (
+            <Typography variant={meta ? "meta" : "caption"} className="mt-1 line-clamp-2">
+              {description}
+            </Typography>
+          ) : null}
+        </FlexItem>
+        {trailing ? (
+          <Flex align={trailingAlign} className="self-stretch shrink-0">
+            {trailing}
+          </Flex>
+        ) : null}
+      </Flex>
+    </CommandItem>
+  );
+}
+
+function SearchResultGlyph({ type }: { type: SearchResult["type"] }) {
+  if (type === "issue") {
+    return (
+      <svg aria-hidden="true" className="size-5 text-brand" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          fillRule="evenodd"
+          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+          clipRule="evenodd"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" className="size-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+      <path
+        fillRule="evenodd"
+        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function SearchIntroPanel() {
+  return (
+    <div className="px-2 pt-2">
+      <div className={cn(getCardRecipeClassName("commandIntro"), "p-3")}>
+        <Flex direction="column" gap="md">
+          <div>
+            <Badge variant="brand" shape="pill">
+              Command center
+            </Badge>
+            <Typography variant="h5" className="mt-3">
+              Jump faster across your workspace
+            </Typography>
+            <Typography variant="small" color="secondary" className="mt-2">
+              Search issues and docs as you type, or use the quick actions below to navigate and
+              create without leaving your flow.
+            </Typography>
+          </div>
+          <Flex gap="sm" wrap>
+            <Badge variant="outline" shape="pill">
+              Navigate
+            </Badge>
+            <Badge variant="outline" shape="pill">
+              Create
+            </Badge>
+            <Badge variant="outline" shape="pill">
+              Search with filters
+            </Badge>
+          </Flex>
+        </Flex>
+      </div>
+    </div>
+  );
+}
+
+function SearchInfoPanel({ children }: { children: ReactNode }) {
+  return (
+    <Card
+      variant="ghost"
+      padding="md"
+      radius="none"
+      className="border-t border-ui-border text-center text-ui-text-secondary"
+    >
+      <Flex direction="column" align="center">
+        {children}
+      </Flex>
+    </Card>
+  );
+}
+
+function SearchEmptyState({
+  hasCommandMatches,
+  onOpenAdvancedSearch,
+}: {
+  hasCommandMatches: boolean;
+  onOpenAdvancedSearch: () => void;
+}) {
+  return (
+    <Flex
+      direction="column"
+      align="center"
+      data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
+      className="text-ui-text-secondary"
+    >
+      <div className="p-4">
+        <Flex direction="column" align="center" gap="md">
+          <SearchRowIconShell padding="xs" tone="muted">
+            <Icon icon={Search} size="xl" />
+          </SearchRowIconShell>
+          <Typography variant="label">
+            {hasCommandMatches ? "No issue or document results" : "No results found"}
+          </Typography>
+          <Button variant="ghost" size="sm" onClick={onOpenAdvancedSearch}>
+            Open advanced search
+          </Button>
+        </Flex>
+      </div>
+    </Flex>
+  );
+}
+
+function SearchFooter({
+  onOpenAdvancedSearch,
+  onSearchWithFilters,
+}: {
+  onOpenAdvancedSearch: () => void;
+  onSearchWithFilters: () => void;
+}) {
+  return (
+    <Card
+      variant="ghost"
+      padding="md"
+      radius="none"
+      className="shrink-0 border-t border-ui-border/50 bg-ui-bg-soft/20"
+    >
+      <Stack gap="sm">
+        <Flex align="center" justify="between">
+          <Flex align="center" gap="sm" wrap>
+            <Button
+              chrome="framed"
+              chromeSize="compactPill"
+              onClick={onOpenAdvancedSearch}
+              leftIcon={<Icon icon={Filter} size="sm" />}
+            >
+              Advanced Search
+            </Button>
+            <Button
+              chrome="framed"
+              chromeSize="compactPill"
+              onClick={onSearchWithFilters}
+              leftIcon={<Icon icon={Plus} size="sm" />}
+            >
+              Search with filters
+            </Button>
+          </Flex>
+          <div className="hidden sm:block">
+            <Flex align="center" gap="lg">
+              <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+              <ShortcutHint keys="Enter">Open</ShortcutHint>
+              <ShortcutHint keys="Esc">Close</ShortcutHint>
+            </Flex>
+          </div>
+        </Flex>
+        <Typography variant="meta" className="hidden text-ui-text-tertiary sm:block">
+          Filters: <code>type:bug</code> <code>status:done</code> <code>priority:high</code>{" "}
+          <code>label:frontend</code> <code>@me</code>
+        </Typography>
+      </Stack>
+    </Card>
+  );
+}
 
 function filterCommands(commands: CommandAction[], query: string) {
   const normalizedQuery = query.trim().toLowerCase();
@@ -138,46 +374,33 @@ function getHasMore(
 
 function CommandActionItem({ command, onClose }: { command: CommandAction; onClose: () => void }) {
   return (
-    <CommandItem
+    <SearchListRow
       value={command.id}
       onSelect={() => {
         command.action();
         onClose();
       }}
-      className="cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
-    >
-      <Flex align="start" gap="md" className="w-full">
-        <Card
-          recipe="controlStrip"
-          padding="none"
-          className="flex size-9 shrink-0 items-center justify-center text-ui-text-tertiary"
-        >
+      icon={
+        <SearchRowIconShell tone="muted">
           {command.icon ? (
             <Icon icon={command.icon} size="md" />
           ) : (
             <Icon icon={Command} size="sm" />
           )}
-        </Card>
-        <FlexItem flex="1" className="min-w-0">
-          <Flex align="center" gap="sm" wrap>
-            <Typography variant="label" as="p" className="truncate">
-              {command.label}
-            </Typography>
-            {command.group ? (
-              <Badge variant="outline" shape="pill">
-                {command.group}
-              </Badge>
-            ) : null}
-          </Flex>
-          {command.description ? (
-            <Typography variant="caption" className="mt-1 line-clamp-2">
-              {command.description}
-            </Typography>
-          ) : null}
-        </FlexItem>
-        <Icon icon={ArrowRight} size="sm" tone="tertiary" className="mt-1 shrink-0" />
-      </Flex>
-    </CommandItem>
+        </SearchRowIconShell>
+      }
+      title={command.label}
+      trailingAlign="start"
+      meta={
+        command.group ? (
+          <Badge variant="outline" shape="pill">
+            {command.group}
+          </Badge>
+        ) : undefined
+      }
+      description={command.description}
+      trailing={<Icon icon={ArrowRight} size="sm" tone="tertiary" />}
+    />
   );
 }
 
@@ -189,68 +412,31 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
       : ROUTES.documents.detail.build(orgSlug, result._id);
 
   return (
-    <CommandItem
+    <SearchListRow
       value={result._id}
       onSelect={() => {
         window.location.href = href;
         onClose();
       }}
-      className="cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
-      data-testid={TEST_IDS.SEARCH.RESULT_ITEM}
-    >
-      <Flex align="start" gap="md" className="w-full">
-        <Card
-          recipe="controlStrip"
-          padding="none"
-          className="flex size-9 shrink-0 items-center justify-center"
-        >
+      testId={TEST_IDS.SEARCH.RESULT_ITEM}
+      icon={
+        <SearchRowIconShell>
+          <SearchResultGlyph type={result.type} />
+        </SearchRowIconShell>
+      }
+      meta={
+        <>
           {result.type === "issue" ? (
-            <svg
-              aria-hidden="true"
-              className="size-5 text-brand"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                clipRule="evenodd"
-              />
-            </svg>
-          ) : (
-            <svg
-              aria-hidden="true"
-              className="size-5 text-accent"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-                clipRule="evenodd"
-              />
-            </svg>
-          )}
-        </Card>
-
-        <FlexItem flex="1" className="min-w-0">
-          <Flex align="center" gap="sm" wrap>
-            {result.type === "issue" ? (
-              <Typography variant="inlineCode">{result.key}</Typography>
-            ) : null}
-            <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
-              {result.type}
-            </Badge>
-          </Flex>
-          <Typography variant="label" className="mt-1.5 truncate">
-            {result.title}
-          </Typography>
-          <Typography variant="meta" className="mt-1 line-clamp-2">
-            {result.description || "No description"}
-          </Typography>
-        </FlexItem>
-      </Flex>
-    </CommandItem>
+            <Typography variant="inlineCode">{result.key}</Typography>
+          ) : null}
+          <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
+            {result.type}
+          </Badge>
+        </>
+      }
+      title={result.title}
+      description={result.description || "No description"}
+    />
   );
 }
 
@@ -282,35 +468,7 @@ function SearchListContent({
   if (query.length === 0) {
     return (
       <>
-        <div className="px-2 pt-2">
-          <div className={cn(getCardRecipeClassName("commandIntro"), "p-3")}>
-            <Flex direction="column" gap="md">
-              <div>
-                <Badge variant="brand" shape="pill">
-                  Command center
-                </Badge>
-                <Typography variant="h5" className="mt-3">
-                  Jump faster across your workspace
-                </Typography>
-                <Typography variant="small" color="secondary" className="mt-2">
-                  Search issues and docs as you type, or use the quick actions below to navigate and
-                  create without leaving your flow.
-                </Typography>
-              </div>
-              <Flex gap="sm" wrap>
-                <Badge variant="outline" shape="pill">
-                  Navigate
-                </Badge>
-                <Badge variant="outline" shape="pill">
-                  Create
-                </Badge>
-                <Badge variant="outline" shape="pill">
-                  Search with filters
-                </Badge>
-              </Flex>
-            </Flex>
-          </div>
-        </div>
+        <SearchIntroPanel />
 
         {commandGroupEntries.map(([group, commands]) => (
           <CommandGroup key={group} heading={group}>
@@ -320,18 +478,11 @@ function SearchListContent({
           </CommandGroup>
         ))}
 
-        <Card
-          variant="ghost"
-          padding="md"
-          radius="none"
-          className="border-t border-ui-border text-center text-ui-text-secondary"
-        >
-          <Flex direction="column" align="center">
-            <Typography variant="small">
-              Search across issues and docs, or jump straight into common actions.
-            </Typography>
-          </Flex>
-        </Card>
+        <SearchInfoPanel>
+          <Typography variant="small">
+            Search across issues and docs, or jump straight into common actions.
+          </Typography>
+        </SearchInfoPanel>
       </>
     );
   }
@@ -346,16 +497,17 @@ function SearchListContent({
             ))}
           </CommandGroup>
         ))}
-        <Typography
-          variant="small"
-          color="secondary"
-          className="px-4 py-5 text-center"
-          data-testid={TEST_IDS.SEARCH.MIN_QUERY_MESSAGE}
-        >
-          {hasShortcuts
-            ? "Add at least 2 non-shortcut characters to search issues and docs"
-            : "Type at least 2 characters to search issues and docs"}
-        </Typography>
+        <SearchInfoPanel>
+          <Typography
+            variant="small"
+            color="secondary"
+            data-testid={TEST_IDS.SEARCH.MIN_QUERY_MESSAGE}
+          >
+            {hasShortcuts
+              ? "Add at least 2 non-shortcut characters to search issues and docs"
+              : "Type at least 2 characters to search issues and docs"}
+          </Typography>
+        </SearchInfoPanel>
       </>
     );
   }
@@ -368,9 +520,9 @@ function SearchListContent({
         className="text-ui-text-secondary"
         data-testid={TEST_IDS.SEARCH.LOADING_STATE}
       >
-        <Card variant="ghost" padding="lg">
+        <SearchInfoPanel>
           <LoadingSpinner size="md" variant="brand" message="Searching..." />
-        </Card>
+        </SearchInfoPanel>
       </Flex>
     );
   }
@@ -389,26 +541,10 @@ function SearchListContent({
       ))}
 
       {!hasSearchMatches ? (
-        <Flex
-          direction="column"
-          align="center"
-          data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
-          className="text-ui-text-secondary"
-        >
-          <div className="p-4">
-            <Flex direction="column" align="center" gap="md">
-              <div className={cn(getCardRecipeClassName("controlStrip"), "p-2")}>
-                <Icon icon={Search} size="xl" />
-              </div>
-              <Typography variant="label">
-                {hasCommandMatches ? "No issue or document results" : "No results found"}
-              </Typography>
-              <Button variant="ghost" size="sm" onClick={onOpenAdvancedSearch}>
-                Open advanced search
-              </Button>
-            </Flex>
-          </div>
-        </Flex>
+        <SearchEmptyState
+          hasCommandMatches={hasCommandMatches}
+          onOpenAdvancedSearch={onOpenAdvancedSearch}
+        />
       ) : (
         <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP} heading="Results">
           {filteredResults.map((result) => (
@@ -418,11 +554,11 @@ function SearchListContent({
       )}
 
       {hasMore ? (
-        <Card variant="ghost" padding="none" radius="none" className="border-t border-ui-border">
+        <SearchInfoPanel>
           <Button variant="brandSubtle" size="sm" onClick={onLoadMore} className="w-full">
             Load More ({totalCount - filteredResults.length} remaining)
           </Button>
-        </Card>
+        </SearchInfoPanel>
       ) : null}
     </>
   );
@@ -513,13 +649,9 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
       >
         <Flex align="center" gap="sm" className="min-w-0">
-          <Card
-            recipe="controlStrip"
-            padding="none"
-            className="flex size-8 shrink-0 items-center justify-center border-ui-border/60 text-ui-text-tertiary sm:size-7"
-          >
+          <SearchRowIconShell className="border-ui-border/60 sm:size-7" tone="muted">
             <Icon icon={Search} size="sm" />
-          </Card>
+          </SearchRowIconShell>
           <Typography variant="searchTriggerLabel">Search, jump, or create...</Typography>
         </Flex>
         <FlexItem shrink={false} className="hidden sm:block">
@@ -605,46 +737,10 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           </CommandList>
 
           {/* Fixed footer: actions, hints, and shortcuts */}
-          <Card
-            variant="ghost"
-            padding="md"
-            radius="none"
-            className="shrink-0 border-t border-ui-border/50 bg-ui-bg-soft/20"
-          >
-            <Stack gap="sm">
-              <Flex align="center" justify="between">
-                <Flex align="center" gap="sm" wrap>
-                  <Button
-                    chrome="framed"
-                    chromeSize="compactPill"
-                    onClick={handleOpenAdvancedSearch}
-                    leftIcon={<Icon icon={Filter} size="sm" />}
-                  >
-                    Advanced Search
-                  </Button>
-                  <Button
-                    chrome="framed"
-                    chromeSize="compactPill"
-                    onClick={() => setQuery("@")}
-                    leftIcon={<Icon icon={Plus} size="sm" />}
-                  >
-                    Search with filters
-                  </Button>
-                </Flex>
-                <div className="hidden sm:block">
-                  <Flex align="center" gap="lg">
-                    <ShortcutHint keys="up+down">Navigate</ShortcutHint>
-                    <ShortcutHint keys="Enter">Open</ShortcutHint>
-                    <ShortcutHint keys="Esc">Close</ShortcutHint>
-                  </Flex>
-                </div>
-              </Flex>
-              <Typography variant="meta" className="hidden text-ui-text-tertiary sm:block">
-                Filters: <code>type:bug</code> <code>status:done</code> <code>priority:high</code>{" "}
-                <code>label:frontend</code> <code>@me</code>
-              </Typography>
-            </Stack>
-          </Card>
+          <SearchFooter
+            onOpenAdvancedSearch={handleOpenAdvancedSearch}
+            onSearchWithFilters={() => setQuery("@")}
+          />
         </CommandMenu>
       </CommandDialog>
 

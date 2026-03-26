@@ -21,9 +21,6 @@
 
 ### Tier 1: Highest cleanup value
 
-- [ ] `src/components/GlobalSearch.tsx`
-  Current shape: ~662 lines, ~37 `className=` sites.
-  Cleanup target: tighten overlay/list/result-row structure, remove repeated control chrome, and extract only genuinely shared search result anatomy.
 - [ ] `src/components/RoadmapView.tsx`
   Current shape: ~791 lines, ~15 `className=` sites.
   Cleanup target: reduce oversized shell logic, separate timeline chrome from issue-row rendering, and remove repeated roadmap-specific structural wrappers before considering any new primitive.
