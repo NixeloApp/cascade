@@ -9,7 +9,8 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { usePaginatedQuery } from "convex/react";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { CardSection } from "@/components/ui/CardSection";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -19,6 +20,7 @@ import { Separator } from "@/components/ui/Separator";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOfflineAddComment } from "@/hooks/useOfflineAddComment";
+import { useQueuedOfflineIssueComments } from "@/hooks/useOfflineOptimisticState";
 import { formatRelativeTime } from "@/lib/formatting";
 import { MessageCircle, Paperclip, X } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -38,6 +40,18 @@ interface IssueCommentsProps {
 interface PendingAttachment {
   storageId: Id<"_storage">;
   filename: string;
+}
+
+interface CommentThreadRowProps {
+  attachments?: Id<"_storage">[];
+  authorImage?: string | null;
+  authorName?: string | null;
+  content: string;
+  edited?: boolean;
+  footer?: ReactNode;
+  issueId: Id<"issues">;
+  pending?: boolean;
+  timestamp: number;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -103,6 +117,67 @@ async function uploadSingleFile(
   return { storageId, filename: file.name };
 }
 
+function CommentThreadRow({
+  attachments,
+  authorImage,
+  authorName,
+  content,
+  edited = false,
+  footer,
+  issueId,
+  pending = false,
+  timestamp,
+}: CommentThreadRowProps) {
+  return (
+    <Flex gap="md" align="stretch">
+      <Stack align="center" gap="sm">
+        <FlexItem shrink={false}>
+          <Avatar name={authorName} src={authorImage} size="lg" />
+        </FlexItem>
+        <Separator orientation="vertical" className="flex-1" />
+      </Stack>
+
+      <Card recipe="commentThreadItem" padding="md" hoverable={!pending}>
+        <FlexItem flex="1" className="min-w-0">
+          <Stack gap="sm">
+            <Flex align="center" gap="sm" wrap>
+              <Typography variant="label">{authorName || "Unknown User"}</Typography>
+              <Typography as="time" variant="caption" color="tertiary">
+                {pending ? "Queued offline" : formatRelativeTime(timestamp)}
+              </Typography>
+              {edited && !pending ? (
+                <Typography variant="caption" color="tertiary" className="italic">
+                  (edited)
+                </Typography>
+              ) : null}
+              {pending ? <Badge variant="warning">Pending Sync</Badge> : null}
+            </Flex>
+
+            <CommentRenderer content={content} />
+            {(attachments?.length || 0) > 0 ? (
+              <Stack gap="xs">
+                <Typography variant="caption" color="tertiary">
+                  Attachments
+                </Typography>
+                <Stack gap="xs">
+                  {attachments?.map((storageId) => (
+                    <CommentAttachmentLink
+                      key={storageId}
+                      issueId={issueId}
+                      storageId={storageId}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+            ) : null}
+            {footer}
+          </Stack>
+        </FlexItem>
+      </Card>
+    </Flex>
+  );
+}
+
 /** Comment thread for an issue with reactions and mention support. */
 export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   const [newComment, setNewComment] = useState("");
@@ -120,6 +195,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   } = usePaginatedQuery(api.issues.listComments, { issueId }, { initialNumItems: 50 });
 
   const { addComment } = useOfflineAddComment();
+  const queuedComments = useQueuedOfflineIssueComments(issueId, currentUser?._id);
   const { mutate: generateUploadUrl } = useAuthenticatedMutation(api.attachments.generateUploadUrl);
   const { mutate: attachToIssue } = useAuthenticatedMutation(api.attachments.attachToIssue);
   const { mutate: removeAttachment } = useAuthenticatedMutation(api.attachments.removeAttachment);
@@ -201,11 +277,13 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
     );
   }
 
+  const hasComments = (comments?.length ?? 0) > 0 || queuedComments.length > 0;
+
   return (
     <Stack gap="lg">
       {/* Comments List */}
       <Stack gap="md">
-        {comments?.length === 0 ? (
+        {!hasComments ? (
           <Card variant="flat" padding="lg">
             <EmptyState
               icon={MessageCircle}
@@ -218,59 +296,35 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
           </Card>
         ) : (
           <Stack gap="md">
+            {queuedComments.map((comment) => (
+              <CommentThreadRow
+                key={comment.key}
+                authorImage={currentUser?.image}
+                authorName={currentUser?.name || "You"}
+                content={comment.content}
+                issueId={issueId}
+                pending
+                timestamp={comment.timestamp}
+              />
+            ))}
             {comments?.map((comment) => (
-              <Flex key={comment._id} gap="md" align="stretch">
-                <Stack align="center" gap="sm">
-                  <FlexItem shrink={false}>
-                    <Avatar name={comment.author?.name} src={comment.author?.image} size="lg" />
-                  </FlexItem>
-                  <Separator orientation="vertical" className="flex-1" />
-                </Stack>
-
-                <Card recipe="commentThreadItem" padding="md" hoverable>
-                  <FlexItem flex="1" className="min-w-0">
-                    <Stack gap="sm">
-                      <Flex align="center" gap="sm">
-                        <Typography variant="label">
-                          {comment.author?.name || "Unknown User"}
-                        </Typography>
-                        <Typography as="time" variant="caption" color="tertiary">
-                          {formatRelativeTime(comment._creationTime)}
-                        </Typography>
-                        {comment.updatedAt > comment._creationTime && (
-                          <Typography variant="caption" color="tertiary" className="italic">
-                            (edited)
-                          </Typography>
-                        )}
-                      </Flex>
-
-                      <CommentRenderer content={comment.content} />
-                      {(comment.attachments?.length || 0) > 0 && (
-                        <Stack gap="xs">
-                          <Typography variant="caption" color="tertiary">
-                            Attachments
-                          </Typography>
-                          <Stack gap="xs">
-                            {comment.attachments?.map((storageId) => (
-                              <CommentAttachmentLink
-                                key={storageId}
-                                issueId={issueId}
-                                storageId={storageId}
-                              />
-                            ))}
-                          </Stack>
-                        </Stack>
-                      )}
-
-                      <CommentReactions
-                        commentId={comment._id}
-                        reactions={comment.reactions || []}
-                        currentUserId={currentUser?._id}
-                      />
-                    </Stack>
-                  </FlexItem>
-                </Card>
-              </Flex>
+              <CommentThreadRow
+                key={comment._id}
+                attachments={comment.attachments}
+                authorImage={comment.author?.image}
+                authorName={comment.author?.name}
+                content={comment.content}
+                edited={comment.updatedAt > comment._creationTime}
+                footer={
+                  <CommentReactions
+                    commentId={comment._id}
+                    reactions={comment.reactions || []}
+                    currentUserId={currentUser?._id}
+                  />
+                }
+                issueId={issueId}
+                timestamp={comment._creationTime}
+              />
             ))}
 
             {status === "CanLoadMore" && (

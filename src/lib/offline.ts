@@ -59,6 +59,8 @@ export interface OfflineMutation {
   nextRetryAfter?: number;
 }
 
+type OfflineQueueListener = () => void;
+
 /**
  * Error message patterns that indicate a permanent (non-retryable) failure.
  * These errors won't resolve by retrying — the entity is gone, the input
@@ -77,6 +79,21 @@ const PERMANENT_FAILURE_PATTERNS = [
   /revoked/i,
   /unsupported offline mutation/i,
 ] as const;
+
+const offlineQueueListeners = new Set<OfflineQueueListener>();
+
+function notifyOfflineQueueListeners(): void {
+  for (const listener of offlineQueueListeners) {
+    listener();
+  }
+}
+
+export function subscribeOfflineQueueChanges(listener: OfflineQueueListener): () => void {
+  offlineQueueListeners.add(listener);
+  return () => {
+    offlineQueueListeners.delete(listener);
+  };
+}
 
 /**
  * Classify whether an error is permanent (should not be retried) or
@@ -255,7 +272,9 @@ class OfflineDB {
 
   async addMutation(mutation: Omit<OfflineMutation, "id">): Promise<number> {
     const db = await this.open();
-    return (await db.add("mutations", mutation as OfflineMutation)) as number;
+    const id = (await db.add("mutations", mutation as OfflineMutation)) as number;
+    notifyOfflineQueueListeners();
+    return id;
   }
 
   async getMutation(id: number): Promise<OfflineMutation | undefined> {
@@ -275,6 +294,9 @@ class OfflineDB {
     for (const mutation of syncing) {
       mutation.status = "pending";
       await db.put("mutations", mutation);
+    }
+    if (syncing.length > 0) {
+      notifyOfflineQueueListeners();
     }
     return syncing.length;
   }
@@ -298,11 +320,13 @@ class OfflineDB {
 
     const updated = applyMutationStatusUpdate(mutation, status, options);
     await db.put("mutations", updated);
+    notifyOfflineQueueListeners();
   }
 
   async deleteMutation(id: number): Promise<void> {
     const db = await this.open();
     await db.delete("mutations", id);
+    notifyOfflineQueueListeners();
   }
 
   async clearSyncedMutations(olderThan?: number): Promise<number> {
@@ -323,6 +347,10 @@ class OfflineDB {
         deleted++;
       }
       cursor = await cursor.continue();
+    }
+
+    if (deleted > 0) {
+      notifyOfflineQueueListeners();
     }
 
     return deleted;

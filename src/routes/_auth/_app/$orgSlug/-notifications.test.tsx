@@ -8,6 +8,8 @@ import {
   useAuthenticatedQuery,
   useAuthReady,
 } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useQueuedOfflineNotificationReadIds } from "@/hooks/useOfflineOptimisticState";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { SECOND } from "@/lib/time";
@@ -36,6 +38,14 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
 
 vi.mock("@/hooks/useOrgContext", () => ({
   useOrganizationOptional: vi.fn(),
+}));
+
+vi.mock("@/hooks/useCurrentUser", () => ({
+  useCurrentUser: vi.fn(),
+}));
+
+vi.mock("@/hooks/useOfflineOptimisticState", () => ({
+  useQueuedOfflineNotificationReadIds: vi.fn(),
 }));
 
 vi.mock("@/components/layout", () => ({
@@ -216,6 +226,8 @@ const mockUsePaginatedQuery = vi.mocked(usePaginatedQuery);
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 const mockUseAuthReady = vi.mocked(useAuthReady);
+const mockUseCurrentUser = vi.mocked(useCurrentUser);
+const mockUseQueuedOfflineNotificationReadIds = vi.mocked(useQueuedOfflineNotificationReadIds);
 const mockUseOrganizationOptional = vi.mocked(useOrganizationOptional);
 
 type MockNotification = {
@@ -333,6 +345,12 @@ describe("NotificationsPage", () => {
       isAuthLoading: false,
       canAct: true,
     });
+    mockUseCurrentUser.mockReturnValue({
+      user: null,
+      isLoading: false,
+      isAuthenticated: true,
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set());
     mockUseOrganizationOptional.mockReturnValue({
       orgSlug: "acme",
       organizationId: "org-1" as Id<"organizations">,
@@ -340,6 +358,16 @@ describe("NotificationsPage", () => {
       userRole: "owner",
       billingEnabled: true,
     });
+  });
+
+  it("applies queued offline reads to the unread summary immediately", () => {
+    mockUseAuthenticatedQuery.mockReturnValue(2);
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([inboxNotification._id]));
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("1 unread notification")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("1");
   });
 
   it("passes snooze handling to inbox notifications", async () => {

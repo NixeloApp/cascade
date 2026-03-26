@@ -7,7 +7,8 @@ export const ISSUE_UPDATE_STATUS_OFFLINE_MUTATION_TYPE = "issues.updateStatus";
 
 export type IssueUpdateStatusArgs = FunctionArgs<typeof api.issues.updateStatus>;
 
-function isIssueUpdateStatusArgs(value: unknown): value is IssueUpdateStatusArgs {
+/** Type guard for queued `issues.updateStatus` replay payloads. */
+export function isIssueUpdateStatusArgs(value: unknown): value is IssueUpdateStatusArgs {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
@@ -17,6 +18,11 @@ function isIssueUpdateStatusArgs(value: unknown): value is IssueUpdateStatusArgs
     typeof obj.newStatus === "string" &&
     typeof obj.newOrder === "number"
   );
+}
+
+/** Parses a queued `issues.updateStatus` payload, returning `null` when invalid. */
+export function parseIssueUpdateStatusArgs(value: unknown): IssueUpdateStatusArgs | null {
+  return isIssueUpdateStatusArgs(value) ? value : null;
 }
 
 function validateIssueUpdateStatusArgs(args: Record<string, unknown>): IssueUpdateStatusArgs {

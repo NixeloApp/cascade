@@ -35,7 +35,9 @@ import {
   useAuthenticatedQuery,
   useAuthReady,
 } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOfflineNotificationMarkAsRead } from "@/hooks/useOfflineNotificationMarkAsRead";
+import { useQueuedOfflineNotificationReadIds } from "@/hooks/useOfflineOptimisticState";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Bell, ExternalLink, Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -96,6 +98,7 @@ export function NotificationCenter() {
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const orgContext = useOrganizationOptional();
   const { canAct } = useAuthReady();
+  const { user } = useCurrentUser();
 
   // Filter by type on the backend for proper pagination
   const typeFilter = FILTER_TYPE_MAP[filter];
@@ -108,7 +111,10 @@ export function NotificationCenter() {
     canAct ? { types: typeFilter ?? undefined } : "skip",
     { initialNumItems: 25 },
   );
-  const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
+  const queuedReadIds = useQueuedOfflineNotificationReadIds(user?._id);
+  const notifications = ((notificationsRaw ?? []) as NotificationWithActor[]).map((notification) =>
+    queuedReadIds.has(notification._id) ? { ...notification, isRead: true } : notification,
+  );
 
   // Group notifications by date
   const groupedNotifications = groupNotificationsByDate(notifications);
@@ -116,6 +122,8 @@ export function NotificationCenter() {
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
+  const optimisticUnreadCount =
+    unreadCount == null ? unreadCount : Math.max(0, unreadCount - queuedReadIds.size);
   const { markAsRead: offlineMarkAsRead } = useOfflineNotificationMarkAsRead();
   const { mutate: markAllAsRead } = useAuthenticatedMutation(api.notifications.markAllAsRead);
   const { mutate: archiveNotification } = useAuthenticatedMutation(
@@ -172,8 +180,8 @@ export function NotificationCenter() {
   };
 
   const dynamicLabel =
-    unreadCount != null && unreadCount > 0
-      ? `Notifications, ${unreadCount} unread`
+    optimisticUnreadCount != null && optimisticUnreadCount > 0
+      ? `Notifications, ${optimisticUnreadCount} unread`
       : "Notifications";
 
   return (
@@ -190,14 +198,14 @@ export function NotificationCenter() {
           >
             <Icon icon={Bell} size="md" />
             {/* Unread Badge */}
-            {unreadCount != null && unreadCount > 0 && (
+            {optimisticUnreadCount != null && optimisticUnreadCount > 0 && (
               <Badge
                 variant="alertCount"
                 size="sm"
                 shape="pill"
                 className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 animate-scale-in"
               >
-                {unreadCount > 99 ? "99+" : unreadCount}
+                {optimisticUnreadCount > 99 ? "99+" : optimisticUnreadCount}
               </Badge>
             )}
           </Button>
@@ -217,7 +225,7 @@ export function NotificationCenter() {
             <Stack gap="sm">
               <Flex align="center" justify="between">
                 <PopoverTitle as="h3">Notifications</PopoverTitle>
-                {unreadCount != null && unreadCount > 0 && (
+                {optimisticUnreadCount != null && optimisticUnreadCount > 0 && (
                   <Button
                     variant="link"
                     size="none"

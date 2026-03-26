@@ -8,7 +8,8 @@ const COMMENT_CLIENT_REQUEST_ID_PREFIX = "issue-comment";
 
 export type AddCommentArgs = FunctionArgs<typeof api.issues.addComment>;
 
-function isAddCommentArgs(value: unknown): value is AddCommentArgs {
+/** Type guard for queued `issues.addComment` replay payloads. */
+export function isAddCommentArgs(value: unknown): value is AddCommentArgs {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
@@ -18,6 +19,11 @@ function isAddCommentArgs(value: unknown): value is AddCommentArgs {
     typeof obj.content === "string" &&
     (obj.clientRequestId === undefined || typeof obj.clientRequestId === "string")
   );
+}
+
+/** Parses a queued `issues.addComment` payload, returning `null` when invalid. */
+export function parseAddCommentArgs(value: unknown): AddCommentArgs | null {
+  return isAddCommentArgs(value) ? value : null;
 }
 
 function validateAddCommentArgs(args: Record<string, unknown>): AddCommentArgs {

@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import { HOUR, MINUTE } from "@convex/lib/timeUtils";
 import userEvent from "@testing-library/user-event";
 import type { ReactMutation } from "convex/react";
@@ -5,6 +6,8 @@ import { useConvexAuth, useMutation, usePaginatedQuery, useQuery } from "convex/
 import type { FunctionReference } from "convex/server";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useQueuedOfflineNotificationReadIds } from "@/hooks/useOfflineOptimisticState";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor, within } from "@/test/custom-render";
 import { NotificationCenter } from "./NotificationCenter";
@@ -22,7 +25,17 @@ vi.mock("@/lib/accessibility", () => ({
   handleKeyboardClick: vi.fn((callback) => callback),
 }));
 
+vi.mock("@/hooks/useCurrentUser", () => ({
+  useCurrentUser: vi.fn(),
+}));
+
+vi.mock("@/hooks/useOfflineOptimisticState", () => ({
+  useQueuedOfflineNotificationReadIds: vi.fn(),
+}));
+
 describe("NotificationCenter", () => {
+  const mockUseCurrentUser = vi.mocked(useCurrentUser);
+  const mockUseQueuedOfflineNotificationReadIds = vi.mocked(useQueuedOfflineNotificationReadIds);
   const mockMarkAsRead = Object.assign(vi.fn(), {
     withOptimisticUpdate: vi.fn().mockReturnThis(),
   }) as Mock & ReactMutation<FunctionReference<"mutation">>;
@@ -49,6 +62,12 @@ describe("NotificationCenter", () => {
     mockArchive.mockReset();
     mockSnooze.mockReset();
     mockRemove.mockReset();
+    mockUseCurrentUser.mockReturnValue({
+      user: null,
+      isLoading: false,
+      isAuthenticated: true,
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set());
 
     // Set up mutation mocks to persist across re-renders
     // Order matches component: markAsRead, markAllAsRead, archiveNotification, snoozeNotification, removeNotification
@@ -210,6 +229,31 @@ describe("NotificationCenter", () => {
     expect(screen.getByText("New comment")).toBeInTheDocument();
     expect(screen.getByText("You were assigned to TEST-123")).toBeInTheDocument();
     expect(screen.getByText("Someone commented on your issue")).toBeInTheDocument();
+  });
+
+  it("applies queued offline reads to the unread badge immediately", () => {
+    vi.mocked(usePaginatedQuery).mockReturnValue({
+      results: [
+        {
+          _id: "1",
+          type: "issue_assigned",
+          title: "Issue assigned",
+          message: "You were assigned to TEST-123",
+          isRead: false,
+          _creationTime: Date.now(),
+        },
+      ],
+      status: "Exhausted",
+      isLoading: false,
+      loadMore: vi.fn(),
+    });
+    vi.mocked(useQuery).mockReturnValue(2);
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set(["1" as Id<"notifications">]));
+
+    render(<NotificationCenter />);
+
+    expect(screen.getByRole("button", { name: "Notifications, 1 unread" })).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
   });
 
   it("should highlight unread notifications", async () => {

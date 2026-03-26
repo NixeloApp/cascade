@@ -49,6 +49,7 @@ Verified now:
 - manual queue processing from Settings
 - four real replayable mutation families: `userSettings.update`, `notifications.markAsRead`, `issues.updateStatus`, and `issues.addComment`
 - install/update helper wiring in the app shell
+- queued status changes, notification reads, and issue comments now apply optimistic UI immediately while they wait in the offline queue
 - production-preview browser automation confirms an authenticated Settings session stays usable offline once loaded
 - production-preview browser automation confirms previously visited authenticated Settings and dashboard routes restore offline in preview
 - production-preview browser automation confirms Chromium installability checks are clean for the built app

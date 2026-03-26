@@ -16,10 +16,6 @@ Related docs:
 - [ ] Verify push still works after cache clear and worker re-registration.
 - [ ] Verify unsubscribe cleanup is correct when subscriptions rotate.
 
-### UX / Replay Polish
-
-- [ ] Add optimistic UI for queued mutations where the current UX still waits for replay confirmation.
-
 ### Docs
 
 - [ ] Refresh `docs/guides/pwa.md` after real browser verification of push, install, and offline flows.

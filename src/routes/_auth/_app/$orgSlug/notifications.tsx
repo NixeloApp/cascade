@@ -36,7 +36,9 @@ import {
   useAuthenticatedQuery,
   useAuthReady,
 } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOfflineNotificationMarkAsRead } from "@/hooks/useOfflineNotificationMarkAsRead";
+import { useQueuedOfflineNotificationReadIds } from "@/hooks/useOfflineOptimisticState";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Archive, Bell, CheckCheck, Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -209,6 +211,7 @@ export function NotificationsPage() {
   );
   const orgContext = useOrganizationOptional();
   const { canAct } = useAuthReady();
+  const { user } = useCurrentUser();
 
   // Active notifications - filter by type on the backend for proper pagination
   const typeFilter = FILTER_TYPE_MAP[filter];
@@ -217,7 +220,10 @@ export function NotificationsPage() {
     canAct ? { types: typeFilter ?? undefined } : "skip",
     { initialNumItems: 100 },
   );
-  const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
+  const queuedReadIds = useQueuedOfflineNotificationReadIds(user?._id);
+  const notifications = ((notificationsRaw ?? []) as NotificationWithActor[]).map((notification) =>
+    queuedReadIds.has(notification._id) ? { ...notification, isRead: true } : notification,
+  );
 
   // Archived notifications (paginated)
   const {
@@ -231,6 +237,8 @@ export function NotificationsPage() {
 
   // Unread count
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
+  const optimisticUnreadCount =
+    unreadCount == null ? unreadCount : Math.max(0, unreadCount - queuedReadIds.size);
 
   // Mutations
   const { markAsRead: offlineMarkAsRead } = useOfflineNotificationMarkAsRead();
@@ -400,22 +408,24 @@ export function NotificationsPage() {
         <PageHeader
           title="Notifications"
           spacing="stack"
-          description={getUnreadNotificationsDescription(unreadCount)}
+          description={getUnreadNotificationsDescription(optimisticUnreadCount)}
           actions={
             <Flex gap="sm">
-              {activeTab === "inbox" && unreadCount != null && unreadCount > 0 && (
-                <Button
-                  data-testid={TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON}
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleMarkAllAsRead}
-                  isLoading={bulkActionLoading === "markAll"}
-                  disabled={bulkActionLoading !== null}
-                  leftIcon={<Icon icon={CheckCheck} size="sm" />}
-                >
-                  Mark all read
-                </Button>
-              )}
+              {activeTab === "inbox" &&
+                optimisticUnreadCount != null &&
+                optimisticUnreadCount > 0 && (
+                  <Button
+                    data-testid={TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON}
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleMarkAllAsRead}
+                    isLoading={bulkActionLoading === "markAll"}
+                    disabled={bulkActionLoading !== null}
+                    leftIcon={<Icon icon={CheckCheck} size="sm" />}
+                  >
+                    Mark all read
+                  </Button>
+                )}
               {activeTab === "inbox" && notifications.length > 0 && (
                 <Button
                   data-testid={TEST_IDS.NOTIFICATIONS.ARCHIVE_ALL_BUTTON}
@@ -443,14 +453,14 @@ export function NotificationsPage() {
                       <Flex align="center" gap="xs">
                         <Icon icon={Bell} size="sm" />
                         Inbox
-                        {unreadCount != null && unreadCount > 0 && (
+                        {optimisticUnreadCount != null && optimisticUnreadCount > 0 && (
                           <Badge
                             data-testid={TEST_IDS.NOTIFICATIONS.UNREAD_BADGE}
                             variant="brand"
                             size="sm"
                             shape="pill"
                           >
-                            {unreadCount > 99 ? "99+" : unreadCount}
+                            {optimisticUnreadCount > 99 ? "99+" : optimisticUnreadCount}
                           </Badge>
                         )}
                       </Flex>

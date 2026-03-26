@@ -7,12 +7,18 @@ export const NOTIFICATION_MARK_READ_OFFLINE_MUTATION_TYPE = "notifications.markA
 
 export type NotificationMarkAsReadArgs = FunctionArgs<typeof api.notifications.markAsRead>;
 
-function isNotificationMarkAsReadArgs(value: unknown): value is NotificationMarkAsReadArgs {
+/** Type guard for queued `notifications.markAsRead` replay payloads. */
+export function isNotificationMarkAsReadArgs(value: unknown): value is NotificationMarkAsReadArgs {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
   const obj = value as Record<string, unknown>;
   return typeof obj.id === "string" && Object.keys(obj).length === 1;
+}
+
+/** Parses a queued `notifications.markAsRead` payload, returning `null` when invalid. */
+export function parseNotificationMarkAsReadArgs(value: unknown): NotificationMarkAsReadArgs | null {
+  return isNotificationMarkAsReadArgs(value) ? value : null;
 }
 
 function validateNotificationMarkAsReadArgs(
