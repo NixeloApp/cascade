@@ -74,7 +74,8 @@ function isPatchContext(node) {
 }
 
 function getStatusLiteral(node) {
-  for (const property of node.properties) {
+  for (let index = node.properties.length - 1; index >= 0; index -= 1) {
+    const property = node.properties[index];
     if (ts.isSpreadAssignment(property) && ts.isObjectLiteralExpression(property.expression)) {
       const nestedStatus = getStatusLiteral(property.expression);
       if (nestedStatus) {

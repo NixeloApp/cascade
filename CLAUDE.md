@@ -160,7 +160,7 @@ export const update = mutation({
 
 ```bash
 pnpm dev              # Start frontend + backend
-pnpm run check        # Typecheck + lint + validate + tests (full CI check)
+pnpm run static       # Typecheck + lint + validate + screenshot manifest checks
 pnpm run fixme        # Auto-fix lint/format + typecheck (run after big changes)
 pnpm run biome        # Lint with auto-fix
 pnpm run typecheck    # TypeScript check

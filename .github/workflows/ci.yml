@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   static-checks:
-    name: Static: ${{ matrix.name }}
+    name: "Static: ${{ matrix.name }}"
     # runs-on: blacksmith-4vcpu-ubuntu-2404
     runs-on: ubuntu-latest
     strategy:

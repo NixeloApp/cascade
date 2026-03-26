@@ -149,7 +149,7 @@ pnpm run test:convex:coverage
 pnpm run test:all
 
 # Run full check (typecheck + lint + all tests)
-pnpm run check
+pnpm run static
 ```
 
 ## Notes 📝

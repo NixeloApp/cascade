@@ -67,14 +67,13 @@ async function getHighestExistingProjectIssueNumber(
   projectId: Id<"projects">,
   projectKey: string,
 ): Promise<number> {
-  const existingIssues = await ctx.db
+  const existingIssues = ctx.db
     .query("issues")
     .withIndex("by_project_status", (q) => q.eq("projectId", projectId))
-    .filter(notDeleted)
-    .take(BOUNDED_LIST_LIMIT);
+    .filter(notDeleted);
 
   let highestIssueNumber = 0;
-  for (const issue of existingIssues) {
+  for await (const issue of existingIssues) {
     const issueNumber = getIssueNumberFromKey(issue.key, projectKey);
     if (issueNumber !== null) {
       highestIssueNumber = Math.max(highestIssueNumber, issueNumber);
@@ -4031,9 +4030,13 @@ export const setupRbacProjectInternal = internalMutation({
       const nextIssueNumber = await getProjectIssueCounterFloor(ctx, workspaceProject);
       await ctx.db.patch(workspaceProject._id, {
         name: `RBAC Workspace Project (${workspaceProjectKey})`,
+        organizationId: organization._id,
+        workspaceId,
+        teamId,
         description: "E2E test project for RBAC - Workspace level",
         ownerId: adminUser._id, // Ensure ownership is updated
         nextIssueNumber,
+        updatedAt: now,
       });
     }
 
@@ -4072,9 +4075,13 @@ export const setupRbacProjectInternal = internalMutation({
       const nextIssueNumber = await getProjectIssueCounterFloor(ctx, teamProject);
       await ctx.db.patch(teamProject._id, {
         name: `RBAC Team Project (${teamProjectKey})`,
+        organizationId: organization._id,
+        workspaceId,
+        teamId,
         description: "E2E test project for RBAC - Team level",
         ownerId: adminUser._id, // Ensure ownership is updated
         nextIssueNumber,
+        updatedAt: now,
       });
     }
 

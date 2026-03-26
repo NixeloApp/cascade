@@ -53,6 +53,7 @@ import {
   openDocumentEditorForCapture,
   openDocumentEditorMentionPopoverForCapture,
   openDocumentEditorSlashMenuForCapture,
+  openDocumentMoveDialogForCapture,
   openMarkdownImportPreviewDialog,
   primeDocumentEditorRichContent,
   seedIssueDraft,
@@ -1198,14 +1199,11 @@ export async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-move-dialog")) {
         await runCaptureStep("document move dialog", async () => {
           await openDocumentEditorForCapture(page, baseDocUrl);
-          await openDocumentActionsMenu(page);
-          await page.getByRole("menuitem", { name: /move to another project/i }).click();
-          await page
-            .getByRole("dialog", { name: /move document/i })
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
-          await captureCurrentView(page, p, "document-editor-move-dialog");
-          await page.keyboard.press("Escape");
+          const dialog = await openDocumentMoveDialogForCapture(page);
+          await captureCurrentView(page, p, "document-editor-move-dialog", {
+            skipReadyCheck: true,
+          });
+          await dismissIfOpen(page, dialog);
         });
       }
 
@@ -1217,8 +1215,9 @@ export async function screenshotFilledStates(
             MARKDOWN_IMPORT_PREVIEW,
             "import.md",
           );
-          await waitForScreenshotReady(page);
-          await captureCurrentView(page, p, "document-editor-markdown-preview-modal");
+          await captureCurrentView(page, p, "document-editor-markdown-preview-modal", {
+            skipReadyCheck: true,
+          });
           await dismissIfOpen(page, dialog);
         });
       }

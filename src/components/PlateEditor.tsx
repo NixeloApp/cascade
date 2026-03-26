@@ -181,6 +181,11 @@ interface E2EEditorValueEventDetail {
   value: Value;
 }
 
+interface E2EOpenMarkdownPreviewEventDetail {
+  markdown: string;
+  filename?: string;
+}
+
 const DOCUMENT_STARTER_SECTIONS = [
   {
     title: "Capture the context",
@@ -875,11 +880,29 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
       replaceEditorValue(detail.value);
     };
 
+    const handleE2EOpenMarkdownPreview = (event: Event) => {
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+
+      const detail = event.detail as E2EOpenMarkdownPreviewEventDetail | undefined;
+      if (typeof detail?.markdown !== "string") {
+        return;
+      }
+
+      setMarkdownImportPreview({
+        markdown: detail.markdown,
+        filename: detail.filename ?? "document.md",
+      });
+    };
+
     window.addEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
     window.addEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
+    window.addEventListener("nixelo:e2e-open-markdown-preview", handleE2EOpenMarkdownPreview);
     return () => {
       window.removeEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
       window.removeEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
+      window.removeEventListener("nixelo:e2e-open-markdown-preview", handleE2EOpenMarkdownPreview);
     };
   }, [replaceEditorValue]);
 

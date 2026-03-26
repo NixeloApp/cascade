@@ -143,7 +143,7 @@ nixelo/
 
 ```bash
 pnpm dev              # Start frontend + backend
-pnpm run check        # Typecheck + lint + validate + tests (full CI)
+pnpm run static       # Typecheck + lint + validate + screenshot manifest checks
 pnpm run fixme        # Auto-fix lint/format + typecheck
 pnpm run biome        # Lint with auto-fix
 pnpm run typecheck    # TypeScript check
