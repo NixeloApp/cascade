@@ -211,6 +211,9 @@ describe("issue helpers", () => {
 
       const updates = processIssueUpdates(issue, args, changes);
 
+      expect(updates.description).toBe(
+        JSON.stringify([{ type: "p", children: [{ text: "New Desc" }] }]),
+      );
       expect(updates.searchContent).toBe("Title New Desc");
     });
 

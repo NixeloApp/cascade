@@ -11,7 +11,7 @@ import { asyncMap, pruneNull } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
-import { getPlainTextFromDescription } from "../lib/richText";
+import { getPlainTextFromDescription, normalizeIssueDescriptionForStorage } from "../lib/richText";
 import { notDeleted } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, canAccessProject } from "../projectAccess";
 import type { issueActivityActions } from "../validators";
@@ -351,16 +351,21 @@ export function processIssueUpdates(
   }>,
 ) {
   const updates: Record<string, unknown> = { updatedAt: Date.now() };
+  const normalizedDescription =
+    args.description === undefined
+      ? undefined
+      : normalizeIssueDescriptionForStorage(args.description);
 
   // Track simple field changes
   trackFieldChange(updates, changes, "title", issue.title, args.title);
-  trackFieldChange(updates, changes, "description", issue.description, args.description);
+  trackFieldChange(updates, changes, "description", issue.description, normalizedDescription);
   trackFieldChange(updates, changes, "priority", issue.priority, args.priority);
 
   // Update search content if title or description changed
   if (args.title !== undefined || args.description !== undefined) {
     const newTitle = args.title ?? issue.title;
-    const newDescription = args.description !== undefined ? args.description : issue.description;
+    const newDescription =
+      normalizedDescription !== undefined ? normalizedDescription : issue.description;
     updates.searchContent = getSearchContent(newTitle, newDescription);
   }
 

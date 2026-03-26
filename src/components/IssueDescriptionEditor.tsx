@@ -14,14 +14,13 @@ import {
   getInitialValue,
   getIssueDescriptionPlugins,
   isEmptyValue,
-  plainTextToValue,
   serializeValue,
 } from "@/lib/plate/editor";
 import { cn } from "@/lib/utils";
 import { FloatingToolbar } from "./Plate/FloatingToolbar";
 
 interface IssueDescriptionEditorProps {
-  /** Serialized JSON string value, or plain text (for backwards compat) */
+  /** Serialized Plate JSON string value */
   value?: string | null;
   /** Called with serialized JSON string when content changes */
   onChange?: (value: string) => void;
@@ -57,25 +56,23 @@ function isValidPlateValue(candidate: unknown): candidate is Value {
 }
 
 /**
- * Parse initial value - handles both JSON and plain text
+ * Parse initial value from stored Plate JSON.
  */
 function parseInitialValue(value: string | null | undefined): Value {
   if (!value) {
     return getInitialValue();
   }
 
-  // Try parsing as JSON first
   try {
     const parsed: unknown = JSON.parse(value);
     if (isValidPlateValue(parsed)) {
       return parsed;
     }
   } catch {
-    // Not JSON, treat as plain text
+    return getInitialValue();
   }
 
-  // Convert plain text to editor value
-  return plainTextToValue(value);
+  return getInitialValue();
 }
 
 /**
@@ -91,7 +88,6 @@ export function IssueDescriptionEditor({
   autoFocus = false,
   testId,
 }: IssueDescriptionEditorProps) {
-  // Parse initial value (handles both JSON and plain text)
   const initialValue = parseInitialValue(value);
 
   // Create editor with lightweight plugins
@@ -146,7 +142,6 @@ export function IssueDescriptionReadOnly({
   className?: string;
   testId?: string;
 }) {
-  // Parse value (handles both JSON and plain text)
   const parsedValue = parseInitialValue(value);
 
   // Create read-only editor (must be called unconditionally for React hooks rules)

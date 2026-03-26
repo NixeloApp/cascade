@@ -4,7 +4,7 @@
 
 ## P0
 
-- [ ] [compatibility-removal.md](./compatibility-removal.md) — Delete actual backwards-compatibility paths that no longer matter instead of renaming `legacy` comments around them.
+- [ ] [compatibility-removal.md](./compatibility-removal.md) — Finish the last real cleanup pass by deleting leftover compatibility comments and aliases only after their fallback behavior is gone.
 
 ## Infrastructure
 

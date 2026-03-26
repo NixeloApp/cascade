@@ -5,6 +5,32 @@
  * plain text should use this helper to avoid leaking raw JSON blobs.
  */
 
+type RichTextNode = {
+  children: unknown[];
+};
+
+function isRichTextNode(candidate: unknown): candidate is RichTextNode {
+  return (
+    typeof candidate === "object" &&
+    candidate !== null &&
+    "children" in candidate &&
+    Array.isArray(candidate.children)
+  );
+}
+
+function isRichTextValue(candidate: unknown): candidate is RichTextNode[] {
+  return Array.isArray(candidate) && candidate.every(isRichTextNode);
+}
+
+function serializeParagraph(text: string): string {
+  return JSON.stringify([
+    {
+      type: "p",
+      children: [{ text }],
+    },
+  ]);
+}
+
 function extractNodeText(node: unknown): string {
   if (typeof node === "string") {
     return node;
@@ -26,10 +52,45 @@ function extractNodeText(node: unknown): string {
 }
 
 /**
- * Converts a stored description value into plain text.
+ * Normalizes an issue description for storage.
  *
- * - Legacy plain text values are returned as-is.
- * - Rich text JSON values are parsed and recursively reduced to text.
+ * Non-empty descriptions are stored as Plate JSON arrays so the editor only
+ * needs to handle one persisted shape.
+ */
+export function normalizeIssueDescriptionForStorage(
+  description: string | undefined | null,
+): string | undefined {
+  if (description === undefined) {
+    return undefined;
+  }
+
+  if (description === null || description.trim() === "") {
+    return "";
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(description);
+
+    if (typeof parsed === "string") {
+      return parsed.trim() === "" ? "" : serializeParagraph(parsed);
+    }
+
+    if (isRichTextValue(parsed)) {
+      return description;
+    }
+
+    if (isRichTextNode(parsed)) {
+      return JSON.stringify([parsed]);
+    }
+  } catch {
+    return serializeParagraph(description);
+  }
+
+  return serializeParagraph(description);
+}
+
+/**
+ * Converts a stored description value into plain text.
  */
 export function getPlainTextFromDescription(description: string | undefined): string {
   if (!description) {

@@ -14,6 +14,7 @@ import { getSearchContent } from "./issues/helpers";
 import { BOUNDED_DELETE_BATCH, BOUNDED_RELATION_LIMIT, safeCollect } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole } from "./lib/organizationAccess";
+import { normalizeIssueDescriptionForStorage } from "./lib/richText";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { WEEK } from "./lib/timeUtils";
 import { RUNTIME_COLORS } from "./shared/colors";
@@ -425,15 +426,16 @@ export const createSampleProject = authenticatedMutation({
     // Create all issues in parallel
     const issueNow = Date.now();
     const createdIssues = await Promise.all(
-      issues.map((issue, index) =>
-        ctx.db.insert("issues", {
+      issues.map((issue, index) => {
+        const normalizedDescription = normalizeIssueDescriptionForStorage(issue.description);
+        return ctx.db.insert("issues", {
           projectId,
           organizationId,
           workspaceId,
           teamId,
           key: `SAMPLE-${index + 1}`,
           title: issue.title,
-          description: issue.description,
+          description: normalizedDescription,
           type: issue.type,
           status: issue.status,
           priority: issue.priority,
@@ -446,9 +448,9 @@ export const createSampleProject = authenticatedMutation({
           attachments: [],
           loggedHours: 0,
           order: issue.order,
-          searchContent: getSearchContent(issue.title, issue.description),
-        }),
-      ),
+          searchContent: getSearchContent(issue.title, normalizedDescription),
+        });
+      }),
     );
 
     // Add activity logs for all issues in parallel

@@ -27,6 +27,7 @@ import { conflict, forbidden, getErrorMessage, notFound, validation } from "./li
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { isOrganizationMember } from "./lib/organizationAccess";
+import { normalizeIssueDescriptionForStorage } from "./lib/richText";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { validateDestination } from "./lib/ssrf";
 import { MINUTE } from "./lib/timeUtils";
@@ -1120,7 +1121,7 @@ export const createIssueFromActionItem = authenticatedMutation({
     const status = project.workflowStates[0]?.id ?? "todo";
     const { key: issueKey } = await getNextIssueKey(ctx, args.projectId, project.key);
     const maxOrder = await getMaxOrderForStatus(ctx, args.projectId, status);
-    const description = "Created from meeting action item";
+    const description = normalizeIssueDescriptionForStorage("Created from meeting action item");
 
     const now = Date.now();
 
