@@ -21,6 +21,10 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^public-verify-2fa$/, "02-signin", "-verify-2fa"],
   [/^public-signup-verify$/, "03-signup", "-verify"],
   [/^public-forgot-password-reset$/, "04-forgot-password", "-reset"],
+  [/^public-invite-invalid$/, "15-invite", "-invalid"],
+  [/^public-invite-expired$/, "15-invite", "-expired"],
+  [/^public-invite-revoked$/, "15-invite", "-revoked"],
+  [/^public-invite-accepted$/, "15-invite", "-accepted"],
   // Dashboard modals
   [/^filled-dashboard-omnibox$/, "04-dashboard", "-omnibox"],
   [/^filled-dashboard-customize-modal$/, "04-dashboard", "-customize-modal"],

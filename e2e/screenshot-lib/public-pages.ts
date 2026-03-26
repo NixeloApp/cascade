@@ -22,6 +22,9 @@ export async function screenshotPublicPages(page: Page, seed: SeedScreenshotResu
     "verify-2fa",
     "invite",
     "invite-invalid",
+    "invite-expired",
+    "invite-revoked",
+    "invite-accepted",
     "unsubscribe",
     "portal",
     "portal-project",
@@ -58,6 +61,24 @@ export async function screenshotPublicPages(page: Page, seed: SeedScreenshotResu
     await takeScreenshot(page, "public", "invite", ROUTES.invite.build(seed.inviteToken));
   }
   await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
+  await takeScreenshot(
+    page,
+    "public",
+    "invite-expired",
+    `${ROUTES.invite.build("screenshot-test-token")}?previewState=expired`,
+  );
+  await takeScreenshot(
+    page,
+    "public",
+    "invite-revoked",
+    `${ROUTES.invite.build("screenshot-test-token")}?previewState=revoked`,
+  );
+  await takeScreenshot(
+    page,
+    "public",
+    "invite-accepted",
+    `${ROUTES.invite.build("screenshot-test-token")}?previewState=accepted`,
+  );
   const unsubscribeToken = getCurrentConfigUnsubscribeToken(seed);
   if (unsubscribeToken) {
     await takeScreenshot(page, "public", "unsubscribe", ROUTES.unsubscribe.build(unsubscribeToken));

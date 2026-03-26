@@ -102,14 +102,6 @@ export async function waitForPublicPageReady(page: Page, name: string): Promise<
     return;
   }
 
-  if (name === "invite-invalid") {
-    await page
-      .getByRole("heading", { name: /invalid invitation/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
-  }
-
   if (name === "signup-verify") {
     await page
       .getByRole("heading", { name: /create your account/i })
@@ -153,6 +145,23 @@ export async function waitForPublicPageReady(page: Page, name: string): Promise<
     await page.getByText(/has invited you to join/i).waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
+  }
+
+  if (name.startsWith("invite-")) {
+    const inviteStateHeading = {
+      "invite-invalid": /invalid invitation/i,
+      "invite-expired": /invitation expired/i,
+      "invite-revoked": /invitation revoked/i,
+      "invite-accepted": /already accepted/i,
+    }[name];
+
+    if (inviteStateHeading) {
+      await page
+        .getByRole("heading", { name: inviteStateHeading })
+        .waitFor({ state: "visible", timeout: 12000 });
+      await waitForScreenshotReady(page);
+      return;
+    }
   }
 
   if (name === "unsubscribe") {
