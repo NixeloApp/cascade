@@ -1200,9 +1200,7 @@ export async function screenshotFilledStates(
         await runCaptureStep("document move dialog", async () => {
           await openDocumentEditorForCapture(page, baseDocUrl);
           const dialog = await openDocumentMoveDialogForCapture(page);
-          await captureCurrentView(page, p, "document-editor-move-dialog", {
-            skipReadyCheck: true,
-          });
+          await captureCurrentView(page, p, "document-editor-move-dialog");
           await dismissIfOpen(page, dialog);
         });
       }
@@ -1215,9 +1213,7 @@ export async function screenshotFilledStates(
             MARKDOWN_IMPORT_PREVIEW,
             "import.md",
           );
-          await captureCurrentView(page, p, "document-editor-markdown-preview-modal", {
-            skipReadyCheck: true,
-          });
+          await captureCurrentView(page, p, "document-editor-markdown-preview-modal");
           await dismissIfOpen(page, dialog);
         });
       }

@@ -55,16 +55,21 @@ vi.mock("@/lib/toast", () => ({
 vi.mock("./Documents", () => ({
   DocumentHeader: ({
     onImportMarkdown,
+    onMoveToProject,
     onShowVersionHistory,
     syncState,
   }: {
     onImportMarkdown: () => Promise<void>;
+    onMoveToProject?: () => void;
     onShowVersionHistory: () => void;
     syncState?: string;
   }) => (
     <>
       <button type="button" onClick={() => void onImportMarkdown()}>
         Import markdown
+      </button>
+      <button type="button" onClick={onMoveToProject}>
+        Move document
       </button>
       <button type="button" onClick={onShowVersionHistory}>
         Version history
@@ -80,7 +85,7 @@ vi.mock("./ErrorBoundary", () => ({
 }));
 
 vi.mock("./MoveDocumentDialog", () => ({
-  MoveDocumentDialog: () => null,
+  MoveDocumentDialog: ({ open }: { open: boolean }) => (open ? <div>Move Document</div> : null),
 }));
 
 vi.mock("./Plate/FloatingToolbar", () => ({
@@ -324,6 +329,37 @@ describe("PlateEditor", () => {
     await waitFor(() => {
       expect(screen.queryByText("Preview Markdown Import")).not.toBeInTheDocument();
     });
+  });
+
+  it("opens the move dialog from the header action", async () => {
+    const user = userEvent.setup();
+    mockQueryResults(loadedQueryResults());
+
+    render(<PlateEditor documentId={documentId} />);
+
+    await user.click(screen.getByRole("button", { name: "Move document" }));
+
+    expect(await screen.findByText("Move Document")).toBeInTheDocument();
+  });
+
+  it("opens the markdown preview from the e2e event and keeps it mounted", async () => {
+    mockQueryResults(loadedQueryResults());
+
+    render(<PlateEditor documentId={documentId} />);
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent("nixelo:e2e-open-markdown-preview", {
+          detail: {
+            markdown: "# Imported",
+            filename: "import.md",
+          },
+        }),
+      );
+    });
+
+    expect(await screen.findByText("Preview Markdown Import")).toBeInTheDocument();
+    expect(screen.getByText("import.md")).toBeInTheDocument();
   });
 
   it("replaces the editor value when the e2e markdown event is dispatched", async () => {

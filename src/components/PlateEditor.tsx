@@ -849,6 +849,12 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
   const isEditorHydrated =
     latestSnapshot !== undefined && latestVersion !== undefined && versions !== undefined;
 
+  const scheduleDialogOpen = useCallback((openDialog: () => void) => {
+    requestAnimationFrame(() => {
+      openDialog();
+    });
+  }, []);
+
   useEffect(() => {
     const handleE2EEditorMarkdown = (event: Event) => {
       if (!(event instanceof CustomEvent)) {
@@ -890,9 +896,11 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
         return;
       }
 
-      setMarkdownImportPreview({
-        markdown: detail.markdown,
-        filename: detail.filename ?? "document.md",
+      scheduleDialogOpen(() => {
+        setMarkdownImportPreview({
+          markdown: detail.markdown,
+          filename: detail.filename ?? "document.md",
+        });
       });
     };
 
@@ -904,7 +912,7 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
       window.removeEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
       window.removeEventListener("nixelo:e2e-open-markdown-preview", handleE2EOpenMarkdownPreview);
     };
-  }, [replaceEditorValue]);
+  }, [replaceEditorValue, scheduleDialogOpen]);
 
   const {
     handleTitleEdit,
@@ -930,7 +938,9 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     try {
       const preview = await readMarkdownForPreview();
       if (preview) {
-        setMarkdownImportPreview(preview);
+        scheduleDialogOpen(() => {
+          setMarkdownImportPreview(preview);
+        });
       }
     } catch (error) {
       showError(error, "Failed to read markdown file");
@@ -965,7 +975,11 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
         onToggleFavorite={handleToggleFavorite}
         onToggleArchive={handleToggleArchive}
         onToggleLock={handleToggleLock}
-        onMoveToProject={() => setShowMoveDialog(true)}
+        onMoveToProject={() => {
+          scheduleDialogOpen(() => {
+            setShowMoveDialog(true);
+          });
+        }}
         onImportMarkdown={handleOpenMarkdownImportPreview}
         onExportMarkdown={async () => {
           showError("Markdown export not yet implemented for Plate editor");

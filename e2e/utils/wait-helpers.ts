@@ -289,6 +289,21 @@ async function waitForAllSpinnersToClear(page: Page, timeout: number): Promise<v
     .toBe(0);
 }
 
+async function waitForAppSplashToClear(page: Page, timeout: number): Promise<void> {
+  const splash = page.locator(".bg-ui-bg-hero.z-\\[9999\\]").first();
+  await expect
+    .poll(
+      async () => {
+        if ((await splash.count()) === 0) {
+          return false;
+        }
+        return isLocatorVisible(splash);
+      },
+      { timeout, intervals: [100, 200, 500] },
+    )
+    .toBe(false);
+}
+
 /**
  * Wait for route/query loading indicators to clear before taking a screenshot.
  * This fails when app-shell loading never settles instead of capturing spinners.
@@ -296,6 +311,7 @@ async function waitForAllSpinnersToClear(page: Page, timeout: number): Promise<v
 export async function waitForScreenshotReady(page: Page, timeout = 5000): Promise<void> {
   await page.waitForLoadState("domcontentloaded");
 
+  await waitForAppSplashToClear(page, timeout);
   await waitForAllSpinnersToClear(page, timeout);
   await waitForLoadingSkeletonsToClear(page, timeout);
 

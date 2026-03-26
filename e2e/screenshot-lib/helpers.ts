@@ -129,6 +129,7 @@ export async function openDocumentMoveDialogForCapture(page: Page): Promise<Loca
   await dialog.waitFor({ state: "visible", timeout: 8000 });
   await dialog.getByLabel(/target project/i).waitFor({ state: "visible", timeout: 8000 });
   await waitForAnimation(page);
+  await waitForScreenshotReady(page);
   return dialog;
 }
 
@@ -158,6 +159,7 @@ export async function openMarkdownImportPreviewDialog(
     .getByRole("button", { name: /import & replace content/i })
     .waitFor({ state: "visible", timeout: 8000 });
   await waitForAnimation(page);
+  await waitForScreenshotReady(page);
   return dialog;
 }
 
