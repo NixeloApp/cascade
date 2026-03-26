@@ -2,7 +2,7 @@
 
 > **Route**: `/:orgSlug/workspaces`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-25
+> **Last Updated**: 2026-03-26
 
 ---
 
@@ -47,7 +47,7 @@ The workspaces list is the org-level structure view. It answers:
 1. `WorkspacesList` owns the route composition, metrics, and search state.
 2. `api.workspaces.list` returns the enriched list with `teamCount` and `projectCount`.
 3. The route computes org-level totals client-side from the loaded workspace list.
-4. The `OverviewBand` now uses literal structure counts instead of coaching copy, so the first surface reads as an org map instead of a motivational callout.
+4. The `OverviewBand` now uses a compact structure-summary treatment instead of a hero-sized explainer panel, so the route gets to search and workspace cards faster on mobile and tablet.
 5. Search is case-insensitive across workspace name, slug, and description.
 6. Search is shown whenever the route has at least one workspace, or immediately once a query is active.
 7. Search misses render a full recovery state with a clear-search action instead of a dead text line.
@@ -65,8 +65,8 @@ The workspaces list is the org-level structure view. It answers:
 | Search-empty state | ![](screenshots/desktop-dark-search-empty.png) | ![](screenshots/desktop-light-search-empty.png) | ![](screenshots/tablet-light-search-empty.png) | ![](screenshots/mobile-light-search-empty.png) |
 | Create workspace modal | ![](screenshots/desktop-dark-create-workspace-modal.png) | ![](screenshots/desktop-light-create-workspace-modal.png) | ![](screenshots/tablet-light-create-workspace-modal.png) | ![](screenshots/mobile-light-create-workspace-modal.png) |
 
-The route now has reviewed empty, search-empty, and modal coverage across the full viewport matrix
-instead of only the default route plus a partial modal pass.
+The route now has reviewed empty, search-empty, and modal coverage across the full viewport matrix,
+and the default route baseline reflects the tighter compact summary band instead of the older oversized structure panel.
 
 ---
 
@@ -99,7 +99,6 @@ instead of only the default route plus a partial modal pass.
 
 ## Summary
 
-Workspaces is now a reviewed core surface instead of a mostly-canonical screenshot baseline. The
-overview summary band now reads as concrete structure data instead of filler copy, and the
-remaining work is future scalability plus broader composition polish, not missing route states or
-spec drift.
+Workspaces is now a reviewed core surface with a compact structure summary that stays out of the
+way of the actual list. The remaining work is future scalability plus broader composition polish,
+not missing route states, giant summary chrome, or spec drift.

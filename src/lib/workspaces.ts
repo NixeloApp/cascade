@@ -80,9 +80,8 @@ export function getWorkspaceOverviewCopy({
   const projectLabel = `${totalProjects} project${totalProjects === 1 ? "" : "s"}`;
 
   return {
-    eyebrow: "Organization structure",
-    title: `${workspaceLabel}, ${teamLabel}, and ${projectLabel} are active.`,
-    description:
-      "Use this list to confirm where new teams and projects belong before you create them.",
+    eyebrow: "Organization footprint",
+    title: "Structure at a glance",
+    description: `This organization currently has ${workspaceLabel}, ${teamLabel}, and ${projectLabel}.`,
   };
 }
