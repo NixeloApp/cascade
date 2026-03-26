@@ -529,6 +529,13 @@ export async function waitForAnalyticsReady(page: Page): Promise<void> {
   await waitForSpinnersHidden(page);
 }
 
+export async function waitForProjectAnalyticsReady(page: Page): Promise<void> {
+  const projectsPage = new ProjectsPage(page, READINESS_ONLY_SLUG);
+  await projectsPage.expectAnalyticsLoaded();
+  await waitForSpinnersHidden(page);
+  await waitForLoadingSkeletonsToClear(page, 4000);
+}
+
 export async function scrollSectionNearViewportTop(
   locator: Locator,
   page: Page,
@@ -691,7 +698,7 @@ export async function waitForExpectedContent(
   }
 
   if (URL_PATTERNS.projectAnalytics.test(url)) {
-    await waitForAnalyticsReady(page);
+    await waitForProjectAnalyticsReady(page);
     return;
   }
 

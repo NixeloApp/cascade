@@ -698,7 +698,6 @@ export class ProjectsPage extends BasePage {
     await expect(this.analyticsIssuesByStatusChart).toBeVisible();
     await expect(this.analyticsIssuesByTypeChart).toBeVisible();
     await expect(this.analyticsIssuesByPriorityChart).toBeVisible();
-    await this.analyticsTeamVelocityChart.scrollIntoViewIfNeeded();
     await expect(this.analyticsTeamVelocityChart).toBeVisible();
   }
 

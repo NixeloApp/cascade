@@ -468,6 +468,16 @@ export async function screenshotFilledStates(
     ) {
       await runCaptureStep("project analytics states", async () => {
         const analyticsUrl = ROUTES.projects.analytics.build(orgSlug, projectKey);
+        const captureProjectAnalyticsState = async (
+          capturePage: Parameters<typeof captureCurrentView>[0],
+          screenshotName: string,
+        ) => {
+          await capturePage.evaluate(() => {
+            window.scrollTo(0, 0);
+          });
+          await waitForScreenshotReady(capturePage);
+          await captureCurrentView(capturePage, p, screenshotName);
+        };
 
         try {
           const defaultStateResult = await testUserService.configureProjectAnalyticsState(
@@ -496,8 +506,7 @@ export async function screenshotFilledStates(
             await expect(projectsPage.analyticsRecentActivity).not.toContainText(
               "No recent activity yet",
             );
-            await waitForScreenshotReady(page);
-            await captureCurrentView(page, p, `project-${normalizedProjectKey}-analytics`);
+            await captureProjectAnalyticsState(page, `project-${normalizedProjectKey}-analytics`);
           }
 
           if (shouldCapture(p, `project-${normalizedProjectKey}-analytics-sparse-data`)) {
@@ -525,10 +534,8 @@ export async function screenshotFilledStates(
               );
               const projectsPage = new ProjectsPage(sparsePage, orgSlug);
               await projectsPage.expectAnalyticsSparseDataState();
-              await waitForScreenshotReady(sparsePage);
-              await captureCurrentView(
+              await captureProjectAnalyticsState(
                 sparsePage,
-                p,
                 `project-${normalizedProjectKey}-analytics-sparse-data`,
               );
             } finally {
@@ -564,10 +571,8 @@ export async function screenshotFilledStates(
               );
               const projectsPage = new ProjectsPage(noActivityPage, orgSlug);
               await projectsPage.expectAnalyticsNoActivityState();
-              await waitForScreenshotReady(noActivityPage);
-              await captureCurrentView(
+              await captureProjectAnalyticsState(
                 noActivityPage,
-                p,
                 `project-${normalizedProjectKey}-analytics-no-activity`,
               );
             } finally {
