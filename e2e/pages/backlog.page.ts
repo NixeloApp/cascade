@@ -1,19 +1,18 @@
 import type { Locator, Page } from "@playwright/test";
-import { TEST_IDS } from "../../src/lib/test-ids";
 import { BasePage } from "./base.page";
 
 /**
  * Backlog Page Object
- * Handles the workspace backlog view with issue columns.
+ * Handles the workspace backlog view with filterable issue rows.
  */
 export class BacklogPage extends BasePage {
-  readonly boardColumn: Locator;
   readonly emptyState: Locator;
+  readonly issueSummary: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
-    this.boardColumn = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.emptyState = page.getByText(/backlog is empty/i);
+    this.issueSummary = page.getByText(/^\d+\s+issues?(?:\s+\([^)]+\))?$/i);
   }
 
   async goto() {
@@ -28,6 +27,6 @@ export class BacklogPage extends BasePage {
   }
 
   async waitUntilReady(): Promise<void> {
-    await this.emptyState.or(this.boardColumn).waitFor({ state: "visible", timeout: 12000 });
+    await this.emptyState.or(this.issueSummary).waitFor({ state: "visible", timeout: 12000 });
   }
 }

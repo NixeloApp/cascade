@@ -1417,15 +1417,17 @@ export async function screenshotFilledStates(
   if (wsSlug && shouldCapture(p, "workspace-create-team-modal")) {
     await runCaptureStep("create team modal", async () => {
       const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
+      const workspacesPage = new WorkspacesPage(page, orgSlug);
       await page.goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 });
       await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
       await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByText("Create Team");
-      await trigger.waitFor({ state: "visible", timeout: 10000 });
-      await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await openStableDialog(
+        page,
+        workspacesPage.createTeamButton,
+        page.getByRole("dialog", { name: /^create team$/i }),
+        page.getByLabel(/^team name$/i),
+        "create team",
+      );
       await captureCurrentView(page, p, "workspace-create-team-modal");
       await dismissIfOpen(page, dialog);
     });

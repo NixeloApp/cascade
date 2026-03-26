@@ -2,7 +2,7 @@
 
 > **Route**: `/:orgSlug/workspaces/:workspaceSlug` (layout shell) with child tabs
 > **Status**: IMPLEMENTED
-> **Last Updated**: 2026-03-25
+> **Last Updated**: 2026-03-26
 
 ---
 
@@ -44,11 +44,13 @@ The workspace detail page is the primary operating surface for a single workspac
 │   │       │
 │   │       └── <Outlet /> (child route renders here)
 │
-├── index.tsx → Redirects to /teams/ (team list)
+├── index.tsx → beforeLoad redirect to /teams/ (team list)
 │
 ├── teams/index.tsx → TeamsList
-│   ├── PageHeader ("Teams")
+│   ├── Section intro row ("Teams" + compact supporting copy + create action)
 │   ├── Grid → TeamCard[] (per team, linked to team detail)
+│   ├── PageContent empty state ("No teams yet")
+│   ├── CreateTeamModal (opened from header or empty state)
 │   └── Load More button (paginated via usePaginatedQuery)
 │
 ├── backlog.tsx → WorkspaceBacklogPage
@@ -83,8 +85,8 @@ The workspace detail page is the primary operating surface for a single workspac
 ## Current Composition Walkthrough
 
 1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`. Shows loading spinner while pending, "Workspace not found" if null. Renders a lighter `PageHeader` with breadcrumbs plus a compact `PageControls` strip with 7 tabs, then an `<Outlet />` for child routes.
-2. **Index redirect** (`index.tsx`): Immediately redirects to the teams list sub-route via `useEffect` + `navigate`.
-3. **Teams list** (`teams/index.tsx`): Uses `usePaginatedQuery` with `api.teams.getTeams` (org-wide, not workspace-filtered). Shows team cards with icon, name, description, member count, project count. "Load More" button for pagination.
+2. **Index redirect** (`index.tsx`): Immediately redirects to the teams list sub-route in `beforeLoad` using TanStack Router `redirect()`. No component renders and no child query fires first.
+3. **Teams list** (`teams/index.tsx`): Uses `usePaginatedQuery` with `api.teams.getTeams` filtered by `workspaceId`. Renders a lightweight section intro instead of a second hero shell, shows team cards with icon, name, description, member count, and project count, and opens a real `CreateTeamModal` from both the populated header action and the empty state.
 4. **Backlog** (`backlog.tsx`): Queries `api.workspaces.getBacklogIssues` (workspace-scoped). Renders a flat card list with issue key, title, status, and priority.
 5. **Sprints** (`sprints.tsx`): Queries `api.workspaces.getActiveSprints` (workspace-scoped). Shows cards with project key/name, sprint name, issue count, and end date.
 6. **Dependencies** (`dependencies.tsx`): Queries `api.workspaces.getCrossTeamDependencies` with optional team/status/priority filters. `DependencyFilters` component provides three filter dropdowns. Each dependency card shows a "Blocks" badge with from-issue and to-issue details.
