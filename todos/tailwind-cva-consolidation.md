@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** Needs explicit file-by-file cleanup
-> **Last Updated:** 2026-03-25
+> **Last Updated:** 2026-03-26
 
 ## Goal
 
@@ -21,9 +21,6 @@
 
 ### Tier 1: Highest cleanup value
 
-- [ ] `src/components/ProjectsList.tsx`
-  Current shape: ~655 lines, ~87 `className=` sites.
-  Cleanup target: split repeated grid/card/loading/empty shells into owned helpers or primitives, remove repeated width/padding wrappers, and keep project-specific composition readable.
 - [ ] `src/components/GlobalSearch.tsx`
   Current shape: ~662 lines, ~37 `className=` sites.
   Cleanup target: tighten overlay/list/result-row structure, remove repeated control chrome, and extract only genuinely shared search result anatomy.
