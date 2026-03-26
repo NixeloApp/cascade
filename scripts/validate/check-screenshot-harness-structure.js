@@ -14,6 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
+import { createValidatorResult } from "./result-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const SCREENSHOT_HARNESS_BASELINE_PATH = path.join(
@@ -112,8 +113,7 @@ export function run() {
       `  ${c.red}ERROR${c.reset} ${helper.file}:${helper.line} - Private screenshot helper "${helper.name}" exceeds the ratcheted baseline for this module.`,
   );
 
-  return {
-    passed: overageHelpers.length === 0,
+  return createValidatorResult({
     errors: overageHelpers.length,
     currentCountByFile: ratchet.currentCountByKey,
     detail:
@@ -123,5 +123,5 @@ export function run() {
           ? `no blocking issues (${ratchet.totalCurrent} baselined private screenshot helper(s))`
           : "no blocking issues",
     messages: messages.length > 0 ? messages : undefined,
-  };
+  });
 }

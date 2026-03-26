@@ -1,13 +1,8 @@
 # Tailwind-to-CVA Consolidation
 
-> **Priority:** P3
+> **Priority:** P1
 > **Status:** Ongoing ratchet
 > **Last Updated:** 2026-03-25
-
-## Current Baseline
-
-- Raw styling debt baseline: **73 files / 102 violations**
-- Validator ratchet is in place; the goal is to keep shrinking the baseline without forcing fake abstractions.
 
 ## Remaining
 
@@ -29,7 +24,7 @@
 - [ ] Padding wrappers that may indicate repeated shell/layout patterns.
 - [ ] Height utilities around charts and overlays that may still need explicit ownership.
 
-## Working Rule
+## Rules
 
 - [ ] Extract shared semantics into primitives/components only when repetition is real.
 - [ ] Keep one-off composition in raw Tailwind when abstraction would hide layout intent.
