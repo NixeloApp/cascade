@@ -95,6 +95,8 @@ export interface CliOptions {
   configFilters: Set<string> | null;
   specFilters: string[];
   matchFilters: string[];
+  shardIndex: number | null;
+  shardTotal: number | null;
   help: boolean;
 }
 

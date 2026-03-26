@@ -1,0 +1,171 @@
+name: Screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    name: Build Screenshot App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.12.0"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+        env:
+          VITE_CONVEX_URL: http://127.0.0.1:3210
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-build
+          path: dist/
+          retention-days: 1
+
+  capture:
+    name: Screenshot Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+    runs-on: ubuntu-latest
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: screenshot-build
+          path: dist/
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.12.0"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm list @playwright/test --json | jq -r '.[0].devDependencies[\"@playwright/test\"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install Playwright deps (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+
+      - name: Start Local Convex Backend
+        env:
+          CONVEX_NONINTERACTIVE: 1
+          CONVEX_AGENT_MODE: anonymous
+        run: |
+          npx convex dev --local > convex.log 2>&1 &
+          CONVEX_PID=$!
+
+          echo "Waiting for Convex backend to push functions..."
+          timeout 300 bash -c 'while ! grep -q "Convex functions ready" convex.log 2>/dev/null; do sleep 1; done' || {
+            echo "Timeout waiting for Convex functions"
+            cat convex.log
+            exit 1
+          }
+          echo "Convex functions are ready!"
+
+      - name: Configure Convex Backend Environment
+        run: |
+          echo "${{ secrets.JWT_PRIVATE_KEY }}" | npx convex env set JWT_PRIVATE_KEY
+          echo '${{ secrets.JWKS }}' | npx convex env set JWKS
+          npx convex env set SITE_URL "http://127.0.0.1:5555"
+          npx convex env set AUTH_GOOGLE_ID "${{ secrets.AUTH_GOOGLE_ID }}"
+          npx convex env set AUTH_GOOGLE_SECRET "${{ secrets.AUTH_GOOGLE_SECRET }}"
+          npx convex env set CI "true"
+          npx convex env set E2E_TEST_MODE "${{ secrets.E2E_TEST_MODE }}"
+          npx convex env set E2E_API_KEY "${{ secrets.E2E_API_KEY }}"
+          npx convex env set MAILTRAP_API_TOKEN "${{ secrets.MAILTRAP_API_TOKEN }}"
+          npx convex env set MAILTRAP_INBOX_ID "${{ secrets.MAILTRAP_INBOX_ID }}"
+          npx convex env set MAILTRAP_ACCOUNT_ID "${{ secrets.MAILTRAP_ACCOUNT_ID }}"
+          npx convex env set MAILTRAP_FROM_EMAIL "${{ secrets.MAILTRAP_FROM_EMAIL }}"
+          npx convex env set MAILTRAP_MODE "${{ secrets.MAILTRAP_MODE }}"
+
+      - name: Start Preview Server
+        run: |
+          corepack pnpm exec vite preview --host 127.0.0.1 --port 5555 > preview.log 2>&1 &
+          timeout 120 bash -c 'while ! curl -fsS http://127.0.0.1:5555 >/dev/null 2>&1; do sleep 1; done' || {
+            echo "Preview server failed to start"
+            cat preview.log
+            exit 1
+          }
+
+      - name: Capture screenshot shard
+        run: pnpm screenshots -- --shard-index ${{ matrix.shardIndex }} --shard-total ${{ matrix.shardTotal }}
+        env:
+          BASE_URL: http://127.0.0.1:5555
+          CI: true
+          VITE_CONVEX_URL: http://127.0.0.1:3210
+          E2E_API_KEY: ${{ secrets.E2E_API_KEY }}
+          MAILTRAP_API_TOKEN: ${{ secrets.MAILTRAP_API_TOKEN }}
+          MAILTRAP_ACCOUNT_ID: ${{ secrets.MAILTRAP_ACCOUNT_ID }}
+          MAILTRAP_INBOX_ID: ${{ secrets.MAILTRAP_INBOX_ID }}
+
+      - name: Package changed screenshots
+        if: always()
+        run: |
+          mkdir -p screenshot-artifacts
+          git diff --name-only -- \
+            docs/design/specs/pages \
+            docs/design/specs/modals/screenshots \
+            e2e/screenshots > screenshot-artifacts/changed-files.txt
+
+          if [ -s screenshot-artifacts/changed-files.txt ]; then
+            tar -czf screenshot-artifacts/screenshots-shard-${{ matrix.shardIndex }}.tar.gz \
+              --files-from=screenshot-artifacts/changed-files.txt
+          else
+            printf "No screenshot output changed in this shard.\n" > screenshot-artifacts/README.txt
+          fi
+
+      - name: Upload screenshot outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-shard-${{ matrix.shardIndex }}
+          path: |
+            screenshot-artifacts/**
+            convex.log
+            preview.log
+          retention-days: 7

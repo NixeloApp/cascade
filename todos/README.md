@@ -4,7 +4,6 @@
 
 ## Infrastructure
 
-- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Decide whether screenshot capture should split across CI workers after the next full run.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Fix screenshot-visible regressions and tighten cross-surface visual consistency with real before/after review.
 
 ## Features
