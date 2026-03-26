@@ -10,6 +10,11 @@ const BANNED_SCREENSHOT_HOOK_PATTERNS = [
   "nixelo:e2e-open-slash-menu",
   "nixelo:e2e-open-floating-toolbar",
   "__NIXELO_E2E_MARKDOWN_IMPORT__",
+  "nixelo:e2e:roadmap-state",
+  "__NIXELO_E2E_ROADMAP_STATE__",
+  "e2e-roadmap",
+  "nixelo:e2e:time-tracking-state",
+  "__NIXELO_E2E_TIME_TRACKING_STATE__",
 ];
 
 export function collectBannedScreenshotProdHooks(source, filePath) {

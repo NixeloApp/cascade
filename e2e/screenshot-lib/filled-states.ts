@@ -1539,20 +1539,13 @@ export async function screenshotFilledStates(
         afterReady,
         expectedState,
         name,
-        requestedState,
       }: {
         afterReady?: (trackingPage: TimeTrackingPage) => Promise<void>;
         expectedState: "entries" | "burn-rate" | "rates";
         name: (typeof timeTrackingCaptureNames)[number];
-        requestedState?: "all-time" | "burn-rate" | "rates";
       }): Promise<void> => {
         const capturePage = await page.context().newPage();
         try {
-          if (requestedState) {
-            await capturePage.addInitScript((state: "all-time" | "burn-rate" | "rates") => {
-              window.sessionStorage.setItem("nixelo:e2e:time-tracking-state", state);
-            }, requestedState);
-          }
           await capturePage.goto(`${BASE_URL}${timeTrackingUrl}`, {
             waitUntil: "domcontentloaded",
             timeout: 15000,
@@ -1580,9 +1573,11 @@ export async function screenshotFilledStates(
       try {
         if (shouldCapture(p, "time-tracking-burn-rate")) {
           await captureTimeTrackingState({
-            expectedState: "burn-rate",
+            afterReady: async (trackingPage) => {
+              await trackingPage.openBurnRate();
+            },
+            expectedState: "entries",
             name: "time-tracking-burn-rate",
-            requestedState: "burn-rate",
           });
         }
 
@@ -1618,7 +1613,10 @@ export async function screenshotFilledStates(
           await captureTimeTrackingState({
             expectedState: "entries",
             name: "time-tracking-all-time",
-            requestedState: "all-time",
+            afterReady: async (trackingPage) => {
+              await trackingPage.selectDateRange("All Time");
+              await trackingPage.expectEntriesState();
+            },
           });
         }
 

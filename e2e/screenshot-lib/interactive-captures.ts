@@ -662,22 +662,16 @@ export async function screenshotRoadmapStates(
   };
 
   const withRoadmapPage = async <T>({
-    bootState,
     mode,
     run,
   }: {
-    bootState?: "detail" | "group-status";
     mode: "default" | "empty" | "milestone";
     run: (capturePage: Page, roadmapPage: RoadmapPage) => Promise<T>;
   }): Promise<T> => {
     await configureRoadmapState(mode);
-    const captureUrl = new URL(`${BASE_URL}${roadmapUrl}`);
-    if (bootState) {
-      captureUrl.searchParams.set("e2e-roadmap", bootState);
-    }
 
     try {
-      await page.goto(captureUrl.toString(), {
+      await page.goto(`${BASE_URL}${roadmapUrl}`, {
         waitUntil: "domcontentloaded",
         timeout: 15000,
       });
@@ -721,9 +715,9 @@ export async function screenshotRoadmapStates(
   if (shouldCapture(prefix, captureNames.grouped)) {
     await runRequiredCaptureStep("roadmap grouped", async () => {
       await withRoadmapPage({
-        bootState: "group-status",
         mode: "default",
         run: async (capturePage, roadmapPage) => {
+          await roadmapPage.groupByStatus();
           await roadmapPage.expectGroupedState();
           await waitForScreenshotReady(capturePage);
           await captureCurrentView(capturePage, prefix, captureNames.grouped);
@@ -735,9 +729,10 @@ export async function screenshotRoadmapStates(
   if (shouldCapture(prefix, captureNames.detail)) {
     await runRequiredCaptureStep("roadmap detail", async () => {
       await withRoadmapPage({
-        bootState: "detail",
         mode: "default",
         run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectTimelineState();
+          await roadmapPage.openPreferredIssueDetail();
           await roadmapPage.expectDetailState();
           await waitForScreenshotReady(capturePage);
           await captureCurrentView(capturePage, prefix, captureNames.detail);

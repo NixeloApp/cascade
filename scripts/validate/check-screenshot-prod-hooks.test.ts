@@ -9,11 +9,15 @@ describe("check-screenshot-prod-hooks", () => {
         if (window.__NIXELO_E2E_MARKDOWN_IMPORT__) {
           return;
         }
+        window.sessionStorage.setItem("nixelo:e2e:roadmap-state", "detail");
+        if (window.__NIXELO_E2E_TIME_TRACKING_STATE__) {
+          return;
+        }
       `,
       "/tmp/example.tsx",
     );
 
-    expect(violations).toHaveLength(2);
+    expect(violations).toHaveLength(4);
     expect(violations[0]).toMatchObject({
       line: 2,
       pattern: "nixelo:e2e-open-slash-menu",
@@ -24,6 +28,16 @@ describe("check-screenshot-prod-hooks", () => {
       pattern: "__NIXELO_E2E_MARKDOWN_IMPORT__",
     });
     expect(violations[1]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[2]).toMatchObject({
+      line: 6,
+      pattern: "nixelo:e2e:roadmap-state",
+    });
+    expect(violations[2]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[3]).toMatchObject({
+      line: 7,
+      pattern: "__NIXELO_E2E_TIME_TRACKING_STATE__",
+    });
+    expect(violations[3]?.file.endsWith("tmp/example.tsx")).toBe(true);
   });
 
   it("passes against the current repo state", () => {
