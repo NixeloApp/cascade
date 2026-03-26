@@ -15,10 +15,24 @@ permissions:
   actions: read
 
 jobs:
-  biome-and-typecheck:
-    name: Biome & TypeScript
+  static-checks:
+    name: Static: ${{ matrix.name }}
     # runs-on: blacksmith-4vcpu-ubuntu-2404
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: codegen
+            name: Convex Codegen
+          - id: biome
+            name: Biome
+          - id: typecheck
+            name: TypeScript
+          - id: validate
+            name: Validate
+          - id: screenshots-check
+            name: Screenshot Manifest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,12 +62,14 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Convex codegen
+        if: matrix.id == 'codegen'
         run: npx convex codegen
         env:
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
       - name: Check Convex generated files are up to date
+        if: matrix.id == 'codegen'
         run: |
           if [ -n "$(git status --porcelain convex/_generated/)" ]; then
             echo "❌ Convex generated files are out of date!"
@@ -64,15 +80,19 @@ jobs:
           echo "✅ Convex generated files are up to date"
 
       - name: Biome
+        if: matrix.id == 'biome'
         run: pnpm run biome:check
 
       - name: TypeScript
+        if: matrix.id == 'typecheck'
         run: pnpm run typecheck
 
-      - name: Architectural Checks
+      - name: Validate
+        if: matrix.id == 'validate'
         run: pnpm run validate
 
       - name: Screenshot Manifest
+        if: matrix.id == 'screenshots-check'
         run: pnpm run screenshots:check
 
   unit-tests:
@@ -146,7 +166,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [biome-and-typecheck, unit-tests, backend-tests]
+    needs: [static-checks, unit-tests, backend-tests]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
