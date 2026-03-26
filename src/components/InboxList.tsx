@@ -897,6 +897,160 @@ function InboxTabContent({
   );
 }
 
+function InboxIssueMetadata({ item }: { item: InboxIssueWithDetails }) {
+  return (
+    <Stack gap="xs">
+      <Typography variant="caption" color="tertiary">
+        {formatRelativeMeta(item)}
+      </Typography>
+
+      <Flex align="center" gap="sm" wrap>
+        {item.status === "snoozed" && item.snoozedUntil ? (
+          <Badge variant="outline" size="sm">
+            Until {formatCompactDate(item.snoozedUntil)}
+          </Badge>
+        ) : null}
+
+        {item.status === "duplicate" && item.duplicateOfIssue ? (
+          <Badge variant="outline" size="sm">
+            Duplicate of {item.duplicateOfIssue.key}
+          </Badge>
+        ) : null}
+
+        {item.status === "declined" && item.declineReason ? (
+          <Badge variant="outline" size="sm">
+            {item.declineReason}
+          </Badge>
+        ) : null}
+
+        {item.source === "email" ? (
+          <Badge variant="outline" size="sm">
+            <Icon icon={Mail} size="sm" />
+            Email intake
+          </Badge>
+        ) : null}
+      </Flex>
+
+      {item.triageNotes ? (
+        <Typography variant="caption" color="tertiary">
+          Notes: {item.triageNotes}
+        </Typography>
+      ) : null}
+    </Stack>
+  );
+}
+
+function InboxIssueActions({
+  isOpen,
+  item,
+  onAcceptIssue,
+  onOpenDecline,
+  onOpenDuplicate,
+  onOpenCustomSnooze,
+  onRemoveIssue,
+  onReopenIssue,
+  onSnoozeIssue,
+  onUnsnoozeIssue,
+}: {
+  isOpen: boolean;
+  item: InboxIssueWithDetails;
+  onAcceptIssue: (issueId: Id<"inboxIssues">) => Promise<void>;
+  onOpenDecline: (issue: InboxIssueWithDetails) => void;
+  onOpenDuplicate: (issue: InboxIssueWithDetails) => void;
+  onOpenCustomSnooze: (issue: InboxIssueWithDetails) => void;
+  onRemoveIssue: (issueId: Id<"inboxIssues">) => Promise<void>;
+  onReopenIssue: (issueId: Id<"inboxIssues">) => Promise<void>;
+  onSnoozeIssue: (issueId: Id<"inboxIssues">, until: number) => Promise<void>;
+  onUnsnoozeIssue: (issueId: Id<"inboxIssues">) => Promise<void>;
+}) {
+  return (
+    <Flex
+      align="center"
+      gap="xs"
+      wrap
+      className="w-full border-t border-ui-border-divider sm:w-auto sm:shrink-0 sm:justify-end sm:border-t-0"
+    >
+      {isOpen ? (
+        <>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => void onAcceptIssue(item._id)}
+            leftIcon={<Icon icon={CheckCircle2} size="sm" />}
+          >
+            Accept
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onOpenDecline(item)}
+            leftIcon={<Icon icon={XCircle} size="sm" />}
+          >
+            Decline
+          </Button>
+          {item.status === "snoozed" ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => void onUnsnoozeIssue(item._id)}
+              leftIcon={<Icon icon={RotateCcw} size="sm" />}
+            >
+              Unsnooze
+            </Button>
+          ) : (
+            <SnoozeDropdownButton
+              label="Snooze"
+              onPreset={(until) => void onSnoozeIssue(item._id, until)}
+              onCustomDate={() => onOpenCustomSnooze(item)}
+            />
+          )}
+        </>
+      ) : (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => void onReopenIssue(item._id)}
+          leftIcon={<Icon icon={RotateCcw} size="sm" />}
+        >
+          Reopen
+        </Button>
+      )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="iconSm"
+            variant="ghost"
+            aria-label={`More actions for ${item.issue.key}`}
+            leftIcon={<Icon icon={MoreHorizontal} size="sm" />}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {isOpen ? (
+            <>
+              <DropdownMenuItem
+                onSelect={() => onOpenDuplicate(item)}
+                icon={<Icon icon={Copy} size="sm" />}
+              >
+                Mark duplicate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          ) : null}
+
+          <DropdownMenuItem
+            onSelect={() => void onRemoveIssue(item._id)}
+            variant="danger"
+            icon={<Icon icon={Trash2} size="sm" />}
+          >
+            Remove from inbox
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </Flex>
+  );
+}
+
 function InboxIssueRow({
   isSelected,
   item,
@@ -928,152 +1082,54 @@ function InboxIssueRow({
 
   return (
     <Card padding="sm" hoverable data-testid={TEST_IDS.PROJECT_INBOX.ROW}>
-      <Flex align="start" gap="md">
-        {isOpen ? (
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onToggleSelect(item._id)}
-            aria-label={`Select ${item.issue.title}`}
-          />
-        ) : null}
-
-        <div className={cn(getCardRecipeClassName(config.recipe), "size-8 shrink-0")}>
-          <Flex align="center" justify="center" className="h-full">
-            <Icon icon={StatusIcon} size="sm" />
-          </Flex>
-        </div>
-
-        <FlexItem flex="1" className="min-w-0">
-          <Stack gap="xs">
-            <Flex align="center" gap="sm" wrap>
-              <Typography variant="label" className="text-ui-text-secondary">
-                {item.issue.key}
-              </Typography>
-              <Typography className="truncate">{item.issue.title}</Typography>
-              <Badge variant="outline" size="sm">
-                {config.label}
-              </Badge>
-            </Flex>
-
-            <Typography variant="caption" color="tertiary">
-              {formatRelativeMeta(item)}
-            </Typography>
-
-            <Flex align="center" gap="sm" wrap>
-              {item.status === "snoozed" && item.snoozedUntil ? (
-                <Badge variant="outline" size="sm">
-                  Until {formatCompactDate(item.snoozedUntil)}
-                </Badge>
-              ) : null}
-
-              {item.status === "duplicate" && item.duplicateOfIssue ? (
-                <Badge variant="outline" size="sm">
-                  Duplicate of {item.duplicateOfIssue.key}
-                </Badge>
-              ) : null}
-
-              {item.status === "declined" && item.declineReason ? (
-                <Badge variant="outline" size="sm">
-                  {item.declineReason}
-                </Badge>
-              ) : null}
-
-              {item.source === "email" ? (
-                <Badge variant="outline" size="sm">
-                  <Icon icon={Mail} size="sm" />
-                  Email intake
-                </Badge>
-              ) : null}
-
-              {item.triageNotes ? (
-                <Typography variant="caption" color="tertiary">
-                  Notes: {item.triageNotes}
-                </Typography>
-              ) : null}
-            </Flex>
-          </Stack>
-        </FlexItem>
-
-        <Flex align="center" gap="xs" justify="end" wrap>
+      <Stack gap="sm" className="sm:flex-row sm:items-start sm:justify-between">
+        <Flex align="start" gap="md" className="min-w-0 flex-1">
           {isOpen ? (
-            <>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => void onAcceptIssue(item._id)}
-                leftIcon={<Icon icon={CheckCircle2} size="sm" />}
-              >
-                Accept
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => onOpenDecline(item)}
-                leftIcon={<Icon icon={XCircle} size="sm" />}
-              >
-                Decline
-              </Button>
-              {item.status === "snoozed" ? (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => void onUnsnoozeIssue(item._id)}
-                  leftIcon={<Icon icon={RotateCcw} size="sm" />}
-                >
-                  Unsnooze
-                </Button>
-              ) : (
-                <SnoozeDropdownButton
-                  label="Snooze"
-                  onPreset={(until) => void onSnoozeIssue(item._id, until)}
-                  onCustomDate={() => onOpenCustomSnooze(item)}
-                />
-              )}
-            </>
-          ) : (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => void onReopenIssue(item._id)}
-              leftIcon={<Icon icon={RotateCcw} size="sm" />}
-            >
-              Reopen
-            </Button>
-          )}
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect(item._id)}
+              aria-label={`Select ${item.issue.title}`}
+            />
+          ) : null}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="iconSm"
-                variant="ghost"
-                aria-label={`More actions for ${item.issue.key}`}
-                leftIcon={<Icon icon={MoreHorizontal} size="sm" />}
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {isOpen ? (
-                <>
-                  <DropdownMenuItem
-                    onSelect={() => onOpenDuplicate(item)}
-                    icon={<Icon icon={Copy} size="sm" />}
-                  >
-                    Mark duplicate
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              ) : null}
+          <div className={cn(getCardRecipeClassName(config.recipe), "size-8 shrink-0")}>
+            <Flex align="center" justify="center" className="h-full">
+              <Icon icon={StatusIcon} size="sm" />
+            </Flex>
+          </div>
 
-              <DropdownMenuItem
-                onSelect={() => void onRemoveIssue(item._id)}
-                variant="danger"
-                icon={<Icon icon={Trash2} size="sm" />}
-              >
-                Remove from inbox
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <FlexItem flex="1" className="min-w-0">
+            <Stack gap="xs">
+              <Flex align="start" gap="sm" wrap className="sm:items-center">
+                <Typography variant="label" className="shrink-0 text-ui-text-secondary">
+                  {item.issue.key}
+                </Typography>
+                <Typography className="min-w-0 break-words leading-snug sm:truncate">
+                  {item.issue.title}
+                </Typography>
+                <Badge variant="outline" size="sm" className="shrink-0">
+                  {config.label}
+                </Badge>
+              </Flex>
+
+              <InboxIssueMetadata item={item} />
+            </Stack>
+          </FlexItem>
         </Flex>
-      </Flex>
+
+        <InboxIssueActions
+          isOpen={isOpen}
+          item={item}
+          onAcceptIssue={onAcceptIssue}
+          onOpenDecline={onOpenDecline}
+          onOpenDuplicate={onOpenDuplicate}
+          onOpenCustomSnooze={onOpenCustomSnooze}
+          onRemoveIssue={onRemoveIssue}
+          onReopenIssue={onReopenIssue}
+          onSnoozeIssue={onSnoozeIssue}
+          onUnsnoozeIssue={onUnsnoozeIssue}
+        />
+      </Stack>
     </Card>
   );
 }

@@ -259,6 +259,23 @@ describe("InboxList", () => {
     expect(screen.getByRole("button", { name: /decline all/i })).toBeInTheDocument();
   });
 
+  it("uses a full-width responsive action bar for mobile inbox rows", () => {
+    setupMocks({
+      counts: createMockCounts({ open: 1, pending: 1 }),
+      inboxIssues: [createMockInboxIssue()],
+    });
+
+    render(<InboxList projectId={"proj-1" as Id<"projects">} />);
+
+    const row = screen.getByTestId(TEST_IDS.PROJECT_INBOX.ROW);
+    const acceptButton = within(row).getByRole("button", { name: /accept/i });
+    const actionBar = acceptButton.closest("div");
+
+    expect(actionBar).not.toBeNull();
+    expect(actionBar).toHaveClass("w-full", "border-t", "sm:w-auto");
+    expect(within(row).getByText("Test Issue")).toHaveClass("break-words");
+  });
+
   it("opens the decline dialog from the row action", async () => {
     const user = userEvent.setup();
     setupMocks({

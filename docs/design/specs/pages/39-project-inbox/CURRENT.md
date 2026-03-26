@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects/:key/inbox`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-25
+> **Last Updated**: 2026-03-26
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -176,6 +176,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 | Tab separation | Open vs closed is clean. No mixing of actionable and resolved items. |
 | Submitter context | Triage notes show who submitted and how (API, email). |
 | Recovery UX | Empty states now point directly to the next useful action instead of dead-ending. |
+| Mobile readability | Row actions now stack beneath the content on small screens, so titles, provenance, and badges keep usable width instead of collapsing into a narrow column. |
 
 ---
 
@@ -215,5 +216,6 @@ duplicate -> Copy (secondary)          "Duplicate"
 
 The project inbox is now a fuller triage surface with reviewed closed, bulk-selection,
 snooze-menu, decline-dialog, duplicate-search, and both empty-tab states across
-desktop/tablet/mobile. The main engineering debt is that the route still lives in a
-very large single component.
+desktop/tablet/mobile. The main product-level visual bug on the route was the mobile
+row collapse; that is now fixed. The main engineering debt is that the route still
+lives in a very large single component.
