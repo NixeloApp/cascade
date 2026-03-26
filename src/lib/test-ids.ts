@@ -88,6 +88,8 @@ export const TEST_IDS = {
   BOARD: {
     /** @see src/components/KanbanBoard.tsx */
     ROOT: "project-board",
+    /** @see src/components/Kanban/BoardToolbar.tsx */
+    TOOLBAR: "project-board-toolbar",
     /** @see src/components/KanbanBoard.tsx */
     LOADING_STATE: "project-board-loading-state",
     /** @see src/components/KanbanBoard.tsx */

@@ -32,10 +32,10 @@
 - The shared project shell and mobile tab row are tighter than the last round, so the board starts sooner and reads less like stacked chrome.
 - The extra mobile board-actions card is gone; export/sprint controls now sit as a lighter utility row above filters instead of a full-width chrome block.
 - Mobile filter controls now use the quieter shared filter button/input chrome instead of a heavier custom pill treatment.
-- The mobile selection toggle now lives in a shared floating toolbar cluster, so it stops consuming a full row before the lanes begin.
+- Mobile utility actions now sit in a compact in-flow toolbar row beneath filters, so they stay reachable without overlapping the workflow selector.
 - Mobile lanes now focus one workflow state at a time, with a segmented selector above the board so narrow screens keep card content readable.
-- Mobile export and sprint controls now share that same floating cluster as selection, which removes the last detached board-only toolbar row before the lanes begin.
-- The export action still uses compact mobile treatment, but it now rides inside the floating cluster instead of a separate strip.
+- Mobile export and sprint controls share that same compact toolbar row as selection instead of floating over the selector or living in a detached actions card.
+- The export action still uses compact mobile treatment, but it now stays in the shared toolbar row instead of a separate strip.
 - The board baseline is now operationally trustworthy, so the remaining issues are visual rather than harness-related.
 - The loading state now has a reviewed desktop/tablet/mobile matrix and no longer reuses the old desktop-shaped multi-column haze on phone widths.
 - The screenshot matrix also includes create-issue validation/success/draft-restore, filter-active, swimlane, import/export, collapsed-column, loading, and WIP warning states in the spec folder beyond the single modal preview shown above.
@@ -73,4 +73,4 @@
 ## Summary
 
 The board screenshot baseline is trustworthy again. The next pass can stay focused on card hierarchy
-and lane-level polish, not clipped mobile rails, loading-shell regressions, harness repair, or mobile toolbar cleanup.
+and lane-level polish, not clipped mobile rails, loading-shell regressions, harness repair, or selector-overlapping mobile toolbar cleanup.
