@@ -4,6 +4,7 @@ import { createContext, type ReactNode, useContext } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
@@ -39,6 +40,10 @@ vi.mock("@/hooks/useOrgContext", () => ({
   useOrganization: vi.fn(),
 }));
 
+vi.mock("@/hooks/useMediaQuery", () => ({
+  useMediaQuery: vi.fn(),
+}));
+
 vi.mock("@/components/layout", () => ({
   PageLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PageHeader: ({ title, actions }: { actions?: ReactNode; title: string }) => (
@@ -55,8 +60,10 @@ vi.mock("@/components/Calendar/CalendarView", () => ({
     organizationId,
     teamId,
     workspaceId,
+    defaultMode,
   }: {
     colorByScope?: string;
+    defaultMode?: string;
     organizationId?: string;
     teamId?: string;
     workspaceId?: string;
@@ -64,7 +71,7 @@ vi.mock("@/components/Calendar/CalendarView", () => ({
     <div data-testid={TEST_IDS.CALENDAR.ROOT}>
       {`calendar:${organizationId ?? "none"}:${workspaceId ?? "none"}:${teamId ?? "none"}:${
         colorByScope ?? "none"
-      }`}
+      }:${defaultMode ?? "none"}`}
     </div>
   ),
 }));
@@ -128,6 +135,7 @@ vi.mock("@/components/ui/Select", () => ({
 }));
 
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
+const mockUseMediaQuery = vi.mocked(useMediaQuery);
 const mockUseOrganization = vi.mocked(useOrganization);
 
 const WORKSPACE_ID = "workspace-product" as Id<"workspaces">;
@@ -159,6 +167,7 @@ describe("OrganizationCalendarPage", () => {
       organizationName: "Acme",
       userRole: "owner",
     });
+    mockUseMediaQuery.mockReturnValue(false);
     mockUseAuthenticatedQuery.mockImplementation((_, args) => {
       if (typeof args === "object" && args !== null && "workspaceId" in args) {
         if (args.workspaceId === WORKSPACE_ID) {
@@ -185,7 +194,7 @@ describe("OrganizationCalendarPage", () => {
     expect(screen.getByLabelText("Team filter")).toHaveTextContent("Select workspace first");
 
     expect(await screen.findByTestId(TEST_IDS.CALENDAR.ROOT)).toHaveTextContent(
-      "calendar:org-1:none:none:workspace",
+      "calendar:org-1:none:none:workspace:week",
     );
   });
 
@@ -225,7 +234,17 @@ describe("OrganizationCalendarPage", () => {
     expect(screen.getByRole("heading", { name: "Team scope" })).toBeInTheDocument();
     expect(screen.getByLabelText("Team filter")).not.toBeDisabled();
     expect(await screen.findByTestId(TEST_IDS.CALENDAR.ROOT)).toHaveTextContent(
-      `calendar:org-1:${WORKSPACE_ID}:${TEAM_ID}:none`,
+      `calendar:org-1:${WORKSPACE_ID}:${TEAM_ID}:none:week`,
+    );
+  });
+
+  it("defaults to month mode on mobile viewports", async () => {
+    mockUseMediaQuery.mockReturnValue(true);
+
+    render(<OrganizationCalendarPage />);
+
+    expect(await screen.findByTestId(TEST_IDS.CALENDAR.ROOT)).toHaveTextContent(
+      "calendar:org-1:none:none:workspace:month",
     );
   });
 

@@ -2,6 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect } from "react";
+import type { Mode } from "@/components/Calendar/shadcn-calendar/calendar-types";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Card } from "@/components/ui/Card";
 import { CardSection } from "@/components/ui/CardSection";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 
@@ -243,6 +245,7 @@ export function OrganizationCalendarPage() {
   const { organizationId } = useOrganization();
   const { workspace: workspaceParam, team: teamParam } = Route.useSearch();
   const navigate = Route.useNavigate();
+  const isMobileViewport = useMediaQuery("(max-width: 767px)");
 
   const requestedWorkspaceId =
     typeof workspaceParam === "string" ? (workspaceParam as Id<"workspaces">) : undefined;
@@ -260,6 +263,7 @@ export function OrganizationCalendarPage() {
     workspaces,
   });
   const scopePresentation = getCalendarScopePresentation(selection);
+  const defaultCalendarMode: Mode = isMobileViewport ? "month" : "week";
 
   const setSelectedWorkspaceId = (value: Id<"workspaces"> | "all") => {
     navigate({
@@ -339,6 +343,7 @@ export function OrganizationCalendarPage() {
             }
             teamId={selection.selectedTeamId === "all" ? undefined : selection.selectedTeamId}
             colorByScope={scopePresentation.colorByScope}
+            defaultMode={defaultCalendarMode}
           />
         </Suspense>
       </div>

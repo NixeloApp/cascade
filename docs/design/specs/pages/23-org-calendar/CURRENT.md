@@ -2,7 +2,7 @@
 
 > **Route**: `/:orgSlug/calendar`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-25
+> **Last Updated**: 2026-03-26
 
 ---
 
@@ -48,7 +48,8 @@ The org calendar provides a single unified view of calendar events across all wo
 3. **Workspace-scoped team list**: The team query is already scoped by the selected workspace, so the team filter only offers teams that belong to the active workspace. With no workspace selected, the team filter is disabled and shows "Select workspace first".
 4. **Calendar-shaped loading**: The route shows a calendar-specific skeleton for both initial query load and lazy `CalendarView` load instead of a generic spinner shell.
 5. **Scope label and color behavior**: The header title reflects org/workspace/team scope, and `CalendarView` receives `colorByScope="workspace"` for org scope, `colorByScope="team"` for workspace scope, and default coloring for a single team.
-6. **CalendarView**: Still lazy-loaded via `React.lazy`, keeping day/week/month modes, event CRUD modals, and drag-to-reschedule inside the shared calendar surface.
+6. **Mobile-first default mode**: The org-level route now boots the shared calendar in `month` mode on narrow viewports so the default mobile screenshot shows a readable calendar surface instead of an empty-feeling week grid.
+7. **CalendarView**: Still lazy-loaded via `React.lazy`, keeping day/week/month modes, event CRUD modals, and drag-to-reschedule inside the shared calendar surface.
 
 ---
 
@@ -65,7 +66,7 @@ The org calendar provides a single unified view of calendar events across all wo
 
 ## Current Problems
 
-No route-specific defects are currently tracked for org calendar on this branch. Remaining work belongs to the broader cross-surface visual consistency pass.
+The previous mobile default-state weakness is fixed on this branch. Remaining work belongs to the broader cross-surface visual consistency pass rather than a route-specific org-calendar defect.
 
 ---
 
@@ -73,8 +74,8 @@ No route-specific defects are currently tracked for org calendar on this branch.
 
 | File | Purpose |
 |------|---------|
-| `src/routes/_auth/_app/$orgSlug/calendar.tsx` | Route component (339 lines) with search-param normalization, scoped filters, and calendar-shaped loading state |
-| `src/components/Calendar/CalendarView.tsx` | Shared calendar view with day/week/month modes |
+| `src/routes/_auth/_app/$orgSlug/calendar.tsx` | Route component with search-param normalization, scoped filters, calendar-shaped loading state, and mobile default-mode selection |
+| `src/components/Calendar/CalendarView.tsx` | Shared calendar view with day/week/month modes and adopt-if-unchanged default-mode behavior |
 | `src/components/Calendar/CreateEventModal.tsx` | Event creation modal |
 | `src/components/Calendar/EventDetailsModal.tsx` | Event details/edit modal |
 | `src/components/Calendar/shadcn-calendar/calendar.tsx` | Calendar grid engine |

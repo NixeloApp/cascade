@@ -20,6 +20,7 @@ vi.mock("@/lib/toast", () => ({
 // Mock heavy child components
 vi.mock("./shadcn-calendar/calendar", () => ({
   ShadcnCalendar: (props: {
+    mode: string;
     onAddEvent?: (date?: Date) => void;
     onEventMove?: (
       event: {
@@ -33,11 +34,15 @@ vi.mock("./shadcn-calendar/calendar", () => ({
       },
       date: Date,
     ) => Promise<void> | void;
+    setMode?: (mode: "day" | "week" | "month") => void;
   }) => (
     <div data-testid="mock-shadcn-calendar">
-      <span>ShadcnCalendar</span>
+      <span>{`ShadcnCalendar:${props.mode}`}</span>
       <button type="button" onClick={() => props.onAddEvent?.()}>
         Add Event
+      </button>
+      <button type="button" onClick={() => props.setMode?.("day")}>
+        Switch To Day
       </button>
       <button
         type="button"
@@ -97,7 +102,7 @@ describe("CalendarView", () => {
 
     expect(screen.getByTestId(TEST_IDS.CALENDAR.ROOT)).toBeInTheDocument();
     expect(screen.getByTestId("mock-shadcn-calendar")).toBeInTheDocument();
-    expect(screen.getByText("ShadcnCalendar")).toBeInTheDocument();
+    expect(screen.getByText("ShadcnCalendar:week")).toBeInTheDocument();
   });
 
   it("renders the CreateEventModal in closed state initially", () => {
@@ -147,5 +152,25 @@ describe("CalendarView", () => {
       startTime: expectedMove?.startTime,
       endTime: expectedMove?.endTime,
     });
+  });
+
+  it("uses a provided default mode", () => {
+    render(<CalendarView defaultMode="month" />);
+
+    expect(screen.getByText("ShadcnCalendar:month")).toBeInTheDocument();
+  });
+
+  it("adopts a new default mode only while still on the previous default", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<CalendarView defaultMode="week" />);
+
+    rerender(<CalendarView defaultMode="month" />);
+    expect(screen.getByText("ShadcnCalendar:month")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /switch to day/i }));
+    expect(screen.getByText("ShadcnCalendar:day")).toBeInTheDocument();
+
+    rerender(<CalendarView defaultMode="week" />);
+    expect(screen.getByText("ShadcnCalendar:day")).toBeInTheDocument();
   });
 });
