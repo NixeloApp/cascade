@@ -4,8 +4,8 @@
 
 ## Infrastructure
 
-- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Reduce raw Tailwind debt and extract primitives only where repetition is real.
-- [ ] [validator-strengthening.md](./validator-strengthening.md) — Add the remaining highest-value validators now that severity/reporting conventions are shared and documented.
+- [ ] [validator-strengthening.md](./validator-strengthening.md) — Finish the remaining high-signal validator gaps: stricter `.collect()` enforcement and explicit lifecycle timestamp ownership checks.
+- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Reduce raw Tailwind debt in the worst files first and only extract primitives when repetition is proven.
 - [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Decide whether screenshot capture should split across CI workers and keep the harness honest.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Fix screenshot-visible regressions and tighten cross-surface visual consistency with real before/after review.
 

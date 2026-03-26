@@ -1,31 +1,67 @@
 # Tailwind-to-CVA Consolidation
 
 > **Priority:** P1
-> **Status:** Ongoing ratchet
+> **Status:** Needs explicit file-by-file cleanup
 > **Last Updated:** 2026-03-25
 
-## Remaining
+## Goal
 
-### Highest-Debt Files
+- [ ] Reduce raw Tailwind debt in the highest-noise files.
+- [ ] Keep one-off layout in raw Tailwind when it is local and readable.
+- [ ] Extract shared APIs only when the same semantics repeat across multiple call sites.
+- [ ] Avoid feature-local shadow design systems made of class maps or one-off `cva()` helpers.
 
-- [ ] `RoadmapView.tsx`
-- [ ] `IssueCard.tsx`
-- [ ] `calendar-body-month.tsx`
-- [ ] `RoadmapHeaderControls.tsx`
-- [ ] `DocumentTree.tsx`
-- [ ] `GlobalSearch.tsx`
-- [ ] `ProductShowcase.tsx`
-- [ ] `ProjectsList.tsx`
+## Current Read
 
-### Main Violation Buckets
+- [ ] The main problem is not “too little CVA.” The main problem is oversized components with too many inline layout decisions and repeated local patterns.
+- [ ] None of the top debt files currently define `cva()` locally; the work is mostly composition cleanup, shell extraction, and repeated class cluster removal.
+- [ ] The best next pass is 1-3 files at a time, not a repo-wide conversion sweep.
 
-- [ ] Margin utilities that are still acceptable composition in some places but should be reviewed when touched.
-- [ ] Width utilities, especially repeated control widths that may justify semantic props.
-- [ ] Padding wrappers that may indicate repeated shell/layout patterns.
-- [ ] Height utilities around charts and overlays that may still need explicit ownership.
+## Priority Order
 
-## Rules
+### Tier 1: Highest cleanup value
 
-- [ ] Extract shared semantics into primitives/components only when repetition is real.
-- [ ] Keep one-off composition in raw Tailwind when abstraction would hide layout intent.
-- [ ] Verify spacing/layout changes visually with screenshots when the route is screenshot-owned.
+- [ ] `src/components/ProjectsList.tsx`
+  Current shape: ~655 lines, ~87 `className=` sites.
+  Cleanup target: split repeated grid/card/loading/empty shells into owned helpers or primitives, remove repeated width/padding wrappers, and keep project-specific composition readable.
+- [ ] `src/components/GlobalSearch.tsx`
+  Current shape: ~662 lines, ~37 `className=` sites.
+  Cleanup target: tighten overlay/list/result-row structure, remove repeated control chrome, and extract only genuinely shared search result anatomy.
+- [ ] `src/components/RoadmapView.tsx`
+  Current shape: ~791 lines, ~15 `className=` sites.
+  Cleanup target: reduce oversized shell logic, separate timeline chrome from issue-row rendering, and remove repeated roadmap-specific structural wrappers before considering any new primitive.
+
+### Tier 2: Dense repeated local composition
+
+- [ ] `src/components/Documents/DocumentTree.tsx`
+  Current shape: ~422 lines, ~21 `className=` sites.
+  Cleanup target: normalize row indentation/interaction shells and stop repeating tree-row spacing logic.
+- [ ] `src/components/Landing/ProductShowcase.tsx`
+  Current shape: ~362 lines, ~22 `className=` sites.
+  Cleanup target: remove repeated presentation wrappers and consolidate repeated showcase card anatomy.
+- [ ] `src/components/IssueDetail/IssueCard.tsx`
+  Current shape: ~565 lines, ~19 `className=` sites.
+  Cleanup target: remove card-on-card drift and normalize repeated metadata/action row composition.
+
+### Tier 3: Smaller follow-up passes
+
+- [ ] `src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx`
+  Current shape: ~272 lines, ~16 `className=` sites.
+  Cleanup target: normalize month-cell chrome and event row spacing without over-abstracting the calendar internals.
+- [ ] `src/components/Roadmap/RoadmapHeaderControls.tsx`
+  Current shape: ~188 lines, ~1 `className=` site.
+  Cleanup target: likely low priority now; only revisit if `RoadmapView.tsx` cleanup leaves obvious repeated control semantics.
+
+## Done Criteria
+
+- [ ] Each touched file gets smaller or materially easier to reason about.
+- [ ] Repeated shells move into an owned primitive/helper only when used more than once or when they encode a real semantic contract.
+- [ ] No new feature-local `cva()` helpers unless they are clearly reusable and would be wrong to leave inline.
+- [ ] No new reusable class-string maps that bypass the shared primitive layer.
+- [ ] Screenshot-owned routes get visual verification after spacing/shell changes.
+
+## Explicit Non-Goals
+
+- [ ] Do not convert every class list into `cva()` just because it is long.
+- [ ] Do not create generic spacing primitives that only hide local layout intent.
+- [ ] Do not rewrite stable shared UI primitives unless the cleanup is truly cross-surface and reusable.
