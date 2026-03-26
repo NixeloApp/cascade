@@ -71,8 +71,8 @@ That exists because one giant screenshot job was too slow and too fragile. Split
 
 The capture implementation still lives in:
 
-- [screenshot-pages.ts](/home/mikhail/Desktop/cascade/e2e/screenshot-pages.ts)
-- [sharding.ts](/home/mikhail/Desktop/cascade/e2e/screenshot-lib/sharding.ts)
+- [screenshot-pages.ts](../../e2e/screenshot-pages.ts)
+- [sharding.ts](../../e2e/screenshot-lib/sharding.ts)
 
 But the separate PR screenshot workflow is gone. Screenshot capture is now a local/manual tool, while CI only checks the approved artifact manifest through `static`.
 
@@ -80,7 +80,7 @@ But the separate PR screenshot workflow is gone. Screenshot capture is now a loc
 
 The entrypoint is:
 
-- [screenshot-pages.ts](/home/mikhail/Desktop/cascade/e2e/screenshot-pages.ts)
+- [screenshot-pages.ts](../../e2e/screenshot-pages.ts)
 
 High level flow:
 
@@ -101,7 +101,7 @@ The editor has a few test-only hooks because some visual states are hard to reac
 
 Current hooks in:
 
-- [PlateEditor.tsx](/home/mikhail/Desktop/cascade/src/components/PlateEditor.tsx)
+- [PlateEditor.tsx](../../src/components/PlateEditor.tsx)
 
 Current events:
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getInitialValue,
+  normalizeSerializedEditorValue,
   plateValueToProseMirrorSnapshot,
   proseMirrorSnapshotToValue,
 } from "./editor";
@@ -267,5 +268,28 @@ describe("plateValueToProseMirrorSnapshot", () => {
     expect(mention.value).toBe("user-123");
     // Children must be proper Plate text leaves, not ProseMirror element objects
     expect(mention.children).toEqual([{ text: "@alice" }]);
+  });
+});
+
+describe("normalizeSerializedEditorValue", () => {
+  it("preserves valid serialized Plate arrays", () => {
+    const serialized = JSON.stringify([{ type: "p", children: [{ text: "Ready" }] }]);
+
+    expect(normalizeSerializedEditorValue(serialized)).toBe(serialized);
+  });
+
+  it("converts plain text into serialized Plate paragraphs", () => {
+    expect(normalizeSerializedEditorValue("Line one\nLine two")).toBe(
+      JSON.stringify([
+        { type: "p", children: [{ text: "Line one" }] },
+        { type: "p", children: [{ text: "Line two" }] },
+      ]),
+    );
+  });
+
+  it("converts JSON string literals into serialized Plate paragraphs", () => {
+    expect(normalizeSerializedEditorValue(JSON.stringify("Template description"))).toBe(
+      JSON.stringify([{ type: "p", children: [{ text: "Template description" }] }]),
+    );
   });
 });

@@ -56,6 +56,7 @@ import {
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
 import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
+import { normalizeSerializedEditorValue } from "@/lib/plate/editor";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -591,7 +592,7 @@ function useIssueDraftSupport({
     if (!draft) return;
 
     setFieldValue("title", draft.title);
-    setFieldValue("description", draft.description);
+    setFieldValue("description", normalizeSerializedEditorValue(draft.description));
     setFieldValue("type", draft.type);
     setFieldValue("priority", draft.priority);
     setFieldValue("assigneeId", draft.assigneeId);
@@ -660,7 +661,10 @@ function useApplySelectedIssueTemplate({
     setFieldValue("type", template.type);
     setFieldValue("priority", template.defaultPriority);
     setFieldValue("title", template.titleTemplate);
-    setFieldValue("description", template.descriptionTemplate || "");
+    setFieldValue(
+      "description",
+      normalizeSerializedEditorValue(template.descriptionTemplate || ""),
+    );
     onEditorValueApplied();
 
     if (template.defaultLabels?.length && labels) {
@@ -696,7 +700,7 @@ function applyAISuggestionsToForm({
   suggestions: AISuggestions;
 }) {
   if (suggestions.description && !description.trim()) {
-    setFieldValue("description", suggestions.description);
+    setFieldValue("description", normalizeSerializedEditorValue(suggestions.description));
     onEditorValueApplied();
   }
 

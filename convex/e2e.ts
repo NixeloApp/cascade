@@ -542,7 +542,7 @@ function screenshotOrderedList(items: string[]): ScreenshotDocumentNode {
 function screenshotBlockquote(text: string): ScreenshotDocumentNode {
   return {
     type: "blockquote",
-    content: [screenshotText(text)],
+    content: [screenshotParagraph(text)],
   };
 }
 
