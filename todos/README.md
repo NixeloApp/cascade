@@ -4,16 +4,16 @@
 
 ## Infrastructure
 
-- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — P0: collapse screenshot capture onto reusable E2E/page-object state setup, remove screenshot-only prod hooks where possible, and keep screenshot capture local/manual while `static` handles artifact integrity in CI.
-- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P0: normalize confusing route/API naming, separate public token flows from admin collection pages, remove hidden `-*.test.tsx` route-test conventions, and make file-routed structure readable without repo folklore.
-- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — P1: shrink oversized shared primitive variant surfaces, remove shared-recipe bloat from `Card`/`Button`/`Typography`, and burn down the remaining raw Tailwind ratchet instead of hiding styling debt in baseline files.
-- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Fix screenshot-visible regressions and tighten cross-surface visual consistency with real before/after review.
+- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — P0: make screenshots a thin layer on top of reusable E2E/page-object state setup, not a second Playwright framework.
+- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P0: remove route/API naming ambiguity, replace hidden `-*.test.tsx` conventions, and make file-routed structure readable without repo folklore.
+- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — P1: shrink oversized shared primitive surfaces (`Card`, `Button`, `Typography`, `Badge`) and burn down the remaining raw Tailwind ratchet.
+- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — P2: fix screenshot-visible regressions with actual before/after review, not theory-driven polish.
 
 ## Features
 
-- [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Provider rollout, multi-platform capture, and collaboration cleanup.
-- [ ] [email-outreach.md](./email-outreach.md) — Reliability polish, deeper analytics, and provider expansion.
-- [ ] [offline-pwa.md](./offline-pwa.md) — Push/runtime verification and final documentation cleanup.
-- [ ] [cal-com-features.md](./cal-com-features.md) — AI scheduling, MCP/chat scheduling ideas, branding, and portal/domain controls.
+- [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Provider rollout, capture-platform direction, and collaboration reality check.
+- [ ] [email-outreach.md](./email-outreach.md) — Reliability polish, analytics depth, and provider expansion.
+- [ ] [offline-pwa.md](./offline-pwa.md) — Push/runtime verification and final docs cleanup.
+- [ ] [cal-com-features.md](./cal-com-features.md) — Scheduling, branding, and portal ideas that still need a product decision.
 - [ ] [plane-features.md](./plane-features.md) — External notification routing.
-- [ ] [feature-docs-expansion.md](./feature-docs-expansion.md) — Current-state feature documentation still needs coverage and structure cleanup.
+- [ ] [feature-docs-expansion.md](./feature-docs-expansion.md) — Current-state feature docs still need coverage and a standard structure.

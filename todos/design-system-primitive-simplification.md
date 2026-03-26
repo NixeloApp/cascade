@@ -13,28 +13,31 @@
 ## Shared Primitive Surface Area
 
 - [ ] Simplify [Card.tsx](/home/mikhail/Desktop/cascade/src/components/ui/Card.tsx).
-  Current problem: the `recipe` axis is massively overloaded and acting like a catch-all visual theme switchboard instead of a tight primitive.
+  Current problem: the `recipe` axis is massively overloaded at `199` options and acts like a catch-all visual theme switchboard instead of a tight primitive.
 - [ ] Simplify [Button.tsx](/home/mikhail/Desktop/cascade/src/components/ui/Button.tsx).
   Current problem:
-  - `chrome`
-  - `chromeSize`
-  - `variant`
-  - `size`
+  - `chrome` (`39`)
+  - `chromeSize` (`37`)
+  - `variant` (`18`)
+  - `size` (`14`)
   have grown into a broad matrix that is hard to reason about and easy to misuse.
 - [ ] Simplify [Typography.tsx](/home/mikhail/Desktop/cascade/src/components/ui/Typography.tsx).
-  Current problem: `variant` and `color` have become too broad, which makes route/component authors depend on giant primitive enums instead of clearer semantic wrappers.
+  Current problem:
+  - `variant` (`60`)
+  - `color` (`11`)
+  are too broad, which makes route/component authors depend on giant primitive enums instead of clearer semantic wrappers.
 - [ ] Review [Badge.tsx](/home/mikhail/Desktop/cascade/src/components/ui/Badge.tsx) after the first three.
-  It is smaller than the others, but it is still above the oversized-axis threshold and may be carrying presentation states that should live elsewhere.
+  It is smaller than the others, but `variant` is still at `24`, above the oversized-axis threshold and likely carrying presentation states that should live elsewhere.
 
 ## Raw Tailwind Ratchet Follow-Through
 
 - [ ] Burn down the remaining raw Tailwind baseline instead of treating it as "already handled."
 - [ ] Start with the highest remaining files still above the local residue floor:
-  - [calendar-body-month.tsx](/home/mikhail/Desktop/cascade/src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx)
-  - [IssueCard.tsx](/home/mikhail/Desktop/cascade/src/components/IssueDetail/IssueCard.tsx)
-  - [GlobalSearch.tsx](/home/mikhail/Desktop/cascade/src/components/GlobalSearch.tsx)
-  - [ProductShowcase.tsx](/home/mikhail/Desktop/cascade/src/components/Landing/ProductShowcase.tsx)
-  - [RoadmapView.tsx](/home/mikhail/Desktop/cascade/src/components/RoadmapView.tsx)
+  - [calendar-body-month.tsx](/home/mikhail/Desktop/cascade/src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx) (`4`)
+  - [IssueCard.tsx](/home/mikhail/Desktop/cascade/src/components/IssueDetail/IssueCard.tsx) (`4`)
+  - [GlobalSearch.tsx](/home/mikhail/Desktop/cascade/src/components/GlobalSearch.tsx) (`3`)
+  - [ProductShowcase.tsx](/home/mikhail/Desktop/cascade/src/components/Landing/ProductShowcase.tsx) (`3`)
+  - [RoadmapView.tsx](/home/mikhail/Desktop/cascade/src/components/RoadmapView.tsx) (`3`)
 - [ ] After those, sweep the remaining `1-2` count files by pattern, not by random one-file cleanup.
 
 ## Rules For This Pass
