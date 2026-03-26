@@ -13,12 +13,11 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { getConvexSiteUrl } from "@/lib/convex";
 import { Check, Copy, Key, LinkIcon, RotateCcw, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { SettingsSection, SettingsSectionInset } from "../Settings/SettingsSection";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
-import { Label } from "../ui/Label";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -52,9 +51,8 @@ function TokenDisplay({ token }: { token: string }) {
   const maskedToken = `${token.slice(0, 12)}${"•".repeat(8)}`;
 
   return (
-    <Card variant="outline" padding="sm" className="bg-ui-bg">
+    <SettingsSectionInset title="Intake Token" padding="sm">
       <Stack gap="xs">
-        <Label>Intake Token</Label>
         <Flex align="center" gap="sm">
           <Typography variant="small" className="font-mono select-all break-all">
             {maskedToken}
@@ -62,7 +60,7 @@ function TokenDisplay({ token }: { token: string }) {
           <CopyButton value={token} label="token" />
         </Flex>
       </Stack>
-    </Card>
+    </SettingsSectionInset>
   );
 }
 
@@ -70,9 +68,8 @@ function EndpointDisplay() {
   const endpoint = buildIntakeEndpoint();
 
   return (
-    <Card variant="outline" padding="sm" className="bg-ui-bg">
+    <SettingsSectionInset title="Endpoint URL" padding="sm">
       <Stack gap="xs">
-        <Label>Endpoint URL</Label>
         <Flex align="center" gap="sm">
           <Typography variant="small" className="font-mono select-all break-all">
             {endpoint}
@@ -80,7 +77,7 @@ function EndpointDisplay() {
           <CopyButton value={endpoint} label="endpoint URL" />
         </Flex>
       </Stack>
-    </Card>
+    </SettingsSectionInset>
   );
 }
 
@@ -92,17 +89,17 @@ function UsageExample({ token }: { token: string }) {
   -d '{"title": "Bug report", "submitterEmail": "user@example.com"}'`;
 
   return (
-    <Card variant="outline" padding="sm" className="bg-ui-bg">
+    <SettingsSectionInset
+      title="Example Request"
+      action={<CopyButton value={curlExample} label="curl example" />}
+      padding="sm"
+    >
       <Stack gap="xs">
-        <Flex align="center" justify="between">
-          <Label>Example Request</Label>
-          <CopyButton value={curlExample} label="curl example" />
-        </Flex>
         <Typography variant="caption" className="font-mono whitespace-pre-wrap break-all">
           {curlExample}
         </Typography>
       </Stack>
-    </Card>
+    </SettingsSectionInset>
   );
 }
 
@@ -153,18 +150,14 @@ export function IntakeSettings({ projectId }: IntakeSettingsProps) {
   };
 
   return (
-    <Card variant="outline" padding="sm" className="bg-ui-bg">
+    <SettingsSection
+      title="External Intake"
+      description="Allow external users or services to submit issues to this project's inbox via API."
+      icon={LinkIcon}
+      variant="outline"
+      padding="lg"
+    >
       <Stack gap="md">
-        <Stack gap="xs">
-          <Flex align="center" gap="xs">
-            <Icon icon={LinkIcon} size="sm" />
-            <Typography variant="label">External Intake</Typography>
-          </Flex>
-          <Typography variant="small" color="secondary">
-            Allow external users or services to submit issues to this project&apos;s inbox via API.
-          </Typography>
-        </Stack>
-
         {tokenStatus === undefined ? (
           <Typography variant="caption" color="tertiary">
             Loading...
@@ -205,7 +198,6 @@ export function IntakeSettings({ projectId }: IntakeSettingsProps) {
           </Button>
         )}
       </Stack>
-
       <ConfirmDialog
         isOpen={revokeConfirmOpen}
         onClose={() => setRevokeConfirmOpen(false)}
@@ -216,6 +208,6 @@ export function IntakeSettings({ projectId }: IntakeSettingsProps) {
         isLoading={isRevoking}
         variant="danger"
       />
-    </Card>
+    </SettingsSection>
   );
 }

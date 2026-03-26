@@ -139,7 +139,7 @@ describe("MemberManagement", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Add Member" }));
-    const addForm = screen.getByText("Add New Member").closest("[class*='bg-ui-bg']");
+    const addForm = screen.getByText("Add new member").closest("[class*='border-ui-border']");
     if (!(addForm instanceof HTMLElement)) {
       throw new Error("Add member form not found");
     }

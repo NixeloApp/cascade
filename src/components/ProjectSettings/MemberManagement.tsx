@@ -10,11 +10,12 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
+import { SettingsSection, SettingsSectionInset } from "../Settings/SettingsSection";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { CardSection } from "../ui/CardSection";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
@@ -135,25 +136,23 @@ export function MemberManagement({
 
   return (
     <>
-      <Card variant="outline" padding="md" className="sm:p-6">
+      <SettingsSection
+        data-testid={TEST_IDS.PROJECT_SETTINGS.MEMBERS_SECTION}
+        title="Members"
+        description={`${members.length} member${members.length !== 1 ? "s" : ""} with access`}
+        action={
+          !showAddForm ? (
+            <Button variant="secondary" size="sm" onClick={() => setShowAddForm(true)}>
+              Add Member
+            </Button>
+          ) : null
+        }
+        variant="outline"
+        padding="lg"
+      >
         <Stack gap="lg">
-          <Flex justify="between" align="center">
-            <Stack gap="xs">
-              <Typography variant="h4">Members</Typography>
-              <Typography variant="small" color="secondary">
-                {members.length} member{members.length !== 1 ? "s" : ""} with access
-              </Typography>
-            </Stack>
-            {!showAddForm && (
-              <Button variant="secondary" size="sm" onClick={() => setShowAddForm(true)}>
-                Add Member
-              </Button>
-            )}
-          </Flex>
-
           {showAddForm && (
-            <CardSection size="md" className="bg-ui-bg">
-              <Typography variant="label">Add New Member</Typography>
+            <SettingsSectionInset title="Add new member">
               <Stack gap="md">
                 <Input
                   label="Email Address"
@@ -191,7 +190,7 @@ export function MemberManagement({
                   </Button>
                 </Flex>
               </Stack>
-            </CardSection>
+            </SettingsSectionInset>
           )}
 
           <Stack gap="sm">
@@ -238,6 +237,7 @@ export function MemberManagement({
                           variant="ghostDanger"
                           size="sm"
                           onClick={() => setMemberToRemove(member)}
+                          data-testid={TEST_IDS.PROJECT_SETTINGS.MEMBER_REMOVE_BUTTON}
                         >
                           Remove
                         </Button>
@@ -249,7 +249,7 @@ export function MemberManagement({
             ))}
           </Stack>
         </Stack>
-      </Card>
+      </SettingsSection>
 
       <ConfirmDialog
         isOpen={!!memberToRemove}

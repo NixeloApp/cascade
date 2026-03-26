@@ -2,7 +2,7 @@
 
 > **Route**: embedded inside `/:slug/projects/:key/settings`
 > **Status**: IMPLEMENTED as a project-settings sub-surface
-> **Last Updated**: 2026-03-21
+> **Last Updated**: 2026-03-26
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -15,7 +15,7 @@
 | Desktop Dark | ![](screenshots/desktop-dark.png) | ![](screenshots/desktop-dark-confirm-dialog.png) |
 | Desktop Light | ![](screenshots/desktop-light.png) | ![](screenshots/desktop-light-confirm-dialog.png) |
 | Tablet Light | ![](screenshots/tablet-light.png) | ![](screenshots/tablet-light-confirm-dialog.png) |
-| Mobile Light | n/a | ![](screenshots/mobile-light-confirm-dialog.png) |
+| Mobile Light | ![](screenshots/mobile-light.png) | ![](screenshots/mobile-light-confirm-dialog.png) |
 
 ---
 
@@ -28,7 +28,7 @@
   - role changes
   - owner protection
   - removal with confirm dialog
-- The confirm dialog is now part of the reviewed screenshot set.
+- The base state and confirm dialog are now both part of the reviewed screenshot set across desktop, tablet, and mobile.
 
 ---
 
@@ -54,8 +54,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The surface works, but its shell still reads more like a local settings card than a first-class section anatomy | embedded surface chrome | LOW |
-| Mobile base-state coverage is still weaker than dialog coverage in the screenshot set | screenshot depth | LOW |
+| The embedded surface is appropriately scoped now, but if member management expands much further it should graduate into a broader team/org management route instead of accumulating more local settings chrome. | future scope | LOW |
 
 ---
 
@@ -69,5 +68,6 @@
 
 ## Summary
 
-Members management is current as an embedded settings surface. The open question is not whether it
-exists, but whether it should someday graduate into a broader team-management route.
+Members management is current as an embedded settings surface with reviewed base and confirm-dialog
+states across desktop, tablet, and mobile. The remaining question is future scope, not shell
+quality or screenshot depth.

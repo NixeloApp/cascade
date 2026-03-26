@@ -533,6 +533,13 @@ export const TEST_IDS = {
     HOUR_COMPLIANCE_SECTION: "settings-hour-compliance-section",
   },
 
+  PROJECT_SETTINGS: {
+    /** @see src/components/ProjectSettings/MemberManagement.tsx */
+    MEMBERS_SECTION: "project-settings-members-section",
+    /** @see src/components/ProjectSettings/MemberManagement.tsx */
+    MEMBER_REMOVE_BUTTON: "project-settings-member-remove-button",
+  },
+
   // ============================================================
   // Invites (User Management)
   // ============================================================

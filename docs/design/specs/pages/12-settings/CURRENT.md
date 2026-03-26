@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/settings/profile` plus search-param tab state across the settings suite
 > **Status**: REVIEWED across the major settings tabs and modal states
-> **Last Updated**: 2026-03-21
+> **Last Updated**: 2026-03-26
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -86,6 +86,7 @@ full settings workspace:
 - Integrations now use shared `SettingsIntegrationSection`.
 - Admin uses a dedicated shared shell rather than a stack of unrelated panels.
 - Security, API keys, and devtools no longer drift away from the shared settings anatomy.
+- The embedded project-settings surface now uses a direct section intro plus the same lighter section stack, instead of wrapping the whole project settings area in an extra outer card.
 
 ---
 

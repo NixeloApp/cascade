@@ -601,7 +601,9 @@ export async function screenshotFilledStates(
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-members`);
 
         if (shouldCapture(p, `project-${normalizedProjectKey}-members-confirm-dialog`)) {
-          const removeButton = page.getByRole("button", { name: /^remove$/i }).first();
+          const removeButton = page
+            .getByTestId(TEST_IDS.PROJECT_SETTINGS.MEMBER_REMOVE_BUTTON)
+            .first();
           const dialog = await openStableDialog(
             page,
             removeButton,

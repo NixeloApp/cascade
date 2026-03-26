@@ -13,9 +13,9 @@ import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { ChevronDown, ChevronUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { SettingsSection } from "../Settings/SettingsSection";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { CardSection } from "../ui/CardSection";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select } from "../ui/form";
@@ -161,22 +161,20 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
   };
 
   return (
-    <Card variant="outline" padding="md" className="sm:p-6">
+    <SettingsSection
+      title="Workflow"
+      description="Configure issue status workflow"
+      action={
+        !isEditing ? (
+          <Button variant="secondary" size="sm" onClick={handleEdit}>
+            Edit
+          </Button>
+        ) : null
+      }
+      variant="outline"
+      padding="lg"
+    >
       <Stack gap="lg">
-        <Flex justify="between" align="center">
-          <Stack gap="xs">
-            <Typography variant="label">Workflow</Typography>
-            <Typography variant="small" color="secondary">
-              Configure issue status workflow
-            </Typography>
-          </Stack>
-          {!isEditing && (
-            <Button variant="secondary" size="sm" onClick={handleEdit}>
-              Edit
-            </Button>
-          )}
-        </Flex>
-
         {isEditing ? (
           <Stack gap="md">
             <Stack gap="sm">
@@ -264,6 +262,6 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
           </Stack>
         )}
       </Stack>
-    </Card>
+    </SettingsSection>
   );
 }
