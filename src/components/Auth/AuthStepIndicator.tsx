@@ -1,5 +1,5 @@
-import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { ProgressPill } from "@/components/ui/ProgressPill";
 
 interface AuthStepIndicatorProps {
   currentStep: number;
@@ -15,9 +15,11 @@ export function AuthStepIndicator({ currentStep, totalSteps = 3 }: AuthStepIndic
   return (
     <Flex justify="center" gap="sm" aria-label="Authentication progress">
       {stepIds.map((stepId, stepIndex) => (
-        <Card
+        <ProgressPill
           key={stepId}
-          recipe={stepIndex <= currentStep ? "authStepIndicatorActive" : "authStepIndicator"}
+          aria-hidden="true"
+          tone={stepIndex <= currentStep ? "active" : "inactive"}
+          length={stepIndex <= currentStep ? "extended" : "compact"}
         />
       ))}
     </Flex>

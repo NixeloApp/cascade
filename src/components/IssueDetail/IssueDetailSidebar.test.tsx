@@ -8,7 +8,9 @@ import type { ReactNode } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOfflineIssueUpdateStatus } from "@/hooks/useOfflineIssueUpdateStatus";
+import { useQueuedOfflineIssueStatus } from "@/hooks/useOfflineOptimisticState";
 import { showError } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { IssueDetailSidebar } from "./IssueDetailSidebar";
@@ -22,6 +24,14 @@ vi.mock("@/hooks/useOfflineIssueUpdateStatus", () => ({
   useOfflineIssueUpdateStatus: vi.fn(),
 }));
 
+vi.mock("@/hooks/useCurrentUser", () => ({
+  useCurrentUser: vi.fn(),
+}));
+
+vi.mock("@/hooks/useOfflineOptimisticState", () => ({
+  useQueuedOfflineIssueStatus: vi.fn(),
+}));
+
 vi.mock("@/lib/toast", () => ({
   showError: vi.fn(),
 }));
@@ -32,6 +42,7 @@ vi.mock("./IssueMetadataSection", () => ({
     members,
     workflowStates,
     labels,
+    status,
     onStatusChange,
     onTypeChange,
     onPriorityChange,
@@ -47,9 +58,10 @@ vi.mock("./IssueMetadataSection", () => ({
     onPriorityChange?: (priority: IssuePriority) => Promise<void> | void;
     onAssigneeChange?: (assigneeId: Id<"users"> | null) => Promise<void> | void;
     onStoryPointsChange?: (storyPoints: number | null) => Promise<void> | void;
+    status?: string;
   }) => (
     <div>
-      <div>{`metadata:${editable ? "editable" : "read-only"}:${members?.length ?? 0}:${workflowStates?.length ?? 0}:${labels.length}`}</div>
+      <div>{`metadata:${editable ? "editable" : "read-only"}:${members?.length ?? 0}:${workflowStates?.length ?? 0}:${labels.length}:${status ?? "unknown"}`}</div>
       <button type="button" onClick={() => void onStatusChange?.("in_progress")}>
         Change Status
       </button>
@@ -117,6 +129,8 @@ vi.mock("@/components/ui/Typography", () => ({
 
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
+const mockUseCurrentUser = vi.mocked(useCurrentUser);
+const mockUseQueuedOfflineIssueStatus = vi.mocked(useQueuedOfflineIssueStatus);
 const mockShowError = vi.mocked(showError);
 
 type MutationProcedure = (
@@ -166,6 +180,12 @@ describe("IssueDetailSidebar", () => {
     updateIssue.mockResolvedValue(undefined);
     updateStatus.mockResolvedValue({ queued: false });
     mockUseAuthenticatedQuery.mockReturnValue(project);
+    mockUseCurrentUser.mockReturnValue({
+      user: null,
+      isLoading: false,
+      isAuthenticated: true,
+    });
+    mockUseQueuedOfflineIssueStatus.mockReturnValue(null);
     mockUseAuthenticatedMutation.mockReturnValue({
       mutate: createMutationMock(updateIssue),
       canAct: true,
@@ -187,7 +207,7 @@ describe("IssueDetailSidebar", () => {
     expect(screen.getByText("Watchers")).toBeInTheDocument();
     expect(screen.getByText("Dependencies")).toBeInTheDocument();
 
-    expect(screen.getByText("metadata:editable:2:2:1")).toBeInTheDocument();
+    expect(screen.getByText("metadata:editable:2:2:1:todo")).toBeInTheDocument();
     expect(screen.getByText("time:issue_1:project_1:13:billing")).toBeInTheDocument();
     expect(screen.getByText("attachments:issue_1")).toBeInTheDocument();
     expect(screen.getByText("watchers:issue_1")).toBeInTheDocument();
@@ -197,7 +217,15 @@ describe("IssueDetailSidebar", () => {
   it("passes a read-only metadata state when editing is disabled", () => {
     render(<IssueDetailSidebar {...defaultProps} canEdit={false} />);
 
-    expect(screen.getByText("metadata:read-only:2:2:1")).toBeInTheDocument();
+    expect(screen.getByText("metadata:read-only:2:2:1:todo")).toBeInTheDocument();
+  });
+
+  it("prefers the queued offline status while replay is pending", () => {
+    mockUseQueuedOfflineIssueStatus.mockReturnValue("in_progress");
+
+    render(<IssueDetailSidebar {...defaultProps} />);
+
+    expect(screen.getByText("metadata:editable:2:2:1:in_progress")).toBeInTheDocument();
   });
 
   it("wires metadata edits to the correct mutations", async () => {

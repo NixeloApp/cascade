@@ -1,5 +1,6 @@
 import { Inbox } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { PageContent } from "./PageContent";
 
@@ -7,6 +8,7 @@ describe("PageContent", () => {
   it("renders a loading spinner while content is loading", () => {
     render(<PageContent isLoading={true}>Loaded content</PageContent>);
 
+    expect(screen.getByTestId(TEST_IDS.PAGE.LOADING_STATE)).toBeInTheDocument();
     expect(screen.getByRole("status")).toBeInTheDocument();
     expect(screen.queryByText("Loaded content")).not.toBeInTheDocument();
   });
@@ -16,21 +18,22 @@ describe("PageContent", () => {
 
     render(
       <PageContent
-        isEmpty={true}
         emptyState={{
           icon: Inbox,
           title: "Nothing here yet",
           description: "Create your first item to get started.",
-          action: {
-            label: "Create item",
-            onClick,
-          },
+          actions: (
+            <button type="button" onClick={onClick}>
+              Create item
+            </button>
+          ),
         }}
       >
         Hidden content
       </PageContent>,
     );
 
+    expect(screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Nothing here yet" })).toBeInTheDocument();
     expect(screen.getByText("Create your first item to get started.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create item" })).toBeInTheDocument();

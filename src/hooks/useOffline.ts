@@ -5,6 +5,7 @@ import {
   offlineDB,
   offlineStatus,
   processOfflineQueue,
+  subscribeOfflineQueueChanges,
 } from "../lib/offline";
 
 function logOfflineError(operation: string, error: unknown) {
@@ -152,10 +153,14 @@ export function useOfflineQueue() {
 
     loadInitial();
 
+    const unsubscribe = subscribeOfflineQueueChanges(() => {
+      void loadInitial();
+    });
     const interval = setInterval(loadInitial, 5000);
 
     return () => {
       mounted = false;
+      unsubscribe();
       clearInterval(interval);
     };
   }, []);

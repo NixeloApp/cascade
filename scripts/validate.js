@@ -66,6 +66,7 @@
 
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { normalizeValidatorResult } from "./validate/result-utils.js";
 import { c, ROOT } from "./validate/utils.js";
 
 function runIsolatedCheck(modulePath) {
@@ -103,12 +104,15 @@ function runIsolatedCheck(modulePath) {
   }
 
   const result = JSON.parse(lastJsonLine);
-  const passed = child.status === 0 && result.passed !== false && (result.errors ?? 0) === 0;
-  // Normalize errors: if check failed (passed=false), ensure at least 1 error is reported
-  const errors = passed ? 0 : Math.max(1, result.errors ?? 0);
+  const normalizedResult = normalizeValidatorResult(result);
+  const passed =
+    child.status === 0 && normalizedResult.passed !== false && (normalizedResult.errors ?? 0) === 0;
+  // Audit checks never contribute to the exit code; enforced checks must already
+  // satisfy the result contract in normalizeValidatorResult().
+  const errors = normalizedResult.blocking === false || passed ? 0 : (normalizedResult.errors ?? 0);
   return {
-    ...result,
-    passed,
+    ...normalizedResult,
+    passed: normalizedResult.blocking === false ? true : passed,
     errors,
   };
 }
@@ -116,10 +120,12 @@ function runIsolatedCheck(modulePath) {
 function formatResultLine(index, totalChecks, result) {
   const idx = `[${index + 1}/${totalChecks}]`;
   const dots = ".".repeat(Math.max(1, 30 - result.name.length));
-  const statusColor = result.passed ? c.green : c.red;
-  const statusText = result.passed ? "PASS" : "FAIL";
-  const detailStr = !result.passed && result.detail ? `  (${result.detail})` : "";
-  return `${idx} ${result.name}${dots} ${statusColor}${statusText}${c.reset}${detailStr}`;
+  const isAudit = result.blocking === false;
+  const statusColor = isAudit ? c.cyan : result.passed ? c.green : c.red;
+  const statusText = isAudit ? "PASS" : result.passed ? "PASS" : "FAIL";
+  const scopeLabel = isAudit ? `${c.cyan}[audit]${c.reset}` : `${c.dim}[enforced]${c.reset}`;
+  const detailStr = result.detail ? `  (${result.detail})` : "";
+  return `${idx} ${result.name}${dots} ${statusColor}${statusText}${c.reset} ${scopeLabel}${detailStr}`;
 }
 
 const checks = [

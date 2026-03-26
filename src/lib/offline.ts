@@ -59,6 +59,8 @@ export interface OfflineMutation {
   nextRetryAfter?: number;
 }
 
+type OfflineQueueListener = () => void;
+
 /**
  * Error message patterns that indicate a permanent (non-retryable) failure.
  * These errors won't resolve by retrying — the entity is gone, the input
@@ -76,7 +78,29 @@ const PERMANENT_FAILURE_PATTERNS = [
   /is deleted/i,
   /revoked/i,
   /unsupported offline mutation/i,
+  /clientrequestid was already used for a different comment/i,
 ] as const;
+
+const offlineQueueListeners = new Set<OfflineQueueListener>();
+
+function notifyOfflineQueueListeners(): void {
+  for (const listener of [...offlineQueueListeners]) {
+    queueMicrotask(() => {
+      try {
+        listener();
+      } catch (error) {
+        console.info("[offline] Offline queue listener failed", { error });
+      }
+    });
+  }
+}
+
+export function subscribeOfflineQueueChanges(listener: OfflineQueueListener): () => void {
+  offlineQueueListeners.add(listener);
+  return () => {
+    offlineQueueListeners.delete(listener);
+  };
+}
 
 /**
  * Classify whether an error is permanent (should not be retried) or
@@ -113,6 +137,9 @@ export function getFailureReason(error: unknown): string {
   }
   if (/unsupported offline mutation/i.test(message)) {
     return "This action type is not supported for offline replay";
+  }
+  if (/clientrequestid was already used for a different comment/i.test(message)) {
+    return "This queued comment conflicts with an already-submitted request";
   }
 
   return message;
@@ -276,6 +303,9 @@ class OfflineDB {
       mutation.status = "pending";
       await db.put("mutations", mutation);
     }
+    if (syncing.length > 0) {
+      notifyOfflineQueueListeners();
+    }
     return syncing.length;
   }
 
@@ -298,11 +328,13 @@ class OfflineDB {
 
     const updated = applyMutationStatusUpdate(mutation, status, options);
     await db.put("mutations", updated);
+    notifyOfflineQueueListeners();
   }
 
   async deleteMutation(id: number): Promise<void> {
     const db = await this.open();
     await db.delete("mutations", id);
+    notifyOfflineQueueListeners();
   }
 
   async clearSyncedMutations(olderThan?: number): Promise<number> {
@@ -323,6 +355,10 @@ class OfflineDB {
         deleted++;
       }
       cursor = await cursor.continue();
+    }
+
+    if (deleted > 0) {
+      notifyOfflineQueueListeners();
     }
 
     return deleted;
@@ -471,6 +507,7 @@ export async function queueOfflineMutation(
   };
 
   const id = await offlineDB.addMutation(mutation);
+  notifyOfflineQueueListeners();
   return id;
 }
 

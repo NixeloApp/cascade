@@ -45,32 +45,25 @@ vi.mock("@/components/layout", () => ({
   PageContent: ({
     children,
     isLoading,
-    isEmpty,
     emptyState,
     className,
   }: {
     children: ReactNode;
     isLoading?: boolean;
-    isEmpty?: boolean;
     emptyState?: {
       title: string;
       description?: string;
-      action?: { label: string; onClick: () => void };
-      "data-testid"?: string;
-    };
+      actions?: ReactNode;
+    } | null;
     className?: string;
   }) =>
     isLoading ? (
       <div>Loading</div>
-    ) : isEmpty ? (
-      <div data-testid={emptyState?.["data-testid"]}>
-        <div>{emptyState?.title}</div>
-        {emptyState?.description ? <div>{emptyState.description}</div> : null}
-        {emptyState?.action ? (
-          <button type="button" onClick={emptyState.action.onClick}>
-            {emptyState.action.label}
-          </button>
-        ) : null}
+    ) : emptyState ? (
+      <div data-testid={TEST_IDS.PAGE.EMPTY_STATE}>
+        <div>{emptyState.title}</div>
+        {emptyState.description ? <div>{emptyState.description}</div> : null}
+        {emptyState.actions}
       </div>
     ) : (
       <div className={className}>{children}</div>
@@ -323,7 +316,7 @@ describe("MyIssuesBoardPage", () => {
 
     render(<MyIssuesBoardPage />);
 
-    expect(screen.getByTestId(TEST_IDS.MY_ISSUES.EMPTY_STATE)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
     expect(screen.getByText("No issues assigned to you yet")).toBeInTheDocument();
   });
 
@@ -334,13 +327,13 @@ describe("MyIssuesBoardPage", () => {
 
     await user.click(screen.getByRole("option", { name: "Lowest" }));
 
-    const filteredEmptyState = screen.getByTestId(TEST_IDS.MY_ISSUES.FILTER_EMPTY_STATE);
+    const filteredEmptyState = screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
     expect(filteredEmptyState).toBeInTheDocument();
     expect(screen.getByText("No issues match these filters")).toBeInTheDocument();
 
     await user.click(within(filteredEmptyState).getByRole("button", { name: "Clear filters" }));
 
-    expect(screen.queryByTestId(TEST_IDS.MY_ISSUES.FILTER_EMPTY_STATE)).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.PAGE.EMPTY_STATE)).not.toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.MY_ISSUES.CONTENT)).toBeInTheDocument();
     expect(screen.getAllByTestId(TEST_IDS.MY_ISSUES.COLUMN)).toHaveLength(2);
   });

@@ -19,6 +19,7 @@ import { Building2, SearchX, X } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import {
   filterWorkspaces,
+  getWorkspaceOverviewCopy,
   getWorkspaceSearchEmptyState,
   getWorkspaceSearchSummary,
   shouldShowWorkspaceSearch,
@@ -27,6 +28,118 @@ import {
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/")({
   component: WorkspacesList,
 });
+
+type WorkspaceListData = Exclude<
+  ReturnType<typeof useAuthenticatedQuery<typeof api.workspaces.list>>,
+  undefined
+>;
+type WorkspaceListItem = WorkspaceListData[number];
+
+function getWorkspacePageEmptyState(onCreateWorkspace: () => void) {
+  return {
+    icon: Building2,
+    title: "No workspaces yet",
+    description: "Create your first workspace to organize teams and projects",
+    actions: (
+      <Button variant="primary" onClick={onCreateWorkspace}>
+        + Create Workspace
+      </Button>
+    ),
+  };
+}
+
+interface WorkspaceSearchControlsProps {
+  showSearch: boolean;
+  hasSearch: boolean;
+  searchQuery: string;
+  matchCount: number;
+  onSearchChange: (value: string) => void;
+  onClearSearch: () => void;
+}
+
+function WorkspaceSearchControls({
+  showSearch,
+  hasSearch,
+  searchQuery,
+  matchCount,
+  onSearchChange,
+  onClearSearch,
+}: WorkspaceSearchControlsProps) {
+  if (!showSearch) {
+    return null;
+  }
+
+  return (
+    <Stack gap="sm">
+      <Flex gap="sm" align="center">
+        <Input
+          data-testid={TEST_IDS.WORKSPACE.SEARCH_INPUT}
+          type="text"
+          variant="search"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search workspaces..."
+        />
+        {hasSearch && (
+          <Button variant="ghost" size="sm" onClick={onClearSearch} aria-label="Clear search">
+            <X className="size-4" />
+          </Button>
+        )}
+      </Flex>
+
+      {hasSearch && (
+        <Typography variant="small" color="secondary">
+          {getWorkspaceSearchSummary(matchCount, searchQuery)}
+        </Typography>
+      )}
+    </Stack>
+  );
+}
+
+interface WorkspaceResultsProps {
+  filteredWorkspaces: WorkspaceListItem[] | undefined;
+  hasSearch: boolean;
+  orgSlug: string;
+  searchEmptyState: ReturnType<typeof getWorkspaceSearchEmptyState> | null;
+  onClearSearch: () => void;
+}
+
+function WorkspaceResults({
+  filteredWorkspaces,
+  hasSearch,
+  orgSlug,
+  searchEmptyState,
+  onClearSearch,
+}: WorkspaceResultsProps) {
+  if (filteredWorkspaces && filteredWorkspaces.length > 0) {
+    return (
+      <Grid cols={1} colsMd={2} gap="xl">
+        {filteredWorkspaces.map((workspace) => (
+          <WorkspaceCard key={workspace._id} orgSlug={orgSlug} workspace={workspace} />
+        ))}
+      </Grid>
+    );
+  }
+
+  if (!hasSearch) {
+    return null;
+  }
+
+  return (
+    <EmptyState
+      icon={SearchX}
+      title={searchEmptyState?.title ?? "No workspaces match your search"}
+      description={
+        searchEmptyState?.description ?? "Try a different workspace name, slug, or description."
+      }
+      data-testid={TEST_IDS.WORKSPACE.SEARCH_EMPTY_STATE}
+      action={{
+        label: "Clear search",
+        onClick: onClearSearch,
+      }}
+    />
+  );
+}
 
 export function WorkspacesList() {
   const { organizationId, orgSlug } = useOrganization();
@@ -46,10 +159,19 @@ export function WorkspacesList() {
   const totalTeams = workspaces?.reduce((sum, workspace) => sum + workspace.teamCount, 0) ?? 0;
   const totalProjects =
     workspaces?.reduce((sum, workspace) => sum + workspace.projectCount, 0) ?? 0;
+  const overviewCopy = getWorkspaceOverviewCopy({
+    workspaceCount,
+    totalTeams,
+    totalProjects,
+  });
   const hasSearch = searchQuery.trim().length > 0;
   const showSearch = shouldShowWorkspaceSearch(workspaceCount, searchQuery);
   const matchCount = filteredWorkspaces?.length ?? 0;
   const searchEmptyState = hasSearch ? getWorkspaceSearchEmptyState(searchQuery) : null;
+  const pageEmptyState =
+    workspaces !== undefined && workspaces.length === 0
+      ? getWorkspacePageEmptyState(() => setIsCreateModalOpen(true))
+      : null;
 
   const handleWorkspaceCreated = (slug: string) => {
     navigate({
@@ -76,26 +198,12 @@ export function WorkspacesList() {
         onCreated={handleWorkspaceCreated}
       />
 
-      <PageContent
-        isLoading={workspaces === undefined}
-        isEmpty={workspaces !== undefined && workspaces.length === 0}
-        emptyState={{
-          icon: Building2,
-          title: "No workspaces yet",
-          description: "Create your first workspace to organize teams and projects",
-          "data-testid": TEST_IDS.WORKSPACE.EMPTY_STATE,
-          action: (
-            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-              + Create Workspace
-            </Button>
-          ),
-        }}
-      >
+      <PageContent isLoading={workspaces === undefined} emptyState={pageEmptyState}>
         <Stack gap="xl">
           <OverviewBand
-            eyebrow="Workspace map"
-            title="Structure teams before work gets scattered."
-            description="Use workspaces to group departments, keep related projects together, and route ownership cleanly across the organization."
+            eyebrow={overviewCopy.eyebrow}
+            title={overviewCopy.title}
+            description={overviewCopy.description}
             metrics={[
               { label: "Workspaces", value: workspaceCount },
               { label: "Teams", value: totalTeams },
@@ -103,56 +211,22 @@ export function WorkspacesList() {
             ]}
           />
 
-          {showSearch && (
-            <Flex gap="sm" align="center">
-              <Input
-                data-testid={TEST_IDS.WORKSPACE.SEARCH_INPUT}
-                type="text"
-                variant="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search workspaces..."
-              />
-              {hasSearch && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSearchQuery("")}
-                  aria-label="Clear search"
-                >
-                  <X className="size-4" />
-                </Button>
-              )}
-            </Flex>
-          )}
+          <WorkspaceSearchControls
+            showSearch={showSearch}
+            hasSearch={hasSearch}
+            searchQuery={searchQuery}
+            matchCount={matchCount}
+            onSearchChange={setSearchQuery}
+            onClearSearch={() => setSearchQuery("")}
+          />
 
-          {hasSearch && (
-            <Typography variant="small" color="secondary">
-              {getWorkspaceSearchSummary(matchCount, searchQuery)}
-            </Typography>
-          )}
-
-          {filteredWorkspaces && filteredWorkspaces.length > 0 ? (
-            <Grid cols={1} colsMd={2} gap="xl">
-              {filteredWorkspaces.map((workspace) => (
-                <WorkspaceCard key={workspace._id} orgSlug={orgSlug} workspace={workspace} />
-              ))}
-            </Grid>
-          ) : hasSearch ? (
-            <EmptyState
-              icon={SearchX}
-              title={searchEmptyState?.title ?? "No workspaces match your search"}
-              description={
-                searchEmptyState?.description ??
-                "Try a different workspace name, slug, or description."
-              }
-              data-testid={TEST_IDS.WORKSPACE.SEARCH_EMPTY_STATE}
-              action={{
-                label: "Clear search",
-                onClick: () => setSearchQuery(""),
-              }}
-            />
-          ) : null}
+          <WorkspaceResults
+            filteredWorkspaces={filteredWorkspaces}
+            hasSearch={hasSearch}
+            orgSlug={orgSlug}
+            searchEmptyState={searchEmptyState}
+            onClearSearch={() => setSearchQuery("")}
+          />
         </Stack>
       </PageContent>
     </PageLayout>

@@ -47,26 +47,23 @@ vi.mock("@/components/layout", () => ({
   PageContent: ({
     children,
     isLoading,
-    isEmpty,
     emptyState,
   }: {
     children: ReactNode;
     isLoading?: boolean;
-    isEmpty?: boolean;
     emptyState?: {
       title: string;
       description?: string;
-      action?: ReactNode;
-      "data-testid"?: string;
-    };
+      actions?: ReactNode;
+    } | null;
   }) =>
     isLoading ? (
       <div>Loading</div>
-    ) : isEmpty ? (
-      <div data-testid={emptyState?.["data-testid"]}>
-        <div>{emptyState?.title}</div>
-        <div>{emptyState?.description}</div>
-        {emptyState?.action}
+    ) : emptyState ? (
+      <div data-testid={TEST_IDS.PAGE.EMPTY_STATE}>
+        <div>{emptyState.title}</div>
+        <div>{emptyState.description}</div>
+        {emptyState.actions}
       </div>
     ) : (
       <div>{children}</div>
@@ -139,7 +136,21 @@ vi.mock("@/components/ui/Input", () => ({
 }));
 
 vi.mock("@/components/ui/OverviewBand", () => ({
-  OverviewBand: ({ title }: { title: string }) => <div>{title}</div>,
+  OverviewBand: ({
+    eyebrow,
+    title,
+    description,
+  }: {
+    eyebrow?: string;
+    title: string;
+    description: string;
+  }) => (
+    <div>
+      {eyebrow ? <div>{eyebrow}</div> : null}
+      <div>{title}</div>
+      <div>{description}</div>
+    </div>
+  ),
 }));
 
 vi.mock("@/components/ui/EmptyState", () => ({
@@ -223,7 +234,7 @@ describe("WorkspacesList", () => {
 
     render(<WorkspacesList />);
 
-    expect(screen.getByTestId(TEST_IDS.WORKSPACE.EMPTY_STATE)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
     expect(screen.getByText("No workspaces yet")).toBeInTheDocument();
   });
 
@@ -231,6 +242,16 @@ describe("WorkspacesList", () => {
     const user = userEvent.setup();
 
     render(<WorkspacesList />);
+
+    expect(screen.getByText("Organization structure")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 workspaces, 5 teams, and 11 projects are active."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Use this list to confirm where new teams and projects belong before you create them.",
+      ),
+    ).toBeInTheDocument();
 
     await user.type(screen.getByTestId(TEST_IDS.WORKSPACE.SEARCH_INPUT), "platform");
     expect(screen.getByText("Platform Operations")).toBeInTheDocument();

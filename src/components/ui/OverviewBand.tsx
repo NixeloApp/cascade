@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "./Badge";
 import { Card } from "./Card";
-import { Grid } from "./Grid";
 import { Stack } from "./Stack";
 import { Typography } from "./Typography";
 
@@ -21,6 +20,26 @@ interface OverviewBandProps {
   className?: string;
 }
 
+function OverviewMetricCard({ metric }: { metric: OverviewMetric }) {
+  return (
+    <article className="rounded-container border border-ui-border-secondary/70 bg-ui-bg/80 px-4 py-3 shadow-soft">
+      <Stack gap="xs">
+        <Typography variant="caption" className="uppercase tracking-wide text-ui-text-tertiary">
+          {metric.label}
+        </Typography>
+        <Typography variant="h4" color="brand">
+          {metric.value}
+        </Typography>
+        {metric.detail ? (
+          <Typography variant="caption" color="secondary">
+            {metric.detail}
+          </Typography>
+        ) : null}
+      </Stack>
+    </article>
+  );
+}
+
 export function OverviewBand({
   title,
   description,
@@ -34,74 +53,49 @@ export function OverviewBand({
       variant="default"
       padding="lg"
       className={cn(
-        "overflow-hidden border-ui-border-secondary/90 bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-soft/70 shadow-card",
+        "overflow-hidden border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft/60 shadow-soft",
         className,
       )}
     >
-      <div className="grid gap-6 lg:grid-cols-12">
-        <div className="rounded-container border border-ui-border-secondary/70 bg-linear-to-br from-ui-bg to-ui-bg-secondary/75 p-5 shadow-soft lg:col-span-5">
-          <Stack gap="sm">
-            {eyebrow ? (
-              <Badge
-                variant="neutral"
-                shape="pill"
-                className="w-fit border-brand-border/60 bg-brand-subtle/80 text-brand-subtle-foreground"
-              >
-                {eyebrow}
-              </Badge>
-            ) : null}
-            <Typography variant="h3" className="max-w-xl text-balance">
-              {title}
-            </Typography>
-            <Typography variant="small" color="secondary" className="max-w-xl leading-6">
-              {description}
-            </Typography>
-          </Stack>
-        </div>
-
-        <Stack gap="md" className="lg:col-span-7">
-          {metrics.length > 0 ? (
-            <Grid
-              cols={1}
-              colsSm={metrics.length > 1 ? 2 : 1}
-              colsLg={metrics.length > 2 ? 3 : 2}
-              gap="md"
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-start">
+        <Stack gap="sm" className="min-w-0">
+          {eyebrow ? (
+            <Badge
+              variant="neutral"
+              shape="pill"
+              className="w-fit border-ui-border-secondary/80 bg-ui-bg-soft text-ui-text-secondary"
             >
-              {metrics.map((metric) => (
-                <Card
-                  key={metric.label}
-                  variant="default"
-                  padding="md"
-                  className="h-full border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated/95 to-ui-bg-soft/85 shadow-soft"
-                >
-                  <Stack gap="xs">
-                    <Typography
-                      variant="caption"
-                      className="uppercase tracking-wide text-ui-text-tertiary"
-                    >
-                      {metric.label}
-                    </Typography>
-                    <Typography variant="h4" color="brand">
-                      {metric.value}
-                    </Typography>
-                    {metric.detail ? (
-                      <Typography variant="caption" color="secondary">
-                        {metric.detail}
-                      </Typography>
-                    ) : null}
-                  </Stack>
-                </Card>
-              ))}
-            </Grid>
+              {eyebrow}
+            </Badge>
           ) : null}
-
-          {aside ? (
-            <div className="rounded-container border border-ui-border-secondary/70 bg-linear-to-br from-brand-subtle/35 via-ui-bg-elevated to-ui-bg-soft/85 p-4 shadow-soft">
-              {aside}
-            </div>
-          ) : null}
+          <Typography variant="h3" className="max-w-3xl text-balance">
+            {title}
+          </Typography>
+          <Typography variant="small" color="secondary" className="max-w-3xl leading-6">
+            {description}
+          </Typography>
         </Stack>
+
+        {aside ? (
+          <div className="rounded-container border border-ui-border-secondary/70 bg-ui-bg/70 px-4 py-4 shadow-soft">
+            {aside}
+          </div>
+        ) : null}
       </div>
+
+      {metrics.length > 0 ? (
+        <div
+          className={cn(
+            "mt-5 grid gap-3",
+            metrics.length > 1 && "sm:grid-cols-2",
+            metrics.length > 2 && "xl:grid-cols-3",
+          )}
+        >
+          {metrics.map((metric) => (
+            <OverviewMetricCard key={metric.label} metric={metric} />
+          ))}
+        </div>
+      ) : null}
     </Card>
   );
 }

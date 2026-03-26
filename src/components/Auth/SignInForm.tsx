@@ -9,18 +9,15 @@
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Flex } from "@/components/ui/Flex";
-import { Icon } from "@/components/ui/Icon";
+import { useEffect, useRef, useState } from "react";
+import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { usePublicQuery } from "@/hooks/useConvexHelpers";
-import { Mail } from "@/lib/icons";
 import { getEmailDomain, isGoogleWorkspaceSsoConnection } from "@/lib/sso-discovery";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
-import { cn } from "@/lib/utils";
-import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
+import { AuthEmailFormSection } from "./AuthEmailFormSection";
 import { AuthLinkButton } from "./AuthLink";
 import { AuthMethodDivider } from "./AuthMethodDivider";
 import { GoogleAuthButton } from "./GoogleAuthButton";
@@ -32,9 +29,25 @@ function getSignInButtonText(hasGoogleWorkspaceSso: boolean, emailDomain: string
 }
 
 function getSignInErrorMessage(error: Error): string {
-  return error.message.includes("Invalid password")
-    ? "Invalid password. Please try again."
-    : "Could not sign in. Please check your credentials.";
+  const message = error.message.toLowerCase();
+
+  if (message.includes("invalid password")) {
+    return "Invalid password. Please try again.";
+  }
+
+  if (message.includes("verify your email") || message.includes("email not verified")) {
+    return "Verify your email before signing in.";
+  }
+
+  if (message.includes("temporarily locked")) {
+    return "Too many failed attempts. Try again in a few minutes.";
+  }
+
+  if (message.includes("account not found") || message.includes("invalid credentials")) {
+    return "We couldn't find an account with that email and password.";
+  }
+
+  return "Could not sign in. Please check your credentials and try again.";
 }
 
 async function submitPasswordSignIn({
@@ -77,6 +90,7 @@ export function SignInForm() {
   const [submitting, setSubmitting] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState("");
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   // Debounce SSO discovery to avoid querying on every keystroke
   const [debouncedEmail, setDebouncedEmail] = useState("");
@@ -95,6 +109,14 @@ export function SignInForm() {
       : "skip",
   );
   const hasGoogleWorkspaceSso = isGoogleWorkspaceSsoConnection(ssoConnection);
+
+  useEffect(() => {
+    if (!showEmailForm) {
+      return;
+    }
+
+    emailInputRef.current?.focus();
+  }, [showEmailForm]);
 
   const handleShowEmailForm = () => {
     setShowEmailForm(true);
@@ -134,56 +156,39 @@ export function SignInForm() {
       />
       <AuthMethodDivider />
       <form onSubmit={handleSubmit} data-testid={TEST_IDS.AUTH.FORM}>
-        {showEmailForm ? (
-          <span data-testid={TEST_IDS.AUTH.FORM_READY} hidden aria-hidden="true" />
-        ) : null}
-        <Flex direction="column">
-          <div
-            data-testid={showEmailForm ? TEST_IDS.AUTH.EMAIL_FORM : undefined}
-            className={cn(
-              "overflow-hidden transition-all duration-medium ease-out",
-              showEmailForm ? "max-h-48 opacity-100" : "max-h-0 opacity-0",
-            )}
-          >
-            <Flex direction="column" className="overflow-hidden gap-form-field">
-              <Input
-                type="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="transition-default"
-                data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
-              />
-              <Input
-                type="password"
-                name="password"
-                placeholder="Password"
-                className="transition-default"
-                data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
-              />
-            </Flex>
-          </div>
-          {showEmailForm && (
-            <div className="text-right mb-3">
-              <AuthLinkButton onClick={() => navigate({ to: ROUTES.forgotPassword.path })}>
-                Forgot password?
-              </AuthLinkButton>
-            </div>
-          )}
-          <Button
-            type={showEmailForm ? "submit" : "button"}
-            onClick={!showEmailForm ? handleShowEmailForm : undefined}
-            variant={showEmailForm ? "primary" : "secondary"}
-            size="lg"
-            className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
-            isLoading={showEmailForm && submitting}
-            leftIcon={!showEmailForm ? <Icon icon={Mail} size="md" /> : undefined}
-            data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
-          >
-            {showEmailForm ? "Sign in" : "Continue with email"}
-          </Button>
-        </Flex>
+        <AuthEmailFormSection
+          open={showEmailForm}
+          submitting={submitting}
+          submitLabel="Sign in"
+          onRequestOpen={handleShowEmailForm}
+          footer={
+            <AuthLinkButton onClick={() => navigate({ to: ROUTES.forgotPassword.path })}>
+              Forgot password?
+            </AuthLinkButton>
+          }
+        >
+          <Stack gap="md">
+            <Input
+              ref={emailInputRef}
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="transition-default"
+              autoComplete="email"
+              data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
+            />
+            <Input
+              type="password"
+              name="password"
+              placeholder="Password"
+              autoComplete="current-password"
+              className="transition-default"
+              data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
+            />
+          </Stack>
+        </AuthEmailFormSection>
       </form>
     </div>
   );

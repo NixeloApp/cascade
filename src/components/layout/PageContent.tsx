@@ -5,20 +5,19 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { LucideIcon } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface EmptyStateConfig {
   icon: LucideIcon;
   title: string;
   description?: string;
-  action?: ReactNode | { label: string; onClick: () => void };
-  "data-testid"?: string;
+  actions?: ReactNode;
 }
 
 interface PageContentProps {
   children: ReactNode;
   isLoading?: boolean;
-  isEmpty?: boolean;
-  emptyState?: EmptyStateConfig;
+  emptyState?: EmptyStateConfig | null;
   className?: string;
 }
 
@@ -26,13 +25,17 @@ interface PageContentProps {
 export function PageContent({
   children,
   isLoading,
-  isEmpty,
   emptyState,
   className,
 }: PageContentProps): ReactNode {
   if (isLoading) {
     return (
-      <Card padding="xl" variant="ghost">
+      <Card
+        padding="xl"
+        variant="ghost"
+        className="border border-ui-border-secondary/80 bg-ui-bg-elevated shadow-soft"
+        data-testid={TEST_IDS.PAGE.LOADING_STATE}
+      >
         <Flex align="center" justify="center">
           <LoadingSpinner size="lg" />
         </Flex>
@@ -40,14 +43,15 @@ export function PageContent({
     );
   }
 
-  if (isEmpty && emptyState) {
+  if (emptyState) {
     return (
       <EmptyState
         icon={emptyState.icon}
         title={emptyState.title}
         description={emptyState.description}
-        action={emptyState.action}
-        data-testid={emptyState["data-testid"]}
+        action={emptyState.actions}
+        surface="page"
+        data-testid={TEST_IDS.PAGE.EMPTY_STATE}
       />
     );
   }

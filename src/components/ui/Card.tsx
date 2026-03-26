@@ -106,6 +106,8 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-b-0 border-t border-ui-border/50 bg-transparent shadow-none",
       filterBar:
         "rounded-md border-ui-border-secondary/75 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/92 shadow-card sm:rounded-2xl",
+      pageSectionStrip:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary/75 bg-transparent shadow-none",
       timelineItem:
         "rounded-lg border-transparent bg-transparent shadow-none hover:border-transparent hover:bg-ui-bg-secondary/30 hover:shadow-none",
       timeSummary:
@@ -203,10 +205,6 @@ const cardRecipeVariants = cva("", {
         "rounded-3xl border-ui-border/55 bg-linear-to-b from-ui-bg-elevated/82 to-ui-bg-soft/58 shadow-soft backdrop-blur-sm",
       authFormShell:
         "relative rounded-3xl border-ui-border/65 bg-ui-bg-elevated/96 shadow-soft backdrop-blur-sm",
-      authStepIndicator:
-        "h-1.5 w-4 rounded-full border-transparent bg-ui-border shadow-none transition-all duration-medium",
-      authStepIndicatorActive:
-        "h-1.5 w-6 rounded-full border-transparent bg-brand shadow-none transition-all duration-medium",
       authStrengthSegment:
         "h-1 rounded-full border-transparent bg-ui-border shadow-none transition-colors",
       authStrengthSegmentError:

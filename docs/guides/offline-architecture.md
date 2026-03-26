@@ -162,13 +162,16 @@ Current live replay coverage:
 | `userSettings.update` | PreferencesTab (theme, timezone, dashboard layout) | Idempotent — last-write-wins | None |
 | `notifications.markAsRead` | NotificationCenter, notifications page | Trivially idempotent | None |
 | `issues.updateStatus` | IssueDetailSidebar status dropdown | Last-write-wins, skips optimistic lock | Medium — status may have moved |
-| `issues.addComment` | IssueComments form | Append-only, no server-side dedup yet | Low — only edge case is deleted issue |
+| `issues.addComment` | IssueComments form | Idempotent by client request ID on the server | Low — only edge case is deleted issue |
 
 **UX indicators:**
 - Offline badge in app header (WifiOff icon) — visible on every page
 - Syncing badge in app header (spinning RefreshCw) — visible while queue drains
 - "Comment queued — will post when you reconnect" toast for offline comments
 - "Back online — N changes synced" toast on reconnect when queue had items
+- queued issue status changes immediately replace the visible status value while replay is pending
+- queued notification reads immediately clear unread styling and decrement the unread count
+- queued issue comments render inline in the thread with a pending-sync badge
 - Settings > Offline tab shows full queue diagnostics with retry/delete controls
 
 ## Background Sync Policy
@@ -190,8 +193,6 @@ Practical fallback when Background Sync is unavailable:
 The current architecture still lacks:
 
 - replay coverage for more mutation families (current: 4)
-- server-side idempotency key for comment replay (low risk for v1)
-- optimistic UI for queued mutations (e.g., grey out read notification)
 - end-to-end browser verification for push across worker updates
 - durable server-side auditing for failed offline actions
 

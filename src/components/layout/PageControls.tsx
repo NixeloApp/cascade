@@ -10,6 +10,7 @@ interface PageControlsProps extends Omit<CardProps, "recipe"> {
   children: ReactNode;
   gap?: PageControlsGap;
   spacing?: "standalone" | "stack";
+  tone?: "surface" | "strip";
 }
 
 interface SectionControlsProps extends CardProps {
@@ -27,17 +28,20 @@ export function PageControls({
   gap = "md",
   padding = "md",
   spacing = "standalone",
+  tone = "surface",
   ...props
 }: PageControlsProps) {
   return (
-    <Card
-      recipe="filterBar"
-      padding={padding}
-      className={cn(spacing === "standalone" && "mb-6", className)}
-      {...props}
-    >
-      <Stack gap={gap}>{children}</Stack>
-    </Card>
+    <Stack gap="none" mb={spacing === "standalone" ? "lg" : "none"}>
+      <Card
+        recipe={tone === "surface" ? "filterBar" : "pageSectionStrip"}
+        padding={padding}
+        className={className}
+        {...props}
+      >
+        <Stack gap={gap}>{children}</Stack>
+      </Card>
+    </Stack>
   );
 }
 

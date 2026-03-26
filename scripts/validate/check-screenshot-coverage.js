@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createValidatorResult } from "./result-utils.js";
 import { c, ROOT } from "./utils.js";
 
 const SCREENSHOT_ROUTE_SOURCE_REL_PATHS = [
@@ -477,10 +478,18 @@ export function run() {
   })();
   const specsWithCanonicalVariants = completeSpecFolders - missingSpecVariants.length;
 
-  // Informational — never blocks CI, but shows uncovered routes in output
-  return {
-    passed: true,
-    errors: 0,
+  const findingCount =
+    uncovered.length +
+    missingSpecVariants.length +
+    missingPageSpecDocs.length +
+    missingRequiredPageSpecs.length +
+    missingModalSpecVariants.length;
+
+  // Informational — never blocks CI, but shows uncovered routes in output.
+  return createValidatorResult({
+    blocking: false,
+    errors: findingCount,
+    findings: findingCount,
     showMessagesOnPass:
       !canAuditRouteCoverage ||
       uncovered.length > 0 ||
@@ -498,5 +507,5 @@ export function run() {
         ? `${canAuditRouteCoverage ? `${auditableRouteKeys.length - uncovered.length}/${auditableRouteKeys.length} auditable routes covered` : "route coverage skipped"}, ${specsWithCanonicalVariants}/${completeSpecFolders} page spec folders have canonical screenshots, ${missingModalSpecVariants.length === 0 ? "all" : "not all"} spec'd modals have canonical screenshots`
         : `all ${auditableRouteKeys.length} auditable routes covered, all ${completeSpecFolders} page spec folders have canonical screenshots, all spec'd modals have canonical screenshots`,
     messages,
-  };
+  });
 }

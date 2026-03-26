@@ -50,9 +50,9 @@ Array<{
 | `workspaceCount` | `workspaces?.length ?? 0` | Total workspace count for metrics |
 | `totalTeams` | `workspaces?.reduce(sum teamCount)` | Aggregate team count |
 | `totalProjects` | `workspaces?.reduce(sum projectCount)` | Aggregate project count |
-| `gridColumns` | `workspaceCount > 1 ? 2 : 1` | Dynamic grid column count |
-| `isCompactOverview` | `workspaceCount <= 1` | Layout variant selector |
-| `pageWidth` | `isCompactOverview ? "md" : "lg"` | PageLayout max-width |
+| `overviewCopy` | `getWorkspaceOverviewCopy({ workspaceCount, totalTeams, totalProjects })` | Concrete copy for the structure summary band |
+| `hasSearch` / `showSearch` | query + workspace count | Search control visibility |
+| `filteredWorkspaces` | `filterWorkspaces(workspaces, deferredQuery)` | Search result set |
 
 ---
 
@@ -60,43 +60,28 @@ Array<{
 
 ```
 WorkspacesList (route)
-├── PageLayout (maxWidth: dynamic)
+├── PageLayout
 │   ├── PageHeader
 │   │   └── actions → Button ("+ Create Workspace")
-│   │
 │   ├── CreateWorkspaceModal
-│   │   └── Dialog
-│   │       └── form
-│   │           ├── Input (workspace name)
-│   │           ├── Textarea (description)
-│   │           └── footer: Cancel + Create buttons
-│   │
+│   │   └── Dialog form (name, description, icon, slug helper)
 │   └── PageContent
-│       ├── [loading] LoadingSpinner
-│       ├── [empty] EmptyState
-│       │
-│       ├── [compact layout: <=1 workspace]
-│       │   ├── OverviewBand (metrics: Workspaces, Teams, Projects)
-│       │   └── Grid → WorkspaceCard[] (compact variant)
-│       │       ├── Link (to workspace detail)
-│       │       └── Card (hoverable)
-│       │           ├── IconCircle (emoji icon)
-│       │           ├── Typography (name, description)
-│       │           ├── Badge[] (Workspace, slug)
-│       │           ├── InsetPanel[] (Teams metric, Projects metric)
-│       │           └── InsetPanel footer (Metadata + "Open workspace" badge)
-│       │
-│       └── [standard layout: 2+ workspaces]
-│           ├── Grid area (7/12) → WorkspaceCard[] (standard variant)
-│           │   ├── Link (to workspace detail)
-│           │   └── Card (hoverable)
-│           │       ├── IconCircle + Typography (name)
-│           │       ├── Badge (team count)
-│           │       ├── Typography (description)
-│           │       ├── InsetPanel[] (Teams, Projects)
-│           │       └── InsetPanel footer
-│           │
-│           └── Grid area (5/12) → OverviewBand (sidebar)
+│       ├── [loading] shared page loading shell
+│       ├── [empty] shared page EmptyState
+│       └── Stack
+│           ├── OverviewBand
+│           │   ├── literal structure summary copy
+│           │   └── metrics: Workspaces / Teams / Projects
+│           ├── [showSearch] search row + clear button
+│           ├── [hasSearch] match summary
+│           ├── [search miss] EmptyState with clear-search action
+│           └── Grid → WorkspaceCard[]
+│               ├── Link (to workspace detail)
+│               └── Card (hoverable)
+│                   ├── IconCircle (optional emoji icon)
+│                   ├── Typography (name, description)
+│                   ├── metric sections (Teams, Projects)
+│                   └── footer metadata + "Open workspace" badge
 ```
 
 ---
@@ -114,6 +99,7 @@ WorkspacesList (route)
 
 1. Route mounts, queries `workspaces.list` with `organizationId`.
 2. Workspace list populates, computed metrics (totalTeams, totalProjects) derive from the response.
-3. Layout variant is selected based on workspace count (compact vs standard).
-4. User clicks "+ Create Workspace" -> modal opens -> user fills form -> `workspaces.create` mutation -> on success, navigates to new workspace's teams list.
-5. Clicking a workspace card navigates to `ROUTES.workspaces.detail` with the workspace slug.
+3. The route derives `overviewCopy` from the loaded counts so the summary band always reflects the actual org structure.
+4. Search filters the loaded list client-side across name, slug, and description.
+5. User clicks "+ Create Workspace" -> modal opens -> user fills form -> `workspaces.create` mutation -> on success, navigates to the workspace detail route.
+6. Clicking a workspace card navigates to `ROUTES.workspaces.detail` with the workspace slug.

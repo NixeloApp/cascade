@@ -88,7 +88,8 @@ describe("ProjectLayout", () => {
 
     expect(screen.getByText("Nixelo")).toBeInTheDocument();
     expect(screen.getAllByText("Scrum project")).toHaveLength(1);
-    expect(screen.getAllByText("NX")).not.toHaveLength(0);
+    expect(screen.getByText("scrum")).toBeInTheDocument();
+    expect(screen.getByText("NX")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Sprints" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "More project sections" })).toBeInTheDocument();
@@ -96,7 +97,7 @@ describe("ProjectLayout", () => {
 
     const projectNavs = screen.getAllByRole("navigation", { name: "Project sections" });
     expect(projectNavs).toHaveLength(2);
-    expect(projectNavs[0]?.closest(".gap-6")).not.toBeNull();
+    expect(projectNavs[1]?.closest(".gap-4")).not.toBeNull();
   });
 
   it("omits scrum and admin-only tabs when the viewer is not an admin on a kanban project", () => {

@@ -4,8 +4,6 @@
 > **Status:** Open
 > **Last Updated:** 2026-03-25
 
-All page-spec triplets already exist. The remaining gap is not missing `CURRENT.md` / `IMPLEMENTATION.md` / `TARGET.md` files; it is missing current-state feature coverage for real shipped behavior.
-
 ## Remaining
 
 ### Shared Structure
@@ -24,9 +22,3 @@ All page-spec triplets already exist. The remaining gap is not missing `CURRENT.
 - [ ] Client portal / public sharing limits.
 - [ ] Time tracking / billing current reporting and export behavior.
 - [ ] Settings / integrations exceptional states and setup/disconnected flows.
-
-## Done When
-
-- [ ] A developer can answer “what is currently shipped here?” from docs without reading route code first.
-- [ ] Important states are described explicitly instead of being implied by screenshots or tests.
-- [ ] New feature work can point to current-state docs as implementation input rather than only comparison/reference material.

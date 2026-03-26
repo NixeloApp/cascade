@@ -41,13 +41,16 @@ function TeamsList() {
 
       <PageContent
         isLoading={teams === undefined}
-        isEmpty={teams !== undefined && teams.length === 0}
-        emptyState={{
-          icon: Users,
-          title: "No teams yet",
-          description: "Create your first team to start organizing work",
-          action: <Button variant="primary">+ Create Team</Button>,
-        }}
+        emptyState={
+          teams !== undefined && teams.length === 0
+            ? {
+                icon: Users,
+                title: "No teams yet",
+                description: "Create your first team to start organizing work",
+                actions: <Button variant="primary">+ Create Team</Button>,
+              }
+            : null
+        }
       >
         <Grid cols={1} colsMd={2} colsLg={3} gap="xl">
           {teams?.map((team) => (

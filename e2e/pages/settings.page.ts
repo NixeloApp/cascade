@@ -379,6 +379,13 @@ export class SettingsPage extends BasePage {
     await this.processQueueButton.click();
   }
 
+  async waitForOfflineQueueToDrain() {
+    await expect(async () => {
+      await this.offlineTab.click();
+      await expect(this.localOfflineQueueHeading).toHaveCount(0);
+    }).toPass({ intervals: [500, 1000, 2000] });
+  }
+
   // ===================
   // Actions - Admin
   // ===================

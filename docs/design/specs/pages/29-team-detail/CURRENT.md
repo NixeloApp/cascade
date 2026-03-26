@@ -2,7 +2,7 @@
 
 > **Route**: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug` (layout shell) with child tabs
 > **Status**: IMPLEMENTED (settings tab is placeholder)
-> **Last Updated**: 2026-03-22
+> **Last Updated**: 2026-03-25
 
 ---
 
@@ -36,14 +36,14 @@ The team detail page is the working surface for a single team within a workspace
 │   │       │   ]
 │   │       │
 │   │       ├── PageControls → RouteNav (section tabs)
-│   │       │   ├── "Projects" → /:orgSlug/workspaces/:ws/teams/:team/ (exact)
+│   │       │   ├── "Board" → /:orgSlug/workspaces/:ws/teams/:team/board
 │   │       │   ├── "Calendar" → /.../teams/:team/calendar
 │   │       │   ├── "Wiki" → /.../teams/:team/wiki
 │   │       │   └── "Settings" → /.../teams/:team/settings
 │   │       │
 │   │       └── <Outlet /> (child route renders here)
 │
-├── index.tsx → Redirects to /board (via useEffect + navigate)
+├── index.tsx → Redirects to /board (via beforeLoad + redirect)
 │
 ├── board.tsx → TeamBoardPage
 │   └── KanbanBoard (teamId)
@@ -66,8 +66,8 @@ The team detail page is the working surface for a single team within a workspace
 
 ## Current Composition Walkthrough
 
-1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`, then team via `api.teams.getBySlug` (using workspace ID as parent). Shows loading spinner while pending, "Team not found" if either is null. Renders 3-level breadcrumbs and a `RouteNav` with 4 tabs (Projects, Calendar, Wiki, Settings), then `<Outlet />`.
-2. **Index redirect** (`index.tsx`): Resolves workspace and team, then redirects to the board route via `useEffect` + `navigate({ replace: true })`.
+1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`, then team via `api.teams.getBySlug` (using workspace ID as parent). Shows loading spinner while pending, "Team not found" if either is null. Renders 3-level breadcrumbs, a lighter shared header with the member summary folded into the header actions, and a compact `PageControls` strip with 4 tabs (Board, Calendar, Wiki, Settings), then `<Outlet />`.
+2. **Index redirect** (`index.tsx`): Uses TanStack Router `beforeLoad` with `redirect()` so the team root never renders a transient blank shell before landing on the board route.
 3. **Board** (`board.tsx`): Resolves workspace and team, then renders `<KanbanBoard teamId={team._id} />`. The `KanbanBoard` component is a feature-rich Kanban board with drag-and-drop (Atlaskit pragmatic-drag-and-drop), swimlanes, board history (undo/redo), bulk operations, filtering, and issue detail viewer.
 4. **Calendar** (`calendar.tsx`): Resolves workspace and team, renders `<CalendarView teamId={team._id} />` with full error handling for both workspace and team not-found states.
 5. **Wiki** (`wiki.tsx`): Resolves workspace and team, queries `api.documents.listByTeam` scoped to the team. Renders the same card layout as workspace wiki (doc icon, title, visibility badge, creator metadata). Empty state directs users to create team-scoped docs.
@@ -79,30 +79,26 @@ The team detail page is the working surface for a single team within a workspace
 
 | Viewport | Theme | Tab | Preview |
 |----------|-------|-----|---------|
-| Desktop | Dark | Projects/Board | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | Projects/Board | ![](screenshots/desktop-light.png) |
-| Tablet | Light | Projects/Board | ![](screenshots/tablet-light.png) |
-| Mobile | Light | Projects/Board | ![](screenshots/mobile-light.png) |
-| Desktop | Dark | Board | ![](screenshots/desktop-dark-board.png) |
-| Desktop | Light | Board | ![](screenshots/desktop-light-board.png) |
-| Tablet | Light | Board | ![](screenshots/tablet-light-board.png) |
-| Mobile | Light | Board | ![](screenshots/mobile-light-board.png) |
-| Desktop | Dark | Calendar | ![](screenshots/desktop-dark-calendar.png) |
-| Desktop | Light | Calendar | ![](screenshots/desktop-light-calendar.png) |
-| Tablet | Light | Calendar | ![](screenshots/tablet-light-calendar.png) |
-| Mobile | Light | Calendar | ![](screenshots/mobile-light-calendar.png) |
-| Desktop | Dark | Wiki | ![](screenshots/desktop-dark-wiki.png) |
-| Desktop | Light | Wiki | ![](screenshots/desktop-light-wiki.png) |
-| Tablet | Light | Wiki | ![](screenshots/tablet-light-wiki.png) |
-| Mobile | Light | Wiki | ![](screenshots/mobile-light-wiki.png) |
-| Desktop | Dark | Settings | ![](screenshots/desktop-dark-settings.png) |
-| Desktop | Light | Settings | ![](screenshots/desktop-light-settings.png) |
-| Tablet | Light | Settings | ![](screenshots/tablet-light-settings.png) |
-| Mobile | Light | Settings | ![](screenshots/mobile-light-settings.png) |
-| Desktop | Dark | Project tree | ![](screenshots/desktop-dark-project-tree.png) |
-| Desktop | Light | Project tree | ![](screenshots/desktop-light-project-tree.png) |
-| Tablet | Light | Project tree | ![](screenshots/tablet-light-project-tree.png) |
-| Mobile | Light | Project tree | ![](screenshots/mobile-light-project-tree.png) |
+| Desktop | Dark | Board | ![Team detail board - desktop dark](screenshots/desktop-dark-board.png) |
+| Desktop | Light | Board | ![Team detail board - desktop light](screenshots/desktop-light-board.png) |
+| Tablet | Light | Board | ![Team detail board - tablet light](screenshots/tablet-light-board.png) |
+| Mobile | Light | Board | ![Team detail board - mobile light](screenshots/mobile-light-board.png) |
+| Desktop | Dark | Calendar | ![Team detail calendar - desktop dark](screenshots/desktop-dark-calendar.png) |
+| Desktop | Light | Calendar | ![Team detail calendar - desktop light](screenshots/desktop-light-calendar.png) |
+| Tablet | Light | Calendar | ![Team detail calendar - tablet light](screenshots/tablet-light-calendar.png) |
+| Mobile | Light | Calendar | ![Team detail calendar - mobile light](screenshots/mobile-light-calendar.png) |
+| Desktop | Dark | Wiki | ![Team detail wiki - desktop dark](screenshots/desktop-dark-wiki.png) |
+| Desktop | Light | Wiki | ![Team detail wiki - desktop light](screenshots/desktop-light-wiki.png) |
+| Tablet | Light | Wiki | ![Team detail wiki - tablet light](screenshots/tablet-light-wiki.png) |
+| Mobile | Light | Wiki | ![Team detail wiki - mobile light](screenshots/mobile-light-wiki.png) |
+| Desktop | Dark | Settings | ![Team detail settings - desktop dark](screenshots/desktop-dark-settings.png) |
+| Desktop | Light | Settings | ![Team detail settings - desktop light](screenshots/desktop-light-settings.png) |
+| Tablet | Light | Settings | ![Team detail settings - tablet light](screenshots/tablet-light-settings.png) |
+| Mobile | Light | Settings | ![Team detail settings - mobile light](screenshots/mobile-light-settings.png) |
+| Desktop | Dark | Project tree | ![Team detail project tree - desktop dark](screenshots/desktop-dark-project-tree.png) |
+| Desktop | Light | Project tree | ![Team detail project tree - desktop light](screenshots/desktop-light-project-tree.png) |
+| Tablet | Light | Project tree | ![Team detail project tree - tablet light](screenshots/tablet-light-project-tree.png) |
+| Mobile | Light | Project tree | ![Team detail project tree - mobile light](screenshots/mobile-light-project-tree.png) |
 
 ---
 
@@ -116,7 +112,7 @@ The team detail page is the working surface for a single team within a workspace
 | ~~4~~ | ~~useEffect redirect in index route~~ **Fixed** — replaced with TanStack Router `beforeLoad` + `redirect()`. No component renders, no query fires. | ~~architecture~~ | ~~LOW~~ |
 | ~~5~~ | ~~Wiki page shares identical card markup with workspace wiki~~ **Fixed** — extracted `WikiDocumentGrid` to `src/components/Documents/WikiDocumentGrid.tsx`, used by both team and workspace wiki | ~~code duplication~~ | ~~MEDIUM~~ |
 | 6 | Board route loads workspace + team just to pass `team._id` to KanbanBoard; team ID could come from layout context | efficiency | LOW |
-| ~~7~~ | ~~No team member list visible~~ **Fixed** — team layout header shows member avatar row with tooltips (up to 8, +N overflow badge) | ~~functionality~~ | ~~MEDIUM~~ |
+| ~~7~~ | ~~No team member list visible~~ **Fixed** — team layout header now keeps the member summary inside the shared header actions (avatars, overflow badge, count) instead of spending a separate row on chrome | ~~functionality~~ | ~~MEDIUM~~ |
 | 8 | Settings placeholder uses an inline SVG icon instead of an icon from `@/lib/icons` | consistency | LOW |
 
 ---

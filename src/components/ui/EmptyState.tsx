@@ -16,7 +16,7 @@ import { Typography } from "./Typography";
 type EmptyStateVariant = "default" | "info" | "warning" | "error";
 type EmptyStateSize = "default" | "compact";
 type EmptyStateAlign = "center" | "start";
-type EmptyStateSurface = "default" | "bare";
+type EmptyStateSurface = "default" | "bare" | "page";
 
 interface EmptyStateProps {
   icon: string | LucideIcon;
@@ -61,6 +61,40 @@ const EMPTY_STATE_ICON_SHELL_CLASS: Record<EmptyStateSize, string> = {
   compact: "mb-1.5 h-7 w-7",
 };
 
+function getEmptyStateSurfaceClass(surface: EmptyStateSurface): string {
+  switch (surface) {
+    case "bare":
+      return "rounded-none border-transparent bg-transparent shadow-none";
+    case "page":
+      return "rounded-container border border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft/60";
+    default:
+      return "rounded-container border border-ui-border/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70";
+  }
+}
+
+function getEmptyStatePaddingClass(
+  size: EmptyStateSize,
+  surface: EmptyStateSurface,
+): string | null {
+  if (surface === "bare" && size === "compact") {
+    return "max-w-none px-0 py-0";
+  }
+
+  if (surface === "page") {
+    return size === "compact"
+      ? "max-w-none px-4 py-6 sm:px-6 sm:py-7"
+      : "max-w-none px-6 py-10 sm:px-8 sm:py-12";
+  }
+
+  return null;
+}
+
+function getEmptyStateShadowClass(size: EmptyStateSize, surface: EmptyStateSurface): string | null {
+  if (surface === "bare") return null;
+  if (surface === "page") return "shadow-soft";
+  return size === "compact" ? "shadow-card" : "shadow-soft";
+}
+
 function EmptyStateBadge({
   size,
   surface,
@@ -70,8 +104,8 @@ function EmptyStateBadge({
   surface: EmptyStateSurface;
   variant: EmptyStateVariant;
 }) {
-  // Only show badge for default variant; other variants use icon color to convey meaning
-  if (variant !== "default") return null;
+  // Only show badge for embedded default states; page-level shells already have enough framing.
+  if (variant !== "default" || surface === "page") return null;
 
   return (
     <div
@@ -93,17 +127,23 @@ function EmptyStateIcon({
   icon,
   iconColorClass,
   size,
+  surface,
 }: {
   icon: string | LucideIcon;
   iconColorClass: string;
   size: EmptyStateSize;
+  surface: EmptyStateSurface;
 }) {
   const iconClass = size === "compact" ? "text-2xl" : "text-3xl";
+  const isPage = surface === "page";
 
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-full border border-ui-border bg-ui-bg-secondary shadow-soft",
+        "flex items-center justify-center rounded-full border",
+        isPage
+          ? "border-ui-border-secondary/80 bg-ui-bg-secondary"
+          : "border-ui-border bg-ui-bg-secondary shadow-soft",
         EMPTY_STATE_ICON_SHELL_CLASS[size],
         iconColorClass,
       )}
@@ -150,26 +190,23 @@ export function EmptyState({
   const iconColorClass = EMPTY_STATE_ICON_COLOR_CLASS[variant];
   const sizeClass = EMPTY_STATE_SIZE_CLASS[size];
   const isStartAligned = align === "start";
-  const isBare = surface === "bare";
 
   return (
     <section
       data-testid={dataTestId}
       className={cn(
         "mx-auto flex w-full flex-col justify-center animate-fade-in",
-        isBare
-          ? "rounded-none border-transparent bg-transparent shadow-none"
-          : "rounded-container border border-ui-border/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70",
-        isBare && size === "compact" && "max-w-none px-0 py-0",
-        !isBare && (size === "compact" ? "shadow-card" : "shadow-soft"),
-        isStartAligned ? "items-start text-left" : "items-center text-center",
         sizeClass,
+        getEmptyStateSurfaceClass(surface),
+        getEmptyStatePaddingClass(size, surface),
+        getEmptyStateShadowClass(size, surface),
+        isStartAligned ? "items-start text-left" : "items-center text-center",
         className,
       )}
       aria-label={title}
     >
       <EmptyStateBadge size={size} surface={surface} variant={variant} />
-      <EmptyStateIcon icon={icon} iconColorClass={iconColorClass} size={size} />
+      <EmptyStateIcon icon={icon} iconColorClass={iconColorClass} size={size} surface={surface} />
       <Typography
         variant={size === "compact" ? "large" : "h4"}
         as="h3"

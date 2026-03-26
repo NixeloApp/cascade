@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const routeNavVariants = cva("flex max-w-full items-center overflow-x-auto scrollbar-subtle", {
   variants: {
     variant: {
-      underline: "gap-6 border-b border-ui-border/70",
+      underline: "border-b border-ui-border/70",
       pill: "gap-0.5 rounded-xl border border-ui-border-secondary/75 bg-ui-bg-elevated/94 p-0.5 shadow-soft sm:gap-1 sm:rounded-2xl sm:p-1 sm:shadow-card",
     },
     size: {
@@ -18,6 +18,18 @@ const routeNavVariants = cva("flex max-w-full items-center overflow-x-auto scrol
     variant: "underline",
     size: "md",
   },
+  compoundVariants: [
+    {
+      variant: "underline",
+      size: "sm",
+      className: "gap-4",
+    },
+    {
+      variant: "underline",
+      size: "md",
+      className: "gap-6",
+    },
+  ],
 });
 
 const routeNavItemVariants = cva(

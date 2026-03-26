@@ -52,12 +52,15 @@ function WorkspaceSprintsPage() {
 
   return (
     <PageContent
-      isEmpty={activeSprints.length === 0}
-      emptyState={{
-        icon: Calendar,
-        title: "No sprints",
-        description: "No sprints were found across projects in this workspace.",
-      }}
+      emptyState={
+        activeSprints.length === 0
+          ? {
+              icon: Calendar,
+              title: "No sprints",
+              description: "No sprints were found across projects in this workspace.",
+            }
+          : null
+      }
     >
       <Stack gap="md">
         <Flex justify="between" align="center">

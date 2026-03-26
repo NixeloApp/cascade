@@ -5,6 +5,7 @@ import type { FunctionReference } from "convex/server";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useQueuedOfflineIssueComments } from "@/hooks/useOfflineOptimisticState";
 import { render, screen } from "@/test/custom-render";
 import { IssueComments } from "./IssueComments";
 
@@ -15,6 +16,10 @@ vi.mock("convex/react", () => ({
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedMutation: vi.fn(),
   useAuthenticatedQuery: vi.fn(),
+}));
+
+vi.mock("@/hooks/useOfflineOptimisticState", () => ({
+  useQueuedOfflineIssueComments: vi.fn(),
 }));
 
 vi.mock("@/lib/toast", () => ({
@@ -58,6 +63,7 @@ vi.mock("./MentionInput", () => ({
 const mockUsePaginatedQuery = vi.mocked(usePaginatedQuery);
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
+const mockUseQueuedOfflineIssueComments = vi.mocked(useQueuedOfflineIssueComments);
 
 const addComment = vi.fn() as Mock & ReactMutation<FunctionReference<"mutation">>;
 const generateUploadUrl = vi.fn() as Mock & ReactMutation<FunctionReference<"mutation">>;
@@ -72,7 +78,12 @@ describe("IssueComments", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockUseAuthenticatedQuery.mockReturnValue({ _id: "user_current" as Id<"users"> });
+    mockUseAuthenticatedQuery.mockReturnValue({
+      _id: "user_current" as Id<"users">,
+      name: "Current User",
+      image: null,
+    });
+    mockUseQueuedOfflineIssueComments.mockReturnValue([]);
 
     let mutationIndex = 0;
     mockUseAuthenticatedMutation.mockImplementation(() => {
@@ -147,5 +158,54 @@ describe("IssueComments", () => {
 
     screen.getByRole("button", { name: "Load More Comments" }).click();
     expect(loadMore).toHaveBeenCalledWith(50);
+  });
+
+  it("renders queued offline comments before synced comments", () => {
+    mockUseAuthenticatedQuery.mockImplementation((_query, args) => {
+      if (args && typeof args === "object" && "storageId" in args) {
+        return "https://files.example.com/queued-attachment.pdf";
+      }
+
+      return {
+        _id: "user_current" as Id<"users">,
+        name: "Current User",
+        image: null,
+      };
+    });
+    mockUsePaginatedQuery.mockReturnValue({
+      results: [
+        {
+          _id: "comment_1" as Id<"issueComments">,
+          _creationTime: 1000,
+          updatedAt: 1000,
+          content: "Existing comment",
+          author: { name: "Alex Writer", image: null },
+          attachments: [],
+          reactions: [],
+        },
+      ],
+      status: "Exhausted",
+      isLoading: false,
+      loadMore,
+    });
+    mockUseQueuedOfflineIssueComments.mockReturnValue([
+      {
+        attachments: ["storage_1" as Id<"_storage">],
+        content: "Queued offline comment",
+        issueId,
+        key: "queued-1",
+        mentions: undefined,
+        timestamp: 2_000,
+      },
+    ]);
+
+    render(<IssueComments issueId={issueId} projectId={projectId} />);
+
+    expect(screen.getByText("Queued offline comment")).toBeInTheDocument();
+    expect(screen.getByText("Pending Sync")).toBeInTheDocument();
+    expect(screen.getByText("Queued offline")).toBeInTheDocument();
+    expect(screen.getByText("Existing comment")).toBeInTheDocument();
+    expect(screen.getByText("Attachments")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "queued-attachment.pdf" })).toBeInTheDocument();
   });
 });

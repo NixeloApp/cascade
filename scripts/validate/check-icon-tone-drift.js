@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
+import { createCountRatchetResult } from "./result-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const SRC_DIR = path.join(ROOT, "src");
@@ -189,10 +190,11 @@ export function run() {
     }
   }
 
-  return {
-    passed: overageEntries.length === 0,
-    errors: overageEntries.reduce((sum, [, overage]) => sum + overage.overageItems.length, 0),
-    detail: `${analysis.totalBaselined} baselined icon tone drift occurrence(s) across ${analysis.activeKeyCount} file(s)`,
+  return createCountRatchetResult({
+    analysis,
+    overageEntries,
     messages,
-  };
+    overageDetail: `${overageEntries.length} file(s) exceed icon tone drift baseline`,
+    baselineDetail: `${analysis.totalBaselined} baselined icon tone drift occurrence(s) across ${analysis.activeKeyCount} file(s)`,
+  });
 }

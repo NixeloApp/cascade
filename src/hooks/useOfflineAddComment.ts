@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { queueAddComment } from "@/lib/offlineComments";
+import { createCommentClientRequestId, queueAddComment } from "@/lib/offlineComments";
 import { showInfo } from "@/lib/toast";
 import { useOnlineStatus } from "./useOffline";
 
@@ -21,13 +21,13 @@ export function useOfflineAddComment() {
     mentions?: Id<"users">[],
     attachments?: Id<"_storage">[],
   ): Promise<{ queued: boolean; commentId?: Id<"issueComments"> }> => {
-    const queueArgs = { issueId, content, mentions };
+    const clientRequestId = createCommentClientRequestId();
+    const queueArgs = { issueId, content, mentions, attachments, clientRequestId };
 
     if (!isOnline) {
       if (!userId) {
         throw new Error("Cannot queue offline mutation without an authenticated user");
       }
-      // Attachments are not supported offline (can't queue file uploads)
       await queueAddComment(queueArgs, userId);
       showInfo("Comment queued — will post when you reconnect");
       return { queued: true };

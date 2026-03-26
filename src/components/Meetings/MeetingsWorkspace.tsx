@@ -43,6 +43,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { useSeededDocumentCreation } from "@/hooks/useSeededDocumentCreation";
+import { BREAKPOINTS } from "@/lib/constants";
 import {
   formatDateTime,
   formatDurationHuman,
@@ -85,6 +86,117 @@ type MemoryProjectLens = {
   openQuestions: number;
   unresolvedActionItems: number;
 };
+
+type MeetingDetailTab = "actions" | "notes" | "transcript" | "people";
+type MeetingDetailTabConfig = {
+  value: MeetingDetailTab;
+  label: string;
+  content: ReactNode;
+};
+
+const WIDE_MEETING_DETAIL_MEDIA_QUERY = `(min-width: ${BREAKPOINTS.lg})`;
+
+function useMediaQuery(query: string, defaultValue = true) {
+  const getMatches = () => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return defaultValue;
+    }
+
+    return window.matchMedia(query).matches;
+  };
+
+  const [matches, setMatches] = useState(getMatches);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return undefined;
+    }
+
+    const mediaQueryList = window.matchMedia(query);
+    const updateMatches = () => setMatches(mediaQueryList.matches);
+
+    updateMatches();
+
+    if (typeof mediaQueryList.addEventListener === "function") {
+      mediaQueryList.addEventListener("change", updateMatches);
+      return () => mediaQueryList.removeEventListener("change", updateMatches);
+    }
+
+    mediaQueryList.addListener(updateMatches);
+    return () => mediaQueryList.removeListener(updateMatches);
+  }, [query]);
+
+  return matches;
+}
+
+function hasMeetingNotes(summary: MeetingSummary) {
+  return (
+    summary.keyPoints.length > 0 ||
+    summary.decisions.length > 0 ||
+    summary.openQuestions.length > 0 ||
+    summary.topics.length > 0
+  );
+}
+
+function getDefaultMeetingDetailTab(tabs: MeetingDetailTab[]) {
+  return tabs[0] ?? null;
+}
+
+function useMeetingDetailTabState(tabs: MeetingDetailTab[]) {
+  const [activeTab, setActiveTab] = useState<MeetingDetailTab | null>(() =>
+    getDefaultMeetingDetailTab(tabs),
+  );
+
+  useEffect(() => {
+    setActiveTab((currentTab) => {
+      if (currentTab && tabs.includes(currentTab)) {
+        return currentTab;
+      }
+
+      return getDefaultMeetingDetailTab(tabs);
+    });
+  }, [tabs]);
+
+  return { activeTab, setActiveTab };
+}
+
+function getMeetingsPageEmptyState({
+  recordings,
+  projectFilter,
+  statusFilter,
+  platformFilter,
+  timeWindowFilter,
+  deferredSearchQuery,
+  onScheduleRecording,
+}: {
+  recordings: MeetingOverview[] | undefined;
+  projectFilter: ProjectFilter;
+  statusFilter: StatusFilter;
+  platformFilter: PlatformFilter;
+  timeWindowFilter: TimeWindowFilter;
+  deferredSearchQuery: string;
+  onScheduleRecording: () => void;
+}) {
+  if (
+    recordings === undefined ||
+    recordings.length > 0 ||
+    projectFilter !== "all" ||
+    statusFilter !== "all" ||
+    platformFilter !== "all" ||
+    timeWindowFilter !== "all" ||
+    deferredSearchQuery.length >= 2
+  ) {
+    return null;
+  }
+
+  return {
+    icon: Mic,
+    title: "No meeting recordings yet",
+    description:
+      "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
+    actions: <Button onClick={() => onScheduleRecording()}>Schedule Recording</Button>,
+  };
+}
 
 function getSelectedActionItemProjects(
   summary: MeetingSummary,
@@ -1286,6 +1398,173 @@ function CollapsibleDetail({
   );
 }
 
+function SummaryOverviewCard({ summary }: { summary: MeetingSummary }) {
+  return (
+    <Card variant="soft" padding="md">
+      <Section title="Summary" gap="sm">
+        <Typography variant="muted">{summary.executiveSummary}</Typography>
+        <Flex gap="xs" wrap>
+          {summary.overallSentiment && (
+            <Badge size="sm">Sentiment: {summary.overallSentiment}</Badge>
+          )}
+          <Badge size="sm">Model: {summary.modelUsed}</Badge>
+        </Flex>
+      </Section>
+    </Card>
+  );
+}
+
+function MeetingNotesPanel({ summary }: { summary: MeetingSummary }) {
+  return (
+    <Section title="Meeting Notes" gap="md">
+      {summary.keyPoints.length > 0 && (
+        <Stack gap="xs">
+          <Typography variant="h5">Key Points</Typography>
+          <List gap="xs" variant="bulleted">
+            {summary.keyPoints.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </List>
+        </Stack>
+      )}
+
+      {summary.decisions.length > 0 && (
+        <Stack gap="xs">
+          <Typography variant="h5">Decisions</Typography>
+          <List gap="xs">
+            {summary.decisions.map((decision) => (
+              <Flex as="li" key={decision} align="start" gap="sm">
+                <Icon icon={CheckCircle} size="sm" tone="success" />
+                <Typography variant="caption" color="secondary">
+                  {decision}
+                </Typography>
+              </Flex>
+            ))}
+          </List>
+        </Stack>
+      )}
+
+      {summary.openQuestions.length > 0 && (
+        <Stack gap="xs">
+          <Typography variant="h5">Open Questions</Typography>
+          <List gap="xs" variant="bulleted">
+            {summary.openQuestions.map((question) => (
+              <li key={question}>{question}</li>
+            ))}
+          </List>
+        </Stack>
+      )}
+
+      {summary.topics.length > 0 && (
+        <Stack gap="sm">
+          <Typography variant="h5">Topics</Typography>
+          <List gap="sm">
+            {summary.topics.map((topic) => (
+              <li key={`topic-${topic.title}-${topic.summary}`}>
+                <Card variant="soft" padding="sm">
+                  <Stack gap="xs">
+                    <Typography variant="label">{topic.title}</Typography>
+                    <Typography variant="caption" color="secondary">
+                      {topic.summary}
+                    </Typography>
+                  </Stack>
+                </Card>
+              </li>
+            ))}
+          </List>
+        </Stack>
+      )}
+    </Section>
+  );
+}
+
+function FocusedMeetingDetailTab({
+  value,
+  label,
+  isActive,
+  onSelect,
+}: {
+  value: MeetingDetailTab;
+  label: string;
+  isActive: boolean;
+  onSelect: (value: MeetingDetailTab) => void;
+}) {
+  return (
+    <FlexItem flex="1">
+      <Button
+        type="button"
+        variant={isActive ? "secondary" : "ghost"}
+        size="touchWide"
+        role="tab"
+        id={`meeting-detail-tab-${value}`}
+        aria-controls={`meeting-detail-panel-${value}`}
+        aria-selected={isActive}
+        data-state={isActive ? "active" : "inactive"}
+        onClick={() => onSelect(value)}
+      >
+        {label}
+      </Button>
+    </FlexItem>
+  );
+}
+
+function getFocusedMeetingDetailTabConfigs(
+  recording: NonNullable<MeetingDetail>,
+  projects: ProjectOption[] | undefined,
+) {
+  if (!recording.summary) {
+    return [] as MeetingDetailTabConfig[];
+  }
+
+  const configs: MeetingDetailTabConfig[] = [];
+
+  if (recording.summary.actionItems.length > 0) {
+    configs.push({
+      value: "actions",
+      label: "Actions",
+      content: (
+        <ActionItemsSection
+          summary={recording.summary}
+          defaultProjectId={recording.projectId}
+          projects={projects}
+          participants={recording.participants}
+        />
+      ),
+    });
+  }
+
+  if (hasMeetingNotes(recording.summary)) {
+    configs.push({
+      value: "notes",
+      label: "Notes",
+      content: <MeetingNotesPanel summary={recording.summary} />,
+    });
+  }
+
+  if (recording.transcript) {
+    configs.push({
+      value: "transcript",
+      label: "Transcript",
+      content: (
+        <TranscriptSegmentList
+          transcript={recording.transcript}
+          participants={recording.participants}
+        />
+      ),
+    });
+  }
+
+  if (recording.participants.length > 0) {
+    configs.push({
+      value: "people",
+      label: "People",
+      content: <ParticipantsSection participants={recording.participants} />,
+    });
+  }
+
+  return configs;
+}
+
 function SummarySections({
   recording,
   projects,
@@ -1316,20 +1595,8 @@ function SummarySections({
 
   return (
     <Stack gap="md">
-      {/* Summary is always visible — it's the primary content */}
-      <Card variant="soft" padding="md">
-        <Section title="Summary" gap="sm">
-          <Typography variant="muted">{summary.executiveSummary}</Typography>
-          <Flex gap="xs" wrap>
-            {summary.overallSentiment && (
-              <Badge size="sm">Sentiment: {summary.overallSentiment}</Badge>
-            )}
-            <Badge size="sm">Model: {summary.modelUsed}</Badge>
-          </Flex>
-        </Section>
-      </Card>
+      <SummaryOverviewCard summary={summary} />
 
-      {/* Action items open by default — high-priority content */}
       <CollapsibleDetail title="Action Items" defaultOpen count={summary.actionItems.length}>
         <ActionItemsSection
           summary={summary}
@@ -1402,6 +1669,64 @@ function SummarySections({
   );
 }
 
+function FocusedMeetingDetailSections({
+  recording,
+  projects,
+}: {
+  recording: NonNullable<MeetingDetail>;
+  projects: ProjectOption[] | undefined;
+}) {
+  const tabConfigs = getFocusedMeetingDetailTabConfigs(recording, projects);
+  const tabs = tabConfigs.map((config) => config.value);
+  const { activeTab, setActiveTab } = useMeetingDetailTabState(tabs);
+
+  if (!recording.summary) {
+    return <SummarySections recording={recording} projects={projects} />;
+  }
+
+  if (tabs.length === 0 || !activeTab) {
+    return <SummaryOverviewCard summary={recording.summary} />;
+  }
+
+  return (
+    <Stack gap="md">
+      <SummaryOverviewCard summary={recording.summary} />
+
+      <Card
+        recipe="filterBar"
+        variant="ghost"
+        padding="xs"
+        role="tablist"
+        aria-label="Meeting detail sections"
+      >
+        <Flex gap="xs">
+          {tabConfigs.map((tabConfig) => (
+            <FocusedMeetingDetailTab
+              key={tabConfig.value}
+              value={tabConfig.value}
+              label={tabConfig.label}
+              isActive={activeTab === tabConfig.value}
+              onSelect={setActiveTab}
+            />
+          ))}
+        </Flex>
+      </Card>
+
+      {tabConfigs.map((tabConfig) => (
+        <div
+          key={tabConfig.value}
+          role="tabpanel"
+          id={`meeting-detail-panel-${tabConfig.value}`}
+          aria-labelledby={`meeting-detail-tab-${tabConfig.value}`}
+          hidden={activeTab !== tabConfig.value}
+        >
+          {tabConfig.content}
+        </div>
+      ))}
+    </Stack>
+  );
+}
+
 function RecordingDetailPanel({
   recording,
   projects,
@@ -1410,6 +1735,7 @@ function RecordingDetailPanel({
   projects: ProjectOption[] | undefined;
 }) {
   const { createSeededDocumentAndOpen, isCreatingDocument } = useSeededDocumentCreation();
+  const isWideDetailLayout = useMediaQuery(WIDE_MEETING_DETAIL_MEDIA_QUERY);
 
   const handleCreateMeetingDocument = async (meeting: NonNullable<MeetingDetail>) => {
     try {
@@ -1496,8 +1822,16 @@ function RecordingDetailPanel({
       </Card>
 
       <MeetingProjectContext recording={recording} projects={projects} />
-      <SummarySections recording={recording} projects={projects} />
-      <ParticipantsSection participants={recording.participants} />
+      {isWideDetailLayout || !recording.summary ? (
+        <>
+          <SummarySections recording={recording} projects={projects} />
+          {recording.participants.length > 0 && (
+            <ParticipantsSection participants={recording.participants} />
+          )}
+        </>
+      ) : (
+        <FocusedMeetingDetailSections recording={recording} projects={projects} />
+      )}
     </Stack>
   );
 }
@@ -1737,199 +2071,194 @@ export function MeetingsWorkspace() {
     api.meetingBot.getRecording,
     selectedRecordingId ? { recordingId: selectedRecordingId } : "skip",
   );
+  const pageEmptyState = getMeetingsPageEmptyState({
+    recordings,
+    projectFilter,
+    statusFilter,
+    platformFilter,
+    timeWindowFilter,
+    deferredSearchQuery,
+    onScheduleRecording: () => setIsScheduleDialogOpen(true),
+  });
 
   return (
-    <PageContent
-      isLoading={
-        recordings === undefined ||
-        (deferredSearchQuery.length >= 2 && searchedRecordings === undefined)
-      }
-      isEmpty={
-        recordings !== undefined &&
-        recordings.length === 0 &&
-        projectFilter === "all" &&
-        statusFilter === "all" &&
-        platformFilter === "all" &&
-        timeWindowFilter === "all" &&
-        deferredSearchQuery.length < 2
-      }
-      emptyState={{
-        icon: Mic,
-        title: "No meeting recordings yet",
-        description:
-          "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
-        "data-testid": TEST_IDS.MEETINGS.EMPTY_STATE,
-      }}
-    >
-      <Stack gap="lg">
-        <MeetingMemorySection
-          memory={memory}
-          projectFilter={projectFilter}
-          projects={projects}
-          onProjectSelect={setProjectFilter}
-        />
+    <>
+      <PageContent
+        isLoading={
+          recordings === undefined ||
+          (deferredSearchQuery.length >= 2 && searchedRecordings === undefined)
+        }
+        emptyState={pageEmptyState}
+      >
+        <Stack gap="lg">
+          <MeetingMemorySection
+            memory={memory}
+            projectFilter={projectFilter}
+            projects={projects}
+            onProjectSelect={setProjectFilter}
+          />
 
-        <Grid cols={1} colsLg={2} gap="lg">
-          <Section
-            title="Recent Meetings"
-            description="Recordings created from calendar-linked meetings and direct bot runs."
-            gap="sm"
-            data-testid={TEST_IDS.MEETINGS.RECENT_SECTION}
-          >
-            <Stack gap="sm">
-              <Flex justify="between" align="center" gap="sm" wrap>
-                <Typography variant="caption" color="secondary">
-                  Schedule from calendar or add an ad-hoc meeting URL here.
-                </Typography>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setIsScheduleDialogOpen(true)}
-                  data-testid={TEST_IDS.MEETINGS.SCHEDULE_BUTTON}
-                >
-                  Schedule Recording
-                </Button>
-              </Flex>
+          <Grid cols={1} colsLg={2} gap="lg">
+            <Section
+              title="Recent Meetings"
+              description="Recordings created from calendar-linked meetings and direct bot runs."
+              gap="sm"
+              data-testid={TEST_IDS.MEETINGS.RECENT_SECTION}
+            >
+              <Stack gap="sm">
+                <Flex justify="between" align="center" gap="sm" wrap>
+                  <Typography variant="caption" color="secondary">
+                    Schedule from calendar or add an ad-hoc meeting URL here.
+                  </Typography>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsScheduleDialogOpen(true)}
+                    data-testid={TEST_IDS.MEETINGS.SCHEDULE_BUTTON}
+                  >
+                    Schedule Recording
+                  </Button>
+                </Flex>
 
-              <Input
-                variant="search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search transcript text"
-                aria-label="Search meetings"
-                data-testid={TEST_IDS.MEETINGS.SEARCH_INPUT}
-              />
+                <Input
+                  variant="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search transcript text"
+                  aria-label="Search meetings"
+                  data-testid={TEST_IDS.MEETINGS.SEARCH_INPUT}
+                />
 
-              <Grid cols={1} colsSm={2} colsXl={4} gap="sm">
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-                >
-                  <SelectTrigger aria-label="Filter by status">
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_FILTER_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
+                <Grid cols={1} colsSm={2} colsXl={4} gap="sm">
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                  >
+                    <SelectTrigger aria-label="Filter by status">
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_FILTER_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={platformFilter}
+                    onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
+                  >
+                    <SelectTrigger aria-label="Filter by platform">
+                      <SelectValue placeholder="All platforms" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PLATFORM_FILTER_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={projectFilter}
+                    onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
+                  >
+                    <SelectTrigger aria-label="Filter by project">
+                      <SelectValue placeholder="All projects" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All projects</SelectItem>
+                      {projects?.map((project) => (
+                        <SelectItem key={project._id} value={project._id}>
+                          {project.key} - {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={timeWindowFilter}
+                    onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
+                  >
+                    <SelectTrigger aria-label="Filter by date">
+                      <SelectValue placeholder="All dates" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIME_WINDOW_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Grid>
+
+                {filteredRecordings !== undefined && (
+                  <Typography variant="caption" color="secondary">
+                    {filteredRecordings.length} meeting{filteredRecordings.length === 1 ? "" : "s"}{" "}
+                    shown
+                  </Typography>
+                )}
+
+                {deferredSearchQuery.length >= 2 && (
+                  <Typography variant="caption" color="secondary">
+                    Searching transcript content for "{deferredSearchQuery}".
+                  </Typography>
+                )}
+
+                {filteredRecordings !== undefined && filteredRecordings.length === 0 ? (
+                  <EmptyState
+                    icon={FileText}
+                    size="compact"
+                    title="No meetings match these filters"
+                    description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
+                    data-testid={TEST_IDS.MEETINGS.FILTER_EMPTY_STATE}
+                  />
+                ) : (
+                  <List gap="sm">
+                    {filteredRecordings?.map((recording) => (
+                      <li key={recording._id}>
+                        <RecordingListItem
+                          recording={recording}
+                          isSelected={selectedRecordingId === recording._id}
+                          onSelect={() => setSelectedRecordingId(recording._id)}
+                        />
+                      </li>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </List>
+                )}
+              </Stack>
+            </Section>
 
-                <Select
-                  value={platformFilter}
-                  onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
-                >
-                  <SelectTrigger aria-label="Filter by platform">
-                    <SelectValue placeholder="All platforms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PLATFORM_FILTER_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={projectFilter}
-                  onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
-                >
-                  <SelectTrigger aria-label="Filter by project">
-                    <SelectValue placeholder="All projects" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All projects</SelectItem>
-                    {projects?.map((project) => (
-                      <SelectItem key={project._id} value={project._id}>
-                        {project.key} - {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={timeWindowFilter}
-                  onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
-                >
-                  <SelectTrigger aria-label="Filter by date">
-                    <SelectValue placeholder="All dates" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIME_WINDOW_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Grid>
-
-              {filteredRecordings !== undefined && (
-                <Typography variant="caption" color="secondary">
-                  {filteredRecordings.length} meeting{filteredRecordings.length === 1 ? "" : "s"}{" "}
-                  shown
-                </Typography>
-              )}
-
-              {deferredSearchQuery.length >= 2 && (
-                <Typography variant="caption" color="secondary">
-                  Searching transcript content for "{deferredSearchQuery}".
-                </Typography>
-              )}
-
-              {filteredRecordings !== undefined && filteredRecordings.length === 0 ? (
+            <Section
+              title="Meeting Detail"
+              description="Review summaries, decisions, action items, transcript, and participants."
+              gap="sm"
+              data-testid={TEST_IDS.MEETINGS.DETAIL_SECTION}
+            >
+              {selectedRecordingId ? (
+                <RecordingDetailPanel recording={selectedRecording} projects={projects} />
+              ) : (
                 <EmptyState
                   icon={FileText}
                   size="compact"
-                  title="No meetings match these filters"
-                  description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
-                  data-testid={TEST_IDS.MEETINGS.FILTER_EMPTY_STATE}
+                  title="Select a meeting"
+                  description="Choose a recording from the list to inspect its details."
+                  data-testid={TEST_IDS.MEETINGS.DETAIL_EMPTY_STATE}
                 />
-              ) : (
-                <List gap="sm">
-                  {filteredRecordings?.map((recording) => (
-                    <li key={recording._id}>
-                      <RecordingListItem
-                        recording={recording}
-                        isSelected={selectedRecordingId === recording._id}
-                        onSelect={() => setSelectedRecordingId(recording._id)}
-                      />
-                    </li>
-                  ))}
-                </List>
               )}
-            </Stack>
-          </Section>
-
-          <Section
-            title="Meeting Detail"
-            description="Review summaries, decisions, action items, transcript, and participants."
-            gap="sm"
-            data-testid={TEST_IDS.MEETINGS.DETAIL_SECTION}
-          >
-            {selectedRecordingId ? (
-              <RecordingDetailPanel recording={selectedRecording} projects={projects} />
-            ) : (
-              <EmptyState
-                icon={FileText}
-                size="compact"
-                title="Select a meeting"
-                description="Choose a recording from the list to inspect its details."
-                data-testid={TEST_IDS.MEETINGS.DETAIL_EMPTY_STATE}
-              />
-            )}
-          </Section>
-        </Grid>
-      </Stack>
-
+            </Section>
+          </Grid>
+        </Stack>
+      </PageContent>
       <ScheduleRecordingDialog
         open={isScheduleDialogOpen}
         onOpenChange={setIsScheduleDialogOpen}
         projects={projects}
       />
-    </PageContent>
+    </>
   );
 }

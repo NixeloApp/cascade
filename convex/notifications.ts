@@ -130,6 +130,38 @@ export const getUnreadCount = authenticatedQuery({
   },
 });
 
+const MAX_UNREAD_IDS = 100;
+
+/** Get the unread inbox notification ids for the current user, plus whether the list was truncated. */
+export const getUnreadIds = authenticatedQuery({
+  args: {},
+  returns: v.object({
+    ids: v.array(v.id("notifications")),
+    hasMore: v.boolean(),
+  }),
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    const unreadNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_read", (q) =>
+        q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
+      )
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("isArchived"), true),
+          q.or(q.eq(q.field("snoozedUntil"), undefined), q.lt(q.field("snoozedUntil"), now)),
+        ),
+      )
+      .take(MAX_UNREAD_IDS + 1);
+
+    return {
+      ids: unreadNotifications.slice(0, MAX_UNREAD_IDS).map((notification) => notification._id),
+      hasMore: unreadNotifications.length > MAX_UNREAD_IDS,
+    };
+  },
+});
+
 /** Mark a single notification as read. Only the notification owner can perform this action. */
 export const markAsRead = authenticatedMutation({
   args: { id: v.id("notifications") },

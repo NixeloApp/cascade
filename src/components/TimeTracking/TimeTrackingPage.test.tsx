@@ -258,9 +258,11 @@ describe("TimeTrackingPage", () => {
   it("renders overview metrics and entries tab with project/date filters", () => {
     render(<TimeTrackingPage userRole="admin" />);
 
-    expect(screen.getByText("Operations pulse")).toBeInTheDocument();
+    expect(screen.getByText("Time summary")).toBeInTheDocument();
     expect(
-      screen.getByText("Track time with enough context to understand cost, not just duration."),
+      screen.getByText(
+        "Review logged time, entry volume, and billable totals before drilling into detail.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Logged")).toBeInTheDocument();
     expect(screen.getByText("3h")).toBeInTheDocument();

@@ -2,12 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@/test/custom-render";
 import { useOfflineQueue, useOfflineSyncStatus } from "./useOffline";
 
-const { mockGetLastSuccessfulOfflineReplayAt, mockGetQueuedMutations, mockProcessOfflineQueue } =
-  vi.hoisted(() => ({
-    mockGetLastSuccessfulOfflineReplayAt: vi.fn(),
-    mockGetQueuedMutations: vi.fn(),
-    mockProcessOfflineQueue: vi.fn(),
-  }));
+const {
+  mockGetLastSuccessfulOfflineReplayAt,
+  mockGetQueuedMutations,
+  mockProcessOfflineQueue,
+  mockSubscribeOfflineQueueChanges,
+} = vi.hoisted(() => ({
+  mockGetLastSuccessfulOfflineReplayAt: vi.fn(),
+  mockGetQueuedMutations: vi.fn(),
+  mockProcessOfflineQueue: vi.fn(),
+  mockSubscribeOfflineQueueChanges: vi.fn(),
+}));
 
 vi.mock("../lib/offline", () => ({
   getLastSuccessfulOfflineReplayAt: mockGetLastSuccessfulOfflineReplayAt,
@@ -22,6 +27,7 @@ vi.mock("../lib/offline", () => ({
     subscribe: vi.fn(() => () => {}),
   },
   processOfflineQueue: mockProcessOfflineQueue,
+  subscribeOfflineQueueChanges: mockSubscribeOfflineQueueChanges,
 }));
 
 /** Expected count when offline queue is empty or fetch fails */
@@ -31,6 +37,7 @@ describe("useOffline reliability", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetLastSuccessfulOfflineReplayAt.mockReturnValue(null);
+    mockSubscribeOfflineQueueChanges.mockImplementation(() => () => {});
   });
 
   afterEach(() => {
@@ -106,5 +113,30 @@ describe("useOffline reliability", () => {
     });
 
     expect(result.current.lastSuccessfulReplayAt).toBe(1_700_000_555_000);
+  });
+
+  it("refreshes the queue when the offline queue subscription fires", async () => {
+    let onQueueChange: (() => void) | undefined;
+    mockSubscribeOfflineQueueChanges.mockImplementation((listener: () => void) => {
+      onQueueChange = listener;
+      return () => {};
+    });
+    mockGetQueuedMutations
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 99, status: "pending" }]);
+
+    const { result } = renderHook(() => useOfflineQueue());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      onQueueChange?.();
+    });
+
+    await waitFor(() => {
+      expect(result.current.queue).toEqual([{ id: 99, status: "pending" }]);
+    });
   });
 });

@@ -1,7 +1,7 @@
 # Offline / PWA
 
-> **Status:** Core infrastructure shipped; verification and polish remain
-> **Last Updated:** 2026-03-24
+> **Status:** In Progress
+> **Last Updated:** 2026-03-25
 
 Related docs:
 
@@ -15,11 +15,6 @@ Related docs:
 - [ ] Verify push subscription survives service worker replacement.
 - [ ] Verify push still works after cache clear and worker re-registration.
 - [ ] Verify unsubscribe cleanup is correct when subscriptions rotate.
-
-### UX / Replay Polish
-
-- [ ] Add optimistic UI for queued mutations where the current UX still waits for replay confirmation.
-- [ ] Add a server-side idempotency strategy for replayed comments if we want stronger guarantees than the current low-risk behavior.
 
 ### Docs
 

@@ -15,7 +15,7 @@ import { BasePage } from "./base.page";
  * Handles top-level department/workspace management
  */
 export class WorkspacesPage extends BasePage {
-  readonly emptyState: Locator;
+  readonly pageEmptyState: Locator;
   readonly searchEmptyState: Locator;
   readonly searchInput: Locator;
   readonly newWorkspaceButton: Locator;
@@ -30,7 +30,7 @@ export class WorkspacesPage extends BasePage {
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
 
-    this.emptyState = page.getByTestId(TEST_IDS.WORKSPACE.EMPTY_STATE);
+    this.pageEmptyState = page.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
     this.searchEmptyState = page.getByTestId(TEST_IDS.WORKSPACE.SEARCH_EMPTY_STATE);
     this.searchInput = page.getByTestId(TEST_IDS.WORKSPACE.SEARCH_INPUT);
     this.newWorkspaceButton = page
@@ -70,7 +70,7 @@ export class WorkspacesPage extends BasePage {
         async () => {
           const cardCount = await getLocatorCount(this.workspaceCards);
           if (cardCount > 0) return "ready";
-          return (await isLocatorVisible(this.emptyState)) ||
+          return (await isLocatorVisible(this.pageEmptyState)) ||
             (await isLocatorVisible(this.searchEmptyState)) ||
             (await isLocatorVisible(this.page.getByText(/no workspaces yet/i)))
             ? "ready"

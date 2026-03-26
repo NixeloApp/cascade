@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
@@ -258,6 +259,83 @@ describe("Notifications", () => {
       await expect(t.query(api.notifications.getUnreadCount, {})).rejects.toThrow(
         "Not authenticated",
       );
+    });
+  });
+
+  describe("getUnreadIds", () => {
+    it("returns unread inbox notification ids with the same visibility rules as the badge count", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const futureSnooze = Date.now() + 60_000;
+      let unreadInboxId: Id<"notifications"> | null = null;
+
+      await t.run(async (ctx) => {
+        unreadInboxId = await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Unread inbox",
+          message: "Unread inbox notification",
+          isRead: false,
+        });
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Archived unread",
+          message: "Archived unread notification",
+          isRead: false,
+          isArchived: true,
+        });
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Snoozed unread",
+          message: "Snoozed unread notification",
+          isRead: false,
+          snoozedUntil: futureSnooze,
+        });
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Read inbox",
+          message: "Read inbox notification",
+          isRead: true,
+        });
+      });
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const unreadIds = await asUser.query(api.notifications.getUnreadIds, {});
+
+      expect(unreadIds).toEqual({
+        ids: unreadInboxId ? [unreadInboxId] : [],
+        hasMore: false,
+      });
+    });
+
+    it("caps unread ids to the badge limit and reports when more exist", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const MAX_UNREAD_IDS = 100;
+      const EXTRA_UNREAD_IDS = 5;
+
+      await t.run(async (ctx) => {
+        await Promise.all(
+          Array.from({ length: MAX_UNREAD_IDS + EXTRA_UNREAD_IDS }).map((_, index) =>
+            ctx.db.insert("notifications", {
+              userId,
+              type: "test",
+              title: `Unread ${index}`,
+              message: "Unread notification",
+              isRead: false,
+            }),
+          ),
+        );
+      });
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const unreadIds = await asUser.query(api.notifications.getUnreadIds, {});
+
+      expect(unreadIds.ids).toHaveLength(MAX_UNREAD_IDS);
+      expect(unreadIds.hasMore).toBe(true);
     });
   });
 

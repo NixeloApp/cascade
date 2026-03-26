@@ -4,22 +4,66 @@ import type { FunctionArgs } from "convex/server";
 import { queueOfflineMutation } from "./offline";
 
 export const COMMENT_ADD_OFFLINE_MUTATION_TYPE = "issues.addComment";
+const COMMENT_CLIENT_REQUEST_ID_PREFIX = "issue-comment";
 
 export type AddCommentArgs = FunctionArgs<typeof api.issues.addComment>;
 
-function isAddCommentArgs(value: unknown): value is AddCommentArgs {
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function hasOnlyExpectedAddCommentKeys(value: Record<string, unknown>): boolean {
+  const expectedKeys = new Set([
+    "attachments",
+    "clientRequestId",
+    "content",
+    "issueId",
+    "mentions",
+  ]);
+
+  return Object.keys(value).every((key) => expectedKeys.has(key));
+}
+
+/** Type guard for queued `issues.addComment` replay payloads. */
+export function isAddCommentArgs(value: unknown): value is AddCommentArgs {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
   const obj = value as Record<string, unknown>;
-  return typeof obj.issueId === "string" && typeof obj.content === "string";
+  return (
+    hasOnlyExpectedAddCommentKeys(obj) &&
+    typeof obj.issueId === "string" &&
+    typeof obj.content === "string" &&
+    (obj.mentions === undefined || isStringArray(obj.mentions)) &&
+    (obj.attachments === undefined || isStringArray(obj.attachments)) &&
+    (obj.clientRequestId === undefined ||
+      (typeof obj.clientRequestId === "string" && obj.clientRequestId.trim().length > 0))
+  );
+}
+
+/** Parses a queued `issues.addComment` payload, returning `null` when invalid. */
+export function parseAddCommentArgs(value: unknown): AddCommentArgs | null {
+  return isAddCommentArgs(value) ? value : null;
 }
 
 function validateAddCommentArgs(args: Record<string, unknown>): AddCommentArgs {
   if (!isAddCommentArgs(args)) {
-    throw new Error("Invalid issues.addComment args: expected { issueId, content }");
+    throw new Error("Validation failed for issues.addComment args: expected a replayable payload");
   }
   return args;
+}
+
+function createCommentRequestEntropy(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/** Creates a stable client-side request ID for live and replayed comment creation. */
+export function createCommentClientRequestId(): string {
+  return `${COMMENT_CLIENT_REQUEST_ID_PREFIX}:${createCommentRequestEntropy()}`;
 }
 
 /** Queues a comment creation to IndexedDB for offline replay. */
@@ -29,14 +73,15 @@ export async function queueAddComment(args: AddCommentArgs, userId?: string): Pr
 
 /** Replays a queued comment through the live Convex client. */
 export async function replayAddComment(
-  client: ConvexReactClient,
+  client: Pick<ConvexReactClient, "mutation">,
   args: Record<string, unknown>,
 ): Promise<void> {
   const validated = validateAddCommentArgs(args);
-  // Skip attachments for offline replay — file uploads can't be queued.
   await client.mutation(api.issues.addComment, {
     issueId: validated.issueId,
     content: validated.content,
     mentions: validated.mentions,
+    attachments: validated.attachments,
+    clientRequestId: validated.clientRequestId,
   });
 }

@@ -21,6 +21,10 @@ export const TEST_IDS = {
   PAGE: {
     /** @see src/components/layout/PageHeader.tsx */
     HEADER_TITLE: "page-header-title",
+    /** @see src/components/layout/PageContent.tsx */
+    LOADING_STATE: "page-loading-state",
+    /** @see src/components/layout/PageContent.tsx */
+    EMPTY_STATE: "page-empty-state",
     /** @see public/offline.html */
     OFFLINE_FALLBACK_HEADING: "offline-fallback-heading",
   },
@@ -42,8 +46,6 @@ export const TEST_IDS = {
     TYPE_FILTER: "issue-type-filter",
     /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
     FILTER_SUMMARY: "issue-filter-summary",
-    /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
-    SEARCH_EMPTY_STATE: "issue-search-empty-state",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     CREATE_TRIGGER: "issue-create-trigger",
     /** @see src/components/IssueDetail/CreateIssueModal.tsx */
@@ -68,8 +70,6 @@ export const TEST_IDS = {
     DESCRIPTION_EDITOR: "issue-description-editor",
     /** @see src/components/IssueDetail/IssueDetailContent.tsx */
     DESCRIPTION_CONTENT: "issue-description-content",
-    /** @see src/routes/_app.$orgSlug.issues.index.tsx */
-    EMPTY_STATE: "issue-empty-state",
     /** @see src/routes/_auth/_app/$orgSlug/issues/$key.tsx */
     EDIT_BUTTON: "issue-edit-button",
     /** @see src/components/IssueDetail/IssueDetailContent.tsx */
@@ -105,8 +105,6 @@ export const TEST_IDS = {
     CARD: "workspace-card",
     /** @see src/components/WorkspaceCard.tsx */
     NAME: "workspace-name",
-    /** @see src/routes/_app.$orgSlug.workspaces.index.tsx */
-    EMPTY_STATE: "workspace-empty-state",
     /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
     SEARCH_INPUT: "workspace-search-input",
     /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
@@ -619,8 +617,6 @@ export const TEST_IDS = {
     /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
     WORKSPACE_LIBRARY_SECTION: "documents-workspace-library-section",
     /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
-    EMPTY_STATE: "documents-empty-state",
-    /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
     SEARCH_EMPTY_STATE: "documents-search-empty-state",
   },
 
@@ -728,10 +724,6 @@ export const TEST_IDS = {
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     FILTER_SUMMARY: "my-issues-filter-summary",
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
-    EMPTY_STATE: "my-issues-empty-state",
-    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
-    FILTER_EMPTY_STATE: "my-issues-filter-empty-state",
-    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     COLUMN: "my-issues-column",
   },
 
@@ -828,8 +820,6 @@ export const TEST_IDS = {
     MEMORY_SECTION: "meetings-memory-section",
     /** @see src/routes/_app.$orgSlug.meetings.tsx */
     RECORDING_CARD: "meetings-recording-card",
-    /** @see src/components/Meetings/MeetingsWorkspace.tsx - empty state */
-    EMPTY_STATE: "meetings-empty-state",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - search input */
     SEARCH_INPUT: "meetings-search-input",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - transcript search */

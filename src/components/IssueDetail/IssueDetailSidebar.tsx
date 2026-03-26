@@ -20,7 +20,9 @@ import { Card } from "@/components/ui/Card";
 import { FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOfflineIssueUpdateStatus } from "@/hooks/useOfflineIssueUpdateStatus";
+import { useQueuedOfflineIssueStatus } from "@/hooks/useOfflineOptimisticState";
 import type { UserSummary, UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { showError } from "@/lib/toast";
 import { IssueDetailSection } from "./IssueDetailSection";
@@ -74,10 +76,13 @@ export function IssueDetailSidebar({
 }: IssueDetailSidebarProps): ReactNode {
   // Fetch project for members and workflow states
   const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
+  const { user } = useCurrentUser();
 
   // Mutations for inline updates
   const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
   const { updateStatus: offlineUpdateStatus } = useOfflineIssueUpdateStatus();
+  const queuedStatus = useQueuedOfflineIssueStatus(issueId, user?._id);
+  const effectiveStatus = queuedStatus ?? status;
 
   // Extract project data for inline editing
   const members = project?.members ?? [];
@@ -134,7 +139,7 @@ export function IssueDetailSidebar({
             description="Status, ownership, and planning fields stay together here."
           >
             <IssueMetadataSection
-              status={status}
+              status={effectiveStatus}
               type={type}
               priority={priority}
               assignee={assignee}

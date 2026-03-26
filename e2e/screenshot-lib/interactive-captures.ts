@@ -938,24 +938,10 @@ export async function screenshotMeetingsStates(
   if (shouldCapture(prefix, transcriptSearchName)) {
     await runCaptureStep("meetings transcript search", async () => {
       await openMeetingsForCapture();
-      const weeklyProductSyncCard = recentMeetingsSection
-        .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
-        .filter({ hasText: /Weekly Product Sync/i })
-        .first();
-      await weeklyProductSyncCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
-      await weeklyProductSyncCard.evaluate((element) => {
-        if (element instanceof HTMLElement) {
-          element.click();
-        }
-      });
-      await meetingDetailSection
-        .getByText("Weekly Product Sync", { exact: true })
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
-
-      const transcriptSearch = meetingDetailSection.getByRole("searchbox", {
-        name: "Search transcript",
-      });
-      await transcriptSearch.fill("pricing");
+      await meetingsPage.expectRecordingVisible("Weekly Product Sync");
+      await meetingsPage.openRecording("Weekly Product Sync");
+      await meetingsPage.expectRecordingDetail("Weekly Product Sync");
+      await meetingsPage.filterTranscript("pricing");
       await meetingDetailSection
         .getByText(
           "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",

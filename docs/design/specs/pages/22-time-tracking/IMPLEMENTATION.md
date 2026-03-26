@@ -57,7 +57,7 @@ Date range maps to query bounds:
 ```text
 TimeTrackingPageRoute (route, admin gate)
 +-- TimeTrackingPage (422 lines)
-    +-- OverviewBand (3 summary metrics with truncation markers)
+    +-- OverviewBand (3 summary metrics with truncation markers + scope note)
     +-- PageControls
     |   +-- Select (project filter)
     |   +-- Select (date range)

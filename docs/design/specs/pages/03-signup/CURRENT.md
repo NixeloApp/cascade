@@ -1,11 +1,9 @@
 # Sign Up Page - Current State
 
 > **Route**: `/signup`
-> **Status**: REVIEWED, with verification-state density follow-up only
-> **Last Updated**: 2026-03-21
-
-
-> **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
+> **Status**: REVIEWED
+> **Last Updated**: 2026-03-25
+> **Spec Contract**: Keep this file explicit about state transitions so signup density problems are visible in review.
 
 ---
 
@@ -20,32 +18,50 @@
 
 ---
 
+## Structure
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ Public auth shell                                            │
+│                                                              │
+│                    compact centered stack                    │
+│                    ┌────────────────────────────────────┐    │
+│                    │ Nixelo logo                        │    │
+│                    │ eyebrow + title + sign-in link     │    │
+│                    │ [step 0] Google CTA + email reveal │    │
+│                    │ [step 1] progress pills + fields   │    │
+│                    │ [step 2] progress pills + verify   │    │
+│                    │ compact legal footer               │    │
+│                    └────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Current UI
 
-- Signup now shares the same split auth shell as sign-in instead of the older isolated card treatment.
-- The page title is `Create your account`, with the sign-in switch link in the subtitle line.
-- Desktop keeps the marketing rail on the left; mobile collapses to a single stacked auth flow.
-- The main panel still needs to handle the email expansion and verification states without losing hierarchy.
-- Verification is now a first-class reviewed screenshot state instead of an untracked internal flow.
+- Signup now matches sign-in structurally: one centered auth stack instead of a desktop split layout.
+- The base reviewed state is the collapsed step-0 surface with Google first and email/password behind a reveal.
+- The verification step is still separately reviewed and now uses a lighter progress indicator instead of tiny `Card` surfaces.
+- When the email form is expanded, focus lands in the email field immediately and password helper copy stays compact.
 
 ---
 
 ## Recent Improvements
 
-- The shared auth shell is materially cleaner and more product-like than the previous version.
-- Legal copy is reduced to a compact footer line.
-- The page-level account-switching copy is now in the right place.
-- Theme parity is much better across dark, light, tablet, and mobile captures.
+- Replaced the duplicated signup email expansion block with the shared `AuthEmailFormSection`.
+- Removed the old `max-h-*` reveal animation and the extra shell around the credentials step.
+- Flattened the step indicator into simple progress pills instead of using the `Card` recipe for decorative micro-surfaces.
+- Refreshed the reviewed screenshots so this spec matches the actual current shell and verification state.
 
 ---
 
-## Remaining Gaps
+## Problems
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The expanded signup and verification states still make the panel feel busier and taller than the rest of the auth suite | `SignUpForm` / `EmailVerificationForm` | MEDIUM |
-| Desktop light mode still lets the left marketing rail compete a bit too much with the form | Shared auth shell | MEDIUM |
-| The signup surface is improved, but the panel still has more shell than necessary for a simple auth action | Shared auth shell | LOW |
+| The expanded email/password step still is not a dedicated reviewed screenshot variant in this folder | screenshot depth | LOW |
+| The verification state is cleaner now, but it remains visually denser than the collapsed entry state because the OTP flow is naturally longer | verification state | LOW |
 
 ---
 
@@ -54,4 +70,12 @@
 - `src/routes/signup.tsx`
 - `src/components/Auth/AuthPageLayout.tsx`
 - `src/components/Auth/SignUpForm.tsx`
+- `src/components/Auth/AuthEmailFormSection.tsx`
+- `src/components/Auth/AuthStepIndicator.tsx`
 - `src/components/Auth/EmailVerificationForm.tsx`
+
+---
+
+## Summary
+
+Signup is now structurally aligned with the rest of the public auth suite: one calm shell, one shared email reveal pattern, and lighter progress chrome. The only notable remaining debt is screenshot depth for the expanded credential step.

@@ -16,6 +16,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
+import { createCountRatchetResult } from "./result-utils.js";
 import { collectClassNameSpan, findOpeningTag } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
@@ -131,13 +132,12 @@ export function run() {
     }
   }
 
-  return {
-    passed: overageEntries.length === 0,
-    errors: overageEntries.length,
-    detail:
-      overageEntries.length > 0
-        ? `${overageEntries.length} file(s) exceed square size drift baseline`
-        : `${ratchet.totalBaselined} baselined square size drift occurrence(s) across ${ratchet.activeKeyCount} file(s)`,
+  return createCountRatchetResult({
+    analysis: ratchet,
+    overageEntries,
+    countBy: "entries",
     messages,
-  };
+    overageDetail: `${overageEntries.length} file(s) exceed square size drift baseline`,
+    baselineDetail: `${ratchet.totalBaselined} baselined square size drift occurrence(s) across ${ratchet.activeKeyCount} file(s)`,
+  });
 }

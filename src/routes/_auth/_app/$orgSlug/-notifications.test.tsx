@@ -8,6 +8,8 @@ import {
   useAuthenticatedQuery,
   useAuthReady,
 } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useQueuedOfflineNotificationReadIds } from "@/hooks/useOfflineOptimisticState";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { SECOND } from "@/lib/time";
@@ -36,6 +38,14 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
 
 vi.mock("@/hooks/useOrgContext", () => ({
   useOrganizationOptional: vi.fn(),
+}));
+
+vi.mock("@/hooks/useCurrentUser", () => ({
+  useCurrentUser: vi.fn(),
+}));
+
+vi.mock("@/hooks/useOfflineOptimisticState", () => ({
+  useQueuedOfflineNotificationReadIds: vi.fn(),
 }));
 
 vi.mock("@/components/layout", () => ({
@@ -73,11 +83,12 @@ vi.mock("@/components/Notifications", () => ({
     notification,
     onSnooze,
   }: {
-    notification: { _id: Id<"notifications">; title: string };
+    notification: { _id: Id<"notifications">; title: string; isRead: boolean };
     onSnooze?: (id: Id<"notifications">, snoozedUntil: number) => void;
   }) => (
     <div>
       <div>{notification.title}</div>
+      <div>{notification.isRead ? "Read" : "Unread"}</div>
       {onSnooze ? (
         <button type="button" onClick={() => onSnooze(notification._id, 1_234)}>
           Snooze notification
@@ -216,6 +227,8 @@ const mockUsePaginatedQuery = vi.mocked(usePaginatedQuery);
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 const mockUseAuthReady = vi.mocked(useAuthReady);
+const mockUseCurrentUser = vi.mocked(useCurrentUser);
+const mockUseQueuedOfflineNotificationReadIds = vi.mocked(useQueuedOfflineNotificationReadIds);
 const mockUseOrganizationOptional = vi.mocked(useOrganizationOptional);
 
 type MockNotification = {
@@ -247,6 +260,25 @@ const archivedNotification: MockNotification = {
   isRead: true,
   isArchived: true,
 };
+
+function mockUnreadQueries(args: {
+  unreadCount: number | undefined;
+  unreadHasMore?: boolean;
+  unreadIds?: Id<"notifications">[];
+}) {
+  let authenticatedQueryCallCount = 0;
+  mockUseAuthenticatedQuery.mockImplementation(() => {
+    authenticatedQueryCallCount += 1;
+    if (authenticatedQueryCallCount % 2 === 1) {
+      return args.unreadCount;
+    }
+
+    return {
+      ids: args.unreadIds ?? [],
+      hasMore: args.unreadHasMore ?? false,
+    };
+  });
+}
 
 function mockNotificationQueries({
   archived = [archivedNotification],
@@ -327,12 +359,18 @@ describe("NotificationsPage", () => {
       isAuthLoading: false,
     }));
     mockNotificationQueries();
-    mockUseAuthenticatedQuery.mockReturnValue(1);
+    mockUnreadQueries({ unreadCount: 1, unreadIds: [inboxNotification._id] });
     mockUseAuthReady.mockReturnValue({
       isAuthenticated: true,
       isAuthLoading: false,
       canAct: true,
     });
+    mockUseCurrentUser.mockReturnValue({
+      user: null,
+      isLoading: false,
+      isAuthenticated: true,
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set());
     mockUseOrganizationOptional.mockReturnValue({
       orgSlug: "acme",
       organizationId: "org-1" as Id<"organizations">,
@@ -340,6 +378,19 @@ describe("NotificationsPage", () => {
       userRole: "owner",
       billingEnabled: true,
     });
+  });
+
+  it("applies queued offline reads to the unread summary immediately", () => {
+    mockUnreadQueries({
+      unreadCount: 2,
+      unreadIds: [inboxNotification._id, "notif-queued" as Id<"notifications">],
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([inboxNotification._id]));
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("1 unread notification")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("1");
   });
 
   it("passes snooze handling to inbox notifications", async () => {
@@ -405,7 +456,7 @@ describe("NotificationsPage", () => {
       inbox: [],
       archived: [archivedNotification],
     });
-    mockUseAuthenticatedQuery.mockReturnValue(0);
+    mockUnreadQueries({ unreadCount: 0, unreadIds: [] });
 
     render(<NotificationsPage />);
 
@@ -451,7 +502,7 @@ describe("NotificationsPage", () => {
   });
 
   it("caps the unread badge at 99+ while preserving the header count", () => {
-    mockUseAuthenticatedQuery.mockReturnValue(100);
+    mockUnreadQueries({ unreadCount: 100, unreadIds: [inboxNotification._id] });
 
     render(<NotificationsPage />);
 
@@ -461,7 +512,7 @@ describe("NotificationsPage", () => {
 
   it("forces the mark-all-read loading state when the E2E override is enabled", () => {
     window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ = true;
-    mockUseAuthenticatedQuery.mockReturnValue(3);
+    mockUnreadQueries({ unreadCount: 3, unreadIds: [inboxNotification._id] });
 
     render(<NotificationsPage />);
 
@@ -470,5 +521,58 @@ describe("NotificationsPage", () => {
       "true",
     );
     expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON)).toBeDisabled();
+  });
+  it("does not subtract archived queued reads from the inbox badge", () => {
+    mockUnreadQueries({ unreadCount: 1, unreadIds: [inboxNotification._id] });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([archivedNotification._id]));
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("1 unread notification")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("1");
+  });
+
+  it("subtracts queued reads for unread inbox items outside the current filter or page", () => {
+    mockUnreadQueries({
+      unreadCount: 2,
+      unreadIds: [inboxNotification._id, "notif-off-page" as Id<"notifications">],
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(
+      new Set(["notif-off-page" as Id<"notifications">]),
+    );
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("1 unread notification")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("1");
+  });
+
+  it("does not subtract queued reads when the unread id list is truncated", () => {
+    mockUnreadQueries({
+      unreadCount: 100,
+      unreadHasMore: true,
+      unreadIds: [inboxNotification._id],
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([inboxNotification._id]));
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("100 unread notifications")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("99+");
+  });
+
+  it("applies queued read projection to archived rows", async () => {
+    const user = userEvent.setup();
+    mockNotificationQueries({
+      archived: [{ ...archivedNotification, isRead: false }],
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([archivedNotification._id]));
+
+    render(<NotificationsPage />);
+
+    await user.click(screen.getByRole("tab", { name: /archived/i }));
+
+    expect(await screen.findByText("Archived status update")).toBeInTheDocument();
+    expect(screen.getByText("Read")).toBeInTheDocument();
   });
 });

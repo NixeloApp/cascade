@@ -107,9 +107,8 @@ This column is the operational list-management side of the route.
 ### 4. Right-column detail workspace
 
 - Selected recording summary
-- Participants
-- Transcript
-- Action items
+- Focused detail panes for action items, notes, transcript, and participants on smaller widths
+- Expanded stacked sections for transcript, action items, and notes on wide layouts
 - Project-aware follow-up context
 
 This column is the review and handoff side of the route.
@@ -149,6 +148,7 @@ This column is the review and handoff side of the route.
 |------|--------------|
 | Screenshot depth | Strong. This route covers canonical, deep-state, overlay, and in-progress detail states, while avoiding redundant small-screen captures that do not change the visible composition. |
 | Route purpose | Clear. The page reads as a review/search workspace, not a generic transcript dump. |
+| Small-screen detail handling | Better. Narrow widths now keep the summary visible and move the secondary detail into focused panes instead of making transcript, notes, and action items compete in one long stack. |
 | State coverage | Better than many other product routes because search, memory lens, processing, and scheduling are explicitly reviewed. |
 
 ---
@@ -157,9 +157,8 @@ This column is the review and handoff side of the route.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Dense detail states can still feel busy on smaller widths because summary, transcript, and action items all compete for the same right-column attention | detail composition | MEDIUM |
-| 2 | Failed/cancelled capture quality still depends on future deterministic seed coverage if those states become a regular review target | state coverage follow-up | LOW |
-| 3 | The spec will need another refresh if multi-platform capture or richer bot lifecycle UI changes the route anatomy | documentation follow-up | LOW |
+| 1 | Failed/cancelled capture quality still depends on future deterministic seed coverage if those states become a regular review target | state coverage follow-up | LOW |
+| 2 | The spec will need another refresh if multi-platform capture or richer bot lifecycle UI changes the route anatomy | documentation follow-up | LOW |
 
 ---
 
@@ -186,5 +185,5 @@ This column is the review and handoff side of the route.
 ## Summary
 
 The meetings spec is now current. Core route coverage, deep-state screenshots, schedule overlay,
-processing detail, and filter-empty review are all real. The remaining gaps are broader platform
-breadth and provider rollout, not missing route-state captures.
+processing detail, filter-empty review, and small-screen detail focus are all real. The remaining
+gaps are broader platform breadth and provider rollout, not missing route-state captures.

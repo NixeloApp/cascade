@@ -12,6 +12,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
+import { createCountRatchetResult, createValidatorResult } from "./result-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const E2E_DIR = path.join(ROOT, "e2e");
@@ -25,7 +26,7 @@ function lineFromIndex(source, index) {
 
 export function run() {
   if (!fs.existsSync(E2E_DIR)) {
-    return { passed: true, errors: 0, detail: "No e2e/ directory", messages: [] };
+    return createValidatorResult({ errors: 0, detail: "No e2e/ directory", messages: [] });
   }
 
   const baselineByFile = loadCountBaseline(BASELINE_PATH, "silentCatchSwallowsByFile");
@@ -71,13 +72,13 @@ export function run() {
     }
   }
 
-  return {
-    passed: violations.length === 0,
-    errors: violations.length,
-    detail:
-      violations.length > 0
-        ? `${violations.length} file(s) exceed silent catch swallow baseline`
-        : `${ratchet.totalCurrent} baselined swallow(s) across ${ratchet.activeKeyCount} file(s)`,
+  return createCountRatchetResult({
+    analysis: ratchet,
+    overageEntries: Object.entries(ratchet.overagesByKey),
+    countBy: "entries",
+    findings: violations.length,
     messages,
-  };
+    overageDetail: `${violations.length} file(s) exceed silent catch swallow baseline`,
+    baselineDetail: `${ratchet.totalCurrent} baselined swallow(s) across ${ratchet.activeKeyCount} file(s)`,
+  });
 }

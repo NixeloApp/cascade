@@ -1,17 +1,19 @@
 # Visual Consistency Hardening
 
-> **Priority:** P1
+> **Priority:** P2
 > **Status:** In Progress
 > **Last Updated:** 2026-03-25
 
-Make the product more visually cohesive and more enforceable in code, using the consistency contract, screenshot review loop, and validator output as the cleanup map.
-
 ## Remaining
 
-Documents workspace screenshot review now covers the canonical route plus template and search variants, the projects route now has reviewed multi-project, single-project, empty, loading, and create-modal states across the full viewport matrix, the invoices route now has reviewed canonical, filtered-empty, create-dialog, and loading states across the full viewport matrix, the issues route now has reviewed filtered, modal, side-panel, and loading captures across desktop/tablet/mobile, the my-issues route now has reviewed true-empty, filter-active, filtered-empty, and loading states across the full viewport matrix, notifications now has reviewed archive/filter/popover/empty/loading/overflow states across the full viewport matrix, roadmap now has reviewed dependency-linked canonical, grouped, detail-open, empty, milestone, and selector-open states across the full viewport matrix, time tracking now has reviewed burn-rate, rates, empty, all-time, truncation, and modal states across the full viewport matrix, the project inbox now has reviewed closed, bulk-selection, snooze, decline, duplicate, and both empty-tab states across the full viewport matrix, the workspaces route now has reviewed true-empty, search-empty, and create-modal coverage across all four configs, the dashboard route now has reviewed shell simplification plus the full canonical/modal/loading/responsive matrix, project analytics now has reviewed sparse-data plus no-activity variants across the full viewport matrix, org analytics now has reviewed sparse-data plus no-activity variants across the full viewport matrix, org calendar now has reviewed workspace-scope, team-scope, and loading variants across the full viewport matrix, and the assistant route now has reviewed overview, conversations, empty, and loading states across the full viewport matrix. The remaining work here is broader page-by-page polish, empty-state quality on other surfaces, and cross-surface consistency rather than another blind core-route gap.
+### Active regressions
+
+- [ ] Fix the mobile board loading state so it stops rendering a desktop-shaped, washed-out multi-column skeleton on phone widths.
+- [ ] Review the board loading shell before/after across desktop, tablet, and mobile before approving any new baseline for that route.
 
 ### Screenshot-driven cleanup
 
+- [ ] Treat screenshot approval as real design review: inspect actual before/after images for every changed route state instead of relying on harness completeness, validators, or green diff checks.
 - [ ] Review approved screenshots page by page and turn every visibly broken or weird state into an explicit todo item instead of leaving it as vague review debt
 - [ ] Fix screenshot-exposed broken states before approving new baselines -- missing content, bad shells, off spacing, broken empty states, and modal/popover layout failures should not be normalized
 - [ ] Use screenshot review to find and remove AI-slop patterns -- nested cards, redundant shells, accidental panel-in-panel layouts, and inconsistent control groupings
@@ -40,7 +42,7 @@ Documents workspace screenshot review now covers the canonical route plus templa
 
 ## Exit Criteria
 
-- [ ] The visual-consistency validator runs with zero meaningful drift findings or an intentionally tiny known set
-- [ ] Screenshot review no longer has obvious uncaptured consistency holes for important surfaces, including tablet/mobile and major feature states
-- [ ] The remaining human-review blind spots are either covered by guardrails or tracked as explicit debt
-- [ ] Screenshot review no longer surfaces obvious "what is this layout doing?" moments on core routes and dialogs
+- [ ] The visual-consistency validator runs with zero meaningful drift findings or an intentionally tiny known set.
+- [ ] Screenshot review no longer has obvious uncaptured consistency holes for important surfaces, including tablet/mobile and major feature states.
+- [ ] The remaining human-review blind spots are either covered by guardrails or tracked as explicit debt.
+- [ ] Screenshot review no longer surfaces obvious "what is this layout doing?" moments on core routes and dialogs.

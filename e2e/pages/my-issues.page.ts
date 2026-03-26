@@ -13,8 +13,7 @@ export class MyIssuesPage extends BasePage {
   readonly content: Locator;
   readonly columns: Locator;
   readonly dueDateFilter: Locator;
-  readonly emptyState: Locator;
-  readonly filterEmptyState: Locator;
+  readonly pageEmptyState: Locator;
   readonly filterSummary: Locator;
   readonly priorityFilter: Locator;
 
@@ -23,8 +22,7 @@ export class MyIssuesPage extends BasePage {
     this.content = page.getByTestId(TEST_IDS.MY_ISSUES.CONTENT);
     this.columns = page.getByTestId(TEST_IDS.MY_ISSUES.COLUMN);
     this.dueDateFilter = page.getByTestId(TEST_IDS.MY_ISSUES.DUE_DATE_FILTER);
-    this.emptyState = page.getByTestId(TEST_IDS.MY_ISSUES.EMPTY_STATE);
-    this.filterEmptyState = page.getByTestId(TEST_IDS.MY_ISSUES.FILTER_EMPTY_STATE);
+    this.pageEmptyState = page.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
     this.filterSummary = page.getByTestId(TEST_IDS.MY_ISSUES.FILTER_SUMMARY);
     this.priorityFilter = page.getByTestId(TEST_IDS.MY_ISSUES.PRIORITY_FILTER);
   }
@@ -45,9 +43,7 @@ export class MyIssuesPage extends BasePage {
             return "ready";
           }
 
-          return (await isLocatorVisible(this.emptyState.or(this.filterEmptyState)))
-            ? "ready"
-            : "pending";
+          return (await isLocatorVisible(this.pageEmptyState)) ? "ready" : "pending";
         },
         { timeout: 12000 },
       )
@@ -70,6 +66,7 @@ export class MyIssuesPage extends BasePage {
   }
 
   async expectFilteredEmptyState(): Promise<void> {
-    await expect(this.filterEmptyState).toBeVisible();
+    await expect(this.pageEmptyState).toBeVisible();
+    await expect(this.pageEmptyState).toContainText("No issues match these filters");
   }
 }
