@@ -1246,25 +1246,31 @@ export async function screenshotMyIssuesStates(
   }
 
   const myIssuesUrl = ROUTES.myIssues.build(orgSlug);
-  const myIssuesPage = new MyIssuesPage(page, orgSlug);
-
-  const openMyIssuesForCapture = async () => {
-    await page.goto(`${BASE_URL}${myIssuesUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, myIssuesUrl, "my-issues", prefix);
-    await waitForScreenshotReady(page);
-    await myIssuesPage.waitUntilReady();
-  };
 
   if (shouldCapture(prefix, filterActiveName)) {
     await runCaptureStep("my issues filter active", async () => {
-      await openMyIssuesForCapture();
-      await myIssuesPage.filterByPriority("High");
-      await myIssuesPage.expectFilterSummaryVisible();
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, filterActiveName);
+      const filterActivePage = await page.context().newPage();
+
+      try {
+        await filterActivePage.addInitScript(() => {
+          window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filter-active");
+        });
+
+        const filteredMyIssuesPage = new MyIssuesPage(filterActivePage, orgSlug);
+        await filterActivePage.goto(`${BASE_URL}${myIssuesUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(filterActivePage, myIssuesUrl, "my-issues", prefix);
+        await waitForScreenshotReady(filterActivePage);
+        await filteredMyIssuesPage.waitUntilReady();
+        await filteredMyIssuesPage.expectFilterSummaryVisible();
+        await captureCurrentView(filterActivePage, prefix, filterActiveName);
+      } finally {
+        if (!filterActivePage.isClosed()) {
+          await filterActivePage.close();
+        }
+      }
     });
   }
 

@@ -726,6 +726,8 @@ export const TEST_IDS = {
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     CONTENT: "my-issues-content",
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    MOBILE_COLUMN_SELECTOR: "my-issues-mobile-column-selector",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     PRIORITY_FILTER: "my-issues-priority-filter",
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     DUE_DATE_FILTER: "my-issues-due-date-filter",

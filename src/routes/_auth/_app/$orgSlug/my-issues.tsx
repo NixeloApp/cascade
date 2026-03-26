@@ -3,7 +3,7 @@ import { WEEK } from "@convex/lib/timeUtils";
 import type { ISSUE_PRIORITIES } from "@convex/validators";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -22,6 +22,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDate } from "@/lib/formatting";
 import { ListTodo, SearchX } from "@/lib/icons";
@@ -41,7 +42,7 @@ declare global {
 type GroupBy = "status" | "project";
 type PriorityFilter = "all" | (typeof ISSUE_PRIORITIES)[number];
 type DueDateFilter = "all" | "has-date" | "overdue" | "this-week" | "no-date";
-type MyIssuesE2EState = "filtered-empty";
+type MyIssuesE2EState = "filter-active" | "filtered-empty";
 
 type MyIssueSummary = {
   _id: string;
@@ -65,6 +66,8 @@ type MyIssuesColumn = {
   totalCount: number;
   issues: MyIssueSummary[];
 };
+
+const MOBILE_MY_ISSUES_MEDIA_QUERY = "(max-width: 767px)";
 
 type MyIssuesInitialState = {
   dueDateFilter: DueDateFilter;
@@ -122,6 +125,14 @@ function consumeMyIssuesE2ERequestedState(): MyIssuesInitialState {
   try {
     const requestedState = window.sessionStorage.getItem(MY_ISSUES_E2E_STATE_STORAGE_KEY);
     window.sessionStorage.removeItem(MY_ISSUES_E2E_STATE_STORAGE_KEY);
+    if ((requestedState as MyIssuesE2EState | null) === "filter-active") {
+      return {
+        dueDateFilter: "all",
+        forceFilteredEmpty: false,
+        groupBy: "status",
+        priorityFilter: "high",
+      };
+    }
     if ((requestedState as MyIssuesE2EState | null) === "filtered-empty") {
       return {
         dueDateFilter: "all",
@@ -182,6 +193,124 @@ function buildMyIssuesColumns(args: {
     }));
 }
 
+function filterMyIssuesResults(args: {
+  dueDateFilter: DueDateFilter;
+  forceFilteredEmpty: boolean;
+  hasActiveFilters: boolean;
+  priorityFilter: PriorityFilter;
+  results: MyIssueSummary[];
+}): MyIssueSummary[] {
+  if (args.forceFilteredEmpty && args.hasActiveFilters) {
+    return [];
+  }
+
+  if (!args.hasActiveFilters) {
+    return args.results;
+  }
+
+  return args.results.filter((issue) => {
+    if (args.priorityFilter !== "all" && issue.priority !== args.priorityFilter) {
+      return false;
+    }
+
+    return matchesDueDateFilter(issue.dueDate, args.dueDateFilter);
+  });
+}
+
+function formatMyIssuesColumnCount(column: MyIssuesColumn, hasActiveFilters: boolean): string {
+  if (hasActiveFilters) {
+    return `${column.issues.length} filtered`;
+  }
+
+  if (column.issues.length < column.totalCount) {
+    return `${column.issues.length} / ${column.totalCount}`;
+  }
+
+  return String(column.totalCount);
+}
+
+function MobileMyIssuesColumnSelector({
+  activeColumnKey,
+  columns,
+  onChange,
+}: {
+  activeColumnKey: string | null;
+  columns: MyIssuesColumn[];
+  onChange: (columnKey: string) => void;
+}) {
+  if (columns.length <= 1) {
+    return null;
+  }
+
+  return (
+    <SegmentedControl
+      data-testid={TEST_IDS.MY_ISSUES.MOBILE_COLUMN_SELECTOR}
+      value={activeColumnKey ?? undefined}
+      onValueChange={(value) => {
+        if (value) {
+          onChange(value);
+        }
+      }}
+      variant="outline"
+      size="sm"
+      width="fill"
+      aria-label="My issues columns"
+      className="sm:hidden"
+    >
+      {columns.map((column) => (
+        <SegmentedControlItem key={column.key} value={column.key} width="fill" iconSpacing>
+          <span className="truncate">{column.label}</span>
+          <Badge variant="neutral" size="sm" shape="pill">
+            {column.totalCount}
+          </Badge>
+        </SegmentedControlItem>
+      ))}
+    </SegmentedControl>
+  );
+}
+
+function useVisibleMyIssuesColumns(args: {
+  columns: MyIssuesColumn[];
+  isMobileViewport: boolean;
+}): {
+  activeMobileColumnKey: string | null;
+  setActiveMobileColumnKey: (columnKey: string) => void;
+  visibleColumns: MyIssuesColumn[];
+} {
+  const [activeMobileColumnKey, setActiveMobileColumnKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!args.isMobileViewport) {
+      return;
+    }
+
+    if (args.columns.length === 0) {
+      setActiveMobileColumnKey((currentColumnKey) => currentColumnKey ?? null);
+      return;
+    }
+
+    setActiveMobileColumnKey((currentColumnKey) => {
+      if (currentColumnKey && args.columns.some((column) => column.key === currentColumnKey)) {
+        return currentColumnKey;
+      }
+
+      return args.columns[0]?.key ?? null;
+    });
+  }, [args.columns, args.isMobileViewport]);
+
+  const resolvedMobileColumnKey = activeMobileColumnKey ?? args.columns[0]?.key ?? null;
+  const visibleColumns =
+    args.isMobileViewport && resolvedMobileColumnKey
+      ? args.columns.filter((column) => column.key === resolvedMobileColumnKey)
+      : args.columns;
+
+  return {
+    activeMobileColumnKey: resolvedMobileColumnKey,
+    setActiveMobileColumnKey,
+    visibleColumns,
+  };
+}
+
 /** Personal issue board with client-side filters, grouped columns, and recovery empty states. */
 export function MyIssuesBoardPage() {
   const { orgSlug } = useOrganization();
@@ -189,6 +318,7 @@ export function MyIssuesBoardPage() {
   const [groupBy, setGroupBy] = useState<GroupBy>(initialState.groupBy);
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>(initialState.priorityFilter);
   const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>(initialState.dueDateFilter);
+  const isMobileViewport = useMediaQuery(MOBILE_MY_ISSUES_MEDIA_QUERY);
 
   // Server-side group counts — always reflect the full dataset
   const groupCounts = useAuthenticatedQuery(api.dashboard.getMyIssueGroupCounts, { groupBy });
@@ -205,14 +335,12 @@ export function MyIssuesBoardPage() {
 
   // Apply client-side filters
   const filteredResults = useMemo(() => {
-    if (initialState.forceFilteredEmpty && hasActiveFilters) {
-      return [];
-    }
-    if (!hasActiveFilters) return results;
-    return results.filter((issue) => {
-      if (priorityFilter !== "all" && issue.priority !== priorityFilter) return false;
-      if (!matchesDueDateFilter(issue.dueDate, dueDateFilter)) return false;
-      return true;
+    return filterMyIssuesResults({
+      dueDateFilter,
+      forceFilteredEmpty: initialState.forceFilteredEmpty,
+      hasActiveFilters,
+      priorityFilter,
+      results,
     });
   }, [results, priorityFilter, dueDateFilter, hasActiveFilters, initialState.forceFilteredEmpty]);
 
@@ -225,6 +353,12 @@ export function MyIssuesBoardPage() {
       }),
     [filteredResults, groupBy, groupCounts],
   );
+  const { activeMobileColumnKey, setActiveMobileColumnKey, visibleColumns } =
+    useVisibleMyIssuesColumns({
+      columns,
+      isMobileViewport,
+    });
+
   const hasLoadedIssues = results.length > 0 || (groupCounts?.length ?? 0) > 0;
   const showEmptyState = !hasLoadedIssues;
   const showFilteredEmptyState =
@@ -341,68 +475,74 @@ export function MyIssuesBoardPage() {
             </Typography>
           )}
 
-          <Flex gap="md" className="overflow-x-auto pb-2" data-testid={TEST_IDS.MY_ISSUES.CONTENT}>
-            {columns.map((column) => (
-              <Card
-                key={column.key}
-                radius="lg"
-                padding="sm"
-                variant="flat"
-                data-testid={TEST_IDS.MY_ISSUES.COLUMN}
-                className="min-w-72 max-w-80 shrink-0 border-ui-border bg-ui-bg-secondary"
-              >
-                <Stack gap="md">
-                  <Flex justify="between" align="center">
-                    <Typography variant="label">{column.label}</Typography>
-                    <Badge variant="neutral" size="sm">
-                      {hasActiveFilters
-                        ? `${column.issues.length} filtered`
-                        : column.issues.length < column.totalCount
-                          ? `${column.issues.length} / ${column.totalCount}`
-                          : String(column.totalCount)}
-                    </Badge>
-                  </Flex>
-                  <Stack gap="sm">
-                    {column.issues.map((issue) => (
-                      <Link
-                        key={issue._id}
-                        to={ROUTES.issues.detail.path}
-                        params={{ orgSlug, key: issue.key }}
-                      >
-                        <CardSection size="compact" hoverable>
-                          <Stack gap="xs">
-                            <Flex justify="between" align="center">
-                              <Typography variant="small" color="secondary">
-                                {issue.key} · {issue.projectKey}
+          <Stack gap="md" data-testid={TEST_IDS.MY_ISSUES.CONTENT}>
+            {isMobileViewport ? (
+              <MobileMyIssuesColumnSelector
+                activeColumnKey={activeMobileColumnKey}
+                columns={columns}
+                onChange={setActiveMobileColumnKey}
+              />
+            ) : null}
+
+            <Flex gap="md" className="overflow-x-auto pb-2 sm:pb-2">
+              {visibleColumns.map((column) => (
+                <Card
+                  key={column.key}
+                  radius="lg"
+                  padding="sm"
+                  variant="flat"
+                  data-testid={TEST_IDS.MY_ISSUES.COLUMN}
+                  className="w-full min-w-0 border-ui-border bg-ui-bg-secondary sm:min-w-72 sm:max-w-80 sm:shrink-0"
+                >
+                  <Stack gap="md">
+                    <Flex justify="between" align="center">
+                      <Typography variant="label">{column.label}</Typography>
+                      <Badge variant="neutral" size="sm">
+                        {formatMyIssuesColumnCount(column, hasActiveFilters)}
+                      </Badge>
+                    </Flex>
+                    <Stack gap="sm">
+                      {column.issues.map((issue) => (
+                        <Link
+                          key={issue._id}
+                          to={ROUTES.issues.detail.path}
+                          params={{ orgSlug, key: issue.key }}
+                        >
+                          <CardSection size="compact" hoverable>
+                            <Stack gap="xs">
+                              <Flex justify="between" align="center">
+                                <Typography variant="small" color="secondary">
+                                  {issue.key} · {issue.projectKey}
+                                </Typography>
+                                {issue.dueDate && (
+                                  <Badge
+                                    variant={issue.dueDate < Date.now() ? "error" : "neutral"}
+                                    size="sm"
+                                  >
+                                    {formatDate(issue.dueDate, { month: "short", day: "numeric" })}
+                                  </Badge>
+                                )}
+                              </Flex>
+                              <Typography variant="label" className="line-clamp-2">
+                                {issue.title}
                               </Typography>
-                              {issue.dueDate && (
-                                <Badge
-                                  variant={issue.dueDate < Date.now() ? "error" : "neutral"}
-                                  size="sm"
-                                >
-                                  {formatDate(issue.dueDate, { month: "short", day: "numeric" })}
-                                </Badge>
-                              )}
-                            </Flex>
-                            <Typography variant="label" className="line-clamp-2">
-                              {issue.title}
-                            </Typography>
-                            <Badge
-                              size="sm"
-                              shape="pill"
-                              priorityTone={getPriorityBadgeTone(issue.priority)}
-                            >
-                              {issue.priority}
-                            </Badge>
-                          </Stack>
-                        </CardSection>
-                      </Link>
-                    ))}
+                              <Badge
+                                size="sm"
+                                shape="pill"
+                                priorityTone={getPriorityBadgeTone(issue.priority)}
+                              >
+                                {issue.priority}
+                              </Badge>
+                            </Stack>
+                          </CardSection>
+                        </Link>
+                      ))}
+                    </Stack>
                   </Stack>
-                </Stack>
-              </Card>
-            ))}
-          </Flex>
+                </Card>
+              ))}
+            </Flex>
+          </Stack>
 
           {status === "CanLoadMore" && (
             <Flex justify="center">

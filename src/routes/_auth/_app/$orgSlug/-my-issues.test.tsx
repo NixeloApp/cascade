@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { usePaginatedQuery } from "convex/react";
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -179,7 +179,19 @@ vi.mock("@/components/ui/Select", () => ({
 }));
 
 vi.mock("@/components/ui/Stack", () => ({
-  Stack: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Stack: ({
+    children,
+    className,
+    "data-testid": testId,
+  }: {
+    children: ReactNode;
+    className?: string;
+    "data-testid"?: string;
+  }) => (
+    <div className={className} data-testid={testId}>
+      {children}
+    </div>
+  ),
 }));
 
 vi.mock("@/components/ui/Typography", () => ({
@@ -289,7 +301,32 @@ function mockMyIssuesQueries({
   );
 }
 
+function mockMatchMedia(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: () => ({
+      matches,
+      media: "(max-width: 767px)",
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }),
+  });
+}
+
 describe("MyIssuesBoardPage", () => {
+  afterEach(() => {
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      configurable: true,
+      value: undefined,
+    });
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     window.__NIXELO_E2E_MY_ISSUES_LOADING__ = false;
@@ -357,5 +394,35 @@ describe("MyIssuesBoardPage", () => {
     render(<MyIssuesBoardPage />);
 
     expect(screen.getByText("Loading")).toBeInTheDocument();
+  });
+
+  it("shows a single active column with a selector on narrow screens", async () => {
+    const user = userEvent.setup();
+    mockMatchMedia(true);
+
+    render(<MyIssuesBoardPage />);
+
+    expect(screen.getByTestId(TEST_IDS.MY_ISSUES.MOBILE_COLUMN_SELECTOR)).toBeInTheDocument();
+    expect(screen.getAllByTestId(TEST_IDS.MY_ISSUES.COLUMN)).toHaveLength(1);
+    expect(
+      within(screen.getByTestId(TEST_IDS.MY_ISSUES.COLUMN)).getByText("todo"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /in-progress/i }));
+
+    expect(screen.getAllByTestId(TEST_IDS.MY_ISSUES.COLUMN)).toHaveLength(1);
+    expect(
+      within(screen.getByTestId(TEST_IDS.MY_ISSUES.COLUMN)).getByText("in-progress"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId(TEST_IDS.MY_ISSUES.COLUMN)).getByText(
+        "Fix login timeout on mobile",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId(TEST_IDS.MY_ISSUES.COLUMN)).queryByText(
+        "Review deployment checklist",
+      ),
+    ).toBeNull();
   });
 });
