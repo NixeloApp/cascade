@@ -417,6 +417,98 @@ export const update = issueMutation({
   },
 });
 
+type AddCommentArgs = {
+  content: string;
+  mentions?: Id<"users">[];
+  attachments?: Id<"_storage">[];
+  clientRequestId?: string;
+};
+
+type AddCommentContext = MutationCtx & {
+  userId: Id<"users">;
+  issue: Doc<"issues">;
+  projectId: Id<"projects">;
+  project: Doc<"projects">;
+};
+
+type NormalizedCommentPayload = {
+  attachments: Id<"_storage">[];
+  clientRequestId: string | undefined;
+  mentions: Id<"users">[];
+};
+
+function normalizeCommentPayload(args: AddCommentArgs): NormalizedCommentPayload {
+  return {
+    attachments: args.attachments ?? [],
+    clientRequestId: args.clientRequestId?.trim(),
+    mentions: args.mentions ?? [],
+  };
+}
+
+function hasMatchingReplayPayload(
+  existingComment: Doc<"issueComments">,
+  args: AddCommentArgs,
+  normalizedPayload: NormalizedCommentPayload,
+): boolean {
+  const hasSameMentions =
+    JSON.stringify(existingComment.mentions ?? []) === JSON.stringify(normalizedPayload.mentions);
+  const hasSameAttachments =
+    JSON.stringify(existingComment.attachments ?? []) ===
+    JSON.stringify(normalizedPayload.attachments);
+
+  return existingComment.content === args.content && hasSameMentions && hasSameAttachments;
+}
+
+async function getExistingReplayCommentId(
+  ctx: AddCommentContext,
+  args: AddCommentArgs,
+  normalizedPayload: NormalizedCommentPayload,
+): Promise<Id<"issueComments"> | null> {
+  if (args.clientRequestId === undefined) {
+    return null;
+  }
+
+  if (!normalizedPayload.clientRequestId) {
+    throw validation("clientRequestId", "clientRequestId must be non-empty");
+  }
+
+  const existingComment = await ctx.db
+    .query("issueComments")
+    .withIndex("by_authorId_and_issueId_and_clientRequestId", (q) =>
+      q
+        .eq("authorId", ctx.userId)
+        .eq("issueId", ctx.issue._id)
+        .eq("clientRequestId", normalizedPayload.clientRequestId),
+    )
+    .unique();
+
+  if (!existingComment) {
+    return null;
+  }
+
+  if (!hasMatchingReplayPayload(existingComment, args, normalizedPayload)) {
+    throw conflict("clientRequestId was already used for a different comment");
+  }
+
+  return existingComment._id;
+}
+
+function assertCommentAttachmentsBelongToIssue(
+  issue: Doc<"issues">,
+  attachments: Id<"_storage">[],
+): void {
+  if (attachments.length === 0) {
+    return;
+  }
+
+  const issueAttachments = new Set((issue.attachments ?? []).map((id) => id.toString()));
+  for (const storageId of attachments) {
+    if (!issueAttachments.has(storageId.toString())) {
+      throw forbidden("Attachment does not belong to this issue");
+    }
+  }
+}
+
 /**
  * Add a comment to an issue.
  *
@@ -438,42 +530,22 @@ export const addComment = issueViewerMutation({
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
     const now = Date.now();
-    const mentions = args.mentions || [];
-    const attachments = args.attachments || [];
-    const clientRequestId = args.clientRequestId;
-
-    if (clientRequestId) {
-      const existingComment = await ctx.db
-        .query("issueComments")
-        .withIndex("by_authorId_and_issueId_and_clientRequestId", (q) =>
-          q
-            .eq("authorId", ctx.userId)
-            .eq("issueId", ctx.issue._id)
-            .eq("clientRequestId", clientRequestId),
-        )
-        .unique();
-
-      if (existingComment) {
-        return { commentId: existingComment._id };
-      }
+    const normalizedPayload = normalizeCommentPayload(args);
+    const existingCommentId = await getExistingReplayCommentId(ctx, args, normalizedPayload);
+    if (existingCommentId) {
+      return { commentId: existingCommentId };
     }
 
-    if (attachments.length > 0) {
-      const issueAttachments = new Set((ctx.issue.attachments || []).map((id) => id.toString()));
-      for (const storageId of attachments) {
-        if (!issueAttachments.has(storageId.toString())) {
-          throw forbidden("Attachment does not belong to this issue");
-        }
-      }
-    }
+    await enforceRateLimit(ctx, "addComment", ctx.userId);
+    assertCommentAttachmentsBelongToIssue(ctx.issue, normalizedPayload.attachments);
 
     const commentId = await ctx.db.insert("issueComments", {
       issueId: ctx.issue._id,
       authorId: ctx.userId,
       content: args.content,
-      mentions,
-      attachments,
-      clientRequestId,
+      mentions: normalizedPayload.mentions,
+      attachments: normalizedPayload.attachments,
+      clientRequestId: normalizedPayload.clientRequestId,
       updatedAt: now,
     });
 
@@ -488,7 +560,7 @@ export const addComment = issueViewerMutation({
       issueKey: ctx.issue.key,
       projectId: ctx.projectId,
       content: args.content,
-      mentions,
+      mentions: normalizedPayload.mentions,
       actorId: ctx.userId,
       reporterId: ctx.issue.reporterId,
       issue: ctx.issue,

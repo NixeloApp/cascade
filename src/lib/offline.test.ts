@@ -8,8 +8,10 @@ import {
   type OfflineMutation,
   offlineDB,
   processOfflineQueue,
+  queueOfflineMutation,
   RETRY_BACKOFF_MS,
   registerOfflineReplayHandler,
+  subscribeOfflineQueueChanges,
 } from "./offline";
 
 function createQueuedMutation(overrides: Partial<OfflineMutation> = {}): OfflineMutation {
@@ -202,6 +204,34 @@ describe("offline replay queue", () => {
 
     expect(handler).toHaveBeenCalled();
     expect(updateSpy).toHaveBeenNthCalledWith(2, 1, "synced", { clearError: true });
+  });
+
+  it("does not reject queue writes when an offline queue subscriber throws", async () => {
+    const logSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+    const addMutationSpy = vi.spyOn(offlineDB, "addMutation").mockResolvedValue(99);
+    const unsubscribe = subscribeOfflineQueueChanges(() => {
+      throw new Error("listener exploded");
+    });
+
+    try {
+      await expect(
+        queueOfflineMutation(
+          "issues.addComment",
+          { issueId: "issue-1", content: "Offline comment" },
+          "user-1",
+        ),
+      ).resolves.toBe(99);
+
+      expect(addMutationSpy).toHaveBeenCalledTimes(1);
+
+      await vi.waitFor(() => {
+        expect(logSpy).toHaveBeenCalledWith("[offline] Offline queue listener failed", {
+          error: expect.any(Error),
+        });
+      });
+    } finally {
+      unsubscribe();
+    }
   });
 });
 

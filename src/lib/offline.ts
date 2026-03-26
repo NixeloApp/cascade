@@ -83,8 +83,14 @@ const PERMANENT_FAILURE_PATTERNS = [
 const offlineQueueListeners = new Set<OfflineQueueListener>();
 
 function notifyOfflineQueueListeners(): void {
-  for (const listener of offlineQueueListeners) {
-    listener();
+  for (const listener of [...offlineQueueListeners]) {
+    queueMicrotask(() => {
+      try {
+        listener();
+      } catch (error) {
+        console.info("[offline] Offline queue listener failed", { error });
+      }
+    });
   }
 }
 
@@ -272,9 +278,7 @@ class OfflineDB {
 
   async addMutation(mutation: Omit<OfflineMutation, "id">): Promise<number> {
     const db = await this.open();
-    const id = (await db.add("mutations", mutation as OfflineMutation)) as number;
-    notifyOfflineQueueListeners();
-    return id;
+    return (await db.add("mutations", mutation as OfflineMutation)) as number;
   }
 
   async getMutation(id: number): Promise<OfflineMutation | undefined> {
@@ -499,6 +503,7 @@ export async function queueOfflineMutation(
   };
 
   const id = await offlineDB.addMutation(mutation);
+  notifyOfflineQueueListeners();
   return id;
 }
 

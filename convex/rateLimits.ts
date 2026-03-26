@@ -28,6 +28,9 @@ const rateLimitConfig = {
   // Issue Creation: Prevent spam
   createIssue: { kind: "token bucket", rate: 60, period: MINUTE, capacity: 15 },
 
+  // Issue Comment: Prevent spam
+  addComment: { kind: "token bucket", rate: 120, period: MINUTE, capacity: 20 },
+
   // Document Creation: Prevent spam
   createDocument: { kind: "token bucket", rate: 60, period: MINUTE, capacity: 15 },
 

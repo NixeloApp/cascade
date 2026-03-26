@@ -3,7 +3,6 @@
 > **Route**: `/forgot-password`
 > **Status**: REVIEWED
 > **Last Updated**: 2026-03-25
-
 > **Spec Contract**: Keep this file aligned with the real shared auth shell rather than older split-layout assumptions.
 
 ---

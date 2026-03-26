@@ -3,7 +3,6 @@
 > **Route**: `/signup`
 > **Status**: REVIEWED
 > **Last Updated**: 2026-03-25
-
 > **Spec Contract**: Keep this file explicit about state transitions so signup density problems are visible in review.
 
 ---

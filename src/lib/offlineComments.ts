@@ -8,6 +8,22 @@ const COMMENT_CLIENT_REQUEST_ID_PREFIX = "issue-comment";
 
 export type AddCommentArgs = FunctionArgs<typeof api.issues.addComment>;
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function hasOnlyExpectedAddCommentKeys(value: Record<string, unknown>): boolean {
+  const expectedKeys = new Set([
+    "attachments",
+    "clientRequestId",
+    "content",
+    "issueId",
+    "mentions",
+  ]);
+
+  return Object.keys(value).every((key) => expectedKeys.has(key));
+}
+
 /** Type guard for queued `issues.addComment` replay payloads. */
 export function isAddCommentArgs(value: unknown): value is AddCommentArgs {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -15,8 +31,11 @@ export function isAddCommentArgs(value: unknown): value is AddCommentArgs {
   }
   const obj = value as Record<string, unknown>;
   return (
+    hasOnlyExpectedAddCommentKeys(obj) &&
     typeof obj.issueId === "string" &&
     typeof obj.content === "string" &&
+    (obj.mentions === undefined || isStringArray(obj.mentions)) &&
+    obj.attachments === undefined &&
     (obj.clientRequestId === undefined || typeof obj.clientRequestId === "string")
   );
 }

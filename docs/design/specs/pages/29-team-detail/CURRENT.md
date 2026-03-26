@@ -36,14 +36,14 @@ The team detail page is the working surface for a single team within a workspace
 │   │       │   ]
 │   │       │
 │   │       ├── PageControls → RouteNav (section tabs)
-│   │       │   ├── "Projects" → /:orgSlug/workspaces/:ws/teams/:team/ (exact)
+│   │       │   ├── "Board" → /:orgSlug/workspaces/:ws/teams/:team/board
 │   │       │   ├── "Calendar" → /.../teams/:team/calendar
 │   │       │   ├── "Wiki" → /.../teams/:team/wiki
 │   │       │   └── "Settings" → /.../teams/:team/settings
 │   │       │
 │   │       └── <Outlet /> (child route renders here)
 │
-├── index.tsx → Redirects to /board (via useEffect + navigate)
+├── index.tsx → Redirects to /board (via beforeLoad + redirect)
 │
 ├── board.tsx → TeamBoardPage
 │   └── KanbanBoard (teamId)
@@ -67,7 +67,7 @@ The team detail page is the working surface for a single team within a workspace
 ## Current Composition Walkthrough
 
 1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`, then team via `api.teams.getBySlug` (using workspace ID as parent). Shows loading spinner while pending, "Team not found" if either is null. Renders 3-level breadcrumbs, a lighter shared header with the member summary folded into the header actions, and a compact `PageControls` strip with 4 tabs (Board, Calendar, Wiki, Settings), then `<Outlet />`.
-2. **Index redirect** (`index.tsx`): Resolves workspace and team, then redirects to the board route via `useEffect` + `navigate({ replace: true })`.
+2. **Index redirect** (`index.tsx`): Uses TanStack Router `beforeLoad` with `redirect()` so the team root never renders a transient blank shell before landing on the board route.
 3. **Board** (`board.tsx`): Resolves workspace and team, then renders `<KanbanBoard teamId={team._id} />`. The `KanbanBoard` component is a feature-rich Kanban board with drag-and-drop (Atlaskit pragmatic-drag-and-drop), swimlanes, board history (undo/redo), bulk operations, filtering, and issue detail viewer.
 4. **Calendar** (`calendar.tsx`): Resolves workspace and team, renders `<CalendarView teamId={team._id} />` with full error handling for both workspace and team not-found states.
 5. **Wiki** (`wiki.tsx`): Resolves workspace and team, queries `api.documents.listByTeam` scoped to the team. Renders the same card layout as workspace wiki (doc icon, title, visibility badge, creator metadata). Empty state directs users to create team-scoped docs.
@@ -79,10 +79,10 @@ The team detail page is the working surface for a single team within a workspace
 
 | Viewport | Theme | Tab | Preview |
 |----------|-------|-----|---------|
-| Desktop | Dark | Projects/Board | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | Projects/Board | ![](screenshots/desktop-light.png) |
-| Tablet | Light | Projects/Board | ![](screenshots/tablet-light.png) |
-| Mobile | Light | Projects/Board | ![](screenshots/mobile-light.png) |
+| Desktop | Dark | Board | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | Board | ![](screenshots/desktop-light.png) |
+| Tablet | Light | Board | ![](screenshots/tablet-light.png) |
+| Mobile | Light | Board | ![](screenshots/mobile-light.png) |
 | Desktop | Dark | Board | ![](screenshots/desktop-dark-board.png) |
 | Desktop | Light | Board | ![](screenshots/desktop-light-board.png) |
 | Tablet | Light | Board | ![](screenshots/tablet-light-board.png) |

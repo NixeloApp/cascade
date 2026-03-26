@@ -70,7 +70,7 @@ function WorkspaceSearchControls({
   }
 
   return (
-    <>
+    <Stack gap="sm">
       <Flex gap="sm" align="center">
         <Input
           data-testid={TEST_IDS.WORKSPACE.SEARCH_INPUT}
@@ -92,7 +92,7 @@ function WorkspaceSearchControls({
           {getWorkspaceSearchSummary(matchCount, searchQuery)}
         </Typography>
       )}
-    </>
+    </Stack>
   );
 }
 

@@ -6,7 +6,7 @@ just audits.
 
 ## Result Contract
 
-- Use `createValidatorResult()` from [result-utils.js](/home/mikhail/Desktop/cascade/scripts/validate/result-utils.js) for normal checks.
+- Use `createValidatorResult()` from [result-utils.js](./result-utils.js) for normal checks.
 - Use `createCountRatchetResult()` for baseline-backed count ratchets.
 - Enforced checks use the default `blocking: true` behavior and fail CI when `errors > 0`.
 - Audit checks must set `blocking: false`; they never fail CI and print as `PASS [audit]` in the runner.
@@ -36,6 +36,6 @@ just audits.
 
 1. Create `scripts/validate/check-*.js`.
 2. Return a structured result through `result-utils.js`.
-3. Register it in [validate.js](/home/mikhail/Desktop/cascade/scripts/validate.js).
+3. Register it in [validate.js](../validate.js).
 4. Add or update any baseline file in `scripts/ci/` if the rule is ratcheted.
 5. Add targeted tests if the rule has non-trivial parsing or result logic.

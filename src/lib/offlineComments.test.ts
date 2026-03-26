@@ -1,7 +1,11 @@
 import { api } from "@convex/_generated/api";
 import type { ConvexReactClient } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createCommentClientRequestId, replayAddComment } from "./offlineComments";
+import {
+  createCommentClientRequestId,
+  parseAddCommentArgs,
+  replayAddComment,
+} from "./offlineComments";
 
 describe("offlineComments", () => {
   beforeEach(() => {
@@ -37,5 +41,25 @@ describe("offlineComments", () => {
       mentions: ["user-1"],
       clientRequestId: "issue-comment:dedup-1",
     });
+  });
+
+  it("rejects queued payloads with malformed mentions", () => {
+    expect(
+      parseAddCommentArgs({
+        issueId: "issue-123",
+        content: "Queued comment",
+        mentions: ["user-1", 7],
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects queued payloads with unsupported attachments", () => {
+    expect(
+      parseAddCommentArgs({
+        issueId: "issue-123",
+        content: "Queued comment",
+        attachments: ["storage-1"],
+      }),
+    ).toBeNull();
   });
 });

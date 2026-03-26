@@ -14,6 +14,8 @@ import {
   createTestUser,
 } from "../testUtils";
 
+const EXPECTED_SINGLE_COMMENT = 1;
+
 describe("Issue Mutations", () => {
   describe("createIssue", () => {
     it("should create issue with all optional fields", async () => {
@@ -593,9 +595,69 @@ describe("Issue Mutations", () => {
         }),
       ]);
 
-      expect(comments).toHaveLength(1);
+      expect(comments).toHaveLength(EXPECTED_SINGLE_COMMENT);
       expect(comments[0]?.clientRequestId).toBe("issue-comment:request-1");
-      expect(activities.filter((activity) => activity.action === "commented")).toHaveLength(1);
+      expect(activities.filter((activity) => activity.action === "commented")).toHaveLength(
+        EXPECTED_SINGLE_COMMENT,
+      );
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("rejects empty client request IDs for comment idempotency", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Offline Replay Validation Project",
+        key: "OFFV",
+      });
+
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: "Replay validation test",
+        type: "task",
+        priority: "medium",
+      });
+
+      await expect(
+        asUser.mutation(api.issues.addComment, {
+          issueId,
+          content: "Should fail validation",
+          clientRequestId: "   ",
+        }),
+      ).rejects.toThrow("clientRequestId must be non-empty");
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("rejects conflicting comment replays for a reused client request ID", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Offline Replay Conflict Project",
+        key: "OFFR",
+      });
+
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: "Replay conflict test",
+        type: "task",
+        priority: "medium",
+      });
+
+      await asUser.mutation(api.issues.addComment, {
+        issueId,
+        content: "Original comment payload",
+        clientRequestId: "issue-comment:request-conflict",
+      });
+
+      await expect(
+        asUser.mutation(api.issues.addComment, {
+          issueId,
+          content: "Conflicting replay payload",
+          clientRequestId: "issue-comment:request-conflict",
+        }),
+      ).rejects.toThrow("clientRequestId was already used for a different comment");
       await t.finishInProgressScheduledFunctions();
     });
   });
