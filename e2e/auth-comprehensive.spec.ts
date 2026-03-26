@@ -31,7 +31,7 @@ test.describe("Sign In Form - Elements", () => {
     await authPage.waitForFormExpanded();
     await expect(authPage.emailInput).toBeVisible();
     await expect(authPage.passwordInput).toBeVisible();
-    await expect(authPage.forgotPasswordButton).toBeVisible();
+    await expect(authPage.forgotPasswordLink).toBeVisible();
 
     // Final assertions for input types (these don't depend on form state)
     await expect(authPage.emailInput).toHaveAttribute("type", "email");
@@ -84,7 +84,7 @@ test.describe("Sign Up Form - Elements", () => {
     await expect(authPage.passwordInput).toBeVisible();
 
     // Forgot password hidden in sign up mode (only shown in sign in)
-    await expect(authPage.forgotPasswordButton).not.toBeVisible();
+    await expect(authPage.forgotPasswordLink).not.toBeVisible();
   });
 
   test("can switch between sign in and sign up", async ({ authPage }) => {
@@ -120,7 +120,7 @@ test.describe("Forgot Password Form - Elements", () => {
     await expect(authPage.sendResetCodeButton).toBeVisible();
 
     // Back to sign in
-    await expect(authPage.backToSignInButton).toBeVisible();
+    await expect(authPage.backToSignInLink).toBeVisible();
   });
 
   test("can go back to sign in", async ({ authPage }) => {

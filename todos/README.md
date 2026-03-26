@@ -1,10 +1,6 @@
 # Nixelo Todo Index
 
-> **Last Updated:** 2026-03-25
-
-## P0
-
-- [ ] [compatibility-removal.md](./compatibility-removal.md) — Finish the last real cleanup pass by deleting leftover compatibility comments and aliases only after their fallback behavior is gone.
+> **Last Updated:** 2026-03-26
 
 ## Infrastructure
 

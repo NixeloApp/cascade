@@ -215,20 +215,6 @@ export class LandingPage extends BasePage {
   }
 
   /**
-   * Alias for expectSignInPage - tests may call it expectLoginSection
-   */
-  async expectLoginSection() {
-    await this.expectSignInPage();
-  }
-
-  /**
-   * Alias for expectSignUpPage - tests may call it expectSignUpSection
-   */
-  async expectSignUpSection() {
-    await this.expectSignUpPage();
-  }
-
-  /**
    * Assert navigation elements are visible
    */
   async expectNavigation() {

@@ -28,7 +28,7 @@ export class ProjectsPage extends BasePage {
   readonly sidebar: Locator;
   readonly newProjectButton: Locator;
   readonly newWorkspaceButton: Locator;
-  readonly createEntityButton: Locator; // Alias for sidebar "Add new project" or "Create Workspace" button
+  readonly sidebarCreateButton: Locator;
   readonly projectList: Locator;
   readonly projectItems: Locator;
   readonly projectsPageHeading: Locator;
@@ -145,7 +145,7 @@ export class ProjectsPage extends BasePage {
       .getByRole("button", { name: /^\+?\s*create project$/i })
       .first();
     this.newWorkspaceButton = page.getByRole("button", { name: "+ Create Workspace" });
-    this.createEntityButton = this.sidebar.getByRole("button", {
+    this.sidebarCreateButton = this.sidebar.getByRole("button", {
       name: /add new|create|\+/i,
     });
     this.projectsPageHeading = page.getByRole("heading", { name: /^projects$/i });
@@ -1099,7 +1099,7 @@ export class ProjectsPage extends BasePage {
   async hasCreateProjectEntryPoint() {
     return (
       (await isLocatorVisible(this.newProjectButton)) ||
-      (await isLocatorVisible(this.createEntityButton))
+      (await isLocatorVisible(this.sidebarCreateButton))
     );
   }
 

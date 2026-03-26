@@ -25,12 +25,12 @@ test.describe("Landing Page - Navigation", () => {
 
   test("nav login button opens auth form", async ({ landingPage }) => {
     await landingPage.clickNavLogin();
-    await landingPage.expectLoginSection();
+    await landingPage.expectSignInPage();
   });
 
   test("nav get started button opens auth form", async ({ landingPage }) => {
     await landingPage.clickNavGetStarted();
-    await landingPage.expectSignUpSection();
+    await landingPage.expectSignUpPage();
   });
 });
 
@@ -49,12 +49,12 @@ test.describe("Landing Page - Hero Section", () => {
 
   test("hero get started button opens auth form", async ({ landingPage }) => {
     await landingPage.clickGetStarted();
-    await landingPage.expectSignUpSection();
+    await landingPage.expectSignUpPage();
   });
 
   test("can return to landing from signup section", async ({ landingPage }) => {
     await landingPage.clickGetStarted();
-    await landingPage.expectSignUpSection();
+    await landingPage.expectSignUpPage();
     await landingPage.goBackToHome();
     await landingPage.expectLandingPage();
   });

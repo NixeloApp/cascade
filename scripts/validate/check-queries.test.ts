@@ -21,7 +21,7 @@ describe("check-queries", () => {
   it("allows explicit unbounded collect ignores with a concrete annotation", () => {
     const source = `
       export const bootstrapKeys = async (ctx) => {
-        // @convex-validation-ignore UNBOUNDED_COLLECT: legacy bootstrap must scan all rows once.
+        // @convex-validation-ignore UNBOUNDED_COLLECT: approved full scan must inspect all rows once.
         return await ctx.db.query("issues").collect();
       };
     `;
