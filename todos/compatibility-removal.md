@@ -5,7 +5,6 @@
 
 ## Remaining
 
-- [ ] Review tolerance for missing mailbox minute-counter fields in [mailboxRateLimits.ts](/home/mikhail/Desktop/cascade/convex/outreach/mailboxRateLimits.ts) and decide whether to hard-require them now that repair paths exist.
 - [ ] Review the plain-text compatibility path in [IssueDescriptionEditor.tsx](/home/mikhail/Desktop/cascade/src/components/IssueDescriptionEditor.tsx) and remove it if no persisted rows still depend on it.
 - [ ] Delete leftover backwards-compatibility comments and aliases only when the underlying fallback behavior is actually gone.
 

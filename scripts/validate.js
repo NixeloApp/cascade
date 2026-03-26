@@ -23,42 +23,43 @@
  *  19. Route drift             — shared ROUTES config must stay aligned with TanStack file routes
  *  20. Convex patterns         — Envelope Pattern returns, security checks, test destructuring
  *  21. Project issue counters  — all project inserts must initialize nextIssueNumber
- *  22. Convex naming           — function naming conventions (get/list/create/update/delete)
- *  23. Component naming        — PascalCase components, {Component}Props interfaces
- *  24. Component props         — consistent prop naming across component definitions
- *  25. Duplicate components    — detect components with same name in different directories
- *  26. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva(), feature-local style bundles, weighted class-string style bundles, degenerate single-use helpers, and oversized shared CVA variant axes
- *  27. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
- *  28. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
- *  29. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
- *  30. Recipe drift            — repeated visual shell patterns must move behind owned recipes
- *  31. JSDoc coverage          — exported functions/components should have JSDoc documentation
- *  32. Import paths            — validates import path conventions
- *  33. Hook patterns           — custom hooks should follow consistent patterns
- *  34. Async patterns          — consistent error handling in async operations
- *  35. Time constants          — enforces use of timeUtils constants instead of magic numbers
- *  36. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
- *  37. Test coverage           — critical files should have corresponding tests
- *  38. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
- *  39. Native confirm()        — ensure custom dialogs used instead of native confirm()
- *  40. Convex hooks            — validates Convex hook usage patterns
- *  41. Console usage           — bans console.* in production code
- *  42. Tech debt               — tracks TODO/FIXME/HACK comments
- *  43. Nested Cards            — bans Cards nested inside other Cards
- *  44. Border Radius           — enforces consistent border radius usage
- *  45. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
- *  46. Screenshot harness structure — ratchets private helper counts in screenshot modules
- *  47. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
- *  48. Typography drift        — blocks Typography/style drift outside owned primitives
- *  49. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
- *  50. Shared shape drift      — blocks repeated inline entity summary shapes
- *  51. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
- *  52. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
- *  53. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
- *  54. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
- *  55. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
- *  56. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
- *  57. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
+ *  22. Outreach mailbox minute counters — all outreach mailbox inserts must initialize minute-window counters
+ *  23. Convex naming           — function naming conventions (get/list/create/update/delete)
+ *  24. Component naming        — PascalCase components, {Component}Props interfaces
+ *  25. Component props         — consistent prop naming across component definitions
+ *  26. Duplicate components    — detect components with same name in different directories
+ *  27. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva(), feature-local style bundles, weighted class-string style bundles, degenerate single-use helpers, and oversized shared CVA variant axes
+ *  28. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
+ *  29. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
+ *  30. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  31. Recipe drift            — repeated visual shell patterns must move behind owned recipes
+ *  32. JSDoc coverage          — exported functions/components should have JSDoc documentation
+ *  33. Import paths            — validates import path conventions
+ *  34. Hook patterns           — custom hooks should follow consistent patterns
+ *  35. Async patterns          — consistent error handling in async operations
+ *  36. Time constants          — enforces use of timeUtils constants instead of magic numbers
+ *  37. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
+ *  38. Test coverage           — critical files should have corresponding tests
+ *  39. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  40. Native confirm()        — ensure custom dialogs used instead of native confirm()
+ *  41. Convex hooks            — validates Convex hook usage patterns
+ *  42. Console usage           — bans console.* in production code
+ *  43. Tech debt               — tracks TODO/FIXME/HACK comments
+ *  44. Nested Cards            — bans Cards nested inside other Cards
+ *  45. Border Radius           — enforces consistent border radius usage
+ *  46. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
+ *  47. Screenshot harness structure — ratchets private helper counts in screenshot modules
+ *  48. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
+ *  49. Typography drift        — blocks Typography/style drift outside owned primitives
+ *  50. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
+ *  51. Shared shape drift      — blocks repeated inline entity summary shapes
+ *  52. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
+ *  53. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
+ *  54. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
+ *  55. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  56. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
+ *  57. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
+ *  58. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -205,6 +206,10 @@ const checks = [
   {
     name: "Project issue counters",
     modulePath: new URL("./validate/check-project-issue-counters.js", import.meta.url).href,
+  },
+  {
+    name: "Outreach mailbox minute counters",
+    modulePath: new URL("./validate/check-outreach-mailbox-rate-limits.js", import.meta.url).href,
   },
   {
     name: "Convex naming",

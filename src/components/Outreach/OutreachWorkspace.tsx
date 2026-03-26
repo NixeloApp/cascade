@@ -1714,7 +1714,7 @@ function MailboxCard({
           />
           <MetricTile
             title="Minute Window"
-            value={`${health?.minuteSent ?? 0}/${health?.minuteLimit ?? mailbox.minuteSendLimit ?? 0}`}
+            value={`${health?.minuteSent ?? 0}/${health?.minuteLimit ?? mailbox.minuteSendLimit}`}
             description={`${health?.minuteRemaining ?? 0} sends left in the current minute`}
           />
         </Grid>

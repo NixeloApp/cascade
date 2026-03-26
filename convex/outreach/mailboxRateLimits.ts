@@ -19,27 +19,24 @@ function getUtcDateKey(timestamp: number): string {
   return new Date(timestamp).toISOString().slice(0, 10);
 }
 
-/** Read the effective daily and minute mailbox counters, tolerating rows missing minute counters. */
+/** Read the effective daily and minute mailbox counters for a mailbox. */
 export function getMailboxRateLimitSnapshot(
   mailbox: MailboxRateLimitFields,
   now: number = Date.now(),
 ) {
   const dailyWindowCurrent = getUtcDateKey(now) === getUtcDateKey(mailbox.todayResetAt);
-  const minuteWindowCurrent =
-    mailbox.minuteWindowStartedAt !== undefined &&
-    now - mailbox.minuteWindowStartedAt < MAILBOX_SEND_WINDOW_MS;
+  const minuteWindowCurrent = now - mailbox.minuteWindowStartedAt < MAILBOX_SEND_WINDOW_MS;
 
   const todaySendCount = dailyWindowCurrent ? mailbox.todaySendCount : 0;
-  const minuteSendCount = minuteWindowCurrent ? (mailbox.minuteSendCount ?? 0) : 0;
+  const minuteSendCount = minuteWindowCurrent ? mailbox.minuteSendCount : 0;
   const minuteWindowStartedAt = minuteWindowCurrent ? mailbox.minuteWindowStartedAt : now;
-  const minuteSendLimit = mailbox.minuteSendLimit ?? DEFAULT_MAILBOX_MINUTE_SEND_LIMIT;
 
   return {
     todaySendCount,
     todayResetAt: dailyWindowCurrent ? mailbox.todayResetAt : now,
     minuteSendCount,
     minuteWindowStartedAt,
-    minuteSendLimit,
+    minuteSendLimit: mailbox.minuteSendLimit,
   };
 }
 
@@ -67,7 +64,6 @@ export function buildMailboxSendReservationPatch(
     todayResetAt: rateLimits.todayResetAt,
     minuteSendCount: rateLimits.minuteSendCount + 1,
     minuteWindowStartedAt: rateLimits.minuteWindowStartedAt,
-    minuteSendLimit: rateLimits.minuteSendLimit,
   };
 }
 
@@ -83,6 +79,5 @@ export function buildMailboxSuccessfulSendPatch(
     todayResetAt: rateLimits.todayResetAt,
     minuteSendCount: rateLimits.minuteSendCount,
     minuteWindowStartedAt: rateLimits.minuteWindowStartedAt,
-    minuteSendLimit: rateLimits.minuteSendLimit,
   };
 }

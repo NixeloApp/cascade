@@ -7,6 +7,7 @@ import { MINUTE } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createOrganizationAdmin, createTestUser } from "../testUtils";
+import { DEFAULT_MAILBOX_MINUTE_SEND_LIMIT } from "./mailboxRateLimits";
 
 vi.mock("../lib/fetchWithTimeout", () => ({
   fetchWithTimeout: vi.fn(),
@@ -195,6 +196,9 @@ describe("outreach gmail", () => {
         dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
         todaySendCount: 0,
         todayResetAt: Date.now(),
+        minuteSendLimit: DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
+        minuteSendCount: 0,
+        minuteWindowStartedAt: Date.now(),
         isActive: true,
         updatedAt: Date.now(),
       }),
@@ -225,6 +229,9 @@ describe("outreach gmail", () => {
         dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
         todaySendCount: 0,
         todayResetAt: Date.now(),
+        minuteSendLimit: DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
+        minuteSendCount: 0,
+        minuteWindowStartedAt: Date.now(),
         isActive: true,
         updatedAt: Date.now(),
       }),

@@ -16,10 +16,7 @@ import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { isEncrypted } from "../lib/encryption";
 import { notFound, validation } from "../lib/errors";
 import { outreachMailboxProviders } from "../validators";
-import {
-  buildMailboxRateLimitDefaults,
-  DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
-} from "./mailboxRateLimits";
+import { buildMailboxRateLimitDefaults } from "./mailboxRateLimits";
 import { encryptMailboxTokensForStorage } from "./mailboxTokens";
 
 const DEFAULT_REPAIR_BATCH_SIZE = 50;
@@ -101,16 +98,12 @@ export const createMailbox = authenticatedMutation({
 
     if (alreadyConnected) {
       // Update tokens on existing connection
-      const updatedAt = Date.now();
       await ctx.db.patch(alreadyConnected._id, {
         accessToken: encryptedTokens.accessToken,
         refreshToken: encryptedTokens.refreshToken,
         expiresAt: args.expiresAt,
-        minuteSendLimit: alreadyConnected.minuteSendLimit ?? DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
-        minuteSendCount: alreadyConnected.minuteSendCount ?? 0,
-        minuteWindowStartedAt: alreadyConnected.minuteWindowStartedAt ?? updatedAt,
         isActive: true,
-        updatedAt,
+        updatedAt: Date.now(),
       });
       return alreadyConnected._id;
     }
@@ -179,16 +172,12 @@ export const createMailboxFromOAuth = internalMutation({
     );
 
     if (alreadyConnected) {
-      const updatedAt = Date.now();
       await ctx.db.patch(alreadyConnected._id, {
         accessToken: encryptedTokens.accessToken,
         refreshToken: encryptedTokens.refreshToken,
         expiresAt: args.expiresAt,
-        minuteSendLimit: alreadyConnected.minuteSendLimit ?? DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
-        minuteSendCount: alreadyConnected.minuteSendCount ?? 0,
-        minuteWindowStartedAt: alreadyConnected.minuteWindowStartedAt ?? updatedAt,
         isActive: true,
-        updatedAt,
+        updatedAt: Date.now(),
       });
       return alreadyConnected._id;
     }
