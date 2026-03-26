@@ -4,6 +4,7 @@
 
 ## Infrastructure
 
+- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — P0: collapse screenshot capture onto reusable E2E/page-object state setup, remove screenshot-only prod hooks where possible, and stop treating full screenshot recapture as a normal PR CI gate.
 - [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P0: normalize confusing route/API naming, separate public token flows from admin collection pages, remove hidden `-*.test.tsx` route-test conventions, and make file-routed structure readable without repo folklore.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Fix screenshot-visible regressions and tighten cross-surface visual consistency with real before/after review.
 
