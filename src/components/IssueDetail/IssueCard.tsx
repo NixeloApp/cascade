@@ -112,6 +112,96 @@ interface UseIssueCardDnDArgs {
   ) => void;
 }
 
+interface IssueCardInteractionHandlers {
+  handleClick: (e: React.MouseEvent | React.KeyboardEvent) => void;
+}
+
+function IssueCardTooltipTrigger({
+  children,
+  content,
+  handleClick,
+  testId,
+  className,
+}: React.PropsWithChildren<
+  IssueCardInteractionHandlers & {
+    content: string;
+    testId?: string;
+    className?: string;
+  }
+>) {
+  return (
+    <Tooltip content={content}>
+      <Flex
+        as="span"
+        inline
+        align="center"
+        justify="center"
+        onClick={handleClick}
+        className={cn("pointer-events-auto cursor-default", className)}
+        data-testid={testId}
+        aria-hidden="true"
+      >
+        {children}
+      </Flex>
+    </Tooltip>
+  );
+}
+
+function IssueCardAssigneeAvatar({
+  assignee,
+  handleClick,
+}: IssueCardInteractionHandlers & {
+  assignee: UserSummary;
+}) {
+  return (
+    <IssueCardTooltipTrigger
+      content={`Assigned to: ${assignee.name}`}
+      handleClick={handleClick}
+      testId={TEST_IDS.ISSUE.ASSIGNEE}
+      className="gap-xs"
+    >
+      {assignee.image ? (
+        <Avatar
+          name={assignee.name}
+          src={assignee.image}
+          alt={assignee.name}
+          size="xs"
+          variant="neutral"
+        />
+      ) : (
+        <Card
+          recipe="issueAssigneeFallback"
+          className="inline-flex size-5 items-center justify-center text-xs font-medium"
+        >
+          {assignee.name.charAt(0).toUpperCase()}
+        </Card>
+      )}
+    </IssueCardTooltipTrigger>
+  );
+}
+
+function IssueCardLabelBadge({
+  className,
+  content,
+  handleClick,
+  children,
+  style,
+}: React.PropsWithChildren<
+  IssueCardInteractionHandlers & {
+    className?: string;
+    content: string;
+    style?: React.CSSProperties;
+  }
+>) {
+  return (
+    <IssueCardTooltipTrigger content={content} handleClick={handleClick}>
+      <Badge size="sm" className={className} style={style}>
+        {children}
+      </Badge>
+    </IssueCardTooltipTrigger>
+  );
+}
+
 function IssueCardHeader({
   issue,
   display,
@@ -148,45 +238,28 @@ function IssueCardHeader({
           />
         )}
         {display.issueType && (
-          <Tooltip content={getTypeLabel(issue.type)}>
-            <Flex
-              as="span"
-              inline
-              align="center"
-              justify="center"
-              onClick={handleClick}
-              className="pointer-events-auto cursor-default"
-              aria-hidden="true"
-            >
+          <IssueCardTooltipTrigger content={getTypeLabel(issue.type)} handleClick={handleClick}>
+            <Flex as="span" inline align="center" justify="center">
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" className="cursor-help" />
             </Flex>
-          </Tooltip>
+          </IssueCardTooltipTrigger>
         )}
         <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
           {issue.key}
         </Typography>
       </Flex>
       {display.priority && (
-        <Tooltip
+        <IssueCardTooltipTrigger
           content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
+          handleClick={handleClick}
         >
-          <Flex
-            as="span"
-            inline
-            align="center"
-            justify="center"
-            onClick={handleClick}
-            className="pointer-events-auto cursor-default"
-            aria-hidden="true"
-          >
-            <Icon
-              icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
-              size="sm"
-              data-testid={TEST_IDS.ISSUE.PRIORITY}
-              className={cn("cursor-help", getPriorityColor(issue.priority))}
-            />
-          </Flex>
-        </Tooltip>
+          <Icon
+            icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
+            size="sm"
+            data-testid={TEST_IDS.ISSUE.PRIORITY}
+            className={cn("cursor-help", getPriorityColor(issue.priority))}
+          />
+        </IssueCardTooltipTrigger>
       )}
     </Flex>
   );
@@ -200,47 +273,27 @@ function IssueCardLabels({ issue, display, handleClick }: IssueCardFooterProps) 
   return (
     <Flex wrap gap="xs" className="mb-1.5 sm:mb-2">
       {issue.labels.slice(0, 3).map((label) => (
-        <Tooltip key={label.name} content={label.description || label.name}>
-          <Flex
-            as="span"
-            inline
-            align="center"
-            justify="center"
-            onClick={handleClick}
-            className="pointer-events-auto cursor-default"
-            aria-hidden="true"
-          >
-            <Badge
-              size="sm"
-              className="text-brand-foreground cursor-help"
-              style={{ backgroundColor: label.color }}
-            >
-              {label.name}
-            </Badge>
-          </Flex>
-        </Tooltip>
+        <IssueCardLabelBadge
+          key={label.name}
+          content={label.description || label.name}
+          handleClick={handleClick}
+          className="text-brand-foreground cursor-help"
+          style={{ backgroundColor: label.color }}
+        >
+          {label.name}
+        </IssueCardLabelBadge>
       ))}
       {issue.labels.length > 3 && (
-        <Tooltip
+        <IssueCardLabelBadge
           content={issue.labels
             .slice(3)
             .map((label) => label.name)
             .join(", ")}
+          handleClick={handleClick}
+          className="cursor-help"
         >
-          <Flex
-            as="span"
-            inline
-            align="center"
-            justify="center"
-            onClick={handleClick}
-            className="pointer-events-auto cursor-default"
-            aria-hidden="true"
-          >
-            <Badge variant="neutral" size="sm" className="cursor-help">
-              +{issue.labels.length - 3}
-            </Badge>
-          </Flex>
-        </Tooltip>
+          +{issue.labels.length - 3}
+        </IssueCardLabelBadge>
       )}
     </Flex>
   );
@@ -265,36 +318,7 @@ function IssueCardFooter({ issue, display, handleClick }: IssueCardFooterProps) 
     >
       <Flex align="center" gap="xs">
         {display.assignee && issue.assignee && (
-          <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-            <Flex
-              as="span"
-              inline
-              align="center"
-              justify="center"
-              gap="xs"
-              onClick={handleClick}
-              className="pointer-events-auto cursor-default"
-              data-testid={TEST_IDS.ISSUE.ASSIGNEE}
-              aria-hidden="true"
-            >
-              {issue.assignee.image ? (
-                <Avatar
-                  name={issue.assignee.name}
-                  src={issue.assignee.image}
-                  alt={issue.assignee.name}
-                  size="xs"
-                  variant="neutral"
-                />
-              ) : (
-                <Card
-                  recipe="issueAssigneeFallback"
-                  className="inline-flex size-5 items-center justify-center text-xs font-medium"
-                >
-                  {issue.assignee.name.charAt(0).toUpperCase()}
-                </Card>
-              )}
-            </Flex>
-          </Tooltip>
+          <IssueCardAssigneeAvatar assignee={issue.assignee} handleClick={handleClick} />
         )}
       </Flex>
       {display.storyPoints && issue.storyPoints !== undefined && (

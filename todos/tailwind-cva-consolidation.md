@@ -21,10 +21,6 @@
 
 ### Tier 1: Dense repeated local composition
 
-- [ ] `src/components/IssueDetail/IssueCard.tsx`
-  Current shape: ~565 lines, ~19 `className=` sites.
-  Cleanup target: remove card-on-card drift and normalize repeated metadata/action row composition.
-
 ### Tier 2: Smaller follow-up passes
 
 - [ ] `src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx`
