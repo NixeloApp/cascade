@@ -19,10 +19,6 @@ import {
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
-import {
-  buildArchivedStatePatchWithActor,
-  buildRestoredArchiveStatePatchWithActor,
-} from "./lib/lifecyclePatches";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import {
   DEFAULT_PAGE_SIZE,
@@ -1660,7 +1656,9 @@ export const archiveDocument = authenticatedMutation({
     }
 
     await ctx.db.patch(args.id, {
-      ...buildArchivedStatePatchWithActor(Date.now(), ctx.userId),
+      isArchived: true,
+      archivedAt: Date.now(),
+      archivedBy: ctx.userId,
     });
 
     return { success: true } as const;
@@ -1690,7 +1688,9 @@ export const unarchiveDocument = authenticatedMutation({
     }
 
     await ctx.db.patch(args.id, {
-      ...buildRestoredArchiveStatePatchWithActor(),
+      isArchived: undefined,
+      archivedAt: undefined,
+      archivedBy: undefined,
     });
 
     return { success: true } as const;

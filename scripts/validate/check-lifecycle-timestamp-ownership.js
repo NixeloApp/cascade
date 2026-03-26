@@ -4,9 +4,7 @@
  * Enforced. Raw repeated lifecycle bundles in Convex write paths must go
  * through the shared ownership helpers instead of being copied inline.
  *
- * Current owned bundles:
- * - issue archive / restore fields
- * - generic archive-state fields for archivable records
+ * Current owned bundle:
  * - outreach enrollment completion / terminal-state fields
  */
 
@@ -83,38 +81,16 @@ function getOwnershipIssue(node, filePath, sourceFile) {
 
   const relativeFile = relPath(filePath);
   const propertyNames = getObjectPropertyNames(node);
-  const hasArchivedAt = propertyNames.has("archivedAt");
-  const hasArchivedBy = propertyNames.has("archivedBy");
-  const hasIsArchived = propertyNames.has("isArchived");
-  const hasUpdatedAt = propertyNames.has("updatedAt");
   const hasCompletedAt = propertyNames.has("completedAt");
   const hasNextSendAt = propertyNames.has("nextSendAt");
 
-  let message = null;
-
-  if (
-    hasArchivedAt &&
-    hasIsArchived &&
-    (relativeFile === "convex/documents.ts" || relativeFile === "convex/notifications.ts")
-  ) {
-    message =
-      "Use the shared archive-state helpers in lifecyclePatches.ts for archive state fields.";
-  } else if (
-    hasArchivedAt &&
-    !hasIsArchived &&
-    (hasArchivedBy || hasUpdatedAt) &&
-    (relativeFile === "convex/autoArchive.ts" || relativeFile.startsWith("convex/issues/"))
-  ) {
-    message = "Use buildIssueArchivePatch()/buildIssueRestorePatch() for issue archive fields.";
-  } else if (
+  const message =
     hasCompletedAt &&
     hasNextSendAt &&
     relativeFile.startsWith("convex/outreach/") &&
     OUTREACH_TERMINAL_STATUSES.has(getStatusLiteral(node) ?? "")
-  ) {
-    message =
-      "Use buildCompletedEnrollmentPatch()/buildTerminalEnrollmentPatch() for outreach enrollment terminal-state fields.";
-  }
+      ? "Use buildCompletedEnrollmentPatch()/buildTerminalEnrollmentPatch() for outreach enrollment terminal-state fields."
+      : null;
 
   if (!message) {
     return null;

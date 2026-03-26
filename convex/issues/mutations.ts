@@ -19,7 +19,6 @@ import {
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { validate } from "../lib/constrainedValidators";
 import { conflict, forbidden, validation } from "../lib/errors";
-import { buildIssueArchivePatch, buildIssueRestorePatch } from "../lib/lifecyclePatches";
 import { resolveOutOfOfficeDelegateUserId } from "../lib/outOfOffice";
 import { syncProjectIssueStats } from "../lib/projectIssueStats";
 import { normalizeIssueDescriptionForStorage } from "../lib/richText";
@@ -876,7 +875,8 @@ export const archive = issueMutation({
 
     // Archive the issue
     await ctx.db.patch(issue._id, {
-      ...buildIssueArchivePatch(now, ctx.userId),
+      archivedAt: now,
+      archivedBy: ctx.userId,
       updatedAt: now,
     });
 
@@ -914,7 +914,8 @@ export const restore = issueMutation({
 
     // Restore the issue
     await ctx.db.patch(issue._id, {
-      ...buildIssueRestorePatch(),
+      archivedAt: undefined,
+      archivedBy: undefined,
       updatedAt: now,
     });
 
@@ -961,7 +962,10 @@ export const bulkArchive = authenticatedMutation({
       if (!state || state.category !== "done") return null;
 
       return {
-        patch: buildIssueArchivePatch(now, ctx.userId),
+        patch: {
+          archivedAt: now,
+          archivedBy: ctx.userId,
+        },
         activity: {
           action: "archived",
         },
@@ -993,7 +997,10 @@ export const bulkRestore = authenticatedMutation({
       if (!issue.archivedAt) return null;
 
       return {
-        patch: buildIssueRestorePatch(),
+        patch: {
+          archivedAt: undefined,
+          archivedBy: undefined,
+        },
         activity: {
           action: "restored",
         },

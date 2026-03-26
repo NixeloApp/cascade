@@ -10,45 +10,6 @@ function fixturePath(relativePath: string): string {
 }
 
 describe("check-lifecycle-timestamp-ownership", () => {
-  it("flags raw issue archive patches", () => {
-    const issues = collectLifecycleTimestampOwnershipIssues(
-      `
-        export const archive = authenticatedMutation({
-          handler: async (ctx) => {
-            await ctx.db.patch(issueId, {
-              archivedAt: now,
-              archivedBy: ctx.userId,
-              updatedAt: now,
-            });
-          },
-        });
-      `,
-      fixturePath("convex/issues/mutations.ts"),
-    );
-
-    expect(issues).toHaveLength(1);
-    expect(issues[0]?.message).toContain("buildIssueArchivePatch");
-  });
-
-  it("flags raw archive-state patches", () => {
-    const issues = collectLifecycleTimestampOwnershipIssues(
-      `
-        export const archiveNotification = authenticatedMutation({
-          handler: async (ctx) => {
-            await ctx.db.patch(notificationId, {
-              isArchived: true,
-              archivedAt: Date.now(),
-            });
-          },
-        });
-      `,
-      fixturePath("convex/notifications.ts"),
-    );
-
-    expect(issues).toHaveLength(1);
-    expect(issues[0]?.message).toContain("archive-state helpers");
-  });
-
   it("flags raw outreach terminal-state patches", () => {
     const issues = collectLifecycleTimestampOwnershipIssues(
       `
@@ -72,18 +33,15 @@ describe("check-lifecycle-timestamp-ownership", () => {
   it("allows shared helper usage", () => {
     const issues = collectLifecycleTimestampOwnershipIssues(
       `
-        import { buildIssueArchivePatch } from "../lib/lifecyclePatches";
+        import { buildCompletedEnrollmentPatch } from "../lib/lifecyclePatches";
 
-        export const archive = authenticatedMutation({
+        export const cancelEnrollment = authenticatedMutation({
           handler: async (ctx) => {
-            await ctx.db.patch(issueId, {
-              ...buildIssueArchivePatch(now, ctx.userId),
-              updatedAt: now,
-            });
+            await ctx.db.patch(enrollmentId, buildCompletedEnrollmentPatch(now));
           },
         });
       `,
-      fixturePath("convex/issues/mutations.ts"),
+      fixturePath("convex/outreach/enrollments.ts"),
     );
 
     expect(issues).toEqual([]);

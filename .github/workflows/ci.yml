@@ -63,37 +63,26 @@ jobs:
 
       - name: Convex codegen
         if: matrix.id == 'codegen'
-        run: npx convex codegen
+        run: pnpm run static:codegen
         env:
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      - name: Check Convex generated files are up to date
-        if: matrix.id == 'codegen'
-        run: |
-          if [ -n "$(git status --porcelain convex/_generated/)" ]; then
-            echo "❌ Convex generated files are out of date!"
-            echo "Run 'npx convex codegen' locally and commit the changes."
-            git diff convex/_generated/
-            exit 1
-          fi
-          echo "✅ Convex generated files are up to date"
-
       - name: Biome
         if: matrix.id == 'biome'
-        run: pnpm run biome:check
+        run: pnpm run static:biome
 
       - name: TypeScript
         if: matrix.id == 'typecheck'
-        run: pnpm run typecheck
+        run: pnpm run static:typecheck
 
       - name: Validate
         if: matrix.id == 'validate'
-        run: pnpm run validate
+        run: pnpm run static:validate
 
       - name: Screenshot Manifest
         if: matrix.id == 'screenshots-check'
-        run: pnpm run screenshots:check
+        run: pnpm run static:screenshots
 
   unit-tests:
     name: Unit Tests

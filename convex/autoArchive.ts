@@ -8,7 +8,6 @@
 
 import { internalMutation } from "./_generated/server";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
-import { buildIssueArchivePatch } from "./lib/lifecyclePatches";
 import { DAY } from "./lib/timeUtils";
 
 const MAX_ISSUES_PER_RUN = 500;
@@ -62,7 +61,7 @@ export const archiveStaleDoneIssues = internalMutation({
       await Promise.all(
         toArchive.map(async (issue) => {
           await ctx.db.patch(issue._id, {
-            ...buildIssueArchivePatch(now),
+            archivedAt: now,
             updatedAt: now,
           });
           await ctx.db.insert("issueActivity", {
