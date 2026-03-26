@@ -16,6 +16,7 @@ import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { boundedCount } from "./lib/boundedQueries";
 import { requireOwned, validation } from "./lib/errors";
+import { buildArchivedStatePatch, buildRestoredArchiveStatePatch } from "./lib/lifecyclePatches";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 
@@ -221,8 +222,7 @@ export const archiveNotification = authenticatedMutation({
     requireOwned(notification, ctx.userId, "notification");
 
     await ctx.db.patch(args.id, {
-      isArchived: true,
-      archivedAt: Date.now(),
+      ...buildArchivedStatePatch(Date.now()),
     });
 
     return { success: true } as const;
@@ -238,8 +238,7 @@ export const unarchiveNotification = authenticatedMutation({
     requireOwned(notification, ctx.userId, "notification");
 
     await ctx.db.patch(args.id, {
-      isArchived: undefined,
-      archivedAt: undefined,
+      ...buildRestoredArchiveStatePatch(),
     });
 
     return { success: true } as const;
@@ -298,12 +297,7 @@ export const archiveAllNotifications = authenticatedMutation({
       .take(500);
 
     const now = Date.now();
-    await asyncMap(notifications, (n) =>
-      ctx.db.patch(n._id, {
-        isArchived: true,
-        archivedAt: now,
-      }),
-    );
+    await asyncMap(notifications, (n) => ctx.db.patch(n._id, buildArchivedStatePatch(now)));
 
     return { archivedCount: notifications.length };
   },

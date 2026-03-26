@@ -104,6 +104,7 @@ import type * as lib_formatting from "../lib/formatting.js";
 import type * as lib_html from "../lib/html.js";
 import type * as lib_issueCalculation from "../lib/issueCalculation.js";
 import type * as lib_issueHelpers from "../lib/issueHelpers.js";
+import type * as lib_lifecyclePatches from "../lib/lifecyclePatches.js";
 import type * as lib_logger from "../lib/logger.js";
 import type * as lib_organizationAccess from "../lib/organizationAccess.js";
 import type * as lib_outOfOffice from "../lib/outOfOffice.js";
@@ -296,6 +297,7 @@ declare const fullApi: ApiFromModules<{
   "lib/html": typeof lib_html;
   "lib/issueCalculation": typeof lib_issueCalculation;
   "lib/issueHelpers": typeof lib_issueHelpers;
+  "lib/lifecyclePatches": typeof lib_lifecyclePatches;
   "lib/logger": typeof lib_logger;
   "lib/organizationAccess": typeof lib_organizationAccess;
   "lib/outOfOffice": typeof lib_outOfOffice;

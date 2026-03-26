@@ -19,6 +19,7 @@ import {
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { validate } from "../lib/constrainedValidators";
 import { conflict, forbidden, validation } from "../lib/errors";
+import { buildIssueArchivePatch, buildIssueRestorePatch } from "../lib/lifecyclePatches";
 import { resolveOutOfOfficeDelegateUserId } from "../lib/outOfOffice";
 import { syncProjectIssueStats } from "../lib/projectIssueStats";
 import { normalizeIssueDescriptionForStorage } from "../lib/richText";
@@ -860,6 +861,7 @@ export const archive = issueMutation({
   returns: v.object({ success: v.boolean(), archived: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
+    const now = Date.now();
 
     // Already archived
     if (issue.archivedAt) {
@@ -874,9 +876,8 @@ export const archive = issueMutation({
 
     // Archive the issue
     await ctx.db.patch(issue._id, {
-      archivedAt: Date.now(),
-      archivedBy: ctx.userId,
-      updatedAt: Date.now(),
+      ...buildIssueArchivePatch(now, ctx.userId),
+      updatedAt: now,
     });
 
     // Log activity
@@ -904,6 +905,7 @@ export const restore = issueMutation({
   returns: v.object({ success: v.boolean(), restored: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
+    const now = Date.now();
 
     // Not archived
     if (!issue.archivedAt) {
@@ -912,9 +914,8 @@ export const restore = issueMutation({
 
     // Restore the issue
     await ctx.db.patch(issue._id, {
-      archivedAt: undefined,
-      archivedBy: undefined,
-      updatedAt: Date.now(),
+      ...buildIssueRestorePatch(),
+      updatedAt: now,
     });
 
     // Log activity
@@ -960,10 +961,7 @@ export const bulkArchive = authenticatedMutation({
       if (!state || state.category !== "done") return null;
 
       return {
-        patch: {
-          archivedAt: now,
-          archivedBy: ctx.userId,
-        },
+        patch: buildIssueArchivePatch(now, ctx.userId),
         activity: {
           action: "archived",
         },
@@ -995,10 +993,7 @@ export const bulkRestore = authenticatedMutation({
       if (!issue.archivedAt) return null;
 
       return {
-        patch: {
-          archivedAt: undefined,
-          archivedBy: undefined,
-        },
+        patch: buildIssueRestorePatch(),
         activity: {
           action: "restored",
         },

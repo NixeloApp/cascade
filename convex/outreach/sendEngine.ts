@@ -17,6 +17,7 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
+import { buildTerminalEnrollmentPatch } from "../lib/lifecyclePatches";
 import { logger } from "../lib/logger";
 import { MINUTE } from "../lib/timeUtils";
 import { isSuppressed, suppress } from "./contacts";
@@ -159,11 +160,10 @@ export const checkPreSend = internalMutation({
     // Check suppression
     if (await isSuppressed(ctx, enrollment.organizationId, contact.email)) {
       // Auto-stop this enrollment
-      await ctx.db.patch(args.enrollmentId, {
-        status: "unsubscribed",
-        completedAt: Date.now(),
-        nextSendAt: undefined,
-      });
+      await ctx.db.patch(
+        args.enrollmentId,
+        buildTerminalEnrollmentPatch("unsubscribed", Date.now()),
+      );
       return fail;
     }
 

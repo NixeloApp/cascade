@@ -15,6 +15,10 @@ import type { MutationCtx } from "../_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { conflict, notFound, validation } from "../lib/errors";
+import {
+  buildCompletedEnrollmentPatch,
+  buildTerminalEnrollmentPatch,
+} from "../lib/lifecyclePatches";
 import { HOUR, MINUTE } from "../lib/timeUtils";
 import { isSuppressed } from "./contacts";
 
@@ -229,11 +233,7 @@ export const cancelEnrollment = authenticatedMutation({
       throw conflict("Enrollment is already in a terminal state");
     }
 
-    await ctx.db.patch(args.enrollmentId, {
-      status: "completed",
-      completedAt: Date.now(),
-      nextSendAt: undefined,
-    });
+    await ctx.db.patch(args.enrollmentId, buildCompletedEnrollmentPatch(Date.now()));
   },
 });
 
@@ -292,12 +292,7 @@ export async function advanceEnrollment(
 
   if (nextStep >= sequenceStepCount || nextStepDelayDays === undefined) {
     // Sequence complete
-    await ctx.db.patch(enrollmentId, {
-      currentStep: nextStep,
-      status: "completed",
-      completedAt: Date.now(),
-      nextSendAt: undefined,
-    });
+    await ctx.db.patch(enrollmentId, buildCompletedEnrollmentPatch(Date.now(), nextStep));
   } else {
     // Schedule next step
     await ctx.db.patch(enrollmentId, {
@@ -321,17 +316,5 @@ export async function stopEnrollment(
   // Only stop active/paused enrollments
   if (enrollment.status !== "active" && enrollment.status !== "paused") return;
 
-  const timestampField = reason === "replied" ? "lastRepliedAt" : undefined;
-
-  const patch: Record<string, unknown> = {
-    status: reason,
-    completedAt: Date.now(),
-    nextSendAt: undefined,
-  };
-
-  if (timestampField) {
-    patch[timestampField] = Date.now();
-  }
-
-  await ctx.db.patch(enrollmentId, patch);
+  await ctx.db.patch(enrollmentId, buildTerminalEnrollmentPatch(reason, Date.now()));
 }
