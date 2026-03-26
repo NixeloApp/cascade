@@ -11,6 +11,7 @@ export class InvoicesPage extends BasePage {
   readonly emptyState: Locator;
   readonly filteredEmptyState: Locator;
   readonly loadingState: Locator;
+  readonly mobileList: Locator;
   readonly newDraftButton: Locator;
   readonly statusFilter: Locator;
   readonly table: Locator;
@@ -22,6 +23,7 @@ export class InvoicesPage extends BasePage {
     this.emptyState = page.getByTestId(TEST_IDS.INVOICES.EMPTY_STATE);
     this.filteredEmptyState = page.getByTestId(TEST_IDS.INVOICES.FILTERED_EMPTY_STATE);
     this.loadingState = page.getByTestId(TEST_IDS.INVOICES.LOADING_STATE);
+    this.mobileList = page.getByTestId(TEST_IDS.INVOICES.MOBILE_LIST);
     this.newDraftButton = page.getByRole("button", { name: /^new draft$/i });
     this.statusFilter = page.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER);
     this.table = page.getByTestId(TEST_IDS.INVOICES.TABLE);
@@ -38,6 +40,7 @@ export class InvoicesPage extends BasePage {
       .poll(
         async () => {
           if (await isLocatorVisible(this.table)) return "ready";
+          if (await isLocatorVisible(this.mobileList)) return "ready";
           if (await isLocatorVisible(this.emptyState)) return "ready";
           if (await isLocatorVisible(this.filteredEmptyState)) return "ready";
           if (await isLocatorVisible(this.loadingState)) return "ready";
@@ -48,9 +51,18 @@ export class InvoicesPage extends BasePage {
       .toBe("ready");
   }
 
-  async expectTableVisible(): Promise<void> {
+  async expectPopulatedStateVisible(): Promise<void> {
     await expect(this.content).toBeVisible();
-    await expect(this.table).toBeVisible();
+    await expect
+      .poll(
+        async () => {
+          if (await isLocatorVisible(this.table)) return "ready";
+          if (await isLocatorVisible(this.mobileList)) return "ready";
+          return "pending";
+        },
+        { timeout: 12000 },
+      )
+      .toBe("ready");
   }
 
   async expectFilteredEmptyStateVisible(): Promise<void> {

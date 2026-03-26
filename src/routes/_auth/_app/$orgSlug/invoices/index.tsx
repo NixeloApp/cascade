@@ -136,55 +136,113 @@ function getStatusBadgeVariant(status: string) {
   }
 }
 
+function getInvoiceClientLabel(invoice: InvoiceListItem) {
+  return invoice.client?.name ?? "No client";
+}
+
+function InvoiceStatusBadge({ status }: { status: InvoiceListItem["status"] }) {
+  return (
+    <Badge variant={getStatusBadgeVariant(status)} shape="pill" size="sm">
+      {status}
+    </Badge>
+  );
+}
+
+function InvoiceMetricBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-ui-border-secondary bg-ui-bg-secondary px-3 py-2">
+      <Typography variant="small" color="tertiary" className="block">
+        {label}
+      </Typography>
+      <Typography variant="label" className="mt-1 block">
+        {value}
+      </Typography>
+    </div>
+  );
+}
+
+function InvoiceMobileCard({ invoice, orgSlug }: { invoice: InvoiceListItem; orgSlug: string }) {
+  return (
+    <div className="border-b border-ui-border-primary p-4 last:border-b-0">
+      <Stack gap="sm">
+        <Flex align="start" justify="between" gap="sm">
+          <Stack gap="xs" className="min-w-0 flex-1">
+            <Link to={ROUTES.invoices.detail.path} params={{ orgSlug, invoiceId: invoice._id }}>
+              <Typography variant="label" color="brand">
+                {invoice.number}
+              </Typography>
+            </Link>
+            <Typography variant="small" color="secondary">
+              {getInvoiceClientLabel(invoice)}
+            </Typography>
+          </Stack>
+          <InvoiceStatusBadge status={invoice.status} />
+        </Flex>
+
+        <Grid cols={2} gap="sm">
+          <InvoiceMetricBlock label="Total" value={formatCurrency(invoice.total)} />
+          <InvoiceMetricBlock
+            label="Due"
+            value={formatDate(invoice.dueDate, { timeZone: "UTC" })}
+          />
+        </Grid>
+      </Stack>
+    </div>
+  );
+}
+
 function InvoiceTable({ invoices, orgSlug }: { invoices: InvoiceListItem[]; orgSlug: string }) {
   return (
     <Card padding="none" data-testid={TEST_IDS.INVOICES.CONTENT}>
-      <Table data-testid={TEST_IDS.INVOICES.TABLE}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Invoice</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-            <TableHead className="text-right">Due</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {invoices.map((invoice) => (
-            <TableRow key={invoice._id}>
-              <TableCell>
-                <Link to={ROUTES.invoices.detail.path} params={{ orgSlug, invoiceId: invoice._id }}>
-                  <Typography variant="label" color="brand">
-                    {invoice.number}
-                  </Typography>
-                </Link>
-              </TableCell>
-              <TableCell>
-                {invoice.client ? (
-                  <Typography variant="small">{invoice.client.name}</Typography>
-                ) : (
-                  <Typography variant="small" color="tertiary">
-                    —
-                  </Typography>
-                )}
-              </TableCell>
-              <TableCell>
-                <Badge variant={getStatusBadgeVariant(invoice.status)} shape="pill" size="sm">
-                  {invoice.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <Typography variant="label">{formatCurrency(invoice.total)}</Typography>
-              </TableCell>
-              <TableCell className="text-right">
-                <Typography variant="small" color="secondary">
-                  {formatDate(invoice.dueDate, { timeZone: "UTC" })}
-                </Typography>
-              </TableCell>
+      <div className="md:hidden" data-testid={TEST_IDS.INVOICES.MOBILE_LIST}>
+        {invoices.map((invoice) => (
+          <InvoiceMobileCard key={invoice._id} invoice={invoice} orgSlug={orgSlug} />
+        ))}
+      </div>
+
+      <div className="hidden md:block">
+        <Table data-testid={TEST_IDS.INVOICES.TABLE}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invoice</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Due</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {invoices.map((invoice) => (
+              <TableRow key={invoice._id}>
+                <TableCell>
+                  <Link
+                    to={ROUTES.invoices.detail.path}
+                    params={{ orgSlug, invoiceId: invoice._id }}
+                  >
+                    <Typography variant="label" color="brand">
+                      {invoice.number}
+                    </Typography>
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="small">{getInvoiceClientLabel(invoice)}</Typography>
+                </TableCell>
+                <TableCell>
+                  <InvoiceStatusBadge status={invoice.status} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Typography variant="label">{formatCurrency(invoice.total)}</Typography>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Typography variant="small" color="secondary">
+                    {formatDate(invoice.dueDate, { timeZone: "UTC" })}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 }
@@ -192,44 +250,68 @@ function InvoiceTable({ invoices, orgSlug }: { invoices: InvoiceListItem[]; orgS
 function InvoicesLoadingState() {
   return (
     <Card padding="none" data-testid={TEST_IDS.INVOICES.LOADING_STATE}>
-      <Table aria-hidden="true">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Invoice</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-            <TableHead className="text-right">Due</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {["invoice-loading-row-1", "invoice-loading-row-2", "invoice-loading-row-3"].map(
-            (rowId) => (
-              <TableRow key={rowId}>
-                <TableCell>
-                  <Skeleton className="h-5 w-28" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-5 w-16" />
-                </TableCell>
-                <TableCell className="text-right">
-                  <Flex justify="end">
-                    <Skeleton className="h-4 w-20" />
-                  </Flex>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Flex justify="end">
+      <div className="md:hidden" aria-hidden="true">
+        {["invoice-loading-row-1", "invoice-loading-row-2", "invoice-loading-row-3"].map(
+          (rowId) => (
+            <div key={rowId} className="border-b border-ui-border-primary p-4 last:border-b-0">
+              <Stack gap="sm">
+                <Flex align="start" justify="between" gap="sm">
+                  <Stack gap="xs" className="min-w-0 flex-1">
+                    <Skeleton className="h-5 w-28" />
                     <Skeleton className="h-4 w-24" />
-                  </Flex>
-                </TableCell>
-              </TableRow>
-            ),
-          )}
-        </TableBody>
-      </Table>
+                  </Stack>
+                  <Skeleton className="h-5 w-16" />
+                </Flex>
+                <Grid cols={2} gap="sm">
+                  <Skeleton className="h-14 w-full" />
+                  <Skeleton className="h-14 w-full" />
+                </Grid>
+              </Stack>
+            </div>
+          ),
+        )}
+      </div>
+
+      <div className="hidden md:block">
+        <Table aria-hidden="true">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invoice</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Due</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {["invoice-loading-row-1", "invoice-loading-row-2", "invoice-loading-row-3"].map(
+              (rowId) => (
+                <TableRow key={rowId}>
+                  <TableCell>
+                    <Skeleton className="h-5 w-28" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Flex justify="end">
+                      <Skeleton className="h-4 w-20" />
+                    </Flex>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Flex justify="end">
+                      <Skeleton className="h-4 w-24" />
+                    </Flex>
+                  </TableCell>
+                </TableRow>
+              ),
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 }

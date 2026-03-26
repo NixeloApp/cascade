@@ -682,6 +682,8 @@ export const TEST_IDS = {
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     CONTENT: "invoices-content",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    MOBILE_LIST: "invoices-mobile-list",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     TABLE: "invoices-table",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     STATUS_FILTER: "invoices-status-filter",

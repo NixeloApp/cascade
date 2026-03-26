@@ -453,7 +453,7 @@ export async function screenshotInvoicesStates(
   if (shouldCapture(prefix, captureNames.canonical)) {
     await runCaptureStep("invoices canonical", async () => {
       const invoicesPage = await openInvoicesPage();
-      await invoicesPage.expectTableVisible();
+      await invoicesPage.expectPopulatedStateVisible();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureNames.canonical);
     });
