@@ -111,6 +111,7 @@ export const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-mobile-hamburger$/, "04-dashboard", "-mobile-hamburger"],
   // Project board
   [/^filled-project-.+-board$/, "06-board", ""],
+  [/^filled-project-.+-board-loading$/, "06-board", "-loading"],
   [/^filled-project-.+-create-issue-modal$/, "06-board", "-create-issue-modal"],
   [
     /^filled-project-.+-create-issue-draft-restoration$/,

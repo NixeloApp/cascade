@@ -48,6 +48,45 @@ interface KanbanBoardProps {
   mobileActions?: React.ReactNode;
 }
 
+declare global {
+  interface Window {
+    __NIXELO_E2E_BOARD_LOADING__?: boolean;
+  }
+}
+
+interface BoardLoadingColumnConfig {
+  id: string;
+  titleWidthClassName: string;
+  visibilityClassName: string;
+}
+
+const BOARD_LOADING_COLUMNS: BoardLoadingColumnConfig[] = [
+  {
+    id: "todo",
+    titleWidthClassName: "w-20",
+    visibilityClassName: "block",
+  },
+  {
+    id: "in-progress",
+    titleWidthClassName: "w-24",
+    visibilityClassName: "hidden sm:block",
+  },
+  {
+    id: "review",
+    titleWidthClassName: "w-16",
+    visibilityClassName: "hidden md:block",
+  },
+  {
+    id: "done",
+    titleWidthClassName: "w-20",
+    visibilityClassName: "hidden xl:block",
+  },
+];
+
+function isE2EBoardLoadingOverrideEnabled(): boolean {
+  return typeof window !== "undefined" && window.__NIXELO_E2E_BOARD_LOADING__ === true;
+}
+
 /** Check if issue matches type filter */
 function matchesTypeFilter(issue: EnrichedIssue, types?: BoardFilters["type"]): boolean {
   if (!types?.length) return true;
@@ -330,23 +369,31 @@ export function KanbanBoard({
   );
 
   // Loading State
-  const isLoading = isLoadingIssues || (isProjectMode && !project);
+  const isLoading =
+    isE2EBoardLoadingOverrideEnabled() || isLoadingIssues || (isProjectMode && !project);
 
   if (isLoading) {
     return (
-      <FlexItem flex="1" className="overflow-x-auto">
-        <Flex align="center" justify="between">
-          <SkeletonText lines={1} className="w-32" />
-          <SkeletonText lines={1} className="w-32" />
+      <FlexItem flex="1" className="overflow-x-auto" data-testid={TEST_IDS.BOARD.LOADING_STATE}>
+        <Flex align="center" justify="between" gap="sm" className="px-2 pt-3 sm:px-4 lg:px-6">
+          <SkeletonText lines={1} className="w-28 sm:w-32" />
+          <SkeletonText lines={1} className="hidden w-24 sm:block sm:w-32" />
         </Flex>
         <Card variant="ghost" recipe="kanbanBoardRail" ref={boardContainerRef}>
           <Flex gap="sm" align="start">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className={getCardRecipeClassName("kanbanLoadingColumn")}>
+            {BOARD_LOADING_COLUMNS.map((column) => (
+              <div
+                key={column.id}
+                className={cn(
+                  getCardRecipeClassName("kanbanLoadingColumn"),
+                  column.visibilityClassName,
+                )}
+                data-testid={TEST_IDS.BOARD.LOADING_COLUMN}
+              >
                 <div className={cn(getCardRecipeClassName("kanbanLoadingColumnHeader"), "p-3")}>
-                  <SkeletonText lines={1} className="w-24" />
+                  <SkeletonText lines={1} className={column.titleWidthClassName} />
                 </div>
-                <div className="min-h-96">
+                <div className={getCardRecipeClassName("kanbanLoadingColumnBody")}>
                   <SkeletonKanbanCard />
                   <SkeletonKanbanCard />
                   <SkeletonKanbanCard />

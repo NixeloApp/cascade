@@ -2,14 +2,9 @@
 
 > **Priority:** P2
 > **Status:** In Progress
-> **Last Updated:** 2026-03-25
+> **Last Updated:** 2026-03-26
 
 ## Remaining
-
-### Active regressions
-
-- [ ] Fix the mobile board loading state so it stops rendering a desktop-shaped, washed-out multi-column skeleton on phone widths.
-- [ ] Review the board loading shell before/after across desktop, tablet, and mobile before approving any new baseline for that route.
 
 ### Screenshot-driven cleanup
 

@@ -867,6 +867,58 @@ export async function screenshotBoardModals(
   }
 }
 
+export async function screenshotBoardLoadingState(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const loadingStateName = `project-${normalizedProjectKey}-board-loading`;
+
+  if (!shouldCapture(prefix, loadingStateName)) {
+    return;
+  }
+
+  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+
+  await runRequiredCaptureStep("board loading state", async () => {
+    const loadingPage = await page.context().newPage();
+    const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
+
+    try {
+      await loadingPage.addInitScript(() => {
+        window.__NIXELO_E2E_BOARD_LOADING__ = true;
+      });
+
+      await loadingPage.goto(`${BASE_URL}${boardUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await loadingPage.waitForURL(
+        (currentUrl) => /\/[^/]+\/projects\/[^/]+\/board$/.test(new URL(currentUrl).pathname),
+        {
+          timeout: 15000,
+        },
+      );
+      await loadingProjectsPage.expectBoardLoadingStateVisible(15000);
+      await expect
+        .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+          timeout: 12000,
+        })
+        .toBeGreaterThanOrEqual(8);
+      await waitForAnimation(loadingPage);
+      await captureCurrentView(loadingPage, prefix, loadingStateName, {
+        skipReadyCheck: true,
+      });
+    } finally {
+      if (!loadingPage.isClosed()) {
+        await loadingPage.close();
+      }
+    }
+  });
+}
+
 export async function screenshotMeetingsStates(
   page: Page,
   orgSlug: string,

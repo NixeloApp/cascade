@@ -88,6 +88,10 @@ export const TEST_IDS = {
   BOARD: {
     /** @see src/components/KanbanBoard.tsx */
     ROOT: "project-board",
+    /** @see src/components/KanbanBoard.tsx */
+    LOADING_STATE: "project-board-loading-state",
+    /** @see src/components/KanbanBoard.tsx */
+    LOADING_COLUMN: "project-board-loading-column",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN: "board-column",
     /** @see src/components/Kanban/KanbanColumn.tsx */

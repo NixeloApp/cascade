@@ -11,6 +11,7 @@ import { useBoardHistory } from "@/hooks/useBoardHistory";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { KanbanBoard } from "./KanbanBoard";
 
@@ -139,8 +140,18 @@ vi.mock("./ui/Card", () => ({
 }));
 
 vi.mock("./ui/Flex", () => ({
-  Flex: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  FlexItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Flex: ({
+    children,
+    ...props
+  }: {
+    children: ReactNode;
+  } & Record<string, unknown>) => <div {...props}>{children}</div>,
+  FlexItem: ({
+    children,
+    ...props
+  }: {
+    children: ReactNode;
+  } & Record<string, unknown>) => <div {...props}>{children}</div>,
 }));
 
 vi.mock("./ui/Skeleton", () => ({
@@ -200,6 +211,7 @@ const issueB = {
 describe("KanbanBoard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete window.__NIXELO_E2E_BOARD_LOADING__;
     mockUseAuthenticatedQuery.mockReturnValue({
       userRole: "admin",
       workflowStates,
@@ -250,9 +262,26 @@ describe("KanbanBoard", () => {
 
     render(<KanbanBoard projectId={"project_1" as Id<"projects">} />);
 
+    expect(screen.getByTestId(TEST_IDS.BOARD.LOADING_STATE)).toBeInTheDocument();
+    const loadingColumns = screen.getAllByTestId(TEST_IDS.BOARD.LOADING_COLUMN);
+    expect(loadingColumns).toHaveLength(4);
+    expect(loadingColumns[0]).toHaveClass("block");
+    expect(loadingColumns[1]).toHaveClass("hidden", "sm:block");
+    expect(loadingColumns[2]).toHaveClass("hidden", "md:block");
+    expect(loadingColumns[3]).toHaveClass("hidden", "xl:block");
     expect(screen.getAllByText("loading-text").length).toBeGreaterThan(0);
     expect(screen.getAllByText("loading-card")).toHaveLength(12);
     expect(mockAutoScrollForElements).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("toggle-selection")).not.toBeInTheDocument();
+  });
+
+  it("forces the board loading shell when the E2E override is enabled", () => {
+    window.__NIXELO_E2E_BOARD_LOADING__ = true;
+
+    render(<KanbanBoard projectId={"project_1" as Id<"projects">} />);
+
+    expect(screen.getByTestId(TEST_IDS.BOARD.LOADING_STATE)).toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.BOARD.ROOT)).not.toBeInTheDocument();
     expect(screen.queryByText("toggle-selection")).not.toBeInTheDocument();
   });
 

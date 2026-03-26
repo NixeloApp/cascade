@@ -128,6 +128,7 @@ export const SCREENSHOT_PAGE_IDS = [
   "filled-workspace-create-team-modal",
   // Filled states — project sub-pages (use PROJ as placeholder key)
   "filled-project-PROJ-board",
+  "filled-project-PROJ-board-loading",
   "filled-project-PROJ-backlog",
   "filled-project-PROJ-inbox",
   "filled-project-PROJ-inbox-closed",

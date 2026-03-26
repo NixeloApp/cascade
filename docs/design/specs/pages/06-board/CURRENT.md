@@ -17,6 +17,7 @@
 | Desktop | Light | ![](screenshots/desktop-light.png) |
 | Tablet | Light | ![](screenshots/tablet-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
+| Mobile | Loading | ![](screenshots/mobile-light-loading.png) |
 | Desktop | Create Issue Modal | ![](screenshots/desktop-light-create-issue-modal.png) |
 
 ---
@@ -36,7 +37,8 @@
 - Mobile export and sprint controls now share that same floating cluster as selection, which removes the last detached board-only toolbar row before the lanes begin.
 - The export action still uses compact mobile treatment, but it now rides inside the floating cluster instead of a separate strip.
 - The board baseline is now operationally trustworthy, so the remaining issues are visual rather than harness-related.
-- The screenshot matrix also includes create-issue validation/success/draft-restore, filter-active, swimlane, import/export, collapsed-column, and WIP warning states in the spec folder beyond the single modal preview shown above.
+- The loading state now has a reviewed desktop/tablet/mobile matrix and no longer reuses the old desktop-shaped multi-column haze on phone widths.
+- The screenshot matrix also includes create-issue validation/success/draft-restore, filter-active, swimlane, import/export, collapsed-column, loading, and WIP warning states in the spec folder beyond the single modal preview shown above.
 
 ---
 
@@ -71,4 +73,4 @@
 ## Summary
 
 The board screenshot baseline is trustworthy again. The next pass can stay focused on card hierarchy
-and lane-level polish, not shared-shell cleanup, harness repair, or mobile toolbar cleanup.
+and lane-level polish, not loading-shell regressions, harness repair, or mobile toolbar cleanup.

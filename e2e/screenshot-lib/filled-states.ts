@@ -60,6 +60,7 @@ import {
 import {
   screenshotAssistantStates,
   screenshotBoardInteractiveStates,
+  screenshotBoardLoadingState,
   screenshotBoardModals,
   screenshotDashboardLoadingState,
   screenshotDashboardModals,
@@ -876,6 +877,10 @@ export async function screenshotFilledStates(
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-board-sprint-selector`);
         await page.keyboard.press("Escape");
       });
+    }
+
+    if (shouldCapture(p, `project-${normalizedProjectKey}-board-loading`)) {
+      await screenshotBoardLoadingState(page, orgSlug, projectKey, p);
     }
 
     if (

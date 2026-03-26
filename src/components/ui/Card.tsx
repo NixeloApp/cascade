@@ -378,9 +378,12 @@ const cardRecipeVariants = cva("", {
       kanbanBoardRail:
         "overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-2 pb-3 scroll-px-2 sm:snap-none sm:px-4 lg:px-6",
       kanbanSwimlaneWrapper: "px-4 pb-6 lg:px-6",
-      kanbanLoadingColumn: "w-72 border-ui-border bg-ui-bg-soft lg:w-80",
+      kanbanLoadingColumn:
+        "w-full max-w-full shrink-0 overflow-hidden rounded-container border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft sm:w-72 lg:w-80",
       kanbanLoadingColumnHeader:
-        "rounded-none border-x-0 border-t-0 border-b border-ui-border/50 bg-transparent shadow-none",
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary/70 bg-ui-bg-elevated/90 shadow-none",
+      kanbanLoadingColumnBody:
+        "min-h-72 rounded-lg border-transparent bg-transparent p-2 shadow-none sm:min-h-80 lg:min-h-96",
       sprintWorkloadHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-transparent shadow-none",
       sprintWorkloadRow:
