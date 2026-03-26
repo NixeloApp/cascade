@@ -66,12 +66,13 @@ The team detail page is the working surface for a single team within a workspace
 
 ## Current Composition Walkthrough
 
-1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`, then team via `api.teams.getBySlug` (using workspace ID as parent). Shows loading spinner while pending, "Team not found" if either is null. Renders 3-level breadcrumbs, a lighter shared header with the member summary folded into the header actions, and a compact `PageControls` strip with 4 tabs (Board, Calendar, Wiki, Settings), then `<Outlet />`.
-2. **Index redirect** (`index.tsx`): Uses TanStack Router `beforeLoad` with `redirect()` so the team root never renders a transient blank shell before landing on the board route.
-3. **Board** (`board.tsx`): Resolves workspace and team, then renders `<KanbanBoard teamId={team._id} />`. The `KanbanBoard` component is a feature-rich Kanban board with drag-and-drop (Atlaskit pragmatic-drag-and-drop), swimlanes, board history (undo/redo), bulk operations, filtering, and issue detail viewer. On mobile it now uses the same single-column workflow selector as the project board instead of clipping multiple columns off-screen.
-4. **Calendar** (`calendar.tsx`): Resolves workspace and team, renders `<CalendarView teamId={team._id} />` with full error handling for both workspace and team not-found states.
-5. **Wiki** (`wiki.tsx`): Resolves workspace and team, queries `api.documents.listByTeam` scoped to the team. Renders the same card layout as workspace wiki (doc icon, title, visibility badge, creator metadata). Empty state directs users to create team-scoped docs.
-6. **Settings** (`settings.tsx`): Static placeholder page with a "Coming Soon" card. No queries, mutations, or form elements. Describes future functionality (member management, roles, permissions).
+1. **Inherited workspace context** (`../route.tsx`): When the team route is active, the parent workspace layout no longer renders its own full header. It now collapses to a compact workspace-sections strip so users can still jump back to workspace-level sections without spending a full extra header block on nested chrome.
+2. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`, then team via `api.teams.getBySlug` (using workspace ID as parent). Shows loading spinner while pending, "Team not found" if either is null. Renders 3-level breadcrumbs, a lighter shared header with the member summary folded into the header actions, and a compact `PageControls` strip with 4 tabs (Board, Calendar, Wiki, Settings), then `<Outlet />`.
+3. **Index redirect** (`index.tsx`): Uses TanStack Router `beforeLoad` with `redirect()` so the team root never renders a transient blank shell before landing on the board route.
+4. **Board** (`board.tsx`): Resolves workspace and team, then renders `<KanbanBoard teamId={team._id} />`. The `KanbanBoard` component is a feature-rich Kanban board with drag-and-drop (Atlaskit pragmatic-drag-and-drop), swimlanes, board history (undo/redo), bulk operations, filtering, and issue detail viewer. On mobile it now uses the same single-column workflow selector as the project board instead of clipping multiple columns off-screen.
+5. **Calendar** (`calendar.tsx`): Resolves workspace and team, renders `<CalendarView teamId={team._id} />` with full error handling for both workspace and team not-found states.
+6. **Wiki** (`wiki.tsx`): Resolves workspace and team, queries `api.documents.listByTeam` scoped to the team. Renders the same card layout as workspace wiki (doc icon, title, visibility badge, creator metadata). Empty state directs users to create team-scoped docs.
+7. **Settings** (`settings.tsx`): Static placeholder page with a "Coming Soon" card. No queries, mutations, or form elements. Describes future functionality (member management, roles, permissions).
 
 ---
 

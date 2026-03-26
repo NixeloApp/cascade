@@ -8,6 +8,7 @@ import { WorkspaceLayout } from "./route";
 
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 const mockUseOrganization = vi.mocked(useOrganization);
+const mockUseLocation = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
@@ -27,6 +28,7 @@ vi.mock("@tanstack/react-router", () => ({
     </a>
   ),
   Outlet: () => <div>Workspace content</div>,
+  useLocation: () => mockUseLocation(),
   createFileRoute: () => () => ({
     useParams: () => ({
       workspaceSlug: "platform",
@@ -60,6 +62,10 @@ describe("WorkspaceLayout", () => {
       description: "Delivery workspace",
       slug: "platform",
     });
+
+    mockUseLocation.mockReturnValue({
+      pathname: "/acme/workspaces/platform",
+    });
   });
 
   it("renders the workspace sections nav inside the shared page-controls shell", () => {
@@ -74,5 +80,19 @@ describe("WorkspaceLayout", () => {
 
     const nav = screen.getByRole("navigation", { name: "Workspace sections" });
     expect(nav.closest(".gap-4")).not.toBeNull();
+  });
+
+  it("demotes the workspace shell to a compact context strip for team routes", () => {
+    mockUseLocation.mockReturnValue({
+      pathname: "/acme/workspaces/platform/teams/delivery/board",
+    });
+
+    render(<WorkspaceLayout />);
+
+    expect(screen.queryByRole("heading", { level: 2, name: "Platform" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Delivery workspace")).not.toBeInTheDocument();
+    expect(screen.getByText("Workspace sections")).toBeInTheDocument();
+    expect(screen.getByText("Platform")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Workspace sections" })).toBeInTheDocument();
   });
 });
