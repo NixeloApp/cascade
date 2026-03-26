@@ -95,4 +95,41 @@ describe("Slack unfurl", () => {
 
     expect(result).toBeNull();
   });
+
+  it("should ignore malformed connections that are missing slackUserId", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, organizationId, asUser } = await createTestContext(t);
+    const projectId = await createProjectInOrganization(t, userId, organizationId, {
+      name: "Malformed Unfurl",
+      key: "MUF",
+    });
+
+    const created = await asUser.mutation(api.issues.createIssue, {
+      projectId,
+      title: "Malformed Slack connection should not unfurl",
+      type: "task",
+      priority: "medium",
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.insert("slackConnections", {
+        userId,
+        teamId: "T-MALFORMED-UNFURL",
+        teamName: "Malformed Team",
+        accessToken: "encrypted-token",
+        isActive: true,
+        messagesSent: 0,
+        updatedAt: Date.now(),
+      });
+    });
+
+    const result = await t.query(internal.slackUnfurl.getIssueUnfurl, {
+      teamId: "T-MALFORMED-UNFURL",
+      callerSlackUserId: "U-ANY",
+      issueKey: created.key,
+      url: `https://nixelo.app/issues/${created.key}`,
+    });
+
+    expect(result).toBeNull();
+  });
 });

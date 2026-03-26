@@ -46,7 +46,7 @@ function isSlackWebhookUrl(url: string): boolean {
 /** Save or update Slack OAuth connection for current user. */
 export const connectSlack = authenticatedMutation({
   args: {
-    slackUserId: v.optional(v.string()),
+    slackUserId: v.string(),
     teamId: v.string(),
     teamName: v.string(),
     accessToken: v.string(),
@@ -57,6 +57,9 @@ export const connectSlack = authenticatedMutation({
   },
   returns: v.object({ success: v.literal(true), connectionId: v.id("slackConnections") }),
   handler: async (ctx, args) => {
+    if (args.slackUserId.trim().length === 0) {
+      throw validation("slackUserId", "Slack user ID is required");
+    }
     if (args.incomingWebhookUrl && !isSlackWebhookUrl(args.incomingWebhookUrl)) {
       throw validation("incomingWebhookUrl", "Invalid Slack incoming webhook URL");
     }
@@ -104,6 +107,40 @@ export const connectSlack = authenticatedMutation({
     });
 
     return { success: true, connectionId } as const;
+  },
+});
+
+export const disableConnectionsMissingSlackUserId = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    numItems: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const numItems = Math.min(args.numItems ?? BOUNDED_LIST_LIMIT, BOUNDED_LIST_LIMIT);
+    const page = await ctx.db.query("slackConnections").paginate({ numItems, cursor: args.cursor });
+
+    const invalidConnections = [];
+    for (const connection of page.page) {
+      if (!connection.slackUserId?.trim()) {
+        invalidConnections.push(connection);
+      }
+    }
+    await Promise.all(
+      invalidConnections.map((connection) =>
+        ctx.db.patch(connection._id, {
+          isActive: false,
+          lastError: "Slack connection requires reconnect to attach slackUserId",
+          updatedAt: Date.now(),
+        }),
+      ),
+    );
+
+    return {
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+      deactivated: invalidConnections.length,
+      scanned: page.page.length,
+    };
   },
 });
 

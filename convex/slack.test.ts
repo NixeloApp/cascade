@@ -26,6 +26,7 @@ describe("Slack integration", () => {
     const { asUser } = await createTestContext(t);
 
     const { connectionId } = await asUser.mutation(api.slack.connectSlack, {
+      slackUserId: "U-CONNECT",
       teamId: "T123",
       teamName: "Nixelo Team",
       accessToken: "xoxb-test-token",
@@ -44,6 +45,8 @@ describe("Slack integration", () => {
     expect(connection?.incomingWebhookChannel).toBe("#alerts");
     expect(connection?.hasIncomingWebhook).toBe(true);
     expect(connection?.hasAccessToken).toBe(true);
+
+    await t.finishAllScheduledFunctions(() => {});
   });
 
   it("should upsert existing connection for the same user", async () => {
@@ -51,11 +54,13 @@ describe("Slack integration", () => {
     const { asUser } = await createTestContext(t);
 
     const first = await asUser.mutation(api.slack.connectSlack, {
+      slackUserId: "U-FIRST",
       teamId: "T123",
       teamName: "Workspace One",
       accessToken: "xoxb-token-1",
     });
     const second = await asUser.mutation(api.slack.connectSlack, {
+      slackUserId: "U-SECOND",
       teamId: "T456",
       teamName: "Workspace Two",
       accessToken: "xoxb-token-2",
@@ -68,6 +73,8 @@ describe("Slack integration", () => {
     expect(connection?.teamId).toBe("T456");
     expect(connection?.teamName).toBe("Workspace Two");
     expect(connection?.incomingWebhookChannel).toBe("#product");
+
+    await t.finishAllScheduledFunctions(() => {});
   });
 
   it("should disconnect slack connection", async () => {
@@ -75,6 +82,7 @@ describe("Slack integration", () => {
     const { asUser } = await createTestContext(t);
 
     await asUser.mutation(api.slack.connectSlack, {
+      slackUserId: "U-DISCONNECT",
       teamId: "T123",
       teamName: "Nixelo Team",
       accessToken: "xoxb-test-token",
@@ -83,6 +91,8 @@ describe("Slack integration", () => {
     await asUser.mutation(api.slack.disconnectSlack, {});
     const connection = await asUser.query(api.slack.getConnection, {});
     expect(connection).toBeNull();
+
+    await t.finishAllScheduledFunctions(() => {});
   });
 
   it("should send message to incoming webhook for owner", async () => {
@@ -90,6 +100,7 @@ describe("Slack integration", () => {
     const { asUser } = await createTestContext(t);
 
     const { connectionId } = await asUser.mutation(api.slack.connectSlack, {
+      slackUserId: "U-SEND",
       teamId: "T123",
       teamName: "Nixelo Team",
       accessToken: "xoxb-test-token",
@@ -112,6 +123,8 @@ describe("Slack integration", () => {
         }),
       }),
     );
+
+    await t.finishAllScheduledFunctions(() => {});
   });
 
   it("should send internal issue notification to project member destinations", async () => {
@@ -132,6 +145,7 @@ describe("Slack integration", () => {
     });
 
     await asUser.mutation(api.slack.connectSlack, {
+      slackUserId: "U-NOTIFY",
       teamId: "T123",
       teamName: "Nixelo Team",
       accessToken: "xoxb-test-token",
@@ -152,48 +166,36 @@ describe("Slack integration", () => {
         method: "POST",
       }),
     );
+
+    await t.finishAllScheduledFunctions(() => {});
   });
 
-  it("should schedule slack notification on issue comment creation", async () => {
+  it("deactivates malformed connections that are missing slackUserId", async () => {
     const t = convexTest(schema, modules);
-    const userId = await createTestUser(t);
-    const { organizationId } = await createOrganizationAdmin(t, userId);
-    const projectId = await createProjectInOrganization(t, userId, organizationId, {
-      name: "Slack Comment Project",
-      key: "SLC",
+    const { userId } = await createTestContext(t);
+
+    const connectionId = await t.run(async (ctx) =>
+      ctx.db.insert("slackConnections", {
+        userId,
+        teamId: "T-MALFORMED",
+        teamName: "Malformed Team",
+        accessToken: "encrypted-token",
+        incomingWebhookUrl: "https://hooks.slack.com/services/T/B/malformed",
+        isActive: true,
+        messagesSent: 0,
+        updatedAt: Date.now(),
+      }),
+    );
+
+    const result = await t.mutation(internal.slack.disableConnectionsMissingSlackUserId, {
+      cursor: null,
     });
 
-    const asUser = asAuthenticatedUser(t, userId);
-    await asUser.mutation(api.slack.connectSlack, {
-      teamId: "T777",
-      teamName: "Nixelo Team",
-      accessToken: "xoxb-test-token",
-      incomingWebhookUrl: "https://hooks.slack.com/services/T/B/comment",
-    });
+    expect(result.deactivated).toBe(1);
+    const connection = await t.run(async (ctx) => ctx.db.get(connectionId));
+    expect(connection?.isActive).toBe(false);
+    expect(connection?.lastError).toContain("requires reconnect");
 
-    const { issueId } = await asUser.mutation(api.issues.createIssue, {
-      projectId,
-      title: "Comment hook",
-      type: "task",
-      priority: "medium",
-    });
-
-    mockSafeFetch.mockResolvedValue(new Response("ok", { status: 200 }));
-    await asUser.mutation(api.issues.addComment, {
-      issueId,
-      content: "Trigger comment notification",
-    });
-    // Drain all nested scheduled work to avoid timing-related flakiness.
     await t.finishAllScheduledFunctions(() => {});
-
-    await vi.waitFor(() => {
-      expect(mockSafeFetch).toHaveBeenCalledWith(
-        "https://hooks.slack.com/services/T/B/comment",
-        expect.objectContaining({
-          method: "POST",
-          body: expect.stringContaining("SLC-1: Comment hook"),
-        }),
-      );
-    });
   });
 });

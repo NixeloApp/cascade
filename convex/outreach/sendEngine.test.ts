@@ -7,6 +7,7 @@ import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createOrganizationAdmin, createTestUser } from "../testUtils";
 import { DEFAULT_MAILBOX_MINUTE_SEND_LIMIT, MAILBOX_SEND_WINDOW_MS } from "./mailboxRateLimits";
+import { encryptMailboxTokensForStorage } from "./mailboxTokens";
 
 type ConvexTestInstance = TestConvex<typeof schema>;
 
@@ -20,7 +21,7 @@ type SendFixture = {
 };
 
 type SendFixtureOptions = {
-  useLegacyMailbox?: boolean;
+  omitMailboxRateLimits?: boolean;
   contactEmail?: string;
   firstName?: string;
   company?: string;
@@ -58,16 +59,20 @@ async function createSendFixture(
   const { organizationId } = await createOrganizationAdmin(t, userId);
 
   let mailboxId: Id<"outreachMailboxes">;
-  if (options.useLegacyMailbox) {
+  if (options.omitMailboxRateLimits) {
+    const encryptedTokens = await encryptMailboxTokensForStorage({
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+    });
     mailboxId = await t.run(async (ctx) =>
       ctx.db.insert("outreachMailboxes", {
         userId,
         organizationId,
         provider: "google",
-        email: "legacy-mailbox@example.com",
-        displayName: "Legacy Mailbox",
-        accessToken: "encrypted-token",
-        refreshToken: "encrypted-refresh",
+        email: "sender@example.com",
+        displayName: "Sender",
+        accessToken: encryptedTokens.accessToken,
+        refreshToken: encryptedTokens.refreshToken,
         expiresAt: Date.now() + DAY,
         dailySendLimit: 50,
         todaySendCount: 0,
@@ -193,8 +198,8 @@ describe("outreach sendEngine", () => {
     expect(secondAttempt).toEqual({ canSend: false });
   });
 
-  it("backfills legacy mailboxes and resets expired rate-limit windows before reserving the next send", async () => {
-    const { t, fixture } = await createSendFixture({ useLegacyMailbox: true });
+  it("backfills missing mailbox rate-limit fields and resets expired windows before reserving the next send", async () => {
+    const { t, fixture } = await createSendFixture({ omitMailboxRateLimits: true });
     const staleDay = Date.now() - 2 * DAY;
 
     await t.run(async (ctx) => {
@@ -350,7 +355,7 @@ describe("outreach sendEngine", () => {
   });
 
   it("suppresses contacts and records bounce metadata when Gmail rejects a send as a hard bounce", async () => {
-    const { t, fixture } = await createSendFixture({ useLegacyMailbox: true });
+    const { t, fixture } = await createSendFixture({ omitMailboxRateLimits: true });
     const staleDay = Date.now() - DAY;
 
     await t.run(async (ctx) => {

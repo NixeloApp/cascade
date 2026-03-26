@@ -3935,6 +3935,7 @@ export const setupRbacProjectInternal = internalMutation({
         name: args.projectName,
         organizationId: organization._id,
         description: "E2E test project for RBAC permission testing - organization level",
+        nextIssueNumber: project.nextIssueNumber ?? 0,
       });
     }
 
@@ -3978,6 +3979,7 @@ export const setupRbacProjectInternal = internalMutation({
         name: `RBAC Workspace Project (${workspaceProjectKey})`,
         description: "E2E test project for RBAC - Workspace level",
         ownerId: adminUser._id, // Ensure ownership is updated
+        nextIssueNumber: workspaceProject.nextIssueNumber ?? 0,
       });
     }
 
@@ -4017,6 +4019,7 @@ export const setupRbacProjectInternal = internalMutation({
         name: `RBAC Team Project (${teamProjectKey})`,
         description: "E2E test project for RBAC - Team level",
         ownerId: adminUser._id, // Ensure ownership is updated
+        nextIssueNumber: teamProject.nextIssueNumber ?? 0,
       });
     }
 
@@ -7252,6 +7255,7 @@ export const seedScreenshotDataInternal = internalMutation({
         ownerId: userId,
         updatedAt: now,
         boardType: "kanban",
+        nextIssueNumber: project.nextIssueNumber ?? 0,
         workflowStates: [
           { id: "todo", name: "To Do", category: "todo", order: 0 },
           { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
@@ -7415,6 +7419,7 @@ export const seedScreenshotDataInternal = internalMutation({
         ownerId: userId,
         updatedAt: now,
         boardType: "scrum",
+        nextIssueNumber: secondaryProject.nextIssueNumber ?? 0,
         workflowStates: [
           { id: "todo", name: "To Do", category: "todo", order: 0 },
           { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },

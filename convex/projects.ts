@@ -10,7 +10,7 @@ import { paginationOptsValidator } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { internalMutation, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
@@ -88,6 +88,40 @@ const createProjectArgs = {
 
 type CreateProjectArgs = Infer<typeof createProjectArgsObject>;
 const createProjectArgsObject = v.object(createProjectArgs);
+const DEFAULT_PROJECT_REPAIR_BATCH_SIZE = 50;
+
+function extractIssueNumberFromKey(key: string): number | null {
+  const match = key.match(/-(\d+)$/);
+  if (!match) return null;
+  return Number.parseInt(match[1], 10);
+}
+
+async function scanHighestIssueNumberForProject(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+): Promise<number> {
+  let cursor: string | null = null;
+  let maxIssueNumber = 0;
+
+  while (true) {
+    const page = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", projectId))
+      .paginate({ numItems: BOUNDED_LIST_LIMIT, cursor });
+
+    for (const issue of page.page) {
+      const issueNumber = extractIssueNumberFromKey(issue.key);
+      if (issueNumber !== null && issueNumber > maxIssueNumber) {
+        maxIssueNumber = issueNumber;
+      }
+    }
+
+    if (page.isDone) {
+      return maxIssueNumber;
+    }
+    cursor = page.continueCursor;
+  }
+}
 
 /**
  * Validates inputs and permissions for creating a project.
@@ -182,6 +216,38 @@ async function validateCreateProject(
 
   return { uniqueSharedTeamIds };
 }
+
+export const backfillMissingIssueCounters = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    numItems: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const numItems = Math.min(
+      args.numItems ?? DEFAULT_PROJECT_REPAIR_BATCH_SIZE,
+      BOUNDED_LIST_LIMIT,
+    );
+    const page = await ctx.db.query("projects").paginate({ numItems, cursor: args.cursor });
+
+    let repaired = 0;
+    for (const project of page.page) {
+      if (project.nextIssueNumber !== undefined) {
+        continue;
+      }
+
+      const nextIssueNumber = await scanHighestIssueNumberForProject(ctx, project._id);
+      await ctx.db.patch(project._id, { nextIssueNumber });
+      repaired += 1;
+    }
+
+    return {
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+      repaired,
+      scanned: page.page.length,
+    };
+  },
+});
 
 export const createProject = authenticatedMutation({
   args: createProjectArgs,

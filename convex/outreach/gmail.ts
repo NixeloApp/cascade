@@ -685,14 +685,6 @@ export const getMailboxTokens = internalMutation({
       refreshToken: mailbox.refreshToken,
     });
 
-    if (tokenSnapshot.needsMigration) {
-      await ctx.db.patch(args.mailboxId, {
-        accessToken: tokenSnapshot.accessToken,
-        refreshToken: tokenSnapshot.refreshToken,
-        updatedAt: Date.now(),
-      });
-    }
-
     return {
       accessToken: tokenSnapshot.decryptedAccessToken,
       refreshToken: tokenSnapshot.decryptedRefreshToken,

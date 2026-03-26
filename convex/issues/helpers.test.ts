@@ -1,5 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
+import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { DAY } from "../lib/timeUtils";
 import schema from "../schema";
@@ -575,6 +576,34 @@ describe("issue helpers", () => {
           return await getNextIssueKey(ctx, projectId, "LEGACY");
         }),
       ).rejects.toThrow("Project issue counter is missing");
+    });
+
+    it("can repair missing issue counters from existing issue keys", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId, { key: "LEGACY" });
+
+      await createTestIssue(t, projectId, userId); // LEGACY-1
+      await createTestIssue(t, projectId, userId); // LEGACY-2
+
+      await t.run(async (ctx) => {
+        await ctx.db.patch(projectId, { nextIssueNumber: undefined });
+      });
+
+      const repair = await t.mutation(internal.projects.backfillMissingIssueCounters, {
+        cursor: null,
+      });
+
+      expect(repair.repaired).toBe(1);
+      const projectAfter = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(projectAfter?.nextIssueNumber).toBe(2);
+
+      const result = await t.run(async (ctx) => {
+        return await getNextIssueKey(ctx, projectId, "LEGACY");
+      });
+
+      expect(result.key).toBe("LEGACY-3");
+      expect(result.number).toBe(3);
     });
 
     it("should never produce duplicate keys across sequential calls", async () => {

@@ -13,6 +13,7 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
+import { isEncrypted } from "../lib/encryption";
 import { notFound, validation } from "../lib/errors";
 import { outreachMailboxProviders } from "../validators";
 import {
@@ -20,6 +21,8 @@ import {
   DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
 } from "./mailboxRateLimits";
 import { encryptMailboxTokensForStorage } from "./mailboxTokens";
+
+const DEFAULT_REPAIR_BATCH_SIZE = 50;
 
 // =============================================================================
 // Queries
@@ -204,6 +207,50 @@ export const createMailboxFromOAuth = internalMutation({
       isActive: true,
       updatedAt: Date.now(),
     });
+  },
+});
+
+export const backfillEncryptedMailboxTokens = internalMutation({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    numItems: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const numItems = Math.min(args.numItems ?? DEFAULT_REPAIR_BATCH_SIZE, BOUNDED_LIST_LIMIT);
+    const page = await ctx.db
+      .query("outreachMailboxes")
+      .paginate({ numItems, cursor: args.cursor });
+
+    let repaired = 0;
+    for (const mailbox of page.page) {
+      const hasPlaintextAccessToken =
+        mailbox.accessToken.length > 0 && !isEncrypted(mailbox.accessToken);
+      const hasPlaintextRefreshToken =
+        mailbox.refreshToken !== undefined && !isEncrypted(mailbox.refreshToken);
+
+      if (!hasPlaintextAccessToken && !hasPlaintextRefreshToken) {
+        continue;
+      }
+
+      const encryptedTokens = await encryptMailboxTokensForStorage({
+        accessToken: mailbox.accessToken,
+        refreshToken: mailbox.refreshToken,
+      });
+
+      await ctx.db.patch(mailbox._id, {
+        accessToken: encryptedTokens.accessToken,
+        refreshToken: encryptedTokens.refreshToken,
+        updatedAt: Date.now(),
+      });
+      repaired += 1;
+    }
+
+    return {
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+      repaired,
+      scanned: page.page.length,
+    };
   },
 });
 

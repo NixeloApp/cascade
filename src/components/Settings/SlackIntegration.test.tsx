@@ -65,6 +65,7 @@ describe("SlackIntegration", () => {
           data: {
             type: "slack-connected",
             data: {
+              slackUserId: "U123",
               teamId: "T123",
               teamName: "Nixelo Team",
               accessToken: "xoxb-test",
@@ -76,7 +77,7 @@ describe("SlackIntegration", () => {
 
     await waitFor(() =>
       expect(mockConnectSlack).toHaveBeenCalledWith({
-        slackUserId: undefined,
+        slackUserId: "U123",
         teamId: "T123",
         teamName: "Nixelo Team",
         accessToken: "xoxb-test",
@@ -141,6 +142,7 @@ describe("SlackIntegration", () => {
           data: {
             type: "slack-connected",
             data: {
+              slackUserId: "U123",
               teamId: "T123",
               teamName: "Nixelo Team",
             },

@@ -2,6 +2,10 @@
 
 > **Last Updated:** 2026-03-25
 
+## P0
+
+- [ ] [compatibility-removal.md](./compatibility-removal.md) — Delete actual backwards-compatibility paths that no longer matter instead of renaming `legacy` comments around them.
+
 ## Infrastructure
 
 - [ ] [validator-strengthening.md](./validator-strengthening.md) — Finish the remaining high-signal validator gap: explicit lifecycle timestamp ownership checks.
