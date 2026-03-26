@@ -664,6 +664,7 @@ function EditorCanvas({
       {!isLocked && <FloatingToolbar />}
       {isEmptyEditor && (
         <Card
+          data-testid={TEST_IDS.EDITOR.STARTER_PANEL}
           padding="md"
           variant="soft"
           className="mb-5 border-ui-border-secondary/85 bg-linear-to-br from-ui-bg via-ui-bg-elevated/96 to-ui-bg-secondary/78"
@@ -840,6 +841,8 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     null,
   );
   const isEmptyEditor = isEmptyValue(editorSeedValue);
+  const isEditorHydrated =
+    latestSnapshot !== undefined && latestVersion !== undefined && versions !== undefined;
 
   useEffect(() => {
     const handleE2EEditorMarkdown = (event: Event) => {
@@ -954,6 +957,7 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
       <Flex flex="1" className="overflow-hidden">
         <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
           <Card padding="md" variant="ghost" className="mx-auto w-full max-w-5xl">
+            {isEditorHydrated ? <div data-testid={TEST_IDS.EDITOR.HYDRATED_STATE} hidden /> : null}
             <ErrorBoundary
               fallback={
                 <SectionErrorFallback

@@ -251,6 +251,8 @@ describe("PlateEditor", () => {
 
     render(<PlateEditor documentId={documentId} />);
 
+    expect(screen.getByTestId("plate-editor-hydrated-state")).toBeInTheDocument();
+    expect(screen.getByTestId("plate-editor-starter-panel")).toBeInTheDocument();
     expect(screen.getByText("Blank document")).toBeInTheDocument();
     expect(
       screen.getByText(

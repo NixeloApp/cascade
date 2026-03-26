@@ -272,6 +272,10 @@ export const TEST_IDS = {
   EDITOR: {
     /** @see src/components/PlateEditor.tsx */
     PLATE: "plate-editor",
+    /** @see src/components/PlateEditor.tsx */
+    STARTER_PANEL: "plate-editor-starter-panel",
+    /** @see src/components/PlateEditor.tsx */
+    HYDRATED_STATE: "plate-editor-hydrated-state",
     /** @see src/components/CommandPalette.tsx */
     COMMAND_PALETTE: "command-palette",
   },

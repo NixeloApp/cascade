@@ -156,11 +156,13 @@ export async function primeDocumentEditorRichContent(page: Page, docUrl: string)
       }),
     );
   }, MARKDOWN_RICH_CONTENT);
-  await page.getByText(/^Release Readiness$/).waitFor({ state: "visible", timeout: 5000 });
-  await page.getByText(/qa signoff/i).waitFor({ state: "visible", timeout: 5000 });
-  await page
-    .getByText(/export const shipWindow = "2026-03-25";/i)
-    .waitFor({ state: "visible", timeout: 5000 });
+  const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+  await editor.getByText(/^Release Readiness$/).waitFor({ state: "visible", timeout: 5000 });
+  await editor.getByText(/qa signoff/i).waitFor({ state: "visible", timeout: 5000 });
+  await editor.getByText(/export const shipWindow = "2026-03-25";/i).waitFor({
+    state: "visible",
+    timeout: 5000,
+  });
   await waitForScreenshotReady(page);
 }
 
@@ -203,10 +205,6 @@ export async function openDocumentEditorMentionPopoverForCapture(
     );
   });
   await page.getByRole("combobox").waitFor({ state: "visible", timeout: 5000 });
-  await page.getByRole("combobox").locator("button").first().waitFor({
-    state: "visible",
-    timeout: 5000,
-  });
   await waitForScreenshotReady(page);
 }
 

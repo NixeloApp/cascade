@@ -5,6 +5,8 @@ import { getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state
 import { ROUTES, routePattern } from "../utils/routes";
 import { BasePage } from "./base.page";
 
+const DOCUMENT_EDITOR_PLACEHOLDER = "Start with a summary or press / for blocks";
+
 /**
  * Documents Page Object
  * Handles the documents view with sidebar and editor
@@ -42,6 +44,8 @@ export class DocumentsPage extends BasePage {
   // ===================
   readonly editor: Locator;
   readonly editorContent: Locator;
+  readonly editorStarterPanel: Locator;
+  readonly editorHydratedState: Locator;
   readonly documentTitle: Locator;
   readonly documentTitleInput: Locator;
   readonly appErrorHeading: Locator;
@@ -88,6 +92,8 @@ export class DocumentsPage extends BasePage {
     // Editor
     this.editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
     this.editorContent = this.editor;
+    this.editorStarterPanel = page.getByTestId(TEST_IDS.EDITOR.STARTER_PANEL);
+    this.editorHydratedState = page.getByTestId(TEST_IDS.EDITOR.HYDRATED_STATE);
     this.documentTitle = page.getByTestId(TEST_IDS.DOCUMENT.TITLE);
     this.documentTitleInput = page.getByTestId(TEST_IDS.DOCUMENT.TITLE_INPUT);
     this.appErrorHeading = page.getByRole("heading", { name: "500" });
@@ -240,20 +246,20 @@ export class DocumentsPage extends BasePage {
 
     await this.throwIfAppErrorVisible();
 
-    if ((await this.getEditorReadyState()) === "initializer") {
+    const initialState = await this.getEditorReadyState();
+    if (initialState === "initializer") {
       const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
       await initButton.click();
-
-      await expect
-        .poll(() => this.getEditorReadyState(), {
-          timeout: 10000,
-          intervals: [200, 500, 1000],
-        })
-        .not.toBe("initializer");
     }
 
     await this.throwIfAppErrorVisible();
-    await expect(this.editor).toBeVisible();
+    await expect
+      .poll(() => this.getEditorReadyState(), {
+        timeout: 10000,
+        intervals: [200, 500, 1000],
+      })
+      .toBe("editor");
+    await this.throwIfAppErrorVisible();
   }
 
   private async getEditorReadyState(): Promise<"editor" | "initializer" | "error" | "pending"> {
@@ -266,11 +272,42 @@ export class DocumentsPage extends BasePage {
       return "initializer";
     }
 
-    if (await isLocatorVisible(this.editor)) {
+    if ((await this.editorHydratedState.count()) === 0) {
+      return "pending";
+    }
+
+    if (await isLocatorVisible(this.editorStarterPanel)) {
       return "editor";
     }
 
+    if (await this.editorHasHydratedContent()) {
+      return "editor";
+    }
+
+    if (await isLocatorVisible(this.editor)) {
+      return "pending";
+    }
+
     return "pending";
+  }
+
+  private async editorHasHydratedContent(): Promise<boolean> {
+    if (!(await isLocatorVisible(this.editor))) {
+      return false;
+    }
+
+    try {
+      return await this.editor.evaluate((element, placeholder) => {
+        const normalizedText = (element.textContent ?? "")
+          .replace(/\u200B/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        return normalizedText.length > 0 && normalizedText !== placeholder;
+      }, DOCUMENT_EDITOR_PLACEHOLDER);
+    } catch {
+      return false;
+    }
   }
 
   private async throwIfAppErrorVisible() {

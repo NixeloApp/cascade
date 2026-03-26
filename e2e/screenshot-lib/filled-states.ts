@@ -1262,7 +1262,7 @@ export async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-color-picker")) {
         await runRequiredCaptureStep("document color picker", async () => {
           await openDocumentEditorFloatingToolbarForCapture(page, baseDocUrl);
-          const colorButton = page.getByRole("button", { name: /^text color$/i });
+          const colorButton = page.getByRole("button", { name: /text color|font color/i }).first();
           await colorButton.waitFor({ state: "visible", timeout: 5000 });
           await colorButton.evaluate((button: HTMLElement) => {
             button.click();

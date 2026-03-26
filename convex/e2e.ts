@@ -506,9 +506,11 @@ const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
   "Project Requirements": {
     type: "doc",
     content: [
-      screenshotHeading(1, "Project Requirements"),
       screenshotParagraph(
-        "Cascade should unify board planning, client delivery, and documentation in one calmer workspace.",
+        "Cascade should unify board planning, client delivery, and documentation in one calmer workspace where the document carries the operating story, not just a detached brief.",
+      ),
+      screenshotBlockquote(
+        "Write the intent, risks, and launch handshake here so the team can move from document to board without losing the thread.",
       ),
       screenshotHeading(2, "Success criteria"),
       screenshotBulletList([
@@ -536,9 +538,11 @@ const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
   "Sprint Retrospective Notes": {
     type: "doc",
     content: [
-      screenshotHeading(1, "Sprint Retrospective"),
       screenshotParagraph(
-        "The team closed the auth refresh, improved mobile board density, and stabilized screenshot capture across configs without losing seeded-product credibility.",
+        "The team closed the auth refresh, improved mobile board density, and stabilized screenshot capture across configs without losing seeded-product credibility or workspace continuity.",
+      ),
+      screenshotBlockquote(
+        "The retro should read like the handoff layer for the sprint, not a thin placeholder note hiding behind a toolbar.",
       ),
       screenshotHeading(2, "Sprint health"),
       screenshotParagraph(
