@@ -37,6 +37,7 @@
   - harness-only complexity that should be deleted
 - [x] Collapse the document-editor capture path onto [DocumentsPage](/home/mikhail/Desktop/cascade/e2e/pages/documents.page.ts) and file-chooser based markdown import instead of screenshot-only window events.
 - [x] Collapse roadmap and time-tracking reviewed states onto reusable page-object interactions instead of session-storage/window-based screenshot boot state.
+- [x] Collapse settings, notifications, and meetings screenshot readiness onto page-object methods instead of keeping route-specific waits in `e2e/screenshot-lib/readiness.ts`.
 - [ ] Start with the biggest offenders:
   - `e2e/screenshot-lib/filled-states.ts` (`79`)
   - `e2e/screenshot-lib/readiness.ts` (`64`)

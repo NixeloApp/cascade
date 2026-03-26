@@ -1,8 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { isLocatorVisible } from "../utils/locator-state";
+import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
+import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -15,8 +16,10 @@ export class NotificationsPage extends BasePage {
   readonly archivedTab: Locator;
   readonly content: Locator;
   readonly inboxEmptyState: Locator;
+  readonly inboxTab: Locator;
   readonly markAllReadButton: Locator;
   readonly mentionsFilter: Locator;
+  readonly notificationItems: Locator;
   readonly unreadBadge: Locator;
 
   constructor(page: Page, orgSlug: string) {
@@ -26,8 +29,10 @@ export class NotificationsPage extends BasePage {
     this.archivedTab = page.getByRole("tab", { name: /archived/i });
     this.content = page.getByTestId(TEST_IDS.NOTIFICATIONS.CONTENT);
     this.inboxEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
+    this.inboxTab = page.getByRole("tab", { name: /inbox/i });
     this.markAllReadButton = page.getByTestId(TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON);
     this.mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
+    this.notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
     this.unreadBadge = page.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE);
   }
 
@@ -45,6 +50,41 @@ export class NotificationsPage extends BasePage {
           return "pending";
         },
         { timeout: 12000 },
+      )
+      .toBe("ready");
+  }
+
+  async waitForCaptureReady(): Promise<void> {
+    await waitForDashboardReady(this.page);
+    await expect
+      .poll(
+        async () =>
+          (await isLocatorVisible(this.pageHeaderTitle)) || (await isLocatorVisible(this.inboxTab)),
+        { timeout: 12000 },
+      )
+      .toBe(true);
+
+    await expect
+      .poll(
+        async () => {
+          const mentionsVisible = await isLocatorVisible(this.mentionsFilter);
+          const archivedSelected =
+            (await this.archivedTab.getAttribute("aria-selected")) === "true";
+          const itemCount = await getLocatorCount(this.notificationItems);
+          const inboxEmptyVisible = await isLocatorVisible(this.inboxEmptyState);
+          const archivedEmptyVisible = await isLocatorVisible(this.archivedEmptyState);
+
+          if (mentionsVisible && (itemCount > 0 || inboxEmptyVisible)) {
+            return "ready";
+          }
+
+          if (archivedSelected && (itemCount > 0 || archivedEmptyVisible)) {
+            return "ready";
+          }
+
+          return "pending";
+        },
+        { timeout: 10000 },
       )
       .toBe("ready");
   }

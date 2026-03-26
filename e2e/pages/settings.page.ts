@@ -23,6 +23,7 @@ export class SettingsPage extends BasePage {
   readonly preferencesTab: Locator;
   readonly adminTab: Locator;
   readonly devToolsTab: Locator;
+  readonly profileTab: Locator;
 
   // ===================
   // Locators - Theme Options (in Preferences tab)
@@ -100,6 +101,7 @@ export class SettingsPage extends BasePage {
   readonly requiresTimeApprovalSwitch: Locator;
   readonly saveSettingsButton: Locator;
   readonly organizationSettingsHeading: Locator;
+  readonly twoFactorSection: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -111,6 +113,7 @@ export class SettingsPage extends BasePage {
     this.preferencesTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_PREFERENCES);
     this.adminTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_ADMIN);
     this.devToolsTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_DEVELOPER);
+    this.profileTab = page.getByRole("tab", { name: /^profile$/i });
 
     // Theme options (in Preferences tab) - ToggleGroupItems with aria-labels
     this.themeLightOption = page.getByRole("radio", { name: /light theme/i });
@@ -189,6 +192,7 @@ export class SettingsPage extends BasePage {
     this.organizationNameInput = page.locator("#orgName");
     this.requiresTimeApprovalSwitch = page.getByTestId(TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH);
     this.saveSettingsButton = page.getByTestId(TEST_IDS.SETTINGS.SAVE_BUTTON);
+    this.twoFactorSection = page.getByTestId(TEST_IDS.SETTINGS.TWO_FACTOR_SECTION);
   }
 
   // ===================
@@ -243,9 +247,56 @@ export class SettingsPage extends BasePage {
 
   async waitUntilReady(): Promise<void> {
     await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
-    await this.page
-      .getByRole("tab", { name: /^profile$/i })
-      .waitFor({ state: "visible", timeout: 12000 });
+    await this.profileTab.waitFor({ state: "visible", timeout: 12000 });
+  }
+
+  async waitForCaptureReady(
+    name:
+      | "settings"
+      | "settings-profile"
+      | "settings-notifications"
+      | "settings-security"
+      | "settings-apikeys"
+      | "settings-integrations"
+      | "settings-admin"
+      | "settings-offline",
+  ): Promise<void> {
+    await this.page.waitForURL(
+      (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
+      {
+        timeout: 12000,
+      },
+    );
+    await this.waitUntilReady();
+
+    if (name === "settings-notifications") {
+      await this.notificationPreferences.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-security") {
+      await this.twoFactorSection.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-apikeys") {
+      await this.apiKeysList.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-integrations") {
+      await this.githubIntegration.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-admin") {
+      await this.userManagementSection.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-offline") {
+      await this.syncStatusIndicator.waitFor({ state: "visible", timeout: 12000 });
+    }
   }
 
   async switchToTab(

@@ -49,6 +49,26 @@ export class MeetingsPage extends BasePage {
     await this.expectLoaded();
   }
 
+  async waitForCaptureReady(): Promise<void> {
+    await this.expectLoaded();
+
+    if (await isLocatorVisible(this.pageEmptyState)) {
+      return;
+    }
+
+    await expect
+      .poll(
+        async () =>
+          (await isLocatorVisible(this.memorySection)) ||
+          (await isLocatorVisible(this.meetingsSearchInput)),
+        {
+          message: "Expected meetings workspace content to render for reviewed capture",
+          timeout: 12000,
+        },
+      )
+      .toBe(true);
+  }
+
   async expectLoaded() {
     await waitForDashboardReady(this.page);
     await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
