@@ -4,7 +4,7 @@
 
 ## Infrastructure
 
-- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P0: normalize confusing route/API naming, remove hidden `-*.test.tsx` route-test conventions, and make file-routed structure readable without repo folklore.
+- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P0: normalize confusing route/API naming, separate public token flows from admin collection pages, remove hidden `-*.test.tsx` route-test conventions, and make file-routed structure readable without repo folklore.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Fix screenshot-visible regressions and tighten cross-surface visual consistency with real before/after review.
 
 ## Features
