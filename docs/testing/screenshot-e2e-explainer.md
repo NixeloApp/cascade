@@ -1,10 +1,10 @@
 # Screenshot And E2E Explainer
 
-This doc explains the screenshot CI job, why it is slow, why it is sharded, and what the `PlateEditor` E2E hooks are doing.
+This doc explains the screenshot tooling, why the old CI workflow was slow, why it used sharding, and what the `PlateEditor` E2E hooks are doing.
 
-## What This CI Job Actually Is
+## What The Old CI Job Was
 
-The `Screenshots` workflow is not the normal product E2E suite.
+The repo used to have a separate `Screenshots` workflow. It was not the normal product E2E suite.
 
 It is a visual review pipeline that:
 
@@ -24,7 +24,7 @@ than to:
 
 - "run a few critical user-flow E2E tests"
 
-## Why It Runs For So Long
+## Why It Used To Run For So Long
 
 It is expensive because it does all of this in one workflow:
 
@@ -45,9 +45,9 @@ The configured matrix is:
 
 And the target set is large. The screenshot tool currently validates hundreds of screenshot outputs across public pages, empty states, and filled states.
 
-That is why this job can run for a long time. It is not a quick smoke test.
+That is why the old workflow could run for a long time. It was not a quick smoke test.
 
-## Why It Uses Shards
+## Why It Used Shards
 
 Sharding here means:
 
@@ -60,7 +60,7 @@ It does **not** mean:
 - route-level product architecture
 - anything inside TanStack Router
 
-The workflow currently runs:
+The old workflow ran:
 
 - `Screenshot Shard 1/4`
 - `Screenshot Shard 2/4`
@@ -69,13 +69,14 @@ The workflow currently runs:
 
 That exists because one giant screenshot job was too slow and too fragile. Splitting it across workers reduces wall-clock time and makes failures more local to a subset of captures.
 
-The implementation lives in:
+The capture implementation still lives in:
 
-- [screenshots.yml](/home/mikhail/Desktop/cascade/.github/workflows/screenshots.yml)
 - [screenshot-pages.ts](/home/mikhail/Desktop/cascade/e2e/screenshot-pages.ts)
 - [sharding.ts](/home/mikhail/Desktop/cascade/e2e/screenshot-lib/sharding.ts)
 
-## What The Screenshot Tool Does
+But the separate PR screenshot workflow is gone. Screenshot capture is now a local/manual tool, while CI only checks the approved artifact manifest through `static`.
+
+## What The Screenshot Tool Does Now
 
 The entrypoint is:
 
@@ -92,7 +93,7 @@ High level flow:
 7. Write screenshots to a staging directory.
 8. Promote staged output only if the run finishes cleanly.
 
-This is why the tool is so much heavier than a normal Playwright spec.
+This is why the tool is much heavier than a normal Playwright spec even when run locally.
 
 ## Why `PlateEditor.tsx` Has E2E Logic
 
@@ -141,17 +142,16 @@ That coupling is exactly the part worth being suspicious of.
 
 Intentional:
 
-- a separate screenshot workflow
 - seeded visual-review states
-- CI sharding for screenshot capture
-- local Convex + built preview app in CI
+- local/manual screenshot capture
+- local Convex + built preview app when capture is run
 
 Not ideal:
 
 - production components listening for screenshot-only custom events
 - screenshot state setup living inside route/component logic
-- one workflow trying to serve as both visual baseline generation and CI gate
-- long runtime from combining too much into one pipeline
+- one automation path trying to serve as both visual baseline generation and CI gate
+- long runtime when capture is treated like a default CI responsibility
 
 ## Why The Screenshot Manifest Validator Keeps Failing
 
@@ -171,9 +171,9 @@ When the validator says a hash appears too many times, it usually means one of t
 
 That is why this area keeps surfacing in CI.
 
-## Why The Current Screenshot Job Is Confusing
+## Why The Old Screenshot Job Was Confusing
 
-Right now the job mixes three concerns:
+The removed workflow mixed three concerns:
 
 1. visual regression capture
 2. screenshot-library maintenance
@@ -185,7 +185,7 @@ That makes it hard to answer simple questions like:
 - "is this just a spec screenshot mismatch?"
 - "is this a harness bug?"
 
-The answer is often "some combination of all three".
+The answer was often "some combination of all three".
 
 ## Recommended Cleanup Direction
 
@@ -195,7 +195,13 @@ If we want this system to be easier to trust, the direction should be:
 2. Move screenshot-only state setup out of production components where possible.
 3. Prefer seeded route states over custom window-event hooks.
 4. Keep only the smallest possible set of component-level hooks for states that truly cannot be seeded any other way.
-5. Separate "capture screenshots" from "validate approved screenshot manifest" conceptually and in docs.
+5. Keep "capture screenshots" separate from "validate approved screenshot manifest" both conceptually and in CI.
+
+Current model:
+
+- `pnpm screenshots` captures/reviews screenshots locally when needed.
+- `pnpm run static` checks screenshot artifact integrity in local hooks and CI.
+- there is no separate sharded PR screenshot workflow anymore.
 
 For `PlateEditor` specifically:
 
@@ -204,4 +210,4 @@ For `PlateEditor` specifically:
 
 ## Short Version
 
-The screenshot CI job is slow because it is not a simple test. It is a full visual-capture system running a big matrix of routes and states against a locally booted app. It is sharded because the matrix is too large for one worker. The `PlateEditor` E2E logic exists to make rich editor states deterministic, but it is also a real coupling point between test infrastructure and production code, so your discomfort is justified.
+The old screenshot CI job was slow because it was not a simple test. It was a full visual-capture system running a big matrix of routes and states against a locally booted app. It used sharding because the matrix was too large for one worker. The `PlateEditor` E2E logic exists to make rich editor states deterministic, but it is also a real coupling point between test infrastructure and production code, so your discomfort is justified.

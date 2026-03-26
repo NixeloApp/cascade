@@ -8,7 +8,7 @@
 
 - [ ] The repo currently has two overlapping automation systems: real E2E/product testing and a screenshot-specific Playwright harness. They duplicate readiness logic, state setup, and route-driving behavior instead of sharing one reusable path.
 - [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
-- [ ] PR CI is paying for expensive screenshot recapture work even though local and CI `static` already validate screenshot artifact integrity. We should not keep a second heavyweight pipeline unless it is clearly worth the cost.
+- [x] PR CI no longer runs the separate screenshot recapture workflow. Local/manual capture plus `static` artifact integrity is the new baseline.
 - [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
 - [ ] The current raw-locator baseline proves the screenshot harness is still acting like a parallel framework.
   Current hotspots:
@@ -34,8 +34,8 @@
   - manifest matches files
   - no stale diffs
   - no duplicate/loading-shell junk
-- [ ] Full screenshot recapture stops being a normal PR CI gate.
-  The default CI path should validate artifacts, not regenerate the whole visual library on every PR.
+- [x] Full screenshot recapture is no longer a normal PR CI gate.
+  The default CI path now validates artifacts instead of regenerating the whole visual library on every PR.
 
 ## Screenshot Harness Cleanup
 
@@ -61,13 +61,13 @@
 
 ## CI Simplification
 
-- [ ] Remove full screenshot recapture from normal PR CI.
+- [x] Remove full screenshot recapture from normal PR CI.
 - [ ] Keep `static`-level screenshot integrity checks in local and CI workflows.
-- [ ] If any screenshot-related CI remains beyond `static`, make it a small reusable smoke subset that uses existing E2E helpers rather than the full recapture pipeline.
+- [ ] Keep screenshot capture local/manual unless we later add a small reusable smoke subset that clearly earns its cost.
 - [ ] Update the workflow/docs so the CI surface area is obvious:
   - what validates product behavior
   - what validates static artifacts
-  - what no longer runs by default
+  - what no longer exists as a default workflow
 
 ## Documentation And Rules
 
@@ -86,5 +86,5 @@
 
 - [ ] A contributor can point to one reusable helper path for a given route/state instead of choosing between E2E helpers and screenshot-only helpers.
 - [ ] Production components no longer carry screenshot-only hooks unless there is a documented, justified exception.
-- [ ] PR CI no longer runs the full screenshot recapture workflow by default.
+- [x] PR CI no longer runs the full screenshot recapture workflow by default.
 - [ ] Screenshot generation and screenshot integrity checking are clearly separate concepts in code and docs.
