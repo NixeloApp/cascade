@@ -261,6 +261,78 @@ describe("Notifications", () => {
     });
   });
 
+  describe("getUnreadIds", () => {
+    it("returns unread inbox notification ids with the same visibility rules as the badge count", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const futureSnooze = Date.now() + 60_000;
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Unread inbox",
+          message: "Unread inbox notification",
+          isRead: false,
+        });
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Archived unread",
+          message: "Archived unread notification",
+          isRead: false,
+          isArchived: true,
+        });
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Snoozed unread",
+          message: "Snoozed unread notification",
+          isRead: false,
+          snoozedUntil: futureSnooze,
+        });
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Read inbox",
+          message: "Read inbox notification",
+          isRead: true,
+        });
+      });
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const unreadIds = await asUser.query(api.notifications.getUnreadIds, {});
+
+      expect(unreadIds).toHaveLength(1);
+    });
+
+    it("caps unread ids to the badge limit", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const MAX_UNREAD_IDS = 100;
+      const EXTRA_UNREAD_IDS = 5;
+
+      await t.run(async (ctx) => {
+        await Promise.all(
+          Array.from({ length: MAX_UNREAD_IDS + EXTRA_UNREAD_IDS }).map((_, index) =>
+            ctx.db.insert("notifications", {
+              userId,
+              type: "test",
+              title: `Unread ${index}`,
+              message: "Unread notification",
+              isRead: false,
+            }),
+          ),
+        );
+      });
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const unreadIds = await asUser.query(api.notifications.getUnreadIds, {});
+
+      expect(unreadIds).toHaveLength(MAX_UNREAD_IDS);
+    });
+  });
+
   describe("markAsRead", () => {
     it("should mark notification as read", async () => {
       const t = convexTest(schema, modules);

@@ -130,6 +130,31 @@ export const getUnreadCount = authenticatedQuery({
   },
 });
 
+/** Get the unread inbox notification ids for the current user, capped to the badge limit. */
+export const getUnreadIds = authenticatedQuery({
+  args: {},
+  returns: v.array(v.id("notifications")),
+  handler: async (ctx) => {
+    const MAX_UNREAD_IDS = 100;
+    const now = Date.now();
+
+    const unreadNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_read", (q) =>
+        q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
+      )
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("isArchived"), true),
+          q.or(q.eq(q.field("snoozedUntil"), undefined), q.lt(q.field("snoozedUntil"), now)),
+        ),
+      )
+      .take(MAX_UNREAD_IDS);
+
+    return unreadNotifications.map((notification) => notification._id);
+  },
+});
+
 /** Mark a single notification as read. Only the notification owner can perform this action. */
 export const markAsRead = authenticatedMutation({
   args: { id: v.id("notifications") },

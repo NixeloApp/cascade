@@ -40,6 +40,7 @@ import { useOfflineNotificationMarkAsRead } from "@/hooks/useOfflineNotification
 import { useQueuedOfflineNotificationReadIds } from "@/hooks/useOfflineOptimisticState";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Bell, ExternalLink, Inbox } from "@/lib/icons";
+import { getOptimisticUnreadCount } from "@/lib/notifications";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
@@ -115,16 +116,6 @@ export function NotificationCenter() {
   const notifications = ((notificationsRaw ?? []) as NotificationWithActor[]).map((notification) =>
     queuedReadIds.has(notification._id) ? { ...notification, isRead: true } : notification,
   );
-  const queuedInboxUnreadReadCount = ((notificationsRaw ?? []) as NotificationWithActor[]).reduce(
-    (count, notification) => {
-      if (notification.isRead || !queuedReadIds.has(notification._id)) {
-        return count;
-      }
-
-      return count + 1;
-    },
-    0,
-  );
 
   // Group notifications by date
   const groupedNotifications = groupNotificationsByDate(notifications);
@@ -132,8 +123,12 @@ export function NotificationCenter() {
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
-  const optimisticUnreadCount =
-    unreadCount == null ? unreadCount : Math.max(0, unreadCount - queuedInboxUnreadReadCount);
+  const unreadNotificationIds = useAuthenticatedQuery(api.notifications.getUnreadIds, {});
+  const optimisticUnreadCount = getOptimisticUnreadCount({
+    unreadCount,
+    unreadNotificationIds,
+    queuedReadIds,
+  });
   const { markAsRead: offlineMarkAsRead } = useOfflineNotificationMarkAsRead();
   const { mutate: markAllAsRead } = useAuthenticatedMutation(api.notifications.markAllAsRead);
   const { mutate: archiveNotification } = useAuthenticatedMutation(

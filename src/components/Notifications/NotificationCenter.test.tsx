@@ -54,6 +54,21 @@ describe("NotificationCenter", () => {
   let _queryCallCount = 0;
   let mutationCallCount = 0;
 
+  function mockUnreadQueries(args: {
+    unreadCount: number | undefined;
+    unreadIds?: Id<"notifications">[];
+  }) {
+    let authenticatedQueryCallCount = 0;
+    vi.mocked(useQuery).mockImplementation(() => {
+      authenticatedQueryCallCount += 1;
+      if (authenticatedQueryCallCount % 2 === 1) {
+        return args.unreadCount;
+      }
+
+      return args.unreadIds ?? [];
+    });
+  }
+
   beforeEach(async () => {
     _queryCallCount = 0;
     mutationCallCount = 0;
@@ -83,7 +98,7 @@ describe("NotificationCenter", () => {
 
     // Default mock for useQuery
     vi.mocked(useConvexAuth).mockReturnValue({ isAuthenticated: true, isLoading: false });
-    vi.mocked(useQuery).mockReturnValue(undefined);
+    mockUnreadQueries({ unreadCount: 0, unreadIds: [] });
     // Default mock for usePaginatedQuery
     vi.mocked(usePaginatedQuery).mockReturnValue({
       results: [],
@@ -98,7 +113,7 @@ describe("NotificationCenter", () => {
   });
 
   it("should render notification bell button", () => {
-    vi.mocked(useQuery).mockReturnValue(undefined);
+    mockUnreadQueries({ unreadCount: undefined, unreadIds: [] });
 
     render(<NotificationCenter />);
 
@@ -114,7 +129,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(5); // Unread count
+    mockUnreadQueries({ unreadCount: 5, unreadIds: [] });
 
     render(<NotificationCenter />);
 
@@ -130,7 +145,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(0); // Unread count
+    mockUnreadQueries({ unreadCount: 0, unreadIds: [] });
 
     render(<NotificationCenter />);
 
@@ -148,7 +163,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(150); // Unread count
+    mockUnreadQueries({ unreadCount: 150, unreadIds: [] });
 
     render(<NotificationCenter />);
 
@@ -163,7 +178,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(0); // Unread count
+    mockUnreadQueries({ unreadCount: 0, unreadIds: [] });
 
     render(<NotificationCenter />);
 
@@ -181,7 +196,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(0); // Unread count
+    mockUnreadQueries({ unreadCount: 0, unreadIds: [] });
 
     render(<NotificationCenter />);
 
@@ -218,7 +233,10 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(1); // Unread count
+    mockUnreadQueries({
+      unreadCount: 1,
+      unreadIds: [mockNotifications[0]._id as Id<"notifications">],
+    });
 
     render(<NotificationCenter />);
 
@@ -247,7 +265,10 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(2);
+    mockUnreadQueries({
+      unreadCount: 2,
+      unreadIds: ["1" as Id<"notifications">, "2" as Id<"notifications">],
+    });
     mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set(["1" as Id<"notifications">]));
 
     render(<NotificationCenter />);
@@ -272,7 +293,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(1);
+    mockUnreadQueries({ unreadCount: 1, unreadIds: ["1" as Id<"notifications">] });
     mockUseQueuedOfflineNotificationReadIds.mockReturnValue(
       new Set(["archived-1" as Id<"notifications">]),
     );
@@ -302,7 +323,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(1); // Unread count
+    mockUnreadQueries({ unreadCount: 1, unreadIds: ["1" as Id<"notifications">] });
 
     render(<NotificationCenter />);
 
@@ -350,7 +371,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(1); // Unread count
+    mockUnreadQueries({ unreadCount: 1, unreadIds: ["notif-1" as Id<"notifications">] });
     mockMarkAsRead.mockResolvedValue(undefined);
 
     render(<NotificationCenter />);
@@ -385,7 +406,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(1); // Unread count
+    mockUnreadQueries({ unreadCount: 1, unreadIds: ["1" as Id<"notifications">] });
     mockMarkAllAsRead.mockResolvedValue(undefined);
 
     render(<NotificationCenter />);
@@ -420,7 +441,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(0); // Unread count
+    mockUnreadQueries({ unreadCount: 0, unreadIds: [] });
     mockRemove.mockResolvedValue(undefined);
 
     render(<NotificationCenter />);
@@ -457,7 +478,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(1);
+    mockUnreadQueries({ unreadCount: 1, unreadIds: ["notif-3" as Id<"notifications">] });
     mockSnooze.mockResolvedValue(undefined);
 
     render(<NotificationCenter />);
@@ -512,7 +533,14 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(3); // Unread count
+    mockUnreadQueries({
+      unreadCount: 3,
+      unreadIds: [
+        "1" as Id<"notifications">,
+        "2" as Id<"notifications">,
+        "3" as Id<"notifications">,
+      ],
+    });
 
     render(<NotificationCenter />);
 
@@ -555,7 +583,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(2); // Unread count
+    mockUnreadQueries({ unreadCount: 2, unreadIds: ["1" as Id<"notifications">] });
 
     render(<NotificationCenter />);
 
@@ -588,7 +616,7 @@ describe("NotificationCenter", () => {
       isLoading: false,
       loadMore: vi.fn(),
     });
-    vi.mocked(useQuery).mockReturnValue(0); // Unread count
+    mockUnreadQueries({ unreadCount: 0, unreadIds: [] });
 
     render(<NotificationCenter />);
 
@@ -604,5 +632,35 @@ describe("NotificationCenter", () => {
     await waitFor(() => {
       expect(screen.queryByRole("heading", { name: "Notifications" })).not.toBeInTheDocument();
     });
+  });
+
+  it("subtracts queued reads that target unread inbox items outside the current page", () => {
+    vi.mocked(usePaginatedQuery).mockReturnValue({
+      results: [
+        {
+          _id: "1",
+          type: "issue_assigned",
+          title: "Visible unread",
+          message: "Visible",
+          isRead: false,
+          _creationTime: Date.now(),
+        },
+      ],
+      status: "Exhausted",
+      isLoading: false,
+      loadMore: vi.fn(),
+    });
+    mockUnreadQueries({
+      unreadCount: 2,
+      unreadIds: ["1" as Id<"notifications">, "off-page-2" as Id<"notifications">],
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(
+      new Set(["off-page-2" as Id<"notifications">]),
+    );
+
+    render(<NotificationCenter />);
+
+    expect(screen.getByRole("button", { name: "Notifications, 1 unread" })).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
   });
 });

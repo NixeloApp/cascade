@@ -260,6 +260,21 @@ const archivedNotification: MockNotification = {
   isArchived: true,
 };
 
+function mockUnreadQueries(args: {
+  unreadCount: number | undefined;
+  unreadIds?: Id<"notifications">[];
+}) {
+  let authenticatedQueryCallCount = 0;
+  mockUseAuthenticatedQuery.mockImplementation(() => {
+    authenticatedQueryCallCount += 1;
+    if (authenticatedQueryCallCount % 2 === 1) {
+      return args.unreadCount;
+    }
+
+    return args.unreadIds ?? [];
+  });
+}
+
 function mockNotificationQueries({
   archived = [archivedNotification],
   archivedStatus = "Exhausted",
@@ -339,7 +354,7 @@ describe("NotificationsPage", () => {
       isAuthLoading: false,
     }));
     mockNotificationQueries();
-    mockUseAuthenticatedQuery.mockReturnValue(1);
+    mockUnreadQueries({ unreadCount: 1, unreadIds: [inboxNotification._id] });
     mockUseAuthReady.mockReturnValue({
       isAuthenticated: true,
       isAuthLoading: false,
@@ -361,7 +376,10 @@ describe("NotificationsPage", () => {
   });
 
   it("applies queued offline reads to the unread summary immediately", () => {
-    mockUseAuthenticatedQuery.mockReturnValue(2);
+    mockUnreadQueries({
+      unreadCount: 2,
+      unreadIds: [inboxNotification._id, "notif-queued" as Id<"notifications">],
+    });
     mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([inboxNotification._id]));
 
     render(<NotificationsPage />);
@@ -433,7 +451,7 @@ describe("NotificationsPage", () => {
       inbox: [],
       archived: [archivedNotification],
     });
-    mockUseAuthenticatedQuery.mockReturnValue(0);
+    mockUnreadQueries({ unreadCount: 0, unreadIds: [] });
 
     render(<NotificationsPage />);
 
@@ -479,7 +497,7 @@ describe("NotificationsPage", () => {
   });
 
   it("caps the unread badge at 99+ while preserving the header count", () => {
-    mockUseAuthenticatedQuery.mockReturnValue(100);
+    mockUnreadQueries({ unreadCount: 100, unreadIds: [inboxNotification._id] });
 
     render(<NotificationsPage />);
 
@@ -489,7 +507,7 @@ describe("NotificationsPage", () => {
 
   it("forces the mark-all-read loading state when the E2E override is enabled", () => {
     window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ = true;
-    mockUseAuthenticatedQuery.mockReturnValue(3);
+    mockUnreadQueries({ unreadCount: 3, unreadIds: [inboxNotification._id] });
 
     render(<NotificationsPage />);
 
@@ -498,5 +516,29 @@ describe("NotificationsPage", () => {
       "true",
     );
     expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON)).toBeDisabled();
+  });
+  it("does not subtract archived queued reads from the inbox badge", () => {
+    mockUnreadQueries({ unreadCount: 1, unreadIds: [inboxNotification._id] });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([archivedNotification._id]));
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("1 unread notification")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("1");
+  });
+
+  it("subtracts queued reads for unread inbox items outside the current filter or page", () => {
+    mockUnreadQueries({
+      unreadCount: 2,
+      unreadIds: [inboxNotification._id, "notif-off-page" as Id<"notifications">],
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(
+      new Set(["notif-off-page" as Id<"notifications">]),
+    );
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("1 unread notification")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("1");
   });
 });

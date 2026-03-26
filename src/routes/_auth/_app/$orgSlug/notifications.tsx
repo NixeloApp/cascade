@@ -41,6 +41,7 @@ import { useOfflineNotificationMarkAsRead } from "@/hooks/useOfflineNotification
 import { useQueuedOfflineNotificationReadIds } from "@/hooks/useOfflineOptimisticState";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Archive, Bell, CheckCheck, Inbox } from "@/lib/icons";
+import { getOptimisticUnreadCount } from "@/lib/notifications";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -237,8 +238,12 @@ export function NotificationsPage() {
 
   // Unread count
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
-  const optimisticUnreadCount =
-    unreadCount == null ? unreadCount : Math.max(0, unreadCount - queuedReadIds.size);
+  const unreadNotificationIds = useAuthenticatedQuery(api.notifications.getUnreadIds, {});
+  const optimisticUnreadCount = getOptimisticUnreadCount({
+    unreadCount,
+    unreadNotificationIds,
+    queuedReadIds,
+  });
 
   // Mutations
   const { markAsRead: offlineMarkAsRead } = useOfflineNotificationMarkAsRead();
