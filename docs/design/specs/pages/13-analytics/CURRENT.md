@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects/:key/analytics`
 > **Status**: REVIEWED, with routine follow-up polish only
-> **Last Updated**: 2026-03-25
+> **Last Updated**: 2026-03-26
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -128,7 +128,7 @@ thin.
 | Project context | Strong. The route now feels tied to the active project instead of being a generic analytics demo. |
 | Section rhythm | Good. Insight cards, metrics, charts, and activity now read as one workspace. |
 | Empty-state honesty | Better than the earlier route because missing data produces explicit sections instead of silently dropped panels. |
-| Screenshot trust | High. The reviewed matrix now covers canonical, sparse-data, and no-activity variants across the full viewport set. |
+| Screenshot trust | High. The reviewed matrix now covers canonical, sparse-data, and no-activity variants across the full viewport set, and the canonical captures now start at the actual route header instead of a mid-page chart scroll position. |
 
 ---
 

@@ -48,4 +48,28 @@ describe("OverviewBand", () => {
     expect(screen.getByText("Logged")).toBeInTheDocument();
     expect(screen.getByText("3h")).toBeInTheDocument();
   });
+
+  it("supports a compact density for tighter route summaries", () => {
+    render(
+      <OverviewBand
+        eyebrow="Organization footprint"
+        title="Structure at a glance"
+        description="This organization currently has 1 workspace, 1 team, and 2 projects."
+        density="compact"
+        metrics={[
+          { label: "Workspaces", value: 1 },
+          { label: "Teams", value: 1 },
+          { label: "Projects", value: 2 },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Organization footprint")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Structure at a glance" })).toBeInTheDocument();
+    expect(
+      screen.getByText("This organization currently has 1 workspace, 1 team, and 2 projects."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Workspaces")).toBeInTheDocument();
+    expect(screen.getByText("Projects")).toBeInTheDocument();
+  });
 });

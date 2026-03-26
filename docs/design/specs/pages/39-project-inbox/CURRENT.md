@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects/:key/inbox`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-25
+> **Last Updated**: 2026-03-26
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -97,7 +97,7 @@ No known screenshot gaps for this route on the reviewed matrix.
 - Thin route: resolves project by key, passes `projectId` to `InboxList`.
 - Loading and error states handled at route level.
 
-### 2. InboxList component (1460 lines)
+### 2. InboxList component (1515 lines)
 
 The entire inbox UI lives in a single component with:
 
@@ -176,6 +176,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 | Tab separation | Open vs closed is clean. No mixing of actionable and resolved items. |
 | Submitter context | Triage notes show who submitted and how (API, email). |
 | Recovery UX | Empty states now point directly to the next useful action instead of dead-ending. |
+| Mobile readability | Row actions now stack beneath the content on small screens, so titles, provenance, and badges keep usable width instead of collapsing into a narrow column. |
 
 ---
 
@@ -183,7 +184,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | `InboxList` now covers more of the real triage surface, but it is still a very large single component. | maintainability | MEDIUM |
+| 1 | `InboxList` now covers more of the real triage surface, but it is still a 1515-line single component. | maintainability | MEDIUM |
 
 ---
 
@@ -192,7 +193,7 @@ duplicate -> Copy (secondary)          "Duplicate"
 | File | Lines | Purpose |
 |------|-------|---------|
 | `src/routes/.../inbox.tsx` | 29 | Route: project resolution |
-| `src/components/InboxList.tsx` | 1460 | Full inbox UI: tabs, bulk actions, rows, dialogs, duplicate search, empty-state recovery |
+| `src/components/InboxList.tsx` | 1515 | Full inbox UI: tabs, bulk actions, rows, dialogs, duplicate search, empty-state recovery |
 | `e2e/pages/inbox.page.ts` | 128 | Page object for inbox route screenshot and E2E interactions |
 | `convex/inbox.ts` | -- | Backend: list, accept, decline, snooze, duplicate, reopen, remove, counts |
 | `convex/intake.ts` | -- | External submission: createExternal, token management |
@@ -215,5 +216,6 @@ duplicate -> Copy (secondary)          "Duplicate"
 
 The project inbox is now a fuller triage surface with reviewed closed, bulk-selection,
 snooze-menu, decline-dialog, duplicate-search, and both empty-tab states across
-desktop/tablet/mobile. The main engineering debt is that the route still lives in a
-very large single component.
+desktop/tablet/mobile. The main product-level visual bug on the route was the mobile
+row collapse; that is now fixed. The main engineering debt is that the route still
+lives in a 1515-line single component.

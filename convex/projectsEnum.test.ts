@@ -60,6 +60,7 @@ describe("Global User Enumeration", () => {
         createdBy: userA,
         updatedAt: Date.now(),
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });

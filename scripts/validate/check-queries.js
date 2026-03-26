@@ -7,7 +7,9 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import ts from "typescript";
 import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
+import { createValidatorResult } from "./result-utils.js";
 import { ROOT, relPath, walkDir } from "./utils.js";
 
 const POST_FETCH_FILTER_BASELINE_PATH = path.join(
@@ -32,6 +34,51 @@ const QUERY_HOOK_PATTERN = /use(?:AuthenticatedQuery|Query|PaginatedQuery|Suspen
 
 function lineFromIndex(source, index) {
   return source.slice(0, index).split("\n").length;
+}
+
+function hasNearbyIgnoreComment(lines, lineIndex, ruleName) {
+  const line = lines[lineIndex] ?? "";
+  if (new RegExp(`@convex-validation-ignore\\s+${ruleName}\\b`).test(line)) {
+    return true;
+  }
+
+  const previousLine = lines[lineIndex - 1] ?? "";
+  if (new RegExp(`@convex-validation-ignore\\s+${ruleName}\\b`).test(previousLine)) {
+    return true;
+  }
+
+  const secondPreviousLine = lines[lineIndex - 2] ?? "";
+  return new RegExp(`@convex-validation-ignore\\s+${ruleName}\\b`).test(secondPreviousLine);
+}
+
+function collectUnboundedCollectIssues(content, lines) {
+  const sourceFile = ts.createSourceFile("validator.ts", content, ts.ScriptTarget.Latest, true);
+  const issues = [];
+
+  function visit(node) {
+    if (
+      ts.isCallExpression(node) &&
+      node.arguments.length === 0 &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === "collect"
+    ) {
+      const line = lineFromIndex(content, node.getStart(sourceFile));
+      if (!hasNearbyIgnoreComment(lines, line - 1, "UNBOUNDED_COLLECT")) {
+        issues.push({
+          type: "UNBOUNDED_COLLECT",
+          line,
+          code: node.getText(sourceFile),
+          message:
+            "Unbounded .collect() - replace with a bounded helper or add @convex-validation-ignore UNBOUNDED_COLLECT with a concrete reason",
+        });
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return issues;
 }
 
 function getQueryHelperNames(content) {
@@ -339,21 +386,6 @@ export function run() {
       }
 
       // Unbounded .collect()
-      if (/\.collect\s*\(\s*\)/.test(line)) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith("//") || trimmed.startsWith("*")) continue;
-        const contextLines = lines.slice(Math.max(0, i - 5), i + 1).join("\n");
-        const hasBound = /\.take\s*\(/.test(contextLines) || /\.first\s*\(/.test(contextLines);
-        if (!hasBound) {
-          issues.push({
-            type: "UNBOUNDED_COLLECT",
-            line: lineNum,
-            code: trimmed,
-            message: "Unbounded .collect() - add .take(BOUNDED_LIST_LIMIT) or use .first()",
-          });
-        }
-      }
-
       // N+1 queries
       if (inLoopContext) {
         const trimmedLine = line.trim();
@@ -536,6 +568,7 @@ export function run() {
       }
     }
 
+    issues.push(...collectUnboundedCollectIssues(content, lines));
     return issues;
   }
 
@@ -694,13 +727,17 @@ export function run() {
   const combinedBaselineDetail =
     baselineSummaryParts.length > 0 ? ` (${baselineSummaryParts.join(", ")})` : "";
 
-  return {
-    passed: allIssues.length === 0,
+  return createValidatorResult({
     errors: allIssues.length,
     detail:
       allIssues.length > 0
         ? `${allIssues.length} query issue(s)`
         : `no blocking issues${combinedBaselineDetail}`,
     messages,
-  };
+  });
 }
+
+export const _private = {
+  collectUnboundedCollectIssues,
+  hasNearbyIgnoreComment,
+};

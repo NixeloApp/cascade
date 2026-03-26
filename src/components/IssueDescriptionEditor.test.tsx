@@ -6,7 +6,6 @@ import {
   getInitialValue,
   getIssueDescriptionPlugins,
   isEmptyValue,
-  plainTextToValue,
   serializeValue,
 } from "@/lib/plate/editor";
 import { render, screen } from "@/test/custom-render";
@@ -48,7 +47,6 @@ vi.mock("@/lib/plate/editor", () => ({
   getInitialValue: vi.fn(),
   getIssueDescriptionPlugins: vi.fn(),
   isEmptyValue: vi.fn(),
-  plainTextToValue: vi.fn(),
   serializeValue: vi.fn(),
 }));
 
@@ -61,11 +59,9 @@ const mockUsePlateEditor = vi.mocked(usePlateEditor);
 const mockGetInitialValue = vi.mocked(getInitialValue);
 const mockGetIssueDescriptionPlugins = vi.mocked(getIssueDescriptionPlugins);
 const mockIsEmptyValue = vi.mocked(isEmptyValue);
-const mockPlainTextToValue = vi.mocked(plainTextToValue);
 const mockSerializeValue = vi.mocked(serializeValue);
 
 const initialValue: Value = [{ type: "p", children: [{ text: "" }] }];
-const plainTextValue: Value = [{ type: "p", children: [{ text: "plain text value" }] }];
 const parsedJsonValue: Value = [{ type: "p", children: [{ text: "json value" }] }];
 const changedValue: Value = [{ type: "p", children: [{ text: "changed value" }] }];
 const editorInstance = { id: "mock-editor" } as NonNullable<ReturnType<typeof usePlateEditor>>;
@@ -89,7 +85,6 @@ describe("IssueDescriptionEditor", () => {
     mockGetInitialValue.mockReturnValue(initialValue);
     mockGetIssueDescriptionPlugins.mockReturnValue(plugins);
     mockIsEmptyValue.mockReturnValue(false);
-    mockPlainTextToValue.mockReturnValue(plainTextValue);
     mockSerializeValue.mockReturnValue("serialized-value");
     mockUsePlateEditor.mockReturnValue(editorInstance as never);
     mockPlate.mockImplementation(({ children, onChange, readOnly }) => {
@@ -125,15 +120,15 @@ describe("IssueDescriptionEditor", () => {
     expect(content).toHaveAttribute("data-variant", "issueEditor");
   });
 
-  it("converts plain text input and serializes non-empty changes", () => {
+  it("falls back to the initial value for invalid stored input and serializes non-empty changes", () => {
     const onChange = vi.fn();
 
     render(<IssueDescriptionEditor value="Legacy plain text" onChange={onChange} />);
 
-    expect(mockPlainTextToValue).toHaveBeenCalledWith("Legacy plain text");
+    expect(mockGetInitialValue).toHaveBeenCalled();
     expect(mockUsePlateEditor).toHaveBeenCalledWith({
       plugins,
-      value: plainTextValue,
+      value: initialValue,
     });
 
     latestPlateProps?.onChange?.({ editor: editorInstance, value: changedValue });
@@ -177,7 +172,6 @@ describe("IssueDescriptionReadOnly", () => {
 
     mockGetInitialValue.mockReturnValue(initialValue);
     mockGetIssueDescriptionPlugins.mockReturnValue(plugins);
-    mockPlainTextToValue.mockReturnValue(plainTextValue);
     mockUsePlateEditor.mockReturnValue(editorInstance as never);
     mockPlate.mockImplementation(({ children, onChange, readOnly }) => {
       latestPlateProps = {
@@ -197,21 +191,20 @@ describe("IssueDescriptionReadOnly", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("renders the read-only view for non-empty values", () => {
+  it("renders the read-only view for non-empty valid JSON values", () => {
     mockIsEmptyValue.mockReturnValue(false);
 
     render(
       <IssueDescriptionReadOnly
-        value="Stored plain text"
+        value={JSON.stringify(parsedJsonValue)}
         className="read-only-shell"
         testId="issue-readonly"
       />,
     );
 
-    expect(mockPlainTextToValue).toHaveBeenCalledWith("Stored plain text");
     expect(mockUsePlateEditor).toHaveBeenCalledWith({
       plugins,
-      value: plainTextValue,
+      value: parsedJsonValue,
     });
     expect(screen.getByTestId("issue-readonly")).toHaveAttribute("data-read-only", "true");
     expect(screen.getByTestId("issue-readonly")).toHaveAttribute("data-variant", "issueReadOnly");
@@ -219,5 +212,16 @@ describe("IssueDescriptionReadOnly", () => {
       "data-class-name",
       "read-only-shell",
     );
+  });
+
+  it("returns null for invalid stored input", () => {
+    mockIsEmptyValue.mockReturnValue(true);
+
+    const { container } = render(
+      <IssueDescriptionReadOnly value="Stored plain text" testId="issue-readonly" />,
+    );
+
+    expect(mockGetInitialValue).toHaveBeenCalled();
+    expect(container).toBeEmptyDOMElement();
   });
 });

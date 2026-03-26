@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
+import { normalizeIssueDescriptionForStorage } from "../lib/richText";
 import { DAY, WEEK } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
@@ -41,7 +42,9 @@ describe("Issue Mutations", () => {
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Full Featured Issue");
-      expect(issue?.description).toBe("A detailed description");
+      expect(issue?.description).toBe(
+        normalizeIssueDescriptionForStorage("A detailed description"),
+      );
       expect(issue?.type).toBe("story");
       expect(issue?.priority).toBe("high");
       expect(issue?.estimatedHours).toBe(8);
@@ -331,7 +334,7 @@ describe("Issue Mutations", () => {
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Updated Title");
-      expect(issue?.description).toBe("Updated description");
+      expect(issue?.description).toBe(normalizeIssueDescriptionForStorage("Updated description"));
       expect(issue?.priority).toBe("high");
       expect(issue?.estimatedHours).toBe(4);
       expect(issue?.storyPoints).toBe(3);

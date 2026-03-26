@@ -1,15 +1,57 @@
 import { describe, expect, it } from "vitest";
-import { getPlainTextFromDescription } from "./richText";
+import { getPlainTextFromDescription, normalizeIssueDescriptionForStorage } from "./richText";
 
 describe("richText", () => {
+  describe("normalizeIssueDescriptionForStorage", () => {
+    it("returns undefined for missing descriptions", () => {
+      expect(normalizeIssueDescriptionForStorage(undefined)).toBeUndefined();
+    });
+
+    it("collapses null and whitespace-only descriptions to empty strings", () => {
+      expect(normalizeIssueDescriptionForStorage(null)).toBe("");
+      expect(normalizeIssueDescriptionForStorage("   ")).toBe("");
+    });
+
+    it("preserves valid rich-text arrays", () => {
+      const description = JSON.stringify([{ type: "p", children: [{ text: "Hello" }] }]);
+      expect(normalizeIssueDescriptionForStorage(description)).toBe(description);
+    });
+
+    it("wraps a single rich-text node into an array", () => {
+      expect(
+        normalizeIssueDescriptionForStorage(
+          JSON.stringify({ type: "p", children: [{ text: "Hello" }] }),
+        ),
+      ).toBe(JSON.stringify([{ type: "p", children: [{ text: "Hello" }] }]));
+    });
+
+    it("converts raw plain text into paragraph JSON", () => {
+      expect(normalizeIssueDescriptionForStorage("Hello world")).toBe(
+        JSON.stringify([{ type: "p", children: [{ text: "Hello world" }] }]),
+      );
+    });
+
+    it("converts JSON string payloads into paragraph JSON", () => {
+      expect(normalizeIssueDescriptionForStorage('"Hello world"')).toBe(
+        JSON.stringify([{ type: "p", children: [{ text: "Hello world" }] }]),
+      );
+    });
+
+    it("treats malformed JSON objects as raw text", () => {
+      expect(normalizeIssueDescriptionForStorage('{"oops":true}')).toBe(
+        JSON.stringify([{ type: "p", children: [{ text: '{"oops":true}' }] }]),
+      );
+    });
+  });
+
   describe("getPlainTextFromDescription", () => {
     it("returns empty string when description is missing", () => {
       expect(getPlainTextFromDescription(undefined)).toBe("");
       expect(getPlainTextFromDescription("")).toBe("");
     });
 
-    it("returns plain-text legacy descriptions unchanged", () => {
-      const description = "Legacy description text";
+    it("returns plain-text descriptions unchanged", () => {
+      const description = "Description text";
       expect(getPlainTextFromDescription(description)).toBe(description);
     });
 

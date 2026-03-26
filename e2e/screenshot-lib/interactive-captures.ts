@@ -34,6 +34,7 @@ import {
   captureCurrentView,
   captureState,
   runCaptureStep,
+  runRequiredCaptureStep,
   shouldCapture,
   shouldCaptureAny,
 } from "./capture";
@@ -206,7 +207,7 @@ export async function screenshotOrgCalendarStates(
   const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
 
   if (shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName])) {
-    await runCaptureStep("org calendar filtered scope states", async () => {
+    await runRequiredCaptureStep("org calendar filtered scope states", async () => {
       await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
         waitUntil: "domcontentloaded",
         timeout: 15000,
@@ -234,7 +235,7 @@ export async function screenshotOrgCalendarStates(
   }
 
   if (shouldCapture(prefix, loadingStateName)) {
-    await runCaptureStep("org calendar loading state", async () => {
+    await runRequiredCaptureStep("org calendar loading state", async () => {
       const loadingPage = await page.context().newPage();
 
       try {
@@ -452,7 +453,7 @@ export async function screenshotInvoicesStates(
   if (shouldCapture(prefix, captureNames.canonical)) {
     await runCaptureStep("invoices canonical", async () => {
       const invoicesPage = await openInvoicesPage();
-      await invoicesPage.expectTableVisible();
+      await invoicesPage.expectPopulatedStateVisible();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureNames.canonical);
     });
@@ -689,7 +690,7 @@ export async function screenshotRoadmapStates(
   };
 
   if (shouldCapture(prefix, captureNames.canonical)) {
-    await runCaptureStep("roadmap canonical", async () => {
+    await runRequiredCaptureStep("roadmap canonical", async () => {
       await withRoadmapPage({
         mode: "default",
         run: async (capturePage, roadmapPage) => {
@@ -703,7 +704,7 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.timelineSelector)) {
-    await runCaptureStep("roadmap timeline selector", async () => {
+    await runRequiredCaptureStep("roadmap timeline selector", async () => {
       await withRoadmapPage({
         mode: "default",
         run: async (capturePage, roadmapPage) => {
@@ -718,7 +719,7 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.grouped)) {
-    await runCaptureStep("roadmap grouped", async () => {
+    await runRequiredCaptureStep("roadmap grouped", async () => {
       await withRoadmapPage({
         bootState: "group-status",
         mode: "default",
@@ -732,11 +733,11 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.detail)) {
-    await runCaptureStep("roadmap detail", async () => {
+    await runRequiredCaptureStep("roadmap detail", async () => {
       await withRoadmapPage({
+        bootState: "detail",
         mode: "default",
         run: async (capturePage, roadmapPage) => {
-          await roadmapPage.openIssueDetail("DEMO-2");
           await roadmapPage.expectDetailState();
           await waitForScreenshotReady(capturePage);
           await captureCurrentView(capturePage, prefix, captureNames.detail);
@@ -746,7 +747,7 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.empty)) {
-    await runCaptureStep("roadmap empty", async () => {
+    await runRequiredCaptureStep("roadmap empty", async () => {
       await withRoadmapPage({
         mode: "empty",
         run: async (capturePage, roadmapPage) => {
@@ -759,7 +760,7 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.milestone)) {
-    await runCaptureStep("roadmap milestone", async () => {
+    await runRequiredCaptureStep("roadmap milestone", async () => {
       await withRoadmapPage({
         mode: "milestone",
         run: async (capturePage, roadmapPage) => {
@@ -864,6 +865,58 @@ export async function screenshotBoardModals(
       await dismissIfOpen(page, issueDetailDialog);
     });
   }
+}
+
+export async function screenshotBoardLoadingState(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const loadingStateName = `project-${normalizedProjectKey}-board-loading`;
+
+  if (!shouldCapture(prefix, loadingStateName)) {
+    return;
+  }
+
+  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+
+  await runRequiredCaptureStep("board loading state", async () => {
+    const loadingPage = await page.context().newPage();
+    const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
+
+    try {
+      await loadingPage.addInitScript(() => {
+        window.__NIXELO_E2E_BOARD_LOADING__ = true;
+      });
+
+      await loadingPage.goto(`${BASE_URL}${boardUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await loadingPage.waitForURL(
+        (currentUrl) => /\/[^/]+\/projects\/[^/]+\/board$/.test(new URL(currentUrl).pathname),
+        {
+          timeout: 15000,
+        },
+      );
+      await loadingProjectsPage.expectBoardLoadingStateVisible(15000);
+      await expect
+        .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+          timeout: 12000,
+        })
+        .toBeGreaterThanOrEqual(8);
+      await waitForAnimation(loadingPage);
+      await captureCurrentView(loadingPage, prefix, loadingStateName, {
+        skipReadyCheck: true,
+      });
+    } finally {
+      if (!loadingPage.isClosed()) {
+        await loadingPage.close();
+      }
+    }
+  });
 }
 
 export async function screenshotMeetingsStates(
@@ -1193,25 +1246,31 @@ export async function screenshotMyIssuesStates(
   }
 
   const myIssuesUrl = ROUTES.myIssues.build(orgSlug);
-  const myIssuesPage = new MyIssuesPage(page, orgSlug);
-
-  const openMyIssuesForCapture = async () => {
-    await page.goto(`${BASE_URL}${myIssuesUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, myIssuesUrl, "my-issues", prefix);
-    await waitForScreenshotReady(page);
-    await myIssuesPage.waitUntilReady();
-  };
 
   if (shouldCapture(prefix, filterActiveName)) {
     await runCaptureStep("my issues filter active", async () => {
-      await openMyIssuesForCapture();
-      await myIssuesPage.filterByPriority("High");
-      await myIssuesPage.expectFilterSummaryVisible();
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, filterActiveName);
+      const filterActivePage = await page.context().newPage();
+
+      try {
+        await filterActivePage.addInitScript(() => {
+          window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filter-active");
+        });
+
+        const filteredMyIssuesPage = new MyIssuesPage(filterActivePage, orgSlug);
+        await filterActivePage.goto(`${BASE_URL}${myIssuesUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(filterActivePage, myIssuesUrl, "my-issues", prefix);
+        await waitForScreenshotReady(filterActivePage);
+        await filteredMyIssuesPage.waitUntilReady();
+        await filteredMyIssuesPage.expectFilterSummaryVisible();
+        await captureCurrentView(filterActivePage, prefix, filterActiveName);
+      } finally {
+        if (!filterActivePage.isClosed()) {
+          await filterActivePage.close();
+        }
+      }
     });
   }
 

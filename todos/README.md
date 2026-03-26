@@ -1,12 +1,12 @@
 # Nixelo Todo Index
 
-> **Last Updated:** 2026-03-25
+> **Last Updated:** 2026-03-26
 
 ## Infrastructure
 
-- [ ] [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) — Reduce raw Tailwind debt and extract primitives only where repetition is real.
-- [ ] [validator-strengthening.md](./validator-strengthening.md) — Add the remaining highest-value validators now that severity/reporting conventions are shared and documented.
-- [ ] [e2e-overhaul.md](./e2e-overhaul.md) — Decide whether screenshot capture should split across CI workers and keep the harness honest.
+- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — P0: collapse screenshot capture onto reusable E2E/page-object state setup, remove screenshot-only prod hooks where possible, and keep screenshot capture local/manual while `static` handles artifact integrity in CI.
+- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P0: normalize confusing route/API naming, separate public token flows from admin collection pages, remove hidden `-*.test.tsx` route-test conventions, and make file-routed structure readable without repo folklore.
+- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — P1: shrink oversized shared primitive variant surfaces, remove shared-recipe bloat from `Card`/`Button`/`Typography`, and burn down the remaining raw Tailwind ratchet instead of hiding styling debt in baseline files.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Fix screenshot-visible regressions and tighten cross-surface visual consistency with real before/after review.
 
 ## Features

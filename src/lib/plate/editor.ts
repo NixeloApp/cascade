@@ -70,6 +70,34 @@ export function deserializeValue(json: string | null | undefined): Value {
   }
 }
 
+/**
+ * Normalize a serialized editor value for controlled form state.
+ *
+ * Plain strings are converted into Plate JSON so editors can stay strict about
+ * the stored shape they accept.
+ */
+export function normalizeSerializedEditorValue(value: string | null | undefined): string {
+  if (!value || value.trim() === "") {
+    return "";
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return value;
+    }
+
+    if (typeof parsed === "string") {
+      return serializeValue(plainTextToValue(parsed));
+    }
+  } catch {
+    return serializeValue(plainTextToValue(value));
+  }
+
+  return serializeValue(plainTextToValue(value));
+}
+
 interface ProseMirrorMark {
   type?: string;
   attrs?: Record<string, unknown>;

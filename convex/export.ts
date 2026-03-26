@@ -10,11 +10,11 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { projectEditorMutation, projectQuery } from "./customFunctions";
-import { getNextIssueKey } from "./issues/helpers";
+import { getNextIssueKey, getSearchContent } from "./issues/helpers";
 import { batchFetchSprints, batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, safeCollect } from "./lib/boundedQueries";
 import { validation } from "./lib/errors";
-import { getPlainTextFromDescription } from "./lib/richText";
+import { getPlainTextFromDescription, normalizeIssueDescriptionForStorage } from "./lib/richText";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
 /**
@@ -327,12 +327,15 @@ async function createIssueWithActivity(
   },
   userId: Id<"users">,
 ): Promise<Id<"issues">> {
+  const normalizedDescription = normalizeIssueDescriptionForStorage(issueData.description);
   const issueId = await ctx.db.insert("issues", {
     ...issueData,
+    description: normalizedDescription,
     loggedHours: 0,
     updatedAt: Date.now(),
     linkedDocuments: [],
     attachments: [],
+    searchContent: getSearchContent(issueData.title, normalizedDescription),
   });
 
   await ctx.db.insert("issueActivity", {

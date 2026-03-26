@@ -57,6 +57,7 @@ describe("Relationship Cascade Operations", () => {
         isPublic: false,
         ownerId: userId,
         boardType: "scrum",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });
@@ -156,6 +157,7 @@ describe("Relationship Cascade Operations", () => {
         isPublic: false,
         ownerId: userId,
         boardType: "scrum",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });
@@ -251,6 +253,7 @@ describe("Relationship Cascade Operations", () => {
         isPublic: false,
         ownerId: userId,
         boardType: "scrum",
+        nextIssueNumber: 0,
         workflowStates: [],
         isDeleted: true,
         deletedAt: now,
@@ -353,6 +356,7 @@ describe("Relationship Cascade Operations", () => {
         isPublic: false,
         ownerId: userId,
         boardType: "scrum",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });

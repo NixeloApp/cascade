@@ -53,6 +53,7 @@ describe("Relationship Cascade Operations - Overflow", () => {
         isPublic: false,
         ownerId: userId,
         boardType: "scrum",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });

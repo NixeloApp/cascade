@@ -30,7 +30,7 @@ import {
   waitForLoadingSkeletonsToClear,
   waitForScreenshotReady,
 } from "../utils/wait-helpers";
-import { URL_PATTERNS as URL } from "./routing";
+import { URL_PATTERNS } from "./routing";
 
 /**
  * Placeholder orgSlug used when constructing page objects purely for
@@ -102,14 +102,6 @@ export async function waitForPublicPageReady(page: Page, name: string): Promise<
     return;
   }
 
-  if (name === "invite-invalid") {
-    await page
-      .getByRole("heading", { name: /invalid invitation/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
-  }
-
   if (name === "signup-verify") {
     await page
       .getByRole("heading", { name: /create your account/i })
@@ -153,6 +145,24 @@ export async function waitForPublicPageReady(page: Page, name: string): Promise<
     await page.getByText(/has invited you to join/i).waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
+  }
+
+  if (name.startsWith("invite-")) {
+    const inviteStateHeadings: Partial<Record<string, RegExp>> = {
+      "invite-invalid": /invalid invitation/i,
+      "invite-expired": /invitation expired/i,
+      "invite-revoked": /invitation revoked/i,
+      "invite-accepted": /already accepted/i,
+    };
+    const inviteStateHeading = inviteStateHeadings[name];
+
+    if (inviteStateHeading) {
+      await page
+        .getByRole("heading", { name: inviteStateHeading })
+        .waitFor({ state: "visible", timeout: 12000 });
+      await waitForScreenshotReady(page);
+      return;
+    }
   }
 
   if (name === "unsubscribe") {
@@ -529,6 +539,13 @@ export async function waitForAnalyticsReady(page: Page): Promise<void> {
   await waitForSpinnersHidden(page);
 }
 
+export async function waitForProjectAnalyticsReady(page: Page): Promise<void> {
+  const projectsPage = new ProjectsPage(page, READINESS_ONLY_SLUG);
+  await projectsPage.expectAnalyticsLoaded();
+  await waitForSpinnersHidden(page);
+  await waitForLoadingSkeletonsToClear(page, 4000);
+}
+
 export async function scrollSectionNearViewportTop(
   locator: Locator,
   page: Page,
@@ -573,7 +590,7 @@ export async function waitForExpectedContent(
     return;
   }
 
-  if (URL.dashboard.test(url) || name === "dashboard") {
+  if (URL_PATTERNS.dashboard.test(url) || name === "dashboard") {
     // Wait for the sidebar to render — this proves the app shell + auth
     // has completed (splash screen is gone, org context loaded).
     await page
@@ -593,12 +610,12 @@ export async function waitForExpectedContent(
     return;
   }
 
-  if (URL.projectBoard.test(url) || URL.projectBacklog.test(url)) {
+  if (URL_PATTERNS.projectBoard.test(url) || URL_PATTERNS.projectBacklog.test(url)) {
     await waitForBoardReady(page);
     return;
   }
 
-  if (URL.settings.test(url) || name === "settings" || name === "settings-profile") {
+  if (URL_PATTERNS.settings.test(url) || name === "settings" || name === "settings-profile") {
     await page.waitForURL(
       (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
       {
@@ -654,22 +671,22 @@ export async function waitForExpectedContent(
 
   // --- Pages with unique readiness logic ---
 
-  if (URL.projects.test(url) || name === "projects") {
+  if (URL_PATTERNS.projects.test(url) || name === "projects") {
     await waitForProjectsReady(page);
     return;
   }
 
-  if (URL.issues.test(url) || name === "issues") {
+  if (URL_PATTERNS.issues.test(url) || name === "issues") {
     await waitForIssuesReady(page);
     return;
   }
 
-  if (URL.workspaces.test(url) || name === "workspaces") {
+  if (URL_PATTERNS.workspaces.test(url) || name === "workspaces") {
     await waitForWorkspacesReady(page);
     return;
   }
 
-  if (URL.issueDetail.test(url)) {
+  if (URL_PATTERNS.issueDetail.test(url)) {
     await waitForIssueDetailReady(page);
     return;
   }
@@ -685,34 +702,34 @@ export async function waitForExpectedContent(
     return;
   }
 
-  if (URL.documentEditor.test(url) || name === "document-editor") {
+  if (URL_PATTERNS.documentEditor.test(url) || name === "document-editor") {
     await waitForDocumentEditorReady(page);
     return;
   }
 
-  if (URL.projectAnalytics.test(url)) {
-    await waitForAnalyticsReady(page);
+  if (URL_PATTERNS.projectAnalytics.test(url)) {
+    await waitForProjectAnalyticsReady(page);
     return;
   }
 
-  if (URL.analytics.test(url) || name === "org-analytics") {
+  if (URL_PATTERNS.analytics.test(url) || name === "org-analytics") {
     await new AnalyticsPage(page, READINESS_ONLY_SLUG).waitUntilReady();
     await waitForSpinnersHidden(page);
     return;
   }
 
-  if (URL.projectRoadmap.test(url)) {
+  if (URL_PATTERNS.projectRoadmap.test(url)) {
     await waitForRoadmapReady(page);
     return;
   }
 
-  if (URL.projectInbox.test(url) || name === "projectInbox") {
+  if (URL_PATTERNS.projectInbox.test(url) || name === "projectInbox") {
     await new InboxPage(page, READINESS_ONLY_SLUG, READINESS_ONLY_SLUG).waitUntilReady();
     await waitForSpinnersHidden(page);
     return;
   }
 
-  if (URL.notifications.test(url) || name === "notifications") {
+  if (URL_PATTERNS.notifications.test(url) || name === "notifications") {
     await waitForDashboardReady(page);
     const headerTitle = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
     const archivedTab = page.getByRole("tab", { name: /archived/i });
@@ -750,7 +767,7 @@ export async function waitForExpectedContent(
     return;
   }
 
-  if (URL.meetings.test(url) || name === "meetings") {
+  if (URL_PATTERNS.meetings.test(url) || name === "meetings") {
     await page
       .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
       .waitFor({ state: "visible", timeout: 12000 });
@@ -763,7 +780,7 @@ export async function waitForExpectedContent(
     return;
   }
 
-  if (URL.outreach.test(url) || name === "outreach" || name.startsWith("outreach-")) {
+  if (URL_PATTERNS.outreach.test(url) || name === "outreach" || name.startsWith("outreach-")) {
     await new OutreachPage(page, READINESS_ONLY_SLUG).waitUntilReady();
     await waitForSpinnersHidden(page);
     return;
@@ -772,9 +789,9 @@ export async function waitForExpectedContent(
   // --- Calendar pages (project, workspace, team, org) ---
 
   if (
-    URL.projectCalendar.test(url) ||
-    URL.workspaceCalendar.test(url) ||
-    URL.teamCalendar.test(url) ||
+    URL_PATTERNS.projectCalendar.test(url) ||
+    URL_PATTERNS.workspaceCalendar.test(url) ||
+    URL_PATTERNS.teamCalendar.test(url) ||
     name === "calendar-event-modal" ||
     /^calendar-(day|week|month)$/.test(name)
   ) {
@@ -785,7 +802,9 @@ export async function waitForExpectedContent(
   }
 
   if (
-    (URL.orgCalendar.test(url) && !url.includes("/projects/") && !url.includes("/workspaces/")) ||
+    (URL_PATTERNS.orgCalendar.test(url) &&
+      !url.includes("/projects/") &&
+      !url.includes("/workspaces/")) ||
     name === "org-calendar"
   ) {
     await waitForCalendarReady(page);
@@ -795,45 +814,17 @@ export async function waitForExpectedContent(
 
   // --- Board pages (project, workspace backlog, team) ---
 
-  if (URL.workspaceBacklog.test(url)) {
+  if (URL_PATTERNS.workspaceBacklog.test(url)) {
     await waitForWorkspaceBacklogReady(page);
     return;
   }
 
-  if (URL.teamDetail.test(url) || URL.teamBoard.test(url) || /^team-[^-]+-board$/.test(name)) {
+  if (
+    URL_PATTERNS.teamDetail.test(url) ||
+    URL_PATTERNS.teamBoard.test(url) ||
+    /^team-[^-]+-board$/.test(name)
+  ) {
     await waitForTeamDetailReady(page);
-    return;
-  }
-
-  // --- Settings sub-tab pages ---
-
-  if (URL.settings.test(url) || name === "settings" || name === "settings-profile") {
-    await page.waitForURL(
-      (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
-      { timeout: 12000 },
-    );
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByRole("tab", { name: /^profile$/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-
-    // Wait for specific sub-tab content when navigated to a settings sub-section
-    const settingsSubTabTestIds: Record<string, string> = {
-      "settings-notifications": TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION,
-      "settings-security": TEST_IDS.SETTINGS.TWO_FACTOR_SECTION,
-      "settings-apikeys": TEST_IDS.SETTINGS.API_KEYS_SECTION,
-      "settings-integrations": TEST_IDS.SETTINGS.GITHUB_INTEGRATION,
-      "settings-admin": TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION,
-      "settings-offline": TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD,
-    };
-    const subTabTestId = settingsSubTabTestIds[name];
-    if (subTabTestId) {
-      await page.getByTestId(subTabTestId).waitFor({ state: "visible", timeout: 12000 });
-    }
-
-    await waitForSpinnersHidden(page);
     return;
   }
 

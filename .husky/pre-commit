@@ -1,6 +1,4 @@
 corepack pnpm lint-staged
-corepack pnpm run typecheck
-corepack pnpm run biome:check
-corepack pnpm run validate
+corepack pnpm run static
 corepack pnpm run test:run
 corepack pnpm run test:convex:run

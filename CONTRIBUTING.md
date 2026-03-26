@@ -48,7 +48,7 @@ pnpm test
 pnpm test:backend
 
 # Run all checks
-pnpm run check
+pnpm run static
 ```
 
 ### 4. Commit

@@ -55,6 +55,8 @@ import { autoLogin } from "./screenshot-lib/helpers";
 import { screenshotEmptyStates, screenshotPublicPages } from "./screenshot-lib/public-pages";
 import { waitForExpectedContent, waitForSpinnersHidden } from "./screenshot-lib/readiness";
 import { getGeneratedSpecFolders, resolveCaptureTarget } from "./screenshot-lib/routing";
+import { buildScreenshotShards } from "./screenshot-lib/sharding";
+import { SCREENSHOT_PAGE_IDS } from "./screenshot-lib/targets";
 import { injectAuthTokens } from "./utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
 import { waitForDashboardReady } from "./utils/wait-helpers";
@@ -214,242 +216,6 @@ async function captureFilledForConfig(
 // Dry run
 // ---------------------------------------------------------------------------
 
-/** Known page IDs captured during a full run (excluding dynamic project/workspace/team slugs). */
-const DRY_RUN_PAGES = [
-  // Public
-  "public-landing",
-  "public-signin",
-  "public-signup",
-  "public-signup-verify",
-  "public-forgot-password",
-  "public-forgot-password-reset",
-  "public-verify-email",
-  "public-verify-2fa",
-  "public-invite",
-  "public-invite-invalid",
-  "public-unsubscribe",
-  "public-portal",
-  "public-portal-project",
-  // Empty states
-  "empty-dashboard",
-  "empty-projects",
-  "empty-issues",
-  "empty-documents",
-  "empty-documents-templates",
-  "empty-workspaces",
-  "empty-time-tracking",
-  "empty-notifications",
-  "empty-my-issues",
-  "empty-invoices",
-  "empty-clients",
-  "empty-meetings",
-  "empty-outreach",
-  "empty-settings",
-  "empty-settings-profile",
-  // Filled states — top-level
-  "filled-dashboard",
-  "filled-projects",
-  "filled-projects-single-project",
-  "filled-projects-empty",
-  "filled-projects-loading",
-  "filled-issues",
-  "filled-documents",
-  "filled-documents-templates",
-  "filled-documents-search-filtered",
-  "filled-documents-search-empty",
-  "filled-workspaces",
-  "filled-workspaces-search-empty",
-  "filled-time-tracking",
-  "filled-time-tracking-burn-rate",
-  "filled-time-tracking-rates",
-  "filled-time-tracking-empty",
-  "filled-time-tracking-all-time",
-  "filled-time-tracking-truncated",
-  "filled-notifications",
-  "filled-my-issues-filter-active",
-  "filled-my-issues-filtered-empty",
-  "filled-my-issues-loading",
-  "filled-my-issues",
-  "filled-org-calendar",
-  "filled-org-calendar-workspace-scope",
-  "filled-org-calendar-team-scope",
-  "filled-org-calendar-loading",
-  "filled-org-analytics-sparse-data",
-  "filled-org-analytics-no-activity",
-  "filled-org-analytics",
-  "filled-invoices",
-  "filled-invoices-filtered-empty",
-  "filled-invoices-create-draft-dialog",
-  "filled-invoices-loading",
-  "filled-clients",
-  "filled-meetings",
-  "filled-outreach",
-  "filled-outreach-sequences",
-  "filled-outreach-contacts",
-  "filled-outreach-mailboxes",
-  "filled-outreach-analytics",
-  "filled-outreach-contact-dialog",
-  "filled-outreach-import-dialog",
-  "filled-outreach-sequence-dialog",
-  "filled-outreach-enroll-dialog",
-  "filled-outreach-mailbox-disconnect-confirm",
-  "filled-meetings-detail",
-  "filled-meetings-transcript-search",
-  "filled-meetings-memory-lens",
-  "filled-meetings-processing",
-  "filled-meetings-filter-empty",
-  "filled-meetings-schedule-dialog",
-  "filled-settings",
-  "filled-settings-profile",
-  "filled-settings-integrations",
-  "filled-settings-admin",
-  "filled-settings-notifications",
-  "filled-settings-security",
-  "filled-settings-apikeys",
-  "filled-settings-preferences",
-  "filled-settings-offline",
-  "filled-authentication",
-  "filled-add-ons",
-  "filled-assistant",
-  "filled-assistant-conversations",
-  "filled-assistant-overview-empty",
-  "filled-assistant-conversations-empty",
-  "filled-assistant-loading",
-  "filled-mcp-server",
-  // Filled states — dashboard modals
-  "filled-dashboard-omnibox",
-  "filled-dashboard-advanced-search-modal",
-  "filled-dashboard-shortcuts-modal",
-  "filled-dashboard-time-entry-modal",
-  "filled-dashboard-customize-modal",
-  "filled-dashboard-loading-skeletons",
-  "filled-settings-profile-avatar-upload-modal",
-  "filled-settings-profile-cover-upload-modal",
-  "filled-settings-notifications-permission-denied",
-  // Filled states — projects modals
-  "filled-projects-create-project-modal",
-  "filled-issues-side-panel",
-  "filled-issues-search-filtered",
-  "filled-issues-search-empty",
-  "filled-issues-filter-active",
-  "filled-issues-create-modal",
-  "filled-issues-loading",
-  // Filled states — workspace modals
-  "filled-workspaces-create-workspace-modal",
-  "filled-workspace-create-team-modal",
-  // Filled states — project sub-pages (use PROJ as placeholder key)
-  "filled-project-PROJ-board",
-  "filled-project-PROJ-backlog",
-  "filled-project-PROJ-inbox",
-  "filled-project-PROJ-inbox-closed",
-  "filled-project-PROJ-inbox-bulk-selection",
-  "filled-project-PROJ-inbox-snooze-menu",
-  "filled-project-PROJ-inbox-decline-dialog",
-  "filled-project-PROJ-inbox-duplicate-dialog",
-  "filled-project-PROJ-inbox-open-empty",
-  "filled-project-PROJ-inbox-closed-empty",
-  "filled-project-PROJ-sprints",
-  "filled-project-PROJ-roadmap",
-  "filled-project-PROJ-calendar",
-  "filled-project-PROJ-activity",
-  "filled-project-PROJ-analytics",
-  "filled-project-PROJ-analytics-sparse-data",
-  "filled-project-PROJ-analytics-no-activity",
-  "filled-project-PROJ-billing",
-  "filled-project-PROJ-timesheet",
-  "filled-project-PROJ-members",
-  "filled-project-PROJ-members-confirm-dialog",
-  "filled-project-PROJ-settings",
-  "filled-project-PROJ-settings-delete-alert-dialog",
-  "filled-project-PROJ-create-issue-modal",
-  "filled-project-PROJ-issue-detail-modal",
-  "filled-project-PROJ-issue-detail-modal-inline-editing",
-  "filled-project-PROJ-import-export-modal",
-  "filled-project-PROJ-import-export-modal-import",
-  // Filled states — board interactive states
-  "filled-project-PROJ-board-swimlane-priority",
-  "filled-project-PROJ-board-swimlane-assignee",
-  "filled-project-PROJ-board-swimlane-type",
-  "filled-project-PROJ-board-swimlane-label",
-  "filled-project-PROJ-board-column-collapsed",
-  "filled-project-PROJ-board-empty-column",
-  "filled-project-PROJ-board-wip-limit-warning",
-  "filled-project-PROJ-board-filter-active",
-  "filled-project-PROJ-board-display-properties",
-  "filled-project-PROJ-board-peek-mode",
-  "filled-project-PROJ-board-sprint-selector",
-  "filled-project-PROJ-create-issue-draft-restoration",
-  "filled-project-PROJ-create-issue-duplicate-detection",
-  "filled-project-PROJ-create-issue-create-another",
-  "filled-project-PROJ-create-issue-validation",
-  "filled-project-PROJ-create-issue-success-toast",
-  // Filled states — sprint interactive states
-  "filled-project-PROJ-sprints-burndown",
-  "filled-project-PROJ-sprints-burnup",
-  "filled-project-PROJ-sprints-completion-modal",
-  "filled-project-PROJ-sprints-date-overlap-warning",
-  "filled-project-PROJ-sprints-workload",
-  // Filled states — calendar modes
-  "filled-calendar-day",
-  "filled-calendar-week",
-  "filled-calendar-month",
-  "filled-calendar-event-modal",
-  "filled-calendar-create-event-modal",
-  "filled-calendar-drag-and-drop",
-  "filled-calendar-quick-add",
-  // Filled states — time tracking modals
-  "filled-time-tracking-manual-entry-modal",
-  // Filled states — issue detail
-  "filled-issue-PROJ-1",
-  // Filled states — document editor
-  "filled-document-editor",
-  "filled-document-editor-move-dialog",
-  "filled-document-editor-markdown-preview-modal",
-  "filled-document-editor-favorite",
-  "filled-document-editor-sidebar-favorites",
-  "filled-document-editor-locked",
-  "filled-document-editor-rich-blocks",
-  "filled-document-editor-color-picker",
-  "filled-document-editor-slash-menu",
-  "filled-document-editor-floating-toolbar",
-  "filled-document-editor-mention-popover",
-  // Filled states — workspace sub-pages (use WS as placeholder slug)
-  "filled-workspace-WS",
-  "filled-workspace-WS-backlog",
-  "filled-workspace-WS-calendar",
-  "filled-workspace-WS-sprints",
-  "filled-workspace-WS-dependencies",
-  "filled-workspace-WS-wiki",
-  "filled-workspace-WS-settings",
-  // Filled states — team sub-pages (use TEAM as placeholder slug)
-  "filled-team-TEAM",
-  "filled-team-TEAM-board",
-  "filled-team-TEAM-calendar",
-  "filled-team-TEAM-wiki",
-  "filled-team-TEAM-settings",
-  // Filled states — roadmap interactive states
-  "filled-project-PROJ-roadmap-timeline-selector",
-  "filled-project-PROJ-roadmap-grouped",
-  "filled-project-PROJ-roadmap-detail",
-  "filled-project-PROJ-roadmap-empty",
-  "filled-project-PROJ-roadmap-milestone",
-  // Filled states — notification interactive states
-  "filled-notification-popover",
-  "filled-notification-snooze-popover",
-  "filled-notifications-archived",
-  "filled-notifications-filter-active",
-  "filled-notifications-inbox-empty",
-  "filled-notifications-archived-empty",
-  "filled-notifications-mark-all-read-loading",
-  "filled-notifications-unread-overflow",
-  "filled-project-tree",
-  // Filled states — navigation / shell states
-  "filled-sidebar-collapsed",
-  "filled-mobile-hamburger",
-  // Error / edge states
-  "filled-404-page",
-];
-
 function dryRunEnumerate(
   configs: Array<{ viewport: keyof typeof VIEWPORTS; theme: "dark" | "light" }>,
 ): void {
@@ -461,7 +227,7 @@ function dryRunEnumerate(
       `  📸 ${configName.toUpperCase()} (${VIEWPORTS[config.viewport].width}x${VIEWPORTS[config.viewport].height})`,
     );
 
-    for (const pageId of DRY_RUN_PAGES) {
+    for (const pageId of SCREENSHOT_PAGE_IDS) {
       const [prefix, ...rest] = pageId.split("-");
       const name = rest.join("-");
       if (!shouldCapture(prefix, name)) {
@@ -507,6 +273,16 @@ async function run(): Promise<void> {
   console.log(`\n  Base URL: ${BASE_URL}`);
   console.log(`  Configs: ${selectedConfigs.map((c) => `${c.viewport}-${c.theme}`).join(", ")}`);
   console.log(`  Spec folders: ${[...new Set(specFolders)].join(", ")}`);
+  if (captureState.cliOptions.shardIndex !== null && captureState.cliOptions.shardTotal !== null) {
+    const shards = buildScreenshotShards(SCREENSHOT_PAGE_IDS, captureState.cliOptions.shardTotal);
+    const activeShard = shards.find((shard) => shard.index === captureState.cliOptions.shardIndex);
+    if (!activeShard) {
+      throw new Error("Active screenshot shard could not be resolved");
+    }
+    console.log(
+      `  Shard: ${activeShard.index}/${captureState.cliOptions.shardTotal} (${activeShard.targetCount} target(s), ${activeShard.keys.length} bucket(s))`,
+    );
+  }
   if (captureState.cliOptions.specFilters.length > 0) {
     console.log(`  Spec filter: ${captureState.cliOptions.specFilters.join(", ")}`);
   }

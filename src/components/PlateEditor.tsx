@@ -181,6 +181,11 @@ interface E2EEditorValueEventDetail {
   value: Value;
 }
 
+interface E2EOpenMarkdownPreviewEventDetail {
+  markdown: string;
+  filename?: string;
+}
+
 const DOCUMENT_STARTER_SECTIONS = [
   {
     title: "Capture the context",
@@ -664,6 +669,7 @@ function EditorCanvas({
       {!isLocked && <FloatingToolbar />}
       {isEmptyEditor && (
         <Card
+          data-testid={TEST_IDS.EDITOR.STARTER_PANEL}
           padding="md"
           variant="soft"
           className="mb-5 border-ui-border-secondary/85 bg-linear-to-br from-ui-bg via-ui-bg-elevated/96 to-ui-bg-secondary/78"
@@ -840,6 +846,14 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     null,
   );
   const isEmptyEditor = isEmptyValue(editorSeedValue);
+  const isEditorHydrated =
+    latestSnapshot !== undefined && latestVersion !== undefined && versions !== undefined;
+
+  const scheduleDialogOpen = useCallback((openDialog: () => void) => {
+    requestAnimationFrame(() => {
+      openDialog();
+    });
+  }, []);
 
   useEffect(() => {
     const handleE2EEditorMarkdown = (event: Event) => {
@@ -872,13 +886,33 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
       replaceEditorValue(detail.value);
     };
 
+    const handleE2EOpenMarkdownPreview = (event: Event) => {
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+
+      const detail = event.detail as E2EOpenMarkdownPreviewEventDetail | undefined;
+      if (typeof detail?.markdown !== "string") {
+        return;
+      }
+
+      scheduleDialogOpen(() => {
+        setMarkdownImportPreview({
+          markdown: detail.markdown,
+          filename: detail.filename ?? "document.md",
+        });
+      });
+    };
+
     window.addEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
     window.addEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
+    window.addEventListener("nixelo:e2e-open-markdown-preview", handleE2EOpenMarkdownPreview);
     return () => {
       window.removeEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
       window.removeEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
+      window.removeEventListener("nixelo:e2e-open-markdown-preview", handleE2EOpenMarkdownPreview);
     };
-  }, [replaceEditorValue]);
+  }, [replaceEditorValue, scheduleDialogOpen]);
 
   const {
     handleTitleEdit,
@@ -904,7 +938,9 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     try {
       const preview = await readMarkdownForPreview();
       if (preview) {
-        setMarkdownImportPreview(preview);
+        scheduleDialogOpen(() => {
+          setMarkdownImportPreview(preview);
+        });
       }
     } catch (error) {
       showError(error, "Failed to read markdown file");
@@ -939,7 +975,11 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
         onToggleFavorite={handleToggleFavorite}
         onToggleArchive={handleToggleArchive}
         onToggleLock={handleToggleLock}
-        onMoveToProject={() => setShowMoveDialog(true)}
+        onMoveToProject={() => {
+          scheduleDialogOpen(() => {
+            setShowMoveDialog(true);
+          });
+        }}
         onImportMarkdown={handleOpenMarkdownImportPreview}
         onExportMarkdown={async () => {
           showError("Markdown export not yet implemented for Plate editor");
@@ -954,6 +994,7 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
       <Flex flex="1" className="overflow-hidden">
         <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
           <Card padding="md" variant="ghost" className="mx-auto w-full max-w-5xl">
+            {isEditorHydrated ? <div data-testid={TEST_IDS.EDITOR.HYDRATED_STATE} hidden /> : null}
             <ErrorBoundary
               fallback={
                 <SectionErrorFallback

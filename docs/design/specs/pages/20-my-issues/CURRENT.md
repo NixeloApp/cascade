@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/my-issues`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-25
+> **Last Updated**: 2026-03-26
 
 ---
 
@@ -34,9 +34,10 @@ The my-issues route is the personal work board. It answers:
 │       ├── [loading] centered spinner card
 │       ├── [true empty] EmptyState ("No issues assigned to you yet")
 │       ├── [filtered empty] EmptyState ("No issues match these filters", clear action)
-│       └── [default] horizontal board
+│       └── [default] grouped work surface
 │           ├── optional filtered-results summary
-│           ├── grouped columns
+│           ├── [mobile] segmented column selector + one active full-width column
+│           ├── [tablet/desktop] horizontal grouped columns
 │           │   ├── column header + count badge
 │           │   └── issue cards linking to /:slug/issues/:key
 │           └── "Load More" button when pagination can continue
@@ -50,7 +51,8 @@ The my-issues route is the personal work board. It answers:
 2. `useAuthenticatedQuery(api.dashboard.getMyIssueGroupCounts)` supplies server-backed totals for status or project grouping so column counts are not limited to the loaded page.
 3. Priority and due-date filtering stays client-side on the loaded results, which keeps the route responsive without a second query path.
 4. True-empty and filtered-empty states now use full `EmptyState` recovery shells instead of rendering a row of hollow columns.
-5. The reviewed screenshot matrix now covers canonical, true-empty, filter-active, filtered-empty, and loading states across desktop/tablet/mobile.
+5. On narrow screens, the route now switches to a single active column selector instead of clipping a desktop-style multi-column rail off the right edge.
+6. The reviewed screenshot matrix now covers canonical, true-empty, filter-active, filtered-empty, and loading states across desktop/tablet/mobile.
 
 ---
 
@@ -77,7 +79,8 @@ reviewable states rather than hidden assumptions.
 | ~~2~~ | ~~No priority or due-date filters~~ **Fixed** — priority and due-date dropdowns now narrow the board in place | ~~controls~~ | ~~LOW~~ |
 | ~~3~~ | ~~Empty or over-filtered states degraded into hollow columns~~ **Fixed** — route now renders dedicated recovery empty states | ~~empty-state quality~~ | ~~MEDIUM~~ |
 | ~~4~~ | ~~Spec only covered the canonical filled route~~ **Fixed** — reviewed screenshot coverage now includes empty, filter-active, filtered-empty, and loading matrices | ~~visual review depth~~ | ~~MEDIUM~~ |
-| 5 | Project grouping is still only as informative as the currently assigned cross-project dataset | seeded review depth | LOW |
+| ~~5~~ | ~~Phone-width grouped columns clipped horizontally and read like a broken board~~ **Fixed** — mobile now uses a segmented active-column selector with one full-width visible column | ~~mobile layout~~ | ~~HIGH~~ |
+| 6 | Project grouping is still only as informative as the currently assigned cross-project dataset | seeded review depth | LOW |
 
 ---
 
@@ -96,5 +99,5 @@ reviewable states rather than hidden assumptions.
 ## Summary
 
 My Issues is now a reviewed personal-work surface instead of a default-route-only baseline. The
-remaining work is incremental data/seed polish, not missing recovery states or screenshot blind
-spots.
+remaining work is incremental data/seed polish, not missing recovery states or obvious mobile
+layout failures.

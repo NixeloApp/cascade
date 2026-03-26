@@ -1,7 +1,8 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
-import { Card, CardBody, CardHeader } from "../ui/Card";
+import { Container } from "../ui/Container";
 import { Stack } from "../ui/Stack";
+import { Typography } from "../ui/Typography";
 import { DangerZone } from "./DangerZone";
 import { GeneralSettings } from "./GeneralSettings";
 import { IntakeSettings } from "./IntakeSettings";
@@ -74,16 +75,18 @@ export function ProjectSettings({
   ];
 
   return (
-    <Card variant="outline" padding="none" className="mx-auto max-w-3xl overflow-hidden">
-      <CardHeader
-        title="Project Settings"
-        description="Manage your project configuration and team"
-        className="border-ui-border-secondary/85"
-      />
-      <CardBody>
+    <Container size="sm" padding="none">
+      <Stack gap="lg">
+        <Stack gap="xs">
+          <Typography variant="h3">Project Settings</Typography>
+          <Typography variant="small" color="secondary">
+            Manage your project configuration and team
+          </Typography>
+        </Stack>
+
         <Stack gap="lg">{sections}</Stack>
-      </CardBody>
-    </Card>
+      </Stack>
+    </Container>
   );
 }
 

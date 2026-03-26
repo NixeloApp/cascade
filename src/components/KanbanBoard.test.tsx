@@ -11,6 +11,7 @@ import { useBoardHistory } from "@/hooks/useBoardHistory";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { KanbanBoard } from "./KanbanBoard";
 
@@ -139,8 +140,18 @@ vi.mock("./ui/Card", () => ({
 }));
 
 vi.mock("./ui/Flex", () => ({
-  Flex: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  FlexItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Flex: ({
+    children,
+    ...props
+  }: {
+    children: ReactNode;
+  } & Record<string, unknown>) => <div {...props}>{children}</div>,
+  FlexItem: ({
+    children,
+    ...props
+  }: {
+    children: ReactNode;
+  } & Record<string, unknown>) => <div {...props}>{children}</div>,
 }));
 
 vi.mock("./ui/Skeleton", () => ({
@@ -197,9 +208,32 @@ const issueB = {
   priority: "medium",
 } as EnrichedIssue;
 
+function mockMatchMedia(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches,
+      media: "(max-width: 767px)",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      onchange: null,
+    })),
+  });
+}
+
 describe("KanbanBoard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.__NIXELO_E2E_BOARD_LOADING__ = undefined;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      configurable: true,
+      value: undefined,
+    });
     mockUseAuthenticatedQuery.mockReturnValue({
       userRole: "admin",
       workflowStates,
@@ -250,9 +284,26 @@ describe("KanbanBoard", () => {
 
     render(<KanbanBoard projectId={"project_1" as Id<"projects">} />);
 
+    expect(screen.getByTestId(TEST_IDS.BOARD.LOADING_STATE)).toBeInTheDocument();
+    const loadingColumns = screen.getAllByTestId(TEST_IDS.BOARD.LOADING_COLUMN);
+    expect(loadingColumns).toHaveLength(4);
+    expect(loadingColumns[0]).toHaveClass("block");
+    expect(loadingColumns[1]).toHaveClass("hidden", "sm:block");
+    expect(loadingColumns[2]).toHaveClass("hidden", "md:block");
+    expect(loadingColumns[3]).toHaveClass("hidden", "xl:block");
     expect(screen.getAllByText("loading-text").length).toBeGreaterThan(0);
     expect(screen.getAllByText("loading-card")).toHaveLength(12);
     expect(mockAutoScrollForElements).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("toggle-selection")).not.toBeInTheDocument();
+  });
+
+  it("forces the board loading shell when the E2E override is enabled", () => {
+    window.__NIXELO_E2E_BOARD_LOADING__ = true;
+
+    render(<KanbanBoard projectId={"project_1" as Id<"projects">} />);
+
+    expect(screen.getByTestId(TEST_IDS.BOARD.LOADING_STATE)).toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.BOARD.ROOT)).not.toBeInTheDocument();
     expect(screen.queryByText("toggle-selection")).not.toBeInTheDocument();
   });
 
@@ -274,6 +325,45 @@ describe("KanbanBoard", () => {
 
     await user.click(screen.getByRole("button", { name: "toggle-selection" }));
     expect(screen.getByText("bulk:0")).toBeInTheDocument();
+  });
+
+  it("renders a single workflow column at a time on mobile and switches with the selector", async () => {
+    const user = userEvent.setup();
+    mockMatchMedia(true);
+
+    render(<KanbanBoard projectId={"project_1" as Id<"projects">} />);
+
+    expect(screen.getByRole("radio", { name: /to do/i })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /done/i })).toBeInTheDocument();
+    expect(screen.getByText("column:todo:1:2:3:editable:issue_1")).toBeInTheDocument();
+    expect(screen.queryByText("column:done:1:0:1:editable:issue_1")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: /done/i }));
+
+    expect(screen.getByText("column:done:1:0:1:editable:issue_1")).toBeInTheDocument();
+    expect(screen.queryByText("column:todo:1:2:3:editable:issue_1")).not.toBeInTheDocument();
+  });
+
+  it("falls back to loaded issue counts for mobile selector badges when totals are unavailable", () => {
+    mockMatchMedia(true);
+    mockUseSmartBoardData.mockReturnValue({
+      issuesByStatus: {
+        todo: [issueA],
+        done: [issueB],
+      },
+      statusCounts: {},
+      isLoading: false,
+      doneStatusesWithMore: [],
+      loadMoreDone: vi.fn(),
+      isLoadingMore: false,
+      hiddenDoneCount: 0,
+      workflowStates,
+    });
+
+    render(<KanbanBoard teamId={"team_1" as Id<"teams">} />);
+
+    expect(screen.getByRole("radio", { name: "To Do1" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Done1" })).toBeInTheDocument();
   });
 
   it("switches into swimlane rendering in project mode", async () => {

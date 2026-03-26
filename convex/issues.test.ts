@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { normalizeIssueDescriptionForStorage } from "./lib/richText";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -36,7 +37,7 @@ describe("Issues", () => {
       // Verify issue was created
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Test Issue");
-      expect(issue?.description).toBe("This is a test issue");
+      expect(issue?.description).toBe(normalizeIssueDescriptionForStorage("This is a test issue"));
       expect(issue?.type).toBe("task");
       expect(issue?.priority).toBe("medium");
       expect(issue?.key).toBe("ISSUE-1"); // First issue in project
@@ -183,7 +184,7 @@ describe("Issues", () => {
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue).not.toBeNull();
       expect(issue?.title).toBe("Detailed Issue");
-      expect(issue?.description).toBe("Detailed description");
+      expect(issue?.description).toBe(normalizeIssueDescriptionForStorage("Detailed description"));
       expect(issue?.type).toBe("story");
       expect(issue?.priority).toBe("high");
       await t.finishInProgressScheduledFunctions();
@@ -257,7 +258,7 @@ describe("Issues", () => {
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Updated Title");
-      expect(issue?.description).toBe("Updated description");
+      expect(issue?.description).toBe(normalizeIssueDescriptionForStorage("Updated description"));
       expect(issue?.priority).toBe("high");
       await t.finishInProgressScheduledFunctions();
     });

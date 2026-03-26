@@ -93,6 +93,7 @@ export const createFromTemplate = authenticatedMutation({
       isPublic: false,
       boardType: template.boardType,
       workflowStates: template.workflowStates,
+      nextIssueNumber: 0,
     });
 
     // Add creator as admin member

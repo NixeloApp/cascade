@@ -11,6 +11,7 @@
 The invoices page gives organization members a compact billing workspace for:
 
 - scanning invoice number, client, status, total, and due date in one table
+- scanning invoice number, client, status, total, and due date in a mobile card list or wider-screen table
 - filtering the list by billing status
 - creating a new draft invoice without jumping through a placeholder `$0` draft flow
 
@@ -54,9 +55,10 @@ The invoices page gives organization members a compact billing workspace for:
 1. `InvoicesListPage` reads org context from `useOrganization()`, status filter from local state, and optional E2E screenshot boot state from session storage.
 2. `api.invoices.list` returns a bounded, descending organization-scoped list with client names already joined server-side.
 3. `api.clients.list` hydrates the draft dialog client picker when client records exist.
-4. A route-owned loading shell keeps the table/header layout stable during async load and screenshot captures.
+4. A route-owned loading shell keeps the header stable while matching the real surface shape: stacked invoice cards on mobile and the full table on tablet/desktop.
 5. Empty-state copy/action is derived from a shared helper so the base empty state and filtered-empty state do not drift.
-6. Draft creation validates dates client-side, creates the invoice through `api.invoices.create`, then navigates directly to the invoice detail route.
+6. Populated invoices render as a stacked card list on narrow screens and the full five-column table on tablet/desktop so billing metadata stays readable on phones.
+7. Draft creation validates dates client-side, creates the invoice through `api.invoices.create`, then navigates directly to the invoice detail route.
 
 ---
 

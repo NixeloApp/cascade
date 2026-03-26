@@ -11,8 +11,8 @@ import type { Id } from "@convex/_generated/dataModel";
 import { type ReactNode, useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
+import { SettingsSection, SettingsSectionInset } from "../Settings/SettingsSection";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Input, Textarea } from "../ui/form";
 import { Label } from "../ui/Label";
@@ -33,21 +33,14 @@ interface ReadonlyFieldProps {
 
 function ReadonlyField({ label, children }: ReadonlyFieldProps) {
   return (
-    <Card variant="outline" padding="sm" className="bg-ui-bg">
-      <Stack gap="xs">
-        <Label>{label}</Label>
-        {children}
-      </Stack>
-    </Card>
+    <SettingsSectionInset title={label}>
+      <Stack gap="xs">{children}</Stack>
+    </SettingsSectionInset>
   );
 }
 
 function ReadonlyValue({ children }: { children: ReactNode }) {
-  return (
-    <Card variant="flat" padding="sm" radius="md">
-      {children}
-    </Card>
-  );
+  return <SettingsSectionInset padding="sm">{children}</SettingsSectionInset>;
 }
 
 /** Project name and description editor with save/cancel controls. */
@@ -97,21 +90,19 @@ export function GeneralSettings({
   };
 
   return (
-    <Card variant="outline" padding="none" className="p-4 sm:p-6">
-      <Flex justify="between" align="center" className="mb-4 sm:mb-6">
-        <Stack gap="xs">
-          <Typography variant="h4">General</Typography>
-          <Typography variant="small" color="secondary">
-            Basic project information
-          </Typography>
-        </Stack>
-        {!isEditing && (
+    <SettingsSection
+      title="General"
+      description="Basic project information"
+      action={
+        !isEditing ? (
           <Button variant="secondary" size="sm" onClick={handleEdit}>
             Edit
           </Button>
-        )}
-      </Flex>
-
+        ) : null
+      }
+      variant="outline"
+      padding="lg"
+    >
       {isEditing ? (
         <Stack gap="lg">
           <Input
@@ -162,6 +153,6 @@ export function GeneralSettings({
           </ReadonlyField>
         </Stack>
       )}
-    </Card>
+    </SettingsSection>
   );
 }

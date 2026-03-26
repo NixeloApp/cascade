@@ -99,7 +99,7 @@ import { ROUTES } from "@/config/routes";
 - Component tests (React Testing Library)
 - E2E tests for critical flows (Playwright)
 
-Run `pnpm run check` before committing.
+Run `pnpm run static` before committing.
 
 ## Common Mistakes to Avoid
 

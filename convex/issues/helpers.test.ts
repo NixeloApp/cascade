@@ -211,6 +211,9 @@ describe("issue helpers", () => {
 
       const updates = processIssueUpdates(issue, args, changes);
 
+      expect(updates.description).toBe(
+        JSON.stringify([{ type: "p", children: [{ text: "New Desc" }] }]),
+      );
       expect(updates.searchContent).toBe("Title New Desc");
     });
 
@@ -559,32 +562,6 @@ describe("issue helpers", () => {
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       expect(project?.nextIssueNumber).toBe(3);
-    });
-
-    it("should bootstrap counter from existing issues for legacy projects", async () => {
-      const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const projectId = await createTestProject(t, userId, { key: "LEGACY" });
-
-      // Simulate legacy state: issues exist but no counter on project
-      await createTestIssue(t, projectId, userId); // LEGACY-1
-      await createTestIssue(t, projectId, userId); // LEGACY-2
-
-      // Verify project has no counter yet (test helper doesn't set it)
-      const projectBefore = await t.run(async (ctx) => ctx.db.get(projectId));
-      expect(projectBefore?.nextIssueNumber).toBeUndefined();
-
-      // First call should bootstrap from existing keys
-      const result = await t.run(async (ctx) => {
-        return await getNextIssueKey(ctx, projectId, "LEGACY");
-      });
-
-      expect(result.key).toBe("LEGACY-3");
-      expect(result.number).toBe(3);
-
-      // Counter should now be persisted
-      const projectAfter = await t.run(async (ctx) => ctx.db.get(projectId));
-      expect(projectAfter?.nextIssueNumber).toBe(3);
     });
 
     it("should never produce duplicate keys across sequential calls", async () => {

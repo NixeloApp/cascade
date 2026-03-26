@@ -137,18 +137,28 @@ vi.mock("@/components/ui/Input", () => ({
 
 vi.mock("@/components/ui/OverviewBand", () => ({
   OverviewBand: ({
+    density,
     eyebrow,
     title,
     description,
+    metrics,
   }: {
+    density?: "default" | "compact";
     eyebrow?: string;
     title: string;
     description: string;
+    metrics?: { label: string; value: ReactNode }[];
   }) => (
-    <div>
+    <div data-density={density}>
       {eyebrow ? <div>{eyebrow}</div> : null}
       <div>{title}</div>
       <div>{description}</div>
+      {metrics?.map((metric) => (
+        <div key={metric.label}>
+          <span>{metric.label}</span>
+          <span>{metric.value}</span>
+        </div>
+      ))}
     </div>
   ),
 }));
@@ -243,15 +253,18 @@ describe("WorkspacesList", () => {
 
     render(<WorkspacesList />);
 
-    expect(screen.getByText("Organization structure")).toBeInTheDocument();
+    const overviewBand = screen.getByText("Structure at a glance").parentElement;
+    expect(overviewBand).not.toBeNull();
+    expect(overviewBand).toHaveAttribute("data-density", "compact");
+    expect(screen.getByText("Organization footprint")).toBeInTheDocument();
+    expect(screen.getByText("Structure at a glance")).toBeInTheDocument();
     expect(
-      screen.getByText("2 workspaces, 5 teams, and 11 projects are active."),
+      screen.getByText("This organization currently has 2 workspaces, 5 teams, and 11 projects."),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Use this list to confirm where new teams and projects belong before you create them.",
-      ),
-    ).toBeInTheDocument();
+    const compactMetrics = within(overviewBand as HTMLElement);
+    expect(compactMetrics.getByText("Workspaces")).toBeInTheDocument();
+    expect(compactMetrics.getByText("5")).toBeInTheDocument();
+    expect(compactMetrics.getByText("11")).toBeInTheDocument();
 
     await user.type(screen.getByTestId(TEST_IDS.WORKSPACE.SEARCH_INPUT), "platform");
     expect(screen.getByText("Platform Operations")).toBeInTheDocument();

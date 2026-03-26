@@ -11,7 +11,7 @@ import { asyncMap, pruneNull } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
-import { getPlainTextFromDescription } from "../lib/richText";
+import { getPlainTextFromDescription, normalizeIssueDescriptionForStorage } from "../lib/richText";
 import { notDeleted } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, canAccessProject } from "../projectAccess";
 import type { issueActivityActions } from "../validators";
@@ -94,9 +94,6 @@ export async function validateParentIssue(
  * concurrent calls will never receive the same number — the second caller
  * will see the incremented value written by the first.
  *
- * For projects created before the counter field existed, the first call
- * bootstraps the counter from the highest existing issue key number.
- *
  * @param ctx - Mutation context.
  * @param projectId - The project ID.
  * @param projectKey - The project key prefix (e.g., "PROJ").
@@ -112,11 +109,12 @@ export async function getNextIssueKey(
     throw notFound("projects");
   }
 
-  let currentNumber = project.nextIssueNumber;
-
-  // Bootstrap: project predates the counter — scan existing keys once.
+  const currentNumber = project.nextIssueNumber;
   if (currentNumber === undefined) {
-    currentNumber = await scanHighestIssueNumber(ctx, projectId);
+    throw validation(
+      "nextIssueNumber",
+      "Project issue counter is missing. Recreate or repair the project instead of scanning existing issues.",
+    );
   }
 
   const nextNumber = currentNumber + 1;
@@ -126,33 +124,6 @@ export async function getNextIssueKey(
   await ctx.db.patch(projectId, { nextIssueNumber: nextNumber });
 
   return { key: `${projectKey}-${nextNumber}`, number: nextNumber };
-}
-
-/**
- * Scans existing issues to find the highest key number.
- * Used only once per project to bootstrap the counter for legacy projects.
- */
-async function scanHighestIssueNumber(
-  ctx: MutationCtx,
-  projectId: Id<"projects">,
-): Promise<number> {
-  // Must scan all issues — the by_project index sorts by creation time,
-  // not by key number. Issues created out of order (e.g., imports) would
-  // cause .order("desc").first() to return a lower-numbered key.
-  const issues = await ctx.db
-    .query("issues")
-    .withIndex("by_project", (q) => q.eq("projectId", projectId))
-    .collect();
-
-  let max = 0;
-  for (const issue of issues) {
-    const match = issue.key.match(/-(\d+)$/);
-    if (match) {
-      const num = Number.parseInt(match[1], 10);
-      if (num > max) max = num;
-    }
-  }
-  return max;
 }
 
 /**
@@ -184,7 +155,7 @@ export function assertVersionMatch(
   currentVersion: number | undefined,
   expectedVersion: number | undefined,
 ): void {
-  // If no expected version provided, skip check (backwards compatibility)
+  // If no expected version provided, skip optimistic lock enforcement.
   if (expectedVersion === undefined) return;
 
   // Current version defaults to 1 if not set
@@ -380,16 +351,21 @@ export function processIssueUpdates(
   }>,
 ) {
   const updates: Record<string, unknown> = { updatedAt: Date.now() };
+  const normalizedDescription =
+    args.description === undefined
+      ? undefined
+      : normalizeIssueDescriptionForStorage(args.description);
 
   // Track simple field changes
   trackFieldChange(updates, changes, "title", issue.title, args.title);
-  trackFieldChange(updates, changes, "description", issue.description, args.description);
+  trackFieldChange(updates, changes, "description", issue.description, normalizedDescription);
   trackFieldChange(updates, changes, "priority", issue.priority, args.priority);
 
   // Update search content if title or description changed
   if (args.title !== undefined || args.description !== undefined) {
     const newTitle = args.title ?? issue.title;
-    const newDescription = args.description !== undefined ? args.description : issue.description;
+    const newDescription =
+      normalizedDescription !== undefined ? normalizedDescription : issue.description;
     updates.searchContent = getSearchContent(newTitle, newDescription);
   }
 

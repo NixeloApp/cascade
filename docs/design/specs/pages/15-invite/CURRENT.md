@@ -1,21 +1,21 @@
 # Invite Page - Current State
 
 > **Route**: `/invite/:token`
-> **Status**: IMPLEMENTED and functional, with modest shell cleanup still possible
-> **Last Updated**: 2026-03-21
-
+> **Status**: IMPLEMENTED and reviewed across pending plus terminal invite states
+> **Last Updated**: 2026-03-26
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
 
 ## Screenshot Matrix
 
-| Viewport | Theme | Preview |
-|----------|-------|---------|
-| Desktop | Dark | ![](screenshots/desktop-dark.png) |
-| Desktop | Light | ![](screenshots/desktop-light.png) |
-| Tablet | Light | ![](screenshots/tablet-light.png) |
-| Mobile | Light | ![](screenshots/mobile-light.png) |
+| State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
+|-------|--------------|---------------|--------------|--------------|
+| Pending invite | ![Pending invite desktop dark](screenshots/desktop-dark.png) | ![Pending invite desktop light](screenshots/desktop-light.png) | ![Pending invite tablet light](screenshots/tablet-light.png) | ![Pending invite mobile light](screenshots/mobile-light.png) |
+| Invalid invite | ![Invalid invite desktop dark](screenshots/desktop-dark-invalid.png) | ![Invalid invite desktop light](screenshots/desktop-light-invalid.png) | ![Invalid invite tablet light](screenshots/tablet-light-invalid.png) | ![Invalid invite mobile light](screenshots/mobile-light-invalid.png) |
+| Expired invite | ![Expired invite desktop dark](screenshots/desktop-dark-expired.png) | ![Expired invite desktop light](screenshots/desktop-light-expired.png) | ![Expired invite tablet light](screenshots/tablet-light-expired.png) | ![Expired invite mobile light](screenshots/mobile-light-expired.png) |
+| Revoked invite | ![Revoked invite desktop dark](screenshots/desktop-dark-revoked.png) | ![Revoked invite desktop light](screenshots/desktop-light-revoked.png) | ![Revoked invite tablet light](screenshots/tablet-light-revoked.png) | ![Revoked invite mobile light](screenshots/mobile-light-revoked.png) |
+| Accepted invite | ![Accepted invite desktop dark](screenshots/desktop-dark-accepted.png) | ![Accepted invite desktop light](screenshots/desktop-light-accepted.png) | ![Accepted invite tablet light](screenshots/tablet-light-accepted.png) | ![Accepted invite mobile light](screenshots/mobile-light-accepted.png) |
 
 ---
 
@@ -30,7 +30,8 @@
   - valid pending invite for authenticated and unauthenticated users
 - Authenticated users can accept directly.
 - Unauthenticated users are dropped into the shared sign-in flow in-place.
-- The route no longer needs to be described as a hypothetical or partial implementation.
+- All primary terminal branches now render inside the same branded invite shell as the pending path.
+- The reviewed screenshot matrix now covers the important terminal states instead of only the happy-path invite.
 
 ---
 
@@ -56,10 +57,7 @@
 
 ## Remaining Gaps
 
-| Problem | Area | Severity |
-|---------|------|----------|
-| The route works, but some states still carry more generic public-page shell than necessary | route shell | LOW |
-| The canonical screenshot set does not yet separate the major invalid/expired/revoked branches into reviewed artifacts | screenshot depth | LOW |
+No significant route-specific visual gaps remain on the current branch. Future work belongs to the broader public-route consistency pass rather than an invite-only defect.
 
 ---
 
@@ -73,5 +71,6 @@
 
 ## Summary
 
-Invite is implemented and operational. Remaining work is review depth and light shell discipline,
-not missing functionality.
+Invite is implemented, visually coherent, and now reviewable across the main pending and terminal
+states. Remaining work is broader public-route consistency, not missing invite behavior or screenshot
+coverage.

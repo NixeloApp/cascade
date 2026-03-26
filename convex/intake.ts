@@ -9,7 +9,8 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { projectAdminMutation, projectQuery } from "./customFunctions";
-import { getNextIssueKey } from "./issues/helpers";
+import { getNextIssueKey, getSearchContent } from "./issues/helpers";
+import { normalizeIssueDescriptionForStorage } from "./lib/richText";
 
 /** Generate a secure intake token */
 function generateIntakeToken(): string {
@@ -139,6 +140,7 @@ export const createExternal = mutation({
       project.key,
     );
     const defaultStatus = project.workflowStates[0]?.id ?? "todo";
+    const normalizedDescription = normalizeIssueDescriptionForStorage(args.description ?? "");
 
     const issueId = await ctx.db.insert("issues", {
       projectId: tokenRecord.projectId,
@@ -146,7 +148,7 @@ export const createExternal = mutation({
       workspaceId: project.workspaceId,
       key,
       title: args.title,
-      description: args.description ?? "",
+      description: normalizedDescription,
       type: "task",
       status: defaultStatus,
       priority: "medium",
@@ -157,6 +159,7 @@ export const createExternal = mutation({
       updatedAt: now,
       version: 1,
       order: issueNumber,
+      searchContent: getSearchContent(args.title, normalizedDescription),
     });
 
     // Create inbox issue for triage

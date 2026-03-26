@@ -204,6 +204,7 @@ export function WorkspacesList() {
             eyebrow={overviewCopy.eyebrow}
             title={overviewCopy.title}
             description={overviewCopy.description}
+            density="compact"
             metrics={[
               { label: "Workspaces", value: workspaceCount },
               { label: "Teams", value: totalTeams },

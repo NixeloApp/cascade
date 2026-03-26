@@ -121,29 +121,45 @@ export async function openDocumentActionsMenu(page: Page): Promise<void> {
   await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
 }
 
+export async function openDocumentMoveDialogForCapture(page: Page): Promise<Locator> {
+  await dismissAllDialogs(page);
+  await openDocumentActionsMenu(page);
+  await page.getByRole("menuitem", { name: /move to another project/i }).click();
+  const dialog = page.getByRole("dialog", { name: /move document/i });
+  await dialog.waitFor({ state: "visible", timeout: 8000 });
+  await dialog.getByLabel(/target project/i).waitFor({ state: "visible", timeout: 8000 });
+  await waitForAnimation(page);
+  await waitForScreenshotReady(page);
+  return dialog;
+}
+
 export async function openMarkdownImportPreviewDialog(
   page: Page,
   markdown: string,
   filename: string,
 ): Promise<Locator> {
   await dismissAllDialogs(page);
-  const trigger = page.getByRole("button", { name: /import from markdown/i });
-  await trigger.waitFor({ state: "visible", timeout: 8000 });
   await page.evaluate(
     ({ queuedMarkdown, queuedFilename }) => {
-      window.__NIXELO_E2E_MARKDOWN_IMPORT__ = {
-        markdown: queuedMarkdown,
-        filename: queuedFilename,
-      };
+      window.dispatchEvent(
+        new CustomEvent("nixelo:e2e-open-markdown-preview", {
+          detail: {
+            markdown: queuedMarkdown,
+            filename: queuedFilename,
+          },
+        }),
+      );
     },
     { queuedMarkdown: markdown, queuedFilename: filename },
   );
-  await trigger.evaluate((button: HTMLElement) => {
-    button.click();
-  });
   const dialog = page.getByRole("dialog", { name: /preview markdown import/i });
   await dialog.waitFor({ state: "visible", timeout: 8000 });
+  await dialog.getByText(filename, { exact: true }).waitFor({ state: "visible", timeout: 8000 });
+  await dialog
+    .getByRole("button", { name: /import & replace content/i })
+    .waitFor({ state: "visible", timeout: 8000 });
   await waitForAnimation(page);
+  await waitForScreenshotReady(page);
   return dialog;
 }
 
@@ -156,11 +172,13 @@ export async function primeDocumentEditorRichContent(page: Page, docUrl: string)
       }),
     );
   }, MARKDOWN_RICH_CONTENT);
-  await page.getByText(/^Release Readiness$/).waitFor({ state: "visible", timeout: 5000 });
-  await page.getByText(/qa signoff/i).waitFor({ state: "visible", timeout: 5000 });
-  await page
-    .getByText(/export const shipWindow = "2026-03-25";/i)
-    .waitFor({ state: "visible", timeout: 5000 });
+  const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+  await editor.getByText(/^Release Readiness$/).waitFor({ state: "visible", timeout: 5000 });
+  await editor.getByText(/qa signoff/i).waitFor({ state: "visible", timeout: 5000 });
+  await editor.getByText(/export const shipWindow = "2026-03-25";/i).waitFor({
+    state: "visible",
+    timeout: 5000,
+  });
   await waitForScreenshotReady(page);
 }
 
@@ -203,10 +221,6 @@ export async function openDocumentEditorMentionPopoverForCapture(
     );
   });
   await page.getByRole("combobox").waitFor({ state: "visible", timeout: 5000 });
-  await page.getByRole("combobox").locator("button").first().waitFor({
-    state: "visible",
-    timeout: 5000,
-  });
   await waitForScreenshotReady(page);
 }
 

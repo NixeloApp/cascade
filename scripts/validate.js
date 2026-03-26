@@ -20,43 +20,47 @@
  *  16. E2E raw locator ratchet — ratchets direct page-level selector creation outside sanctioned page-object/locator layers
  *  17. UI patterns             — DialogDescription in dialogs, AuthPageLayout for auth pages
  *  18. Route constants         — use ROUTES from @/config/routes instead of hardcoded paths
- *  19. Convex patterns         — Envelope Pattern returns, security checks, test destructuring
- *  20. Convex naming           — function naming conventions (get/list/create/update/delete)
- *  21. Component naming        — PascalCase components, {Component}Props interfaces
- *  22. Component props         — consistent prop naming across component definitions
- *  23. Duplicate components    — detect components with same name in different directories
- *  24. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva(), feature-local style bundles, weighted class-string style bundles, degenerate single-use helpers, and oversized shared CVA variant axes
- *  25. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
- *  26. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
- *  27. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
- *  28. Recipe drift            — repeated visual shell patterns must move behind owned recipes
- *  29. JSDoc coverage          — exported functions/components should have JSDoc documentation
- *  30. Import paths            — validates import path conventions
- *  31. Hook patterns           — custom hooks should follow consistent patterns
- *  32. Async patterns          — consistent error handling in async operations
- *  33. Time constants          — enforces use of timeUtils constants instead of magic numbers
- *  34. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
- *  35. Test coverage           — critical files should have corresponding tests
- *  36. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
- *  37. Native confirm()        — ensure custom dialogs used instead of native confirm()
- *  38. Convex hooks            — validates Convex hook usage patterns
- *  39. Console usage           — bans console.* in production code
- *  40. Tech debt               — tracks TODO/FIXME/HACK comments
- *  41. Nested Cards            — bans Cards nested inside other Cards
- *  42. Border Radius           — enforces consistent border radius usage
- *  43. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
- *  44. Screenshot harness structure — ratchets private helper counts in screenshot modules
- *  45. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
- *  46. Typography drift        — blocks Typography/style drift outside owned primitives
- *  47. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
- *  48. Shared shape drift      — blocks repeated inline entity summary shapes
- *  49. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
- *  50. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
- *  51. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
- *  52. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
- *  53. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
- *  54. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
- *  55. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
+ *  19. Route drift             — shared ROUTES config must stay aligned with TanStack file routes
+ *  20. Convex patterns         — Envelope Pattern returns, security checks, test destructuring
+ *  21. Project issue counters  — all project inserts must initialize nextIssueNumber
+ *  22. Outreach mailbox minute counters — all outreach mailbox inserts must initialize minute-window counters
+ *  23. Lifecycle timestamp ownership — repeated lifecycle bundles must use owned helpers
+ *  24. Convex naming           — function naming conventions (get/list/create/update/delete)
+ *  25. Component naming        — PascalCase components, {Component}Props interfaces
+ *  26. Component props         — consistent prop naming across component definitions
+ *  27. Duplicate components    — detect components with same name in different directories
+ *  28. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva(), feature-local style bundles, weighted class-string style bundles, degenerate single-use helpers, and oversized shared CVA variant axes
+ *  29. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
+ *  30. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
+ *  31. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  32. Recipe drift            — repeated visual shell patterns must move behind owned recipes
+ *  33. JSDoc coverage          — exported functions/components should have JSDoc documentation
+ *  34. Import paths            — validates import path conventions
+ *  35. Hook patterns           — custom hooks should follow consistent patterns
+ *  36. Async patterns          — consistent error handling in async operations
+ *  37. Time constants          — enforces use of timeUtils constants instead of magic numbers
+ *  38. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
+ *  39. Test coverage           — critical files should have corresponding tests
+ *  40. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  41. Native confirm()        — ensure custom dialogs used instead of native confirm()
+ *  42. Convex hooks            — validates Convex hook usage patterns
+ *  43. Console usage           — bans console.* in production code
+ *  44. Tech debt               — tracks TODO/FIXME/HACK comments
+ *  45. Nested Cards            — bans Cards nested inside other Cards
+ *  46. Border Radius           — enforces consistent border radius usage
+ *  47. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
+ *  48. Screenshot harness structure — ratchets private helper counts in screenshot modules
+ *  49. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
+ *  50. Typography drift        — blocks Typography/style drift outside owned primitives
+ *  51. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
+ *  52. Shared shape drift      — blocks repeated inline entity summary shapes
+ *  53. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
+ *  54. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
+ *  55. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
+ *  56. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  57. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
+ *  58. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
+ *  59. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -193,8 +197,24 @@ const checks = [
     modulePath: new URL("./validate/check-route-constants.js", import.meta.url).href,
   },
   {
+    name: "Route drift",
+    modulePath: new URL("./validate/check-route-drift.js", import.meta.url).href,
+  },
+  {
     name: "Convex patterns",
     modulePath: new URL("./validate/check-convex-patterns.js", import.meta.url).href,
+  },
+  {
+    name: "Project issue counters",
+    modulePath: new URL("./validate/check-project-issue-counters.js", import.meta.url).href,
+  },
+  {
+    name: "Outreach mailbox minute counters",
+    modulePath: new URL("./validate/check-outreach-mailbox-rate-limits.js", import.meta.url).href,
+  },
+  {
+    name: "Lifecycle timestamp ownership",
+    modulePath: new URL("./validate/check-lifecycle-timestamp-ownership.js", import.meta.url).href,
   },
   {
     name: "Convex naming",

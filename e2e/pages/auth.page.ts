@@ -75,20 +75,6 @@ export class AuthPage extends BasePage {
     return this.page.getByRole("link", { name: /sign (in|up)/i });
   }
 
-  /**
-   * Alias for forgotPasswordLink - some tests reference it as forgotPasswordButton
-   */
-  get forgotPasswordButton(): Locator {
-    return this.forgotPasswordLink;
-  }
-
-  /**
-   * Alias for backToSignInLink - some tests reference it as backToSignInButton
-   */
-  get backToSignInButton(): Locator {
-    return this.backToSignInLink;
-  }
-
   // ===================
   // Locators - Password Reset
   // ===================
@@ -373,13 +359,6 @@ export class AuthPage extends BasePage {
 
     await this.page.goto(ROUTES.forgotPassword.build(), { waitUntil: "domcontentloaded" });
     await this.expectForgotPasswordReady();
-  }
-
-  /**
-   * Alias for clickForgotPassword - navigates to forgot password from sign in
-   */
-  async goToForgotPassword() {
-    await this.clickForgotPassword();
   }
 
   async requestPasswordReset(email: string) {

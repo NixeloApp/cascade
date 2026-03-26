@@ -137,7 +137,6 @@ Description:`;
     const result = await descriptionCache.fetch(ctx, { prompt }, { ttl: HOUR });
     const responseTime = Date.now() - startTime;
 
-    // Handle backward compatibility (cache might contain strings)
     const suggestion = typeof result === "string" ? result : result.text;
     const usage =
       typeof result === "string"
@@ -213,7 +212,6 @@ Priority:`;
     const result = await priorityCache.fetch(ctx, { prompt }, { ttl: HOUR });
     const responseTime = Date.now() - startTime;
 
-    // Handle backward compatibility
     const responseText = typeof result === "string" ? result : result.text;
     const usage =
       typeof result === "string"
@@ -302,7 +300,6 @@ Labels:`;
     const result = await labelsCache.fetch(ctx, { prompt }, { ttl: HOUR });
     const responseTime = Date.now() - startTime;
 
-    // Handle backward compatibility
     const responseText = (typeof result === "string" ? result : result.text) as string;
     const usage =
       typeof result === "string"

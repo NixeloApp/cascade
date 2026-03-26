@@ -57,7 +57,6 @@ export async function injectAuthTokens(
         localStorage.removeItem(key);
       }
 
-      // Legacy keys
       localStorage.setItem("convexAuthToken", jwt);
       if (refresh) {
         localStorage.setItem("convexAuthRefreshToken", refresh);

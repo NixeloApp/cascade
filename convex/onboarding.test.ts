@@ -81,6 +81,7 @@ describe("Onboarding", () => {
           updatedAt: Date.now(),
           isPublic: false,
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [
             { id: "todo", name: "To Do", category: "todo" as const, order: 0 },
             { id: "done", name: "Done", category: "done" as const, order: 1 },
@@ -140,6 +141,7 @@ describe("Onboarding", () => {
           updatedAt: Date.now(),
           isPublic: false,
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [
             { id: "todo", name: "To Do", category: "todo" as const, order: 0 },
             { id: "done", name: "Done", category: "done" as const, order: 1 },

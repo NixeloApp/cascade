@@ -759,7 +759,6 @@ async function syncEmailToAuthAccounts(ctx: MutationCtx, userId: Id<"users">, ne
  *
  * Returns `true` if the user is:
  * - An 'owner' or 'admin' in ANY organization.
- * - (Legacy) A creator or admin of any project.
  */
 export const isOrganizationAdmin = authenticatedQuery({
   args: {},

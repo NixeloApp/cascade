@@ -62,10 +62,9 @@ describe("workspaces helpers", () => {
         totalProjects: 4,
       }),
     ).toEqual({
-      eyebrow: "Organization structure",
-      title: "1 workspace, 2 teams, and 4 projects are active.",
-      description:
-        "Use this list to confirm where new teams and projects belong before you create them.",
+      eyebrow: "Organization footprint",
+      title: "Structure at a glance",
+      description: "This organization currently has 1 workspace, 2 teams, and 4 projects.",
     });
   });
 });

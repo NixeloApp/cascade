@@ -92,7 +92,7 @@ If you encounter a type error, **fix the underlying issue** rather than suppress
 
 Before submitting PRs, run the following commands. These are also enforced by CI and pre-commit hooks:
 
-- `pnpm run check`: TypeScript type checking + linting.
+- `pnpm run static`: TypeScript, lint, validate, and screenshot-manifest checks.
 - `pnpm run typecheck`: TypeScript type checking only.
 - `pnpm run biome`: Biome linting with auto-fix.
 - `pnpm run format`: Biome formatting with auto-fix.

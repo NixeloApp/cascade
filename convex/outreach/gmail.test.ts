@@ -7,6 +7,7 @@ import { MINUTE } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createOrganizationAdmin, createTestUser } from "../testUtils";
+import { DEFAULT_MAILBOX_MINUTE_SEND_LIMIT } from "./mailboxRateLimits";
 
 vi.mock("../lib/fetchWithTimeout", () => ({
   fetchWithTimeout: vi.fn(),
@@ -177,7 +178,7 @@ describe("outreach gmail", () => {
     vi.restoreAllMocks();
   });
 
-  it("decrypts legacy plaintext mailbox tokens for runtime use and migrates them at rest", async () => {
+  it("rejects plaintext mailbox tokens during runtime reads", async () => {
     const t = convexTest(schema, modules);
     const userId = await createTestUser(t);
     const { organizationId } = await createOrganizationAdmin(t, userId);
@@ -195,10 +196,51 @@ describe("outreach gmail", () => {
         dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
         todaySendCount: 0,
         todayResetAt: Date.now(),
+        minuteSendLimit: DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
+        minuteSendCount: 0,
+        minuteWindowStartedAt: Date.now(),
         isActive: true,
         updatedAt: Date.now(),
       }),
     );
+
+    await expect(
+      t.mutation(internal.outreach.gmail.getMailboxTokens, {
+        mailboxId,
+      }),
+    ).rejects.toThrow("Mailbox accessToken must be encrypted at rest");
+  });
+
+  it("repairs plaintext mailbox tokens with the explicit repair mutation", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const { organizationId } = await createOrganizationAdmin(t, userId);
+
+    const mailboxId = await t.run(async (ctx) =>
+      ctx.db.insert("outreachMailboxes", {
+        userId,
+        organizationId,
+        provider: "google",
+        email: "legacy@example.com",
+        displayName: "Legacy Mailbox",
+        accessToken: "legacy-access-token",
+        refreshToken: "legacy-refresh-token",
+        expiresAt: Date.now() + DEFAULT_TOKEN_TTL_MS,
+        dailySendLimit: DEFAULT_DAILY_SEND_LIMIT,
+        todaySendCount: 0,
+        todayResetAt: Date.now(),
+        minuteSendLimit: DEFAULT_MAILBOX_MINUTE_SEND_LIMIT,
+        minuteSendCount: 0,
+        minuteWindowStartedAt: Date.now(),
+        isActive: true,
+        updatedAt: Date.now(),
+      }),
+    );
+
+    const repair = await t.mutation(internal.outreach.mailboxes.backfillEncryptedMailboxTokens, {
+      cursor: null,
+    });
+    expect(repair.repaired).toBe(1);
 
     const runtimeTokens = await t.mutation(internal.outreach.gmail.getMailboxTokens, {
       mailboxId,

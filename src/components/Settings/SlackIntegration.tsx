@@ -32,7 +32,7 @@ function getAllowedOrigins(): Set<string> {
 }
 
 interface SlackConnectionData {
-  slackUserId?: string;
+  slackUserId: string;
   teamId: string;
   teamName: string;
   accessToken: string;
@@ -57,10 +57,14 @@ function parseSlackConnectionData(value: unknown): SlackConnectionData | null {
   }
 
   const candidate = value as Record<string, unknown>;
+  const slackUserId = candidate.slackUserId;
   const teamId = candidate.teamId;
   const teamName = candidate.teamName;
   const accessToken = candidate.accessToken;
   if (
+    typeof slackUserId !== "string" ||
+    slackUserId.length === 0 ||
+    slackUserId.length > MAX_SLACK_OAUTH_FIELD_LENGTH ||
     typeof teamId !== "string" ||
     teamId.length === 0 ||
     teamId.length > MAX_SLACK_OAUTH_FIELD_LENGTH ||
@@ -85,10 +89,10 @@ function parseSlackConnectionData(value: unknown): SlackConnectionData | null {
   }
 
   return {
+    slackUserId,
     teamId,
     teamName,
     accessToken,
-    slackUserId: candidate.slackUserId,
     botUserId: candidate.botUserId,
     scope: candidate.scope,
     incomingWebhookUrl: candidate.incomingWebhookUrl,

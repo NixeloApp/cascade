@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { isLocatorVisible } from "../utils/locator-state";
+import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -156,18 +156,14 @@ export class CalendarPage extends BasePage {
   }
 
   async selectWorkspace(name: string) {
-    await this.workspaceFilter.scrollIntoViewIfNeeded();
-    await this.workspaceFilter.click();
-    await this.page.getByRole("option", { name }).click();
+    await this.selectFilterOption(this.workspaceFilter, name);
     await expect(this.pageHeaderTitle).toHaveText("Workspace scope");
     await expect(this.workspaceFilter).toContainText(name);
     await expect(this.calendar).toBeVisible();
   }
 
   async selectTeam(name: string) {
-    await this.teamFilter.scrollIntoViewIfNeeded();
-    await this.teamFilter.click();
-    await this.page.getByRole("option", { name }).click();
+    await this.selectFilterOption(this.teamFilter, name);
     await expect(this.pageHeaderTitle).toHaveText("Team scope");
     await expect(this.teamFilter).toContainText(name);
     await expect(this.calendar).toBeVisible();
@@ -182,6 +178,33 @@ export class CalendarPage extends BasePage {
   async expectTeamScope(name: string) {
     await expect(this.pageHeaderTitle).toHaveText("Team scope");
     await expect(this.teamFilter).toContainText(name);
+  }
+
+  private async selectFilterOption(trigger: Locator, optionName: string): Promise<void> {
+    const option = this.page.getByRole("option", { name: optionName, exact: true });
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        await trigger.scrollIntoViewIfNeeded();
+        await trigger.click();
+
+        if (!(await waitForLocatorVisible(option, 3000))) {
+          await this.page.keyboard.press("Escape").catch(() => undefined);
+          continue;
+        }
+
+        await option.scrollIntoViewIfNeeded();
+        await option.click();
+        return;
+      } catch (error) {
+        await this.page.keyboard.press("Escape").catch(() => undefined);
+        if (attempt === 3) {
+          throw error;
+        }
+      }
+    }
+
+    throw new Error(`Failed to select calendar filter option "${optionName}"`);
   }
 
   // ===================

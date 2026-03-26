@@ -132,6 +132,36 @@ describe("Slack slash commands", () => {
     expect(result.message).toContain("not connected");
   });
 
+  it("should reject malformed team connections that are missing slackUserId", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, organizationId } = await createTestContext(t);
+    await createProjectInOrganization(t, userId, organizationId, {
+      name: "Malformed Cmd",
+      key: "BAD",
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.insert("slackConnections", {
+        userId,
+        teamId: "T-MALFORMED-CMD",
+        teamName: "Malformed Team",
+        accessToken: "encrypted-token",
+        isActive: true,
+        messagesSent: 0,
+        updatedAt: Date.now(),
+      });
+    });
+
+    const result = await t.mutation(internal.slackCommandsCore.executeCommand, {
+      teamId: "T-MALFORMED-CMD",
+      callerSlackUserId: "U-ANY",
+      text: "create Should fail",
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain("not connected");
+  });
+
   it("should pick a writable project when first membership is viewer", async () => {
     const t = convexTest(schema, modules);
     const { userId, organizationId } = await createTestContext(t);

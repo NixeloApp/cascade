@@ -8,6 +8,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import type { CardDisplayOptions } from "@/lib/card-display-utils";
 import { CheckSquare, RotateCcw } from "@/lib/icons";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 import { DisplayPropertiesSelector } from "./DisplayPropertiesSelector";
@@ -60,9 +61,10 @@ export function BoardToolbar({
 
   return (
     <Card
+      data-testid={TEST_IDS.BOARD.TOOLBAR}
       recipe="floatingToolbar"
       padding="none"
-      className="pointer-events-auto absolute right-2 top-2 z-20 mb-0 w-fit max-w-full px-1.5 py-1 sm:static sm:mx-6 sm:mt-4 sm:mb-0 sm:max-w-none sm:px-5 sm:pb-3 sm:pt-4"
+      className="pointer-events-auto mx-2 mb-2 w-fit max-w-full px-1.5 py-1 sm:mx-6 sm:mt-4 sm:mb-0 sm:max-w-none sm:px-5 sm:pb-3 sm:pt-4"
     >
       <Flex align="center" justify="between" gap="xs" gapSm="sm">
         <div className="hidden sm:block">

@@ -28,7 +28,7 @@ export class ProjectsPage extends BasePage {
   readonly sidebar: Locator;
   readonly newProjectButton: Locator;
   readonly newWorkspaceButton: Locator;
-  readonly createEntityButton: Locator; // Alias for sidebar "Add new project" or "Create Workspace" button
+  readonly sidebarCreateButton: Locator;
   readonly projectList: Locator;
   readonly projectItems: Locator;
   readonly projectsPageHeading: Locator;
@@ -55,6 +55,7 @@ export class ProjectsPage extends BasePage {
   // Locators - Project Board
   // ===================
   readonly projectBoard: Locator;
+  readonly boardLoadingState: Locator;
   readonly boardColumns: Locator;
   readonly issueCards: Locator;
   readonly createIssueButton: Locator;
@@ -145,7 +146,7 @@ export class ProjectsPage extends BasePage {
       .getByRole("button", { name: /^\+?\s*create project$/i })
       .first();
     this.newWorkspaceButton = page.getByRole("button", { name: "+ Create Workspace" });
-    this.createEntityButton = this.sidebar.getByRole("button", {
+    this.sidebarCreateButton = this.sidebar.getByRole("button", {
       name: /add new|create|\+/i,
     });
     this.projectsPageHeading = page.getByRole("heading", { name: /^projects$/i });
@@ -187,6 +188,7 @@ export class ProjectsPage extends BasePage {
 
     // Project board container
     this.projectBoard = page.getByTestId(TEST_IDS.BOARD.ROOT);
+    this.boardLoadingState = page.getByTestId(TEST_IDS.BOARD.LOADING_STATE);
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - prefer the stable first-column trigger used by the tour,
@@ -696,7 +698,6 @@ export class ProjectsPage extends BasePage {
     await expect(this.analyticsIssuesByStatusChart).toBeVisible();
     await expect(this.analyticsIssuesByTypeChart).toBeVisible();
     await expect(this.analyticsIssuesByPriorityChart).toBeVisible();
-    await this.analyticsTeamVelocityChart.scrollIntoViewIfNeeded();
     await expect(this.analyticsTeamVelocityChart).toBeVisible();
   }
 
@@ -1099,7 +1100,7 @@ export class ProjectsPage extends BasePage {
   async hasCreateProjectEntryPoint() {
     return (
       (await isLocatorVisible(this.newProjectButton)) ||
-      (await isLocatorVisible(this.createEntityButton))
+      (await isLocatorVisible(this.sidebarCreateButton))
     );
   }
 
@@ -1355,6 +1356,10 @@ export class ProjectsPage extends BasePage {
   /** Wait for board to be fully interactive */
   async waitForBoardInteractive() {
     await waitForBoardLoaded(this.page);
+  }
+
+  async expectBoardLoadingStateVisible(timeout = 12000) {
+    await this.boardLoadingState.waitFor({ state: "visible", timeout });
   }
 
   async expectProjectCount(count: number) {

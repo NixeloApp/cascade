@@ -29,6 +29,8 @@ import {
   type ViewportName,
 } from "./config";
 import { resolveCaptureTarget } from "./routing";
+import { isCaptureTargetInShard } from "./sharding";
+import { SCREENSHOT_PAGE_IDS } from "./targets";
 
 // =============================================================================
 // Capture State — mutable singleton for the capture session
@@ -47,6 +49,8 @@ export const captureState = {
     configFilters: null,
     specFilters: [],
     matchFilters: [],
+    shardIndex: null,
+    shardTotal: null,
     help: false,
   } as CliOptions,
 };
@@ -116,6 +120,19 @@ export function shouldCapture(prefix: string, name: string): boolean {
   }
 
   const target = resolveCaptureTarget(prefix, name);
+  if (
+    captureState.cliOptions.shardIndex !== null &&
+    captureState.cliOptions.shardTotal !== null &&
+    !isCaptureTargetInShard(
+      target,
+      SCREENSHOT_PAGE_IDS,
+      captureState.cliOptions.shardIndex,
+      captureState.cliOptions.shardTotal,
+    )
+  ) {
+    return false;
+  }
+
   return matchesSpecFilters(target) && matchesMatchFilters(prefix, name, target);
 }
 
@@ -257,7 +274,9 @@ export function promoteStagedScreenshots(): void {
   const isExhaustiveRun =
     !captureState.cliOptions.configFilters &&
     captureState.cliOptions.specFilters.length === 0 &&
-    captureState.cliOptions.matchFilters.length === 0;
+    captureState.cliOptions.matchFilters.length === 0 &&
+    captureState.cliOptions.shardIndex === null &&
+    captureState.cliOptions.shardTotal === null;
 
   if (isExhaustiveRun) {
     for (const [targetDir, expectedFiles] of targetDirToFiles) {

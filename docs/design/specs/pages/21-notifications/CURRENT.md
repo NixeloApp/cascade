@@ -128,7 +128,10 @@ category filtering, bulk actions, and an archive tab that the popover does not.
   - Actor avatar
   - Message text with linked issue/document key
   - Relative timestamp
-  - Action buttons: Mark as read, Archive, overflow (snooze, delete)
+  - Responsive action cluster:
+    - mobile: compact footer action bar beneath the content
+    - tablet/desktop: right-hand action rail
+    - actions: Mark as read, Archive, overflow (snooze, delete)
 - Unread items: bold text, unread indicator dot
 - Snoozed items: snooze icon with "snoozed until" tooltip
 - Empty inbox states now branch intentionally:

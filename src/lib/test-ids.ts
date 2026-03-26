@@ -88,6 +88,12 @@ export const TEST_IDS = {
   BOARD: {
     /** @see src/components/KanbanBoard.tsx */
     ROOT: "project-board",
+    /** @see src/components/Kanban/BoardToolbar.tsx */
+    TOOLBAR: "project-board-toolbar",
+    /** @see src/components/KanbanBoard.tsx */
+    LOADING_STATE: "project-board-loading-state",
+    /** @see src/components/KanbanBoard.tsx */
+    LOADING_COLUMN: "project-board-loading-column",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN: "board-column",
     /** @see src/components/Kanban/KanbanColumn.tsx */
@@ -266,6 +272,10 @@ export const TEST_IDS = {
   EDITOR: {
     /** @see src/components/PlateEditor.tsx */
     PLATE: "plate-editor",
+    /** @see src/components/PlateEditor.tsx */
+    STARTER_PANEL: "plate-editor-starter-panel",
+    /** @see src/components/PlateEditor.tsx */
+    HYDRATED_STATE: "plate-editor-hydrated-state",
     /** @see src/components/CommandPalette.tsx */
     COMMAND_PALETTE: "command-palette",
   },
@@ -366,6 +376,10 @@ export const TEST_IDS = {
   },
 
   ROADMAP: {
+    /** @see src/components/RoadmapView.tsx */
+    HEADER: "roadmap-header",
+    /** @see src/components/Roadmap/RoadmapHeaderControls.tsx */
+    HEADER_CONTROLS: "roadmap-header-controls",
     /** @see src/components/RoadmapView.tsx */
     CONTENT: "roadmap-content",
     /** @see src/components/RoadmapView.tsx */
@@ -474,6 +488,8 @@ export const TEST_IDS = {
   NOTIFICATION: {
     /** @see src/components/Notifications/NotificationItem.tsx */
     ITEM: "notification-item",
+    /** @see src/components/Notifications/NotificationItem.tsx */
+    ACTIONS: "notification-item-actions",
   },
 
   // ============================================================
@@ -523,6 +539,13 @@ export const TEST_IDS = {
     USER_TYPE_MANAGER_SECTION: "settings-user-type-manager-section",
     /** @see src/components/Admin/HourComplianceDashboard.tsx */
     HOUR_COMPLIANCE_SECTION: "settings-hour-compliance-section",
+  },
+
+  PROJECT_SETTINGS: {
+    /** @see src/components/ProjectSettings/MemberManagement.tsx */
+    MEMBERS_SECTION: "project-settings-members-section",
+    /** @see src/components/ProjectSettings/MemberManagement.tsx */
+    MEMBER_REMOVE_BUTTON: "project-settings-member-remove-button",
   },
 
   // ============================================================
@@ -676,6 +699,8 @@ export const TEST_IDS = {
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     CONTENT: "invoices-content",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    MOBILE_LIST: "invoices-mobile-list",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     TABLE: "invoices-table",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     STATUS_FILTER: "invoices-status-filter",
@@ -715,6 +740,8 @@ export const TEST_IDS = {
   MY_ISSUES: {
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     CONTENT: "my-issues-content",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    MOBILE_COLUMN_SELECTOR: "my-issues-mobile-column-selector",
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     PRIORITY_FILTER: "my-issues-priority-filter",
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */

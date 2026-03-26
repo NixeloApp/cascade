@@ -139,6 +139,7 @@ export async function createProjectInOrganization(
       updatedAt: now,
       isPublic: projectData?.isPublic ?? false,
       boardType: projectData?.boardType || "kanban",
+      nextIssueNumber: 0,
       workflowStates: [
         {
           id: "todo",
@@ -187,7 +188,7 @@ export async function createTestProject(
     boardType?: "kanban" | "scrum";
   },
 ): Promise<Id<"projects">> {
-  // Create an organization first for backward compatibility
+  // Create an organization first because this helper always returns an org-scoped project.
   const { organizationId } = await createOrganizationAdmin(t, creatorId);
   return createProjectInOrganization(t, creatorId, organizationId, projectData);
 }

@@ -14,7 +14,7 @@ import { Typography } from "../ui/Typography";
 
 type BoardCardPreview = {
   detail: string;
-  key: string;
+  issueKey: string;
   priorityTone: NonNullable<BadgeProps["priorityTone"]>;
   title: string;
 };
@@ -25,13 +25,13 @@ const boardColumns = [
     accent: "warning" as const,
     cards: [
       {
-        key: "POL-142",
+        issueKey: "POL-142",
         title: "Polish search flows",
         detail: "Waiting on final approval notes",
         priorityTone: "high" as const,
       },
       {
-        key: "DOC-18",
+        issueKey: "DOC-18",
         title: "Update API notes",
         detail: "Link the launch brief before publish",
         priorityTone: "medium" as const,
@@ -43,13 +43,13 @@ const boardColumns = [
     accent: "info" as const,
     cards: [
       {
-        key: "OPS-44",
+        issueKey: "OPS-44",
         title: "Automate client handoff",
         detail: "Client digest pulls directly from board state",
         priorityTone: "high" as const,
       },
       {
-        key: "WEB-29",
+        issueKey: "WEB-29",
         title: "Refine landing proof",
         detail: "Screenshots stay aligned with product surfaces",
         priorityTone: "low" as const,
@@ -61,13 +61,13 @@ const boardColumns = [
     accent: "success" as const,
     cards: [
       {
-        key: "BOT-12",
+        issueKey: "BOT-12",
         title: "Retry-safe sync worker",
         detail: "Summaries stay grounded after reconnects",
         priorityTone: "medium" as const,
       },
       {
-        key: "AUTH-07",
+        issueKey: "AUTH-07",
         title: "SSO org mapping",
         detail: "Provisioning landed without manual cleanup",
         priorityTone: "low" as const,
@@ -143,102 +143,96 @@ export function ProductShowcase() {
         <div className="bg-linear-to-b from-ui-bg-soft/82 via-ui-bg-elevated/96 to-ui-bg px-4 py-5 sm:px-6 sm:py-6">
           <Grid cols={1} colsLg={12} gap="lg">
             <GridItem colSpanLg={8}>
-              <CardSection
-                size="lg"
-                className={cn(getCardRecipeClassName("dashboardPanelInset"), "h-full")}
-              >
-                <Stack gap="lg">
-                  <Flex
-                    direction="column"
-                    directionSm="row"
-                    align="start"
-                    justify="between"
-                    gap="md"
-                  >
-                    <Stack gap="xs" className="min-w-0">
-                      <Typography variant="pageHeaderEyebrow">Delivery board</Typography>
-                      <Typography variant="landingShowcaseTitle">Product control tower</Typography>
-                      <Typography variant="pageHeaderDescription">
-                        Work, documentation, and client-facing summaries stay attached to the same
-                        execution flow instead of being recopied into separate status theater.
-                      </Typography>
-                    </Stack>
-
-                    <Flex align="center" gap="sm" wrap className="shrink-0">
-                      <Badge variant="outline" shape="pill">
-                        <Icon icon={FileText} size="xs" tone="secondary" />
-                        Client-ready updates
-                      </Badge>
-                      <Badge variant="outline" shape="pill">
-                        <Icon icon={Sparkles} size="xs" tone="brand" />
-                        Docs stay linked
-                      </Badge>
-                    </Flex>
-                  </Flex>
-
-                  <Grid cols={1} colsSm={3} gap="md">
-                    {boardColumns.map((column) => (
-                      <BoardPreviewColumn key={column.title} {...column} />
-                    ))}
-                  </Grid>
-                </Stack>
-              </CardSection>
+              <ProductShowcaseBoardSurface />
             </GridItem>
 
             <GridItem colSpanLg={4}>
-              <CardSection
-                size="lg"
-                className={cn(getCardRecipeClassName("dashboardPanel"), "h-full")}
-              >
-                <Stack gap="lg">
-                  <Flex align="center" justify="between" gap="md">
-                    <Stack gap="xs">
-                      <Typography variant="pageHeaderEyebrow">Workspace pulse</Typography>
-                      <Typography variant="cardTitle">Context that stays attached</Typography>
-                    </Stack>
-                    <Badge variant="neutral" shape="pill">
-                      Live sync
-                    </Badge>
-                  </Flex>
-
-                  <Stack gap="sm">
-                    {workspaceSignals.map((signal) => (
-                      <WorkspaceSignalRow key={signal.title} {...signal} />
-                    ))}
-                  </Stack>
-
-                  <CardSection size="md" className={getCardRecipeClassName("overlayInset")}>
-                    <Stack gap="sm">
-                      <Flex align="center" gap="sm">
-                        <IconCircle size="xs" variant="brand">
-                          <Icon icon={Bot} size="xs" tone="brand" />
-                        </IconCircle>
-                        <div>
-                          <Typography variant="label">AI workspace assistant</Typography>
-                          <Typography variant="caption">
-                            Understands issues, docs, and handoffs
-                          </Typography>
-                        </div>
-                      </Flex>
-
-                      <Typography variant="small" color="secondary">
-                        "Summarize what changed since the last client review and flag blockers."
-                      </Typography>
-                    </Stack>
-                  </CardSection>
-
-                  <Stack gap="sm">
-                    {showcaseAssistantActions.map((item) => (
-                      <ShowcaseActionRow key={item}>{item}</ShowcaseActionRow>
-                    ))}
-                  </Stack>
-                </Stack>
-              </CardSection>
+              <ProductShowcasePulseSurface />
             </GridItem>
           </Grid>
         </div>
       </Card>
     </div>
+  );
+}
+
+function ProductShowcaseBoardSurface() {
+  return (
+    <CardSection size="lg" className={cn(getCardRecipeClassName("dashboardPanelInset"), "h-full")}>
+      <Stack gap="lg">
+        <Flex direction="column" directionSm="row" align="start" justify="between" gap="md">
+          <ShowcaseHeading
+            eyebrow="Delivery board"
+            title="Product control tower"
+            description="Work, documentation, and client-facing summaries stay attached to the same execution flow instead of being recopied into separate status theater."
+          />
+
+          <Flex align="center" gap="sm" wrap className="shrink-0">
+            <Badge variant="outline" shape="pill">
+              <Icon icon={FileText} size="xs" tone="secondary" />
+              Client-ready updates
+            </Badge>
+            <Badge variant="outline" shape="pill">
+              <Icon icon={Sparkles} size="xs" tone="brand" />
+              Docs stay linked
+            </Badge>
+          </Flex>
+        </Flex>
+
+        <Grid cols={1} colsSm={3} gap="md">
+          {boardColumns.map((column) => (
+            <BoardPreviewColumn key={column.title} {...column} />
+          ))}
+        </Grid>
+      </Stack>
+    </CardSection>
+  );
+}
+
+function ProductShowcasePulseSurface() {
+  return (
+    <CardSection size="lg" className={cn(getCardRecipeClassName("dashboardPanel"), "h-full")}>
+      <Stack gap="lg">
+        <Flex align="center" justify="between" gap="md">
+          <ShowcaseHeading eyebrow="Workspace pulse" title="Context that stays attached" />
+          <Badge variant="neutral" shape="pill">
+            Live sync
+          </Badge>
+        </Flex>
+
+        <Stack gap="sm">
+          {workspaceSignals.map((signal) => (
+            <WorkspaceSignalRow key={signal.title} {...signal} />
+          ))}
+        </Stack>
+
+        <AssistantPromptCard />
+
+        <Stack gap="sm">
+          {showcaseAssistantActions.map((item) => (
+            <ShowcaseActionRow key={item}>{item}</ShowcaseActionRow>
+          ))}
+        </Stack>
+      </Stack>
+    </CardSection>
+  );
+}
+
+function ShowcaseHeading({
+  description,
+  eyebrow,
+  title,
+}: {
+  description?: string;
+  eyebrow: string;
+  title: string;
+}) {
+  return (
+    <Stack gap="xs" className="min-w-0">
+      <Typography variant="pageHeaderEyebrow">{eyebrow}</Typography>
+      <Typography variant={description ? "landingShowcaseTitle" : "cardTitle"}>{title}</Typography>
+      {description && <Typography variant="pageHeaderDescription">{description}</Typography>}
+    </Stack>
   );
 }
 
@@ -261,22 +255,28 @@ function BoardPreviewColumn({
 
         <Stack gap="sm">
           {cards.map((card) => (
-            <div key={card.key} className={getCardRecipeClassName("issueCard")}>
-              <Stack gap="xs" className="min-w-0">
-                <Flex align="center" justify="between" gap="sm">
-                  <Typography variant="issueKeyMono">{card.key}</Typography>
-                  <Badge variant="outline" shape="pill" size="sm" priorityTone={card.priorityTone}>
-                    {getPriorityLabel(card.priorityTone)}
-                  </Badge>
-                </Flex>
-                <Typography variant="small">{card.title}</Typography>
-                <Typography variant="caption">{card.detail}</Typography>
-              </Stack>
-            </div>
+            <BoardPreviewCard key={card.issueKey} {...card} />
           ))}
         </Stack>
       </Stack>
     </Card>
+  );
+}
+
+function BoardPreviewCard({ detail, issueKey, priorityTone, title }: BoardCardPreview) {
+  return (
+    <div className={getCardRecipeClassName("issueCard")}>
+      <Stack gap="xs" className="min-w-0">
+        <Flex align="center" justify="between" gap="sm">
+          <Typography variant="issueKeyMono">{issueKey}</Typography>
+          <Badge variant="outline" shape="pill" size="sm" priorityTone={priorityTone}>
+            {getPriorityLabel(priorityTone)}
+          </Badge>
+        </Flex>
+        <Typography variant="small">{title}</Typography>
+        <Typography variant="caption">{detail}</Typography>
+      </Stack>
+    </div>
   );
 }
 
@@ -290,6 +290,28 @@ function ShowcaseActionRow({ children }: { children: string }) {
         {children}
       </Typography>
     </Flex>
+  );
+}
+
+function AssistantPromptCard() {
+  return (
+    <CardSection size="md" className={getCardRecipeClassName("overlayInset")}>
+      <Stack gap="sm">
+        <Flex align="center" gap="sm">
+          <IconCircle size="xs" variant="brand">
+            <Icon icon={Bot} size="xs" tone="brand" />
+          </IconCircle>
+          <div>
+            <Typography variant="label">AI workspace assistant</Typography>
+            <Typography variant="caption">Understands issues, docs, and handoffs</Typography>
+          </div>
+        </Flex>
+
+        <Typography variant="small" color="secondary">
+          "Summarize what changed since the last client review and flag blockers."
+        </Typography>
+      </Stack>
+    </CardSection>
   );
 }
 

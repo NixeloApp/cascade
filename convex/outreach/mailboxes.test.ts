@@ -5,6 +5,11 @@ import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "../testUtils";
 
+const MAILBOX_TTL_MS = 60_000;
+const MAILBOX_RECONNECT_TTL_MS = 120_000;
+const MAILBOX_RECONNECT_TTL_MS_AGAIN = 180_000;
+const ACTIVE_MINUTE_WINDOW_OFFSET_MS = 10_000;
+
 describe("outreach mailboxes", () => {
   it("stores OAuth mailbox tokens encrypted and redacts them from authenticated queries", async () => {
     const t = convexTest(schema, modules);
@@ -20,7 +25,7 @@ describe("outreach mailboxes", () => {
       displayName: "Founder",
       accessToken: "plain-access-token",
       refreshToken: "plain-refresh-token",
-      expiresAt: Date.now() + 60_000,
+      expiresAt: Date.now() + MAILBOX_TTL_MS,
     });
 
     const rawMailbox = await t.run(async (ctx) => ctx.db.get(mailboxId));
@@ -55,7 +60,7 @@ describe("outreach mailboxes", () => {
       displayName: "Founder",
       accessToken: "token-one",
       refreshToken: "refresh-one",
-      expiresAt: Date.now() + 60_000,
+      expiresAt: Date.now() + MAILBOX_TTL_MS,
     });
 
     const secondMailboxId = await asUser.mutation(api.outreach.mailboxes.createMailbox, {
@@ -64,10 +69,27 @@ describe("outreach mailboxes", () => {
       displayName: "Founder Updated",
       accessToken: "token-two",
       refreshToken: "refresh-two",
-      expiresAt: Date.now() + 120_000,
+      expiresAt: Date.now() + MAILBOX_RECONNECT_TTL_MS,
     });
 
     expect(secondMailboxId).toBe(firstMailboxId);
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(firstMailboxId, {
+        minuteSendLimit: 3,
+        minuteSendCount: 2,
+        minuteWindowStartedAt: Date.now() - ACTIVE_MINUTE_WINDOW_OFFSET_MS,
+      });
+    });
+
+    await asUser.mutation(api.outreach.mailboxes.createMailbox, {
+      provider: "google",
+      email: "founder@example.com",
+      displayName: "Founder Updated Again",
+      accessToken: "token-three",
+      refreshToken: "refresh-three",
+      expiresAt: Date.now() + MAILBOX_RECONNECT_TTL_MS_AGAIN,
+    });
 
     const mailboxes = await t.run(async (ctx) =>
       ctx.db
@@ -79,5 +101,7 @@ describe("outreach mailboxes", () => {
     expect(mailboxes).toHaveLength(1);
     expect(mailboxes[0].accessToken).not.toBe("token-two");
     expect(mailboxes[0].refreshToken).not.toBe("refresh-two");
+    expect(mailboxes[0].minuteSendLimit).toBe(3);
+    expect(mailboxes[0].minuteSendCount).toBe(2);
   });
 });

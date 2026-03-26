@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/documents/:id`
 > **Status**: REVIEWED, with follow-up surface polish only
-> **Last Updated**: 2026-03-21
+> **Last Updated**: 2026-03-26
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -84,8 +84,10 @@ This route is no longer just visually reviewed; it is operationally closer to th
 ### 2. Editor body
 
 - The route uses the Plate editor stack.
-- Rich text typography and block rhythm are stronger than before.
-- Blank or lightly seeded states use a shared starter panel instead of a dead canvas.
+- Blank or lightly seeded states now settle into a deliberate starter panel instead of a half-hydrated
+  placeholder shell.
+- The screenshot harness waits for editor hydration before capture, so the reviewed images now reflect
+  the real settled route state instead of the first visible shell.
 
 ### 3. Interaction layers
 
@@ -105,8 +107,7 @@ This route is no longer just visually reviewed; it is operationally closer to th
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | The route is functionally sound now, but the editor body can still look visually sparse when seeded content is short | seeded content / screenshot composition | MEDIUM |
-| 2 | Some overlay states are stable and current, but still visually denser than the calmest page shells elsewhere in the app | overlay polish | LOW |
+| 1 | Some overlay states are stable and current, but still visually denser than the calmest page shells elsewhere in the app | overlay polish | LOW |
 
 ---
 
@@ -128,4 +129,5 @@ This route is no longer just visually reviewed; it is operationally closer to th
 ## Summary
 
 The editor spec is current again. It now reflects the real route, the real interaction matrix, and
-the real save/restore path. Remaining work is mostly visual density and seed-content richness.
+the real save/restore path. The thin placeholder capture is gone; remaining work is mostly overlay
+polish rather than route-body honesty.

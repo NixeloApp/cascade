@@ -29,7 +29,7 @@ const tabsListVariants = cva("inline-flex max-w-full items-center text-ui-text-s
     layout: {
       default: "",
       settings:
-        "flex w-full gap-0.5 overflow-x-auto rounded-2xl bg-transparent p-0 scrollbar-subtle lg:overflow-visible",
+        "flex w-full flex-wrap justify-start gap-1 overflow-visible rounded-2xl bg-transparent p-0 sm:flex-nowrap sm:gap-0.5 sm:overflow-x-auto sm:scrollbar-subtle lg:overflow-visible",
     },
   },
   defaultVariants: {

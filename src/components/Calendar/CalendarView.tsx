@@ -9,7 +9,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate } from "@/lib/formatting";
@@ -55,6 +55,7 @@ interface CalendarViewProps {
   projectId?: Id<"projects">;
   teamId?: Id<"teams">;
   colorByScope?: "workspace" | "team";
+  defaultMode?: Mode;
 }
 
 /**
@@ -66,13 +67,24 @@ export function CalendarView({
   projectId,
   teamId,
   colorByScope,
+  defaultMode = "week",
 }: CalendarViewProps): React.ReactElement {
-  const [mode, setMode] = useState<Mode>("week");
+  const [mode, setMode] = useState<Mode>(defaultMode);
+  const [appliedDefaultMode, setAppliedDefaultMode] = useState<Mode>(defaultMode);
   const [date, setDate] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createEventDate, setCreateEventDate] = useState(new Date());
   const [selectedEventId, setSelectedEventId] = useState<Id<"calendarEvents"> | null>(null);
   const { mutate: updateEvent } = useAuthenticatedMutation(api.calendarEvents.update);
+
+  useEffect(() => {
+    if (defaultMode === appliedDefaultMode) {
+      return;
+    }
+
+    setMode((currentMode) => (currentMode === appliedDefaultMode ? defaultMode : currentMode));
+    setAppliedDefaultMode(defaultMode);
+  }, [appliedDefaultMode, defaultMode]);
 
   const { startDate, endDate } = getDateRange(date, mode);
 

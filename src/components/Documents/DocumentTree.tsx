@@ -59,8 +59,162 @@ interface TreeNode {
   hasChildren: boolean;
 }
 
+function getDocumentTitle(title: string | undefined) {
+  return title || "Untitled";
+}
+
 function TreeChevronIcon({ isExpanded }: { isExpanded: boolean }) {
   return <Icon icon={isExpanded ? ChevronDown : ChevronRight} size="xsPlus" />;
+}
+
+function DocumentTreeRow({
+  action,
+  className,
+  icon,
+  isSelected,
+  orgSlug,
+  documentId,
+  paddingLeft,
+  title,
+}: {
+  action?: React.ReactNode;
+  className?: string;
+  icon: React.ReactNode;
+  isSelected: boolean;
+  orgSlug: string;
+  documentId: Id<"documents">;
+  paddingLeft?: number;
+  title: string;
+}) {
+  return (
+    <Link to={ROUTES.documents.detail.path} params={{ orgSlug, id: documentId }} className="block">
+      <Card
+        recipe={isSelected ? "documentTreeRowSelected" : "documentTreeRow"}
+        padding="xs"
+        hoverable={!isSelected}
+        className={cn(className, !isSelected && "text-ui-text-secondary")}
+        style={paddingLeft === undefined ? undefined : { paddingLeft: `${paddingLeft}px` }}
+      >
+        <Flex align="center" gap="xs">
+          {icon}
+          <FlexItem flex="1" className="min-w-0">
+            <Typography variant={isSelected ? "label" : "small"} className="truncate" title={title}>
+              {title}
+            </Typography>
+          </FlexItem>
+          {action}
+        </Flex>
+      </Card>
+    </Link>
+  );
+}
+
+function DocumentTreeLinkRow({
+  docId,
+  icon,
+  orgSlug,
+  selectedId,
+  title,
+  tone = "secondary",
+}: {
+  docId: Id<"documents">;
+  icon: React.ReactNode;
+  orgSlug: string;
+  selectedId?: Id<"documents">;
+  title: string;
+  tone?: "secondary" | "tertiary";
+}) {
+  return (
+    <DocumentTreeRow
+      title={title}
+      orgSlug={orgSlug}
+      documentId={docId}
+      isSelected={selectedId === docId}
+      icon={icon}
+      className={cn("ml-6", tone === "tertiary" && selectedId !== docId && "text-ui-text-tertiary")}
+    />
+  );
+}
+
+function DocumentTreeSection({
+  ariaLabel,
+  children,
+  expanded,
+  icon,
+  id,
+  label,
+  muted = false,
+  trailing,
+  onToggle,
+}: {
+  ariaLabel: string;
+  children: React.ReactNode;
+  expanded: boolean;
+  icon: React.ReactNode;
+  id: string;
+  label: string;
+  muted?: boolean;
+  trailing?: React.ReactNode;
+  onToggle: () => void;
+}) {
+  return (
+    <div>
+      <Button
+        chrome={muted ? "documentTreeSectionMuted" : "documentTreeSection"}
+        chromeSize="documentTreeSection"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-controls={id}
+      >
+        <TreeChevronIcon isExpanded={expanded} />
+        {icon}
+        <Typography variant="small">{label}</Typography>
+        {trailing}
+      </Button>
+
+      {expanded && (
+        <Stack id={id} role="region" aria-label={ariaLabel} gap="none">
+          {children}
+        </Stack>
+      )}
+    </div>
+  );
+}
+
+function DocumentTreeChildren({
+  nodes,
+  organizationId,
+  orgSlug,
+  selectedId,
+  onCreateDocument,
+  depth,
+}: {
+  nodes: TreeNode[] | undefined;
+  organizationId: Id<"organizations">;
+  orgSlug: string;
+  selectedId?: Id<"documents">;
+  onCreateDocument?: (parentId?: Id<"documents">) => void;
+  depth: number;
+}) {
+  if (nodes === undefined) {
+    return (
+      <Card variant="ghost" padding="sm" className="ml-6">
+        <Skeleton className="h-6 w-3/4" />
+      </Card>
+    );
+  }
+
+  return nodes.map((child) => (
+    <TreeNodeItem
+      key={child._id}
+      node={child}
+      organizationId={organizationId}
+      orgSlug={orgSlug}
+      selectedId={selectedId}
+      onCreateDocument={onCreateDocument}
+      depth={depth + 1}
+    />
+  ));
 }
 
 /** Hierarchical tree view of documents with favorites, archived, and folder sections. */
@@ -133,55 +287,25 @@ export function DocumentTree({
 
       {/* Favorites Section */}
       {favorites && favorites.length > 0 && (
-        <div>
-          <Button
-            chrome="documentTreeSection"
-            chromeSize="documentTreeSection"
-            onClick={() => setFavoritesExpanded((prev) => !prev)}
-            aria-expanded={favoritesExpanded}
-            aria-controls="favorites-documents-list"
-          >
-            <TreeChevronIcon isExpanded={favoritesExpanded} />
-            <Icon icon={Star} size="sm" tone="warning" fill="currentColor" />
-            <Typography variant="small">Favorites</Typography>
-          </Button>
-
-          {favoritesExpanded && (
-            <Stack
-              id="favorites-documents-list"
-              role="region"
-              aria-label="Favorites documents"
-              gap="none"
-            >
-              {favorites.map((doc) => (
-                <Link
-                  key={doc._id}
-                  to={ROUTES.documents.detail.path}
-                  params={{ orgSlug, id: doc._id }}
-                  className="block"
-                >
-                  <Card
-                    recipe={selectedId === doc._id ? "documentTreeRowSelected" : "documentTreeRow"}
-                    padding="xs"
-                    hoverable={selectedId !== doc._id}
-                    className={cn("ml-6", selectedId !== doc._id && "text-ui-text-secondary")}
-                  >
-                    <Flex align="center" gap="xs">
-                      <Icon icon={File} size="sm" tone="tertiary" className="shrink-0" />
-                      <Typography
-                        variant={selectedId === doc._id ? "label" : "small"}
-                        className="truncate"
-                        title={doc.title || "Untitled"}
-                      >
-                        {doc.title || "Untitled"}
-                      </Typography>
-                    </Flex>
-                  </Card>
-                </Link>
-              ))}
-            </Stack>
-          )}
-        </div>
+        <DocumentTreeSection
+          id="favorites-documents-list"
+          ariaLabel="Favorites documents"
+          expanded={favoritesExpanded}
+          icon={<Icon icon={Star} size="sm" tone="warning" fill="currentColor" />}
+          label="Favorites"
+          onToggle={() => setFavoritesExpanded((prev) => !prev)}
+        >
+          {favorites.map((doc) => (
+            <DocumentTreeLinkRow
+              key={doc._id}
+              docId={doc._id}
+              icon={<Icon icon={File} size="sm" tone="tertiary" className="shrink-0" />}
+              orgSlug={orgSlug}
+              selectedId={selectedId}
+              title={getDocumentTitle(doc.title)}
+            />
+          ))}
+        </DocumentTreeSection>
       )}
 
       {rootDocs.map((node) => (
@@ -199,56 +323,32 @@ export function DocumentTree({
       {/* Archived Section */}
       {archived && archived.length > 0 && (
         <div className="border-t border-ui-border">
-          <Button
-            chrome="documentTreeSectionMuted"
-            chromeSize="documentTreeSection"
-            onClick={() => setArchivedExpanded((prev) => !prev)}
-            aria-expanded={archivedExpanded}
-            aria-controls="archived-documents-list"
+          <DocumentTreeSection
+            id="archived-documents-list"
+            ariaLabel="Archived documents"
+            expanded={archivedExpanded}
+            icon={<Icon icon={Archive} size="sm" />}
+            label="Archived"
+            muted
+            trailing={
+              <Typography variant="small" className="ml-auto text-ui-text-tertiary">
+                {archived.length}
+              </Typography>
+            }
+            onToggle={() => setArchivedExpanded((prev) => !prev)}
           >
-            <TreeChevronIcon isExpanded={archivedExpanded} />
-            <Icon icon={Archive} size="sm" />
-            <Typography variant="small">Archived</Typography>
-            <Typography variant="small" className="ml-auto text-ui-text-tertiary">
-              {archived.length}
-            </Typography>
-          </Button>
-
-          {archivedExpanded && (
-            <Stack
-              id="archived-documents-list"
-              role="region"
-              aria-label="Archived documents"
-              gap="none"
-            >
-              {archived.map((doc) => (
-                <Link
-                  key={doc._id}
-                  to={ROUTES.documents.detail.path}
-                  params={{ orgSlug, id: doc._id }}
-                  className="block"
-                >
-                  <Card
-                    recipe={selectedId === doc._id ? "documentTreeRowSelected" : "documentTreeRow"}
-                    padding="xs"
-                    hoverable={selectedId !== doc._id}
-                    className={cn("ml-6", selectedId !== doc._id && "text-ui-text-tertiary")}
-                  >
-                    <Flex align="center" gap="xs">
-                      <Icon icon={File} size="sm" tone="tertiary" className="shrink-0" />
-                      <Typography
-                        variant={selectedId === doc._id ? "label" : "small"}
-                        className="truncate"
-                        title={doc.title || "Untitled"}
-                      >
-                        {doc.title || "Untitled"}
-                      </Typography>
-                    </Flex>
-                  </Card>
-                </Link>
-              ))}
-            </Stack>
-          )}
+            {archived.map((doc) => (
+              <DocumentTreeLinkRow
+                key={doc._id}
+                docId={doc._id}
+                icon={<Icon icon={File} size="sm" tone="tertiary" className="shrink-0" />}
+                orgSlug={orgSlug}
+                selectedId={selectedId}
+                title={getDocumentTitle(doc.title)}
+                tone="tertiary"
+              />
+            ))}
+          </DocumentTreeSection>
         </div>
       )}
     </Stack>
@@ -330,92 +430,70 @@ function TreeNodeItem({
 
   return (
     <div>
-      <Link to={ROUTES.documents.detail.path} params={{ orgSlug, id: node._id }} className="block">
-        <Card
-          recipe={isSelected ? "documentTreeRowSelected" : "documentTreeRow"}
-          padding="xs"
-          hoverable={!isSelected}
-          className={cn("group", !isSelected && "text-ui-text-secondary")}
-          style={{ paddingLeft: `${depth * 16 + 8}px` }}
-        >
-          <Flex align="center" gap="xs">
+      <DocumentTreeRow
+        title={getDocumentTitle(node.title)}
+        orgSlug={orgSlug}
+        documentId={node._id}
+        isSelected={isSelected}
+        className={cn("group", !isSelected && "text-ui-text-secondary")}
+        paddingLeft={depth * 16 + 8}
+        icon={
+          <>
             <ExpandToggle
               hasChildren={node.hasChildren}
               isExpanded={isExpanded}
-              title={node.title || "Untitled"}
+              title={getDocumentTitle(node.title)}
               onToggle={handleToggle}
             />
             <DocumentIcon hasChildren={node.hasChildren} isExpanded={isExpanded} />
-
-            {/* Title */}
-            <FlexItem flex="1" className="min-w-0">
-              <Typography
-                variant={isSelected ? "label" : "small"}
-                className="truncate"
-                title={node.title || "Untitled"}
+          </>
+        }
+        action={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                reveal
+                onClick={(e) => e.preventDefault()}
+                aria-label={`Open actions for ${getDocumentTitle(node.title)}`}
               >
-                {node.title || "Untitled"}
-              </Typography>
-            </FlexItem>
-
-            {/* Actions menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  reveal
-                  onClick={(e) => e.preventDefault()}
-                  aria-label={`Open actions for ${node.title || "Untitled"}`}
+                <Icon icon={MoreHorizontal} size="sm" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" width="md">
+              {onCreateDocument && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onCreateDocument(node._id);
+                  }}
+                  icon={<Icon icon={Plus} size="sm" />}
                 >
-                  <Icon icon={MoreHorizontal} size="sm" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" width="md">
-                {onCreateDocument && (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onCreateDocument(node._id);
-                    }}
-                    icon={<Icon icon={Plus} size="sm" />}
-                  >
-                    Add subpage
-                  </DropdownMenuItem>
-                )}
-                {node.parentId && node.isOwner && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleMoveToRoot}>Move to root</DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </Flex>
-        </Card>
-      </Link>
+                  Add subpage
+                </DropdownMenuItem>
+              )}
+              {node.parentId && node.isOwner && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleMoveToRoot}>Move to root</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
 
       {/* Children */}
       {isExpanded && (
-        <div>
-          {children === undefined ? (
-            <Card variant="ghost" padding="sm" className="ml-6">
-              <Skeleton className="h-6 w-3/4" />
-            </Card>
-          ) : (
-            children.map((child) => (
-              <TreeNodeItem
-                key={child._id}
-                node={child as TreeNode}
-                organizationId={organizationId}
-                orgSlug={orgSlug}
-                selectedId={selectedId}
-                onCreateDocument={onCreateDocument}
-                depth={depth + 1}
-              />
-            ))
-          )}
-        </div>
+        <DocumentTreeChildren
+          nodes={children as TreeNode[] | undefined}
+          organizationId={organizationId}
+          orgSlug={orgSlug}
+          selectedId={selectedId}
+          onCreateDocument={onCreateDocument}
+          depth={depth}
+        />
       )}
     </div>
   );

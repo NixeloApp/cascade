@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects/:key/roadmap`
 > **Status**: REVIEWED
-> **Last Updated**: 2026-03-25
+> **Last Updated**: 2026-03-26
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -97,6 +97,9 @@ edge-resize, dependency arrows, zoom, grouping, and epic filtering.
 
 The toolbar is dense with controls, organized in rows:
 
+On narrow screens, the title and control rail now stack vertically so the route keeps the
+timeline context visible instead of pinning a desktop-width toolbar beside the heading.
+
 **Navigation row:**
 - Previous/Next buttons to shift the timeline window
 - Date range label (e.g., "Jan 2026 - Jun 2026")
@@ -188,7 +191,7 @@ The toolbar is dense with controls, organized in rows:
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | ~~1~~ | ~~2671 lines in a single file~~ **Fixed** — decomposed into `src/components/Roadmap/` support modules. Main file is now 791 lines and the reviewed screenshot matrix covers the route's real operating states instead of a shallow canonical-only baseline. | ~~architecture~~ | ~~MEDIUM~~ |
-| 2 | Mobile/tablet experience is limited for a dense Gantt chart. Drag interactions are designed for mouse, not touch. | responsive | MEDIUM |
+| 2 | Mobile/tablet roadmap chrome now fits the viewport, but direct drag/resize interactions are still designed for mouse rather than touch. | responsive | MEDIUM |
 | 3 | No undo for drag/resize operations. Accidental drags save immediately. | UX | LOW |
 | 4 | Dependency arrows can overlap and become hard to trace in dense timelines. | visualization | LOW |
 

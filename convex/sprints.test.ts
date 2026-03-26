@@ -333,6 +333,7 @@ describe("Sprints", () => {
           updatedAt: now,
           isPublic: true, // organization-visible
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
       });

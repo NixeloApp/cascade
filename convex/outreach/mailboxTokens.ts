@@ -1,5 +1,6 @@
 import type { Doc } from "../_generated/dataModel";
 import { decryptIfNeeded, encryptIfNeeded, isEncrypted } from "../lib/encryption";
+import { validation } from "../lib/errors";
 
 type MailboxTokenFields = Pick<Doc<"outreachMailboxes">, "accessToken" | "refreshToken">;
 
@@ -11,7 +12,6 @@ export interface EncryptedMailboxTokenFields {
 export interface DecryptedMailboxTokenSnapshot extends EncryptedMailboxTokenFields {
   decryptedAccessToken: string;
   decryptedRefreshToken?: string;
-  needsMigration: boolean;
 }
 
 /**
@@ -27,28 +27,34 @@ export async function encryptMailboxTokensForStorage(
   };
 }
 
-/**
- * Read outreach mailbox tokens for runtime use while preserving enough
- * metadata to self-heal legacy plaintext rows.
- */
+function assertEncryptedMailboxToken(
+  field: "accessToken" | "refreshToken",
+  token: string | undefined,
+) {
+  if (token && !isEncrypted(token)) {
+    throw validation(
+      field,
+      `Mailbox ${field} must be encrypted at rest before runtime use. Run the mailbox token repair mutation first.`,
+    );
+  }
+}
+
+/** Read outreach mailbox tokens for runtime use. */
 export async function getDecryptedMailboxTokenSnapshot(
   tokens: MailboxTokenFields,
 ): Promise<DecryptedMailboxTokenSnapshot> {
   const refreshToken = tokens.refreshToken;
   const hasAccessToken = tokens.accessToken.length > 0;
   const hasRefreshToken = refreshToken !== undefined;
-  const needsAccessTokenMigration = hasAccessToken && !isEncrypted(tokens.accessToken);
-  const needsRefreshTokenMigration = hasRefreshToken && !isEncrypted(refreshToken);
-
-  const encryptedTokens = await encryptMailboxTokensForStorage(tokens);
+  assertEncryptedMailboxToken("accessToken", hasAccessToken ? tokens.accessToken : undefined);
+  assertEncryptedMailboxToken("refreshToken", refreshToken);
 
   return {
-    accessToken: encryptedTokens.accessToken,
-    refreshToken: encryptedTokens.refreshToken,
+    accessToken: tokens.accessToken,
+    refreshToken,
     decryptedAccessToken: hasAccessToken
       ? await decryptIfNeeded(tokens.accessToken)
       : tokens.accessToken,
     decryptedRefreshToken: hasRefreshToken ? await decryptIfNeeded(refreshToken) : refreshToken,
-    needsMigration: needsAccessTokenMigration || needsRefreshTokenMigration,
   };
 }

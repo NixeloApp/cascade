@@ -21,6 +21,7 @@ import { validate } from "../lib/constrainedValidators";
 import { conflict, forbidden, validation } from "../lib/errors";
 import { resolveOutOfOfficeDelegateUserId } from "../lib/outOfOffice";
 import { syncProjectIssueStats } from "../lib/projectIssueStats";
+import { normalizeIssueDescriptionForStorage } from "../lib/richText";
 import { notDeleted, softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { enforceRateLimit } from "../rateLimits";
@@ -170,6 +171,7 @@ async function createIssueImpl(
   const resolvedAssigneeId = args.assigneeId
     ? await resolveOutOfOfficeDelegateUserId(ctx, args.assigneeId, ctx.projectId)
     : undefined;
+  const normalizedDescription = normalizeIssueDescriptionForStorage(args.description);
 
   const now = Date.now();
   const issueId = await ctx.db.insert("issues", {
@@ -179,7 +181,7 @@ async function createIssueImpl(
     teamId: ctx.project.teamId,
     key: issueKey,
     title: args.title,
-    description: args.description,
+    description: normalizedDescription,
     type: args.type,
     status: defaultStatus,
     priority: args.priority,
@@ -195,7 +197,7 @@ async function createIssueImpl(
     estimatedHours: args.estimatedHours,
     dueDate: args.dueDate,
     storyPoints: args.storyPoints,
-    searchContent: getSearchContent(args.title, args.description),
+    searchContent: getSearchContent(args.title, normalizedDescription),
     loggedHours: 0,
     order: maxOrder + 1,
     version: 1,
@@ -858,6 +860,7 @@ export const archive = issueMutation({
   returns: v.object({ success: v.boolean(), archived: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
+    const now = Date.now();
 
     // Already archived
     if (issue.archivedAt) {
@@ -872,9 +875,9 @@ export const archive = issueMutation({
 
     // Archive the issue
     await ctx.db.patch(issue._id, {
-      archivedAt: Date.now(),
+      archivedAt: now,
       archivedBy: ctx.userId,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     // Log activity
@@ -902,6 +905,7 @@ export const restore = issueMutation({
   returns: v.object({ success: v.boolean(), restored: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
+    const now = Date.now();
 
     // Not archived
     if (!issue.archivedAt) {
@@ -912,7 +916,7 @@ export const restore = issueMutation({
     await ctx.db.patch(issue._id, {
       archivedAt: undefined,
       archivedBy: undefined,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     // Log activity

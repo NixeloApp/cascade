@@ -50,16 +50,6 @@ export class MyIssuesPage extends BasePage {
       .toBe("ready");
   }
 
-  async filterByPriority(priorityLabel: string): Promise<void> {
-    await expect(this.priorityFilter).toBeVisible();
-    await this.priorityFilter.click();
-    const option = this.page.getByRole("option", {
-      name: new RegExp(`^${priorityLabel}$`, "i"),
-    });
-    await expect(option).toBeVisible();
-    await option.click();
-  }
-
   async expectFilterSummaryVisible(): Promise<void> {
     await expect(this.filterSummary).toBeVisible();
     await expect(this.filterSummary).toContainText(/loaded issues/i);

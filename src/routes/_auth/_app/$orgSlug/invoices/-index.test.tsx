@@ -166,15 +166,17 @@ describe("InvoicesListPage", () => {
     mockInvoiceQueries();
   });
 
-  it("renders the invoice table with invoice and client metadata", () => {
+  it("renders responsive invoice list/table surfaces with invoice metadata", () => {
     render(<InvoicesListPage />);
 
     expect(screen.getByTestId(TEST_IDS.INVOICES.CONTENT)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.INVOICES.MOBILE_LIST)).toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.INVOICES.TABLE)).toBeInTheDocument();
-    expect(screen.getByText("INV-2026-901")).toBeInTheDocument();
-    expect(screen.getByText("INV-2026-902")).toBeInTheDocument();
-    expect(screen.getByText("Northstar Labs")).toBeInTheDocument();
-    expect(screen.getByText("$2,400.00")).toBeInTheDocument();
+    expect(screen.getAllByText("INV-2026-901").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("INV-2026-902").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Northstar Labs").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("No client").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("$2,400.00").length).toBeGreaterThan(0);
   });
 
   it("returns the correct empty-state config for filtered and unfiltered views", () => {

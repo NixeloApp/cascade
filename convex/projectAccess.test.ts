@@ -50,6 +50,7 @@ describe("Project Access", () => {
         createdBy: adminId,
         updatedAt: Date.now(),
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });
@@ -122,6 +123,7 @@ describe("Project Access", () => {
         createdBy: adminId,
         updatedAt: Date.now(),
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });
@@ -180,6 +182,7 @@ describe("Project Access", () => {
         createdBy: adminId,
         updatedAt: Date.now(),
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });
@@ -233,6 +236,7 @@ describe("Project Access", () => {
         createdBy: ownerId,
         updatedAt: Date.now(),
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [],
       });
     });
