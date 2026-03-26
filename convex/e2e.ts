@@ -48,6 +48,54 @@ type SeededTimeTrackingMode = "default" | "entriesEmpty" | "ratesPopulated" | "s
 type SeededAssistantMode = "default" | "empty";
 type SeededInvoiceClient = "portal" | "none";
 
+function getIssueNumberFromKey(issueKey: string, projectKey: string): number | null {
+  const prefix = `${projectKey}-`;
+  if (!issueKey.startsWith(prefix)) {
+    return null;
+  }
+
+  const suffix = issueKey.slice(prefix.length);
+  if (!/^\d+$/.test(suffix)) {
+    return null;
+  }
+
+  return Number.parseInt(suffix, 10);
+}
+
+async function getHighestExistingProjectIssueNumber(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+  projectKey: string,
+): Promise<number> {
+  const existingIssues = await ctx.db
+    .query("issues")
+    .withIndex("by_project_status", (q) => q.eq("projectId", projectId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  let highestIssueNumber = 0;
+  for (const issue of existingIssues) {
+    const issueNumber = getIssueNumberFromKey(issue.key, projectKey);
+    if (issueNumber !== null) {
+      highestIssueNumber = Math.max(highestIssueNumber, issueNumber);
+    }
+  }
+
+  return highestIssueNumber;
+}
+
+async function getProjectIssueCounterFloor(
+  ctx: MutationCtx,
+  project: Doc<"projects">,
+): Promise<number> {
+  const highestExistingIssueNumber = await getHighestExistingProjectIssueNumber(
+    ctx,
+    project._id,
+    project.key,
+  );
+  return Math.max(project.nextIssueNumber, highestExistingIssueNumber);
+}
+
 interface SeededInvoiceLineItemDefinition {
   description: string;
   quantity: number;
@@ -3935,11 +3983,12 @@ export const setupRbacProjectInternal = internalMutation({
       project = await ctx.db.get(projectId);
     } else {
       // Always update project metadata to match current test config
+      const nextIssueNumber = await getProjectIssueCounterFloor(ctx, project);
       await ctx.db.patch(project._id, {
         name: args.projectName,
         organizationId: organization._id,
         description: "E2E test project for RBAC permission testing - organization level",
-        nextIssueNumber: project.nextIssueNumber ?? 0,
+        nextIssueNumber,
       });
     }
 
@@ -3979,11 +4028,12 @@ export const setupRbacProjectInternal = internalMutation({
 
       workspaceProject = await ctx.db.get(wsProjectId);
     } else {
+      const nextIssueNumber = await getProjectIssueCounterFloor(ctx, workspaceProject);
       await ctx.db.patch(workspaceProject._id, {
         name: `RBAC Workspace Project (${workspaceProjectKey})`,
         description: "E2E test project for RBAC - Workspace level",
         ownerId: adminUser._id, // Ensure ownership is updated
-        nextIssueNumber: workspaceProject.nextIssueNumber ?? 0,
+        nextIssueNumber,
       });
     }
 
@@ -4019,11 +4069,12 @@ export const setupRbacProjectInternal = internalMutation({
 
       teamProject = await ctx.db.get(tmProjectId);
     } else {
+      const nextIssueNumber = await getProjectIssueCounterFloor(ctx, teamProject);
       await ctx.db.patch(teamProject._id, {
         name: `RBAC Team Project (${teamProjectKey})`,
         description: "E2E test project for RBAC - Team level",
         ownerId: adminUser._id, // Ensure ownership is updated
-        nextIssueNumber: teamProject.nextIssueNumber ?? 0,
+        nextIssueNumber,
       });
     }
 
@@ -7239,7 +7290,7 @@ export const seedScreenshotDataInternal = internalMutation({
         createdBy: userId,
         updatedAt: now,
         boardType: "kanban",
-        nextIssueNumber: 0,
+        nextIssueNumber: 7,
         workflowStates: [
           { id: "todo", name: "To Do", category: "todo", order: 0 },
           { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
@@ -7250,6 +7301,7 @@ export const seedScreenshotDataInternal = internalMutation({
       project = await ctx.db.get(projId);
     } else {
       // Re-home the seeded project so list/detail queries all target the same org/workspace.
+      const nextIssueNumber = await getProjectIssueCounterFloor(ctx, project);
       await ctx.db.patch(project._id, {
         name: "Demo Project",
         description: screenshotProjectDescription,
@@ -7259,7 +7311,7 @@ export const seedScreenshotDataInternal = internalMutation({
         ownerId: userId,
         updatedAt: now,
         boardType: "kanban",
-        nextIssueNumber: project.nextIssueNumber ?? 0,
+        nextIssueNumber: Math.max(nextIssueNumber, 7),
         workflowStates: [
           { id: "todo", name: "To Do", category: "todo", order: 0 },
           { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
@@ -7404,7 +7456,7 @@ export const seedScreenshotDataInternal = internalMutation({
         createdBy: userId,
         updatedAt: now,
         boardType: "scrum",
-        nextIssueNumber: 0,
+        nextIssueNumber: 3,
         workflowStates: [
           { id: "todo", name: "To Do", category: "todo", order: 0 },
           { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
@@ -7414,6 +7466,7 @@ export const seedScreenshotDataInternal = internalMutation({
       });
       secondaryProject = await ctx.db.get(secondaryProjectId);
     } else {
+      const nextIssueNumber = await getProjectIssueCounterFloor(ctx, secondaryProject);
       await ctx.db.patch(secondaryProject._id, {
         name: "Client Operations Hub",
         description: "Launch checklists, client handoffs, and delivery follow-through.",
@@ -7423,7 +7476,7 @@ export const seedScreenshotDataInternal = internalMutation({
         ownerId: userId,
         updatedAt: now,
         boardType: "scrum",
-        nextIssueNumber: secondaryProject.nextIssueNumber ?? 0,
+        nextIssueNumber: Math.max(nextIssueNumber, 3),
         workflowStates: [
           { id: "todo", name: "To Do", category: "todo", order: 0 },
           { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },

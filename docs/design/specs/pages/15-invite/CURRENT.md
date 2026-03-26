@@ -3,7 +3,6 @@
 > **Route**: `/invite/:token`
 > **Status**: IMPLEMENTED and reviewed across pending plus terminal invite states
 > **Last Updated**: 2026-03-26
-
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
 ---
@@ -12,11 +11,11 @@
 
 | State | Desktop Dark | Desktop Light | Tablet Light | Mobile Light |
 |-------|--------------|---------------|--------------|--------------|
-| Pending invite | ![](screenshots/desktop-dark.png) | ![](screenshots/desktop-light.png) | ![](screenshots/tablet-light.png) | ![](screenshots/mobile-light.png) |
-| Invalid invite | ![](screenshots/desktop-dark-invalid.png) | ![](screenshots/desktop-light-invalid.png) | ![](screenshots/tablet-light-invalid.png) | ![](screenshots/mobile-light-invalid.png) |
-| Expired invite | ![](screenshots/desktop-dark-expired.png) | ![](screenshots/desktop-light-expired.png) | ![](screenshots/tablet-light-expired.png) | ![](screenshots/mobile-light-expired.png) |
-| Revoked invite | ![](screenshots/desktop-dark-revoked.png) | ![](screenshots/desktop-light-revoked.png) | ![](screenshots/tablet-light-revoked.png) | ![](screenshots/mobile-light-revoked.png) |
-| Accepted invite | ![](screenshots/desktop-dark-accepted.png) | ![](screenshots/desktop-light-accepted.png) | ![](screenshots/tablet-light-accepted.png) | ![](screenshots/mobile-light-accepted.png) |
+| Pending invite | ![Pending invite desktop dark](screenshots/desktop-dark.png) | ![Pending invite desktop light](screenshots/desktop-light.png) | ![Pending invite tablet light](screenshots/tablet-light.png) | ![Pending invite mobile light](screenshots/mobile-light.png) |
+| Invalid invite | ![Invalid invite desktop dark](screenshots/desktop-dark-invalid.png) | ![Invalid invite desktop light](screenshots/desktop-light-invalid.png) | ![Invalid invite tablet light](screenshots/tablet-light-invalid.png) | ![Invalid invite mobile light](screenshots/mobile-light-invalid.png) |
+| Expired invite | ![Expired invite desktop dark](screenshots/desktop-dark-expired.png) | ![Expired invite desktop light](screenshots/desktop-light-expired.png) | ![Expired invite tablet light](screenshots/tablet-light-expired.png) | ![Expired invite mobile light](screenshots/mobile-light-expired.png) |
+| Revoked invite | ![Revoked invite desktop dark](screenshots/desktop-dark-revoked.png) | ![Revoked invite desktop light](screenshots/desktop-light-revoked.png) | ![Revoked invite tablet light](screenshots/tablet-light-revoked.png) | ![Revoked invite mobile light](screenshots/mobile-light-revoked.png) |
+| Accepted invite | ![Accepted invite desktop dark](screenshots/desktop-dark-accepted.png) | ![Accepted invite desktop light](screenshots/desktop-light-accepted.png) | ![Accepted invite tablet light](screenshots/tablet-light-accepted.png) | ![Accepted invite mobile light](screenshots/mobile-light-accepted.png) |
 
 ---
 

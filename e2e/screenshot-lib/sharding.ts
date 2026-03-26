@@ -9,6 +9,14 @@ export interface ScreenshotShardInfo {
 
 const shardPlanCache = new Map<string, ScreenshotShardInfo[]>();
 
+export function getCaptureTargetBucketKey(target: CaptureTarget): string {
+  return target.modalSpecSlug
+    ? `modal:${target.modalSpecSlug}`
+    : target.specFolder
+      ? `spec:${target.specFolder}`
+      : `page:${target.pageId}`;
+}
+
 export function buildScreenshotShards(
   pageIds: readonly string[],
   shardTotal: number,
@@ -38,11 +46,7 @@ export function buildScreenshotShards(
     const prefix = separatorIndex === -1 ? pageId : pageId.slice(0, separatorIndex);
     const name = separatorIndex === -1 ? "" : pageId.slice(separatorIndex + 1);
     const target = resolveCaptureTarget(prefix, name);
-    const bucketKey = target.modalSpecSlug
-      ? `modal:${target.modalSpecSlug}`
-      : target.specFolder
-        ? `spec:${target.specFolder}`
-        : `page:${target.pageId}`;
+    const bucketKey = getCaptureTargetBucketKey(target);
     bucketCounts.set(bucketKey, (bucketCounts.get(bucketKey) ?? 0) + 1);
   }
 
@@ -88,16 +92,16 @@ export function isCaptureTargetInShard(
   shardIndex: number,
   shardTotal: number,
 ): boolean {
+  if (!Number.isInteger(shardIndex) || shardIndex < 1 || shardIndex > shardTotal) {
+    throw new Error(`Screenshot shard index must be between 1 and ${shardTotal}`);
+  }
+
   const shard = buildScreenshotShards(pageIds, shardTotal).find(
     (entry) => entry.index === shardIndex,
   );
   if (!shard) {
     return false;
   }
-  const bucketKey = target.modalSpecSlug
-    ? `modal:${target.modalSpecSlug}`
-    : target.specFolder
-      ? `spec:${target.specFolder}`
-      : `page:${target.pageId}`;
+  const bucketKey = getCaptureTargetBucketKey(target);
   return shard.keys.includes(bucketKey);
 }

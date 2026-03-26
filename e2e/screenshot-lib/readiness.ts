@@ -148,12 +148,13 @@ export async function waitForPublicPageReady(page: Page, name: string): Promise<
   }
 
   if (name.startsWith("invite-")) {
-    const inviteStateHeading = {
+    const inviteStateHeadings: Partial<Record<string, RegExp>> = {
       "invite-invalid": /invalid invitation/i,
       "invite-expired": /invitation expired/i,
       "invite-revoked": /invitation revoked/i,
       "invite-accepted": /already accepted/i,
-    }[name];
+    };
+    const inviteStateHeading = inviteStateHeadings[name];
 
     if (inviteStateHeading) {
       await page

@@ -34,7 +34,7 @@ export function buildTerminalEnrollmentPatch(
   status: "replied" | "bounced" | "unsubscribed";
   completedAt: number;
   nextSendAt: undefined;
-  lastRepliedAt?: number;
+  lastRepliedAt?: number | undefined;
 } {
   return reason === "replied"
     ? {
@@ -47,5 +47,6 @@ export function buildTerminalEnrollmentPatch(
         status: reason,
         completedAt,
         nextSendAt: undefined,
+        lastRepliedAt: undefined,
       };
 }

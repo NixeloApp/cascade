@@ -47,6 +47,43 @@ describe("check-lifecycle-timestamp-ownership", () => {
     expect(issues).toEqual([]);
   });
 
+  it("flags raw lifecycle bundles hidden inside object spreads", () => {
+    const issues = collectLifecycleTimestampOwnershipIssues(
+      `
+        export const cancelEnrollment = authenticatedMutation({
+          handler: async (ctx) => {
+            await ctx.db.patch(enrollmentId, {
+              ...{
+                status: "completed",
+                completedAt: Date.now(),
+                nextSendAt: undefined,
+              },
+              updatedAt: Date.now(),
+            });
+          },
+        });
+      `,
+      fixturePath("convex/outreach/enrollments.ts"),
+    );
+
+    expect(issues).toHaveLength(1);
+  });
+
+  it("ignores unrelated non-Convex patch APIs", () => {
+    const issues = collectLifecycleTimestampOwnershipIssues(
+      `
+        someClient.patch(enrollmentId, {
+          status: "completed",
+          completedAt: Date.now(),
+          nextSendAt: undefined,
+        });
+      `,
+      fixturePath("convex/outreach/enrollments.ts"),
+    );
+
+    expect(issues).toEqual([]);
+  });
+
   it("passes against the current repo state", () => {
     const result = run();
 

@@ -1,32 +1,37 @@
 import { describe, expect, it } from "vitest";
 import { buildCompletedEnrollmentPatch, buildTerminalEnrollmentPatch } from "./lifecyclePatches";
 
+const COMPLETED_AT = 456;
+const TERMINAL_AT = 789;
+const CURRENT_STEP = 3;
+
 describe("lifecyclePatches", () => {
   it("builds completed enrollment patches", () => {
-    expect(buildCompletedEnrollmentPatch(456)).toEqual({
+    expect(buildCompletedEnrollmentPatch(COMPLETED_AT)).toEqual({
       status: "completed",
-      completedAt: 456,
+      completedAt: COMPLETED_AT,
       nextSendAt: undefined,
     });
-    expect(buildCompletedEnrollmentPatch(456, 3)).toEqual({
-      currentStep: 3,
+    expect(buildCompletedEnrollmentPatch(COMPLETED_AT, CURRENT_STEP)).toEqual({
+      currentStep: CURRENT_STEP,
       status: "completed",
-      completedAt: 456,
+      completedAt: COMPLETED_AT,
       nextSendAt: undefined,
     });
   });
 
   it("builds terminal enrollment patches", () => {
-    expect(buildTerminalEnrollmentPatch("bounced", 789)).toEqual({
+    expect(buildTerminalEnrollmentPatch("bounced", TERMINAL_AT)).toEqual({
       status: "bounced",
-      completedAt: 789,
+      completedAt: TERMINAL_AT,
       nextSendAt: undefined,
+      lastRepliedAt: undefined,
     });
-    expect(buildTerminalEnrollmentPatch("replied", 789)).toEqual({
+    expect(buildTerminalEnrollmentPatch("replied", TERMINAL_AT)).toEqual({
       status: "replied",
-      completedAt: 789,
+      completedAt: TERMINAL_AT,
       nextSendAt: undefined,
-      lastRepliedAt: 789,
+      lastRepliedAt: TERMINAL_AT,
     });
   });
 });

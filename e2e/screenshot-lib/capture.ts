@@ -274,7 +274,9 @@ export function promoteStagedScreenshots(): void {
   const isExhaustiveRun =
     !captureState.cliOptions.configFilters &&
     captureState.cliOptions.specFilters.length === 0 &&
-    captureState.cliOptions.matchFilters.length === 0;
+    captureState.cliOptions.matchFilters.length === 0 &&
+    captureState.cliOptions.shardIndex === null &&
+    captureState.cliOptions.shardTotal === null;
 
   if (isExhaustiveRun) {
     for (const [targetDir, expectedFiles] of targetDirToFiles) {

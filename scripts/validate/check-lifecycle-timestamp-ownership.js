@@ -29,6 +29,13 @@ function getObjectPropertyNames(node) {
   const names = new Set();
 
   for (const property of node.properties) {
+    if (ts.isSpreadAssignment(property) && ts.isObjectLiteralExpression(property.expression)) {
+      for (const nestedName of getObjectPropertyNames(property.expression)) {
+        names.add(nestedName);
+      }
+      continue;
+    }
+
     if (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property)) {
       const propertyName = getPropertyName(property.name);
       if (propertyName) {
@@ -40,6 +47,17 @@ function getObjectPropertyNames(node) {
   return names;
 }
 
+function isCtxDbPatchCall(expression) {
+  return (
+    ts.isPropertyAccessExpression(expression) &&
+    expression.name.text === "patch" &&
+    ts.isPropertyAccessExpression(expression.expression) &&
+    expression.expression.name.text === "db" &&
+    ts.isIdentifier(expression.expression.expression) &&
+    expression.expression.expression.text === "ctx"
+  );
+}
+
 function isPatchContext(node) {
   const parent = node.parent;
 
@@ -47,21 +65,24 @@ function isPatchContext(node) {
     ts.isCallExpression(parent) &&
     parent.arguments.length >= 2 &&
     parent.arguments[1] === node &&
-    ts.isPropertyAccessExpression(parent.expression) &&
-    parent.expression.name.text === "patch"
+    isCtxDbPatchCall(parent.expression)
   ) {
     return true;
   }
 
-  return (
-    ts.isPropertyAssignment(parent) &&
-    getPropertyName(parent.name) === "patch" &&
-    parent.initializer === node
-  );
+  return false;
 }
 
 function getStatusLiteral(node) {
   for (const property of node.properties) {
+    if (ts.isSpreadAssignment(property) && ts.isObjectLiteralExpression(property.expression)) {
+      const nestedStatus = getStatusLiteral(property.expression);
+      if (nestedStatus) {
+        return nestedStatus;
+      }
+      continue;
+    }
+
     if (!ts.isPropertyAssignment(property) || getPropertyName(property.name) !== "status") {
       continue;
     }

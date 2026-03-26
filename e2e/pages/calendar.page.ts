@@ -184,15 +184,15 @@ export class CalendarPage extends BasePage {
     const option = this.page.getByRole("option", { name: optionName, exact: true });
 
     for (let attempt = 1; attempt <= 3; attempt += 1) {
-      await trigger.scrollIntoViewIfNeeded();
-      await trigger.click();
-
-      if (!(await waitForLocatorVisible(option, 3000))) {
-        await this.page.keyboard.press("Escape").catch(() => undefined);
-        continue;
-      }
-
       try {
+        await trigger.scrollIntoViewIfNeeded();
+        await trigger.click();
+
+        if (!(await waitForLocatorVisible(option, 3000))) {
+          await this.page.keyboard.press("Escape").catch(() => undefined);
+          continue;
+        }
+
         await option.scrollIntoViewIfNeeded();
         await option.click();
         return;

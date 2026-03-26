@@ -1,7 +1,7 @@
 # Team Detail Page - Current State
 
 > **Route**: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug` (layout shell) with child tabs
-> **Status**: IMPLEMENTED (settings tab is placeholder)
+> **Status**: IMPLEMENTED and reviewed across all team tabs
 > **Last Updated**: 2026-03-26
 
 ---
@@ -58,8 +58,10 @@ The team detail page is the working surface for a single team within a workspace
 │   ├── EmptyState ("No team wiki docs yet")
 │   └── Grid → doc card[] (identical to workspace wiki cards)
 │
-└── settings.tsx → TeamSettings (placeholder)
-    └── Card "Coming Soon" (placeholder with icon and description)
+└── settings.tsx → TeamSettings
+    ├── GeneralSection (name, description, privacy)
+    ├── MembersSection (roles, removal)
+    └── DangerSection (delete team)
 ```
 
 ---
@@ -69,10 +71,10 @@ The team detail page is the working surface for a single team within a workspace
 1. **Inherited workspace context** (`../route.tsx`): When the team route is active, the parent workspace layout no longer renders its own full header. It now collapses to a compact workspace-sections strip so users can still jump back to workspace-level sections without spending a full extra header block on nested chrome. On mobile that parent strip now wraps instead of clipping the later tabs off the right edge.
 2. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`, then team via `api.teams.getBySlug` (using workspace ID as parent). Shows loading spinner while pending, "Team not found" if either is null. Renders 3-level breadcrumbs, a lighter shared header with the member summary folded into the header actions, and a compact `PageControls` strip with 4 tabs (Board, Calendar, Wiki, Settings), then `<Outlet />`.
 3. **Index redirect** (`index.tsx`): Uses TanStack Router `beforeLoad` with `redirect()` so the team root never renders a transient blank shell before landing on the board route.
-4. **Board** (`board.tsx`): Resolves workspace and team, then renders `<KanbanBoard teamId={team._id} />`. The `KanbanBoard` component is a feature-rich Kanban board with drag-and-drop (Atlaskit pragmatic-drag-and-drop), swimlanes, board history (undo/redo), bulk operations, filtering, and issue detail viewer. On mobile it now uses the same single-column workflow selector as the project board instead of clipping multiple columns off-screen.
-5. **Calendar** (`calendar.tsx`): Resolves workspace and team, renders `<CalendarView teamId={team._id} />` with full error handling for both workspace and team not-found states.
-6. **Wiki** (`wiki.tsx`): Resolves workspace and team, queries `api.documents.listByTeam` scoped to the team. Renders the same card layout as workspace wiki (doc icon, title, visibility badge, creator metadata). Empty state directs users to create team-scoped docs.
-7. **Settings** (`settings.tsx`): Static placeholder page with a "Coming Soon" card. No queries, mutations, or form elements. Describes future functionality (member management, roles, permissions).
+4. **Board** (`board.tsx`): Reads `teamId` from `useTeamLayout()` and renders `<KanbanBoard teamId={teamId} />`. The `KanbanBoard` component is a feature-rich Kanban board with drag-and-drop (Atlaskit pragmatic-drag-and-drop), swimlanes, board history (undo/redo), bulk operations, filtering, and issue detail viewer. On mobile it now uses the same single-column workflow selector as the project board instead of clipping multiple columns off-screen.
+5. **Calendar** (`calendar.tsx`): Reads `teamId` from `useTeamLayout()` and renders `<CalendarView teamId={teamId} />`.
+6. **Wiki** (`wiki.tsx`): Reads `teamId` from `useTeamLayout()`, then queries `api.documents.listByTeam` scoped to the team. Renders the same card layout as workspace wiki (doc icon, title, visibility badge, creator metadata). Empty state directs users to create team-scoped docs.
+7. **Settings** (`settings.tsx`): Reads `teamId` and `workspaceSlug` from `useTeamLayout()`, then renders editable team settings: general info, member role management, and a delete-team danger zone for leads/admins.
 
 ---
 
@@ -107,14 +109,13 @@ The team detail page is the working surface for a single team within a workspace
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| ~~1~~ | ~~Settings tab is a static "Coming Soon" placeholder~~ **Fixed** — general settings (name, description, privacy), member management (roles, removal), and danger zone (delete team) | functionality | ~~HIGH~~ |
+| ~~1~~ | ~~Settings tab is a static "Coming Soon" placeholder~~ **Fixed** — settings now includes general info, member management, and a lead-only danger zone | functionality | ~~HIGH~~ |
 | ~~2~~ | ~~"Projects" tab label mismatch~~ **Fixed** — renamed to "Board" to match actual content (team index redirects to board view) | ~~naming~~ | ~~MEDIUM~~ |
 | ~~3~~ | ~~Duplicate workspace+team queries in child routes~~ **Fixed** — TeamLayoutContext provides teamId/workspaceId from parent; board/calendar/wiki/settings use useTeamLayout() | ~~performance~~ | ~~MEDIUM~~ |
 | ~~4~~ | ~~useEffect redirect in index route~~ **Fixed** — replaced with TanStack Router `beforeLoad` + `redirect()`. No component renders, no query fires. | ~~architecture~~ | ~~LOW~~ |
 | ~~5~~ | ~~Wiki page shares identical card markup with workspace wiki~~ **Fixed** — extracted `WikiDocumentGrid` to `src/components/Documents/WikiDocumentGrid.tsx`, used by both team and workspace wiki | ~~code duplication~~ | ~~MEDIUM~~ |
-| 6 | Board route loads workspace + team just to pass `team._id` to KanbanBoard; team ID could come from layout context | efficiency | LOW |
+| ~~6~~ | ~~Board route loads workspace + team just to pass `team._id` to KanbanBoard~~ **Fixed** — board, calendar, wiki, and settings read layout context via `useTeamLayout()` | efficiency | ~~LOW~~ |
 | ~~7~~ | ~~No team member list visible~~ **Fixed** — team layout header now keeps the member summary inside the shared header actions (avatars, overflow badge, count) instead of spending a separate row on chrome | ~~functionality~~ | ~~MEDIUM~~ |
-| 8 | Settings placeholder uses an inline SVG icon instead of an icon from `@/lib/icons` | consistency | LOW |
 
 ---
 
@@ -127,7 +128,7 @@ The team detail page is the working surface for a single team within a workspace
 | `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board.tsx` | Kanban board tab |
 | `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar.tsx` | Team calendar tab |
 | `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx` | Team wiki tab |
-| `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings.tsx` | Settings placeholder |
+| `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings.tsx` | Editable team settings surface |
 | `src/components/KanbanBoard.tsx` | Full Kanban board component |
 | `src/components/Calendar/CalendarView.tsx` | Shared calendar component |
 | `convex/workspaces.ts` | `getBySlug` for workspace resolution |

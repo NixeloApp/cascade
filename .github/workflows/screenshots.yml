@@ -1,6 +1,12 @@
 name: Screenshots
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/screenshots.yml"
+      - "e2e/**"
+      - "src/**"
+      - "docs/design/specs/**"
   workflow_dispatch:
 
 permissions:
