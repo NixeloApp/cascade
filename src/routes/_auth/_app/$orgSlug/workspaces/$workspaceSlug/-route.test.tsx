@@ -80,6 +80,12 @@ describe("WorkspaceLayout", () => {
 
     const nav = screen.getByRole("navigation", { name: "Workspace sections" });
     expect(nav.closest(".gap-4")).not.toBeNull();
+    expect(nav).toHaveClass(
+      "flex-wrap",
+      "overflow-visible",
+      "sm:flex-nowrap",
+      "sm:overflow-x-auto",
+    );
   });
 
   it("demotes the workspace shell to a compact context strip for team routes", () => {

@@ -28,4 +28,22 @@ describe("RouteNav", () => {
     expect(item).toHaveAttribute("aria-current", "page");
     expect(item).not.toHaveAttribute("data-active");
   });
+
+  it("supports wrapping navigation items on mobile while preserving desktop scrolling", () => {
+    render(
+      <RouteNav aria-label="Sections" mobileLayout="wrap" size="sm">
+        <RouteNavItem>Teams</RouteNavItem>
+        <RouteNavItem>Backlog</RouteNavItem>
+        <RouteNavItem>Dependencies</RouteNavItem>
+      </RouteNav>,
+    );
+
+    const nav = screen.getByRole("navigation", { name: "Sections" });
+    expect(nav).toHaveClass(
+      "flex-wrap",
+      "overflow-visible",
+      "sm:flex-nowrap",
+      "sm:overflow-x-auto",
+    );
+  });
 });

@@ -106,7 +106,7 @@ interface WorkspaceSectionsNavProps {
 function WorkspaceSectionsNav({ orgSlug, workspaceSlug }: WorkspaceSectionsNavProps) {
   return (
     <Stack gap="none">
-      <RouteNav size="sm" aria-label="Workspace sections">
+      <RouteNav size="sm" mobileLayout="wrap" aria-label="Workspace sections">
         <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.detail.path}

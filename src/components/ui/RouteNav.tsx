@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const routeNavVariants = cva("flex max-w-full items-center overflow-x-auto scrollbar-subtle", {
+const routeNavVariants = cva("flex max-w-full items-center scrollbar-subtle", {
   variants: {
     variant: {
       underline: "border-b border-ui-border/70",
@@ -13,10 +13,15 @@ const routeNavVariants = cva("flex max-w-full items-center overflow-x-auto scrol
       sm: "",
       md: "",
     },
+    mobileLayout: {
+      scroll: "overflow-x-auto",
+      wrap: "flex-wrap gap-y-1 overflow-visible sm:flex-nowrap sm:overflow-x-auto sm:gap-y-0",
+    },
   },
   defaultVariants: {
     variant: "underline",
     size: "md",
+    mobileLayout: "scroll",
   },
   compoundVariants: [
     {
@@ -87,9 +92,9 @@ type RouteNavProps = React.ComponentPropsWithoutRef<"nav"> &
     children?: React.ReactNode;
   };
 
-function RouteNav({ children, className, size, variant, ...props }: RouteNavProps) {
+function RouteNav({ children, className, mobileLayout, size, variant, ...props }: RouteNavProps) {
   return (
-    <nav className={cn(routeNavVariants({ size, variant }), className)} {...props}>
+    <nav className={cn(routeNavVariants({ mobileLayout, size, variant }), className)} {...props}>
       <RouteNavContext.Provider value={{ size, variant }}>{children}</RouteNavContext.Provider>
     </nav>
   );

@@ -84,7 +84,7 @@ The workspace detail page is the primary operating surface for a single workspac
 
 ## Current Composition Walkthrough
 
-1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`. Shows loading spinner while pending, "Workspace not found" if null. Renders a lighter `PageHeader` with breadcrumbs plus a compact `PageControls` strip with 7 tabs, then an `<Outlet />` for child routes.
+1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`. Shows loading spinner while pending, "Workspace not found" if null. Renders a lighter `PageHeader` with breadcrumbs plus a compact `PageControls` strip with 7 tabs. On mobile that section nav now wraps into two readable rows instead of clipping the rightmost tabs off-screen, then an `<Outlet />` for child routes.
 2. **Index redirect** (`index.tsx`): Immediately redirects to the teams list sub-route in `beforeLoad` using TanStack Router `redirect()`. No component renders and no child query fires first.
 3. **Teams list** (`teams/index.tsx`): Uses `usePaginatedQuery` with `api.teams.getTeams` filtered by `workspaceId`. Renders a lightweight section intro instead of a second hero shell, shows team cards with icon, name, description, member count, and project count, and opens a real `CreateTeamModal` from both the populated header action and the empty state.
 4. **Backlog** (`backlog.tsx`): Queries `api.workspaces.getBacklogIssues` (workspace-scoped). Renders a flat card list with issue key, title, status, and priority.
