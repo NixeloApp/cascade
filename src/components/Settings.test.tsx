@@ -134,7 +134,13 @@ describe("Settings", () => {
     const tablist = screen.getByRole("tablist", { name: "Settings sections" });
     expect(tablist.closest(".gap-6")).not.toBeNull();
     expect(container.firstChild).toHaveClass("w-full");
-    expect(tablist).toHaveClass("bg-transparent");
+    expect(tablist).toHaveClass(
+      "bg-transparent",
+      "flex-wrap",
+      "overflow-visible",
+      "sm:flex-nowrap",
+      "sm:overflow-x-auto",
+    );
   });
 
   it("shows admin and developer tabs when the user is an admin on a test inbox account", () => {

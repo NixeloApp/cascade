@@ -81,6 +81,7 @@ full settings workspace:
 
 - Tab state is route-owned through validated search params rather than copied into local state.
 - `SETTINGS_TABS` is the canonical visibility/rendering model.
+- The shared settings tab band now wraps into multiple rows on phone-width screens instead of compressing all tabs into one cramped strip.
 - Lighter tabs now use shared `SettingsSection`.
 - Integrations now use shared `SettingsIntegrationSection`.
 - Admin uses a dedicated shared shell rather than a stack of unrelated panels.
