@@ -51,6 +51,7 @@ describe("Purge Data", () => {
         ownerId: userId,
         isPublic: false,
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [],
         workspaceId: workspaceId,
       });

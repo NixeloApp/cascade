@@ -260,6 +260,7 @@ describe("Workspaces", () => {
           createdBy: userId,
           updatedAt: Date.now(),
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
       });
@@ -351,6 +352,7 @@ describe("Workspaces", () => {
           createdBy: ownerId,
           updatedAt: now,
           boardType: "scrum",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
 
@@ -435,6 +437,7 @@ describe("Workspaces", () => {
           createdBy: ownerId,
           updatedAt: now,
           boardType: "scrum",
+          nextIssueNumber: 0,
           workflowStates: [
             { id: "todo", name: "To Do", category: "todo", order: 0 },
             { id: "inprogress", name: "In Progress", category: "inprogress", order: 1 },
@@ -841,6 +844,7 @@ describe("Workspaces", () => {
           createdBy: userId,
           updatedAt: Date.now(),
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
       });
@@ -894,6 +898,7 @@ describe("Workspaces", () => {
           createdBy: ownerId,
           updatedAt: now,
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
         const mobileProjectId = await ctx.db.insert("projects", {
@@ -906,6 +911,7 @@ describe("Workspaces", () => {
           createdBy: ownerId,
           updatedAt: now,
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
 
@@ -1030,6 +1036,7 @@ describe("Workspaces", () => {
           createdBy: ownerId,
           updatedAt: now,
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
         const productProjectId = await ctx.db.insert("projects", {
@@ -1042,6 +1049,7 @@ describe("Workspaces", () => {
           createdBy: ownerId,
           updatedAt: now,
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
 
@@ -1162,6 +1170,7 @@ describe("Workspaces", () => {
           createdBy: ownerId,
           updatedAt: now,
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
         const frontendProjectId = await ctx.db.insert("projects", {
@@ -1174,6 +1183,7 @@ describe("Workspaces", () => {
           createdBy: ownerId,
           updatedAt: now,
           boardType: "kanban",
+          nextIssueNumber: 0,
           workflowStates: [],
         });
 

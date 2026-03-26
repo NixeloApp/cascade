@@ -43,8 +43,7 @@ export const projectsFields = {
   autoArchiveDays: v.optional(v.number()),
   // Issue key sequence — atomic counter for generating PROJ-N keys.
   // Stores the last issued number; next issue gets nextIssueNumber + 1.
-  // App code must initialize this on every project insert.
-  nextIssueNumber: v.optional(v.number()),
+  nextIssueNumber: v.number(),
   // Soft Delete
   isDeleted: v.optional(v.boolean()),
   deletedAt: v.optional(v.number()),

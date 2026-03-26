@@ -135,6 +135,7 @@ const issue: EnrichedIssue & {
       category: "todo" | "inprogress" | "done";
       wipLimit?: number;
     }>;
+    nextIssueNumber: number;
     isPublic?: boolean;
     sharedWithTeamIds?: Id<"teams">[];
     defaultHourlyRate?: number;
@@ -184,6 +185,7 @@ const issue: EnrichedIssue & {
     description: "Project description",
     boardType: "kanban",
     workflowStates: [],
+    nextIssueNumber: 0,
     isPublic: false,
     sharedWithTeamIds: [],
     defaultHourlyRate: undefined,
