@@ -48,7 +48,7 @@ export function parseAddCommentArgs(value: unknown): AddCommentArgs | null {
 
 function validateAddCommentArgs(args: Record<string, unknown>): AddCommentArgs {
   if (!isAddCommentArgs(args)) {
-    throw new Error("Invalid issues.addComment args: expected { issueId, content }");
+    throw new Error("Validation failed for issues.addComment args: expected a replayable payload");
   }
   return args;
 }

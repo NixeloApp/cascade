@@ -299,6 +299,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
             {queuedComments.map((comment) => (
               <CommentThreadRow
                 key={comment.key}
+                attachments={comment.attachments}
                 authorImage={currentUser?.image}
                 authorName={currentUser?.name || "You"}
                 content={comment.content}

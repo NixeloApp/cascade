@@ -397,7 +397,8 @@ describe("MeetingsWorkspace", () => {
     });
   });
 
-  it("renders an empty state when there are no recordings", () => {
+  it("renders an empty state when there are no recordings and keeps scheduling available", async () => {
+    const user = userEvent.setup();
     installMeetingQueryMock({ listRecordings: [] });
 
     renderMeetingsWorkspace();
@@ -408,6 +409,12 @@ describe("MeetingsWorkspace", () => {
         "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
       ),
     ).toBeInTheDocument();
+    const scheduleButton = screen.getByRole("button", { name: "Schedule Recording" });
+    expect(scheduleButton).toBeInTheDocument();
+
+    await user.click(scheduleButton);
+
+    expect(screen.getByRole("dialog", { name: "Schedule Recording" })).toBeInTheDocument();
   });
 
   it("renders recording details for the selected meeting", () => {

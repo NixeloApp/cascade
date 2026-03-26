@@ -161,6 +161,17 @@ describe("IssueComments", () => {
   });
 
   it("renders queued offline comments before synced comments", () => {
+    mockUseAuthenticatedQuery.mockImplementation((_query, args) => {
+      if (args && typeof args === "object" && "storageId" in args) {
+        return "https://files.example.com/queued-attachment.pdf";
+      }
+
+      return {
+        _id: "user_current" as Id<"users">,
+        name: "Current User",
+        image: null,
+      };
+    });
     mockUsePaginatedQuery.mockReturnValue({
       results: [
         {
@@ -179,6 +190,7 @@ describe("IssueComments", () => {
     });
     mockUseQueuedOfflineIssueComments.mockReturnValue([
       {
+        attachments: ["storage_1" as Id<"_storage">],
         content: "Queued offline comment",
         issueId,
         key: "queued-1",
@@ -193,5 +205,7 @@ describe("IssueComments", () => {
     expect(screen.getByText("Pending Sync")).toBeInTheDocument();
     expect(screen.getByText("Queued offline")).toBeInTheDocument();
     expect(screen.getByText("Existing comment")).toBeInTheDocument();
+    expect(screen.getByText("Attachments")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "queued-attachment.pdf" })).toBeInTheDocument();
   });
 });

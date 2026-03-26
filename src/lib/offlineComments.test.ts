@@ -74,4 +74,19 @@ describe("offlineComments", () => {
       }),
     ).toBeNull();
   });
+
+  it("throws a validation error message for malformed replay payloads", async () => {
+    const mutation = vi.fn(() => Promise.resolve({ commentId: "comment-1" }));
+    const client: Pick<ConvexReactClient, "mutation"> = {
+      mutation,
+    };
+
+    await expect(
+      replayAddComment(client, {
+        issueId: "issue-123",
+        content: "Queued comment",
+        clientRequestId: "   ",
+      }),
+    ).rejects.toThrow("Validation failed for issues.addComment args");
+  });
 });

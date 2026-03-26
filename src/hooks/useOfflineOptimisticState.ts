@@ -24,6 +24,7 @@ interface ParsedOfflineMutation<TArgs> {
 }
 
 export interface QueuedOfflineIssueComment {
+  attachments?: Id<"_storage">[];
   content: string;
   issueId: Id<"issues">;
   key: string;
@@ -88,6 +89,7 @@ export function useQueuedOfflineIssueComments(
       .filter((mutation) => mutation.args.issueId === issueId)
       .sort((left, right) => left.timestamp - right.timestamp)
       .map((mutation) => ({
+        attachments: mutation.args.attachments,
         content: mutation.args.content,
         issueId: mutation.args.issueId,
         key:

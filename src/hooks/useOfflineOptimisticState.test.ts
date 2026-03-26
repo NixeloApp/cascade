@@ -38,6 +38,7 @@ describe("useOfflineOptimisticState", () => {
           mutationArgs: JSON.stringify({
             issueId: "issue-1",
             content: "Oldest queued comment",
+            attachments: ["storage-1"],
             clientRequestId: "comment-1",
           }),
           status: "syncing",
@@ -97,6 +98,7 @@ describe("useOfflineOptimisticState", () => {
 
     expect(result.current).toEqual([
       {
+        attachments: ["storage-1"],
         content: "Oldest queued comment",
         issueId: "issue-1",
         key: "comment-1",

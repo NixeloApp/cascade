@@ -256,6 +256,33 @@ describe("NotificationCenter", () => {
     expect(screen.getByText("1")).toBeInTheDocument();
   });
 
+  it("does not subtract queued reads that are outside the active inbox unread set", () => {
+    vi.mocked(usePaginatedQuery).mockReturnValue({
+      results: [
+        {
+          _id: "1",
+          type: "issue_assigned",
+          title: "Issue assigned",
+          message: "You were assigned to TEST-123",
+          isRead: false,
+          _creationTime: Date.now(),
+        },
+      ],
+      status: "Exhausted",
+      isLoading: false,
+      loadMore: vi.fn(),
+    });
+    vi.mocked(useQuery).mockReturnValue(1);
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(
+      new Set(["archived-1" as Id<"notifications">]),
+    );
+
+    render(<NotificationCenter />);
+
+    expect(screen.getByRole("button", { name: "Notifications, 1 unread" })).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+  });
+
   it("should highlight unread notifications", async () => {
     const user = userEvent.setup();
     const mockNotifications = [

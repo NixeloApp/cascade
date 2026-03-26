@@ -115,6 +115,16 @@ export function NotificationCenter() {
   const notifications = ((notificationsRaw ?? []) as NotificationWithActor[]).map((notification) =>
     queuedReadIds.has(notification._id) ? { ...notification, isRead: true } : notification,
   );
+  const queuedInboxUnreadReadCount = ((notificationsRaw ?? []) as NotificationWithActor[]).reduce(
+    (count, notification) => {
+      if (notification.isRead || !queuedReadIds.has(notification._id)) {
+        return count;
+      }
+
+      return count + 1;
+    },
+    0,
+  );
 
   // Group notifications by date
   const groupedNotifications = groupNotificationsByDate(notifications);
@@ -123,7 +133,7 @@ export function NotificationCenter() {
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
   const optimisticUnreadCount =
-    unreadCount == null ? unreadCount : Math.max(0, unreadCount - queuedReadIds.size);
+    unreadCount == null ? unreadCount : Math.max(0, unreadCount - queuedInboxUnreadReadCount);
   const { markAsRead: offlineMarkAsRead } = useOfflineNotificationMarkAsRead();
   const { mutate: markAllAsRead } = useAuthenticatedMutation(api.notifications.markAllAsRead);
   const { mutate: archiveNotification } = useAuthenticatedMutation(

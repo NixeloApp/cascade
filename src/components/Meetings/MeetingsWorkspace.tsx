@@ -167,6 +167,7 @@ function getMeetingsPageEmptyState({
   platformFilter,
   timeWindowFilter,
   deferredSearchQuery,
+  onScheduleRecording,
 }: {
   recordings: MeetingOverview[] | undefined;
   projectFilter: ProjectFilter;
@@ -174,6 +175,7 @@ function getMeetingsPageEmptyState({
   platformFilter: PlatformFilter;
   timeWindowFilter: TimeWindowFilter;
   deferredSearchQuery: string;
+  onScheduleRecording: () => void;
 }) {
   if (
     recordings === undefined ||
@@ -192,6 +194,7 @@ function getMeetingsPageEmptyState({
     title: "No meeting recordings yet",
     description:
       "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
+    actions: <Button onClick={() => onScheduleRecording()}>Schedule Recording</Button>,
   };
 }
 
@@ -2075,185 +2078,187 @@ export function MeetingsWorkspace() {
     platformFilter,
     timeWindowFilter,
     deferredSearchQuery,
+    onScheduleRecording: () => setIsScheduleDialogOpen(true),
   });
 
   return (
-    <PageContent
-      isLoading={
-        recordings === undefined ||
-        (deferredSearchQuery.length >= 2 && searchedRecordings === undefined)
-      }
-      emptyState={pageEmptyState}
-    >
-      <Stack gap="lg">
-        <MeetingMemorySection
-          memory={memory}
-          projectFilter={projectFilter}
-          projects={projects}
-          onProjectSelect={setProjectFilter}
-        />
+    <>
+      <PageContent
+        isLoading={
+          recordings === undefined ||
+          (deferredSearchQuery.length >= 2 && searchedRecordings === undefined)
+        }
+        emptyState={pageEmptyState}
+      >
+        <Stack gap="lg">
+          <MeetingMemorySection
+            memory={memory}
+            projectFilter={projectFilter}
+            projects={projects}
+            onProjectSelect={setProjectFilter}
+          />
 
-        <Grid cols={1} colsLg={2} gap="lg">
-          <Section
-            title="Recent Meetings"
-            description="Recordings created from calendar-linked meetings and direct bot runs."
-            gap="sm"
-            data-testid={TEST_IDS.MEETINGS.RECENT_SECTION}
-          >
-            <Stack gap="sm">
-              <Flex justify="between" align="center" gap="sm" wrap>
-                <Typography variant="caption" color="secondary">
-                  Schedule from calendar or add an ad-hoc meeting URL here.
-                </Typography>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setIsScheduleDialogOpen(true)}
-                  data-testid={TEST_IDS.MEETINGS.SCHEDULE_BUTTON}
-                >
-                  Schedule Recording
-                </Button>
-              </Flex>
+          <Grid cols={1} colsLg={2} gap="lg">
+            <Section
+              title="Recent Meetings"
+              description="Recordings created from calendar-linked meetings and direct bot runs."
+              gap="sm"
+              data-testid={TEST_IDS.MEETINGS.RECENT_SECTION}
+            >
+              <Stack gap="sm">
+                <Flex justify="between" align="center" gap="sm" wrap>
+                  <Typography variant="caption" color="secondary">
+                    Schedule from calendar or add an ad-hoc meeting URL here.
+                  </Typography>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsScheduleDialogOpen(true)}
+                    data-testid={TEST_IDS.MEETINGS.SCHEDULE_BUTTON}
+                  >
+                    Schedule Recording
+                  </Button>
+                </Flex>
 
-              <Input
-                variant="search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search transcript text"
-                aria-label="Search meetings"
-                data-testid={TEST_IDS.MEETINGS.SEARCH_INPUT}
-              />
+                <Input
+                  variant="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search transcript text"
+                  aria-label="Search meetings"
+                  data-testid={TEST_IDS.MEETINGS.SEARCH_INPUT}
+                />
 
-              <Grid cols={1} colsSm={2} colsXl={4} gap="sm">
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-                >
-                  <SelectTrigger aria-label="Filter by status">
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_FILTER_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
+                <Grid cols={1} colsSm={2} colsXl={4} gap="sm">
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                  >
+                    <SelectTrigger aria-label="Filter by status">
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_FILTER_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={platformFilter}
+                    onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
+                  >
+                    <SelectTrigger aria-label="Filter by platform">
+                      <SelectValue placeholder="All platforms" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PLATFORM_FILTER_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={projectFilter}
+                    onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
+                  >
+                    <SelectTrigger aria-label="Filter by project">
+                      <SelectValue placeholder="All projects" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All projects</SelectItem>
+                      {projects?.map((project) => (
+                        <SelectItem key={project._id} value={project._id}>
+                          {project.key} - {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={timeWindowFilter}
+                    onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
+                  >
+                    <SelectTrigger aria-label="Filter by date">
+                      <SelectValue placeholder="All dates" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIME_WINDOW_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Grid>
+
+                {filteredRecordings !== undefined && (
+                  <Typography variant="caption" color="secondary">
+                    {filteredRecordings.length} meeting{filteredRecordings.length === 1 ? "" : "s"}{" "}
+                    shown
+                  </Typography>
+                )}
+
+                {deferredSearchQuery.length >= 2 && (
+                  <Typography variant="caption" color="secondary">
+                    Searching transcript content for "{deferredSearchQuery}".
+                  </Typography>
+                )}
+
+                {filteredRecordings !== undefined && filteredRecordings.length === 0 ? (
+                  <EmptyState
+                    icon={FileText}
+                    size="compact"
+                    title="No meetings match these filters"
+                    description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
+                    data-testid={TEST_IDS.MEETINGS.FILTER_EMPTY_STATE}
+                  />
+                ) : (
+                  <List gap="sm">
+                    {filteredRecordings?.map((recording) => (
+                      <li key={recording._id}>
+                        <RecordingListItem
+                          recording={recording}
+                          isSelected={selectedRecordingId === recording._id}
+                          onSelect={() => setSelectedRecordingId(recording._id)}
+                        />
+                      </li>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </List>
+                )}
+              </Stack>
+            </Section>
 
-                <Select
-                  value={platformFilter}
-                  onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
-                >
-                  <SelectTrigger aria-label="Filter by platform">
-                    <SelectValue placeholder="All platforms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PLATFORM_FILTER_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={projectFilter}
-                  onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
-                >
-                  <SelectTrigger aria-label="Filter by project">
-                    <SelectValue placeholder="All projects" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All projects</SelectItem>
-                    {projects?.map((project) => (
-                      <SelectItem key={project._id} value={project._id}>
-                        {project.key} - {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={timeWindowFilter}
-                  onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
-                >
-                  <SelectTrigger aria-label="Filter by date">
-                    <SelectValue placeholder="All dates" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIME_WINDOW_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Grid>
-
-              {filteredRecordings !== undefined && (
-                <Typography variant="caption" color="secondary">
-                  {filteredRecordings.length} meeting{filteredRecordings.length === 1 ? "" : "s"}{" "}
-                  shown
-                </Typography>
-              )}
-
-              {deferredSearchQuery.length >= 2 && (
-                <Typography variant="caption" color="secondary">
-                  Searching transcript content for "{deferredSearchQuery}".
-                </Typography>
-              )}
-
-              {filteredRecordings !== undefined && filteredRecordings.length === 0 ? (
+            <Section
+              title="Meeting Detail"
+              description="Review summaries, decisions, action items, transcript, and participants."
+              gap="sm"
+              data-testid={TEST_IDS.MEETINGS.DETAIL_SECTION}
+            >
+              {selectedRecordingId ? (
+                <RecordingDetailPanel recording={selectedRecording} projects={projects} />
+              ) : (
                 <EmptyState
                   icon={FileText}
                   size="compact"
-                  title="No meetings match these filters"
-                  description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
-                  data-testid={TEST_IDS.MEETINGS.FILTER_EMPTY_STATE}
+                  title="Select a meeting"
+                  description="Choose a recording from the list to inspect its details."
+                  data-testid={TEST_IDS.MEETINGS.DETAIL_EMPTY_STATE}
                 />
-              ) : (
-                <List gap="sm">
-                  {filteredRecordings?.map((recording) => (
-                    <li key={recording._id}>
-                      <RecordingListItem
-                        recording={recording}
-                        isSelected={selectedRecordingId === recording._id}
-                        onSelect={() => setSelectedRecordingId(recording._id)}
-                      />
-                    </li>
-                  ))}
-                </List>
               )}
-            </Stack>
-          </Section>
-
-          <Section
-            title="Meeting Detail"
-            description="Review summaries, decisions, action items, transcript, and participants."
-            gap="sm"
-            data-testid={TEST_IDS.MEETINGS.DETAIL_SECTION}
-          >
-            {selectedRecordingId ? (
-              <RecordingDetailPanel recording={selectedRecording} projects={projects} />
-            ) : (
-              <EmptyState
-                icon={FileText}
-                size="compact"
-                title="Select a meeting"
-                description="Choose a recording from the list to inspect its details."
-                data-testid={TEST_IDS.MEETINGS.DETAIL_EMPTY_STATE}
-              />
-            )}
-          </Section>
-        </Grid>
-      </Stack>
-
+            </Section>
+          </Grid>
+        </Stack>
+      </PageContent>
       <ScheduleRecordingDialog
         open={isScheduleDialogOpen}
         onOpenChange={setIsScheduleDialogOpen}
         projects={projects}
       />
-    </PageContent>
+    </>
   );
 }
