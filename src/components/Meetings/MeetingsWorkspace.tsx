@@ -41,6 +41,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { useSeededDocumentCreation } from "@/hooks/useSeededDocumentCreation";
 import { BREAKPOINTS } from "@/lib/constants";
@@ -95,39 +96,6 @@ type MeetingDetailTabConfig = {
 };
 
 const WIDE_MEETING_DETAIL_MEDIA_QUERY = `(min-width: ${BREAKPOINTS.lg})`;
-
-function useMediaQuery(query: string, defaultValue = true) {
-  const getMatches = () => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return defaultValue;
-    }
-
-    return window.matchMedia(query).matches;
-  };
-
-  const [matches, setMatches] = useState(getMatches);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return undefined;
-    }
-
-    const mediaQueryList = window.matchMedia(query);
-    const updateMatches = () => setMatches(mediaQueryList.matches);
-
-    updateMatches();
-
-    if (typeof mediaQueryList.addEventListener === "function") {
-      mediaQueryList.addEventListener("change", updateMatches);
-      return () => mediaQueryList.removeEventListener("change", updateMatches);
-    }
-
-    mediaQueryList.addListener(updateMatches);
-    return () => mediaQueryList.removeListener(updateMatches);
-  }, [query]);
-
-  return matches;
-}
 
 function hasMeetingNotes(summary: MeetingSummary) {
   return (
@@ -1735,7 +1703,7 @@ function RecordingDetailPanel({
   projects: ProjectOption[] | undefined;
 }) {
   const { createSeededDocumentAndOpen, isCreatingDocument } = useSeededDocumentCreation();
-  const isWideDetailLayout = useMediaQuery(WIDE_MEETING_DETAIL_MEDIA_QUERY);
+  const isWideDetailLayout = useMediaQuery(WIDE_MEETING_DETAIL_MEDIA_QUERY, true);
 
   const handleCreateMeetingDocument = async (meeting: NonNullable<MeetingDetail>) => {
     try {

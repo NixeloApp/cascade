@@ -208,10 +208,32 @@ const issueB = {
   priority: "medium",
 } as EnrichedIssue;
 
+function mockMatchMedia(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches,
+      media: "(max-width: 767px)",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      onchange: null,
+    })),
+  });
+}
+
 describe("KanbanBoard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    delete window.__NIXELO_E2E_BOARD_LOADING__;
+    window.__NIXELO_E2E_BOARD_LOADING__ = undefined;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      configurable: true,
+      value: undefined,
+    });
     mockUseAuthenticatedQuery.mockReturnValue({
       userRole: "admin",
       workflowStates,
@@ -303,6 +325,45 @@ describe("KanbanBoard", () => {
 
     await user.click(screen.getByRole("button", { name: "toggle-selection" }));
     expect(screen.getByText("bulk:0")).toBeInTheDocument();
+  });
+
+  it("renders a single workflow column at a time on mobile and switches with the selector", async () => {
+    const user = userEvent.setup();
+    mockMatchMedia(true);
+
+    render(<KanbanBoard projectId={"project_1" as Id<"projects">} />);
+
+    expect(screen.getByRole("radio", { name: /to do/i })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /done/i })).toBeInTheDocument();
+    expect(screen.getByText("column:todo:1:2:3:editable:issue_1")).toBeInTheDocument();
+    expect(screen.queryByText("column:done:1:0:1:editable:issue_1")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: /done/i }));
+
+    expect(screen.getByText("column:done:1:0:1:editable:issue_1")).toBeInTheDocument();
+    expect(screen.queryByText("column:todo:1:2:3:editable:issue_1")).not.toBeInTheDocument();
+  });
+
+  it("falls back to loaded issue counts for mobile selector badges when totals are unavailable", () => {
+    mockMatchMedia(true);
+    mockUseSmartBoardData.mockReturnValue({
+      issuesByStatus: {
+        todo: [issueA],
+        done: [issueB],
+      },
+      statusCounts: {},
+      isLoading: false,
+      doneStatusesWithMore: [],
+      loadMoreDone: vi.fn(),
+      isLoadingMore: false,
+      hiddenDoneCount: 0,
+      workflowStates,
+    });
+
+    render(<KanbanBoard teamId={"team_1" as Id<"teams">} />);
+
+    expect(screen.getByRole("radio", { name: "To Do1" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Done1" })).toBeInTheDocument();
   });
 
   it("switches into swimlane rendering in project mode", async () => {

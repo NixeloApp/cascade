@@ -13,10 +13,12 @@ import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { useEffect, useRef, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
 import { matchesBoardQuery, parseBoardQuery } from "@/lib/board-query-language";
 import { type CardDisplayOptions, DEFAULT_CARD_DISPLAY } from "@/lib/card-display-utils";
@@ -36,6 +38,7 @@ import { IssueDetailViewer } from "./IssueDetailViewer";
 import { BoardToolbar } from "./Kanban/BoardToolbar";
 import { KanbanColumn } from "./Kanban/KanbanColumn";
 import { SwimlanRow } from "./Kanban/SwimlanRow";
+import { Badge } from "./ui/Badge";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { SkeletonKanbanCard, SkeletonText } from "./ui/Skeleton";
 import { Stack } from "./ui/Stack";
@@ -83,8 +86,59 @@ const BOARD_LOADING_COLUMNS: BoardLoadingColumnConfig[] = [
   },
 ];
 
+const MOBILE_BOARD_MEDIA_QUERY = "(max-width: 767px)";
+
 function isE2EBoardLoadingOverrideEnabled(): boolean {
   return typeof window !== "undefined" && window.__NIXELO_E2E_BOARD_LOADING__ === true;
+}
+
+function MobileBoardColumnSelector({
+  activeColumnId,
+  issuesByStatus,
+  onChange,
+  workflowStates,
+  statusCounts,
+}: {
+  activeColumnId: string | null;
+  issuesByStatus: Record<string, EnrichedIssue[]>;
+  onChange: (columnId: string) => void;
+  workflowStates: WorkflowState[];
+  statusCounts: Record<string, { total: number; loaded: number; hidden: number }>;
+}) {
+  if (workflowStates.length <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="px-2 pb-3 sm:hidden">
+      <SegmentedControl
+        value={activeColumnId ?? undefined}
+        onValueChange={(value) => {
+          if (value) {
+            onChange(value);
+          }
+        }}
+        variant="outline"
+        size="sm"
+        width="fill"
+        aria-label="Workflow columns"
+      >
+        {workflowStates.map((state) => {
+          const totalCount = statusCounts[state.id]?.total ?? 0;
+          const loadedCount = issuesByStatus[state.id]?.length ?? 0;
+          const displayCount = Math.max(totalCount, loadedCount);
+          return (
+            <SegmentedControlItem key={state.id} value={state.id} width="fill">
+              <span className="truncate">{state.name}</span>
+              <Badge variant="neutral" size="sm" shape="pill">
+                {displayCount}
+              </Badge>
+            </SegmentedControlItem>
+          );
+        })}
+      </SegmentedControl>
+    </div>
+  );
 }
 
 /** Check if issue matches type filter */
@@ -257,10 +311,12 @@ export function KanbanBoard({
   const [collapsedSwimlanes, setCollapsedSwimlanes] = useState<CollapsedSwimlanes>(new Set());
   const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set());
   const [displayOptions, setDisplayOptions] = useState<CardDisplayOptions>(DEFAULT_CARD_DISPLAY);
+  const [activeMobileColumnId, setActiveMobileColumnId] = useState<string | null>(null);
   const boardContainerRef = useRef<HTMLDivElement>(null);
 
   const isTeamMode = !!teamId;
   const isProjectMode = !!projectId;
+  const isMobileBoardLayout = useMediaQuery(MOBILE_BOARD_MEDIA_QUERY);
 
   // Set up auto-scroll for the board container during drag
   useEffect(() => {
@@ -368,6 +424,26 @@ export function KanbanBoard({
     smartWorkflowStates,
   );
 
+  useEffect(() => {
+    if (workflowStates.length === 0) {
+      if (activeMobileColumnId !== null) {
+        setActiveMobileColumnId(null);
+      }
+      return;
+    }
+
+    const hasActiveColumn = workflowStates.some((state) => state.id === activeMobileColumnId);
+    if (!hasActiveColumn) {
+      setActiveMobileColumnId(workflowStates[0]?.id ?? null);
+    }
+  }, [activeMobileColumnId, workflowStates]);
+
+  const resolvedMobileColumnId = activeMobileColumnId ?? workflowStates[0]?.id ?? null;
+  const visibleWorkflowStates =
+    isMobileBoardLayout && resolvedMobileColumnId
+      ? workflowStates.filter((state) => state.id === resolvedMobileColumnId)
+      : workflowStates;
+
   // Loading State
   const isLoading =
     isE2EBoardLoadingOverrideEnabled() || isLoadingIssues || (isProjectMode && !project);
@@ -375,10 +451,12 @@ export function KanbanBoard({
   if (isLoading) {
     return (
       <FlexItem flex="1" className="overflow-x-auto" data-testid={TEST_IDS.BOARD.LOADING_STATE}>
-        <Flex align="center" justify="between" gap="sm" className="px-2 pt-3 sm:px-4 lg:px-6">
-          <SkeletonText lines={1} className="w-28 sm:w-32" />
-          <SkeletonText lines={1} className="hidden w-24 sm:block sm:w-32" />
-        </Flex>
+        <Card variant="ghost" padding="sm">
+          <Flex align="center" justify="between" gap="sm">
+            <SkeletonText lines={1} className="w-28 sm:w-32" />
+            <SkeletonText lines={1} className="hidden w-24 sm:block sm:w-32" />
+          </Flex>
+        </Card>
         <Card variant="ghost" recipe="kanbanBoardRail" ref={boardContainerRef}>
           <Flex gap="sm" align="start">
             {BOARD_LOADING_COLUMNS.map((column) => (
@@ -426,11 +504,19 @@ export function KanbanBoard({
         mobileActions={mobileActions}
       />
 
+      <MobileBoardColumnSelector
+        activeColumnId={resolvedMobileColumnId}
+        issuesByStatus={filteredIssuesByStatus}
+        onChange={setActiveMobileColumnId}
+        workflowStates={workflowStates}
+        statusCounts={statusCounts}
+      />
+
       {swimlaneGroupBy === "none" ? (
         /* Standard board view without swimlanes */
         <Card ref={boardContainerRef} variant="ghost" recipe="kanbanBoardRail">
           <Flex align="start" gap="sm">
-            {workflowStates.map((state, columnIndex: number) => {
+            {visibleWorkflowStates.map((state, columnIndex: number) => {
               const counts = statusCounts[state.id] || {
                 total: 0,
                 loaded: 0,
@@ -455,8 +541,8 @@ export function KanbanBoard({
                   isLoadingMore={isLoadingMore}
                   onIssueDrop={handleIssueDrop}
                   onIssueReorder={handleIssueReorder}
-                  isCollapsed={collapsedColumns.has(state.id)}
-                  onToggleCollapse={handleToggleColumnCollapse}
+                  isCollapsed={isMobileBoardLayout ? false : collapsedColumns.has(state.id)}
+                  onToggleCollapse={isMobileBoardLayout ? undefined : handleToggleColumnCollapse}
                   displayOptions={displayOptions}
                 />
               );
@@ -472,7 +558,7 @@ export function KanbanBoard({
                 key={config.id}
                 config={config}
                 issuesByStatus={swimlaneIssues[config.id] || {}}
-                workflowStates={workflowStates}
+                workflowStates={visibleWorkflowStates}
                 isCollapsed={collapsedSwimlanes.has(config.id)}
                 onToggleCollapse={handleToggleSwimlanCollapse}
                 selectionMode={selectionMode}
