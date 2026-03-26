@@ -19,7 +19,7 @@ function getUtcDateKey(timestamp: number): string {
   return new Date(timestamp).toISOString().slice(0, 10);
 }
 
-/** Read the effective daily and minute mailbox counters, tolerating legacy rows. */
+/** Read the effective daily and minute mailbox counters, tolerating rows missing minute counters. */
 export function getMailboxRateLimitSnapshot(
   mailbox: MailboxRateLimitFields,
   now: number = Date.now(),

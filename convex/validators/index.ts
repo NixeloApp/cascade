@@ -405,7 +405,7 @@ export const dashboardLayout = v.object({
   widgets: v.optional(v.array(dashboardWidget)),
   columns: v.optional(v.number()), // Grid columns (default: 12)
   rowHeight: v.optional(v.number()), // Row height in pixels
-  // Legacy/Simple mode support
+  // Simple mode support
   showStats: v.optional(v.boolean()),
   showRecentActivity: v.optional(v.boolean()),
   showWorkspaces: v.optional(v.boolean()),

@@ -220,6 +220,7 @@ export const createProject = authenticatedMutation({
       teamId: args.teamId,
       isPublic: args.isPublic ?? false,
       sharedWithTeamIds: uniqueSharedTeamIds,
+      nextIssueNumber: 0,
     });
 
     // Add creator as admin in projectMembers table (for individual access control)

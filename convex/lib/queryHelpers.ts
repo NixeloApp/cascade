@@ -58,7 +58,6 @@ export async function fetchPaginatedQuery<T extends GenericDocument>(
 ): Promise<PaginationResult<T>> {
   const query = (opts.buildQuery(ctx.db) as PaginatedSoftDeleteQuery<T>)
     // Always filter out soft-deleted items.
-    // We check isDeleted != true to handle both explicit false and undefined (legacy data).
     .filter((q: FilterBuilder<TableInfoFor>) => q.neq(q.field("isDeleted"), true));
 
   try {

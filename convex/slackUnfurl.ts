@@ -33,7 +33,7 @@ export const getIssueUnfurl = internalQuery({
       .order("desc")
       .first();
 
-    // Fallback: legacy connections without slackUserId.
+    // Fallback for connections that do not have slackUserId set.
     if (!activeConnection) {
       activeConnection = await ctx.db
         .query("slackConnections")

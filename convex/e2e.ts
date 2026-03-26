@@ -3889,7 +3889,7 @@ export const setupRbacProjectInternal = internalMutation({
     // Step 4: Create RBAC test projects at different hierarchy levels
     // =========================================================================
 
-    // 4a. organization-level project (legacy style - no workspace/team)
+    // 4a. organization-scoped project (no team owner)
     const organizationProjectKey = `${args.projectKey}-ORG`;
     let project = await ctx.db
       .query("projects")
@@ -3917,6 +3917,7 @@ export const setupRbacProjectInternal = internalMutation({
         createdBy: adminUser._id,
         updatedAt: now,
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [
           { id: "backlog", name: "Backlog", category: "todo", order: 0 },
           { id: "todo", name: "To Do", category: "todo", order: 1 },
@@ -3961,6 +3962,7 @@ export const setupRbacProjectInternal = internalMutation({
         createdBy: adminUser._id,
         updatedAt: now,
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [
           { id: "backlog", name: "Backlog", category: "todo", order: 0 },
           { id: "todo", name: "To Do", category: "todo", order: 1 },
@@ -3999,6 +4001,7 @@ export const setupRbacProjectInternal = internalMutation({
         createdBy: adminUser._id,
         updatedAt: now,
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [
           { id: "backlog", name: "Backlog", category: "todo", order: 0 },
           { id: "todo", name: "To Do", category: "todo", order: 1 },
@@ -7229,6 +7232,7 @@ export const seedScreenshotDataInternal = internalMutation({
         createdBy: userId,
         updatedAt: now,
         boardType: "kanban",
+        nextIssueNumber: 0,
         workflowStates: [
           { id: "todo", name: "To Do", category: "todo", order: 0 },
           { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
@@ -7392,6 +7396,7 @@ export const seedScreenshotDataInternal = internalMutation({
         createdBy: userId,
         updatedAt: now,
         boardType: "scrum",
+        nextIssueNumber: 0,
         workflowStates: [
           { id: "todo", name: "To Do", category: "todo", order: 0 },
           { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },

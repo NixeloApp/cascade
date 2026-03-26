@@ -144,16 +144,16 @@ async function resolveTeamContext(
     return { userId: exactMatch.userId };
   }
 
-  // Fallback: legacy connections without slackUserId (use most recent active for this team).
-  const legacyMatch = await ctx.db
+  // Fallback for connections that do not have slackUserId set.
+  const fallbackMatch = await ctx.db
     .query("slackConnections")
     .withIndex("by_team", (q) => q.eq("teamId", teamId))
     .order("desc")
     .filter((q) => q.and(q.eq(q.field("isActive"), true), q.eq(q.field("slackUserId"), undefined)))
     .first();
 
-  if (legacyMatch) {
-    return { userId: legacyMatch.userId };
+  if (fallbackMatch) {
+    return { userId: fallbackMatch.userId };
   }
 
   return null;

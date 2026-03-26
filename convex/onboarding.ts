@@ -261,6 +261,7 @@ export const createSampleProject = authenticatedMutation({
       updatedAt: now,
       isPublic: false,
       boardType: "kanban",
+      nextIssueNumber: 0,
       workflowStates: [
         { id: "todo", name: "To Do", category: "todo" as const, order: 0 },
         { id: "inprogress", name: "In Progress", category: "inprogress" as const, order: 1 },

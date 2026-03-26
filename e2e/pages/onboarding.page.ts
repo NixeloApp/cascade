@@ -14,7 +14,7 @@ const CONVEX_CONNECTION_TIMEOUT = 15000;
  * Onboarding Page Object
  * Handles both:
  * - The new onboarding wizard (role selection, features)
- * - The legacy Driver.js welcome tour
+ * - The Driver.js welcome tour
  *
  * NOTE: Does NOT extend BasePage because onboarding happens BEFORE
  * the user has an organization. The orgSlug is not available yet.
@@ -55,7 +55,7 @@ export class OnboardingPage {
   readonly errorMessage: Locator;
 
   // ===================
-  // Driver.js Tour Locators (legacy)
+  // Driver.js Tour locators
   // ===================
   readonly tourOverlay: Locator;
   readonly tourPopover: Locator;

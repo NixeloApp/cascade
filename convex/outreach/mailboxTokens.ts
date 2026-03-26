@@ -29,7 +29,7 @@ export async function encryptMailboxTokensForStorage(
 
 /**
  * Read outreach mailbox tokens for runtime use while preserving enough
- * metadata to self-heal legacy plaintext rows.
+ * metadata to self-heal plaintext rows that predate encryption-at-rest.
  */
 export async function getDecryptedMailboxTokenSnapshot(
   tokens: MailboxTokenFields,

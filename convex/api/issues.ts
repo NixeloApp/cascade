@@ -133,7 +133,6 @@ function handleError(e: unknown): { response: Response; error: string } {
     if (e.message.includes("Validator failed")) {
       return { response: createErrorResponse(400, "Invalid request parameters"), error };
     }
-    // Explicitly handle unauthorized errors from internal queries (legacy pattern)
     if (e.message.includes("Not authorized")) {
       return { response: createErrorResponse(403, "Not authorized"), error };
     }

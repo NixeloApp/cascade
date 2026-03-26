@@ -166,7 +166,7 @@ export class DashboardPage extends BasePage {
     this.workspacesSection = page.getByTestId(TEST_IDS.DASHBOARD.WORKSPACES_LIST);
     this.recentActivitySection = page.getByTestId(TEST_IDS.DASHBOARD.RECENT_ACTIVITY);
     this.quickStatsSection = page.getByTestId(TEST_IDS.DASHBOARD.QUICK_STATS);
-    // Issue filter tabs: tab role in Radix/Tabs, with button fallback for legacy markup.
+    // Issue filter tabs: tab role in Radix/Tabs, with button fallback when rendered as buttons.
     this.assignedTab = page
       .getByRole("tab", { name: /^assigned/i })
       .or(page.getByRole("button", { name: /^assigned/i }));
