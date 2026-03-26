@@ -12,7 +12,7 @@ describe("PageControls", () => {
 
     expect(screen.getByText("Page controls")).toBeInTheDocument();
     expect(container.firstChild).toHaveClass("mb-6");
-    expect(container.firstChild).toHaveClass("from-ui-bg-elevated/98", "shadow-card");
+    expect(container.firstChild?.firstChild).toHaveClass("from-ui-bg-elevated/98", "shadow-card");
   });
 
   it("stacks rows on small screens and splits them at md+", () => {
@@ -64,5 +64,21 @@ describe("PageControls", () => {
 
     expect(screen.getByText("Stacked controls")).toBeInTheDocument();
     expect(container.firstChild).not.toHaveClass("mb-6");
+  });
+
+  it("renders a lighter strip shell for shared section navigation bands", () => {
+    const { container } = render(
+      <PageControls tone="strip" padding="sm">
+        <div>Section tabs</div>
+      </PageControls>,
+    );
+
+    expect(screen.getByText("Section tabs")).toBeInTheDocument();
+    expect(container.firstChild?.firstChild).toHaveClass(
+      "border-b",
+      "bg-transparent",
+      "shadow-none",
+    );
+    expect(container.firstChild?.firstChild).not.toHaveClass("from-ui-bg-elevated/98");
   });
 });

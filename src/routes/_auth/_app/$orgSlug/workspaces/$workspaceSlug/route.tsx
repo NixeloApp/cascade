@@ -68,8 +68,8 @@ export function WorkspaceLayout() {
           ]}
         />
 
-        <PageControls padding="sm" spacing="stack">
-          <RouteNav aria-label="Workspace sections">
+        <PageControls tone="strip" padding="sm" gap="sm" spacing="stack">
+          <RouteNav size="sm" aria-label="Workspace sections">
             <RouteNavItem asChild>
               <Link
                 to={ROUTES.workspaces.detail.path}

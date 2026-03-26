@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects/:key/board`
 > **Status**: REVIEWED, trustworthy baseline
-> **Last Updated**: 2026-03-21
+> **Last Updated**: 2026-03-25
 
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
@@ -27,6 +27,7 @@
 - Filled-state screenshots now show real seeded issues instead of broken empty baselines.
 - Mobile now fits two real lanes comfortably instead of clipping the second lane immediately.
 - The create-issue modal captures reliably again across the full screenshot matrix.
+- The shared project shell is lighter now: the bespoke header card is gone, the project identity lives in the shared `PageHeader`, and desktop tabs use a slimmer section strip instead of a second pill panel.
 - The shared project shell and mobile tab row are tighter than the last round, so the board starts sooner and reads less like stacked chrome.
 - The extra mobile board-actions card is gone; export/sprint controls now sit as a lighter utility row above filters instead of a full-width chrome block.
 - Mobile filter controls now use the quieter shared filter button/input chrome instead of a heavier custom pill treatment.
@@ -64,11 +65,10 @@
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | 1 | Card hierarchy inside the first lane could still feel a little stronger in light mode | `src/components/Kanban/KanbanColumn.tsx`, `src/components/IssueDetail/IssueCard.tsx` | LOW |
-| 2 | Desktop board chrome is cleaner than before, but the stacked shell/filter/toolbar layers are still a little busier than the issue content beneath them | shared board/page shell | LOW |
 
 ---
 
 ## Summary
 
 The board screenshot baseline is trustworthy again. The next pass can stay focused on card hierarchy
-and optional desktop polish, not harness repair or mobile toolbar cleanup.
+and lane-level polish, not shared-shell cleanup, harness repair, or mobile toolbar cleanup.

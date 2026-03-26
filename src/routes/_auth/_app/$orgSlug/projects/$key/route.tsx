@@ -1,9 +1,8 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { PageContent, PageControls, PageError, PageStack } from "@/components/layout";
+import { PageContent, PageControls, PageError, PageHeader, PageStack } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +11,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
-import { IconCircle } from "@/components/ui/IconCircle";
 import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
-import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -151,7 +148,7 @@ function ProjectSectionNav({
   const activeSecondaryTab = mobileSecondaryTabs.find((tab) => tab.segment === currentSegment);
 
   return (
-    <PageControls padding="sm" gap="sm" spacing="stack">
+    <PageControls tone="strip" padding="sm" gap="sm" spacing="stack">
       <RouteNav variant="pill" size="sm" className="sm:hidden" aria-label="Project sections">
         {mobilePrimaryTabs.map((tab) => (
           <RouteNavItem key={tab.name} asChild variant="pill" size="sm">
@@ -188,9 +185,9 @@ function ProjectSectionNav({
         )}
       </RouteNav>
 
-      <RouteNav variant="pill" className="hidden sm:flex" aria-label="Project sections">
+      <RouteNav size="sm" className="hidden sm:flex" aria-label="Project sections">
         {tabs.map((tab) => (
-          <RouteNavItem key={tab.name} asChild variant="pill">
+          <RouteNavItem key={tab.name} asChild>
             <Link to={tab.to} params={tab.params} activeProps={{ "aria-current": "page" }}>
               {tab.name}
             </Link>
@@ -242,38 +239,21 @@ export function ProjectLayout() {
     <Flex direction="column" className="h-full min-h-0">
       <div className="px-1 pt-1 sm:px-4 sm:pt-4">
         <PageStack>
-          <Card recipe="pageHeader" padding="md">
-            <Flex
-              align="start"
-              alignSm="center"
-              justify="between"
-              gap="xs"
-              direction="column"
-              directionSm="row"
-            >
-              <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
-                <IconCircle size="sm" variant="brand" className="ring-1 ring-brand/18">
-                  <Typography variant="sidebarOrgInitial">
-                    {project.key.slice(0, 2).toUpperCase()}
-                  </Typography>
-                </IconCircle>
-                <div className="min-w-0">
-                  <Flex align="center" gap="xs" wrap className="min-w-0">
-                    <Typography variant="projectHeaderTitle">{project.name}</Typography>
-                    <Badge variant="projectHeaderKey" shape="pill" className="sm:hidden">
-                      {project.key}
-                    </Badge>
-                  </Flex>
-                  <Typography variant="pageHeaderEyebrow" className="mt-0.5">
-                    {isScrum ? "Scrum project" : "Kanban project"}
-                  </Typography>
-                </div>
-              </Flex>
-              <Badge variant="projectHeaderKey" shape="pill" className="hidden sm:inline-flex">
-                {project.key}
-              </Badge>
-            </Flex>
-          </Card>
+          <PageHeader
+            title={project.name}
+            eyebrow={isScrum ? "Scrum project" : "Kanban project"}
+            spacing="stack"
+            actions={
+              <>
+                <Badge variant="projectHeaderKey" shape="pill">
+                  {project.key}
+                </Badge>
+                <Badge variant="neutral" size="sm">
+                  {project.boardType}
+                </Badge>
+              </>
+            }
+          />
 
           <ProjectSectionNav currentSegment={currentSegment} tabs={tabs} />
         </PageStack>

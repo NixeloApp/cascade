@@ -106,6 +106,8 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-b-0 border-t border-ui-border/50 bg-transparent shadow-none",
       filterBar:
         "rounded-md border-ui-border-secondary/75 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/92 shadow-card sm:rounded-2xl",
+      pageSectionStrip:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary/75 bg-transparent shadow-none",
       timelineItem:
         "rounded-lg border-transparent bg-transparent shadow-none hover:border-transparent hover:bg-ui-bg-secondary/30 hover:shadow-none",
       timeSummary:

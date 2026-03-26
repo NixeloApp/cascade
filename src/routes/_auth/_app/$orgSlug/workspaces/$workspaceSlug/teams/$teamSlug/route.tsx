@@ -99,30 +99,31 @@ export function TeamLayout() {
               { label: workspace.name, to: ROUTES.workspaces.detail.build(orgSlug, workspaceSlug) },
               { label: team.name },
             ]}
+            actions={
+              members && members.length > 0 ? (
+                <>
+                  <Flex gap="xs">
+                    {members.slice(0, 6).map((member) => (
+                      <Tooltip key={member._id} content={member.user?.name ?? "Team member"}>
+                        <Avatar name={member.user?.name} src={member.user?.image} size="xs" />
+                      </Tooltip>
+                    ))}
+                  </Flex>
+                  {members.length > 6 && (
+                    <Badge variant="neutral" size="sm">
+                      +{members.length - 6}
+                    </Badge>
+                  )}
+                  <Typography variant="caption" color="tertiary">
+                    {members.length} member{members.length !== 1 ? "s" : ""}
+                  </Typography>
+                </>
+              ) : undefined
+            }
           />
 
-          {members && members.length > 0 && (
-            <Flex align="center" gap="sm">
-              <Flex gap="xs">
-                {members.slice(0, 8).map((member) => (
-                  <Tooltip key={member._id} content={member.user?.name ?? "Team member"}>
-                    <Avatar name={member.user?.name} src={member.user?.image} size="xs" />
-                  </Tooltip>
-                ))}
-              </Flex>
-              {members.length > 8 && (
-                <Badge variant="neutral" size="sm">
-                  +{members.length - 8}
-                </Badge>
-              )}
-              <Typography variant="caption" color="tertiary">
-                {members.length} member{members.length !== 1 ? "s" : ""}
-              </Typography>
-            </Flex>
-          )}
-
-          <PageControls padding="sm" spacing="stack">
-            <RouteNav aria-label="Team sections">
+          <PageControls tone="strip" padding="sm" gap="sm" spacing="stack">
+            <RouteNav size="sm" aria-label="Team sections">
               <RouteNavItem asChild>
                 <Link
                   to={ROUTES.workspaces.teams.detail.path}

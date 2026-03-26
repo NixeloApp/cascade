@@ -2,7 +2,7 @@
 
 > **Route**: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug` (layout shell) with child tabs
 > **Status**: IMPLEMENTED (settings tab is placeholder)
-> **Last Updated**: 2026-03-22
+> **Last Updated**: 2026-03-25
 
 ---
 
@@ -66,7 +66,7 @@ The team detail page is the working surface for a single team within a workspace
 
 ## Current Composition Walkthrough
 
-1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`, then team via `api.teams.getBySlug` (using workspace ID as parent). Shows loading spinner while pending, "Team not found" if either is null. Renders 3-level breadcrumbs and a `RouteNav` with 4 tabs (Projects, Calendar, Wiki, Settings), then `<Outlet />`.
+1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`, then team via `api.teams.getBySlug` (using workspace ID as parent). Shows loading spinner while pending, "Team not found" if either is null. Renders 3-level breadcrumbs, a lighter shared header with the member summary folded into the header actions, and a compact `PageControls` strip with 4 tabs (Board, Calendar, Wiki, Settings), then `<Outlet />`.
 2. **Index redirect** (`index.tsx`): Resolves workspace and team, then redirects to the board route via `useEffect` + `navigate({ replace: true })`.
 3. **Board** (`board.tsx`): Resolves workspace and team, then renders `<KanbanBoard teamId={team._id} />`. The `KanbanBoard` component is a feature-rich Kanban board with drag-and-drop (Atlaskit pragmatic-drag-and-drop), swimlanes, board history (undo/redo), bulk operations, filtering, and issue detail viewer.
 4. **Calendar** (`calendar.tsx`): Resolves workspace and team, renders `<CalendarView teamId={team._id} />` with full error handling for both workspace and team not-found states.
@@ -116,7 +116,7 @@ The team detail page is the working surface for a single team within a workspace
 | ~~4~~ | ~~useEffect redirect in index route~~ **Fixed** — replaced with TanStack Router `beforeLoad` + `redirect()`. No component renders, no query fires. | ~~architecture~~ | ~~LOW~~ |
 | ~~5~~ | ~~Wiki page shares identical card markup with workspace wiki~~ **Fixed** — extracted `WikiDocumentGrid` to `src/components/Documents/WikiDocumentGrid.tsx`, used by both team and workspace wiki | ~~code duplication~~ | ~~MEDIUM~~ |
 | 6 | Board route loads workspace + team just to pass `team._id` to KanbanBoard; team ID could come from layout context | efficiency | LOW |
-| ~~7~~ | ~~No team member list visible~~ **Fixed** — team layout header shows member avatar row with tooltips (up to 8, +N overflow badge) | ~~functionality~~ | ~~MEDIUM~~ |
+| ~~7~~ | ~~No team member list visible~~ **Fixed** — team layout header now keeps the member summary inside the shared header actions (avatars, overflow badge, count) instead of spending a separate row on chrome | ~~functionality~~ | ~~MEDIUM~~ |
 | 8 | Settings placeholder uses an inline SVG icon instead of an icon from `@/lib/icons` | consistency | LOW |
 
 ---

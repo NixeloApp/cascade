@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects/:key/calendar` and `/:slug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 > **Status**: REVIEWED, with routine light-mode refinement still open
-> **Last Updated**: 2026-03-21
+> **Last Updated**: 2026-03-25
 
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
 
@@ -41,6 +41,7 @@
 - View switching is verified against explicit calendar-view markers.
 - Create-event modal capture is deterministic.
 - Mobile month/week states now show useful event content rather than offscreen or collapsed noise.
+- Project and team calendar routes now inherit the lighter shared detail chrome, so small screens spend less vertical space on header/tab framing before the grid begins.
 
 ---
 
@@ -49,7 +50,6 @@
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | 1 | The route is reliable now, but desktop light mode still wants slightly more surface depth around the month grid | composition | LOW |
-| 2 | Small-screen project/team chrome is improved, but still uses a bit more height than ideal before the work surface begins | shared shell | LOW |
 
 ---
 
@@ -68,5 +68,5 @@
 
 ## Summary
 
-Calendar is current and screenshot-stable. The meaningful work left is visual refinement, not
-route correctness or harness repair.
+Calendar is current and screenshot-stable. The meaningful work left is light-mode surface depth and
+other route-local refinement, not shared-shell cleanup, route correctness, or harness repair.

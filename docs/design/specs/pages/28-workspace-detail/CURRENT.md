@@ -2,7 +2,7 @@
 
 > **Route**: `/:orgSlug/workspaces/:workspaceSlug` (layout shell) with child tabs
 > **Status**: IMPLEMENTED
-> **Last Updated**: 2026-03-22
+> **Last Updated**: 2026-03-25
 
 ---
 
@@ -82,7 +82,7 @@ The workspace detail page is the primary operating surface for a single workspac
 
 ## Current Composition Walkthrough
 
-1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`. Shows loading spinner while pending, "Workspace not found" if null. Renders `PageHeader` with breadcrumbs and a `RouteNav` with 7 tabs, then an `<Outlet />` for child routes.
+1. **Layout shell** (`route.tsx`): Loads workspace via `api.workspaces.getBySlug`. Shows loading spinner while pending, "Workspace not found" if null. Renders a lighter `PageHeader` with breadcrumbs plus a compact `PageControls` strip with 7 tabs, then an `<Outlet />` for child routes.
 2. **Index redirect** (`index.tsx`): Immediately redirects to the teams list sub-route via `useEffect` + `navigate`.
 3. **Teams list** (`teams/index.tsx`): Uses `usePaginatedQuery` with `api.teams.getTeams` (org-wide, not workspace-filtered). Shows team cards with icon, name, description, member count, project count. "Load More" button for pagination.
 4. **Backlog** (`backlog.tsx`): Queries `api.workspaces.getBacklogIssues` (workspace-scoped). Renders a flat card list with issue key, title, status, and priority.

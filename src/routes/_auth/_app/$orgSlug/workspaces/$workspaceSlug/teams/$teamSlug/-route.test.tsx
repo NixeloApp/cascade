@@ -68,7 +68,23 @@ describe("TeamLayout", () => {
         name: "Delivery",
         description: "Core product team",
         slug: "delivery",
-      });
+      })
+      .mockReturnValueOnce([
+        {
+          _id: "membership-1" as Id<"teamMembers">,
+          user: {
+            name: "Alex Rivera",
+            image: null,
+          },
+        },
+        {
+          _id: "membership-2" as Id<"teamMembers">,
+          user: {
+            name: "Mina Patel",
+            image: null,
+          },
+        },
+      ] as ReturnType<typeof useAuthenticatedQuery>);
   });
 
   it("renders the team sections nav inside the shared page-controls shell", () => {
@@ -76,12 +92,13 @@ describe("TeamLayout", () => {
 
     expect(screen.getByRole("heading", { level: 2, name: "Delivery" })).toBeInTheDocument();
     expect(screen.getByText("Core product team")).toBeInTheDocument();
+    expect(screen.getByText("2 members")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Team sections" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Board" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
     expect(screen.getByText("Team content")).toBeInTheDocument();
 
     const nav = screen.getByRole("navigation", { name: "Team sections" });
-    expect(nav.closest(".gap-6")).not.toBeNull();
+    expect(nav.closest(".gap-4")).not.toBeNull();
   });
 });
