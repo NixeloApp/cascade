@@ -24,11 +24,29 @@ function normalizeMessages(messages) {
   return messages.filter((message) => typeof message === "string" && message.trim().length > 0);
 }
 
+function assertBlockingResultContract(result, rawErrors) {
+  if (result.passed === false && rawErrors === 0) {
+    throw new Error(
+      "Malformed enforced validator result: passed=false requires errors >= 1. Use createValidatorResult() or report a real error count.",
+    );
+  }
+
+  if (result.passed === true && rawErrors > 0) {
+    throw new Error(
+      "Malformed enforced validator result: passed=true requires errors === 0. Use createValidatorResult() or fix the reported error count.",
+    );
+  }
+}
+
 export function normalizeValidatorResult(result = {}) {
   const blocking = result.blocking !== false;
   const rawErrors = normalizeCount(result.errors);
   const normalizedMessages = normalizeMessages(result.messages);
   const normalizedFindings = normalizeCount(result.findings ?? rawErrors);
+
+  if (blocking) {
+    assertBlockingResultContract(result, rawErrors);
+  }
 
   return {
     ...result,

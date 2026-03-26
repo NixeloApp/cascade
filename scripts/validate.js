@@ -107,14 +107,9 @@ function runIsolatedCheck(modulePath) {
   const normalizedResult = normalizeValidatorResult(result);
   const passed =
     child.status === 0 && normalizedResult.passed !== false && (normalizedResult.errors ?? 0) === 0;
-  // Normalize blocking errors: if a blocking check failed (passed=false), ensure at least 1
-  // error is reported. Audit checks never contribute to the exit code.
-  const errors =
-    normalizedResult.blocking === false
-      ? 0
-      : passed
-        ? 0
-        : Math.max(1, normalizedResult.errors ?? 0);
+  // Audit checks never contribute to the exit code; enforced checks must already
+  // satisfy the result contract in normalizeValidatorResult().
+  const errors = normalizedResult.blocking === false || passed ? 0 : (normalizedResult.errors ?? 0);
   return {
     ...normalizedResult,
     passed: normalizedResult.blocking === false ? true : passed,

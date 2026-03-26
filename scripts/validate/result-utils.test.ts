@@ -34,6 +34,26 @@ describe("normalizeValidatorResult", () => {
     expect(result.findings).toBe(3);
     expect(result.showMessagesOnPass).toBe(true);
   });
+
+  it("rejects enforced failures that do not report errors", () => {
+    expect(() =>
+      normalizeValidatorResult({
+        passed: false,
+        errors: 0,
+        detail: "broken result",
+      }),
+    ).toThrow(/passed=false requires errors >= 1/);
+  });
+
+  it("rejects enforced passes that still report errors", () => {
+    expect(() =>
+      normalizeValidatorResult({
+        passed: true,
+        errors: 1,
+        detail: "broken result",
+      }),
+    ).toThrow(/passed=true requires errors === 0/);
+  });
 });
 
 describe("createValidatorResult", () => {
