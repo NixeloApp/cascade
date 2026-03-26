@@ -44,7 +44,11 @@ function isPendingOfflineMutation(
     return false;
   }
 
-  return userId === undefined || mutation.userId === undefined || mutation.userId === userId;
+  if (userId === undefined || mutation.userId === undefined) {
+    return false;
+  }
+
+  return mutation.userId === userId;
 }
 
 function parseOfflineMutationArgs<TArgs>(

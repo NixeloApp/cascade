@@ -49,11 +49,7 @@ test.describe("Offline Replay", () => {
       await page.context().setOffline(false);
       await dispatchConnectivityEvent(page, "online");
 
-      // Wait for the queue to drain (auto-replay or manual — either path works)
-      await expect(async () => {
-        await settingsPage.offlineTab.click();
-        await expect(settingsPage.localOfflineQueueHeading).toHaveCount(0);
-      }).toPass({ intervals: [500, 1000, 2000] });
+      await settingsPage.waitForOfflineQueueToDrain();
       await expect(settingsPage.page.getByText(/^Never$/)).toHaveCount(0);
 
       await settingsPage.switchToTab("preferences");

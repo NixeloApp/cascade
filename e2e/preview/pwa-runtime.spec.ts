@@ -12,7 +12,23 @@ async function waitForRegisteredWorker(page: Page) {
 }
 
 async function waitForControllingWorker(page: Page) {
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller));
+  const controlTimeoutMs = 5000;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller), {
+        timeout: controlTimeoutMs,
+      });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+
+      await waitForRegisteredWorker(page);
+      await page.reload({ waitUntil: "load" });
+    }
+  }
 }
 
 async function getServiceWorkerState(page: Page) {

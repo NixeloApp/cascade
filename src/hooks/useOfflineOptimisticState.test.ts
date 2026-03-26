@@ -164,6 +164,132 @@ describe("useOfflineOptimisticState", () => {
     expect([...result.current]).toEqual(["notif-1", "notif-2"]);
   });
 
+  it("ignores queued mutations until the authenticated user is known", () => {
+    mockUseOfflineQueue.mockReturnValue({
+      queue: [
+        {
+          id: 1,
+          userId: "user-1",
+          mutationType: "issues.addComment",
+          mutationArgs: JSON.stringify({
+            issueId: "issue-1",
+            content: "Hidden until auth resolves",
+          }),
+          status: "pending",
+          attempts: 0,
+          timestamp: 10,
+        },
+        {
+          id: 2,
+          mutationType: "notifications.markAsRead",
+          mutationArgs: JSON.stringify({ id: "notif-1" }),
+          status: "pending",
+          attempts: 0,
+          timestamp: 11,
+        },
+        {
+          id: 3,
+          userId: "user-1",
+          mutationType: "issues.updateStatus",
+          mutationArgs: JSON.stringify({
+            issueId: "issue-1",
+            newStatus: "done",
+            newOrder: 0,
+          }),
+          status: "pending",
+          attempts: 0,
+          timestamp: 12,
+        },
+      ],
+      count: 0,
+      pendingCount: 0,
+      syncingCount: 0,
+      failedCount: 0,
+      lastSuccessfulReplayAt: null,
+      isLoading: false,
+      refresh: vi.fn(),
+      processNow: vi.fn(),
+      retryMutation: vi.fn(),
+      deleteMutation: vi.fn(),
+      clearSynced: vi.fn(),
+    });
+
+    const { result: commentResult } = renderHook(() =>
+      useQueuedOfflineIssueComments("issue-1" as Id<"issues">),
+    );
+    const { result: notificationResult } = renderHook(() => useQueuedOfflineNotificationReadIds());
+    const { result: statusResult } = renderHook(() =>
+      useQueuedOfflineIssueStatus("issue-1" as Id<"issues">),
+    );
+
+    expect(commentResult.current).toEqual([]);
+    expect([...notificationResult.current]).toEqual([]);
+    expect(statusResult.current).toBeNull();
+  });
+
+  it("ignores legacy queued mutations that are missing a user id", () => {
+    mockUseOfflineQueue.mockReturnValue({
+      queue: [
+        {
+          id: 1,
+          mutationType: "issues.addComment",
+          mutationArgs: JSON.stringify({
+            issueId: "issue-1",
+            content: "Legacy row",
+          }),
+          status: "pending",
+          attempts: 0,
+          timestamp: 10,
+        },
+        {
+          id: 2,
+          mutationType: "notifications.markAsRead",
+          mutationArgs: JSON.stringify({ id: "notif-1" }),
+          status: "syncing",
+          attempts: 1,
+          timestamp: 11,
+        },
+        {
+          id: 3,
+          mutationType: "issues.updateStatus",
+          mutationArgs: JSON.stringify({
+            issueId: "issue-1",
+            newStatus: "done",
+            newOrder: 0,
+          }),
+          status: "pending",
+          attempts: 0,
+          timestamp: 12,
+        },
+      ],
+      count: 0,
+      pendingCount: 0,
+      syncingCount: 0,
+      failedCount: 0,
+      lastSuccessfulReplayAt: null,
+      isLoading: false,
+      refresh: vi.fn(),
+      processNow: vi.fn(),
+      retryMutation: vi.fn(),
+      deleteMutation: vi.fn(),
+      clearSynced: vi.fn(),
+    });
+
+    const { result: commentResult } = renderHook(() =>
+      useQueuedOfflineIssueComments("issue-1" as Id<"issues">, "user-1" as Id<"users">),
+    );
+    const { result: notificationResult } = renderHook(() =>
+      useQueuedOfflineNotificationReadIds("user-1" as Id<"users">),
+    );
+    const { result: statusResult } = renderHook(() =>
+      useQueuedOfflineIssueStatus("issue-1" as Id<"issues">, "user-1" as Id<"users">),
+    );
+
+    expect(commentResult.current).toEqual([]);
+    expect([...notificationResult.current]).toEqual([]);
+    expect(statusResult.current).toBeNull();
+  });
+
   it("returns the latest queued status for the issue", () => {
     mockUseOfflineQueue.mockReturnValue({
       queue: [

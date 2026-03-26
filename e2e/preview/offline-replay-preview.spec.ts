@@ -17,8 +17,35 @@ async function dispatchConnectivityEvent(page: Page, type: "online" | "offline")
   }, type);
 }
 
+async function waitForRegisteredWorker(page: Page) {
+  await page.waitForFunction(async () => {
+    if (!("serviceWorker" in navigator)) {
+      return false;
+    }
+
+    const registration = await navigator.serviceWorker.getRegistration();
+    return Boolean(registration?.active);
+  });
+}
+
 async function waitForControllingWorker(page: Page) {
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller));
+  const controlTimeoutMs = 5000;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller), {
+        timeout: controlTimeoutMs,
+      });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+
+      await waitForRegisteredWorker(page);
+      await page.reload({ waitUntil: "load" });
+    }
+  }
 }
 
 /**
@@ -50,7 +77,7 @@ async function waitForCurrentPageCached(page: Page, timeout = 30000) {
  */
 async function ensureRouteCached(page: Page, url: string, readyLocator: Locator) {
   await page.goto(url, { waitUntil: "load" });
-  await waitForControllingWorker(page);
+  await waitForRegisteredWorker(page);
   await expect(readyLocator).toBeVisible({ timeout: 15000 });
   // Reload so the SW fetch handler intercepts and caches the rendered response
   await page.reload({ waitUntil: "load" });
@@ -75,7 +102,7 @@ test.describe("Offline Replay Preview", () => {
     // caches the complete response), and we must verify the heading is visible
     // while still online before going offline.
     await settingsPage.goto();
-    await waitForControllingWorker(page);
+    await waitForRegisteredWorker(page);
     await expect(settingsPage.pageHeaderTitle).toBeVisible({ timeout: 15000 });
     // Reload so the SW intercepts and caches the fully-rendered response
     await page.reload({ waitUntil: "load" });
@@ -140,7 +167,7 @@ test.describe("Offline Replay Preview", () => {
     let queuedTimezone = "America/Chicago";
 
     await settingsPage.goto();
-    await waitForControllingWorker(page);
+    await waitForRegisteredWorker(page);
     await expect(settingsPage.pageHeaderTitle).toBeVisible({ timeout: 15000 });
     await page.reload({ waitUntil: "load" });
     await waitForControllingWorker(page);
@@ -167,11 +194,10 @@ test.describe("Offline Replay Preview", () => {
       // Process Queue is hidden while offline — restore network first
       await page.context().setOffline(false);
       await dispatchConnectivityEvent(page, "online");
-      await expect(settingsPage.processQueueButton).toBeVisible();
 
-      await settingsPage.processOfflineQueue();
-      await settingsPage.expectToast("Queued items processed");
-      await settingsPage.expectOfflineQueueHidden();
+      // Reconnect flushes queued mutations automatically; wait for the queue
+      // to drain instead of racing a transient manual button.
+      await settingsPage.waitForOfflineQueueToDrain();
       await expect(settingsPage.lastSuccessfulReplayLabel).toBeVisible();
       await expect(settingsPage.page.getByText(/^Never$/)).toHaveCount(0);
 
