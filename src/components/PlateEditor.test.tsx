@@ -342,65 +342,6 @@ describe("PlateEditor", () => {
     expect(await screen.findByText("Move Document")).toBeInTheDocument();
   });
 
-  it("opens the markdown preview from the e2e event and keeps it mounted", async () => {
-    mockQueryResults(loadedQueryResults());
-
-    render(<PlateEditor documentId={documentId} />);
-
-    act(() => {
-      window.dispatchEvent(
-        new CustomEvent("nixelo:e2e-open-markdown-preview", {
-          detail: {
-            markdown: "# Imported",
-            filename: "import.md",
-          },
-        }),
-      );
-    });
-
-    expect(await screen.findByText("Preview Markdown Import")).toBeInTheDocument();
-    expect(screen.getByText("import.md")).toBeInTheDocument();
-  });
-
-  it("replaces the editor value when the e2e markdown event is dispatched", async () => {
-    mockQueryResults(loadedQueryResults());
-
-    render(<PlateEditor documentId={documentId} />);
-
-    act(() => {
-      window.dispatchEvent(
-        new CustomEvent("nixelo:e2e-set-editor-markdown", {
-          detail: { markdown: "# Release Readiness\n\n- Ship it" },
-        }),
-      );
-    });
-
-    await waitFor(() => {
-      expect(mockMarkdownToValue).toHaveBeenCalledWith("# Release Readiness\n\n- Ship it");
-    });
-  });
-
-  it("accepts a direct e2e editor value event without reparsing markdown", async () => {
-    mockQueryResults(loadedQueryResults());
-
-    render(<PlateEditor documentId={documentId} />);
-    const markdownCallCount = mockMarkdownToValue.mock.calls.length;
-
-    act(() => {
-      window.dispatchEvent(
-        new CustomEvent("nixelo:e2e-set-editor-value", {
-          detail: {
-            value: [{ type: "paragraph", children: [{ text: "Injected state" }] }],
-          },
-        }),
-      );
-    });
-
-    await waitFor(() => {
-      expect(mockMarkdownToValue).toHaveBeenCalledTimes(markdownCallCount);
-    });
-  });
-
   it("submits a debounced snapshot when editor content changes", async () => {
     vi.useFakeTimers();
     mockQueryResults(loadedQueryResults());

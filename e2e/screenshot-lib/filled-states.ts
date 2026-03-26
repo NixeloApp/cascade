@@ -12,6 +12,7 @@ import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   AnalyticsPage,
+  DocumentsPage,
   NotificationsPage,
   ProjectsPage,
   TimeTrackingPage,
@@ -35,7 +36,7 @@ import {
   shouldCaptureAny,
   takeScreenshot,
 } from "./capture";
-import { BASE_URL, MARKDOWN_IMPORT_PREVIEW } from "./config";
+import { BASE_URL, MARKDOWN_IMPORT_PREVIEW, MARKDOWN_RICH_CONTENT } from "./config";
 import {
   getUploadDialogReadyLocator,
   openMobileSidebarMenu,
@@ -44,20 +45,7 @@ import {
   waitForCreateIssueModalScreenshotReady,
   waitForDashboardCustomizeDialogReady,
 } from "./dialog-helpers";
-import {
-  clearIssueDrafts,
-  discoverDocumentId,
-  discoverIssueKey,
-  openDocumentActionsMenu,
-  openDocumentEditorFloatingToolbarForCapture,
-  openDocumentEditorForCapture,
-  openDocumentEditorMentionPopoverForCapture,
-  openDocumentEditorSlashMenuForCapture,
-  openDocumentMoveDialogForCapture,
-  openMarkdownImportPreviewDialog,
-  primeDocumentEditorRichContent,
-  seedIssueDraft,
-} from "./helpers";
+import { clearIssueDrafts, discoverDocumentId, discoverIssueKey, seedIssueDraft } from "./helpers";
 import {
   screenshotAssistantStates,
   screenshotBoardInteractiveStates,
@@ -1193,13 +1181,14 @@ export async function screenshotFilledStates(
       (await discoverDocumentId(page, orgSlug));
     if (baseDocId) {
       const baseDocUrl = ROUTES.documents.detail.build(orgSlug, baseDocId);
+      const documentsPage = new DocumentsPage(page, orgSlug);
       await takeScreenshot(page, p, "document-editor", baseDocUrl);
 
       // Document editor interactive states
       if (shouldCapture(p, "document-editor-move-dialog")) {
         await runCaptureStep("document move dialog", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
-          const dialog = await openDocumentMoveDialogForCapture(page);
+          await documentsPage.gotoDocument(baseDocId);
+          const dialog = await documentsPage.openMoveDialog();
           await captureCurrentView(page, p, "document-editor-move-dialog");
           await dismissIfOpen(page, dialog);
         });
@@ -1207,9 +1196,8 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-markdown-preview-modal")) {
         await runRequiredCaptureStep("document markdown preview modal", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
-          const dialog = await openMarkdownImportPreviewDialog(
-            page,
+          await documentsPage.gotoDocument(baseDocId);
+          const dialog = await documentsPage.openMarkdownImportPreview(
             MARKDOWN_IMPORT_PREVIEW,
             "import.md",
           );
@@ -1220,7 +1208,7 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-favorite")) {
         await runCaptureStep("document favorite state", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
           const toggle = page.getByRole("button", { name: /add to favorites/i });
           await toggle.waitFor({ state: "visible", timeout: 8000 });
           await toggle.click();
@@ -1235,7 +1223,7 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-sidebar-favorites")) {
         await runCaptureStep("document sidebar favorites", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
           const toggle = page.getByRole("button", { name: /add to favorites/i });
           await toggle.waitFor({ state: "visible", timeout: 8000 });
           await toggle.click();
@@ -1254,14 +1242,25 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-rich-blocks")) {
         await runRequiredCaptureStep("document rich blocks", async () => {
-          await primeDocumentEditorRichContent(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
           await captureCurrentView(page, p, "document-editor-rich-blocks");
         });
       }
 
       if (shouldCapture(p, "document-editor-color-picker")) {
         await runRequiredCaptureStep("document color picker", async () => {
-          await openDocumentEditorFloatingToolbarForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
+          await documentsPage.openFloatingToolbarForText("Release");
           const colorButton = page.getByRole("button", { name: /text color|font color/i }).first();
           await colorButton.waitFor({ state: "visible", timeout: 5000 });
           await colorButton.evaluate((button: HTMLElement) => {
@@ -1278,7 +1277,13 @@ export async function screenshotFilledStates(
       // Slash menu — type "/" at end of content
       if (shouldCapture(p, "document-editor-slash-menu")) {
         await runRequiredCaptureStep("document slash menu", async () => {
-          await openDocumentEditorSlashMenuForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
+          await documentsPage.openSlashMenuAtEditorEnd();
           await captureCurrentView(page, p, "document-editor-slash-menu");
           // Dismiss and undo
           await page.keyboard.press("Escape");
@@ -1288,7 +1293,13 @@ export async function screenshotFilledStates(
       // Floating toolbar — select text in the editor
       if (shouldCapture(p, "document-editor-floating-toolbar")) {
         await runRequiredCaptureStep("document floating toolbar", async () => {
-          await openDocumentEditorFloatingToolbarForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
+          await documentsPage.openFloatingToolbarForText("Release");
           await captureCurrentView(page, p, "document-editor-floating-toolbar");
           // Click away to deselect
           await page.mouse.click(10, 10);
@@ -1298,7 +1309,13 @@ export async function screenshotFilledStates(
       // @mention popover — type "@" in editor
       if (shouldCapture(p, "document-editor-mention-popover")) {
         await runRequiredCaptureStep("document mention popover", async () => {
-          await openDocumentEditorMentionPopoverForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
+          await documentsPage.openMentionPopoverAtEditorEnd();
           await captureCurrentView(page, p, "document-editor-mention-popover");
           await page.keyboard.press("Escape");
         });
@@ -1306,8 +1323,9 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-locked")) {
         await runCaptureStep("document locked state", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
-          await openDocumentActionsMenu(page);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.moreActionsButton.click();
+          await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
           await page.getByRole("menuitem", { name: /^lock document$/i }).click();
           await page
             .getByRole("alert")
@@ -1316,7 +1334,8 @@ export async function screenshotFilledStates(
             .waitFor({ state: "visible", timeout: 5000 });
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-locked");
-          await openDocumentActionsMenu(page);
+          await documentsPage.moreActionsButton.click();
+          await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
           await page.getByRole("menuitem", { name: /^unlock document$/i }).click();
           await page
             .getByRole("alert")

@@ -50,17 +50,18 @@
  *  46. Border Radius           — enforces consistent border radius usage
  *  47. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
  *  48. Screenshot harness structure — ratchets private helper counts in screenshot modules
- *  49. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
- *  50. Typography drift        — blocks Typography/style drift outside owned primitives
- *  51. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
- *  52. Shared shape drift      — blocks repeated inline entity summary shapes
- *  53. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
- *  54. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
- *  55. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
- *  56. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
- *  57. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
- *  58. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
- *  59. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
+ *  49. Screenshot production hooks — blocks removed screenshot-only editor hooks from re-entering product code
+ *  50. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
+ *  51. Typography drift        — blocks Typography/style drift outside owned primitives
+ *  52. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
+ *  53. Shared shape drift      — blocks repeated inline entity summary shapes
+ *  54. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
+ *  55. Fixed size drift        — ratchets raw square height/width pairs in product code; prefer size-* or owned icon/component APIs
+ *  56. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
+ *  57. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  58. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
+ *  59. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
+ *  60. Icon tone drift            — ratchets raw Icon/IconCircle text-* color overrides when a shared semantic tone already exists
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -315,6 +316,10 @@ const checks = [
   {
     name: "Screenshot harness structure",
     modulePath: new URL("./validate/check-screenshot-harness-structure.js", import.meta.url).href,
+  },
+  {
+    name: "Screenshot production hooks",
+    modulePath: new URL("./validate/check-screenshot-prod-hooks.js", import.meta.url).href,
   },
   {
     name: "Screenshot manifest",

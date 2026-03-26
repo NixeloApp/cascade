@@ -35,6 +35,7 @@
   - reusable helpers that should live with E2E/page objects
   - thin screenshot wrappers that stay in screenshot-lib
   - harness-only complexity that should be deleted
+- [x] Collapse the document-editor capture path onto [DocumentsPage](/home/mikhail/Desktop/cascade/e2e/pages/documents.page.ts) and file-chooser based markdown import instead of screenshot-only window events.
 - [ ] Start with the biggest offenders:
   - `e2e/screenshot-lib/filled-states.ts` (`79`)
   - `e2e/screenshot-lib/readiness.ts` (`64`)
@@ -46,10 +47,13 @@
 
 ## Production Hook Cleanup
 
+- [x] Remove screenshot-only document-editor hooks from:
+  - `PlateEditor.tsx`
+  - `SlashMenu.tsx`
+  - `FloatingToolbar.tsx`
+  - `src/lib/plate/markdown.ts`
 - [ ] Audit production components for screenshot/E2E-only hooks, events, globals, and branches.
   First targets:
-  - `PlateEditor.tsx`
-  - editor/document seeding globals
   - route-specific state toggles added only for capture
 - [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.
 - [ ] Prefer seeded backend state, route params, or normal UI interaction over window-event hooks.

@@ -1,22 +1,17 @@
 /**
- * Screenshot Helpers — discovery, document editing, issue drafts, and authentication.
+ * Screenshot Helpers — discovery, issue drafts, and authentication.
  *
  * Utility functions used by the screenshot capture passes to discover content,
- * prepare document editors, seed issue drafts, and handle test user login.
+ * seed issue drafts, and handle test user login.
  */
 
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { injectAuthTokens } from "../utils/auth-helpers";
 import { testUserService } from "../utils/test-user-service";
-import {
-  dismissAllDialogs,
-  waitForAnimation,
-  waitForDashboardReady,
-  waitForScreenshotReady,
-} from "../utils/wait-helpers";
-import { BASE_URL, MARKDOWN_RICH_CONTENT, SCREENSHOT_USER } from "./config";
+import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
+import { BASE_URL, SCREENSHOT_USER } from "./config";
 import { waitForExpectedContent } from "./readiness";
 
 export async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | null> {
@@ -106,137 +101,6 @@ export async function discoverDocumentId(page: Page, orgSlug: string): Promise<s
   } catch {}
 
   return null;
-}
-
-export async function openDocumentEditorForCapture(page: Page, docUrl: string): Promise<void> {
-  await page.goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-  await waitForExpectedContent(page, docUrl, "document-editor");
-  await waitForScreenshotReady(page);
-}
-
-export async function openDocumentActionsMenu(page: Page): Promise<void> {
-  const trigger = page.getByRole("button", { name: /more document actions/i });
-  await trigger.waitFor({ state: "visible", timeout: 8000 });
-  await trigger.click();
-  await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
-}
-
-export async function openDocumentMoveDialogForCapture(page: Page): Promise<Locator> {
-  await dismissAllDialogs(page);
-  await openDocumentActionsMenu(page);
-  await page.getByRole("menuitem", { name: /move to another project/i }).click();
-  const dialog = page.getByRole("dialog", { name: /move document/i });
-  await dialog.waitFor({ state: "visible", timeout: 8000 });
-  await dialog.getByLabel(/target project/i).waitFor({ state: "visible", timeout: 8000 });
-  await waitForAnimation(page);
-  await waitForScreenshotReady(page);
-  return dialog;
-}
-
-export async function openMarkdownImportPreviewDialog(
-  page: Page,
-  markdown: string,
-  filename: string,
-): Promise<Locator> {
-  await dismissAllDialogs(page);
-  await page.evaluate(
-    ({ queuedMarkdown, queuedFilename }) => {
-      window.dispatchEvent(
-        new CustomEvent("nixelo:e2e-open-markdown-preview", {
-          detail: {
-            markdown: queuedMarkdown,
-            filename: queuedFilename,
-          },
-        }),
-      );
-    },
-    { queuedMarkdown: markdown, queuedFilename: filename },
-  );
-  const dialog = page.getByRole("dialog", { name: /preview markdown import/i });
-  await dialog.waitFor({ state: "visible", timeout: 8000 });
-  await dialog.getByText(filename, { exact: true }).waitFor({ state: "visible", timeout: 8000 });
-  await dialog
-    .getByRole("button", { name: /import & replace content/i })
-    .waitFor({ state: "visible", timeout: 8000 });
-  await waitForAnimation(page);
-  await waitForScreenshotReady(page);
-  return dialog;
-}
-
-export async function primeDocumentEditorRichContent(page: Page, docUrl: string): Promise<void> {
-  await openDocumentEditorForCapture(page, docUrl);
-  await page.evaluate((markdown) => {
-    window.dispatchEvent(
-      new CustomEvent("nixelo:e2e-set-editor-markdown", {
-        detail: { markdown },
-      }),
-    );
-  }, MARKDOWN_RICH_CONTENT);
-  const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
-  await editor.getByText(/^Release Readiness$/).waitFor({ state: "visible", timeout: 5000 });
-  await editor.getByText(/qa signoff/i).waitFor({ state: "visible", timeout: 5000 });
-  await editor.getByText(/export const shipWindow = "2026-03-25";/i).waitFor({
-    state: "visible",
-    timeout: 5000,
-  });
-  await waitForScreenshotReady(page);
-}
-
-export async function openDocumentEditorSlashMenuForCapture(
-  page: Page,
-  docUrl: string,
-): Promise<void> {
-  await openDocumentEditorForCapture(page, docUrl);
-  await page.evaluate(() => {
-    window.dispatchEvent(new Event("nixelo:e2e-open-slash-menu"));
-  });
-  await page.locator("[role='option']").first().waitFor({ state: "visible", timeout: 5000 });
-  await waitForScreenshotReady(page);
-}
-
-export async function openDocumentEditorMentionPopoverForCapture(
-  page: Page,
-  docUrl: string,
-): Promise<void> {
-  await openDocumentEditorForCapture(page, docUrl);
-  await page.evaluate(() => {
-    window.dispatchEvent(
-      new CustomEvent("nixelo:e2e-set-editor-value", {
-        detail: {
-          value: [
-            {
-              type: "paragraph",
-              children: [
-                { text: "Follow up with " },
-                {
-                  type: "mention_input",
-                  trigger: "@",
-                  children: [{ text: "em" }],
-                },
-              ],
-            },
-          ],
-        },
-      }),
-    );
-  });
-  await page.getByRole("combobox").waitFor({ state: "visible", timeout: 5000 });
-  await waitForScreenshotReady(page);
-}
-
-export async function openDocumentEditorFloatingToolbarForCapture(
-  page: Page,
-  docUrl: string,
-): Promise<void> {
-  await openDocumentEditorForCapture(page, docUrl);
-  await page.evaluate(() => {
-    window.dispatchEvent(new Event("nixelo:e2e-open-floating-toolbar"));
-  });
-  await page.getByRole("button", { name: /bold/i }).waitFor({
-    state: "visible",
-    timeout: 5000,
-  });
-  await waitForScreenshotReady(page);
 }
 
 export async function clearIssueDrafts(page: Page): Promise<void> {
