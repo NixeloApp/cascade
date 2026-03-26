@@ -6,12 +6,13 @@
  * calendar, workspaces, settings, and all their sub-states.
  */
 
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   AnalyticsPage,
+  DashboardPage,
   DocumentsPage,
   NotificationsPage,
   ProjectsPage,
@@ -19,7 +20,7 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
-import { getLocatorCount, isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
+import { isLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -1858,107 +1859,6 @@ export async function screenshotFilledStates(
 
   // ── Notification interactive states ──
 
-  async function openNotificationPanel(): Promise<Locator> {
-    const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
-    const panel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
-    let lastError: Error | null = null;
-
-    await bellButton.waitFor({ state: "visible", timeout: 5000 });
-
-    if (await panel.isVisible()) {
-      return panel;
-    }
-
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        await bellButton.click();
-        await panel.waitFor({ state: "visible", timeout: 5000 });
-        await panel.getByRole("heading", { name: /^notifications$/i }).waitFor({
-          state: "visible",
-          timeout: 5000,
-        });
-        await waitForAnimation(page);
-        return panel;
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
-        await page.keyboard.press("Escape");
-        await panel.waitFor({ state: "hidden", timeout: 2000 });
-      }
-    }
-
-    throw new Error(`Notification panel did not open: ${lastError?.message ?? "unknown error"}`);
-  }
-
-  async function waitForNotificationsContentReady(): Promise<void> {
-    const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    const emptyState = page
-      .getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE)
-      .or(page.getByTestId(TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE));
-    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
-
-    await expect
-      .poll(
-        async () => {
-          const mentionsVisible = await isLocatorVisible(mentionsFilter);
-          const itemCount = await getLocatorCount(notificationItems);
-          const emptyVisible = await isLocatorVisible(emptyState);
-
-          return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
-        },
-        {
-          timeout: 10000,
-          message: "Expected notifications content or empty state to become visible",
-        },
-      )
-      .toBe("ready");
-  }
-
-  async function waitForMentionsFilterState(): Promise<void> {
-    const mentionNotification = page.getByText(/you were mentioned/i);
-    const emptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
-
-    await expect
-      .poll(
-        async () => {
-          const mentionVisible = await isLocatorVisible(mentionNotification);
-          const emptyVisible = await isLocatorVisible(emptyState);
-
-          return mentionVisible || emptyVisible ? "ready" : "pending";
-        },
-        {
-          timeout: 10000,
-          message: "Expected Mentions filter results to finish rendering",
-        },
-      )
-      .toBe("ready");
-
-    await waitForAnimation(page);
-  }
-
-  async function openNotificationSnoozePopoverForCapture(): Promise<void> {
-    const firstNotification = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM).first();
-    const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
-    const snoozeMenuHeading = page.getByText(/snooze until/i);
-
-    await firstNotification.waitFor({ state: "visible", timeout: 5000 });
-
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      await firstNotification.hover();
-      await waitForAnimation(page);
-      await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
-      await snoozeButton.focus();
-      await snoozeButton.press("Enter");
-
-      if (await waitForLocatorVisible(snoozeMenuHeading, 2000)) {
-        return;
-      }
-
-      await page.keyboard.press("Escape");
-    }
-
-    throw new Error("Notification snooze popover did not open");
-  }
-
   // Notification popover (bell icon in header)
   if (shouldCapture(p, "notification-popover")) {
     await runCaptureStep("notification popover", async () => {
@@ -1970,7 +1870,9 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      await openNotificationPanel();
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.openNotifications();
+      await dashboardPage.waitForNotificationsPanelContentReady();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-popover");
       // Close popover
@@ -1987,7 +1889,9 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      await openNotificationSnoozePopoverForCapture();
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.openNotifications();
+      await dashboardPage.openNotificationSnoozePopover();
       await waitForAnimation(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-snooze-popover");
@@ -2004,9 +1908,8 @@ export async function screenshotFilledStates(
       });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
-      const archivedTab = page.getByRole("tab", { name: /archived/i });
-      await archivedTab.waitFor({ state: "visible", timeout: 5000 });
-      await archivedTab.click();
+      const notificationsPage = new NotificationsPage(page, orgSlug);
+      await notificationsPage.openArchivedTabAndWait();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notifications-archived");
     });
@@ -2020,10 +1923,9 @@ export async function screenshotFilledStates(
         timeout: 15000,
       });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
-      await waitForNotificationsContentReady();
       const notificationsPage = new NotificationsPage(page, orgSlug);
       await notificationsPage.activateMentionsFilter();
-      await waitForMentionsFilterState();
+      await notificationsPage.waitForMentionsFilterResults();
       await captureCurrentView(page, p, "notifications-filter-active");
     });
   }
@@ -2072,9 +1974,6 @@ export async function screenshotFilledStates(
         const archivedEmptyPage = await page.context().newPage();
 
         try {
-          await archivedEmptyPage.addInitScript(() => {
-            window.sessionStorage.setItem("nixelo:e2e:notifications-state", "archived-tab");
-          });
           await archivedEmptyPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
             waitUntil: "domcontentloaded",
             timeout: 15000,
@@ -2085,6 +1984,7 @@ export async function screenshotFilledStates(
             "notifications",
           );
           const notificationsPage = new NotificationsPage(archivedEmptyPage, orgSlug);
+          await notificationsPage.openArchivedTabAndWait();
           await waitForScreenshotReady(archivedEmptyPage);
           await notificationsPage.expectArchivedEmptyState();
           await captureCurrentView(archivedEmptyPage, p, "notifications-archived-empty");

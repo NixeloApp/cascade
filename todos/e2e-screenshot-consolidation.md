@@ -38,6 +38,7 @@
 - [x] Collapse the document-editor capture path onto [DocumentsPage](/home/mikhail/Desktop/cascade/e2e/pages/documents.page.ts) and file-chooser based markdown import instead of screenshot-only window events.
 - [x] Collapse roadmap and time-tracking reviewed states onto reusable page-object interactions instead of session-storage/window-based screenshot boot state.
 - [x] Collapse settings, notifications, and meetings screenshot readiness onto page-object methods instead of keeping route-specific waits in `e2e/screenshot-lib/readiness.ts`.
+- [x] Collapse notifications archived/popover/filter screenshot state setup onto reusable page-object interactions instead of route-level session-storage boot state.
 - [ ] Start with the biggest offenders:
   - `e2e/screenshot-lib/filled-states.ts` (`79`)
   - `e2e/screenshot-lib/readiness.ts` (`64`)
@@ -57,7 +58,7 @@
 - [ ] Audit production components for screenshot/E2E-only hooks, events, globals, and branches.
   First targets:
   - route-specific state toggles added only for capture
-  - remaining screenshot boot-state shortcuts outside the document, roadmap, and time-tracking surfaces
+  - remaining screenshot boot-state shortcuts outside the document, roadmap, time-tracking, and notifications archived-tab surfaces
 - [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.
 - [ ] Prefer seeded backend state, route params, or normal UI interaction over window-event hooks.
 - [ ] If a hook remains, it must serve reusable test setup broadly, not just one screenshot state.

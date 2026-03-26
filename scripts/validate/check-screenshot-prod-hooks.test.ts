@@ -10,6 +10,7 @@ describe("check-screenshot-prod-hooks", () => {
           return;
         }
         window.sessionStorage.setItem("nixelo:e2e:roadmap-state", "detail");
+        window.sessionStorage.setItem("nixelo:e2e:notifications-state", "archived-tab");
         if (window.__NIXELO_E2E_TIME_TRACKING_STATE__) {
           return;
         }
@@ -17,7 +18,7 @@ describe("check-screenshot-prod-hooks", () => {
       "/tmp/example.tsx",
     );
 
-    expect(violations).toHaveLength(4);
+    expect(violations).toHaveLength(5);
     expect(violations[0]).toMatchObject({
       line: 2,
       pattern: "nixelo:e2e-open-slash-menu",
@@ -35,9 +36,14 @@ describe("check-screenshot-prod-hooks", () => {
     expect(violations[2]?.file.endsWith("tmp/example.tsx")).toBe(true);
     expect(violations[3]).toMatchObject({
       line: 7,
-      pattern: "__NIXELO_E2E_TIME_TRACKING_STATE__",
+      pattern: "nixelo:e2e:notifications-state",
     });
     expect(violations[3]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[4]).toMatchObject({
+      line: 8,
+      pattern: "__NIXELO_E2E_TIME_TRACKING_STATE__",
+    });
+    expect(violations[4]?.file.endsWith("tmp/example.tsx")).toBe(true);
   });
 
   it("passes against the current repo state", () => {

@@ -1,9 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
+import { getLocatorCount, getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
 import { escapeRegExp, ROUTES } from "../utils/routes";
-import { waitForDashboardReady } from "../utils/wait-helpers";
+import { waitForAnimation, waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -90,7 +90,9 @@ export class DashboardPage extends BasePage {
   // ===================
   readonly notificationPanel: Locator;
   readonly markAllReadButton: Locator;
+  readonly notificationsPanelEmptyState: Locator;
   readonly notificationItems: Locator;
+  readonly notificationSnoozeButtons: Locator;
 
   // ===================
   // Locators - Documents Sidebar
@@ -205,7 +207,9 @@ export class DashboardPage extends BasePage {
     // Notifications panel
     this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
     this.markAllReadButton = page.getByRole("button", { name: /mark all read/i });
+    this.notificationsPanelEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
     this.notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
+    this.notificationSnoozeButtons = page.getByRole("button", { name: /snooze notification/i });
 
     // Documents sidebar
     this.documentSearchInput = page.getByPlaceholder(/search.*document/i);
@@ -420,6 +424,52 @@ export class DashboardPage extends BasePage {
 
     await this.clickNotificationTrigger();
     await this.expectNotificationsPanelVisible();
+  }
+
+  async waitForNotificationsPanelContentReady(): Promise<void> {
+    await this.expectNotificationsPanelVisible();
+    await expect
+      .poll(
+        async () => {
+          const itemCount = await getLocatorCount(this.notificationItems);
+          const emptyVisible = await isLocatorVisible(this.notificationsPanelEmptyState);
+          return itemCount > 0 || emptyVisible ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected notification panel content or empty state to render",
+        },
+      )
+      .toBe("ready");
+  }
+
+  async openNotificationSnoozePopover(): Promise<void> {
+    await this.waitForNotificationsPanelContentReady();
+    const firstNotification = this.notificationItems.first();
+    const snoozeMenuHeading = this.page.getByText(/snooze until/i);
+
+    await firstNotification.waitFor({ state: "visible", timeout: 5000 });
+
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await firstNotification.hover();
+        await waitForAnimation(this.page);
+        const snoozeButton = this.notificationSnoozeButtons.first();
+        await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
+        await snoozeButton.focus();
+        await snoozeButton.press("Enter");
+        await snoozeMenuHeading.waitFor({ state: "visible", timeout: 2000 });
+        return;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        await this.page.keyboard.press("Escape");
+      }
+    }
+
+    throw new Error(
+      `Notification snooze popover did not open: ${lastError?.message ?? "unknown error"}`,
+    );
   }
 
   async closeNotifications() {

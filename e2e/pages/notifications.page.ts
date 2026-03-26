@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
-import { waitForDashboardReady } from "../utils/wait-helpers";
+import { waitForAnimation, waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -21,6 +21,7 @@ export class NotificationsPage extends BasePage {
   readonly mentionsFilter: Locator;
   readonly notificationItems: Locator;
   readonly unreadBadge: Locator;
+  readonly mentionNotificationText: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -34,6 +35,7 @@ export class NotificationsPage extends BasePage {
     this.mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
     this.notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
     this.unreadBadge = page.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE);
+    this.mentionNotificationText = page.getByText(/you were mentioned/i);
   }
 
   async goto() {
@@ -89,9 +91,31 @@ export class NotificationsPage extends BasePage {
       .toBe("ready");
   }
 
+  async waitForArchivedTabReady(): Promise<void> {
+    await expect(this.archivedTab).toHaveAttribute("aria-selected", "true");
+    await expect
+      .poll(
+        async () => {
+          const itemCount = await getLocatorCount(this.notificationItems);
+          const emptyVisible = await isLocatorVisible(this.archivedEmptyState);
+          return itemCount > 0 || emptyVisible ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected archived notifications content or empty state to render",
+        },
+      )
+      .toBe("ready");
+  }
+
   async openArchivedTab(): Promise<void> {
     await expect(this.archivedTab).toBeVisible();
     await this.archivedTab.click();
+  }
+
+  async openArchivedTabAndWait(): Promise<void> {
+    await this.openArchivedTab();
+    await this.waitForArchivedTabReady();
   }
 
   async expectInboxEmptyState(): Promise<void> {
@@ -109,5 +133,23 @@ export class NotificationsPage extends BasePage {
   async activateMentionsFilter(): Promise<void> {
     await expect(this.mentionsFilter).toBeVisible();
     await this.mentionsFilter.click();
+  }
+
+  async waitForMentionsFilterResults(): Promise<void> {
+    await expect
+      .poll(
+        async () => {
+          const mentionVisible = await isLocatorVisible(this.mentionNotificationText);
+          const emptyVisible = await isLocatorVisible(this.inboxEmptyState);
+          return mentionVisible || emptyVisible ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected Mentions filter results to finish rendering",
+        },
+      )
+      .toBe("ready");
+
+    await waitForAnimation(this.page);
   }
 }

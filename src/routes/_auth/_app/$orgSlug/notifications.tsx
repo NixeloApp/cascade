@@ -57,7 +57,6 @@ declare global {
 
 /** Notification filter categories */
 type NotificationFilter = "all" | "mentions" | "assigned" | "comments" | "updates";
-type NotificationsE2EState = "archived-tab";
 
 /** Map filter categories to notification types */
 const FILTER_TYPE_MAP: Record<NotificationFilter, string[] | null> = {
@@ -77,7 +76,6 @@ const DATE_GROUP_LABELS: Record<DateGroup, string> = {
   this_week: "This Week",
   older: "Older",
 };
-const NOTIFICATIONS_E2E_STATE_STORAGE_KEY = "nixelo:e2e:notifications-state";
 
 interface NotificationEmptyStateConfig {
   action?: {
@@ -101,24 +99,6 @@ function applyQueuedReadState(
 
 function isE2ENotificationsLoadingOverrideEnabled(): boolean {
   return typeof window !== "undefined" && window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ === true;
-}
-
-function consumeNotificationsE2ERequestedTab(): "inbox" | "archived" {
-  if (typeof window === "undefined") {
-    return "inbox";
-  }
-
-  try {
-    const requestedState = window.sessionStorage.getItem(NOTIFICATIONS_E2E_STATE_STORAGE_KEY);
-    window.sessionStorage.removeItem(NOTIFICATIONS_E2E_STATE_STORAGE_KEY);
-    if ((requestedState as NotificationsE2EState | null) === "archived-tab") {
-      return "archived";
-    }
-  } catch {
-    return "inbox";
-  }
-
-  return "inbox";
 }
 
 function getUnreadNotificationsDescription(unreadCount: number | null | undefined): string {
@@ -216,9 +196,7 @@ export function NotificationsPage() {
     isE2ENotificationsLoadingOverrideEnabled() ? "markAll" : null,
   );
   const [filter, setFilter] = useState<NotificationFilter>("all");
-  const [activeTab, setActiveTab] = useState<"inbox" | "archived">(
-    consumeNotificationsE2ERequestedTab,
-  );
+  const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
   const orgContext = useOrganizationOptional();
   const { canAct } = useAuthReady();
   const { user } = useCurrentUser();
