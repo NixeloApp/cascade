@@ -123,10 +123,10 @@ export function NotificationCenter() {
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
-  const unreadNotificationIds = useAuthenticatedQuery(api.notifications.getUnreadIds, {});
+  const unreadNotificationState = useAuthenticatedQuery(api.notifications.getUnreadIds, {});
   const optimisticUnreadCount = getOptimisticUnreadCount({
     unreadCount,
-    unreadNotificationIds,
+    unreadNotificationState,
     queuedReadIds,
   });
   const { markAsRead: offlineMarkAsRead } = useOfflineNotificationMarkAsRead();

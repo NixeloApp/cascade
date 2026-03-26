@@ -4,19 +4,30 @@ import type { Id } from "@convex/_generated/dataModel";
 export function getOptimisticUnreadCount(args: {
   queuedReadIds: ReadonlySet<Id<"notifications">>;
   unreadCount: number | null | undefined;
-  unreadNotificationIds: readonly Id<"notifications">[] | undefined;
+  unreadNotificationState:
+    | {
+        hasMore: boolean;
+        ids: readonly Id<"notifications">[];
+      }
+    | undefined;
 }): number | null | undefined {
-  const { queuedReadIds, unreadCount, unreadNotificationIds } = args;
+  const { queuedReadIds, unreadCount, unreadNotificationState } = args;
 
   if (unreadCount == null) {
     return unreadCount;
   }
 
-  if (!unreadNotificationIds || unreadNotificationIds.length === 0 || queuedReadIds.size === 0) {
+  if (
+    !unreadNotificationState ||
+    unreadNotificationState.hasMore ||
+    !Array.isArray(unreadNotificationState.ids) ||
+    unreadNotificationState.ids.length === 0 ||
+    queuedReadIds.size === 0
+  ) {
     return unreadCount;
   }
 
-  const unreadIdSet = new Set(unreadNotificationIds);
+  const unreadIdSet = new Set(unreadNotificationState.ids);
   let queuedUnreadCount = 0;
 
   for (const queuedReadId of queuedReadIds) {

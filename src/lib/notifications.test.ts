@@ -13,7 +13,10 @@ describe("getOptimisticUnreadCount", () => {
     expect(
       getOptimisticUnreadCount({
         unreadCount: UNREAD_COUNT,
-        unreadNotificationIds: [NOTIFICATION_ID_ONE, NOTIFICATION_ID_TWO, NOTIFICATION_ID_THREE],
+        unreadNotificationState: {
+          ids: [NOTIFICATION_ID_ONE, NOTIFICATION_ID_TWO, NOTIFICATION_ID_THREE],
+          hasMore: false,
+        },
         queuedReadIds: new Set([NOTIFICATION_ID_ONE, ARCHIVED_NOTIFICATION_ID]),
       }),
     ).toBe(2);
@@ -23,7 +26,20 @@ describe("getOptimisticUnreadCount", () => {
     expect(
       getOptimisticUnreadCount({
         unreadCount: UNREAD_COUNT,
-        unreadNotificationIds: undefined,
+        unreadNotificationState: undefined,
+        queuedReadIds: new Set([NOTIFICATION_ID_ONE]),
+      }),
+    ).toBe(UNREAD_COUNT);
+  });
+
+  it("returns the server count when the unread id list is truncated", () => {
+    expect(
+      getOptimisticUnreadCount({
+        unreadCount: UNREAD_COUNT,
+        unreadNotificationState: {
+          ids: [NOTIFICATION_ID_ONE],
+          hasMore: true,
+        },
         queuedReadIds: new Set([NOTIFICATION_ID_ONE]),
       }),
     ).toBe(UNREAD_COUNT);
@@ -33,7 +49,10 @@ describe("getOptimisticUnreadCount", () => {
     expect(
       getOptimisticUnreadCount({
         unreadCount: undefined,
-        unreadNotificationIds: [NOTIFICATION_ID_ONE],
+        unreadNotificationState: {
+          ids: [NOTIFICATION_ID_ONE],
+          hasMore: false,
+        },
         queuedReadIds: new Set([NOTIFICATION_ID_ONE]),
       }),
     ).toBeUndefined();

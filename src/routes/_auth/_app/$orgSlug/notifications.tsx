@@ -90,6 +90,15 @@ interface NotificationEmptyStateConfig {
   title: string;
 }
 
+function applyQueuedReadState(
+  notifications: NotificationWithActor[],
+  queuedReadIds: ReadonlySet<Id<"notifications">>,
+): NotificationWithActor[] {
+  return notifications.map((notification) =>
+    queuedReadIds.has(notification._id) ? { ...notification, isRead: true } : notification,
+  );
+}
+
 function isE2ENotificationsLoadingOverrideEnabled(): boolean {
   return typeof window !== "undefined" && window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ === true;
 }
@@ -222,8 +231,9 @@ export function NotificationsPage() {
     { initialNumItems: 100 },
   );
   const queuedReadIds = useQueuedOfflineNotificationReadIds(user?._id);
-  const notifications = ((notificationsRaw ?? []) as NotificationWithActor[]).map((notification) =>
-    queuedReadIds.has(notification._id) ? { ...notification, isRead: true } : notification,
+  const notifications = applyQueuedReadState(
+    (notificationsRaw ?? []) as NotificationWithActor[],
+    queuedReadIds,
   );
 
   // Archived notifications (paginated)
@@ -234,14 +244,17 @@ export function NotificationsPage() {
   } = usePaginatedQuery(api.notifications.listArchived, canAct ? {} : "skip", {
     initialNumItems: 25,
   });
-  const archivedNotifications = (archivedNotificationsRaw ?? []) as NotificationWithActor[];
+  const archivedNotifications = applyQueuedReadState(
+    (archivedNotificationsRaw ?? []) as NotificationWithActor[],
+    queuedReadIds,
+  );
 
   // Unread count
   const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
-  const unreadNotificationIds = useAuthenticatedQuery(api.notifications.getUnreadIds, {});
+  const unreadNotificationState = useAuthenticatedQuery(api.notifications.getUnreadIds, {});
   const optimisticUnreadCount = getOptimisticUnreadCount({
     unreadCount,
-    unreadNotificationIds,
+    unreadNotificationState,
     queuedReadIds,
   });
 

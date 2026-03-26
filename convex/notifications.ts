@@ -130,12 +130,16 @@ export const getUnreadCount = authenticatedQuery({
   },
 });
 
-/** Get the unread inbox notification ids for the current user, capped to the badge limit. */
+const MAX_UNREAD_IDS = 100;
+
+/** Get the unread inbox notification ids for the current user, plus whether the list was truncated. */
 export const getUnreadIds = authenticatedQuery({
   args: {},
-  returns: v.array(v.id("notifications")),
+  returns: v.object({
+    ids: v.array(v.id("notifications")),
+    hasMore: v.boolean(),
+  }),
   handler: async (ctx) => {
-    const MAX_UNREAD_IDS = 100;
     const now = Date.now();
 
     const unreadNotifications = await ctx.db
@@ -149,9 +153,12 @@ export const getUnreadIds = authenticatedQuery({
           q.or(q.eq(q.field("snoozedUntil"), undefined), q.lt(q.field("snoozedUntil"), now)),
         ),
       )
-      .take(MAX_UNREAD_IDS);
+      .take(MAX_UNREAD_IDS + 1);
 
-    return unreadNotifications.map((notification) => notification._id);
+    return {
+      ids: unreadNotifications.slice(0, MAX_UNREAD_IDS).map((notification) => notification._id),
+      hasMore: unreadNotifications.length > MAX_UNREAD_IDS,
+    };
   },
 });
 

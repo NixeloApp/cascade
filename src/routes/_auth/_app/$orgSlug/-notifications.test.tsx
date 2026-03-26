@@ -83,11 +83,12 @@ vi.mock("@/components/Notifications", () => ({
     notification,
     onSnooze,
   }: {
-    notification: { _id: Id<"notifications">; title: string };
+    notification: { _id: Id<"notifications">; title: string; isRead: boolean };
     onSnooze?: (id: Id<"notifications">, snoozedUntil: number) => void;
   }) => (
     <div>
       <div>{notification.title}</div>
+      <div>{notification.isRead ? "Read" : "Unread"}</div>
       {onSnooze ? (
         <button type="button" onClick={() => onSnooze(notification._id, 1_234)}>
           Snooze notification
@@ -262,6 +263,7 @@ const archivedNotification: MockNotification = {
 
 function mockUnreadQueries(args: {
   unreadCount: number | undefined;
+  unreadHasMore?: boolean;
   unreadIds?: Id<"notifications">[];
 }) {
   let authenticatedQueryCallCount = 0;
@@ -271,7 +273,10 @@ function mockUnreadQueries(args: {
       return args.unreadCount;
     }
 
-    return args.unreadIds ?? [];
+    return {
+      ids: args.unreadIds ?? [],
+      hasMore: args.unreadHasMore ?? false,
+    };
   });
 }
 
@@ -540,5 +545,34 @@ describe("NotificationsPage", () => {
 
     expect(screen.getByText("1 unread notification")).toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("1");
+  });
+
+  it("does not subtract queued reads when the unread id list is truncated", () => {
+    mockUnreadQueries({
+      unreadCount: 100,
+      unreadHasMore: true,
+      unreadIds: [inboxNotification._id],
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([inboxNotification._id]));
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("100 unread notifications")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE)).toHaveTextContent("99+");
+  });
+
+  it("applies queued read projection to archived rows", async () => {
+    const user = userEvent.setup();
+    mockNotificationQueries({
+      archived: [{ ...archivedNotification, isRead: false }],
+    });
+    mockUseQueuedOfflineNotificationReadIds.mockReturnValue(new Set([archivedNotification._id]));
+
+    render(<NotificationsPage />);
+
+    await user.click(screen.getByRole("tab", { name: /archived/i }));
+
+    expect(await screen.findByText("Archived status update")).toBeInTheDocument();
+    expect(screen.getByText("Read")).toBeInTheDocument();
   });
 });

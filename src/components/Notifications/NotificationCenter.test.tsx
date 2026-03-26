@@ -56,6 +56,7 @@ describe("NotificationCenter", () => {
 
   function mockUnreadQueries(args: {
     unreadCount: number | undefined;
+    unreadHasMore?: boolean;
     unreadIds?: Id<"notifications">[];
   }) {
     let authenticatedQueryCallCount = 0;
@@ -65,7 +66,10 @@ describe("NotificationCenter", () => {
         return args.unreadCount;
       }
 
-      return args.unreadIds ?? [];
+      return {
+        ids: args.unreadIds ?? [],
+        hasMore: args.unreadHasMore ?? false,
+      };
     });
   }
 

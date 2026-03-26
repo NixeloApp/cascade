@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
@@ -266,9 +267,10 @@ describe("Notifications", () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const futureSnooze = Date.now() + 60_000;
+      let unreadInboxId: Id<"notifications"> | null = null;
 
       await t.run(async (ctx) => {
-        await ctx.db.insert("notifications", {
+        unreadInboxId = await ctx.db.insert("notifications", {
           userId,
           type: "test",
           title: "Unread inbox",
@@ -303,10 +305,13 @@ describe("Notifications", () => {
       const asUser = asAuthenticatedUser(t, userId);
       const unreadIds = await asUser.query(api.notifications.getUnreadIds, {});
 
-      expect(unreadIds).toHaveLength(1);
+      expect(unreadIds).toEqual({
+        ids: unreadInboxId ? [unreadInboxId] : [],
+        hasMore: false,
+      });
     });
 
-    it("caps unread ids to the badge limit", async () => {
+    it("caps unread ids to the badge limit and reports when more exist", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const MAX_UNREAD_IDS = 100;
@@ -329,7 +334,8 @@ describe("Notifications", () => {
       const asUser = asAuthenticatedUser(t, userId);
       const unreadIds = await asUser.query(api.notifications.getUnreadIds, {});
 
-      expect(unreadIds).toHaveLength(MAX_UNREAD_IDS);
+      expect(unreadIds.ids).toHaveLength(MAX_UNREAD_IDS);
+      expect(unreadIds.hasMore).toBe(true);
     });
   });
 
