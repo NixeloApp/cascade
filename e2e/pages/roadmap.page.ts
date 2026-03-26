@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { isLocatorVisible } from "../utils/locator-state";
+import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { BasePage } from "./base.page";
 
 /**
@@ -90,12 +90,29 @@ export class RoadmapPage extends BasePage {
   }
 
   async openTimelineSpanSelector(): Promise<void> {
-    await this.timelineSpanSelect.waitFor({ state: "visible", timeout: 5000 });
-    await this.timelineSpanSelect.click();
-    await this.page.getByRole("option", { name: /1 month/i }).waitFor({
-      state: "visible",
-      timeout: 5000,
-    });
+    const monthOption = this.page.getByRole("option", { name: /^1 month$/i });
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      await this.timelineSpanSelect.waitFor({ state: "visible", timeout: 5000 });
+      await this.timelineSpanSelect.scrollIntoViewIfNeeded();
+      await this.timelineSpanSelect.click();
+
+      if (await waitForLocatorVisible(monthOption, 3000)) {
+        return;
+      }
+
+      await this.timelineSpanSelect.press("ArrowDown").catch(() => undefined);
+      if (await waitForLocatorVisible(monthOption, 2000)) {
+        return;
+      }
+
+      await this.page.keyboard.press("Escape").catch(() => undefined);
+      if (attempt === 3) {
+        break;
+      }
+    }
+
+    throw new Error('Roadmap timeline span selector did not open "1 Month" options');
   }
 
   async groupByStatus(): Promise<void> {

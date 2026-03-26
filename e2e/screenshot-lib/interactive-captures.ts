@@ -34,6 +34,7 @@ import {
   captureCurrentView,
   captureState,
   runCaptureStep,
+  runRequiredCaptureStep,
   shouldCapture,
   shouldCaptureAny,
 } from "./capture";
@@ -206,7 +207,7 @@ export async function screenshotOrgCalendarStates(
   const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
 
   if (shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName])) {
-    await runCaptureStep("org calendar filtered scope states", async () => {
+    await runRequiredCaptureStep("org calendar filtered scope states", async () => {
       await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
         waitUntil: "domcontentloaded",
         timeout: 15000,
@@ -234,7 +235,7 @@ export async function screenshotOrgCalendarStates(
   }
 
   if (shouldCapture(prefix, loadingStateName)) {
-    await runCaptureStep("org calendar loading state", async () => {
+    await runRequiredCaptureStep("org calendar loading state", async () => {
       const loadingPage = await page.context().newPage();
 
       try {
@@ -689,7 +690,7 @@ export async function screenshotRoadmapStates(
   };
 
   if (shouldCapture(prefix, captureNames.canonical)) {
-    await runCaptureStep("roadmap canonical", async () => {
+    await runRequiredCaptureStep("roadmap canonical", async () => {
       await withRoadmapPage({
         mode: "default",
         run: async (capturePage, roadmapPage) => {
@@ -703,7 +704,7 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.timelineSelector)) {
-    await runCaptureStep("roadmap timeline selector", async () => {
+    await runRequiredCaptureStep("roadmap timeline selector", async () => {
       await withRoadmapPage({
         mode: "default",
         run: async (capturePage, roadmapPage) => {
@@ -718,7 +719,7 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.grouped)) {
-    await runCaptureStep("roadmap grouped", async () => {
+    await runRequiredCaptureStep("roadmap grouped", async () => {
       await withRoadmapPage({
         bootState: "group-status",
         mode: "default",
@@ -732,11 +733,11 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.detail)) {
-    await runCaptureStep("roadmap detail", async () => {
+    await runRequiredCaptureStep("roadmap detail", async () => {
       await withRoadmapPage({
+        bootState: "detail",
         mode: "default",
         run: async (capturePage, roadmapPage) => {
-          await roadmapPage.openIssueDetail("DEMO-2");
           await roadmapPage.expectDetailState();
           await waitForScreenshotReady(capturePage);
           await captureCurrentView(capturePage, prefix, captureNames.detail);
@@ -746,7 +747,7 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.empty)) {
-    await runCaptureStep("roadmap empty", async () => {
+    await runRequiredCaptureStep("roadmap empty", async () => {
       await withRoadmapPage({
         mode: "empty",
         run: async (capturePage, roadmapPage) => {
@@ -759,7 +760,7 @@ export async function screenshotRoadmapStates(
   }
 
   if (shouldCapture(prefix, captureNames.milestone)) {
-    await runCaptureStep("roadmap milestone", async () => {
+    await runRequiredCaptureStep("roadmap milestone", async () => {
       await withRoadmapPage({
         mode: "milestone",
         run: async (capturePage, roadmapPage) => {
