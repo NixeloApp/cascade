@@ -23,9 +23,6 @@
 
 ### Tier 2: Smaller follow-up passes
 
-- [ ] `src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx`
-  Current shape: ~272 lines, ~16 `className=` sites.
-  Cleanup target: normalize month-cell chrome and event row spacing without over-abstracting the calendar internals.
 - [ ] `src/components/Roadmap/RoadmapHeaderControls.tsx`
   Current shape: ~188 lines, ~1 `className=` site.
   Cleanup target: likely low priority now; only revisit if `RoadmapView.tsx` cleanup leaves obvious repeated control semantics.
