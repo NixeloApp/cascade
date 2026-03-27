@@ -150,6 +150,15 @@ export class CalendarPage extends BasePage {
     return false;
   }
 
+  async expectLoadingStateVisible(timeout = 12000): Promise<void> {
+    await this.loadingState.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+        timeout,
+      })
+      .toBeGreaterThanOrEqual(10);
+  }
+
   // ===================
   // Actions - Navigation
   // ===================

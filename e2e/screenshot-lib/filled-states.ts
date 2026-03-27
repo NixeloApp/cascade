@@ -9,7 +9,6 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
-import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   AnalyticsPage,
   CalendarPage,
@@ -654,11 +653,7 @@ export async function screenshotFilledStates(
           await projectsPage.submitIssueButton.click();
           await projectsPage.createIssueModal.waitFor({ state: "hidden", timeout: 8000 });
           createdIssue = true;
-          const successToast = page
-            .getByTestId(TEST_IDS.TOAST.SUCCESS)
-            .filter({ hasText: /issue created successfully/i })
-            .first();
-          await successToast.waitFor({ state: "visible", timeout: 8000 });
+          await projectsPage.expectCreateIssueSuccessToastVisible(8000);
           await waitForScreenshotReady(page);
           await captureCurrentView(
             page,

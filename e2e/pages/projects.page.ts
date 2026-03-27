@@ -1654,6 +1654,14 @@ export class ProjectsPage extends BasePage {
       .toBeGreaterThanOrEqual(8);
   }
 
+  async expectCreateIssueSuccessToastVisible(timeout = 8000) {
+    await expect(
+      this.getToast("Issue created successfully").filter({
+        has: this.page.getByTestId(TEST_IDS.TOAST.SUCCESS),
+      }),
+    ).toBeVisible({ timeout });
+  }
+
   async expectProjectCount(count: number) {
     await expect(this.projectItems).toHaveCount(count);
   }

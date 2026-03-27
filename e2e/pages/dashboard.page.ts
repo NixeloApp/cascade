@@ -1010,6 +1010,14 @@ export class DashboardPage extends BasePage {
     expect(visible).toBe(true);
   }
 
+  async expectTimeEntryModalReady(timeout = 10000) {
+    await this.expectTimeEntryModalVisible(timeout);
+    await this.timeEntryModal.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM).waitFor({
+      state: "visible",
+      timeout,
+    });
+  }
+
   private async waitForTimeEntryBillingState(expectBillable: boolean, timeout = 3000) {
     try {
       await expect

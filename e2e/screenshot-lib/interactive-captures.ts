@@ -7,7 +7,6 @@
 
 import { expect, type Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
-import { TEST_IDS } from "../../src/lib/test-ids";
 import { E2E_TIMEZONE } from "../constants";
 import {
   AssistantPage,
@@ -105,11 +104,7 @@ export async function screenshotDashboardModals(
     await runCaptureStep("dashboard time-entry modal", async () => {
       await dismissAllDialogs(page);
       await dashboardPage.openTimeEntryModal();
-      await dashboardPage.timeEntryModal.waitFor({ state: "visible", timeout: 5000 });
-      await page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM).waitFor({
-        state: "visible",
-        timeout: 5000,
-      });
+      await dashboardPage.expectTimeEntryModalReady(5000);
       await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
       await dashboardPage.closeTimeEntryModal();
     });
@@ -224,14 +219,8 @@ export async function screenshotOrgCalendarStates(
             timeout: 15000,
           },
         );
-        await loadingPage
-          .getByTestId(TEST_IDS.ORG_CALENDAR.LOADING_STATE)
-          .waitFor({ state: "visible", timeout: 12000 });
-        await expect
-          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThanOrEqual(10);
+        const loadingCalendarPage = new CalendarPage(loadingPage, orgSlug);
+        await loadingCalendarPage.expectLoadingStateVisible(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,
