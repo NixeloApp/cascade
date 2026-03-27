@@ -25,7 +25,9 @@ export class IssuesPage extends BasePage {
     return withBlockedConvexPage(
       sourcePage,
       {
-        blockedQueries: ["issues/queries:listOrganizationIssues"],
+        kind: "queries",
+        paths: ["issues/queries:listOrganizationIssues"],
+        target: "isolated",
       },
       async (loadingPage) => run(new IssuesPage(loadingPage, orgSlug)),
     );

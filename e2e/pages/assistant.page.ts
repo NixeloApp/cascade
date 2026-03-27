@@ -15,7 +15,9 @@ export class AssistantPage extends BasePage {
     return withBlockedConvexPage(
       sourcePage,
       {
-        blockedQueries: ["ai/queries:getUsageStats"],
+        kind: "queries",
+        paths: ["ai/queries:getUsageStats"],
+        target: "isolated",
       },
       async (loadingPage) => run(new AssistantPage(loadingPage, orgSlug)),
     );

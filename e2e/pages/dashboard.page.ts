@@ -24,7 +24,7 @@ export class DashboardPage extends BasePage {
   ): Promise<T> {
     return withBlockedConvexPage(
       sourcePage,
-      { installTransportBlocker: true, isolated: true },
+      { kind: "transport", target: "isolated" },
       async (loadingPage) => run(new DashboardPage(loadingPage, orgSlug)),
     );
   }

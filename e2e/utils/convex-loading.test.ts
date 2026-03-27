@@ -47,7 +47,7 @@ describe("convex loading helpers", () => {
     const harness = createConvexLoadingHarness();
     const result = await withBlockedConvexPage(
       harness.sourcePage,
-      { installTransportBlocker: true, isolated: false },
+      { kind: "transport", target: "sibling" },
       async (loadingPage) => {
         expect(loadingPage).toBe(harness.siblingPage);
         return "done";
@@ -64,7 +64,11 @@ describe("convex loading helpers", () => {
 
     await withBlockedConvexPage(
       harness.sourcePage,
-      { blockedQueries: ["issues/queries:listOrganizationIssues", "notifications:list"] },
+      {
+        kind: "queries",
+        paths: ["issues/queries:listOrganizationIssues", "notifications:list"],
+        target: "isolated",
+      },
       async (blockedPage) => {
         expect(blockedPage).toBe(harness.isolatedPage);
       },
@@ -80,7 +84,7 @@ describe("convex loading helpers", () => {
 
     const result = await withBlockedConvexPage(
       harness.sourcePage,
-      { installTransportBlocker: true },
+      { kind: "transport", target: "isolated" },
       async (loadingPage) => {
         expect(loadingPage).toBe(harness.isolatedPage);
         return "done";
@@ -98,7 +102,11 @@ describe("convex loading helpers", () => {
     await expect(
       withBlockedConvexPage(
         harness.sourcePage,
-        { blockedMutations: ["notifications:markAllAsRead"] },
+        {
+          kind: "mutations",
+          paths: ["notifications:markAllAsRead"],
+          target: "isolated",
+        },
         async () => {
           throw new Error("capture failed");
         },
@@ -110,6 +118,23 @@ describe("convex loading helpers", () => {
     expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
   });
 
+  it("normalizes blocked request paths before installing routes", async () => {
+    const harness = createConvexLoadingHarness();
+
+    await withBlockedConvexPage(
+      harness.sourcePage,
+      {
+        kind: "queries",
+        paths: [" issues/queries:listOrganizationIssues ", "issues/queries:listOrganizationIssues"],
+        target: "isolated",
+      },
+      async () => undefined,
+    );
+
+    expect(harness.isolatedPage.route).toHaveBeenCalledTimes(1);
+    expect(harness.isolatedPage.unroute).toHaveBeenCalledTimes(1);
+  });
+
   it("unwinds already-installed blocked routes when later route setup fails", async () => {
     const harness = createConvexLoadingHarness();
     harness.isolatedPage.route
@@ -119,7 +144,11 @@ describe("convex loading helpers", () => {
     await expect(
       withBlockedConvexPage(
         harness.sourcePage,
-        { blockedQueries: ["issues/queries:listOrganizationIssues", "notifications:list"] },
+        {
+          kind: "queries",
+          paths: ["issues/queries:listOrganizationIssues", "notifications:list"],
+          target: "isolated",
+        },
         async () => "unreachable",
       ),
     ).rejects.toThrow("route install failed");
@@ -128,18 +157,35 @@ describe("convex loading helpers", () => {
     expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
   });
 
-  it("defaults to an isolated page target when no explicit isolation policy is provided", async () => {
+  it("rejects empty blocked-query policies before running the capture", async () => {
     const harness = createConvexLoadingHarness();
 
-    await withBlockedConvexPage(
-      harness.sourcePage,
-      { blockedQueries: ["issues/queries:listOrganizationIssues"] },
-      async (blockedPage) => {
-        expect(blockedPage).toBe(harness.isolatedPage);
-      },
-    );
+    await expect(
+      withBlockedConvexPage(
+        harness.sourcePage,
+        { kind: "queries", paths: [], target: "isolated" },
+        async () => "unreachable",
+      ),
+    ).rejects.toThrow("Blocked Convex queries policy requires at least one path");
 
-    expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
-    expect(harness.siblingPage.close).not.toHaveBeenCalled();
+    expect(harness.isolatedPage.route).not.toHaveBeenCalled();
+    expect(harness.isolatedPage.unroute).not.toHaveBeenCalled();
+    expect(harness.isolatedContext.close).not.toHaveBeenCalled();
+  });
+
+  it("rejects blocked-query policies with empty path values", async () => {
+    const harness = createConvexLoadingHarness();
+
+    await expect(
+      withBlockedConvexPage(
+        harness.sourcePage,
+        { kind: "queries", paths: ["   "], target: "isolated" },
+        async () => "unreachable",
+      ),
+    ).rejects.toThrow("Blocked Convex queries policy must not include empty paths");
+
+    expect(harness.isolatedPage.route).not.toHaveBeenCalled();
+    expect(harness.isolatedPage.unroute).not.toHaveBeenCalled();
+    expect(harness.isolatedContext.close).not.toHaveBeenCalled();
   });
 });

@@ -21,7 +21,7 @@ export class CalendarPage extends BasePage {
   ): Promise<T> {
     return withBlockedConvexPage(
       sourcePage,
-      { installTransportBlocker: true, isolated: false },
+      { kind: "transport", target: "sibling" },
       async (loadingPage) => run(new CalendarPage(loadingPage, orgSlug)),
     );
   }

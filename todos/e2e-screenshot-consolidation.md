@@ -38,6 +38,7 @@
 - [ ] Keep shrinking direct screenshot-lib route-driving so ordinary canonical, modal, and loading captures go through page-object navigation, leaving only shared blocked-transport policy and shared screenshot-session bootstrap as the justified exceptions.
 - [ ] Keep blocked transport/page-target lifecycle on shared E2E helpers instead of re-creating sibling or isolated capture-page setup inside screenshot-lib or route-specific loading helpers.
 - [ ] Keep blocked transport policy on one shared helper contract instead of growing separate `withConvexLoadingPage` / `withQueryBlockedPage` / `withMutationBlockedPage` variants again.
+- [ ] Keep blocked transport policy explicit at call sites. Loading helpers should declare `transport` vs `queries` vs `mutations` and `isolated` vs `sibling` directly instead of leaning on option-bag defaults or implicit harness folklore.
 - [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
 
 ## Production Hook Cleanup

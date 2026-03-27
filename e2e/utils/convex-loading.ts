@@ -2,12 +2,67 @@ import type { Page, Route } from "@playwright/test";
 import { CONVEX_SITE_URL } from "../config";
 import { withIsolatedPageTarget, withSiblingPageTarget } from "./page-targets";
 
-export type BlockedConvexPageOptions = {
-  blockedMutations?: string[];
-  blockedQueries?: string[];
-  installTransportBlocker?: boolean;
-  isolated?: boolean;
-};
+type BlockedConvexPageTarget = "isolated" | "sibling";
+
+export type BlockedConvexPagePolicy =
+  | {
+      kind: "transport";
+      target: BlockedConvexPageTarget;
+    }
+  | {
+      kind: "queries";
+      paths: string[];
+      target: BlockedConvexPageTarget;
+    }
+  | {
+      kind: "mutations";
+      paths: string[];
+      target: BlockedConvexPageTarget;
+    };
+
+type NormalizedBlockedConvexPagePolicy =
+  | {
+      kind: "transport";
+      target: BlockedConvexPageTarget;
+    }
+  | {
+      kind: "queries";
+      paths: string[];
+      target: BlockedConvexPageTarget;
+    }
+  | {
+      kind: "mutations";
+      paths: string[];
+      target: BlockedConvexPageTarget;
+    };
+
+function getBlockedRequestPaths(
+  policy: Extract<BlockedConvexPagePolicy, { kind: "queries" | "mutations" }>,
+): string[] {
+  if (policy.paths.length === 0) {
+    throw new Error(`Blocked Convex ${policy.kind} policy requires at least one path`);
+  }
+
+  const normalizedPaths = policy.paths.map((path) => path.trim());
+  if (normalizedPaths.some((path) => path.length === 0)) {
+    throw new Error(`Blocked Convex ${policy.kind} policy must not include empty paths`);
+  }
+
+  return [...new Set(normalizedPaths)];
+}
+
+function normalizeBlockedConvexPagePolicy(
+  policy: BlockedConvexPagePolicy,
+): NormalizedBlockedConvexPagePolicy {
+  if (policy.kind === "transport") {
+    return policy;
+  }
+
+  return {
+    ...policy,
+    paths: getBlockedRequestPaths(policy),
+  };
+}
 
 function collectBlockedConvexHosts(): string[] {
   const blockedHosts = new Set<string>();
@@ -204,17 +259,21 @@ async function releaseBlockedRoutes(releaseBlocks: Array<() => Promise<void>>): 
 
 async function installBlockedRoutes(
   page: Page,
-  options: BlockedConvexPageOptions,
+  policy: NormalizedBlockedConvexPagePolicy,
 ): Promise<Array<() => Promise<void>>> {
+  if (policy.kind === "transport") {
+    return [];
+  }
+
   const releaseBlocks: Array<() => Promise<void>> = [];
 
   try {
-    for (const queryPath of options.blockedQueries ?? []) {
-      releaseBlocks.push(await blockConvexQuery(page, queryPath));
-    }
-
-    for (const mutationPath of options.blockedMutations ?? []) {
-      releaseBlocks.push(await blockConvexMutation(page, mutationPath));
+    for (const path of policy.paths) {
+      releaseBlocks.push(
+        await (policy.kind === "queries"
+          ? blockConvexQuery(page, path)
+          : blockConvexMutation(page, path)),
+      );
     }
 
     return releaseBlocks;
@@ -226,14 +285,14 @@ async function installBlockedRoutes(
 
 async function withBlockedRoutes<T>(
   page: Page,
-  options: BlockedConvexPageOptions,
+  policy: NormalizedBlockedConvexPagePolicy,
   run: (page: Page) => Promise<T>,
 ): Promise<T> {
-  if (options.installTransportBlocker) {
+  if (policy.kind === "transport") {
     await installConvexLoadingBlocker(page);
   }
 
-  const releaseBlocks = await installBlockedRoutes(page, options);
+  const releaseBlocks = await installBlockedRoutes(page, policy);
   try {
     return await run(page);
   } finally {
@@ -243,20 +302,26 @@ async function withBlockedRoutes<T>(
 
 async function withBlockedPageTarget<T>(
   sourcePage: Page,
-  options: BlockedConvexPageOptions,
+  policy: BlockedConvexPagePolicy,
   run: (page: Page) => Promise<T>,
 ): Promise<T> {
-  if (options.isolated ?? true) {
-    return withIsolatedPageTarget(sourcePage, ({ page }) => withBlockedRoutes(page, options, run));
+  const normalizedPolicy = normalizeBlockedConvexPagePolicy(policy);
+
+  if (normalizedPolicy.target === "isolated") {
+    return withIsolatedPageTarget(sourcePage, ({ page }) =>
+      withBlockedRoutes(page, normalizedPolicy, run),
+    );
   }
 
-  return withSiblingPageTarget(sourcePage, ({ page }) => withBlockedRoutes(page, options, run));
+  return withSiblingPageTarget(sourcePage, ({ page }) =>
+    withBlockedRoutes(page, normalizedPolicy, run),
+  );
 }
 
 export async function withBlockedConvexPage<T>(
   sourcePage: Page,
-  options: BlockedConvexPageOptions,
+  policy: BlockedConvexPagePolicy,
   run: (blockedPage: Page) => Promise<T>,
 ): Promise<T> {
-  return withBlockedPageTarget(sourcePage, options, run);
+  return withBlockedPageTarget(sourcePage, policy, run);
 }

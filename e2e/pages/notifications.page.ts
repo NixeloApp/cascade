@@ -46,7 +46,9 @@ export class NotificationsPage extends BasePage {
     return withBlockedConvexPage(
       sourcePage,
       {
-        blockedMutations: ["notifications:markAllAsRead"],
+        kind: "mutations",
+        paths: ["notifications:markAllAsRead"],
+        target: "isolated",
       },
       async (loadingPage) => {
         const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
