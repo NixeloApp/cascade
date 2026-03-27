@@ -5,8 +5,9 @@ import { testUserService } from "../utils/test-user-service";
 import { ensureAuthenticatedScreenshotPage } from "./auth";
 import { captureState } from "./capture";
 import { screenshotFilledStates } from "./filled-states";
-import { screenshotPublicPages } from "./public-pages";
+import { screenshotEmptyStates, screenshotPublicPages } from "./public-pages";
 import {
+  captureConfiguredScreenshotStates,
   captureFilledStatesForConfig,
   enumerateDryRunTargets,
   formatConfigLabel,
@@ -205,5 +206,79 @@ describe("screenshot session helpers", () => {
     expect(logSpy.mock.calls.some(([line]) => String(line).includes("failed on attempt 1"))).toBe(
       true,
     );
+  });
+
+  it("runs empty captures before seeded filled captures through the shared session flow", async () => {
+    captureState.cliOptions = {
+      ...captureState.cliOptions,
+      matchFilters: ["dashboard"],
+    };
+
+    const bootstrapHarness = createBrowserHarness();
+    const emptyHarness = createBrowserHarness();
+    const filledHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(bootstrapHarness.browser)
+      .mockResolvedValueOnce(emptyHarness.browser)
+      .mockResolvedValueOnce(filledHarness.browser);
+    const callOrder: string[] = [];
+
+    vi.spyOn(testUserService, "deleteTestUser").mockImplementation(async (email) => {
+      callOrder.push(`delete:${email}`);
+      return true;
+    });
+    vi.spyOn(testUserService, "createTestUser").mockImplementation(async () => {
+      callOrder.push("create:primary");
+      return { success: true };
+    });
+    vi.spyOn(testUserService, "seedScreenshotData")
+      .mockImplementationOnce(async () => {
+        callOrder.push("seed:probe");
+        return { orgSlug: "acme", success: true };
+      })
+      .mockImplementationOnce(async () => {
+        callOrder.push("seed:filled");
+        return { orgSlug: "acme", success: true };
+      });
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    vi.mocked(screenshotEmptyStates).mockImplementation(async () => {
+      callOrder.push("capture:empty");
+    });
+    vi.mocked(screenshotPublicPages).mockImplementation(async () => {
+      callOrder.push("capture:public");
+    });
+    vi.mocked(screenshotFilledStates).mockImplementation(async () => {
+      callOrder.push("capture:filled");
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const captured = await captureConfiguredScreenshotStates(launchBrowser, [
+      { viewport: "desktop", theme: "light" },
+    ]);
+
+    expect(captured).toBe(true);
+    expect(callOrder).toEqual([
+      "delete:e2e-member-s0-screenshots@inbox.mailtrap.io",
+      "delete:e2e-teamlead-s0-screenshots@inbox.mailtrap.io",
+      "create:primary",
+      "seed:probe",
+      "capture:empty",
+      "seed:filled",
+      "capture:public",
+      "capture:filled",
+    ]);
+    expect(launchBrowser).toHaveBeenCalledTimes(3);
+    expect(bootstrapHarness.browser.close).toHaveBeenCalledTimes(1);
+    expect(emptyHarness.browser.close).toHaveBeenCalledTimes(1);
+    expect(filledHarness.browser.close).toHaveBeenCalledTimes(1);
+    expect(logSpy.mock.calls.some(([line]) => String(line).includes("Phase 1: Empty states"))).toBe(
+      true,
+    );
+    expect(
+      logSpy.mock.calls.some(([line]) =>
+        String(line).includes("Phase 2: Seed data + public pages + filled states"),
+      ),
+    ).toBe(true);
   });
 });

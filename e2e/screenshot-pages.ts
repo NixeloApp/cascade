@@ -31,30 +31,19 @@ import {
   getStagedOutputSummary,
   getStagingRoot,
   isConfigSelected,
-  isCrashLikeError,
   promoteStagedScreenshots,
   registerWaitForExpectedContent,
-  shouldCaptureAny,
 } from "./screenshot-lib/capture";
 import { parseCliOptions, printUsage } from "./screenshot-lib/cli";
-import {
-  BASE_URL,
-  CONFIGS,
-  SCREENSHOT_EMPTY_USER,
-  SCREENSHOT_STAGING_BASE_DIR,
-  SCREENSHOT_USER,
-} from "./screenshot-lib/config";
+import { BASE_URL, CONFIGS, SCREENSHOT_STAGING_BASE_DIR } from "./screenshot-lib/config";
 import { waitForExpectedContent } from "./screenshot-lib/readiness";
 import { getGeneratedSpecFolders } from "./screenshot-lib/routing";
 import {
-  captureEmptyStatesForConfig,
-  captureFilledStatesForConfig,
+  captureConfiguredScreenshotStates,
   enumerateDryRunTargets,
-  prepareScreenshotAuthBootstrap,
 } from "./screenshot-lib/session";
 import { buildScreenshotShards } from "./screenshot-lib/sharding";
 import { SCREENSHOT_PAGE_IDS } from "./screenshot-lib/targets";
-import { testUserService } from "./utils/test-user-service";
 
 // ---------------------------------------------------------------------------
 // Main
@@ -112,81 +101,9 @@ export async function run(): Promise<void> {
 
   const headless = captureState.cliOptions.headless;
   const launchBrowser = () => chromium.launch({ headless });
-  await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
-  const authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
-  if (!authBootstrap) {
+  const captured = await captureConfiguredScreenshotStates(launchBrowser, selectedConfigs);
+  if (!captured) {
     return;
-  }
-  const { authStorageState, orgSlug } = authBootstrap;
-
-  // -----------------------------------------------------------------------
-  // Phase 1: Empty states — capture BEFORE seeding so pages are genuinely
-  // empty. This eliminates the race condition where Convex syncs seeded
-  // data before the empty-state screenshots can be captured.
-  // -----------------------------------------------------------------------
-  const hasEmptyCaptures = shouldCaptureAny("empty", [
-    "dashboard",
-    "projects",
-    "issues",
-    "documents",
-    "documents-templates",
-    "workspaces",
-    "time-tracking",
-    "notifications",
-    "my-issues",
-    "invoices",
-    "clients",
-    "meetings",
-    "settings",
-    "settings-profile",
-  ]);
-
-  if (hasEmptyCaptures) {
-    console.log("\n  📋 Phase 1: Empty states (before seeding)");
-    for (const config of selectedConfigs) {
-      try {
-        await captureEmptyStatesForConfig(
-          launchBrowser,
-          config.viewport,
-          config.theme,
-          orgSlug,
-          authStorageState ?? undefined,
-        );
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (isCrashLikeError(message)) {
-          throw error;
-        }
-        captureState.captureFailures++;
-        console.log(`    ⚠️ ${config.viewport}-${config.theme} empty capture failed: ${message}`);
-      }
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // Phase 2: Seed data, then capture public pages + filled states.
-  // Public pages need seed data (invite tokens, portal tokens, etc.).
-  // -----------------------------------------------------------------------
-  console.log("\n  📋 Phase 2: Seed data + public pages + filled states");
-  console.log("  Seeding screenshot data...");
-  const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, { orgSlug });
-  if (seedResult.success) {
-    console.log(
-      `  ✓ Seeded: org=${seedResult.orgSlug ?? orgSlug}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
-    );
-  } else {
-    console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
-  }
-
-  for (const config of selectedConfigs) {
-    await captureFilledStatesForConfig(
-      launchBrowser,
-      config.viewport,
-      config.theme,
-      orgSlug,
-      seedResult,
-      authStorageState ?? undefined,
-    );
   }
 
   if (captureState.captureFailures > 0) {

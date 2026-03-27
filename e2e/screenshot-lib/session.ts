@@ -15,11 +15,13 @@ import {
   isCrashLikeError,
   resetCounters,
   shouldCapture,
+  shouldCaptureAny,
   takeScreenshot,
 } from "./capture";
 import {
   SCREENSHOT_AUTH_USER,
   SCREENSHOT_EMPTY_AUTH_USER,
+  SCREENSHOT_EMPTY_USER,
   SCREENSHOT_USER,
   type ThemeName,
   VIEWPORTS,
@@ -35,6 +37,11 @@ export interface ScreenshotAuthBootstrap {
   orgSlug: string;
 }
 
+export interface ScreenshotCaptureConfig {
+  theme: ThemeName;
+  viewport: ViewportName;
+}
+
 export type LaunchBrowser = () => Promise<Browser>;
 export type ScreenshotPageTarget = {
   context: BrowserContext;
@@ -46,6 +53,23 @@ type AuthenticatedScreenshotPageOptions = {
   storageState?: StorageState;
   user?: TestUser;
 };
+
+const EMPTY_CAPTURE_NAMES = [
+  "dashboard",
+  "projects",
+  "issues",
+  "documents",
+  "documents-templates",
+  "workspaces",
+  "time-tracking",
+  "notifications",
+  "my-issues",
+  "invoices",
+  "clients",
+  "meetings",
+  "settings",
+  "settings-profile",
+] as const;
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
   return `${viewport}-${theme}`;
@@ -323,9 +347,67 @@ export async function captureFilledStatesForConfig(
   }
 }
 
-export function enumerateDryRunTargets(
-  configs: Array<{ viewport: ViewportName; theme: ThemeName }>,
-): void {
+export async function captureConfiguredScreenshotStates(
+  launchBrowser: LaunchBrowser,
+  configs: ScreenshotCaptureConfig[],
+): Promise<boolean> {
+  await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
+
+  const authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
+  if (!authBootstrap) {
+    return false;
+  }
+
+  const { authStorageState, orgSlug } = authBootstrap;
+
+  if (shouldCaptureAny("empty", [...EMPTY_CAPTURE_NAMES])) {
+    console.log("\n  📋 Phase 1: Empty states (before seeding)");
+    for (const config of configs) {
+      try {
+        await captureEmptyStatesForConfig(
+          launchBrowser,
+          config.viewport,
+          config.theme,
+          orgSlug,
+          authStorageState ?? undefined,
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (isCrashLikeError(message)) {
+          throw error;
+        }
+        captureState.captureFailures++;
+        console.log(`    ⚠️ ${config.viewport}-${config.theme} empty capture failed: ${message}`);
+      }
+    }
+  }
+
+  console.log("\n  📋 Phase 2: Seed data + public pages + filled states");
+  console.log("  Seeding screenshot data...");
+  const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, { orgSlug });
+  if (seedResult.success) {
+    console.log(
+      `  ✓ Seeded: org=${seedResult.orgSlug ?? orgSlug}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
+    );
+  } else {
+    console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
+  }
+
+  for (const config of configs) {
+    await captureFilledStatesForConfig(
+      launchBrowser,
+      config.viewport,
+      config.theme,
+      orgSlug,
+      seedResult,
+      authStorageState ?? undefined,
+    );
+  }
+
+  return true;
+}
+
+export function enumerateDryRunTargets(configs: ScreenshotCaptureConfig[]): void {
   let count = 0;
   for (const config of configs) {
     captureState.currentConfigPrefix = formatConfigLabel(config.viewport, config.theme);
