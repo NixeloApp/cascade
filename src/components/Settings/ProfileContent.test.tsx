@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { ProfileContent } from "./ProfileContent";
 
@@ -105,7 +106,7 @@ describe("ProfileContent", () => {
     const user = userEvent.setup();
     render(<ProfileContent />);
 
-    await user.click(screen.getByRole("button", { name: /^change avatar$/i }));
+    await user.click(screen.getByTestId(TEST_IDS.SETTINGS.PROFILE_AVATAR_UPLOAD_TRIGGER));
 
     expect(screen.getByText("Upload Avatar")).toBeInTheDocument();
     expect(screen.getByText("Choose a profile picture to display")).toBeInTheDocument();
@@ -115,7 +116,7 @@ describe("ProfileContent", () => {
     const user = userEvent.setup();
     render(<ProfileContent />);
 
-    await user.click(screen.getByRole("button", { name: /^add cover$/i }));
+    await user.click(screen.getByTestId(TEST_IDS.SETTINGS.PROFILE_COVER_UPLOAD_TRIGGER));
 
     expect(screen.getByText("Upload Cover Image")).toBeInTheDocument();
     expect(screen.getByText("Choose a cover image for your profile")).toBeInTheDocument();

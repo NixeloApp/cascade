@@ -536,6 +536,14 @@ export const TEST_IDS = {
     OFFLINE_STATUS_CARD: "settings-offline-status-card",
     /** @see src/components/Settings/NotificationsTab.tsx */
     NOTIFICATION_PREFERENCES_SECTION: "settings-notification-preferences-section",
+    /** @see src/components/Settings/ProfileContent.tsx */
+    PROFILE_AVATAR_UPLOAD_TRIGGER: "settings-profile-avatar-upload-trigger",
+    /** @see src/components/Settings/ProfileContent.tsx */
+    PROFILE_COVER_UPLOAD_TRIGGER: "settings-profile-cover-upload-trigger",
+    /** @see src/components/Settings/NotificationsTab.tsx */
+    NOTIFICATIONS_BLOCKED_ALERT: "settings-notifications-blocked-alert",
+    /** @see src/components/Settings/NotificationsTab.tsx */
+    NOTIFICATIONS_BLOCKED_BUTTON: "settings-notifications-blocked-button",
     /** @see src/components/Admin/UserManagement.tsx */
     USER_MANAGEMENT_SECTION: "settings-user-management-section",
     /** @see src/components/Admin/UserManagement.tsx - Users tab in admin section */

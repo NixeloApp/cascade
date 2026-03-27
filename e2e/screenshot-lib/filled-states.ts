@@ -16,6 +16,7 @@ import {
   DocumentsPage,
   NotificationsPage,
   ProjectsPage,
+  SettingsPage,
   TimeTrackingPage,
   WorkspacesPage,
 } from "../pages";
@@ -39,7 +40,6 @@ import {
 } from "./capture";
 import { BASE_URL, MARKDOWN_IMPORT_PREVIEW, MARKDOWN_RICH_CONTENT } from "./config";
 import {
-  getUploadDialogReadyLocator,
   openMobileSidebarMenu,
   openStableAlertDialog,
   openStableDialog,
@@ -346,24 +346,13 @@ export async function screenshotFilledStates(
     ])
   ) {
     const settingsUrl = ROUTES.settings.profile.build(orgSlug);
+    const settingsPage = new SettingsPage(page, orgSlug);
 
     if (shouldCapture(p, "settings-profile-avatar-upload-modal")) {
       await runCaptureStep("settings profile avatar upload modal", async () => {
-        await page.goto(`${BASE_URL}${settingsUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
-        await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^change avatar$/i });
-        const dialog = await openStableDialog(
-          page,
-          trigger,
-          page.getByRole("dialog", { name: /^upload avatar$/i }),
-          getUploadDialogReadyLocator(page.getByRole("dialog", { name: /^upload avatar$/i })),
-          "avatar upload",
-        );
+        const dialog = await settingsPage.openProfileAvatarUploadModal();
+        await waitForScreenshotReady(page);
         await captureCurrentView(page, p, "settings-profile-avatar-upload-modal");
         await dismissIfOpen(page, dialog);
       });
@@ -371,21 +360,9 @@ export async function screenshotFilledStates(
 
     if (shouldCapture(p, "settings-profile-cover-upload-modal")) {
       await runCaptureStep("settings profile cover upload modal", async () => {
-        await page.goto(`${BASE_URL}${settingsUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
-        await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^(add|change) cover$/i });
-        const dialog = await openStableDialog(
-          page,
-          trigger,
-          page.getByRole("dialog", { name: /^upload cover image$/i }),
-          getUploadDialogReadyLocator(page.getByRole("dialog", { name: /^upload cover image$/i })),
-          "cover image upload",
-        );
+        const dialog = await settingsPage.openProfileCoverUploadModal();
+        await waitForScreenshotReady(page);
         await captureCurrentView(page, p, "settings-profile-cover-upload-modal");
         await dismissIfOpen(page, dialog);
       });
@@ -395,24 +372,9 @@ export async function screenshotFilledStates(
       await runCaptureStep("settings notifications permission denied", async () => {
         const permissionPage = await page.context().newPage();
         try {
-          await permissionPage.addInitScript(() => {
-            window.__NIXELO_E2E_NOTIFICATION_PERMISSION__ = "denied";
-            window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__ = true;
-            window.__NIXELO_E2E_VAPID_PUBLIC_KEY__ = "e2e-screenshot-vapid-key";
-          });
-
-          const notificationsSettingsUrl = `${settingsUrl}?tab=notifications`;
-          await permissionPage.goto(`${BASE_URL}${notificationsSettingsUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          await waitForExpectedContent(permissionPage, settingsUrl, "settings-profile", p);
-          await permissionPage
-            .getByText(/browser notifications blocked/i)
-            .waitFor({ state: "visible", timeout: 5000 });
-          await permissionPage
-            .getByRole("button", { name: /^blocked$/i })
-            .waitFor({ state: "visible", timeout: 5000 });
+          const permissionSettingsPage = new SettingsPage(permissionPage, orgSlug);
+          await permissionSettingsPage.gotoNotificationsWithBlockedPermission();
+          await permissionSettingsPage.expectNotificationsPermissionDeniedState();
           await waitForScreenshotReady(permissionPage);
           await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
         } finally {

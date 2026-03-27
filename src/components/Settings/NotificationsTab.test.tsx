@@ -5,6 +5,7 @@ import type { ChangeEvent, ReactNode } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { fireEvent, render, screen, waitFor, within } from "@/test/custom-render";
@@ -211,7 +212,8 @@ describe("NotificationsTab", () => {
         "Notification permission is denied for this site. Re-enable notifications in your browser settings to receive push alerts.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Blocked" })).toBeDisabled();
+    expect(screen.getByTestId(TEST_IDS.SETTINGS.NOTIFICATIONS_BLOCKED_ALERT)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.SETTINGS.NOTIFICATIONS_BLOCKED_BUTTON)).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Enable" })).not.toBeInTheDocument();
   });
 

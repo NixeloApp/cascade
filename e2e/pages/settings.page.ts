@@ -9,6 +9,14 @@ import {
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
+declare global {
+  interface Window {
+    __NIXELO_E2E_NOTIFICATION_PERMISSION__?: NotificationPermission;
+    __NIXELO_E2E_VAPID_PUBLIC_KEY__?: string;
+    __NIXELO_E2E_WEB_PUSH_SUPPORTED__?: boolean;
+  }
+}
+
 /**
  * Settings Page Object
  * Handles the settings view with integrations, API keys, and preferences
@@ -24,6 +32,8 @@ export class SettingsPage extends BasePage {
   readonly adminTab: Locator;
   readonly devToolsTab: Locator;
   readonly profileTab: Locator;
+  readonly profileAvatarUploadTrigger: Locator;
+  readonly profileCoverUploadTrigger: Locator;
 
   // ===================
   // Locators - Theme Options (in Preferences tab)
@@ -66,6 +76,8 @@ export class SettingsPage extends BasePage {
   // Locators - Preferences
   // ===================
   readonly notificationPreferences: Locator;
+  readonly notificationsBlockedAlert: Locator;
+  readonly notificationsBlockedButton: Locator;
   readonly emailNotificationsToggle: Locator;
   readonly pushNotificationsToggle: Locator;
   readonly languageSelect: Locator;
@@ -113,7 +125,13 @@ export class SettingsPage extends BasePage {
     this.preferencesTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_PREFERENCES);
     this.adminTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_ADMIN);
     this.devToolsTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_DEVELOPER);
-    this.profileTab = page.getByRole("tab", { name: /^profile$/i });
+    this.profileTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_PROFILE);
+    this.profileAvatarUploadTrigger = page.getByTestId(
+      TEST_IDS.SETTINGS.PROFILE_AVATAR_UPLOAD_TRIGGER,
+    );
+    this.profileCoverUploadTrigger = page.getByTestId(
+      TEST_IDS.SETTINGS.PROFILE_COVER_UPLOAD_TRIGGER,
+    );
 
     // Theme options (in Preferences tab) - ToggleGroupItems with aria-labels
     this.themeLightOption = page.getByRole("radio", { name: /light theme/i });
@@ -153,6 +171,12 @@ export class SettingsPage extends BasePage {
     // Preferences
     this.notificationPreferences = page.getByTestId(
       TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION,
+    );
+    this.notificationsBlockedAlert = page.getByTestId(
+      TEST_IDS.SETTINGS.NOTIFICATIONS_BLOCKED_ALERT,
+    );
+    this.notificationsBlockedButton = page.getByTestId(
+      TEST_IDS.SETTINGS.NOTIFICATIONS_BLOCKED_BUTTON,
     );
     this.emailNotificationsToggle = page
       .getByRole("switch", { name: /email/i })
@@ -334,6 +358,53 @@ export class SettingsPage extends BasePage {
     }
 
     await this.waitForLoad();
+  }
+
+  async gotoProfile(): Promise<void> {
+    await this.page.goto(ROUTES.settings.profile.build(this.orgSlug));
+    await this.waitForCaptureReady("settings-profile");
+  }
+
+  async gotoNotifications(): Promise<void> {
+    await this.page.goto(`${ROUTES.settings.profile.build(this.orgSlug)}?tab=notifications`);
+    await this.waitForCaptureReady("settings-notifications");
+  }
+
+  async gotoNotificationsWithBlockedPermission(): Promise<void> {
+    await this.page.addInitScript(() => {
+      window.__NIXELO_E2E_NOTIFICATION_PERMISSION__ = "denied";
+      window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__ = true;
+      window.__NIXELO_E2E_VAPID_PUBLIC_KEY__ = "e2e-screenshot-vapid-key";
+    });
+    await this.gotoNotifications();
+  }
+
+  async openProfileAvatarUploadModal(): Promise<Locator> {
+    await this.gotoProfile();
+    await this.profileAvatarUploadTrigger.waitFor({ state: "visible", timeout: 8000 });
+    await this.profileAvatarUploadTrigger.scrollIntoViewIfNeeded();
+    await this.profileAvatarUploadTrigger.click();
+    const dialog = this.page.getByRole("dialog", { name: /^upload avatar$/i });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /^upload$/i })).toBeVisible();
+    return dialog;
+  }
+
+  async openProfileCoverUploadModal(): Promise<Locator> {
+    await this.gotoProfile();
+    await this.profileCoverUploadTrigger.waitFor({ state: "visible", timeout: 8000 });
+    await this.profileCoverUploadTrigger.scrollIntoViewIfNeeded();
+    await this.profileCoverUploadTrigger.click();
+    const dialog = this.page.getByRole("dialog", { name: /^upload cover image$/i });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /^upload$/i })).toBeVisible();
+    return dialog;
+  }
+
+  async expectNotificationsPermissionDeniedState(): Promise<void> {
+    await this.waitForCaptureReady("settings-notifications");
+    await expect(this.notificationsBlockedAlert).toBeVisible();
+    await expect(this.notificationsBlockedButton).toBeDisabled();
   }
 
   // ===================

@@ -132,7 +132,7 @@ function PushNotificationsUnavailable({ icon, message }: { icon: LucideIcon; mes
 
 function PushNotificationsBlocked() {
   return (
-    <Alert variant="warning">
+    <Alert variant="warning" data-testid={TEST_IDS.SETTINGS.NOTIFICATIONS_BLOCKED_ALERT}>
       <AlertTitle>Browser notifications blocked</AlertTitle>
       <AlertDescription>
         <Stack gap="md">
@@ -141,7 +141,12 @@ function PushNotificationsBlocked() {
             settings to receive push alerts.
           </Typography>
           <div>
-            <Button variant="secondary" size="sm" disabled>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled
+              data-testid={TEST_IDS.SETTINGS.NOTIFICATIONS_BLOCKED_BUTTON}
+            >
               Blocked
             </Button>
           </div>
