@@ -1,3 +1,5 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import type { Browser, BrowserContextOptions, Page, StorageState } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import type { TestUser } from "../config";
@@ -7,7 +9,9 @@ import { type SeedScreenshotResult, testUserService } from "../utils/test-user-s
 import { ensureAuthenticatedScreenshotPage } from "./auth";
 import {
   captureState,
+  getStagedOutputSummary,
   isCrashLikeError,
+  promoteStagedScreenshots,
   resetCounters,
   shouldCapture,
   shouldCaptureAny,
@@ -17,6 +21,7 @@ import {
   SCREENSHOT_AUTH_USER,
   SCREENSHOT_EMPTY_AUTH_USER,
   SCREENSHOT_EMPTY_USER,
+  SCREENSHOT_STAGING_BASE_DIR,
   SCREENSHOT_USER,
   type ThemeName,
   VIEWPORTS,
@@ -37,12 +42,24 @@ export interface ScreenshotCaptureConfig {
   viewport: ViewportName;
 }
 
+export interface ScreenshotCaptureRunResult {
+  captureSkips: number;
+  outputSummary: Map<string, number>;
+  totalScreenshots: number;
+}
+
+export interface ScreenshotCaptureSessionOptions {
+  runConfiguredStates?: RunConfiguredScreenshotStates;
+  stagingBaseDir?: string;
+}
+
 export type LaunchBrowser = () => Promise<Browser>;
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
 type AuthenticatedScreenshotPageOptions = {
   storageState?: StorageState;
   user?: TestUser;
 };
+type RunConfiguredScreenshotStates = typeof captureConfiguredScreenshotStates;
 
 const EMPTY_CAPTURE_NAMES = [
   "dashboard",
@@ -84,6 +101,29 @@ export function getScreenshotContextOptions(
     timezoneId: E2E_TIMEZONE,
     ...(storageState ? { storageState } : {}),
   };
+}
+
+export function resetScreenshotCaptureSessionState(): void {
+  captureState.captureFailures = 0;
+  captureState.captureSkips = 0;
+  captureState.currentConfigPrefix = "";
+  captureState.stagingRootDir = "";
+  captureState.totalScreenshots = 0;
+  resetCounters();
+}
+
+export function initializeScreenshotStagingRoot(stagingBaseDir: string): void {
+  fs.mkdirSync(stagingBaseDir, { recursive: true });
+  captureState.stagingRootDir = fs.mkdtempSync(path.join(stagingBaseDir, "run-"));
+}
+
+export function cleanupScreenshotStagingRoot(): void {
+  if (!captureState.stagingRootDir) {
+    return;
+  }
+
+  fs.rmSync(captureState.stagingRootDir, { recursive: true, force: true });
+  captureState.stagingRootDir = "";
 }
 
 export async function withAuthenticatedScreenshotPage(
@@ -350,6 +390,46 @@ export async function captureConfiguredScreenshotStates(
   }
 
   return true;
+}
+
+export async function runConfiguredScreenshotCaptureSession(
+  launchBrowser: LaunchBrowser,
+  configs: ScreenshotCaptureConfig[],
+  options: ScreenshotCaptureSessionOptions = {},
+): Promise<ScreenshotCaptureRunResult | null> {
+  resetScreenshotCaptureSessionState();
+  initializeScreenshotStagingRoot(options.stagingBaseDir ?? SCREENSHOT_STAGING_BASE_DIR);
+
+  try {
+    const captured = await (options.runConfiguredStates ?? captureConfiguredScreenshotStates)(
+      launchBrowser,
+      configs,
+    );
+    if (!captured) {
+      return null;
+    }
+
+    if (captureState.captureFailures > 0) {
+      throw new Error(
+        `Screenshot capture had ${captureState.captureFailures} failure(s); staged output was not promoted`,
+      );
+    }
+
+    if (captureState.totalScreenshots === 0) {
+      throw new Error("No screenshots matched the provided filters");
+    }
+
+    const outputSummary = getStagedOutputSummary();
+    promoteStagedScreenshots();
+
+    return {
+      captureSkips: captureState.captureSkips,
+      outputSummary,
+      totalScreenshots: captureState.totalScreenshots,
+    };
+  } finally {
+    cleanupScreenshotStagingRoot();
+  }
 }
 
 export function enumerateDryRunTargets(configs: ScreenshotCaptureConfig[]): void {

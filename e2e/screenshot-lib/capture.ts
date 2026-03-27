@@ -291,7 +291,7 @@ export function promoteStagedScreenshots(): void {
   }
 
   for (const stagedFile of stagedFiles) {
-    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
+    const relativePath = path.relative(stagingRoot, stagedFile);
     const finalPath = path.join(process.cwd(), relativePath);
     fs.mkdirSync(path.dirname(finalPath), { recursive: true });
     fs.copyFileSync(stagedFile, finalPath);

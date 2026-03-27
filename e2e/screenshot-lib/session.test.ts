@@ -1,8 +1,12 @@
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { E2E_TIMEZONE } from "../constants";
 import { testUserService } from "../utils/test-user-service";
 import { ensureAuthenticatedScreenshotPage } from "./auth";
+import * as captureModule from "./capture";
 import { captureState } from "./capture";
 import { screenshotFilledStates } from "./filled-states";
 import { screenshotEmptyStates, screenshotPublicPages } from "./public-pages";
@@ -13,6 +17,7 @@ import {
   formatConfigLabel,
   getScreenshotContextOptions,
   prepareScreenshotAuthBootstrap,
+  runConfiguredScreenshotCaptureSession,
   withAuthenticatedScreenshotPage,
 } from "./session";
 
@@ -48,7 +53,11 @@ describe("screenshot session helpers", () => {
   };
 
   afterEach(() => {
+    captureState.captureFailures = 0;
+    captureState.captureSkips = 0;
     captureState.currentConfigPrefix = "";
+    captureState.stagingRootDir = "";
+    captureState.totalScreenshots = 0;
     captureState.cliOptions = {
       headless: true,
       dryRun: false,
@@ -295,5 +304,101 @@ describe("screenshot session helpers", () => {
         String(line).includes("Phase 2: Seed data + public pages + filled states"),
       ),
     ).toBe(true);
+  });
+
+  it("runs the staged screenshot lifecycle behind the shared session helper", async () => {
+    const stagingBaseDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "cascade-screenshot-session-success-"),
+    );
+    const outputSummary = new Map([["e2e/screenshots", 2]]);
+    vi.spyOn(captureModule, "getStagedOutputSummary").mockReturnValue(outputSummary);
+    const promoteSpy = vi
+      .spyOn(captureModule, "promoteStagedScreenshots")
+      .mockImplementation(() => {});
+
+    captureState.captureFailures = 9;
+    captureState.captureSkips = 4;
+    captureState.currentConfigPrefix = "desktop-dark";
+    captureState.totalScreenshots = 8;
+
+    const result = await runConfiguredScreenshotCaptureSession(
+      async () => createBrowserHarness().browser,
+      [{ viewport: "desktop", theme: "light" }],
+      {
+        runConfiguredStates: async () => {
+          expect(captureState.captureFailures).toBe(0);
+          expect(captureState.captureSkips).toBe(0);
+          expect(captureState.currentConfigPrefix).toBe("");
+          expect(captureState.totalScreenshots).toBe(0);
+          expect(fs.existsSync(captureState.stagingRootDir)).toBe(true);
+
+          captureState.captureSkips = 1;
+          captureState.totalScreenshots = 2;
+          return true;
+        },
+        stagingBaseDir,
+      },
+    );
+
+    expect(result).toEqual({
+      captureSkips: 1,
+      outputSummary,
+      totalScreenshots: 2,
+    });
+    expect(promoteSpy).toHaveBeenCalledTimes(1);
+    expect(captureState.stagingRootDir).toBe("");
+    expect(fs.readdirSync(stagingBaseDir)).toHaveLength(0);
+    fs.rmSync(stagingBaseDir, { recursive: true, force: true });
+  });
+
+  it("cleans up staged output without promotion when the run aborts early", async () => {
+    const stagingBaseDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "cascade-screenshot-session-null-"),
+    );
+    const promoteSpy = vi
+      .spyOn(captureModule, "promoteStagedScreenshots")
+      .mockImplementation(() => {});
+    const summarySpy = vi.spyOn(captureModule, "getStagedOutputSummary");
+
+    const result = await runConfiguredScreenshotCaptureSession(
+      async () => createBrowserHarness().browser,
+      [{ viewport: "desktop", theme: "light" }],
+      {
+        runConfiguredStates: async () => false,
+        stagingBaseDir,
+      },
+    );
+
+    expect(result).toBeNull();
+    expect(promoteSpy).not.toHaveBeenCalled();
+    expect(summarySpy).not.toHaveBeenCalled();
+    expect(captureState.stagingRootDir).toBe("");
+    expect(fs.readdirSync(stagingBaseDir)).toHaveLength(0);
+    fs.rmSync(stagingBaseDir, { recursive: true, force: true });
+  });
+
+  it("cleans up staged output and fails when a run captures nothing", async () => {
+    const stagingBaseDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "cascade-screenshot-session-zero-"),
+    );
+    const promoteSpy = vi
+      .spyOn(captureModule, "promoteStagedScreenshots")
+      .mockImplementation(() => {});
+
+    await expect(
+      runConfiguredScreenshotCaptureSession(
+        async () => createBrowserHarness().browser,
+        [{ viewport: "desktop", theme: "light" }],
+        {
+          runConfiguredStates: async () => true,
+          stagingBaseDir,
+        },
+      ),
+    ).rejects.toThrow("No screenshots matched the provided filters");
+
+    expect(promoteSpy).not.toHaveBeenCalled();
+    expect(captureState.stagingRootDir).toBe("");
+    expect(fs.readdirSync(stagingBaseDir)).toHaveLength(0);
+    fs.rmSync(stagingBaseDir, { recursive: true, force: true });
   });
 });

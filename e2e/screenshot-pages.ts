@@ -23,24 +23,19 @@
  * Requires dev server running (pnpm dev).
  */
 
-import * as fs from "node:fs";
-import * as path from "node:path";
 import { chromium } from "@playwright/test";
 import {
   captureState,
-  getStagedOutputSummary,
-  getStagingRoot,
   isConfigSelected,
-  promoteStagedScreenshots,
   registerWaitForExpectedContent,
 } from "./screenshot-lib/capture";
 import { parseCliOptions, printUsage } from "./screenshot-lib/cli";
-import { BASE_URL, CONFIGS, SCREENSHOT_STAGING_BASE_DIR } from "./screenshot-lib/config";
+import { BASE_URL, CONFIGS } from "./screenshot-lib/config";
 import { waitForExpectedContent } from "./screenshot-lib/readiness";
 import { getGeneratedSpecFolders } from "./screenshot-lib/routing";
 import {
-  captureConfiguredScreenshotStates,
   enumerateDryRunTargets,
+  runConfiguredScreenshotCaptureSession,
 } from "./screenshot-lib/session";
 import { buildScreenshotShards } from "./screenshot-lib/sharding";
 import { SCREENSHOT_PAGE_IDS } from "./screenshot-lib/targets";
@@ -95,43 +90,20 @@ export async function run(): Promise<void> {
     return;
   }
 
-  // Create staging directory only when we are actually capturing (not dry-run)
-  fs.mkdirSync(SCREENSHOT_STAGING_BASE_DIR, { recursive: true });
-  captureState.stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
-
   const headless = captureState.cliOptions.headless;
   const launchBrowser = () => chromium.launch({ headless });
-  const captured = await captureConfiguredScreenshotStates(launchBrowser, selectedConfigs);
-  if (!captured) {
+  const captureResult = await runConfiguredScreenshotCaptureSession(launchBrowser, selectedConfigs);
+  if (!captureResult) {
     return;
   }
 
-  if (captureState.captureFailures > 0) {
-    fs.rmSync(getStagingRoot(), { recursive: true, force: true });
-    captureState.stagingRootDir = "";
-    throw new Error(
-      `Screenshot capture had ${captureState.captureFailures} failure(s); staged output was not promoted`,
-    );
-  }
-
-  if (captureState.totalScreenshots === 0) {
-    fs.rmSync(getStagingRoot(), { recursive: true, force: true });
-    captureState.stagingRootDir = "";
-    throw new Error("No screenshots matched the provided filters");
-  }
-
-  promoteStagedScreenshots();
-  const outputSummary = getStagedOutputSummary();
-  fs.rmSync(getStagingRoot(), { recursive: true, force: true });
-  captureState.stagingRootDir = "";
-
-  const skipNote = captureState.captureSkips > 0 ? ` (${captureState.captureSkips} skipped)` : "";
+  const skipNote = captureResult.captureSkips > 0 ? ` (${captureResult.captureSkips} skipped)` : "";
   console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log(`║  ✅ COMPLETE: ${captureState.totalScreenshots} screenshots captured${skipNote}`);
+  console.log(`║  ✅ COMPLETE: ${captureResult.totalScreenshots} screenshots captured${skipNote}`);
   console.log("╚════════════════════════════════════════════════════════════╝\n");
 
   console.log("  Output:");
-  for (const [folder, count] of outputSummary) {
+  for (const [folder, count] of captureResult.outputSummary) {
     console.log(`    ${count.toString().padStart(3, " ")}  ${folder}`);
   }
   console.log("");

@@ -29,6 +29,7 @@
   - harness-only complexity that should be deleted
 - [ ] Keep screenshot auth/bootstrap on the shared session helper path instead of letting new harness-only entrypoints or config-specific login paths reappear.
 - [ ] Keep browser launch/close, config retry policy, and auth bootstrap on the shared screenshot session helper path instead of re-implementing them in CLI entrypoints or route-specific capture code.
+- [ ] Keep staged screenshot output lifecycle on the shared session helper path instead of re-implementing staging-root setup, promotion, or cleanup in CLI entrypoints.
 - [ ] Keep generic browser/context/page target lifecycle on shared E2E utilities instead of rebuilding it inside screenshot-lib session helpers.
 - [ ] Keep empty-before-seed ordering and screenshot seed/bootstrap orchestration on the shared session helper path instead of re-implementing capture phases in the CLI entrypoint.
 - [ ] Keep the screenshot harness private-helper baseline at zero; new top-level harness-only helpers must either become tested public harness API or move into reusable E2E/page-object utilities.
