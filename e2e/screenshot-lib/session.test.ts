@@ -30,6 +30,7 @@ import {
   getAuthenticatedScreenshotBootstrap,
   getCaptureNamesForPrefix,
   getEmptyScreenshotCaptureExecutionMode,
+  getScreenshotCaptureExecutionContextRequirement,
   getScreenshotContextOptions,
   getScreenshotExecutionOrgSlug,
   getScreenshotSeededPhaseMode,
@@ -401,6 +402,48 @@ describe("screenshot session helpers", () => {
   });
 
   it("derives execution-context requirements from execution steps", () => {
+    expect(
+      getScreenshotCaptureExecutionContextRequirement({
+        group: "seedless",
+        kind: "public",
+      }),
+    ).toBe("none");
+    expect(
+      getScreenshotCaptureExecutionContextRequirement({
+        kind: "empty",
+        mode: "separate-auth-only",
+        selectedGroups: [
+          {
+            group: "separate-auth",
+            names: ["my-issues"],
+          },
+        ],
+      }),
+    ).toBe("primary-user");
+    expect(
+      getScreenshotCaptureExecutionContextRequirement({
+        kind: "seeded",
+        mode: "public-only",
+      }),
+    ).toBe("primary-user");
+    expect(
+      getScreenshotCaptureExecutionContextRequirement({
+        kind: "empty",
+        mode: "bootstrap-only",
+        selectedGroups: [
+          {
+            group: "bootstrap",
+            names: ["dashboard"],
+          },
+        ],
+      }),
+    ).toBe("authenticated-bootstrap");
+    expect(
+      getScreenshotCaptureExecutionContextRequirement({
+        kind: "seeded",
+        mode: "filled-only",
+      }),
+    ).toBe("authenticated-bootstrap");
     expect(
       screenshotCaptureStepRequiresExecutionContext({
         group: "seedless",

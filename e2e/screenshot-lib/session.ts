@@ -87,6 +87,10 @@ export interface FilledScreenshotCaptureOptions {
 
 export type AuthenticatedScreenshotCapturePhase = "empty-state" | "filled-state";
 export type EmptyScreenshotCaptureExecutionMode = "bootstrap-only" | "mixed" | "separate-auth-only";
+export type ScreenshotCaptureExecutionContextRequirement =
+  | "none"
+  | "primary-user"
+  | "authenticated-bootstrap";
 export type ScreenshotSeededPhaseMode = "filled-only" | "public-and-filled" | "public-only";
 export type ScreenshotCaptureExecutionStep =
   | {
@@ -278,7 +282,24 @@ export function buildScreenshotCaptureExecutionSteps(
 export function screenshotCaptureStepRequiresExecutionContext(
   executionStep: ScreenshotCaptureExecutionStep,
 ): boolean {
-  return executionStep.kind !== "public";
+  return getScreenshotCaptureExecutionContextRequirement(executionStep) !== "none";
+}
+
+export function getScreenshotCaptureExecutionContextRequirement(
+  executionStep: ScreenshotCaptureExecutionStep,
+): ScreenshotCaptureExecutionContextRequirement {
+  if (executionStep.kind === "public") {
+    return "none";
+  }
+
+  if (
+    (executionStep.kind === "empty" && executionStep.mode === "separate-auth-only") ||
+    (executionStep.kind === "seeded" && executionStep.mode === "public-only")
+  ) {
+    return "primary-user";
+  }
+
+  return "authenticated-bootstrap";
 }
 
 export function emptyCaptureGroupRequiresPrimaryBootstrap(
@@ -517,7 +538,8 @@ export async function prepareScreenshotCaptureExecutionContextForStep(
   executionStep: ScreenshotCaptureExecutionStep,
   executionContext: ScreenshotCaptureExecutionContext | null,
 ): Promise<ScreenshotCaptureExecutionContext | null> {
-  if (!screenshotCaptureStepRequiresExecutionContext(executionStep)) {
+  const contextRequirement = getScreenshotCaptureExecutionContextRequirement(executionStep);
+  if (contextRequirement === "none") {
     return executionContext;
   }
 
@@ -525,11 +547,7 @@ export async function prepareScreenshotCaptureExecutionContextForStep(
     return executionContext;
   }
 
-  if (executionStep.kind === "empty" && executionStep.mode === "separate-auth-only") {
-    return preparePrimaryUserScreenshotExecutionContext();
-  }
-
-  if (executionStep.kind === "seeded" && executionStep.mode === "public-only") {
+  if (contextRequirement === "primary-user") {
     return preparePrimaryUserScreenshotExecutionContext();
   }
 
