@@ -11,12 +11,14 @@ import { captureState } from "./capture";
 import { screenshotFilledStates } from "./filled-states";
 import { screenshotEmptyStates, screenshotPublicPages } from "./public-pages";
 import {
+  buildScreenshotCapturePhasePlan,
   captureConfiguredScreenshotStates,
   captureFilledStatesForConfig,
   enumerateDryRunTargets,
   formatConfigLabel,
   getCaptureNamesForPrefix,
   getScreenshotContextOptions,
+  getSelectedScreenshotPageIds,
   prepareScreenshotAuthBootstrap,
   runAuthenticatedScreenshotCapture,
   runConfiguredScreenshotCaptureSession,
@@ -121,6 +123,63 @@ describe("screenshot session helpers", () => {
     expect(getCaptureNamesForPrefix("empty")).toContain("outreach");
     expect(getCaptureNamesForPrefix("public")).toContain("landing");
     expect(getCaptureNamesForPrefix("filled")).toContain("issues-loading");
+  });
+
+  it("builds a screenshot phase plan directly from canonical page ids", () => {
+    expect(buildScreenshotCapturePhasePlan(["public-landing"])).toEqual({
+      emptyCaptureNames: [],
+      filledCaptureNames: [],
+      seededPublicCaptureNames: [],
+      seedlessPublicCaptureNames: ["landing"],
+      selectedPageIds: ["public-landing"],
+    });
+    expect(buildScreenshotCapturePhasePlan(["public-portal-project"])).toEqual({
+      emptyCaptureNames: [],
+      filledCaptureNames: [],
+      seededPublicCaptureNames: ["portal-project"],
+      seedlessPublicCaptureNames: [],
+      selectedPageIds: ["public-portal-project"],
+    });
+    expect(buildScreenshotCapturePhasePlan(["empty-dashboard"])).toEqual({
+      emptyCaptureNames: ["dashboard"],
+      filledCaptureNames: [],
+      seededPublicCaptureNames: [],
+      seedlessPublicCaptureNames: [],
+      selectedPageIds: ["empty-dashboard"],
+    });
+    expect(buildScreenshotCapturePhasePlan(["filled-issues-loading"])).toEqual({
+      emptyCaptureNames: [],
+      filledCaptureNames: ["issues-loading"],
+      seededPublicCaptureNames: [],
+      seedlessPublicCaptureNames: [],
+      selectedPageIds: ["filled-issues-loading"],
+    });
+  });
+
+  it("derives the selected screenshot page ids from the current CLI filters", () => {
+    captureState.cliOptions = {
+      ...captureState.cliOptions,
+      matchFilters: ["landing", "portal-project", "issues-loading"],
+    };
+
+    expect(getSelectedScreenshotPageIds()).toEqual([
+      "public-landing",
+      "public-portal-project",
+      "filled-my-issues-loading",
+      "filled-issues-loading",
+    ]);
+    expect(buildScreenshotCapturePhasePlan()).toEqual({
+      emptyCaptureNames: [],
+      filledCaptureNames: ["my-issues-loading", "issues-loading"],
+      seededPublicCaptureNames: ["portal-project"],
+      seedlessPublicCaptureNames: ["landing"],
+      selectedPageIds: [
+        "public-landing",
+        "public-portal-project",
+        "filled-my-issues-loading",
+        "filled-issues-loading",
+      ],
+    });
   });
 
   it("enumerates only targets that match the active filters", () => {

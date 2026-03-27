@@ -14,7 +14,6 @@ import {
   promoteStagedScreenshots,
   resetCounters,
   shouldCapture,
-  shouldCaptureAny,
   takeScreenshot,
 } from "./capture";
 import {
@@ -63,6 +62,14 @@ export interface ScreenshotCaptureSessionOptions {
   stagingBaseDir?: string;
 }
 
+export interface ScreenshotCapturePhasePlan {
+  emptyCaptureNames: string[];
+  filledCaptureNames: string[];
+  seededPublicCaptureNames: string[];
+  seedlessPublicCaptureNames: string[];
+  selectedPageIds: string[];
+}
+
 export type LaunchBrowser = () => Promise<Browser>;
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
 type AuthenticatedScreenshotPageOptions = {
@@ -87,6 +94,58 @@ export function getCaptureNamesForPrefix(prefix: ScreenshotCapturePhasePrefix): 
 
     return [rest.join("-")];
   });
+}
+
+export function getSelectedScreenshotPageIds(): string[] {
+  return SCREENSHOT_PAGE_IDS.filter((pageId) => {
+    const [prefix, ...rest] = pageId.split("-");
+    if (rest.length === 0) {
+      return false;
+    }
+
+    return shouldCapture(prefix, rest.join("-"));
+  });
+}
+
+export function buildScreenshotCapturePhasePlan(
+  selectedPageIds: string[] = getSelectedScreenshotPageIds(),
+): ScreenshotCapturePhasePlan {
+  const seededPublicCaptureNameSet = new Set(getPublicCaptureNames("seeded"));
+  const plan: ScreenshotCapturePhasePlan = {
+    emptyCaptureNames: [],
+    filledCaptureNames: [],
+    seededPublicCaptureNames: [],
+    seedlessPublicCaptureNames: [],
+    selectedPageIds,
+  };
+
+  for (const pageId of selectedPageIds) {
+    const [prefix, ...rest] = pageId.split("-");
+    if (rest.length === 0) {
+      continue;
+    }
+
+    const name = rest.join("-");
+    if (prefix === "empty") {
+      plan.emptyCaptureNames.push(name);
+      continue;
+    }
+
+    if (prefix === "filled") {
+      plan.filledCaptureNames.push(name);
+      continue;
+    }
+
+    if (prefix === "public") {
+      if (seededPublicCaptureNameSet.has(name)) {
+        plan.seededPublicCaptureNames.push(name);
+      } else {
+        plan.seedlessPublicCaptureNames.push(name);
+      }
+    }
+  }
+
+  return plan;
 }
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
@@ -431,14 +490,11 @@ export async function captureConfiguredScreenshotStates(
   launchBrowser: LaunchBrowser,
   configs: ScreenshotCaptureConfig[],
 ): Promise<boolean> {
-  const seedlessPublicCaptureNames = getPublicCaptureNames("seedless");
-  const seededPublicCaptureNames = getPublicCaptureNames("seeded");
-  const emptyCaptureNames = getCaptureNamesForPrefix("empty");
-  const filledCaptureNames = getCaptureNamesForPrefix("filled");
-  const hasSeedlessPublicTargets = shouldCaptureAny("public", seedlessPublicCaptureNames);
-  const hasSeededPublicTargets = shouldCaptureAny("public", seededPublicCaptureNames);
-  const hasEmptyTargets = shouldCaptureAny("empty", emptyCaptureNames);
-  const hasFilledTargets = shouldCaptureAny("filled", filledCaptureNames);
+  const phasePlan = buildScreenshotCapturePhasePlan();
+  const hasSeedlessPublicTargets = phasePlan.seedlessPublicCaptureNames.length > 0;
+  const hasSeededPublicTargets = phasePlan.seededPublicCaptureNames.length > 0;
+  const hasEmptyTargets = phasePlan.emptyCaptureNames.length > 0;
+  const hasFilledTargets = phasePlan.filledCaptureNames.length > 0;
   const needsAuthBootstrap = hasEmptyTargets || hasFilledTargets;
   const hasSeededTargets = hasSeededPublicTargets || hasFilledTargets;
 
