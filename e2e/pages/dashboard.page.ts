@@ -68,6 +68,7 @@ export class DashboardPage extends BasePage {
   readonly workspacesSection: Locator;
   readonly recentActivitySection: Locator;
   readonly quickStatsSection: Locator;
+  readonly dashboardContent: Locator;
   readonly assignedTab: Locator;
   readonly createdTab: Locator;
   readonly customizeButton: Locator;
@@ -191,6 +192,7 @@ export class DashboardPage extends BasePage {
     this.workspacesSection = page.getByTestId(TEST_IDS.DASHBOARD.WORKSPACES_LIST);
     this.recentActivitySection = page.getByTestId(TEST_IDS.DASHBOARD.RECENT_ACTIVITY);
     this.quickStatsSection = page.getByTestId(TEST_IDS.DASHBOARD.QUICK_STATS);
+    this.dashboardContent = page.getByTestId(TEST_IDS.DASHBOARD.CONTENT);
     this.customizeButton = page.getByTestId(TEST_IDS.DASHBOARD.CUSTOMIZE_TRIGGER);
     this.customizeModal = page.getByTestId(TEST_IDS.DASHBOARD.CUSTOMIZE_MODAL);
     // Issue filter tabs: tab role in Radix/Tabs, with button fallback when rendered as buttons.
@@ -293,6 +295,12 @@ export class DashboardPage extends BasePage {
 
   async waitUntilReady(): Promise<void> {
     await waitForDashboardReady(this.page);
+  }
+
+  async waitForCaptureReady(timeout = 15000): Promise<void> {
+    await this.expectDashboardReady(timeout);
+    await expect(this.pageHeaderTitle).toBeVisible({ timeout });
+    await expect(this.dashboardContent).toBeVisible({ timeout });
   }
 
   async openCustomizeModal(): Promise<void> {

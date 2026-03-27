@@ -385,6 +385,25 @@ export class ProjectsPage extends BasePage {
     await expect.poll(() => this.readProjectsViewState(), { timeout: 12000 }).toBe("ready");
   }
 
+  async ensureBoardReady(): Promise<boolean> {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await this.waitForBoardInteractive();
+        return true;
+      } catch {
+        if (attempt === 0) {
+          await this.page.goto(this.page.url(), {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          await this.page.waitForLoadState("load");
+        }
+      }
+    }
+
+    return false;
+  }
+
   async gotoProjectBoard(projectKey: string) {
     await this.gotoPath(ROUTES.projects.board.build(this.orgSlug, projectKey));
     await this.waitForLoad();

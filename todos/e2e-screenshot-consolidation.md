@@ -12,9 +12,9 @@
 - [ ] This is the first infrastructure priority again. The current overlap between screenshot-lib and reusable E2E/page objects is active execution debt, not just cleanup polish.
 - [ ] The current raw-locator baseline proves the screenshot harness is still acting like a parallel framework.
   Remaining hotspots:
-  - `e2e/screenshot-lib/filled-states.ts`
-  - `e2e/screenshot-lib/interactive-captures.ts`
-  - smaller leftovers in `e2e/screenshot-lib/readiness.ts`
+  - `e2e/screenshot-lib/readiness.ts`
+  - `e2e/screenshot-lib/dialog-helpers.ts`
+  - `e2e/screenshot-lib/helpers.ts`
 
 ## Target Architecture
 
@@ -32,13 +32,13 @@
   - thin screenshot wrappers that stay in screenshot-lib
   - harness-only complexity that should be deleted
 - [ ] Start with the biggest offenders:
-  - `e2e/screenshot-lib/filled-states.ts`
-  - `e2e/screenshot-lib/interactive-captures.ts`
-  - any remaining readiness branches that still bypass page objects
+  - `e2e/screenshot-lib/readiness.ts`
+  - `e2e/screenshot-lib/dialog-helpers.ts`
+  - `e2e/screenshot-lib/helpers.ts`
 - [ ] Replace raw locator usage in those files with shared page-object helpers or route-specific readiness contracts until the screenshot-lib raw-locator baseline is materially smaller.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
 - [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
-- [ ] Finish the remaining route/dialog leftovers in `filled-states.ts`, especially feature-specific dialog/loading branches that still bypass page objects after the shell/navigation cleanup.
+- [ ] Finish the remaining route/dialog and discovery leftovers in `readiness.ts`, `dialog-helpers.ts`, and `helpers.ts`, especially branches that still keep screenshot-lib-specific locator ownership instead of page-object methods.
 
 ## Production Hook Cleanup
 

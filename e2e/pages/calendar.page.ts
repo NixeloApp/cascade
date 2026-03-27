@@ -24,6 +24,8 @@ export class CalendarPage extends BasePage {
   readonly prevButton: Locator;
   readonly nextButton: Locator;
   readonly monthYearLabel: Locator;
+  readonly dayCells: Locator;
+  readonly quickAddDayButtons: Locator;
   readonly workspaceFilter: Locator;
   readonly teamFilter: Locator;
 
@@ -75,6 +77,8 @@ export class CalendarPage extends BasePage {
     this.prevButton = page.getByTestId(TEST_IDS.CALENDAR.PREV_BUTTON);
     this.nextButton = page.getByTestId(TEST_IDS.CALENDAR.NEXT_BUTTON);
     this.monthYearLabel = page.getByTestId(TEST_IDS.CALENDAR.HEADER_DATE);
+    this.dayCells = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
+    this.quickAddDayButtons = page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY);
     this.workspaceFilter = page.getByTestId(TEST_IDS.ORG_CALENDAR.WORKSPACE_FILTER);
     this.teamFilter = page.getByTestId(TEST_IDS.ORG_CALENDAR.TEAM_FILTER);
 
@@ -198,7 +202,7 @@ export class CalendarPage extends BasePage {
     }
   }
 
-  private async waitForModeSelected(mode: CalendarViewMode): Promise<void> {
+  async expectModeSelected(mode: CalendarViewMode): Promise<void> {
     const toggle = this.getModeToggle(mode);
     await expect(toggle).toHaveAttribute("aria-checked", "true", { timeout: 5000 });
     await expect(this.calendarGrid).toHaveAttribute("data-calendar-view", mode, {
@@ -214,7 +218,7 @@ export class CalendarPage extends BasePage {
       try {
         await toggle.scrollIntoViewIfNeeded();
         await toggle.click();
-        await this.waitForModeSelected(mode);
+        await this.expectModeSelected(mode);
         await waitForScreenshotReady(this.page);
         return;
       } catch (error) {
@@ -227,7 +231,7 @@ export class CalendarPage extends BasePage {
             element.click();
           }
         });
-        await this.waitForModeSelected(mode);
+        await this.expectModeSelected(mode);
         await waitForScreenshotReady(this.page);
         return;
       } catch (error) {
@@ -250,7 +254,7 @@ export class CalendarPage extends BasePage {
 
   async waitForMonthGrid(options?: { requireQuickAddButtons?: boolean }): Promise<void> {
     await expect
-      .poll(() => this.page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).count(), {
+      .poll(() => this.dayCells.count(), {
         timeout: 5000,
         intervals: [100, 200, 500],
       })
@@ -258,7 +262,7 @@ export class CalendarPage extends BasePage {
 
     if (options?.requireQuickAddButtons) {
       await expect
-        .poll(() => this.page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).count(), {
+        .poll(() => this.quickAddDayButtons.count(), {
           timeout: 5000,
           intervals: [100, 200, 500],
         })
@@ -334,6 +338,44 @@ export class CalendarPage extends BasePage {
       }
     });
     await waitForScreenshotReady(this.page);
+  }
+
+  async getDragState(): Promise<{
+    sourceIndex: number | null;
+    targetIndex: number | null;
+    dayCellCount: number;
+    eventItemCount: number;
+  }> {
+    const dayCellCount = await getLocatorCount(this.dayCells);
+    const eventItemCount = await getLocatorCount(this.eventItems);
+
+    let sourceIndex: number | null = null;
+    for (let index = 0; index < dayCellCount; index += 1) {
+      const cellEventCount = await getLocatorCount(
+        this.dayCells.nth(index).getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM),
+      );
+      if (cellEventCount > 0) {
+        sourceIndex = index;
+        break;
+      }
+    }
+
+    if (sourceIndex == null) {
+      return {
+        sourceIndex: null,
+        targetIndex: null,
+        dayCellCount,
+        eventItemCount,
+      };
+    }
+
+    const targetIndex = sourceIndex + 1 < dayCellCount ? sourceIndex + 1 : null;
+    return {
+      sourceIndex,
+      targetIndex,
+      dayCellCount,
+      eventItemCount,
+    };
   }
 
   async selectWorkspace(name: string) {

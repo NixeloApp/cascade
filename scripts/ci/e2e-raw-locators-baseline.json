@@ -4,7 +4,7 @@
     "e2e/preview/pwa-runtime.spec.ts": 3,
     "e2e/screenshot-lib/dialog-helpers.ts": 5,
     "e2e/screenshot-lib/helpers.ts": 3,
-    "e2e/screenshot-lib/readiness.ts": 43,
+    "e2e/screenshot-lib/readiness.ts": 22,
     "e2e/screenshot-pages.ts": 2,
     "e2e/settings/offline-replay.spec.ts": 1
   }
