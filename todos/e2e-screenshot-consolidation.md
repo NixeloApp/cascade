@@ -2,7 +2,7 @@
 
 > **Priority:** P0
 > **Status:** Open
-> **Last Updated:** 2026-03-27
+> **Last Updated:** 2026-03-28
 
 ## Why This Is Still Open
 
@@ -10,7 +10,7 @@
 - [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
 - [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
 - [ ] This is the first infrastructure priority again. The current overlap between screenshot-lib and reusable E2E/page objects is active execution debt, not just cleanup polish.
-- [ ] The remaining debt is no longer one giant screenshot-lib selector hotspot. What is left is smaller but still structural: screenshot-specific helper seams, the blocked-query loading capture policy that still sits outside page objects, and the remaining places where screenshot capture can still diverge from reusable E2E flows.
+- [ ] The remaining debt is no longer one giant screenshot-lib selector hotspot. What is left is smaller but still structural: screenshot-specific helper seams, the blocked-query transport helpers themselves, and the remaining places where screenshot capture can still diverge from reusable E2E flows.
 
 ## Target Architecture
 
@@ -32,7 +32,7 @@
 - [ ] Keep the screenshot-lib raw-locator baseline at zero for tracked screenshot helpers; do not let new route-specific selectors creep back into `readiness.ts`, `helpers.ts`, or new screenshot-lib files.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
 - [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
-- [ ] Keep shrinking direct screenshot-lib route-driving so ordinary canonical, modal, and loading captures go through page-object navigation, leaving only the blocked-query transport decision itself as the justified exception.
+- [ ] Keep shrinking direct screenshot-lib route-driving so ordinary canonical, modal, and loading captures go through page-object navigation, leaving only the blocked-query transport helpers themselves as the justified exception.
 - [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
 
 ## Production Hook Cleanup

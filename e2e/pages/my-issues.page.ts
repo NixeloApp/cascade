@@ -5,15 +5,51 @@ import {
   getMyIssuesPriorityFilterOptionTestId,
   TEST_IDS,
 } from "../../src/lib/test-ids";
+import { E2E_TIMEZONE } from "../constants";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
+import { SettingsPage } from "./settings.page";
 
 /**
  * My Issues Page Object
  * Handles the personal issue board route and its filter states.
  */
 export class MyIssuesPage extends BasePage {
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    colorScheme: "light" | "dark",
+    run: (myIssuesPage: MyIssuesPage) => Promise<T>,
+  ): Promise<T> {
+    const browser = sourcePage.context().browser();
+    if (!browser) {
+      throw new Error("My issues loading capture requires an attached browser instance");
+    }
+
+    const { context, page } = await createMyIssuesLoadingPage(
+      sourcePage,
+      browser,
+      colorScheme,
+      E2E_TIMEZONE,
+    );
+
+    try {
+      const settingsPage = new SettingsPage(page, orgSlug);
+      await settingsPage.goto();
+      await settingsPage.waitForCaptureReady("profile");
+      await context.setOffline(true);
+      await settingsPage.openMyIssuesWithoutWaiting();
+      return await run(new MyIssuesPage(page, orgSlug));
+    } finally {
+      await context.setOffline(false);
+      if (!page.isClosed()) {
+        await page.close();
+      }
+      await context.close();
+    }
+  }
+
   readonly content: Locator;
   readonly columns: Locator;
   readonly dueDateFilter: Locator;
@@ -98,7 +134,7 @@ export class MyIssuesPage extends BasePage {
   }
 }
 
-export async function createMyIssuesLoadingPage(
+async function createMyIssuesLoadingPage(
   sourcePage: Page,
   browser: Browser,
   colorScheme: "light" | "dark",

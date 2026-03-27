@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { withIsolatedConvexLoadingPage } from "../utils/convex-loading";
 import {
   getLocatorAttribute,
   getLocatorCount,
@@ -16,6 +17,16 @@ import { BasePage } from "./base.page";
  * Handles the main authenticated app interface
  */
 export class DashboardPage extends BasePage {
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (dashboardPage: DashboardPage) => Promise<T>,
+  ): Promise<T> {
+    return withIsolatedConvexLoadingPage(sourcePage, async (loadingPage) =>
+      run(new DashboardPage(loadingPage, orgSlug)),
+    );
+  }
+
   // ===================
   // Locators - Navigation Tabs
   // ===================

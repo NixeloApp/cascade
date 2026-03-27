@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { withQueryBlockedPage } from "../utils/convex-loading";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import {
@@ -16,6 +17,18 @@ import { BasePage } from "./base.page";
  * Handles the global issues view with filtering and issue cards.
  */
 export class IssuesPage extends BasePage {
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (issuesPage: IssuesPage) => Promise<T>,
+  ): Promise<T> {
+    return withQueryBlockedPage(
+      sourcePage,
+      ["issues/queries:listOrganizationIssues"],
+      async (loadingPage) => run(new IssuesPage(loadingPage, orgSlug)),
+    );
+  }
+
   readonly createIssueButton: Locator;
   readonly detailModal: Locator;
   readonly detailModalIssueKey: Locator;

@@ -6,7 +6,6 @@
  */
 
 import { expect, type Page } from "@playwright/test";
-import { E2E_TIMEZONE } from "../constants";
 import {
   AssistantPage,
   CalendarPage,
@@ -19,15 +18,8 @@ import {
   MyIssuesPage,
   ProjectsPage,
   RoadmapPage,
-  SettingsPage,
   SprintsPage,
 } from "../pages";
-import { createMyIssuesLoadingPage } from "../pages/my-issues.page";
-import {
-  withConvexLoadingPage,
-  withIsolatedConvexLoadingPage,
-  withQueryBlockedPage,
-} from "../utils/convex-loading";
 import { waitForLocatorVisible } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
 import {
@@ -121,8 +113,8 @@ export async function screenshotDashboardLoadingState(
   }
 
   await runCaptureStep("dashboard loading skeletons", async () => {
-    await withIsolatedConvexLoadingPage(page, async (loadingPage) => {
-      const loadingDashboardPage = new DashboardPage(loadingPage, orgSlug);
+    await DashboardPage.withLoadingPage(page, orgSlug, async (loadingDashboardPage) => {
+      const { page: loadingPage } = loadingDashboardPage;
       await loadingDashboardPage.gotoAndExpectLoadingSkeletons(12000);
       await waitForAnimation(loadingPage);
       await loadingPage.evaluate(
@@ -179,8 +171,8 @@ export async function screenshotOrgCalendarStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runRequiredCaptureStep("org calendar loading state", async () => {
-      await withConvexLoadingPage(page, async (loadingPage) => {
-        const loadingCalendarPage = new CalendarPage(loadingPage, orgSlug);
+      await CalendarPage.withLoadingPage(page, orgSlug, async (loadingCalendarPage) => {
+        const { page: loadingPage } = loadingCalendarPage;
         await loadingCalendarPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
@@ -278,8 +270,8 @@ export async function screenshotProjectsStates(
 
     if (shouldCapture(prefix, captureNames.loading)) {
       await runCaptureStep("projects loading", async () => {
-        await withConvexLoadingPage(page, async (loadingPage) => {
-          const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
+        await ProjectsPage.withProjectsLoadingPage(page, orgSlug, async (loadingProjectsPage) => {
+          const { page: loadingPage } = loadingProjectsPage;
           await loadingProjectsPage.gotoAndExpectProjectsLoadingState(12000);
           await waitForAnimation(loadingPage);
           await captureCurrentView(loadingPage, prefix, captureNames.loading, {
@@ -347,8 +339,10 @@ export async function screenshotInvoicesStates(
 
   if (shouldCapture(prefix, captureNames.loading)) {
     await runCaptureStep("invoices loading", async () => {
-      await withConvexLoadingPage(page, async (loadingPage) => {
-        const loadingInvoicesPage = await openInvoicesPage(loadingPage);
+      await InvoicesPage.withLoadingPage(page, orgSlug, async (loadingInvoicesPage) => {
+        const { page: loadingPage } = loadingInvoicesPage;
+        await loadingInvoicesPage.goto();
+        await loadingInvoicesPage.waitUntilReady();
         await loadingInvoicesPage.expectLoadingStateVisible();
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
@@ -447,8 +441,8 @@ export async function screenshotAssistantStates(
 
   if (shouldCapture(prefix, captureNames.loading)) {
     await runCaptureStep("assistant loading", async () => {
-      await withQueryBlockedPage(page, ["ai/queries:getUsageStats"], async (loadingPage) => {
-        const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
+      await AssistantPage.withLoadingPage(page, orgSlug, async (loadingAssistantPage) => {
+        const { page: loadingPage } = loadingAssistantPage;
         await loadingAssistantPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
@@ -687,8 +681,8 @@ export async function screenshotBoardLoadingState(
   }
 
   await runRequiredCaptureStep("board loading state", async () => {
-    await withConvexLoadingPage(page, async (loadingPage) => {
-      const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
+    await ProjectsPage.withBoardLoadingPage(page, orgSlug, async (loadingProjectsPage) => {
+      const { page: loadingPage } = loadingProjectsPage;
       await loadingProjectsPage.gotoProjectBoardAndExpectLoadingState(projectKey, 15000);
       await waitForAnimation(loadingPage);
       await captureCurrentView(loadingPage, prefix, loadingStateName, {
@@ -928,18 +922,14 @@ export async function screenshotIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("issues loading state", async () => {
-      await withQueryBlockedPage(
-        page,
-        ["issues/queries:listOrganizationIssues"],
-        async (loadingPage) => {
-          const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
-          await loadingIssuesPage.gotoAndExpectLoadingState(12000);
-          await waitForAnimation(loadingPage);
-          await captureCurrentView(loadingPage, prefix, loadingStateName, {
-            skipReadyCheck: true,
-          });
-        },
-      );
+      await IssuesPage.withLoadingPage(page, orgSlug, async (loadingIssuesPage) => {
+        const { page: loadingPage } = loadingIssuesPage;
+        await loadingIssuesPage.gotoAndExpectLoadingState(12000);
+        await waitForAnimation(loadingPage);
+        await captureCurrentView(loadingPage, prefix, loadingStateName, {
+          skipReadyCheck: true,
+        });
+      });
     });
   }
 }
@@ -999,37 +989,19 @@ export async function screenshotMyIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("my issues loading state", async () => {
-      const browser = page.context().browser();
-      if (!browser) {
-        throw new Error("My issues loading capture requires an attached browser instance");
-      }
-
-      const { context: isolatedContext, page: loadingPage } = await createMyIssuesLoadingPage(
+      await MyIssuesPage.withLoadingPage(
         page,
-        browser,
+        orgSlug,
         captureState.currentConfigPrefix.endsWith("dark") ? "dark" : "light",
-        E2E_TIMEZONE,
+        async (loadingMyIssuesPage) => {
+          const { page: loadingPage } = loadingMyIssuesPage;
+          await loadingMyIssuesPage.expectLoadingStateVisible();
+          await waitForAnimation(loadingPage);
+          await captureCurrentView(loadingPage, prefix, loadingStateName, {
+            skipReadyCheck: true,
+          });
+        },
       );
-
-      try {
-        const settingsPage = new SettingsPage(loadingPage, orgSlug);
-        await settingsPage.goto();
-        await settingsPage.waitForCaptureReady("profile");
-        await isolatedContext.setOffline(true);
-        await settingsPage.openMyIssuesWithoutWaiting();
-        const loadingMyIssuesPage = new MyIssuesPage(loadingPage, orgSlug);
-        await loadingMyIssuesPage.expectLoadingStateVisible();
-        await waitForAnimation(loadingPage);
-        await captureCurrentView(loadingPage, prefix, loadingStateName, {
-          skipReadyCheck: true,
-        });
-      } finally {
-        await isolatedContext.setOffline(false);
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
-        await isolatedContext.close();
-      }
     });
   }
 }

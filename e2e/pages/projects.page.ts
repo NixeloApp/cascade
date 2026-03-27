@@ -13,6 +13,7 @@ import {
   waitForIssueUpdateSuccess,
   waitForProjectCreateSuccess,
 } from "../utils";
+import { withConvexLoadingPage } from "../utils/convex-loading";
 import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import { waitForAnimation, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
@@ -23,6 +24,26 @@ import { BasePage } from "./base.page";
  * Note: UI uses "Projects" terminology, URLs use /projects/ path
  */
 export class ProjectsPage extends BasePage {
+  static async withProjectsLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (projectsPage: ProjectsPage) => Promise<T>,
+  ): Promise<T> {
+    return withConvexLoadingPage(sourcePage, async (loadingPage) =>
+      run(new ProjectsPage(loadingPage, orgSlug)),
+    );
+  }
+
+  static async withBoardLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (projectsPage: ProjectsPage) => Promise<T>,
+  ): Promise<T> {
+    return withConvexLoadingPage(sourcePage, async (loadingPage) =>
+      run(new ProjectsPage(loadingPage, orgSlug)),
+    );
+  }
+
   // ===================
   // Locators - Sidebar
   // ===================

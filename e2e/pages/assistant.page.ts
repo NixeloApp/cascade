@@ -1,11 +1,22 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { withQueryBlockedPage } from "../utils/convex-loading";
 import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 export class AssistantPage extends BasePage {
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (assistantPage: AssistantPage) => Promise<T>,
+  ): Promise<T> {
+    return withQueryBlockedPage(sourcePage, ["ai/queries:getUsageStats"], async (loadingPage) =>
+      run(new AssistantPage(loadingPage, orgSlug)),
+    );
+  }
+
   readonly content: Locator;
   readonly conversationsEmptyState: Locator;
   readonly conversationsList: Locator;

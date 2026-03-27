@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { withConvexLoadingPage } from "../utils/convex-loading";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { waitForLoadingSkeletonsToClear, waitForScreenshotReady } from "../utils/wait-helpers";
@@ -13,6 +14,16 @@ type CalendarViewMode = "day" | "week" | "month";
  * Handles the calendar view with events and meetings
  */
 export class CalendarPage extends BasePage {
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (calendarPage: CalendarPage) => Promise<T>,
+  ): Promise<T> {
+    return withConvexLoadingPage(sourcePage, async (loadingPage) =>
+      run(new CalendarPage(loadingPage, orgSlug)),
+    );
+  }
+
   // ===================
   // Locators - Calendar View
   // ===================
