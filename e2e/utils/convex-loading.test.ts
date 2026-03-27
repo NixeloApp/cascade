@@ -1,0 +1,91 @@
+import type { Browser, BrowserContext, Page } from "@playwright/test";
+import { describe, expect, it, vi } from "vitest";
+import {
+  withConvexLoadingPage,
+  withMutationBlockedPage,
+  withQueryBlockedPage,
+} from "./convex-loading";
+
+function createConvexLoadingHarness() {
+  const siblingPage = {
+    addInitScript: vi.fn(async () => {}),
+    close: vi.fn(async () => {}),
+    isClosed: vi.fn(() => false),
+    route: vi.fn(async () => {}),
+    unroute: vi.fn(async () => {}),
+  } satisfies Partial<Page>;
+  const isolatedPage = {
+    addInitScript: vi.fn(async () => {}),
+    close: vi.fn(async () => {}),
+    isClosed: vi.fn(() => false),
+    route: vi.fn(async () => {}),
+    unroute: vi.fn(async () => {}),
+  } satisfies Partial<Page>;
+  const isolatedContext = {
+    close: vi.fn(async () => {}),
+    newPage: vi.fn(async () => isolatedPage as Page),
+  } satisfies Partial<BrowserContext>;
+  const browser = {
+    newContext: vi.fn(async () => isolatedContext as BrowserContext),
+  } satisfies Partial<Browser>;
+  const sourceContext = {
+    browser: vi.fn(() => browser as Browser),
+    newPage: vi.fn(async () => siblingPage as Page),
+    storageState: vi.fn(async () => ({ cookies: [], origins: [] })),
+  } satisfies Partial<BrowserContext>;
+  const sourcePage = {
+    context: vi.fn(() => sourceContext as BrowserContext),
+    viewportSize: vi.fn(() => ({ height: 900, width: 1440 })),
+  } satisfies Partial<Page>;
+
+  return {
+    isolatedContext,
+    isolatedPage,
+    siblingPage,
+    sourcePage: sourcePage as Page,
+  };
+}
+
+describe("convex loading helpers", () => {
+  it("installs the transport blocker on sibling loading pages and closes them", async () => {
+    const harness = createConvexLoadingHarness();
+    const result = await withConvexLoadingPage(harness.sourcePage, async (loadingPage) => {
+      expect(loadingPage).toBe(harness.siblingPage);
+      return "done";
+    });
+
+    expect(result).toBe("done");
+    expect(harness.siblingPage.addInitScript).toHaveBeenCalledTimes(1);
+    expect(harness.siblingPage.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("releases blocked queries and closes the isolated context after the run", async () => {
+    const harness = createConvexLoadingHarness();
+
+    await withQueryBlockedPage(
+      harness.sourcePage,
+      ["issues/queries:listOrganizationIssues", "notifications:list"],
+      async (blockedPage) => {
+        expect(blockedPage).toBe(harness.isolatedPage);
+      },
+    );
+
+    expect(harness.isolatedPage.route).toHaveBeenCalledTimes(2);
+    expect(harness.isolatedPage.unroute).toHaveBeenCalledTimes(2);
+    expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("releases blocked mutations and closes the isolated context after failures", async () => {
+    const harness = createConvexLoadingHarness();
+
+    await expect(
+      withMutationBlockedPage(harness.sourcePage, ["notifications:markAllAsRead"], async () => {
+        throw new Error("capture failed");
+      }),
+    ).rejects.toThrow("capture failed");
+
+    expect(harness.isolatedPage.route).toHaveBeenCalledTimes(1);
+    expect(harness.isolatedPage.unroute).toHaveBeenCalledTimes(1);
+    expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
+  });
+});

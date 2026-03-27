@@ -1,5 +1,6 @@
 import type { Page, Route } from "@playwright/test";
 import { CONVEX_SITE_URL } from "../config";
+import { createIsolatedPageTarget, createSiblingPageTarget, type PageTarget } from "./page-targets";
 
 function collectBlockedConvexHosts(): string[] {
   const blockedHosts = new Set<string>();
@@ -160,60 +161,14 @@ export async function installConvexLoadingBlocker(page: Page): Promise<void> {
   );
 }
 
-export async function createConvexLoadingPage(sourcePage: Page): Promise<Page> {
-  const loadingPage = await sourcePage.context().newPage();
-  await installConvexLoadingBlocker(loadingPage);
-  return loadingPage;
-}
-
 export async function withConvexLoadingPage<T>(
   sourcePage: Page,
   run: (loadingPage: Page) => Promise<T>,
 ): Promise<T> {
-  const loadingPage = await createConvexLoadingPage(sourcePage);
-
-  try {
-    return await run(loadingPage);
-  } finally {
-    if (!loadingPage.isClosed()) {
-      await loadingPage.close();
-    }
-  }
-}
-
-async function createIsolatedContextFromPage(sourcePage: Page) {
-  const browser = sourcePage.context().browser();
-  if (!browser) {
-    throw new Error("Unable to create isolated loading page without a browser instance");
-  }
-
-  return browser.newContext({
-    storageState: await sourcePage.context().storageState(),
-    viewport: sourcePage.viewportSize() ?? undefined,
+  const loadingTarget = await createBlockedPageTarget(sourcePage, {
+    installTransportBlocker: true,
+    isolated: false,
   });
-}
-
-export async function createIsolatedConvexLoadingPage(sourcePage: Page): Promise<{
-  close: () => Promise<void>;
-  page: Page;
-}> {
-  const isolatedContext = await createIsolatedContextFromPage(sourcePage);
-  const isolatedPage = await isolatedContext.newPage();
-  await installConvexLoadingBlocker(isolatedPage);
-
-  return {
-    page: isolatedPage,
-    close: async () => {
-      await isolatedContext.close();
-    },
-  };
-}
-
-export async function withIsolatedConvexLoadingPage<T>(
-  sourcePage: Page,
-  run: (loadingPage: Page) => Promise<T>,
-): Promise<T> {
-  const loadingTarget = await createIsolatedConvexLoadingPage(sourcePage);
 
   try {
     return await run(loadingTarget.page);
@@ -222,10 +177,23 @@ export async function withIsolatedConvexLoadingPage<T>(
   }
 }
 
-export async function blockConvexMutation(
-  page: Page,
-  mutationPath: string,
-): Promise<() => Promise<void>> {
+export async function withIsolatedConvexLoadingPage<T>(
+  sourcePage: Page,
+  run: (loadingPage: Page) => Promise<T>,
+): Promise<T> {
+  const loadingTarget = await createBlockedPageTarget(sourcePage, {
+    installTransportBlocker: true,
+    isolated: true,
+  });
+
+  try {
+    return await run(loadingTarget.page);
+  } finally {
+    await loadingTarget.close();
+  }
+}
+
+async function blockConvexMutation(page: Page, mutationPath: string): Promise<() => Promise<void>> {
   const handler = async (route: Route): Promise<void> => {
     const requestPath = getConvexRequestPath(route, "/api/mutation");
 
@@ -243,10 +211,7 @@ export async function blockConvexMutation(
   };
 }
 
-export async function blockConvexQuery(
-  page: Page,
-  queryPath: string,
-): Promise<() => Promise<void>> {
+async function blockConvexQuery(page: Page, queryPath: string): Promise<() => Promise<void>> {
   const handler = async (route: Route): Promise<void> => {
     const requestPath = getConvexRequestPath(route, "/api/query");
 
@@ -264,26 +229,61 @@ export async function blockConvexQuery(
   };
 }
 
-export async function createQueryBlockedPage(
+type BlockedPageOptions = {
+  blockedMutations?: string[];
+  blockedQueries?: string[];
+  installTransportBlocker?: boolean;
+  isolated: boolean;
+};
+
+async function createBlockedPageTarget(
   sourcePage: Page,
-  queryPaths: string[],
+  options: BlockedPageOptions,
 ): Promise<{
   close: () => Promise<void>;
   page: Page;
 }> {
-  const isolatedContext = await createIsolatedContextFromPage(sourcePage);
-  const blockedPage = await isolatedContext.newPage();
-  const releaseBlocks = await Promise.all(
-    queryPaths.map((queryPath) => blockConvexQuery(blockedPage, queryPath)),
-  );
+  const pageTarget: PageTarget = options.isolated
+    ? await createIsolatedPageTarget(sourcePage)
+    : await createSiblingPageTarget(sourcePage);
+  const releaseBlocks: Array<() => Promise<void>> = [];
 
-  return {
-    page: blockedPage,
-    close: async () => {
+  try {
+    if (options.installTransportBlocker) {
+      await installConvexLoadingBlocker(pageTarget.page);
+    }
+
+    const queryBlocks = await Promise.all(
+      (options.blockedQueries ?? []).map((queryPath) =>
+        blockConvexQuery(pageTarget.page, queryPath),
+      ),
+    );
+    const mutationBlocks = await Promise.all(
+      (options.blockedMutations ?? []).map((mutationPath) =>
+        blockConvexMutation(pageTarget.page, mutationPath),
+      ),
+    );
+    releaseBlocks.push(...queryBlocks, ...mutationBlocks);
+
+    return {
+      page: pageTarget.page,
+      close: async () => {
+        try {
+          await Promise.all(releaseBlocks.map((releaseBlock) => releaseBlock()));
+        } finally {
+          await pageTarget.close();
+        }
+      },
+    };
+  } catch (error) {
+    try {
       await Promise.all(releaseBlocks.map((releaseBlock) => releaseBlock()));
-      await isolatedContext.close();
-    },
-  };
+    } finally {
+      await pageTarget.close();
+    }
+
+    throw error;
+  }
 }
 
 export async function withQueryBlockedPage<T>(
@@ -291,7 +291,10 @@ export async function withQueryBlockedPage<T>(
   queryPaths: string[],
   run: (blockedPage: Page) => Promise<T>,
 ): Promise<T> {
-  const blockedTarget = await createQueryBlockedPage(sourcePage, queryPaths);
+  const blockedTarget = await createBlockedPageTarget(sourcePage, {
+    blockedQueries: queryPaths,
+    isolated: true,
+  });
 
   try {
     return await run(blockedTarget.page);
@@ -300,34 +303,15 @@ export async function withQueryBlockedPage<T>(
   }
 }
 
-export async function createMutationBlockedPage(
-  sourcePage: Page,
-  mutationPaths: string[],
-): Promise<{
-  close: () => Promise<void>;
-  page: Page;
-}> {
-  const isolatedContext = await createIsolatedContextFromPage(sourcePage);
-  const blockedPage = await isolatedContext.newPage();
-  const releaseBlocks = await Promise.all(
-    mutationPaths.map((mutationPath) => blockConvexMutation(blockedPage, mutationPath)),
-  );
-
-  return {
-    page: blockedPage,
-    close: async () => {
-      await Promise.all(releaseBlocks.map((releaseBlock) => releaseBlock()));
-      await isolatedContext.close();
-    },
-  };
-}
-
 export async function withMutationBlockedPage<T>(
   sourcePage: Page,
   mutationPaths: string[],
   run: (blockedPage: Page) => Promise<T>,
 ): Promise<T> {
-  const blockedTarget = await createMutationBlockedPage(sourcePage, mutationPaths);
+  const blockedTarget = await createBlockedPageTarget(sourcePage, {
+    blockedMutations: mutationPaths,
+    isolated: true,
+  });
 
   try {
     return await run(blockedTarget.page);

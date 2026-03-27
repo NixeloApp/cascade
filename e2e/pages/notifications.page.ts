@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { withMutationBlockedPage } from "../utils/convex-loading";
 import { getLocatorCount, getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
+import { createSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
 import {
   waitForAnimation,
@@ -21,14 +22,12 @@ export class NotificationsPage extends BasePage {
     orgSlug: string,
     run: (notificationsPage: NotificationsPage) => Promise<T>,
   ): Promise<T> {
-    const capturePage = await sourcePage.context().newPage();
+    const captureTarget = await createSiblingPageTarget(sourcePage);
 
     try {
-      return await run(new NotificationsPage(capturePage, orgSlug));
+      return await run(new NotificationsPage(captureTarget.page, orgSlug));
     } finally {
-      if (!capturePage.isClosed()) {
-        await capturePage.close();
-      }
+      await captureTarget.close();
     }
   }
 

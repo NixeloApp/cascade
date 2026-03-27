@@ -1,4 +1,4 @@
-import type { Browser, BrowserContext, Locator, Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import {
   getMyIssuesDueDateFilterOptionTestId,
@@ -7,6 +7,7 @@ import {
 } from "../../src/lib/test-ids";
 import { E2E_TIMEZONE } from "../constants";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import { createIsolatedPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 import { SettingsPage } from "./settings.page";
@@ -22,31 +23,21 @@ export class MyIssuesPage extends BasePage {
     colorScheme: "light" | "dark",
     run: (myIssuesPage: MyIssuesPage) => Promise<T>,
   ): Promise<T> {
-    const browser = sourcePage.context().browser();
-    if (!browser) {
-      throw new Error("My issues loading capture requires an attached browser instance");
-    }
-
-    const { context, page } = await createMyIssuesLoadingPage(
-      sourcePage,
-      browser,
+    const loadingTarget = await createIsolatedPageTarget(sourcePage, {
       colorScheme,
-      E2E_TIMEZONE,
-    );
+      timezoneId: E2E_TIMEZONE,
+    });
 
     try {
-      const settingsPage = new SettingsPage(page, orgSlug);
+      const settingsPage = new SettingsPage(loadingTarget.page, orgSlug);
       await settingsPage.goto();
       await settingsPage.waitForCaptureReady("profile");
-      await context.setOffline(true);
+      await loadingTarget.context.setOffline(true);
       await settingsPage.openMyIssuesWithoutWaiting();
-      return await run(new MyIssuesPage(page, orgSlug));
+      return await run(new MyIssuesPage(loadingTarget.page, orgSlug));
     } finally {
-      await context.setOffline(false);
-      if (!page.isClosed()) {
-        await page.close();
-      }
-      await context.close();
+      await loadingTarget.context.setOffline(false);
+      await loadingTarget.close();
     }
   }
 
@@ -132,20 +123,4 @@ export class MyIssuesPage extends BasePage {
     await expect(this.pageEmptyState).toBeVisible();
     await expect(this.pageEmptyState).toContainText("No issues match these filters");
   }
-}
-
-async function createMyIssuesLoadingPage(
-  sourcePage: Page,
-  browser: Browser,
-  colorScheme: "light" | "dark",
-  timezoneId: string,
-): Promise<{ context: BrowserContext; page: Page }> {
-  const context = await browser.newContext({
-    storageState: await sourcePage.context().storageState(),
-    viewport: sourcePage.viewportSize() ?? undefined,
-    colorScheme,
-    timezoneId,
-  });
-  const loadingPage = await context.newPage();
-  return { context, page: loadingPage };
 }
