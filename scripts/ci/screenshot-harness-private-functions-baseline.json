@@ -2,6 +2,6 @@
   "privateFunctionCountByFile": {
     "e2e/screenshot-lib/capture.ts": 1,
     "e2e/screenshot-lib/cli.ts": 2,
-    "e2e/screenshot-pages.ts": 5
+    "e2e/screenshot-pages.ts": 3
   }
 }

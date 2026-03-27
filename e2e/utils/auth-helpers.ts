@@ -921,6 +921,26 @@ export async function trySignInUser(
   }
 }
 
+export async function ensureUserExistsAndSignIn(
+  page: Page,
+  baseURL: string,
+  user: TestUser,
+  autoCompleteOnboarding = true,
+): Promise<boolean> {
+  const createResult = await testUserService.createTestUser(
+    user.email,
+    user.password,
+    autoCompleteOnboarding,
+  );
+
+  if (!createResult.success && !createResult.existing) {
+    console.log(`  ⚠️ Failed to ensure user exists for ${user.email}: ${createResult.error}`);
+    return false;
+  }
+
+  return trySignInUser(page, baseURL, user, autoCompleteOnboarding);
+}
+
 async function getSignUpResultState(
   page: Page,
 ): Promise<"verification" | "redirect" | "error" | "pending"> {

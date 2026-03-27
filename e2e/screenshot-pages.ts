@@ -25,7 +25,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { type Browser, chromium, type Page } from "@playwright/test";
+import { type Browser, chromium } from "@playwright/test";
 import { ROUTES } from "../convex/shared/routes";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { E2E_TIMEZONE } from "./constants";
@@ -46,6 +46,8 @@ import { parseCliOptions, printUsage } from "./screenshot-lib/cli";
 import {
   BASE_URL,
   CONFIGS,
+  SCREENSHOT_AUTH_USER,
+  SCREENSHOT_EMPTY_AUTH_USER,
   SCREENSHOT_EMPTY_USER,
   SCREENSHOT_STAGING_BASE_DIR,
   SCREENSHOT_USER,
@@ -59,65 +61,8 @@ import { waitForExpectedContent, waitForSpinnersHidden } from "./screenshot-lib/
 import { getGeneratedSpecFolders, resolveCaptureTarget } from "./screenshot-lib/routing";
 import { buildScreenshotShards } from "./screenshot-lib/sharding";
 import { SCREENSHOT_PAGE_IDS } from "./screenshot-lib/targets";
-import { injectAuthTokens } from "./utils/auth-helpers";
+import { ensureUserExistsAndSignIn } from "./utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
-import { waitForDashboardReady } from "./utils/wait-helpers";
-
-type ScreenshotCredentials = {
-  email: string;
-  password: string;
-};
-
-async function authenticateAndNavigateAs(
-  page: Page,
-  orgSlug: string,
-  credentials: ScreenshotCredentials,
-): Promise<boolean> {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "load" });
-    await testUserService.createTestUser(credentials.email, credentials.password, true);
-    const loginResult = await testUserService.loginTestUserWithRepair(
-      credentials.email,
-      credentials.password,
-      true,
-    );
-    if (!loginResult.success || !loginResult.token) {
-      continue;
-    }
-
-    await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
-    await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
-
-    try {
-      await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
-        state: "visible",
-        timeout: 30000,
-      });
-      await waitForSpinnersHidden(page, 10000);
-      return true;
-    } catch {
-      try {
-        await page.reload({ waitUntil: "load" });
-        await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
-          state: "visible",
-          timeout: 20000,
-        });
-        await waitForSpinnersHidden(page, 10000);
-        return true;
-      } catch {
-        if (attempt === 1) {
-          return false;
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
-async function authenticateAndNavigate(page: Page, orgSlug: string): Promise<boolean> {
-  return authenticateAndNavigateAs(page, orgSlug, SCREENSHOT_USER);
-}
 
 /**
  * Capture empty states for a single viewport/theme combination.
@@ -150,12 +95,20 @@ async function captureEmptyForConfig(
       const dashboardUrl = `${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`;
       try {
         await page.goto(dashboardUrl, { waitUntil: "load" });
-        await waitForDashboardReady(page);
+        await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
+          state: "visible",
+          timeout: 30000,
+        });
+        await waitForSpinnersHidden(page, 10000);
       } catch {
         await page.reload({ waitUntil: "load" });
-        await waitForDashboardReady(page);
+        await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
+          state: "visible",
+          timeout: 20000,
+        });
+        await waitForSpinnersHidden(page, 10000);
       }
-    } else if (!(await authenticateAndNavigate(page, orgSlug))) {
+    } else if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
       captureState.captureFailures++;
       console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
       return;
@@ -172,7 +125,14 @@ async function captureEmptyForConfig(
       const myIssuesPage = await myIssuesContext.newPage();
 
       try {
-        if (!(await authenticateAndNavigateAs(myIssuesPage, orgSlug, SCREENSHOT_EMPTY_USER))) {
+        if (
+          !(await ensureUserExistsAndSignIn(
+            myIssuesPage,
+            BASE_URL,
+            SCREENSHOT_EMPTY_AUTH_USER,
+            true,
+          ))
+        ) {
           throw new Error(
             `Auth failed for my-issues empty state in ${captureState.currentConfigPrefix}`,
           );
@@ -232,7 +192,7 @@ async function captureFilledForConfig(
     // setup-time storage snapshot. The screenshot run spans multiple fresh
     // browser contexts, and re-establishing auth here is more deterministic
     // for route-level captures than reusing a potentially stale token snapshot.
-    if (!(await authenticateAndNavigate(page, orgSlug))) {
+    if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
       captureState.captureFailures++;
       console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
       return;

@@ -6,11 +6,10 @@
  */
 
 import type { Page } from "@playwright/test";
-import { ROUTES } from "../../convex/shared/routes";
-import { injectAuthTokens } from "../utils/auth-helpers";
+import { ensureUserExistsAndSignIn } from "../utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
-import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
-import { BASE_URL, SCREENSHOT_USER } from "./config";
+import { waitForScreenshotReady } from "../utils/wait-helpers";
+import { BASE_URL, SCREENSHOT_AUTH_USER, SCREENSHOT_USER } from "./config";
 
 export function getSeededIssueKey(seed: SeedScreenshotResult): string | null {
   return seed.issueKeys?.[0] ?? null;
@@ -112,17 +111,6 @@ export async function autoLogin(page: Page): Promise<string | null> {
   }
   console.log(`    User ready: ${SCREENSHOT_USER.email}`);
 
-  // Get API token
-  console.log("    Logging in via API...");
-  const loginResult = await testUserService.loginTestUser(
-    SCREENSHOT_USER.email,
-    SCREENSHOT_USER.password,
-  );
-  if (!(loginResult.success && loginResult.token)) {
-    console.error(`    API login failed: ${loginResult.error}`);
-    return null;
-  }
-
   // Discover orgSlug by doing a lightweight seed (returns orgSlug)
   const seedProbe = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {});
   const orgSlug = seedProbe.orgSlug;
@@ -131,17 +119,12 @@ export async function autoLogin(page: Page): Promise<string | null> {
     return null;
   }
 
-  // Inject tokens and navigate directly to the dashboard (bypasses /app redirect)
-  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
-  await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
-  await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
-
-  // Wait for the dashboard to settle — the Convex auth client needs time to validate
-  // the injected token and render the authenticated page
-  try {
-    await waitForDashboardReady(page);
-  } catch {
-    console.error("    Dashboard did not become ready. Current URL:", page.url());
+  console.log("    Logging in via reusable auth helper...");
+  if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
+    console.error(
+      "    Screenshot auth helper could not reach the dashboard. Current URL:",
+      page.url(),
+    );
     return null;
   }
 

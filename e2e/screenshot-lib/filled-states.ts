@@ -21,7 +21,7 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
-import { injectAuthTokens } from "../utils/auth-helpers";
+import { ensureUserExistsAndSignIn } from "../utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -43,6 +43,7 @@ import {
   BASE_URL,
   MARKDOWN_IMPORT_PREVIEW,
   MARKDOWN_RICH_CONTENT,
+  SCREENSHOT_AUTH_USER,
   SCREENSHOT_USER,
 } from "./config";
 import {
@@ -1714,15 +1715,9 @@ export async function screenshotFilledStates(
       }
 
       try {
-        const loginResult = await testUserService.loginTestUserWithRepair(
-          SCREENSHOT_USER.email,
-          SCREENSHOT_USER.password,
-          true,
-        );
-        if (!(loginResult.success && loginResult.token)) {
-          throw new Error(loginResult.error ?? "Failed to authenticate screenshot notifications");
+        if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
+          throw new Error("Failed to authenticate screenshot notifications");
         }
-        await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
 
         const overflowPage = await page.context().newPage();
         try {
@@ -1770,15 +1765,9 @@ export async function screenshotFilledStates(
           );
         }
 
-        const loginResult = await testUserService.loginTestUserWithRepair(
-          SCREENSHOT_USER.email,
-          SCREENSHOT_USER.password,
-          true,
-        );
-        if (!(loginResult.success && loginResult.token)) {
-          throw new Error(loginResult.error ?? "Failed to authenticate screenshot notifications");
+        if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
+          throw new Error("Failed to authenticate screenshot notifications");
         }
-        await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
 
         const loadingPage = await page.context().newPage();
         try {
