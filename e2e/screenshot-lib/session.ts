@@ -82,6 +82,23 @@ export interface ScreenshotCaptureExecutionPlan {
   runSeedlessPublicPhase: boolean;
 }
 
+export type ScreenshotCaptureExecutionContext =
+  | {
+      authBootstrap: null;
+      bootstrapMode: "none";
+      seedOrgSlug: undefined;
+    }
+  | {
+      authBootstrap: null;
+      bootstrapMode: "primary-user";
+      seedOrgSlug: undefined;
+    }
+  | {
+      authBootstrap: ScreenshotAuthBootstrap;
+      bootstrapMode: "authenticated";
+      seedOrgSlug: string;
+    };
+
 export type LaunchBrowser = () => Promise<Browser>;
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
 type AuthenticatedScreenshotPageOptions = {
@@ -376,6 +393,43 @@ export async function prepareScreenshotAuthBootstrap(
   );
 }
 
+export async function prepareScreenshotCaptureExecutionContext(
+  launchBrowser: LaunchBrowser,
+  executionPlan: ScreenshotCaptureExecutionPlan,
+): Promise<ScreenshotCaptureExecutionContext | null> {
+  if (executionPlan.bootstrapMode === "none") {
+    return {
+      authBootstrap: null,
+      bootstrapMode: "none",
+      seedOrgSlug: undefined,
+    };
+  }
+
+  if (executionPlan.bootstrapMode === "primary-user") {
+    if (!(await prepareScreenshotPrimaryUser())) {
+      return null;
+    }
+
+    return {
+      authBootstrap: null,
+      bootstrapMode: "primary-user",
+      seedOrgSlug: undefined,
+    };
+  }
+
+  await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
+  const authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
+  if (!authBootstrap) {
+    return null;
+  }
+
+  return {
+    authBootstrap,
+    bootstrapMode: "authenticated",
+    seedOrgSlug: authBootstrap.orgSlug,
+  };
+}
+
 export async function capturePublicStatesForConfig(
   launchBrowser: LaunchBrowser,
   viewport: ViewportName,
@@ -544,23 +598,22 @@ export async function captureConfiguredScreenshotStates(
     return true;
   }
 
-  let authBootstrap: ScreenshotAuthBootstrap | null = null;
-  if (executionPlan.bootstrapMode === "authenticated") {
-    await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
-
-    authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
-    if (!authBootstrap) {
-      return false;
-    }
-  } else if (
-    executionPlan.bootstrapMode === "primary-user" &&
-    !(await prepareScreenshotPrimaryUser())
-  ) {
+  const executionContext = await prepareScreenshotCaptureExecutionContext(
+    launchBrowser,
+    executionPlan,
+  );
+  if (!executionContext) {
     return false;
   }
 
   if (executionPlan.runEmptyPhase) {
-    const { authStorageState, orgSlug } = authBootstrap as ScreenshotAuthBootstrap;
+    if (executionContext.bootstrapMode !== "authenticated") {
+      throw new Error("Authenticated bootstrap is required for screenshot empty-state capture");
+    }
+
+    const {
+      authBootstrap: { authStorageState, orgSlug },
+    } = executionContext;
     console.log("\n  📋 Phase 1: Empty states (before seeding)");
     for (const config of configs) {
       try {
@@ -593,18 +646,24 @@ export async function captureConfiguredScreenshotStates(
   );
   console.log("  Seeding screenshot data...");
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
-    orgSlug: authBootstrap?.orgSlug,
+    orgSlug: executionContext.seedOrgSlug,
   });
   if (seedResult.success) {
     console.log(
-      `  ✓ Seeded: org=${seedResult.orgSlug ?? authBootstrap?.orgSlug ?? "unknown"}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
+      `  ✓ Seeded: org=${seedResult.orgSlug ?? executionContext.seedOrgSlug ?? "unknown"}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
     );
   } else {
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
   }
 
   if (executionPlan.runFilledPhase) {
-    const { authStorageState, orgSlug } = authBootstrap as ScreenshotAuthBootstrap;
+    if (executionContext.bootstrapMode !== "authenticated") {
+      throw new Error("Authenticated bootstrap is required for screenshot filled-state capture");
+    }
+
+    const {
+      authBootstrap: { authStorageState, orgSlug },
+    } = executionContext;
     for (const config of configs) {
       await captureFilledStatesForConfig(
         launchBrowser,

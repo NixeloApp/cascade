@@ -21,6 +21,7 @@ import {
   getScreenshotContextOptions,
   getSelectedScreenshotPageIds,
   prepareScreenshotAuthBootstrap,
+  prepareScreenshotCaptureExecutionContext,
   runAuthenticatedScreenshotCapture,
   runConfiguredScreenshotCaptureSession,
   runRetriedAuthenticatedScreenshotCapture,
@@ -401,6 +402,73 @@ describe("screenshot session helpers", () => {
     });
     expect(harness.context.close).toHaveBeenCalledTimes(1);
     expect(harness.browser.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("prepares a no-bootstrap screenshot execution context for seedless public-only runs", async () => {
+    const launchBrowser = vi.fn<() => Promise<Browser>>();
+
+    const executionContext = await prepareScreenshotCaptureExecutionContext(
+      launchBrowser,
+      buildScreenshotCaptureExecutionPlan(["public-landing"]),
+    );
+
+    expect(executionContext).toEqual({
+      authBootstrap: null,
+      bootstrapMode: "none",
+      seedOrgSlug: undefined,
+    });
+    expect(launchBrowser).not.toHaveBeenCalled();
+  });
+
+  it("prepares a primary-user execution context for seeded public-only runs", async () => {
+    const launchBrowser = vi.fn<() => Promise<Browser>>();
+    const deleteSpy = vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
+    const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
+      success: true,
+    });
+
+    const executionContext = await prepareScreenshotCaptureExecutionContext(
+      launchBrowser,
+      buildScreenshotCaptureExecutionPlan(["public-portal-project"]),
+    );
+
+    expect(executionContext).toEqual({
+      authBootstrap: null,
+      bootstrapMode: "primary-user",
+      seedOrgSlug: undefined,
+    });
+    expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
+    expect(createSpy).toHaveBeenCalledTimes(1);
+    expect(launchBrowser).not.toHaveBeenCalled();
+  });
+
+  it("prepares an authenticated execution context for empty and filled runs", async () => {
+    const harness = createBrowserHarness();
+    const launchBrowser = vi.fn(async () => harness.browser);
+    const deleteSpy = vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
+    vi.spyOn(testUserService, "createTestUser").mockResolvedValue({ success: true });
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValueOnce(true);
+
+    const executionContext = await prepareScreenshotCaptureExecutionContext(
+      launchBrowser,
+      buildScreenshotCaptureExecutionPlan(["filled-issues-loading"]),
+    );
+
+    expect(executionContext).toEqual({
+      authBootstrap: {
+        authStorageState: { cookies: [], origins: [] },
+        orgSlug: "acme",
+      },
+      bootstrapMode: "authenticated",
+      seedOrgSlug: "acme",
+    });
+    expect(deleteSpy).toHaveBeenNthCalledWith(1, "e2e-member-s0-screenshots@inbox.mailtrap.io");
+    expect(deleteSpy).toHaveBeenNthCalledWith(2, "e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
+    expect(launchBrowser).toHaveBeenCalledTimes(1);
   });
 
   it("runs an authenticated screenshot capture behind one shared browser session", async () => {
