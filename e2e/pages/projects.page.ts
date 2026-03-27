@@ -71,6 +71,9 @@ export class ProjectsPage extends BasePage {
   readonly issueAssigneeSelect: Locator;
   readonly createIssueForm: Locator;
   readonly submitIssueButton: Locator;
+  readonly createIssueDraftBanner: Locator;
+  readonly createIssueDuplicateDetection: Locator;
+  readonly createAnotherSwitch: Locator;
 
   // ===================
   // Locators - Project Tabs
@@ -118,6 +121,10 @@ export class ProjectsPage extends BasePage {
   readonly roadmapViewToggle: Locator;
   readonly roadmapEpicFilter: Locator;
   readonly projectSettingsHeader: Locator;
+  readonly projectMembersSection: Locator;
+  readonly projectMemberRemoveButton: Locator;
+  readonly projectDeleteTrigger: Locator;
+  readonly projectDeleteConfirmInput: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
@@ -217,6 +224,15 @@ export class ProjectsPage extends BasePage {
     this.submitIssueButton = this.createIssueModal
       .getByRole("button", { name: /^create issue$/i })
       .or(this.createIssueModal.locator('button[type="submit"]'));
+    this.createIssueDraftBanner = this.createIssueModal.getByTestId(
+      TEST_IDS.ISSUE.CREATE_DRAFT_BANNER,
+    );
+    this.createIssueDuplicateDetection = this.createIssueModal.getByTestId(
+      TEST_IDS.ISSUE.CREATE_DUPLICATE_DETECTION,
+    );
+    this.createAnotherSwitch = this.createIssueModal.getByTestId(
+      TEST_IDS.ISSUE.CREATE_ANOTHER_SWITCH,
+    );
 
     // Project tabs - scope to the project tab strip to avoid collisions with global nav links.
     // There are separate mobile (sm:hidden) and desktop (sm:flex) navs, so use .first() to
@@ -264,6 +280,14 @@ export class ProjectsPage extends BasePage {
     this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
     this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });
     this.projectSettingsHeader = page.getByRole("heading", { name: /project settings/i });
+    this.projectMembersSection = page.getByTestId(TEST_IDS.PROJECT_SETTINGS.MEMBERS_SECTION);
+    this.projectMemberRemoveButton = page.getByTestId(
+      TEST_IDS.PROJECT_SETTINGS.MEMBER_REMOVE_BUTTON,
+    );
+    this.projectDeleteTrigger = page.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_TRIGGER);
+    this.projectDeleteConfirmInput = page.getByTestId(
+      TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT,
+    );
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
@@ -336,6 +360,11 @@ export class ProjectsPage extends BasePage {
   async gotoProjectBoard(projectKey: string) {
     await this.gotoPath(ROUTES.projects.board.build(this.orgSlug, projectKey));
     await this.waitForLoad();
+  }
+
+  async gotoProjectSettings(projectKey: string) {
+    await this.gotoPath(ROUTES.projects.settings.build(this.orgSlug, projectKey));
+    await this.expectProjectSettingsLoaded();
   }
 
   // ===================
@@ -515,6 +544,45 @@ export class ProjectsPage extends BasePage {
     await this.submitCreateIssue();
 
     await waitForIssueCreateSuccess(this.page, title);
+  }
+
+  async enableCreateAnother() {
+    await expect(this.createAnotherSwitch).toBeVisible();
+    await this.createAnotherSwitch.click();
+    await expect(this.createAnotherSwitch).toHaveAttribute("data-state", "checked");
+  }
+
+  async submitCreateIssueExpectTitleValidationError() {
+    await expect(this.submitIssueButton).toBeVisible();
+    await this.submitIssueButton.click();
+    await expect(
+      this.createIssueModal.getByText("Title is required", { exact: true }),
+    ).toBeVisible();
+  }
+
+  async expectCreateIssueDuplicateDetectionVisible() {
+    await expect(this.createIssueDuplicateDetection).toBeVisible();
+  }
+
+  async expectCreateIssueDraftBannerVisible() {
+    await expect(this.createIssueDraftBanner).toBeVisible();
+  }
+
+  async openFirstMemberRemoveDialog() {
+    const dialog = this.page.getByRole("alertdialog", { name: /^remove member$/i });
+    await expect(this.projectMemberRemoveButton.first()).toBeVisible();
+    await this.projectMemberRemoveButton.first().click();
+    await expect(dialog).toBeVisible();
+    return dialog;
+  }
+
+  async openDeleteProjectDialog() {
+    const dialog = this.page.getByRole("alertdialog", { name: /^delete this project\?$/i });
+    await expect(this.projectDeleteTrigger).toBeVisible();
+    await this.projectDeleteTrigger.click();
+    await expect(dialog).toBeVisible();
+    await expect(this.projectDeleteConfirmInput).toBeVisible();
+    return dialog;
   }
 
   private async submitCreateIssue() {

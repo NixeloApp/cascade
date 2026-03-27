@@ -41,7 +41,6 @@ import {
 import { BASE_URL, MARKDOWN_IMPORT_PREVIEW, MARKDOWN_RICH_CONTENT } from "./config";
 import {
   openMobileSidebarMenu,
-  openStableAlertDialog,
   openStableDialog,
   waitForCreateIssueModalScreenshotReady,
   waitForDashboardCustomizeDialogReady,
@@ -540,30 +539,16 @@ export async function screenshotFilledStates(
       ])
     ) {
       await runCaptureStep("project members", async () => {
-        const settingsUrl = `/${orgSlug}/projects/${projectKey}/settings`;
-        await page.goto(`${BASE_URL}${settingsUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
+        const settingsUrl = ROUTES.projects.settings.build(orgSlug, projectKey);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await projectsPage.gotoProjectSettings(projectKey);
         await waitForExpectedContent(page, settingsUrl, `project-${normalizedProjectKey}-members`);
-        const membersHeading = page.getByRole("heading", { name: /^members$/i });
-        await scrollSectionNearViewportTop(membersHeading, page);
+        await scrollSectionNearViewportTop(projectsPage.projectMembersSection, page);
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-members`);
 
         if (shouldCapture(p, `project-${normalizedProjectKey}-members-confirm-dialog`)) {
-          const removeButton = page
-            .getByTestId(TEST_IDS.PROJECT_SETTINGS.MEMBER_REMOVE_BUTTON)
-            .first();
-          const dialog = await openStableDialog(
-            page,
-            removeButton,
-            page.getByRole("alertdialog", { name: /^remove member$/i }),
-            page
-              .getByRole("alertdialog", { name: /^remove member$/i })
-              .getByText(/lose access to all project resources\./i),
-            "remove member",
-          );
+          const dialog = await projectsPage.openFirstMemberRemoveDialog();
           await captureCurrentView(
             page,
             p,
@@ -576,18 +561,13 @@ export async function screenshotFilledStates(
 
     if (shouldCapture(p, `project-${normalizedProjectKey}-settings-delete-alert-dialog`)) {
       await runCaptureStep("project settings delete alert dialog", async () => {
-        const settingsUrl = `/${orgSlug}/projects/${projectKey}/settings`;
-        await page.goto(`${BASE_URL}${settingsUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
+        const settingsUrl = ROUTES.projects.settings.build(orgSlug, projectKey);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await projectsPage.gotoProjectSettings(projectKey);
         await waitForExpectedContent(page, settingsUrl, `project-${normalizedProjectKey}-settings`);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^delete project$/i });
-        const confirmInput = page.getByPlaceholder(`Type ${projectKey} to confirm`);
-        await trigger.waitFor({ state: "visible", timeout: 8000 });
-        const dialog = await openStableAlertDialog(page, trigger, confirmInput);
+        const dialog = await projectsPage.openDeleteProjectDialog();
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -622,10 +602,7 @@ export async function screenshotFilledStates(
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
         await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-        // Toggle "Create another" switch
-        const toggle = page.getByLabel(/create another/i);
-        await toggle.waitFor({ state: "visible", timeout: 5000 });
-        await toggle.click();
+        await projectsPage.enableCreateAnother();
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -650,16 +627,7 @@ export async function screenshotFilledStates(
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
         await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-        // Wait for dialog, then find submit button
-        const modal = await waitForDialogOpen(page);
-        const submitBtn = modal.getByRole("button", { name: /create issue/i }).last();
-        await submitBtn.click();
-        await waitForScreenshotReady(page);
-        // Wait for validation error text to appear
-        await page
-          .getByText(/required|title is required|cannot be empty/i)
-          .first()
-          .waitFor({ state: "visible", timeout: 3000 });
+        await projectsPage.submitCreateIssueExpectTitleValidationError();
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -686,16 +654,10 @@ export async function screenshotFilledStates(
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
         await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-        const modal = await waitForDialogOpen(page);
-        const titleInput = modal
-          .getByPlaceholder(/title|issue.*title/i)
-          .or(modal.getByRole("textbox", { name: /title/i }))
-          .first();
-        const submitButton = modal.getByRole("button", { name: /^create issue$/i }).last();
         try {
-          await titleInput.fill(issueTitle);
-          await submitButton.click();
-          await modal.waitFor({ state: "hidden", timeout: 8000 });
+          await projectsPage.issueTitleInput.fill(issueTitle);
+          await projectsPage.submitIssueButton.click();
+          await projectsPage.createIssueModal.waitFor({ state: "hidden", timeout: 8000 });
           createdIssue = true;
           const successToast = page
             .getByTestId(TEST_IDS.TOAST.SUCCESS)
@@ -755,8 +717,7 @@ export async function screenshotFilledStates(
         await projectsPage.openCreateIssueModal();
         await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         await projectsPage.issueTitleInput.fill(duplicateQuery);
-        const duplicateBanner = page.getByText("Potential duplicates found", { exact: true });
-        await duplicateBanner.waitFor({ state: "visible", timeout: 20000 });
+        await projectsPage.expectCreateIssueDuplicateDetectionVisible();
         await page
           .getByRole("button", { name: /DEMO-2.*fix login timeout on mobile/i })
           .waitFor({ state: "visible", timeout: 8000 });
@@ -792,9 +753,7 @@ export async function screenshotFilledStates(
           const projectsPage = new ProjectsPage(page, orgSlug);
           await projectsPage.openCreateIssueModal();
           await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-          await page
-            .getByText(/you have an unsaved draft/i)
-            .waitFor({ state: "visible", timeout: 8000 });
+          await projectsPage.expectCreateIssueDraftBannerVisible();
           await waitForScreenshotReady(page);
           await captureCurrentView(
             page,

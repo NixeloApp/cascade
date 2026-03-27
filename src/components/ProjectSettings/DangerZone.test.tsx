@@ -6,6 +6,7 @@ import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { DangerZone } from "./DangerZone";
@@ -83,14 +84,14 @@ describe("DangerZone", () => {
 
     render(<DangerZone {...defaultProps} />);
 
-    await user.click(screen.getByRole("button", { name: "Delete Project" }));
+    await user.click(screen.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_TRIGGER));
 
     const confirmButton = screen.getByRole("button", {
       name: "I understand, delete this project",
     });
     expect(confirmButton).toBeDisabled();
 
-    await user.type(screen.getByPlaceholderText("Type ALPHA to confirm"), "ALPHA");
+    await user.type(screen.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT), "ALPHA");
 
     expect(confirmButton).toBeEnabled();
 
@@ -119,8 +120,8 @@ describe("DangerZone", () => {
 
     render(<DangerZone {...defaultProps} />);
 
-    await user.click(screen.getByRole("button", { name: "Delete Project" }));
-    await user.type(screen.getByPlaceholderText("Type ALPHA to confirm"), "ALPHA");
+    await user.click(screen.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_TRIGGER));
+    await user.type(screen.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT), "ALPHA");
     await user.click(
       screen.getByRole("button", {
         name: "I understand, delete this project",
@@ -145,13 +146,15 @@ describe("DangerZone", () => {
 
     render(<DangerZone {...defaultProps} />);
 
-    await user.click(screen.getByRole("button", { name: "Delete Project" }));
-    await user.type(screen.getByPlaceholderText("Type ALPHA to confirm"), "ALPHA");
+    await user.click(screen.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_TRIGGER));
+    await user.type(screen.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT), "ALPHA");
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
-    expect(screen.queryByPlaceholderText("Type ALPHA to confirm")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT),
+    ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Delete Project" }));
-    expect(screen.getByPlaceholderText("Type ALPHA to confirm")).toHaveValue("");
+    await user.click(screen.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_TRIGGER));
+    expect(screen.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT)).toHaveValue("");
   });
 });

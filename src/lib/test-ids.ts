@@ -54,6 +54,12 @@ export const TEST_IDS = {
     CREATE_TITLE_INPUT: "issue-create-title-input",
     /** @see src/components/IssueDetail/CreateIssueModal.tsx */
     CREATE_DESCRIPTION_EDITOR: "issue-create-description-editor",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_DRAFT_BANNER: "issue-create-draft-banner",
+    /** @see src/components/DuplicateDetection.tsx */
+    CREATE_DUPLICATE_DETECTION: "issue-create-duplicate-detection",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_ANOTHER_SWITCH: "issue-create-another-switch",
     /** @see src/components/IssueCard.tsx */
     DRAG_HANDLE: "issue-drag-handle",
     /** @see src/components/IssueCard.tsx */
@@ -559,6 +565,10 @@ export const TEST_IDS = {
     MEMBERS_SECTION: "project-settings-members-section",
     /** @see src/components/ProjectSettings/MemberManagement.tsx */
     MEMBER_REMOVE_BUTTON: "project-settings-member-remove-button",
+    /** @see src/components/ProjectSettings/DangerZone.tsx */
+    DELETE_TRIGGER: "project-settings-delete-trigger",
+    /** @see src/components/ProjectSettings/DangerZone.tsx */
+    DELETE_CONFIRM_INPUT: "project-settings-delete-confirm-input",
   },
 
   // ============================================================
