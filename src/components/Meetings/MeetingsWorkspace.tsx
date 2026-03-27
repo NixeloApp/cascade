@@ -528,7 +528,6 @@ function RecordingListItem({
       hoverable
       onClick={onSelect}
       data-testid={TEST_IDS.MEETINGS.RECORDING_CARD}
-      data-slot={TEST_IDS.MEETINGS.RECORDING_CARD_ITEM(recording.title)}
     >
       <Stack gap="sm">
         <Flex justify="between" align="start" gap="sm" wrap>

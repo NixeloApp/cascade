@@ -4,11 +4,15 @@ import { createValidatorResult } from "./result-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const BANNED_LOADING_OVERRIDE_PATTERNS = [
-  "__NIXELO_E2E_ISSUES_LOADING__",
+  /__NIXELO_E2E_[A-Z0-9_]*LOADING__/,
   "isE2ELoadingOverrideEnabled(",
   "createIsolatedLoadingOverridePage(",
   "e2e-loading-overrides",
 ];
+
+function lineMatchesPattern(line, pattern) {
+  return typeof pattern === "string" ? line.includes(pattern) : pattern.test(line);
+}
 
 function collectLoadingOverrideViolations(filePath, source) {
   const lines = source.split("\n");
@@ -16,7 +20,7 @@ function collectLoadingOverrideViolations(filePath, source) {
 
   for (const pattern of BANNED_LOADING_OVERRIDE_PATTERNS) {
     for (const [index, line] of lines.entries()) {
-      if (!line.includes(pattern)) {
+      if (!lineMatchesPattern(line, pattern)) {
         continue;
       }
 

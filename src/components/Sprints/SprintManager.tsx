@@ -218,7 +218,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                 onClick={() => void onStartSprint(sprint._id)}
                 variant="success"
                 size="sm"
-                data-testid={TEST_IDS.SPRINT.START_TRIGGER}
+                data-testid={TEST_IDS.SPRINT.START_TRIGGER(sprint.name)}
               >
                 Start Sprint
               </Button>
@@ -228,7 +228,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                 onClick={() => void onCompleteSprint(sprint._id)}
                 variant="secondary"
                 size="sm"
-                data-testid={TEST_IDS.SPRINT.COMPLETE_TRIGGER}
+                data-testid={TEST_IDS.SPRINT.COMPLETE_TRIGGER(sprint.name)}
               >
                 Complete Sprint
               </Button>

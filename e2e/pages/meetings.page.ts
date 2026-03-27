@@ -240,8 +240,8 @@ export class MeetingsPage extends BasePage {
   }
 
   private getRecordingCard(title: string): Locator {
-    return this.recentSection.locator(
-      `[data-slot="${TEST_IDS.MEETINGS.RECORDING_CARD_ITEM(title)}"]`,
-    );
+    return this.recentSection
+      .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
+      .filter({ hasText: title });
   }
 }

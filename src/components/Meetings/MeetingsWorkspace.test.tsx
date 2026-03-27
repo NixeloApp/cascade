@@ -832,11 +832,7 @@ describe("MeetingsWorkspace", () => {
 
     renderMeetingsWorkspace();
 
-    expect(
-      screen
-        .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
-        .closest(`[data-slot="${TEST_IDS.MEETINGS.RECORDING_CARD_ITEM("Weekly Product Review")}"]`),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)).toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.MEETINGS.DETAIL_TITLE)).toHaveTextContent(
       "Weekly Product Review",
     );

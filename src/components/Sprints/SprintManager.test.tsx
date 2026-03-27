@@ -262,7 +262,7 @@ describe("SprintManager", () => {
 
     render(<SprintManager projectId={projectId} />);
 
-    await user.click(screen.getByTestId(TEST_IDS.SPRINT.START_TRIGGER));
+    await user.click(screen.getByTestId(TEST_IDS.SPRINT.START_TRIGGER("Sprint 8")));
 
     const dialog = screen.getByTestId(TEST_IDS.SPRINT.START_DIALOG);
     await user.click(within(dialog).getByTestId(TEST_IDS.SPRINT.START_PRESET("custom")));
@@ -294,7 +294,7 @@ describe("SprintManager", () => {
 
     render(<SprintManager projectId={projectId} />);
 
-    await user.click(screen.getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER));
+    await user.click(screen.getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER("Current Sprint")));
 
     const dialog = screen.getByTestId(TEST_IDS.SPRINT.COMPLETE_DIALOG);
     expect(

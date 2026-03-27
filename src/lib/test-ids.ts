@@ -473,7 +473,7 @@ export const TEST_IDS = {
     /** @see src/components/Sprints/SprintManager.tsx */
     EMPTY_STATE: "sprints-empty-state",
     /** @see src/components/Sprints/SprintManager.tsx */
-    START_TRIGGER: "sprint-start-trigger",
+    START_TRIGGER: (sprintName: string) => `sprint-start-trigger-${toTestIdFragment(sprintName)}`,
     /** @see src/components/Sprints/SprintManager.tsx */
     START_DIALOG: "sprint-start-dialog",
     /** @see src/components/Sprints/SprintManager.tsx */
@@ -487,7 +487,8 @@ export const TEST_IDS = {
     /** @see src/components/Sprints/SprintManager.tsx */
     START_CONFIRM_BUTTON: "sprint-start-confirm-button",
     /** @see src/components/Sprints/SprintManager.tsx */
-    COMPLETE_TRIGGER: "sprint-complete-trigger",
+    COMPLETE_TRIGGER: (sprintName: string) =>
+      `sprint-complete-trigger-${toTestIdFragment(sprintName)}`,
     /** @see src/components/Sprints/SprintManager.tsx */
     COMPLETE_DIALOG: "sprint-complete-dialog",
     /** @see src/components/Sprints/SprintManager.tsx */

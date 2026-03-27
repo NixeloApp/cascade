@@ -9,8 +9,8 @@ import { BasePage } from "./base.page";
  * Handles the sprint management view with sprint cards and creation form.
  */
 export class SprintsPage extends BasePage {
-  readonly startSprintButton: Locator;
-  readonly completeSprintButton: Locator;
+  readonly anyStartSprintButton: Locator;
+  readonly anyCompleteSprintButton: Locator;
   readonly startDialog: Locator;
   readonly startDateInput: Locator;
   readonly startEndDateInput: Locator;
@@ -32,8 +32,10 @@ export class SprintsPage extends BasePage {
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
-    this.startSprintButton = page.getByTestId(TEST_IDS.SPRINT.START_TRIGGER).first();
-    this.completeSprintButton = page.getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER).first();
+    this.anyStartSprintButton = page.locator('[data-testid^="sprint-start-trigger-"]').first();
+    this.anyCompleteSprintButton = page
+      .locator('[data-testid^="sprint-complete-trigger-"]')
+      .first();
     this.startDialog = page.getByTestId(TEST_IDS.SPRINT.START_DIALOG);
     this.startDateInput = page.getByTestId(TEST_IDS.SPRINT.START_DATE_INPUT);
     this.startEndDateInput = page.getByTestId(TEST_IDS.SPRINT.START_END_DATE_INPUT);
@@ -85,11 +87,20 @@ export class SprintsPage extends BasePage {
       .not.toBe("pending");
   }
 
-  async openCompletionDialog(): Promise<void> {
-    await this.completeSprintButton.waitFor({ state: "visible", timeout: 5000 });
-    await this.completeSprintButton.click();
+  async openCompletionDialog(sprintName?: string): Promise<void> {
+    const button = sprintName ? this.getCompleteButton(sprintName) : this.anyCompleteSprintButton;
+    await button.waitFor({ state: "visible", timeout: 5000 });
+    await button.click();
     await this.completionDialog.waitFor({ state: "visible", timeout: 5000 });
     await this.completionDialogDescription.waitFor({ state: "visible", timeout: 5000 });
+  }
+
+  getStartButton(sprintName: string): Locator {
+    return this.page.getByTestId(TEST_IDS.SPRINT.START_TRIGGER(sprintName));
+  }
+
+  getCompleteButton(sprintName: string): Locator {
+    return this.page.getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER(sprintName));
   }
 
   getStartPresetButton(presetId: string): Locator {
@@ -97,7 +108,8 @@ export class SprintsPage extends BasePage {
   }
 
   async ensureFutureSprintReady(name = "Overlap Warning Sprint"): Promise<void> {
-    if (await isLocatorVisible(this.startSprintButton)) {
+    const button = this.getStartButton(name);
+    if (await isLocatorVisible(this.anyStartSprintButton)) {
       return;
     }
 
@@ -106,12 +118,13 @@ export class SprintsPage extends BasePage {
     await this.createForm.waitFor({ state: "visible", timeout: 5000 });
     await this.createNameInput.fill(name);
     await this.createSubmitButton.click();
-    await this.startSprintButton.waitFor({ state: "visible", timeout: 5000 });
+    await button.waitFor({ state: "visible", timeout: 5000 });
   }
 
-  async openStartDialog(): Promise<void> {
-    await this.startSprintButton.waitFor({ state: "visible", timeout: 5000 });
-    await this.startSprintButton.click();
+  async openStartDialog(sprintName?: string): Promise<void> {
+    const button = sprintName ? this.getStartButton(sprintName) : this.anyStartSprintButton;
+    await button.waitFor({ state: "visible", timeout: 5000 });
+    await button.click();
     await this.startDialog.waitFor({ state: "visible", timeout: 5000 });
   }
 
