@@ -850,6 +850,19 @@ export const TEST_IDS = {
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     STATUS_FILTER: "invoices-status-filter",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_ALL: "invoices-status-filter-option-all",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_DRAFT: "invoices-status-filter-option-draft",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_SENT: "invoices-status-filter-option-sent",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_PAID: "invoices-status-filter-option-paid",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_OVERDUE: "invoices-status-filter-option-overdue",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    NEW_DRAFT_BUTTON: "invoices-new-draft-button",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     EMPTY_STATE: "invoices-empty-state",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     FILTERED_EMPTY_STATE: "invoices-filtered-empty-state",

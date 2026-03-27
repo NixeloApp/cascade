@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { collectBannedScreenshotProdHooks, run } from "./check-screenshot-prod-hooks.js";
 
-const EXPECTED_VIOLATION_COUNT = 8;
+const EXPECTED_VIOLATION_COUNT = 9;
 const EXAMPLE_FILE_PATH_SUFFIX = "tmp/example.tsx";
 
 describe("check-screenshot-prod-hooks", () => {
@@ -15,6 +15,7 @@ describe("check-screenshot-prod-hooks", () => {
         window.sessionStorage.setItem("nixelo:e2e:roadmap-state", "detail");
         window.sessionStorage.setItem("nixelo:e2e:notifications-state", "archived-tab");
         window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "decline-dialog");
+        window.sessionStorage.setItem("nixelo:e2e:invoices-state", "filtered-empty");
         if (window.__NIXELO_E2E_TIME_TRACKING_STATE__) {
           return;
         }
@@ -54,19 +55,24 @@ describe("check-screenshot-prod-hooks", () => {
     expect(violations[4]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[5]).toMatchObject({
       line: 9,
-      pattern: "__NIXELO_E2E_TIME_TRACKING_STATE__",
+      pattern: "nixelo:e2e:invoices-state",
     });
     expect(violations[5]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[6]).toMatchObject({
-      line: 12,
-      pattern: "nixelo:e2e:my-issues-state",
+      line: 10,
+      pattern: "__NIXELO_E2E_TIME_TRACKING_STATE__",
     });
     expect(violations[6]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[7]).toMatchObject({
       line: 13,
-      pattern: "__NIXELO_E2E_MY_ISSUES_LOADING__",
+      pattern: "nixelo:e2e:my-issues-state",
     });
     expect(violations[7]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
+    expect(violations[8]).toMatchObject({
+      line: 14,
+      pattern: "__NIXELO_E2E_MY_ISSUES_LOADING__",
+    });
+    expect(violations[8]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
   });
 
   it("passes against the current repo state", () => {

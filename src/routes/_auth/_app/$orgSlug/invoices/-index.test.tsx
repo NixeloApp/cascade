@@ -116,12 +116,18 @@ function mockInvoiceQueries(args?: {
 }) {
   const clients = args?.clients ?? CLIENTS;
   const invoices = args?.invoices ?? INVOICES;
-  let callIndex = 0;
 
-  mockUseAuthenticatedQuery.mockImplementation(() => {
-    const result = callIndex % 2 === 0 ? invoices : clients;
-    callIndex += 1;
-    return result;
+  mockUseAuthenticatedQuery.mockImplementation((_, queryArgs) => {
+    if ("status" in queryArgs) {
+      const requestedStatus = queryArgs.status;
+      if (requestedStatus === undefined) {
+        return invoices;
+      }
+
+      return invoices.filter((invoice) => invoice.status === requestedStatus);
+    }
+
+    return clients;
   });
 }
 
@@ -135,6 +141,12 @@ describe("InvoicesListPage", () => {
     }
     if (!Element.prototype.releasePointerCapture) {
       Object.defineProperty(Element.prototype, "releasePointerCapture", {
+        configurable: true,
+        value: () => undefined,
+      });
+    }
+    if (!Element.prototype.scrollIntoView) {
+      Object.defineProperty(Element.prototype, "scrollIntoView", {
         configurable: true,
         value: () => undefined,
       });
@@ -214,7 +226,7 @@ describe("InvoicesListPage", () => {
 
     render(<InvoicesListPage />);
 
-    await user.click(screen.getByRole("button", { name: "New draft" }));
+    await user.click(screen.getByTestId(TEST_IDS.INVOICES.NEW_DRAFT_BUTTON));
 
     expect(await screen.findByTestId(TEST_IDS.INVOICES.CREATE_DIALOG)).toBeInTheDocument();
 
@@ -236,6 +248,18 @@ describe("InvoicesListPage", () => {
         to: ROUTES.invoices.detail.path,
       });
     });
+  });
+
+  it("shows the filtered empty state through the real status filter interaction", async () => {
+    const user = userEvent.setup();
+
+    render(<InvoicesListPage />);
+
+    await user.click(screen.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER));
+    await user.click(await screen.findByTestId(TEST_IDS.INVOICES.STATUS_FILTER_OPTION_OVERDUE));
+
+    expect(await screen.findByTestId(TEST_IDS.INVOICES.FILTERED_EMPTY_STATE)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear filter" })).toBeInTheDocument();
   });
 
   it("renders the route-owned loading shell when the e2e loading override is enabled", () => {

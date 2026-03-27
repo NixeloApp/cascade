@@ -45,7 +45,7 @@
 - [ ] Audit production components for screenshot/E2E-only hooks, events, globals, and branches.
   First targets:
   - route-specific state toggles added only for capture
-  - remaining screenshot boot-state shortcuts outside the document, roadmap, time-tracking, notifications archived-tab, and project-inbox surfaces
+  - remaining screenshot boot-state shortcuts outside the document, roadmap, time-tracking, notifications archived-tab, project-inbox, and invoices surfaces
 - [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.
 - [ ] Prefer seeded backend state, route params, or normal UI interaction over window-event hooks.
 - [ ] If a hook remains, it must serve reusable test setup broadly, not just one screenshot state.

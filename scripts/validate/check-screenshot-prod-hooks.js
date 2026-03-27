@@ -15,6 +15,7 @@ const BANNED_SCREENSHOT_HOOK_PATTERNS = [
   "e2e-roadmap",
   "nixelo:e2e:notifications-state",
   "nixelo:e2e:project-inbox-state",
+  "nixelo:e2e:invoices-state",
   "nixelo:e2e:time-tracking-state",
   "__NIXELO_E2E_TIME_TRACKING_STATE__",
   "nixelo:e2e:my-issues-state",

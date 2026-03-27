@@ -396,7 +396,6 @@ export async function screenshotInvoicesStates(
   orgSlug: string,
   prefix: string,
 ): Promise<void> {
-  const invoicesE2EStateStorageKey = "nixelo:e2e:invoices-state";
   const captureNames = {
     canonical: "invoices",
     createDialog: "invoices-create-draft-dialog",
@@ -410,19 +409,7 @@ export async function screenshotInvoicesStates(
 
   const invoicesUrl = ROUTES.invoices.list.build(orgSlug);
 
-  const openInvoicesPage = async (
-    targetPage: Page = page,
-    requestedState?: "create-dialog" | "filtered-empty",
-  ) => {
-    if (requestedState) {
-      await targetPage.evaluate(
-        ([storageKey, state]) => {
-          window.sessionStorage.setItem(storageKey, state);
-        },
-        [invoicesE2EStateStorageKey, requestedState] as const,
-      );
-    }
-
+  const openInvoicesPage = async (targetPage: Page = page) => {
     await targetPage.goto(`${BASE_URL}${invoicesUrl}`, {
       waitUntil: "domcontentloaded",
       timeout: 15000,
@@ -444,7 +431,8 @@ export async function screenshotInvoicesStates(
 
   if (shouldCapture(prefix, captureNames.filteredEmpty)) {
     await runCaptureStep("invoices filtered empty", async () => {
-      const invoicesPage = await openInvoicesPage(page, "filtered-empty");
+      const invoicesPage = await openInvoicesPage();
+      await invoicesPage.selectStatusFilter("overdue");
       await invoicesPage.expectFilteredEmptyStateVisible();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureNames.filteredEmpty);
@@ -453,8 +441,8 @@ export async function screenshotInvoicesStates(
 
   if (shouldCapture(prefix, captureNames.createDialog)) {
     await runCaptureStep("invoices create dialog", async () => {
-      const invoicesPage = await openInvoicesPage(page, "create-dialog");
-      await expect(invoicesPage.createDialog).toBeVisible();
+      const invoicesPage = await openInvoicesPage();
+      await invoicesPage.openCreateDialog();
       await waitForAnimation(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureNames.createDialog);
