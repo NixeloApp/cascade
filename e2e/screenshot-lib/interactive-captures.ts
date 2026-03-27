@@ -25,6 +25,7 @@ import {
   SettingsPage,
   SprintsPage,
 } from "../pages";
+import { createConvexLoadingPage } from "../utils/convex-loading";
 import { waitForLocatorVisible } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
 import {
@@ -219,13 +220,9 @@ export async function screenshotOrgCalendarStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runRequiredCaptureStep("org calendar loading state", async () => {
-      const loadingPage = await page.context().newPage();
+      const loadingPage = await createConvexLoadingPage(page);
 
       try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_ORG_CALENDAR_LOADING__ = true;
-        });
-
         await loadingPage.goto(`${BASE_URL}${orgCalendarUrl}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
@@ -451,13 +448,9 @@ export async function screenshotInvoicesStates(
 
   if (shouldCapture(prefix, captureNames.loading)) {
     await runCaptureStep("invoices loading", async () => {
-      const loadingPage = await page.context().newPage();
+      const loadingPage = await createConvexLoadingPage(page);
 
       try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_INVOICES_LOADING__ = true;
-        });
-
         const loadingInvoicesPage = await openInvoicesPage(loadingPage);
         await loadingInvoicesPage.expectLoadingStateVisible();
         await expect
@@ -841,14 +834,10 @@ export async function screenshotBoardLoadingState(
   const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
 
   await runRequiredCaptureStep("board loading state", async () => {
-    const loadingPage = await page.context().newPage();
+    const loadingPage = await createConvexLoadingPage(page);
     const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
 
     try {
-      await loadingPage.addInitScript(() => {
-        window.__NIXELO_E2E_BOARD_LOADING__ = true;
-      });
-
       await loadingPage.goto(`${BASE_URL}${boardUrl}`, {
         waitUntil: "domcontentloaded",
         timeout: 15000,

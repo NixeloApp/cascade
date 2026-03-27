@@ -10,12 +10,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { getInvoiceEmptyStateConfig, InvoicesListPage } from "./index";
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_INVOICES_LOADING__?: boolean;
-  }
-}
-
 type InvoiceListItem = Doc<"invoices"> & {
   client: { company?: string; name: string } | null;
 };
@@ -114,8 +108,8 @@ function mockInvoiceQueries(args?: {
   clients?: Doc<"clients">[] | undefined;
   invoices?: InvoiceListItem[] | undefined;
 }) {
-  const clients = args?.clients ?? CLIENTS;
-  const invoices = args?.invoices ?? INVOICES;
+  const clients = args && "clients" in args ? args.clients : CLIENTS;
+  const invoices = args && "invoices" in args ? args.invoices : INVOICES;
 
   mockUseAuthenticatedQuery.mockImplementation((_, queryArgs) => {
     if ("status" in queryArgs) {
@@ -124,7 +118,7 @@ function mockInvoiceQueries(args?: {
         return invoices;
       }
 
-      return invoices.filter((invoice) => invoice.status === requestedStatus);
+      return invoices?.filter((invoice) => invoice.status === requestedStatus);
     }
 
     return clients;
@@ -152,7 +146,6 @@ describe("InvoicesListPage", () => {
       });
     }
 
-    delete window.__NIXELO_E2E_INVOICES_LOADING__;
     mockNavigate.mockReset();
     mockCreateInvoice.mockReset();
     mockCreateInvoice.withOptimisticUpdate.mockReset();
@@ -262,8 +255,8 @@ describe("InvoicesListPage", () => {
     expect(screen.getByRole("button", { name: "Clear filter" })).toBeInTheDocument();
   });
 
-  it("renders the route-owned loading shell when the e2e loading override is enabled", () => {
-    window.__NIXELO_E2E_INVOICES_LOADING__ = true;
+  it("renders the route-owned loading shell while invoices are unresolved", () => {
+    mockInvoiceQueries({ invoices: undefined });
 
     render(<InvoicesListPage />);
 

@@ -16,6 +16,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { isE2ELoadingOverrideEnabled } from "@/lib/e2e-loading-overrides";
 import { formatDate } from "@/lib/formatting";
 import { Bot, CheckCircle, DollarSign, MessageSquare, Sparkles } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -23,12 +24,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/assistant")({
   component: AssistantPage,
 });
-
-declare global {
-  interface Window {
-    __NIXELO_E2E_ASSISTANT_LOADING__?: boolean;
-  }
-}
 
 type AssistantTab = "overview" | "conversations";
 type AssistantUsageStats = FunctionReturnType<typeof api.ai.queries.getUsageStats>;
@@ -40,10 +35,6 @@ function formatCost(cents: number): string {
 
 function formatNumber(value: number): string {
   return value.toLocaleString();
-}
-
-function isE2EAssistantLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_ASSISTANT_LOADING__ === true;
 }
 
 function AssistantLoadingPill() {
@@ -393,7 +384,7 @@ export function AssistantPage() {
   const stats = useAuthenticatedQuery(api.ai.queries.getUsageStats, {});
   const chats = useAuthenticatedQuery(api.ai.queries.getUserChats, {});
 
-  if (isE2EAssistantLoadingOverrideEnabled() || stats === undefined) {
+  if (isE2ELoadingOverrideEnabled("assistant") || stats === undefined) {
     return <AssistantLoadingState />;
   }
 

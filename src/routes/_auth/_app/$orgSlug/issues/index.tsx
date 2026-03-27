@@ -31,18 +31,13 @@ import {
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { isE2ELoadingOverrideEnabled } from "@/lib/e2e-loading-overrides";
 import { Plus, SearchX, X } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/")({
   component: AllIssuesPage,
 });
-
-declare global {
-  interface Window {
-    __NIXELO_E2E_ISSUES_LOADING__?: boolean;
-  }
-}
 
 const PRIORITY_OPTIONS = [
   { value: "all", label: "All Priorities" },
@@ -53,10 +48,6 @@ const TYPE_OPTIONS = [
   { value: "all", label: "All Types" },
   ...ISSUE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) })),
 ];
-
-function isE2EIssuesLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_ISSUES_LOADING__ === true;
-}
 
 // =============================================================================
 // Filter Hook
@@ -135,7 +126,7 @@ function useIssueResults(
 
   const searchResults = useAuthenticatedQuery(api.issues.searchOrganizationIssues, searchQueryArgs);
   const isLoading =
-    isE2EIssuesLoadingOverrideEnabled() ||
+    isE2ELoadingOverrideEnabled("issues") ||
     (filters.isSearching ? searchResults === undefined : status === "LoadingFirstPage");
 
   return {

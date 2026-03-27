@@ -228,7 +228,6 @@ function mockMatchMedia(matches: boolean) {
 describe("KanbanBoard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.__NIXELO_E2E_BOARD_LOADING__ = undefined;
     Object.defineProperty(window, "matchMedia", {
       writable: true,
       configurable: true,
@@ -294,16 +293,6 @@ describe("KanbanBoard", () => {
     expect(screen.getAllByText("loading-text").length).toBeGreaterThan(0);
     expect(screen.getAllByText("loading-card")).toHaveLength(12);
     expect(mockAutoScrollForElements).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText("toggle-selection")).not.toBeInTheDocument();
-  });
-
-  it("forces the board loading shell when the E2E override is enabled", () => {
-    window.__NIXELO_E2E_BOARD_LOADING__ = true;
-
-    render(<KanbanBoard projectId={"project_1" as Id<"projects">} />);
-
-    expect(screen.getByTestId(TEST_IDS.BOARD.LOADING_STATE)).toBeInTheDocument();
-    expect(screen.queryByTestId(TEST_IDS.BOARD.ROOT)).not.toBeInTheDocument();
     expect(screen.queryByText("toggle-selection")).not.toBeInTheDocument();
   });
 

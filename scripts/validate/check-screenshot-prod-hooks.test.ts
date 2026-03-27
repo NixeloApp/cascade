@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { collectBannedScreenshotProdHooks, run } from "./check-screenshot-prod-hooks.js";
 
-const EXPECTED_VIOLATION_COUNT = 9;
+const EXPECTED_VIOLATION_COUNT = 12;
 const EXAMPLE_FILE_PATH_SUFFIX = "tmp/example.tsx";
 
 describe("check-screenshot-prod-hooks", () => {
@@ -21,6 +21,15 @@ describe("check-screenshot-prod-hooks", () => {
         }
         window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filter-active");
         if (window.__NIXELO_E2E_MY_ISSUES_LOADING__) {
+          return;
+        }
+        if (window.__NIXELO_E2E_ORG_CALENDAR_LOADING__) {
+          return;
+        }
+        if (window.__NIXELO_E2E_INVOICES_LOADING__) {
+          return;
+        }
+        if (window.__NIXELO_E2E_BOARD_LOADING__) {
           return;
         }
       `,
@@ -73,6 +82,21 @@ describe("check-screenshot-prod-hooks", () => {
       pattern: "__NIXELO_E2E_MY_ISSUES_LOADING__",
     });
     expect(violations[8]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
+    expect(violations[9]).toMatchObject({
+      line: 17,
+      pattern: "__NIXELO_E2E_ORG_CALENDAR_LOADING__",
+    });
+    expect(violations[9]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
+    expect(violations[10]).toMatchObject({
+      line: 20,
+      pattern: "__NIXELO_E2E_INVOICES_LOADING__",
+    });
+    expect(violations[10]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
+    expect(violations[11]).toMatchObject({
+      line: 23,
+      pattern: "__NIXELO_E2E_BOARD_LOADING__",
+    });
+    expect(violations[11]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
   });
 
   it("passes against the current repo state", () => {

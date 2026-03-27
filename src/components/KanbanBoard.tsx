@@ -51,12 +51,6 @@ interface KanbanBoardProps {
   mobileActions?: React.ReactNode;
 }
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_BOARD_LOADING__?: boolean;
-  }
-}
-
 interface BoardLoadingColumnConfig {
   id: string;
   titleWidthClassName: string;
@@ -87,10 +81,6 @@ const BOARD_LOADING_COLUMNS: BoardLoadingColumnConfig[] = [
 ];
 
 const MOBILE_BOARD_MEDIA_QUERY = "(max-width: 767px)";
-
-function isE2EBoardLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_BOARD_LOADING__ === true;
-}
 
 function MobileBoardColumnSelector({
   activeColumnId,
@@ -445,8 +435,7 @@ export function KanbanBoard({
       : workflowStates;
 
   // Loading State
-  const isLoading =
-    isE2EBoardLoadingOverrideEnabled() || isLoadingIssues || (isProjectMode && !project);
+  const isLoading = isLoadingIssues || (isProjectMode && !project);
 
   if (isLoading) {
     return (

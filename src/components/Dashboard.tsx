@@ -16,6 +16,7 @@ import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery, useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { isE2ELoadingOverrideEnabled } from "@/lib/e2e-loading-overrides";
 import { TEST_IDS } from "@/lib/test-ids";
 import { useListNavigation } from "../hooks/useListNavigation";
 import {
@@ -34,16 +35,6 @@ import { WorkspacesList } from "./Dashboard/WorkspacesList";
 type IssueFilter = "assigned" | "created" | "all";
 type DashboardIssueListItem = { projectKey: string };
 type DashboardProjectListItem = { key: string };
-
-declare global {
-  interface Window {
-    __NIXELO_E2E_DASHBOARD_LOADING__?: boolean;
-  }
-}
-
-function isE2EDashboardLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_DASHBOARD_LOADING__ === true;
-}
 
 function DashboardOverview({
   focusTask,
@@ -221,7 +212,8 @@ function useDashboardNavigation({
 }
 
 function useDashboardData(issueFilter: IssueFilter) {
-  const forceLoading = isE2EDashboardLoadingOverrideEnabled();
+  const loadingStatus = "LoadingFirstPage" as const;
+  const overrideLoading = isE2ELoadingOverrideEnabled("dashboard");
   const { queriedUser, showStats, showRecentActivity, showWorkspaces } =
     useDashboardLayoutSettings();
   const {
@@ -234,10 +226,19 @@ function useDashboardData(issueFilter: IssueFilter) {
     queriedRecentActivity,
     queriedStats,
   } = useDashboardQueries();
+  const forceLoading =
+    overrideLoading ||
+    queriedUser === undefined ||
+    queriedMyIssuesStatus === "LoadingFirstPage" ||
+    queriedMyCreatedIssues === undefined ||
+    queriedMyProjects === undefined ||
+    queriedRecentActivity === undefined ||
+    queriedStats === undefined ||
+    queriedFocusTask === undefined;
 
   const user = forceLoading ? undefined : queriedUser;
   const myIssues = applyDashboardLoadingState(forceLoading, queriedMyIssues);
-  const myIssuesStatus = forceLoading ? "LoadingFirstPage" : queriedMyIssuesStatus;
+  const myIssuesStatus = forceLoading ? loadingStatus : queriedMyIssuesStatus;
   const myCreatedIssues = applyDashboardLoadingState(forceLoading, queriedMyCreatedIssues);
   const myProjects = applyDashboardLoadingState(forceLoading, queriedMyProjects);
   const recentActivity = applyDashboardLoadingState(forceLoading, queriedRecentActivity);

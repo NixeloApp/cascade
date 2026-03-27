@@ -51,16 +51,6 @@ const INVOICE_STATUS_OPTIONS: Array<{ label: string; value: InvoiceStatusFilter 
   { label: "Overdue", value: "overdue" },
 ];
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_INVOICES_LOADING__?: boolean;
-  }
-}
-
-function isE2EInvoicesLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_INVOICES_LOADING__ === true;
-}
-
 function getInvoiceStatusOptionTestId(status: InvoiceStatusFilter) {
   switch (status) {
     case "all":
@@ -460,7 +450,7 @@ export function InvoicesListPage() {
   const clients = useAuthenticatedQuery(api.clients.list, { organizationId }) as
     | Doc<"clients">[]
     | undefined;
-  const isLoading = isE2EInvoicesLoadingOverrideEnabled() || invoices === undefined;
+  const isLoading = invoices === undefined;
 
   const handleCreated = (invoiceId: Id<"invoices">) => {
     navigate({

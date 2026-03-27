@@ -6,12 +6,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { AssistantPage } from "./assistant";
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_ASSISTANT_LOADING__?: boolean;
-  }
-}
-
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => () => ({}),
 }));
@@ -226,8 +220,8 @@ function mockAssistantQueries(args?: {
   chats?: typeof populatedChats | undefined;
   stats?: typeof populatedStats | typeof emptyStats | undefined;
 }) {
-  const stats = args?.stats ?? populatedStats;
-  const chats = args?.chats ?? populatedChats;
+  const stats = args && "stats" in args ? args.stats : populatedStats;
+  const chats = args && "chats" in args ? args.chats : populatedChats;
   let callIndex = 0;
 
   mockUseAuthenticatedQuery.mockImplementation(() => {
@@ -239,7 +233,6 @@ function mockAssistantQueries(args?: {
 
 describe("AssistantPage", () => {
   beforeEach(() => {
-    delete window.__NIXELO_E2E_ASSISTANT_LOADING__;
     mockUseAuthenticatedQuery.mockReset();
     mockAssistantQueries();
   });
@@ -288,8 +281,8 @@ describe("AssistantPage", () => {
     expect(screen.getByText("No conversations yet")).toBeInTheDocument();
   });
 
-  it("renders the route-scoped loading shell when the E2E loading override is enabled", () => {
-    window.__NIXELO_E2E_ASSISTANT_LOADING__ = true;
+  it("renders the route-scoped loading shell while stats are unresolved", () => {
+    mockAssistantQueries({ stats: undefined });
 
     render(<AssistantPage />);
 
