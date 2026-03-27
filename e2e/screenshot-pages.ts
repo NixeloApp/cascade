@@ -144,10 +144,9 @@ export async function run(): Promise<void> {
   if (hasEmptyCaptures) {
     console.log("\n  📋 Phase 1: Empty states (before seeding)");
     for (const config of selectedConfigs) {
-      const browser = await launchBrowser();
       try {
         await captureEmptyStatesForConfig(
-          browser,
+          launchBrowser,
           config.viewport,
           config.theme,
           orgSlug,
@@ -160,8 +159,6 @@ export async function run(): Promise<void> {
         }
         captureState.captureFailures++;
         console.log(`    ⚠️ ${config.viewport}-${config.theme} empty capture failed: ${message}`);
-      } finally {
-        await browser.close();
       }
     }
   }
@@ -182,33 +179,14 @@ export async function run(): Promise<void> {
   }
 
   for (const config of selectedConfigs) {
-    let completed = false;
-    for (let attempt = 1; attempt <= 2 && !completed; attempt++) {
-      const browser = await launchBrowser();
-      try {
-        await captureFilledStatesForConfig(
-          browser,
-          config.viewport,
-          config.theme,
-          orgSlug,
-          seedResult,
-          authStorageState ?? undefined,
-        );
-        completed = true;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        const shouldRetry = attempt < 2 && isCrashLikeError(message);
-        console.log(
-          `    ⚠️ ${config.viewport}-${config.theme} failed on attempt ${attempt}: ${message}${shouldRetry ? " (retrying)" : ""}`,
-        );
-        if (!shouldRetry) {
-          captureState.captureFailures++;
-          break;
-        }
-      } finally {
-        await browser.close();
-      }
-    }
+    await captureFilledStatesForConfig(
+      launchBrowser,
+      config.viewport,
+      config.theme,
+      orgSlug,
+      seedResult,
+      authStorageState ?? undefined,
+    );
   }
 
   if (captureState.captureFailures > 0) {

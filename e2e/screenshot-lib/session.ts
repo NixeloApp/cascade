@@ -1,4 +1,11 @@
-import type { Browser, BrowserContextOptions, Page, StorageState } from "@playwright/test";
+import type {
+  Browser,
+  BrowserContext,
+  BrowserContextOptions,
+  Page,
+  StorageState,
+} from "@playwright/test";
+import { ROUTES } from "../../convex/shared/routes";
 import type { TestUser } from "../config";
 import { E2E_TIMEZONE } from "../constants";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
@@ -28,7 +35,13 @@ export interface ScreenshotAuthBootstrap {
   orgSlug: string;
 }
 
+export type LaunchBrowser = () => Promise<Browser>;
+export type ScreenshotPageTarget = {
+  context: BrowserContext;
+  page: Page;
+};
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
+type ScreenshotPageTargetCallback<T> = (target: ScreenshotPageTarget) => Promise<T>;
 type AuthenticatedScreenshotPageOptions = {
   storageState?: StorageState;
   user?: TestUser;
@@ -59,6 +72,35 @@ export function getContextOptions(
   };
 }
 
+export async function withLaunchedBrowser<T>(
+  launchBrowser: LaunchBrowser,
+  callback: (browser: Browser) => Promise<T>,
+): Promise<T> {
+  const browser = await launchBrowser();
+  try {
+    return await callback(browser);
+  } finally {
+    await browser.close();
+  }
+}
+
+export async function withScreenshotTarget<T>(
+  browser: Browser,
+  viewport: ViewportName,
+  theme: ThemeName,
+  callback: ScreenshotPageTargetCallback<T>,
+  storageState?: StorageState,
+): Promise<T> {
+  const context = await browser.newContext(getContextOptions(viewport, theme, storageState));
+
+  try {
+    const page = await context.newPage();
+    return await callback({ context, page });
+  } finally {
+    await context.close();
+  }
+}
+
 export async function withScreenshotPage(
   browser: Browser,
   viewport: ViewportName,
@@ -66,14 +108,15 @@ export async function withScreenshotPage(
   callback: ScreenshotPageCallback,
   storageState?: StorageState,
 ): Promise<void> {
-  const context = await browser.newContext(getContextOptions(viewport, theme, storageState));
-  const page = await context.newPage();
-
-  try {
-    await callback(page);
-  } finally {
-    await context.close();
-  }
+  await withScreenshotTarget(
+    browser,
+    viewport,
+    theme,
+    async ({ page }) => {
+      await callback(page);
+    },
+    storageState,
+  );
 }
 
 export async function withAuthenticatedScreenshotPage(
@@ -86,11 +129,11 @@ export async function withAuthenticatedScreenshotPage(
 ): Promise<boolean> {
   let authenticated = false;
 
-  await withScreenshotPage(
+  await withScreenshotTarget(
     browser,
     viewport,
     theme,
-    async (page) => {
+    async ({ page }) => {
       authenticated = await ensureAuthenticatedScreenshotPage(
         page,
         orgSlug,
@@ -98,10 +141,11 @@ export async function withAuthenticatedScreenshotPage(
       );
 
       if (!authenticated) {
-        return;
+        return false;
       }
 
       await callback(page);
+      return true;
     },
     options.storageState,
   );
@@ -110,7 +154,7 @@ export async function withAuthenticatedScreenshotPage(
 }
 
 export async function prepareScreenshotAuthBootstrap(
-  launchBrowser: () => Promise<Browser>,
+  launchBrowser: LaunchBrowser,
 ): Promise<ScreenshotAuthBootstrap | null> {
   console.log("\n  🔧 Setting up test data...");
   await testUserService.deleteTestUser(SCREENSHOT_USER.email);
@@ -127,15 +171,8 @@ export async function prepareScreenshotAuthBootstrap(
 
   console.log(`  ✓ User: ${SCREENSHOT_USER.email}`);
 
-  const setupBrowser = await launchBrowser();
-  try {
-    const setupContext = await setupBrowser.newContext({
-      viewport: VIEWPORTS.desktop,
-      colorScheme: "dark",
-      timezoneId: E2E_TIMEZONE,
-    });
-    try {
-      const setupPage = await setupContext.newPage();
+  return withLaunchedBrowser(launchBrowser, async (setupBrowser) =>
+    withScreenshotTarget(setupBrowser, "desktop", "dark", async ({ context, page: setupPage }) => {
       const seedProbe = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {});
       const orgSlug = seedProbe.orgSlug;
 
@@ -148,20 +185,17 @@ export async function prepareScreenshotAuthBootstrap(
         console.error("  ❌ Could not authenticate. Aborting.");
         return null;
       }
+
       return {
         orgSlug,
-        authStorageState: await setupContext.storageState(),
+        authStorageState: await context.storageState(),
       };
-    } finally {
-      await setupContext.close();
-    }
-  } finally {
-    await setupBrowser.close();
-  }
+    }),
+  );
 }
 
 export async function captureEmptyStatesForConfig(
-  browser: Browser,
+  launchBrowser: LaunchBrowser,
   viewport: ViewportName,
   theme: ThemeName,
   orgSlug: string,
@@ -170,50 +204,51 @@ export async function captureEmptyStatesForConfig(
   setCurrentConfig(viewport, theme, "empty");
 
   try {
-    const authenticated = await withAuthenticatedScreenshotPage(
-      browser,
-      viewport,
-      theme,
-      orgSlug,
-      async (page) => {
-        await screenshotEmptyStates(page, orgSlug);
+    await withLaunchedBrowser(launchBrowser, async (browser) => {
+      const authenticated = await withAuthenticatedScreenshotPage(
+        browser,
+        viewport,
+        theme,
+        orgSlug,
+        async (page) => {
+          await screenshotEmptyStates(page, orgSlug);
 
-        if (shouldCapture("empty", "my-issues")) {
-          const myIssuesAuthenticated = await withAuthenticatedScreenshotPage(
-            browser,
-            viewport,
-            theme,
-            orgSlug,
-            async (myIssuesPage) => {
-              await takeScreenshot(
-                myIssuesPage,
-                "empty",
-                "my-issues",
-                ROUTES.myIssues.build(orgSlug),
-              );
-            },
-            {
-              user: SCREENSHOT_EMPTY_AUTH_USER,
-            },
-          );
-
-          if (!myIssuesAuthenticated) {
-            throw new Error(
-              `Auth failed for my-issues empty state in ${captureState.currentConfigPrefix}`,
+          if (shouldCapture("empty", "my-issues")) {
+            const myIssuesAuthenticated = await withAuthenticatedScreenshotPage(
+              browser,
+              viewport,
+              theme,
+              orgSlug,
+              async (myIssuesPage) => {
+                await takeScreenshot(
+                  myIssuesPage,
+                  "empty",
+                  "my-issues",
+                  ROUTES.myIssues.build(orgSlug),
+                );
+              },
+              {
+                user: SCREENSHOT_EMPTY_AUTH_USER,
+              },
             );
-          }
-        }
-      },
-      {
-        storageState,
-      },
-    );
 
-    if (!authenticated) {
-      captureState.captureFailures++;
-      console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
-      return;
-    }
+            if (!myIssuesAuthenticated) {
+              throw new Error(
+                `Auth failed for my-issues empty state in ${captureState.currentConfigPrefix}`,
+              );
+            }
+          }
+        },
+        {
+          storageState,
+        },
+      );
+
+      if (!authenticated) {
+        captureState.captureFailures++;
+        console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
+      }
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (isCrashLikeError(message)) {
@@ -227,7 +262,7 @@ export async function captureEmptyStatesForConfig(
 }
 
 export async function captureFilledStatesForConfig(
-  browser: Browser,
+  launchBrowser: LaunchBrowser,
   viewport: ViewportName,
   theme: ThemeName,
   orgSlug: string,
@@ -236,36 +271,55 @@ export async function captureFilledStatesForConfig(
 ): Promise<void> {
   setCurrentConfig(viewport, theme, "public + filled");
 
-  const authenticated = await withAuthenticatedScreenshotPage(
-    browser,
-    viewport,
-    theme,
-    orgSlug,
-    async (page) => {
-      await screenshotPublicPages(page, seedResult);
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await withLaunchedBrowser(launchBrowser, async (browser) => {
+        const authenticated = await withAuthenticatedScreenshotPage(
+          browser,
+          viewport,
+          theme,
+          orgSlug,
+          async (page) => {
+            await screenshotPublicPages(page, seedResult);
 
-      try {
-        const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
-        await screenshotFilledStates(page, filledOrgSlug, seedResult);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (isCrashLikeError(message)) {
-          throw error;
-        }
-        captureState.captureFailures++;
-        console.log(
-          `    ⚠️ Filled state capture failed for ${captureState.currentConfigPrefix}: ${message}`,
+            try {
+              const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
+              await screenshotFilledStates(page, filledOrgSlug, seedResult);
+            } catch (error) {
+              const message = error instanceof Error ? error.message : String(error);
+              if (isCrashLikeError(message)) {
+                throw error;
+              }
+              captureState.captureFailures++;
+              console.log(
+                `    ⚠️ Filled state capture failed for ${captureState.currentConfigPrefix}: ${message}`,
+              );
+            }
+          },
+          {
+            storageState,
+          },
         );
-      }
-    },
-    {
-      storageState,
-    },
-  );
 
-  if (!authenticated) {
-    captureState.captureFailures++;
-    console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
+        if (!authenticated) {
+          throw new Error(`Auth failed for ${captureState.currentConfigPrefix} filled states`);
+        }
+      });
+      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const shouldRetry = attempt < 2 && isCrashLikeError(message);
+      console.log(
+        `    ⚠️ ${viewport}-${theme} failed on attempt ${attempt}: ${message}${shouldRetry ? " (retrying)" : ""}`,
+      );
+
+      if (shouldRetry) {
+        continue;
+      }
+
+      captureState.captureFailures++;
+      return;
+    }
   }
 }
 
