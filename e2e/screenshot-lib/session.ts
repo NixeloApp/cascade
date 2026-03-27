@@ -27,7 +27,7 @@ import {
 import { screenshotFilledStates } from "./filled-states";
 import {
   getPublicCaptureNames,
-  getSelectedEmptyCaptureGroups,
+  getSelectedEmptyCaptureGroupsForNames,
   type PublicScreenshotCaptureGroup,
   type SelectedEmptyScreenshotCaptureGroup,
   screenshotEmptyStates,
@@ -70,6 +70,7 @@ export interface ScreenshotCaptureSessionOptions {
 export interface ScreenshotCapturePhasePlan {
   emptyCaptureNames: string[];
   filledCaptureNames: string[];
+  selectedEmptyCaptureGroups: SelectedEmptyScreenshotCaptureGroup[];
   seededPublicCaptureNames: string[];
   seedlessPublicCaptureNames: string[];
   selectedPageIds: string[];
@@ -85,6 +86,7 @@ export interface FilledScreenshotCaptureOptions {
 }
 
 export type AuthenticatedScreenshotCapturePhase = "empty-state" | "filled-state";
+export type EmptyScreenshotCaptureExecutionMode = "bootstrap-only" | "mixed" | "separate-auth-only";
 export type ScreenshotSeededPhaseMode = "filled-only" | "public-and-filled" | "public-only";
 export type ScreenshotCaptureExecutionStep =
   | {
@@ -93,15 +95,22 @@ export type ScreenshotCaptureExecutionStep =
     }
   | {
       kind: "empty";
+      mode: EmptyScreenshotCaptureExecutionMode;
+      selectedGroups: SelectedEmptyScreenshotCaptureGroup[];
     }
   | {
       kind: "seeded";
       mode: ScreenshotSeededPhaseMode;
     };
 
-export interface ScreenshotCaptureExecutionContext {
-  authBootstrap: ScreenshotAuthBootstrap | null;
-}
+export type ScreenshotCaptureExecutionContext =
+  | {
+      authBootstrap: ScreenshotAuthBootstrap;
+    }
+  | {
+      authBootstrap: null;
+      orgSlug: string;
+    };
 
 export type LaunchBrowser = () => Promise<Browser>;
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
@@ -149,9 +158,18 @@ export function buildScreenshotCapturePhasePlan(
   selectedPageIds: string[] = getSelectedScreenshotPageIds(),
 ): ScreenshotCapturePhasePlan {
   const seededPublicCaptureNameSet = new Set(getPublicCaptureNames("seeded"));
+  const emptyCaptureNames = selectedPageIds.flatMap((pageId) => {
+    const [prefix, ...rest] = pageId.split("-");
+    if (prefix !== "empty" || rest.length === 0) {
+      return [];
+    }
+
+    return [rest.join("-")];
+  });
   const plan: ScreenshotCapturePhasePlan = {
-    emptyCaptureNames: [],
+    emptyCaptureNames,
     filledCaptureNames: [],
+    selectedEmptyCaptureGroups: getSelectedEmptyCaptureGroupsForNames(emptyCaptureNames),
     seededPublicCaptureNames: [],
     seedlessPublicCaptureNames: [],
     selectedPageIds,
@@ -164,11 +182,6 @@ export function buildScreenshotCapturePhasePlan(
     }
 
     const name = rest.join("-");
-    if (prefix === "empty") {
-      plan.emptyCaptureNames.push(name);
-      continue;
-    }
-
     if (prefix === "filled") {
       plan.filledCaptureNames.push(name);
       continue;
@@ -184,6 +197,21 @@ export function buildScreenshotCapturePhasePlan(
   }
 
   return plan;
+}
+
+export function getEmptyScreenshotCaptureExecutionMode(
+  selectedGroups: SelectedEmptyScreenshotCaptureGroup[],
+): EmptyScreenshotCaptureExecutionMode {
+  const selectedGroupNames = new Set(selectedGroups.map(({ group }) => group));
+  if (selectedGroupNames.has("bootstrap") && selectedGroupNames.has("separate-auth")) {
+    return "mixed";
+  }
+
+  if (selectedGroupNames.has("bootstrap")) {
+    return "bootstrap-only";
+  }
+
+  return "separate-auth-only";
 }
 
 export function buildScreenshotCaptureExecutionPlan(
@@ -222,6 +250,8 @@ export function buildScreenshotCaptureExecutionSteps(
   if (phasePlan.emptyCaptureNames.length > 0) {
     executionSteps.push({
       kind: "empty",
+      mode: getEmptyScreenshotCaptureExecutionMode(phasePlan.selectedEmptyCaptureGroups),
+      selectedGroups: phasePlan.selectedEmptyCaptureGroups,
     });
   }
 
@@ -420,13 +450,8 @@ export async function prepareScreenshotAuthBootstrap(
     withBrowserPageTarget(
       setupBrowser,
       async ({ context, page: setupPage }) => {
-        const orgResolution = await testUserService.resolveScreenshotOrgSlug(SCREENSHOT_USER.email);
-        const orgSlug = orgResolution.orgSlug;
-
+        const orgSlug = await resolveScreenshotPrimaryUserOrgSlug();
         if (!orgSlug) {
-          console.error(
-            `  ❌ Could not determine screenshot org slug without seeding: ${orgResolution.error ?? "unknown error"}. Aborting.`,
-          );
           return null;
         }
 
@@ -445,13 +470,31 @@ export async function prepareScreenshotAuthBootstrap(
   );
 }
 
+export async function resolveScreenshotPrimaryUserOrgSlug(): Promise<string | null> {
+  const orgResolution = await testUserService.resolveScreenshotOrgSlug(SCREENSHOT_USER.email);
+  if (!orgResolution.orgSlug) {
+    console.error(
+      `  ❌ Could not determine screenshot org slug without seeding: ${orgResolution.error ?? "unknown error"}. Aborting.`,
+    );
+    return null;
+  }
+
+  return orgResolution.orgSlug;
+}
+
 export async function preparePrimaryUserScreenshotExecutionContext(): Promise<ScreenshotCaptureExecutionContext | null> {
   if (!(await prepareScreenshotPrimaryUser())) {
     return null;
   }
 
+  const orgSlug = await resolveScreenshotPrimaryUserOrgSlug();
+  if (!orgSlug) {
+    return null;
+  }
+
   return {
     authBootstrap: null,
+    orgSlug,
   };
 }
 
@@ -480,6 +523,10 @@ export async function prepareScreenshotCaptureExecutionContextForStep(
 
   if (executionContext) {
     return executionContext;
+  }
+
+  if (executionStep.kind === "empty" && executionStep.mode === "separate-auth-only") {
+    return preparePrimaryUserScreenshotExecutionContext();
   }
 
   if (executionStep.kind === "seeded" && executionStep.mode === "public-only") {
@@ -525,10 +572,10 @@ export async function captureEmptyStatesForConfig(
   viewport: ViewportName,
   theme: ThemeName,
   orgSlug: string,
+  selectedEmptyCaptureGroups: SelectedEmptyScreenshotCaptureGroup[],
   storageState?: StorageState,
 ): Promise<void> {
   setCurrentConfig(viewport, theme, "empty");
-  const selectedEmptyCaptureGroups = getSelectedEmptyCaptureGroups();
   if (selectedEmptyCaptureGroups.length === 0) {
     return;
   }
@@ -727,10 +774,10 @@ export function getAuthenticatedScreenshotBootstrap(
   return executionContext.authBootstrap;
 }
 
-export function getScreenshotSeedOrgSlug(
+export function getScreenshotExecutionOrgSlug(
   executionContext: ScreenshotCaptureExecutionContext,
-): string | undefined {
-  return executionContext.authBootstrap?.orgSlug;
+): string {
+  return executionContext.authBootstrap?.orgSlug ?? executionContext.orgSlug;
 }
 
 export async function runSeedlessPublicScreenshotPhase(
@@ -752,12 +799,16 @@ export async function runSeedlessPublicScreenshotPhase(
 export async function runEmptyScreenshotPhase(
   launchBrowser: LaunchBrowser,
   configs: ScreenshotCaptureConfig[],
+  selectedEmptyCaptureGroups: SelectedEmptyScreenshotCaptureGroup[],
   executionContext: ScreenshotCaptureExecutionContext,
 ): Promise<void> {
-  const { authStorageState, orgSlug } = getAuthenticatedScreenshotBootstrap(
-    executionContext,
-    "empty-state",
+  const needsPrimaryBootstrap = selectedEmptyCaptureGroups.some(({ group }) =>
+    emptyCaptureGroupRequiresPrimaryBootstrap(group),
   );
+  const authStorageState = needsPrimaryBootstrap
+    ? getAuthenticatedScreenshotBootstrap(executionContext, "empty-state").authStorageState
+    : undefined;
+  const orgSlug = getScreenshotExecutionOrgSlug(executionContext);
 
   console.log("\n  📋 Phase 1: Empty states (before seeding)");
   for (const config of configs) {
@@ -767,6 +818,7 @@ export async function runEmptyScreenshotPhase(
         config.viewport,
         config.theme,
         orgSlug,
+        selectedEmptyCaptureGroups,
         authStorageState ?? undefined,
       );
     } catch (error) {
@@ -788,7 +840,7 @@ export async function runSeededScreenshotPhase(
 ): Promise<void> {
   console.log(getSeededPhaseLogLabelForMode(seededPhaseMode));
   console.log("  Seeding screenshot data...");
-  const seedOrgSlug = getScreenshotSeedOrgSlug(executionContext);
+  const seedOrgSlug = getScreenshotExecutionOrgSlug(executionContext);
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
     orgSlug: seedOrgSlug,
   });
@@ -849,7 +901,12 @@ export async function runScreenshotCaptureExecutionStep(
   }
 
   if (executionStep.kind === "empty") {
-    await runEmptyScreenshotPhase(launchBrowser, configs, executionContext);
+    await runEmptyScreenshotPhase(
+      launchBrowser,
+      configs,
+      executionStep.selectedGroups,
+      executionContext,
+    );
     return;
   }
 

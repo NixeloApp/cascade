@@ -318,9 +318,20 @@ export function getEmptyCaptureNames(group: EmptyScreenshotCaptureGroup = "all")
 export function getSelectedEmptyCaptureGroups(): SelectedEmptyScreenshotCaptureGroup[] {
   validateEmptyScreenshotTargets();
 
+  return getSelectedEmptyCaptureGroupsForNames(
+    getCanonicalEmptyCaptureNames().filter((name) => shouldCaptureAny("empty", [name])),
+  );
+}
+
+export function getSelectedEmptyCaptureGroupsForNames(
+  selectedNames: string[],
+): SelectedEmptyScreenshotCaptureGroup[] {
+  validateEmptyScreenshotTargets();
+  const selectedNameSet = new Set(selectedNames);
+
   return EMPTY_SCREENSHOT_TARGET_GROUPS.flatMap((group) => {
-    const names = getEmptyCaptureNames(group);
-    if (!shouldCaptureAny("empty", names)) {
+    const names = getEmptyCaptureNames(group).filter((name) => selectedNameSet.has(name));
+    if (names.length === 0) {
       return [];
     }
 

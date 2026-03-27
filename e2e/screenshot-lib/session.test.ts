@@ -11,6 +11,7 @@ import { captureState } from "./capture";
 import { screenshotFilledStates } from "./filled-states";
 import {
   getSelectedEmptyCaptureGroups,
+  getSelectedEmptyCaptureGroupsForNames,
   screenshotEmptyStates,
   screenshotPublicPages,
 } from "./public-pages";
@@ -28,9 +29,10 @@ import {
   formatConfigLabel,
   getAuthenticatedScreenshotBootstrap,
   getCaptureNamesForPrefix,
+  getEmptyScreenshotCaptureExecutionMode,
   getScreenshotContextOptions,
+  getScreenshotExecutionOrgSlug,
   getScreenshotSeededPhaseMode,
-  getScreenshotSeedOrgSlug,
   getSeededPhaseLogLabel,
   getSeededPhaseLogLabelForMode,
   getSelectedScreenshotPageIds,
@@ -109,6 +111,42 @@ vi.mock("./public-pages", () => ({
       names: ["my-issues"],
     },
   ]),
+  getSelectedEmptyCaptureGroupsForNames: vi.fn((selectedNames: string[]) => {
+    const groups = [
+      {
+        group: "bootstrap",
+        names: [
+          "dashboard",
+          "projects",
+          "issues",
+          "documents",
+          "documents-templates",
+          "workspaces",
+          "time-tracking",
+          "notifications",
+          "invoices",
+          "clients",
+          "meetings",
+          "outreach",
+          "settings",
+          "settings-profile",
+        ],
+      },
+      {
+        group: "separate-auth",
+        names: ["my-issues"],
+      },
+    ] as const;
+
+    return groups.flatMap(({ group, names }) => {
+      const filteredNames = names.filter((name) => selectedNames.includes(name));
+      if (filteredNames.length === 0) {
+        return [];
+      }
+
+      return [{ group, names: filteredNames }];
+    });
+  }),
   getPublicCaptureNames: vi.fn((group: "all" | "seeded" | "seedless" = "all") => {
     const seedless = [
       "landing",
@@ -173,6 +211,7 @@ describe("screenshot session helpers", () => {
     };
     vi.mocked(ensureAuthenticatedScreenshotPage).mockClear();
     vi.mocked(getSelectedEmptyCaptureGroups).mockClear();
+    vi.mocked(getSelectedEmptyCaptureGroupsForNames).mockClear();
     vi.mocked(screenshotEmptyStates).mockClear();
     vi.mocked(screenshotPublicPages).mockClear();
     vi.mocked(screenshotFilledStates).mockClear();
@@ -208,6 +247,7 @@ describe("screenshot session helpers", () => {
     expect(buildScreenshotCapturePhasePlan(["public-landing"])).toEqual({
       emptyCaptureNames: [],
       filledCaptureNames: [],
+      selectedEmptyCaptureGroups: [],
       seededPublicCaptureNames: [],
       seedlessPublicCaptureNames: ["landing"],
       selectedPageIds: ["public-landing"],
@@ -215,6 +255,7 @@ describe("screenshot session helpers", () => {
     expect(buildScreenshotCapturePhasePlan(["public-portal-project"])).toEqual({
       emptyCaptureNames: [],
       filledCaptureNames: [],
+      selectedEmptyCaptureGroups: [],
       seededPublicCaptureNames: ["portal-project"],
       seedlessPublicCaptureNames: [],
       selectedPageIds: ["public-portal-project"],
@@ -222,6 +263,12 @@ describe("screenshot session helpers", () => {
     expect(buildScreenshotCapturePhasePlan(["empty-dashboard"])).toEqual({
       emptyCaptureNames: ["dashboard"],
       filledCaptureNames: [],
+      selectedEmptyCaptureGroups: [
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+      ],
       seededPublicCaptureNames: [],
       seedlessPublicCaptureNames: [],
       selectedPageIds: ["empty-dashboard"],
@@ -229,6 +276,7 @@ describe("screenshot session helpers", () => {
     expect(buildScreenshotCapturePhasePlan(["filled-issues-loading"])).toEqual({
       emptyCaptureNames: [],
       filledCaptureNames: ["issues-loading"],
+      selectedEmptyCaptureGroups: [],
       seededPublicCaptureNames: [],
       seedlessPublicCaptureNames: [],
       selectedPageIds: ["filled-issues-loading"],
@@ -246,6 +294,7 @@ describe("screenshot session helpers", () => {
       phasePlan: {
         emptyCaptureNames: [],
         filledCaptureNames: [],
+        selectedEmptyCaptureGroups: [],
         seededPublicCaptureNames: [],
         seedlessPublicCaptureNames: ["landing"],
         selectedPageIds: ["public-landing"],
@@ -262,6 +311,7 @@ describe("screenshot session helpers", () => {
       phasePlan: {
         emptyCaptureNames: [],
         filledCaptureNames: [],
+        selectedEmptyCaptureGroups: [],
         seededPublicCaptureNames: ["portal-project"],
         seedlessPublicCaptureNames: [],
         selectedPageIds: ["public-portal-project"],
@@ -272,11 +322,24 @@ describe("screenshot session helpers", () => {
       executionSteps: [
         {
           kind: "empty",
+          mode: "bootstrap-only",
+          selectedGroups: [
+            {
+              group: "bootstrap",
+              names: ["dashboard"],
+            },
+          ],
         },
       ],
       phasePlan: {
         emptyCaptureNames: ["dashboard"],
         filledCaptureNames: [],
+        selectedEmptyCaptureGroups: [
+          {
+            group: "bootstrap",
+            names: ["dashboard"],
+          },
+        ],
         seededPublicCaptureNames: [],
         seedlessPublicCaptureNames: [],
         selectedPageIds: ["empty-dashboard"],
@@ -293,11 +356,43 @@ describe("screenshot session helpers", () => {
       phasePlan: {
         emptyCaptureNames: [],
         filledCaptureNames: ["issues-loading"],
+        selectedEmptyCaptureGroups: [],
         seededPublicCaptureNames: [],
         seedlessPublicCaptureNames: [],
         selectedPageIds: ["filled-issues-loading"],
       },
     });
+  });
+
+  it("derives empty execution modes from selected empty capture groups", () => {
+    expect(
+      getEmptyScreenshotCaptureExecutionMode([
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+      ]),
+    ).toBe("bootstrap-only");
+    expect(
+      getEmptyScreenshotCaptureExecutionMode([
+        {
+          group: "separate-auth",
+          names: ["my-issues"],
+        },
+      ]),
+    ).toBe("separate-auth-only");
+    expect(
+      getEmptyScreenshotCaptureExecutionMode([
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+        {
+          group: "separate-auth",
+          names: ["my-issues"],
+        },
+      ]),
+    ).toBe("mixed");
   });
 
   it("derives whether an empty capture group needs the primary authenticated bootstrap", () => {
@@ -315,6 +410,13 @@ describe("screenshot session helpers", () => {
     expect(
       screenshotCaptureStepRequiresExecutionContext({
         kind: "empty",
+        mode: "bootstrap-only",
+        selectedGroups: [
+          {
+            group: "bootstrap",
+            names: ["dashboard"],
+          },
+        ],
       }),
     ).toBe(true);
     expect(
@@ -376,6 +478,13 @@ describe("screenshot session helpers", () => {
       },
       {
         kind: "empty",
+        mode: "bootstrap-only",
+        selectedGroups: [
+          {
+            group: "bootstrap",
+            names: ["dashboard"],
+          },
+        ],
       },
       {
         kind: "seeded",
@@ -401,23 +510,25 @@ describe("screenshot session helpers", () => {
       getAuthenticatedScreenshotBootstrap(
         {
           authBootstrap: null,
+          orgSlug: "acme-empty",
         },
         "filled-state",
       ),
     ).toThrow("Authenticated bootstrap is required for screenshot filled-state capture");
   });
 
-  it("derives seed org slug from the authenticated bootstrap only", () => {
+  it("derives the execution org slug from either bootstrap context shape", () => {
     expect(
-      getScreenshotSeedOrgSlug({
+      getScreenshotExecutionOrgSlug({
         authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
       }),
     ).toBe("acme");
     expect(
-      getScreenshotSeedOrgSlug({
+      getScreenshotExecutionOrgSlug({
         authBootstrap: null,
+        orgSlug: "acme-empty",
       }),
-    ).toBeUndefined();
+    ).toBe("acme-empty");
   });
 
   it("derives the selected screenshot page ids from the current CLI filters", () => {
@@ -435,6 +546,7 @@ describe("screenshot session helpers", () => {
     expect(buildScreenshotCapturePhasePlan()).toEqual({
       emptyCaptureNames: [],
       filledCaptureNames: ["my-issues-loading", "issues-loading"],
+      selectedEmptyCaptureGroups: [],
       seededPublicCaptureNames: ["portal-project"],
       seedlessPublicCaptureNames: ["landing"],
       selectedPageIds: [
@@ -458,6 +570,7 @@ describe("screenshot session helpers", () => {
       phasePlan: {
         emptyCaptureNames: [],
         filledCaptureNames: ["my-issues-loading", "issues-loading"],
+        selectedEmptyCaptureGroups: [],
         seededPublicCaptureNames: ["portal-project"],
         seedlessPublicCaptureNames: ["landing"],
         selectedPageIds: [
@@ -599,11 +712,16 @@ describe("screenshot session helpers", () => {
     const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
       success: true,
     });
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
 
     const executionContext = await preparePrimaryUserScreenshotExecutionContext();
 
     expect(executionContext).toEqual({
       authBootstrap: null,
+      orgSlug: "acme",
     });
     expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
     expect(createSpy).toHaveBeenCalledTimes(1);
@@ -659,6 +777,10 @@ describe("screenshot session helpers", () => {
     const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
       success: true,
     });
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
 
     const executionContext = await prepareScreenshotCaptureExecutionContextForStep(
       launchBrowser,
@@ -671,27 +793,38 @@ describe("screenshot session helpers", () => {
 
     expect(executionContext).toEqual({
       authBootstrap: null,
+      orgSlug: "acme",
     });
     expect(createSpy).toHaveBeenCalledTimes(1);
     expect(launchBrowser).not.toHaveBeenCalled();
   });
 
-  it("prepares an authenticated execution context for empty and filled steps", async () => {
+  it("prepares an authenticated execution context for bootstrap-backed empty and filled steps", async () => {
     const harness = createBrowserHarness();
-    const launchBrowser = vi.fn(async () => harness.browser);
+    const secondHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn(async () => harness.browser)
+      .mockResolvedValueOnce(harness.browser)
+      .mockResolvedValueOnce(secondHarness.browser);
     vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
     vi.spyOn(testUserService, "createTestUser").mockResolvedValue({ success: true });
     vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
       orgSlug: "acme",
       success: true,
     });
-    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValueOnce(true);
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
 
     const executionContext = await prepareScreenshotCaptureExecutionContextForStep(
       launchBrowser,
       {
-        kind: "seeded",
-        mode: "filled-only",
+        kind: "empty",
+        mode: "bootstrap-only",
+        selectedGroups: [
+          {
+            group: "bootstrap",
+            names: ["dashboard"],
+          },
+        ],
       },
       null,
     );
@@ -702,7 +835,56 @@ describe("screenshot session helpers", () => {
         orgSlug: "acme",
       },
     });
-    expect(launchBrowser).toHaveBeenCalledTimes(1);
+
+    const filledExecutionContext = await prepareScreenshotCaptureExecutionContextForStep(
+      launchBrowser,
+      {
+        kind: "seeded",
+        mode: "filled-only",
+      },
+      null,
+    );
+
+    expect(filledExecutionContext).toEqual({
+      authBootstrap: {
+        authStorageState: { cookies: [], origins: [] },
+        orgSlug: "acme",
+      },
+    });
+    expect(launchBrowser).toHaveBeenCalledTimes(2);
+  });
+
+  it("prepares only a primary-user execution context for separate-auth-only empty steps", async () => {
+    const launchBrowser = vi.fn<() => Promise<Browser>>();
+    vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
+    vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
+      success: true,
+    });
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
+
+    const executionContext = await prepareScreenshotCaptureExecutionContextForStep(
+      launchBrowser,
+      {
+        kind: "empty",
+        mode: "separate-auth-only",
+        selectedGroups: [
+          {
+            group: "separate-auth",
+            names: ["my-issues"],
+          },
+        ],
+      },
+      null,
+    );
+
+    expect(executionContext).toEqual({
+      authBootstrap: null,
+      orgSlug: "acme",
+    });
+    expect(launchBrowser).not.toHaveBeenCalled();
   });
 
   it("runs an authenticated screenshot capture behind one shared browser session", async () => {
@@ -856,7 +1038,6 @@ describe("screenshot session helpers", () => {
       "create:primary",
       "resolve:bootstrap",
       "capture:empty",
-      "capture:empty",
       "seed:filled",
       "capture:filled",
     ]);
@@ -981,7 +1162,10 @@ describe("screenshot session helpers", () => {
     const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
       success: true,
     });
-    const resolveSpy = vi.spyOn(testUserService, "resolveScreenshotOrgSlug");
+    const resolveSpy = vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
     const seedSpy = vi.spyOn(testUserService, "seedScreenshotData").mockResolvedValue({
       portalProjectId: "project-1",
       portalToken: "portal-token",
@@ -1000,9 +1184,9 @@ describe("screenshot session helpers", () => {
     expect(launchBrowser).toHaveBeenCalledTimes(1);
     expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
     expect(createSpy).toHaveBeenCalledTimes(1);
-    expect(resolveSpy).not.toHaveBeenCalled();
+    expect(resolveSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
     expect(seedSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io", {
-      orgSlug: undefined,
+      orgSlug: "acme",
     });
     expect(publicSpy).toHaveBeenCalledTimes(1);
     expect(publicSpy).toHaveBeenCalledWith(
@@ -1074,6 +1258,51 @@ describe("screenshot session helpers", () => {
         String(line).includes("Phase 2: Seed data + filled states"),
       ),
     ).toBe(true);
+  });
+
+  it("skips authenticated bootstrap for separate-auth-only empty runs in the shared session flow", async () => {
+    captureState.cliOptions = {
+      ...captureState.cliOptions,
+      matchFilters: ["empty-my-issues"],
+    };
+
+    const emptyHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(emptyHarness.browser);
+
+    const deleteSpy = vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
+    const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
+      success: true,
+    });
+    const resolveSpy = vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
+    const seedSpy = vi.spyOn(testUserService, "seedScreenshotData");
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
+    emptySpy.mockClear();
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const captured = await captureConfiguredScreenshotStates(launchBrowser, [
+      { viewport: "desktop", theme: "light" },
+    ]);
+
+    expect(captured).toBe(true);
+    expect(launchBrowser).toHaveBeenCalledTimes(1);
+    expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
+    expect(createSpy).toHaveBeenCalledTimes(1);
+    expect(resolveSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
+    expect(seedSpy).not.toHaveBeenCalled();
+    expect(emptySpy).toHaveBeenCalledTimes(1);
+    expect(emptySpy).toHaveBeenCalledWith(emptyHarness.page, "acme", {
+      group: "separate-auth",
+    });
+    expect(vi.mocked(ensureAuthenticatedScreenshotPage)).toHaveBeenCalledTimes(1);
+    expect(logSpy.mock.calls.some(([line]) => String(line).includes("Phase 1: Empty states"))).toBe(
+      true,
+    );
   });
 
   it("runs the staged screenshot lifecycle behind the shared session helper", async () => {
@@ -1223,9 +1452,19 @@ describe("screenshot session helpers", () => {
     const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
     emptySpy.mockClear();
 
-    await runEmptyScreenshotPhase(launchBrowser, [{ viewport: "desktop", theme: "light" }], {
-      authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
-    });
+    await runEmptyScreenshotPhase(
+      launchBrowser,
+      [{ viewport: "desktop", theme: "light" }],
+      [
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+      ],
+      {
+        authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
+      },
+    );
 
     expect(emptySpy).toHaveBeenCalledWith(emptyHarness.page, "acme", {
       group: "bootstrap",
@@ -1238,19 +1477,25 @@ describe("screenshot session helpers", () => {
       .fn<() => Promise<Browser>>()
       .mockResolvedValueOnce(emptyHarness.browser);
     vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
-    vi.mocked(getSelectedEmptyCaptureGroups).mockReturnValueOnce([
-      {
-        group: "bootstrap",
-        names: ["dashboard"],
-      },
-    ]);
     const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
     emptySpy.mockClear();
 
-    await captureEmptyStatesForConfig(launchBrowser, "desktop", "light", "acme", {
-      cookies: [],
-      origins: [],
-    });
+    await captureEmptyStatesForConfig(
+      launchBrowser,
+      "desktop",
+      "light",
+      "acme",
+      [
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+      ],
+      {
+        cookies: [],
+        origins: [],
+      },
+    );
 
     expect(emptySpy).toHaveBeenCalledTimes(1);
     expect(emptySpy).toHaveBeenCalledWith(emptyHarness.page, "acme", {
@@ -1291,23 +1536,29 @@ describe("screenshot session helpers", () => {
       .fn<() => Promise<Browser>>()
       .mockResolvedValueOnce(emptyHarness.browser);
     vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
-    vi.mocked(getSelectedEmptyCaptureGroups).mockReturnValueOnce([
-      {
-        group: "bootstrap",
-        names: ["dashboard"],
-      },
-      {
-        group: "separate-auth",
-        names: ["my-issues"],
-      },
-    ]);
     const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
     emptySpy.mockClear();
 
-    await captureEmptyStatesForConfig(launchBrowser, "desktop", "light", "acme", {
-      cookies: [],
-      origins: [],
-    });
+    await captureEmptyStatesForConfig(
+      launchBrowser,
+      "desktop",
+      "light",
+      "acme",
+      [
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+        {
+          group: "separate-auth",
+          names: ["my-issues"],
+        },
+      ],
+      {
+        cookies: [],
+        origins: [],
+      },
+    );
 
     expect(emptySpy).toHaveBeenCalledTimes(2);
     expect(emptySpy).toHaveBeenNthCalledWith(1, emptyHarness.page, "acme", {
@@ -1325,19 +1576,25 @@ describe("screenshot session helpers", () => {
       .fn<() => Promise<Browser>>()
       .mockResolvedValueOnce(emptyHarness.browser);
     vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
-    vi.mocked(getSelectedEmptyCaptureGroups).mockReturnValueOnce([
-      {
-        group: "separate-auth",
-        names: ["my-issues"],
-      },
-    ]);
     const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
     emptySpy.mockClear();
 
-    await captureEmptyStatesForConfig(launchBrowser, "desktop", "light", "acme", {
-      cookies: [],
-      origins: [],
-    });
+    await captureEmptyStatesForConfig(
+      launchBrowser,
+      "desktop",
+      "light",
+      "acme",
+      [
+        {
+          group: "separate-auth",
+          names: ["my-issues"],
+        },
+      ],
+      {
+        cookies: [],
+        origins: [],
+      },
+    );
 
     expect(emptySpy).toHaveBeenCalledTimes(1);
     expect(emptySpy).toHaveBeenCalledWith(emptyHarness.page, "acme", {
@@ -1416,6 +1673,13 @@ describe("screenshot session helpers", () => {
         [{ viewport: "desktop", theme: "light" }],
         {
           kind: "empty",
+          mode: "bootstrap-only",
+          selectedGroups: [
+            {
+              group: "bootstrap",
+              names: ["dashboard"],
+            },
+          ],
         },
         null,
       ),
@@ -1426,6 +1690,10 @@ describe("screenshot session helpers", () => {
     const launchBrowser = vi.fn<() => Promise<Browser>>();
     const deleteSpy = vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
     const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
+      success: true,
+    });
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
       success: true,
     });
 
@@ -1440,6 +1708,7 @@ describe("screenshot session helpers", () => {
 
     expect(executionContext).toEqual({
       authBootstrap: null,
+      orgSlug: "acme",
     });
     expect("bootstrapMode" in executionContext).toBe(false);
     expect("seedOrgSlug" in executionContext).toBe(false);

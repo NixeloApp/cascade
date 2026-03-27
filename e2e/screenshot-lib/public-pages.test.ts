@@ -9,6 +9,7 @@ import {
   getPublicCaptureNames,
   getPublicScreenshotTargets,
   getSelectedEmptyCaptureGroups,
+  getSelectedEmptyCaptureGroupsForNames,
   screenshotEmptyStates,
   screenshotPublicPages,
   validateEmptyScreenshotTargets,
@@ -86,7 +87,7 @@ describe("public screenshot targets", () => {
 
   it("derives selected empty capture groups from the canonical empty target manifest", () => {
     shouldCaptureAny.mockImplementation(
-      (_prefix: string, names: string[]) => !names.includes("my-issues"),
+      (_prefix: string, names: string[]) => names[0] !== "my-issues",
     );
 
     expect(getSelectedEmptyCaptureGroups()).toEqual([
@@ -95,8 +96,26 @@ describe("public screenshot targets", () => {
         names: getEmptyCaptureNames("bootstrap"),
       },
     ]);
-    expect(shouldCaptureAny).toHaveBeenCalledWith("empty", getEmptyCaptureNames("bootstrap"));
-    expect(shouldCaptureAny).toHaveBeenCalledWith("empty", getEmptyCaptureNames("separate-auth"));
+  });
+
+  it("derives selected empty capture groups from explicit empty capture names", () => {
+    expect(getSelectedEmptyCaptureGroupsForNames(["dashboard", "my-issues"])).toEqual([
+      {
+        group: "bootstrap",
+        names: ["dashboard"],
+      },
+      {
+        group: "separate-auth",
+        names: ["my-issues"],
+      },
+    ]);
+
+    expect(getSelectedEmptyCaptureGroupsForNames(["my-issues"])).toEqual([
+      {
+        group: "separate-auth",
+        names: ["my-issues"],
+      },
+    ]);
   });
 
   it("captures only seedless public routes in seedless mode", async () => {
