@@ -21,6 +21,7 @@ import {
   internalMutation,
   internalQuery,
   type MutationCtx,
+  type QueryCtx,
 } from "./_generated/server";
 import { constantTimeEqual } from "./lib/apiAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
@@ -47,6 +48,7 @@ type SeededRoadmapMode = "default" | "empty" | "milestone";
 type SeededTimeTrackingMode = "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated";
 type SeededAssistantMode = "default" | "empty";
 type SeededInvoiceClient = "portal" | "none";
+type E2EReadCtx = Pick<MutationCtx, "db"> | Pick<QueryCtx, "db">;
 
 function getIssueNumberFromKey(issueKey: string, projectKey: string): number | null {
   const prefix = `${projectKey}-`;
@@ -93,6 +95,95 @@ async function getProjectIssueCounterFloor(
     project.key,
   );
   return Math.max(project.nextIssueNumber, highestExistingIssueNumber);
+}
+
+async function findLatestUserByEmail(ctx: E2EReadCtx, email: string): Promise<Doc<"users"> | null> {
+  const users = await ctx.db
+    .query("users")
+    .withIndex("email", (q) => q.eq("email", email))
+    .filter(notDeleted)
+    .collect();
+  if (users.length === 0) {
+    return null;
+  }
+  return users.sort((a, b) => b._creationTime - a._creationTime)[0];
+}
+
+async function resolveSeedOrganizationForUser(
+  ctx: E2EReadCtx,
+  user: Doc<"users">,
+  requestedOrgSlug?: string,
+): Promise<{ error?: string; organization?: Doc<"organizations"> }> {
+  let organizationId: Id<"organizations"> | null = null;
+
+  if (requestedOrgSlug) {
+    const organizationBySlug = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", requestedOrgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organizationBySlug) {
+      return { error: `Organization not found: ${requestedOrgSlug}` };
+    }
+
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", organizationBySlug._id).eq("userId", user._id),
+      )
+      .first();
+
+    if (!membership) {
+      return { error: `User is not a member of organization: ${requestedOrgSlug}` };
+    }
+
+    organizationId = organizationBySlug._id;
+  } else {
+    const defaultOrgId = user.defaultOrganizationId;
+    if (defaultOrgId) {
+      const defaultOrg = await ctx.db.get(defaultOrgId);
+      if (defaultOrg) {
+        const defaultMembership = await ctx.db
+          .query("organizationMembers")
+          .withIndex("by_organization_user", (q) =>
+            q.eq("organizationId", defaultOrgId).eq("userId", user._id),
+          )
+          .first();
+        if (defaultMembership) {
+          organizationId = defaultOrgId;
+        }
+      }
+    }
+
+    if (!organizationId) {
+      const membership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .first();
+
+      if (!membership) {
+        return { error: "User has no organization membership" };
+      }
+
+      organizationId = membership.organizationId;
+    }
+  }
+
+  const organization = organizationId ? await ctx.db.get(organizationId) : null;
+  if (!organization) {
+    return { error: "Organization not found" };
+  }
+
+  const isE2EOrg =
+    organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+  if (!isE2EOrg) {
+    return {
+      error: `Refusing to target non-E2E organization: ${organization.slug}. Use an org with 'nixelo-e2e' prefix.`,
+    };
+  }
+
+  return { organization };
 }
 
 interface SeededInvoiceLineItemDefinition {
@@ -1180,6 +1271,15 @@ async function resolveSeededScreenshotActors(
     }
 > {
   const issueIdsByKey = new Map<string, Id<"issues">>(args.issueIdsByKey ?? []);
+  const project = await ctx.db.get(args.projectId);
+
+  if (!project || project.organizationId !== args.organizationId) {
+    return {
+      success: false,
+      error: "Unable to resolve seeded screenshot project owner",
+    };
+  }
+
   if (!issueIdsByKey.has("DEMO-7")) {
     const projectIssues = await ctx.db
       .query("issues")
@@ -1200,7 +1300,7 @@ async function resolveSeededScreenshotActors(
     .query("organizationMembers")
     .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
     .take(1);
-  const ownerUserId = ownerIssue?.reporterId ?? fallbackMember[0]?.userId;
+  const ownerUserId = project.ownerId ?? ownerIssue?.reporterId ?? fallbackMember[0]?.userId;
 
   if (!ownerUserId) {
     return { success: false, error: "Unable to resolve screenshot owner user" };
@@ -1526,6 +1626,7 @@ async function resetSeededNotificationsForUser(
     projectId: Id<"projects">;
     mode: SeededNotificationsMode;
     issueIdsByKey?: ReadonlyMap<string, Id<"issues">>;
+    userId?: Id<"users">;
   },
 ): Promise<{
   success: boolean;
@@ -1543,6 +1644,7 @@ async function resetSeededNotificationsForUser(
   if (!screenshotActors.success) {
     return { success: false, error: screenshotActors.error };
   }
+  const targetUserId = args.userId ?? screenshotActors.ownerUserId;
 
   const requiredIssueKeys = new Set(
     definitions
@@ -1575,7 +1677,7 @@ async function resetSeededNotificationsForUser(
 
   const existingNotifications = await ctx.db
     .query("notifications")
-    .withIndex("by_user", (q) => q.eq("userId", screenshotActors.ownerUserId))
+    .withIndex("by_user", (q) => q.eq("userId", targetUserId))
     .take(BOUNDED_LIST_LIMIT);
 
   for (const notification of existingNotifications) {
@@ -1587,7 +1689,7 @@ async function resetSeededNotificationsForUser(
   const now = Date.now();
   for (const definition of definitions) {
     await ctx.db.insert("notifications", {
-      userId: screenshotActors.ownerUserId,
+      userId: targetUserId,
       type: definition.type,
       title: definition.title,
       message: definition.message,
@@ -2965,34 +3067,57 @@ export const createTestUserInternal = internalMutation({
       throw new Error("Only test emails allowed");
     }
 
-    // Check if user already exists
-    // Optimization: Use email index instead of filter-based table scan
-    const existingUser = await ctx.db
+    // Canonicalize to the newest user row for this test email. Older duplicates
+    // can linger after interrupted runs, and the screenshot seeding paths already
+    // treat the latest row as the source of truth.
+    const existingUsers = await ctx.db
       .query("users")
       .withIndex("email", (q) => q.eq("email", args.email))
-      .first();
+      .collect();
+    const existingUser = [...existingUsers].sort((a, b) => b._creationTime - a._creationTime)[0];
 
     if (existingUser) {
-      // User exists - check if authAccount exists too
-      const existingAccount = await ctx.db
+      const now = Date.now();
+      const existingAccounts = await ctx.db
         .query("authAccounts")
-        .filter((q) => q.eq(q.field("providerAccountId"), args.email))
-        .first();
+        .withIndex("providerAndAccountId", (q) =>
+          q.eq("provider", "password").eq("providerAccountId", args.email),
+        )
+        .collect();
 
-      if (!existingAccount) {
-        // User exists but no authAccount - create it
+      const canonicalAccount = [...existingAccounts]
+        .filter((account) => account.userId === existingUser._id)
+        .sort((a, b) => b._creationTime - a._creationTime)[0];
+
+      for (const account of existingAccounts) {
+        if (account._id !== canonicalAccount?._id) {
+          await ctx.db.delete(account._id);
+        }
+      }
+
+      if (!canonicalAccount) {
         await ctx.db.insert("authAccounts", {
           userId: existingUser._id,
           provider: "password",
           providerAccountId: args.email,
           secret: args.passwordHash,
+          emailVerified: new Date().toISOString(),
+        });
+      } else {
+        await ctx.db.patch(canonicalAccount._id, {
+          emailVerified: new Date().toISOString(),
+          secret: args.passwordHash,
         });
       }
 
+      await ctx.db.patch(existingUser._id, {
+        emailVerificationTime: existingUser.emailVerificationTime ?? now,
+        isTestUser: true,
+        testUserCreatedAt: existingUser.testUserCreatedAt ?? now,
+      });
+
       // Ensure existing user has organization and onboarding set up when skipOnboarding is true
       if (args.skipOnboarding) {
-        const now = Date.now();
-
         // Check if user has onboarding record
         const existingOnboarding = await ctx.db
           .query("userOnboarding")
@@ -5594,7 +5719,7 @@ export const configureNotificationsStateEndpoint = httpAction(async (ctx, reques
 
   try {
     const body = await request.json();
-    const { orgSlug, projectKey, mode } = body;
+    const { email, orgSlug, projectKey, mode } = body;
 
     if (!(orgSlug && projectKey && mode)) {
       return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or mode" }), {
@@ -5611,6 +5736,7 @@ export const configureNotificationsStateEndpoint = httpAction(async (ctx, reques
     }
 
     const result = await ctx.runMutation(internal.e2e.updateNotificationsStateInternal, {
+      email,
       orgSlug,
       projectKey,
       mode,
@@ -5630,6 +5756,7 @@ export const configureNotificationsStateEndpoint = httpAction(async (ctx, reques
 
 export const updateNotificationsStateInternal = internalMutation({
   args: {
+    email: v.optional(v.string()),
     orgSlug: v.string(),
     projectKey: v.string(),
     mode: v.union(
@@ -5680,10 +5807,50 @@ export const updateNotificationsStateInternal = internalMutation({
       };
     }
 
+    let targetUserId: Id<"users"> | undefined;
+    if (args.email) {
+      if (!isTestEmail(args.email)) {
+        return {
+          success: false,
+          error: `Refusing to modify notifications for non-test email: ${args.email}`,
+        };
+      }
+
+      const matchingUsers = await ctx.db
+        .query("users")
+        .withIndex("email", (q) => q.eq("email", args.email))
+        .collect();
+      const targetUser = [...matchingUsers].sort((a, b) => b._creationTime - a._creationTime)[0];
+
+      if (!targetUser) {
+        return {
+          success: false,
+          error: `test user not found: ${args.email}`,
+        };
+      }
+
+      const membership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_organization_user", (q) =>
+          q.eq("organizationId", organization._id).eq("userId", targetUser._id),
+        )
+        .first();
+
+      if (!membership) {
+        return {
+          success: false,
+          error: `test user ${args.email} is not a member of ${args.orgSlug}`,
+        };
+      }
+
+      targetUserId = targetUser._id;
+    }
+
     const notificationReset = await resetSeededNotificationsForUser(ctx, {
       organizationId: organization._id,
       projectId: project._id,
       mode: args.mode,
+      userId: targetUserId,
     });
 
     if (!notificationReset.success) {
@@ -6972,6 +7139,82 @@ export const seedScreenshotDataEndpoint = httpAction(async (ctx, request) => {
 });
 
 /**
+ * Resolve the screenshot org slug for a test user without seeding data.
+ * POST /e2e/resolve-screenshot-org-slug
+ * Body: { email: string, orgSlug?: string }
+ */
+export const getScreenshotOrgSlugEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { email, orgSlug } = body;
+
+    if (!email) {
+      return new Response(JSON.stringify({ error: "Missing email" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!isTestEmail(email)) {
+      return new Response(JSON.stringify({ error: "Only test emails allowed" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runQuery(internal.e2e.getScreenshotOrgSlugInternal, {
+      email,
+      orgSlug,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const getScreenshotOrgSlugInternal = internalQuery({
+  args: {
+    email: v.string(),
+    orgSlug: v.optional(v.string()),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    orgSlug: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    if (!isTestEmail(args.email)) {
+      return { success: false, error: "Only test emails allowed" };
+    }
+
+    const user = await findLatestUserByEmail(ctx, args.email);
+    if (!user) {
+      return { success: false, error: `User not found: ${args.email}` };
+    }
+
+    const { error, organization } = await resolveSeedOrganizationForUser(ctx, user, args.orgSlug);
+    if (error || !organization) {
+      return { success: false, error: error ?? "Organization not found" };
+    }
+
+    return {
+      success: true,
+      orgSlug: organization.slug,
+    };
+  },
+});
+
+/**
  * Internal mutation to seed screenshot data
  */
 export const seedScreenshotDataInternal = internalMutation({
@@ -7012,14 +7255,10 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     // 1. Find user by email (latest if duplicates)
-    const users = await ctx.db
-      .query("users")
-      .filter((q) => q.eq(q.field("email"), args.email))
-      .collect();
-    if (users.length === 0) {
+    const user = await findLatestUserByEmail(ctx, args.email);
+    if (!user) {
       return { success: false, error: `User not found: ${args.email}` };
     }
-    const user = users.sort((a, b) => b._creationTime - a._creationTime)[0];
     const userId = user._id;
 
     // 1b. Set display name if missing
@@ -7028,82 +7267,9 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     // 2. Resolve the organization to seed against.
-    let organizationId: Id<"organizations"> | null = null;
-
-    if (args.orgSlug) {
-      const organizationBySlug = await ctx.db
-        .query("organizations")
-        .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug as string))
-        .filter(notDeleted)
-        .first();
-
-      if (!organizationBySlug) {
-        return { success: false, error: `Organization not found: ${args.orgSlug}` };
-      }
-
-      const membership = await ctx.db
-        .query("organizationMembers")
-        .withIndex("by_organization_user", (q) =>
-          q.eq("organizationId", organizationBySlug._id).eq("userId", userId),
-        )
-        .first();
-
-      if (!membership) {
-        return {
-          success: false,
-          error: `User is not a member of organization: ${args.orgSlug}`,
-        };
-      }
-
-      organizationId = organizationBySlug._id;
-    } else {
-      // Prefer user's defaultOrganizationId for deterministic org selection
-      const defaultOrgId = user.defaultOrganizationId;
-      if (defaultOrgId) {
-        // Verify organization still exists (not hard-deleted)
-        const defaultOrg = await ctx.db.get(defaultOrgId);
-        if (defaultOrg) {
-          // Verify membership still exists
-          const defaultMembership = await ctx.db
-            .query("organizationMembers")
-            .withIndex("by_organization_user", (q) =>
-              q.eq("organizationId", defaultOrgId).eq("userId", userId),
-            )
-            .first();
-          if (defaultMembership) {
-            organizationId = defaultOrgId;
-          }
-        }
-      }
-
-      // Fall back to first membership only if defaultOrganizationId not usable
-      if (!organizationId) {
-        const membership = await ctx.db
-          .query("organizationMembers")
-          .withIndex("by_user", (q) => q.eq("userId", userId))
-          .first();
-
-        if (!membership) {
-          return { success: false, error: "User has no organization membership" };
-        }
-
-        organizationId = membership.organizationId;
-      }
-    }
-
-    const organization = organizationId ? await ctx.db.get(organizationId) : null;
-    if (!organization) {
-      return { success: false, error: "Organization not found" };
-    }
-
-    // Validate this is an E2E test organization to avoid seeding shared/production orgs
-    const isE2EOrg =
-      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
-    if (!isE2EOrg) {
-      return {
-        success: false,
-        error: `Refusing to seed non-E2E organization: ${organization.slug}. Use an org with 'nixelo-e2e' prefix.`,
-      };
+    const { error, organization } = await resolveSeedOrganizationForUser(ctx, user, args.orgSlug);
+    if (error || !organization) {
+      return { success: false, error: error ?? "Organization not found" };
     }
 
     const orgId = organization._id;

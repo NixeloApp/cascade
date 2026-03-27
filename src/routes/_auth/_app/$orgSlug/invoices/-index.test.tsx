@@ -10,12 +10,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { getInvoiceEmptyStateConfig, InvoicesListPage } from "./index";
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_INVOICES_LOADING__?: boolean;
-  }
-}
-
 type InvoiceListItem = Doc<"invoices"> & {
   client: { company?: string; name: string } | null;
 };
@@ -114,14 +108,20 @@ function mockInvoiceQueries(args?: {
   clients?: Doc<"clients">[] | undefined;
   invoices?: InvoiceListItem[] | undefined;
 }) {
-  const clients = args?.clients ?? CLIENTS;
-  const invoices = args?.invoices ?? INVOICES;
-  let callIndex = 0;
+  const clients = args && "clients" in args ? args.clients : CLIENTS;
+  const invoices = args && "invoices" in args ? args.invoices : INVOICES;
 
-  mockUseAuthenticatedQuery.mockImplementation(() => {
-    const result = callIndex % 2 === 0 ? invoices : clients;
-    callIndex += 1;
-    return result;
+  mockUseAuthenticatedQuery.mockImplementation((_, queryArgs) => {
+    if ("status" in queryArgs) {
+      const requestedStatus = queryArgs.status;
+      if (requestedStatus === undefined) {
+        return invoices;
+      }
+
+      return invoices?.filter((invoice) => invoice.status === requestedStatus);
+    }
+
+    return clients;
   });
 }
 
@@ -139,8 +139,13 @@ describe("InvoicesListPage", () => {
         value: () => undefined,
       });
     }
+    if (!Element.prototype.scrollIntoView) {
+      Object.defineProperty(Element.prototype, "scrollIntoView", {
+        configurable: true,
+        value: () => undefined,
+      });
+    }
 
-    delete window.__NIXELO_E2E_INVOICES_LOADING__;
     mockNavigate.mockReset();
     mockCreateInvoice.mockReset();
     mockCreateInvoice.withOptimisticUpdate.mockReset();
@@ -214,7 +219,7 @@ describe("InvoicesListPage", () => {
 
     render(<InvoicesListPage />);
 
-    await user.click(screen.getByRole("button", { name: "New draft" }));
+    await user.click(screen.getByTestId(TEST_IDS.INVOICES.NEW_DRAFT_BUTTON));
 
     expect(await screen.findByTestId(TEST_IDS.INVOICES.CREATE_DIALOG)).toBeInTheDocument();
 
@@ -238,8 +243,20 @@ describe("InvoicesListPage", () => {
     });
   });
 
-  it("renders the route-owned loading shell when the e2e loading override is enabled", () => {
-    window.__NIXELO_E2E_INVOICES_LOADING__ = true;
+  it("shows the filtered empty state through the real status filter interaction", async () => {
+    const user = userEvent.setup();
+
+    render(<InvoicesListPage />);
+
+    await user.click(screen.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER));
+    await user.click(await screen.findByTestId(TEST_IDS.INVOICES.STATUS_FILTER_OPTION_OVERDUE));
+
+    expect(await screen.findByTestId(TEST_IDS.INVOICES.FILTERED_EMPTY_STATE)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear filter" })).toBeInTheDocument();
+  });
+
+  it("renders the route-owned loading shell while invoices are unresolved", () => {
+    mockInvoiceQueries({ invoices: undefined });
 
     render(<InvoicesListPage />);
 

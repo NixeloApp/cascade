@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { usePaginatedQuery } from "convex/react";
 import type { MouseEvent, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { SidebarTeamItem } from "./SidebarTeamItem";
 
@@ -159,6 +160,7 @@ describe("SidebarTeamItem", () => {
 
     expect(screen.getByRole("button", { name: "Collapse Frontend" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "FE - Frontend Platform" })).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NAV.PROJECT_ITEM("FE"))).toBeInTheDocument();
   });
 
   it("shows a loading state for expanded team projects before the first page resolves", () => {
@@ -213,6 +215,7 @@ describe("SidebarTeamItem", () => {
 
     const activeProjectLink = screen.getByRole("link", { name: "FE - Frontend Platform" });
     expect(activeProjectLink).toHaveAttribute("aria-current", "page");
+    expect(screen.getByTestId(TEST_IDS.NAV.PROJECT_ITEM("FE"))).toBe(activeProjectLink);
     expect(screen.getByRole("link", { name: "UI - Design System" })).toBeInTheDocument();
 
     await user.click(activeProjectLink);

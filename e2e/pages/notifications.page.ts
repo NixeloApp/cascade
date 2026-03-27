@@ -1,9 +1,15 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import { withBlockedConvexPage } from "../utils/convex-loading";
+import { getLocatorCount, getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
+import { withSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
-import { waitForAnimation, waitForDashboardReady } from "../utils/wait-helpers";
+import {
+  waitForAnimation,
+  waitForDashboardReady,
+  waitForScreenshotReady,
+} from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -11,6 +17,49 @@ import { BasePage } from "./base.page";
  * Handles the full-page notification center with filtering and pagination.
  */
 export class NotificationsPage extends BasePage {
+  static async withCapturePage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (notificationsPage: NotificationsPage) => Promise<T>,
+  ): Promise<T> {
+    return withSiblingPageTarget(sourcePage, async ({ page }) =>
+      run(new NotificationsPage(page, orgSlug)),
+    );
+  }
+
+  static async withUnreadOverflowPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (notificationsPage: NotificationsPage) => Promise<T>,
+  ): Promise<T> {
+    return NotificationsPage.withCapturePage(sourcePage, orgSlug, async (notificationsPage) => {
+      await notificationsPage.gotoAndWaitForUnreadOverflowReady();
+      return run(notificationsPage);
+    });
+  }
+
+  static async withMarkAllReadLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (notificationsPage: NotificationsPage) => Promise<T>,
+  ): Promise<T> {
+    return withBlockedConvexPage(
+      sourcePage,
+      {
+        kind: "mutations",
+        paths: ["notifications:markAllAsRead"],
+        target: "isolated",
+      },
+      async (loadingPage) => {
+        const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
+        await notificationsPage.gotoAndWaitForUnreadOverflowReady();
+        await notificationsPage.openMarkAllReadLoadingState();
+        await waitForAnimation(loadingPage);
+        return run(notificationsPage);
+      },
+    );
+  }
+
   readonly archiveAllButton: Locator;
   readonly archivedEmptyState: Locator;
   readonly archivedTab: Locator;
@@ -56,8 +105,14 @@ export class NotificationsPage extends BasePage {
       .toBe("ready");
   }
 
+  async gotoAndWaitForUnreadOverflowReady(): Promise<void> {
+    await this.goto();
+    await this.waitForUnreadOverflowReady();
+  }
+
   async waitForCaptureReady(): Promise<void> {
     await waitForDashboardReady(this.page);
+    await waitForScreenshotReady(this.page);
     await expect
       .poll(
         async () =>
@@ -69,24 +124,51 @@ export class NotificationsPage extends BasePage {
     await expect
       .poll(
         async () => {
-          const mentionsVisible = await isLocatorVisible(this.mentionsFilter);
+          const unreadBadgeVisible = await isLocatorVisible(this.unreadBadge);
+          const markAllReadVisible = await isLocatorVisible(this.markAllReadButton);
+          const archiveAllVisible = await isLocatorVisible(this.archiveAllButton);
           const archivedSelected =
             (await this.archivedTab.getAttribute("aria-selected")) === "true";
           const itemCount = await getLocatorCount(this.notificationItems);
           const inboxEmptyVisible = await isLocatorVisible(this.inboxEmptyState);
           const archivedEmptyVisible = await isLocatorVisible(this.archivedEmptyState);
 
-          if (mentionsVisible && (itemCount > 0 || inboxEmptyVisible)) {
+          if (archivedSelected && (itemCount > 0 || archivedEmptyVisible)) {
             return "ready";
           }
 
-          if (archivedSelected && (itemCount > 0 || archivedEmptyVisible)) {
+          if (
+            itemCount > 0 ||
+            inboxEmptyVisible ||
+            unreadBadgeVisible ||
+            markAllReadVisible ||
+            archiveAllVisible
+          ) {
             return "ready";
           }
 
           return "pending";
         },
         { timeout: 10000 },
+      )
+      .toBe("ready");
+  }
+
+  async waitForUnreadOverflowReady(): Promise<void> {
+    await waitForDashboardReady(this.page);
+    await waitForScreenshotReady(this.page);
+    await expect
+      .poll(
+        async () => {
+          const unreadBadgeText = await getOptionalLocatorText(this.unreadBadge);
+          const markAllReadVisible = await isLocatorVisible(this.markAllReadButton);
+          const itemCount = await getLocatorCount(this.notificationItems);
+
+          return unreadBadgeText === "99+" && markAllReadVisible && itemCount > 0
+            ? "ready"
+            : "pending";
+        },
+        { timeout: 12000 },
       )
       .toBe("ready");
   }
@@ -151,5 +233,12 @@ export class NotificationsPage extends BasePage {
       .toBe("ready");
 
     await waitForAnimation(this.page);
+  }
+
+  async openMarkAllReadLoadingState(): Promise<void> {
+    await expect(this.markAllReadButton).toBeVisible();
+    await this.markAllReadButton.click();
+    await expect(this.markAllReadButton).toHaveAttribute("aria-busy", "true");
+    await expect(this.markAllReadButton).toBeDisabled();
   }
 }

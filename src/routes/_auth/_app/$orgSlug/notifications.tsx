@@ -49,12 +49,6 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/notifications")({
   component: NotificationsPage,
 });
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_NOTIFICATIONS_LOADING__?: boolean;
-  }
-}
-
 /** Notification filter categories */
 type NotificationFilter = "all" | "mentions" | "assigned" | "comments" | "updates";
 
@@ -95,10 +89,6 @@ function applyQueuedReadState(
   return notifications.map((notification) =>
     queuedReadIds.has(notification._id) ? { ...notification, isRead: true } : notification,
   );
-}
-
-function isE2ENotificationsLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ === true;
 }
 
 function getUnreadNotificationsDescription(unreadCount: number | null | undefined): string {
@@ -192,9 +182,7 @@ function groupNotificationsByDate(
 
 /** Full-page notifications hub with filters, tabs, and per-notification actions. */
 export function NotificationsPage() {
-  const [bulkActionLoading, setBulkActionLoading] = useState<"markAll" | "archiveAll" | null>(() =>
-    isE2ENotificationsLoadingOverrideEnabled() ? "markAll" : null,
-  );
+  const [bulkActionLoading, setBulkActionLoading] = useState<"markAll" | "archiveAll" | null>(null);
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
   const orgContext = useOrganizationOptional();

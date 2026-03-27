@@ -9,30 +9,33 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { AnalyticsPage } from "../pages/analytics.page";
+import { AuthPage } from "../pages/auth.page";
 import { BacklogPage } from "../pages/backlog.page";
+import { CalendarPage } from "../pages/calendar.page";
+import { DashboardPage } from "../pages/dashboard.page";
 import { DocumentsPage } from "../pages/documents.page";
 import { InboxPage } from "../pages/inbox.page";
+import { InvitePage } from "../pages/invite.page";
 import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
+import { LandingPage } from "../pages/landing.page";
 import { MeetingsPage } from "../pages/meetings.page";
 import { MyIssuesPage } from "../pages/my-issues.page";
 import { NotificationsPage } from "../pages/notifications.page";
 import { OutreachPage } from "../pages/outreach.page";
+import { PortalPage } from "../pages/portal.page";
 import { ProjectsPage } from "../pages/projects.page";
 import { RoadmapPage } from "../pages/roadmap.page";
 import { SettingsPage } from "../pages/settings.page";
 import { TeamPage } from "../pages/team.page";
+import { UnsubscribePage } from "../pages/unsubscribe.page";
 import { WorkspacesPage } from "../pages/workspaces.page";
-import {
-  getLocatorCount,
-  getPageHeaderOrGenericEmptyState,
-  isLocatorVisible,
-} from "../utils/locator-state";
+import { getPageHeaderOrGenericEmptyState } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
 import {
+  waitForAllSpinnersToClear,
   waitForAnimation,
   waitForLoadingSkeletonsToClear,
-  waitForScreenshotReady,
 } from "../utils/wait-helpers";
 import { URL_PATTERNS } from "./routing";
 
@@ -42,28 +45,6 @@ import { URL_PATTERNS } from "./routing";
  * navigated to the page — we just need the readiness check.
  */
 const READINESS_ONLY_SLUG = "__readiness__";
-
-export async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> {
-  try {
-    await expect
-      .poll(
-        async () => {
-          const spinner = page.getByTestId(TEST_IDS.LOADING.SPINNER);
-          const count = await spinner.count();
-          if (count === 0) return 0;
-          let visible = 0;
-          for (let i = 0; i < count; i++) {
-            if (await isLocatorVisible(spinner.nth(i))) visible++;
-          }
-          return visible;
-        },
-        { timeout, intervals: [100, 200, 500] },
-      )
-      .toBe(0);
-  } catch {
-    // Spinner may have cleared between polls — non-critical
-  }
-}
 
 export async function waitForDuplicateDetectionSearchReady(
   orgSlug: string,
@@ -92,158 +73,61 @@ export async function waitForDuplicateDetectionSearchReady(
 
 export async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "landing") {
-    await page
-      .getByRole("heading", { name: /replace scattered project tools/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByText(/product control tower/i).waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+    await new LandingPage(page, READINESS_ONLY_SLUG).waitForCaptureReady();
     return;
   }
 
-  if (["signin", "signup", "forgot-password"].includes(name)) {
-    await page.getByText(/secure account access/i).waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+  if (
+    name === "signin" ||
+    name === "signup" ||
+    name === "forgot-password" ||
+    name === "signup-verify" ||
+    name === "forgot-password-reset" ||
+    name === "verify-email" ||
+    name === "verify-2fa"
+  ) {
+    await new AuthPage(page, READINESS_ONLY_SLUG).waitForCaptureReady(name);
     return;
   }
 
-  if (name === "signup-verify") {
-    await page
-      .getByRole("heading", { name: /create your account/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByRole("heading", { name: /verify your email/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+  if (
+    name === "invite" ||
+    name === "invite-invalid" ||
+    name === "invite-expired" ||
+    name === "invite-revoked" ||
+    name === "invite-accepted"
+  ) {
+    await new InvitePage(page).waitForCaptureReady(name);
     return;
-  }
-
-  if (name === "forgot-password-reset") {
-    await page
-      .getByRole("heading", { name: /check your email/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByTestId(TEST_IDS.AUTH.RESET_CODE_INPUT)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
-  }
-
-  if (name === "verify-email") {
-    await page
-      .getByRole("heading", { name: /check your email/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
-  }
-
-  if (name === "invite") {
-    await page
-      .getByRole("heading", { name: /you're invited/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByText(/has invited you to join/i).waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
-  }
-
-  if (name.startsWith("invite-")) {
-    const inviteStateHeadings: Partial<Record<string, RegExp>> = {
-      "invite-invalid": /invalid invitation/i,
-      "invite-expired": /invitation expired/i,
-      "invite-revoked": /invitation revoked/i,
-      "invite-accepted": /already accepted/i,
-    };
-    const inviteStateHeading = inviteStateHeadings[name];
-
-    if (inviteStateHeading) {
-      await page
-        .getByRole("heading", { name: inviteStateHeading })
-        .waitFor({ state: "visible", timeout: 12000 });
-      await waitForScreenshotReady(page);
-      return;
-    }
   }
 
   if (name === "unsubscribe") {
-    await page
-      .getByRole("heading", { name: /unsubscribed/i })
-      .or(page.getByRole("heading", { name: /invalid link/i }))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/you've been unsubscribed from email notifications/i)
-      .or(page.getByText(/this unsubscribe link is invalid or has expired/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+    await new UnsubscribePage(page).waitForCaptureReady();
     return;
   }
 
-  if (name === "portal") {
-    await page
-      .getByRole("heading", { name: /client portal/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/portal token received/i)
-      .or(page.getByText(/no projects are available for this portal token/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
+  if (name === "portal" || name === "portal-project") {
+    await new PortalPage(page).waitForCaptureReady(name);
   }
+}
 
-  if (name === "portal-project") {
-    // The portal-project route currently renders the parent portal entry page
-    // (portal.$token.tsx lacks an Outlet for nested routes). Match what actually
-    // appears so the screenshot captures the current state.
-    await page
-      .getByRole("heading", { name: /client portal|project view/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+export async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> {
+  try {
+    await waitForAllSpinnersToClear(page, timeout);
+  } catch {
+    // Spinner may have cleared between polls — non-critical
   }
 }
 
 export async function waitForCalendarReady(page: Page): Promise<boolean> {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      await page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK).waitFor({
-        state: "visible",
-        timeout: 8000,
-      });
-      await page.getByTestId(TEST_IDS.CALENDAR.ROOT).waitFor({
-        state: "visible",
-        timeout: 4000,
-      });
-      await waitForLoadingSkeletonsToClear(page, 4000);
-      return true;
-    } catch {
-      if (attempt === 0) {
-        await page.goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 });
-        await waitForScreenshotReady(page);
-      }
-    }
-  }
-  return false;
+  return new CalendarPage(page, READINESS_ONLY_SLUG).ensureReady();
 }
 
 export async function waitForCalendarModeSelected(
   page: Page,
   mode: "day" | "week" | "month",
 ): Promise<void> {
-  const toggle = page.getByTestId(getCalendarModeTestId(mode));
-  await expect(toggle).toHaveAttribute("aria-checked", "true", { timeout: 5000 });
-  await expect(page.getByTestId(TEST_IDS.CALENDAR.GRID)).toHaveAttribute(
-    "data-calendar-view",
-    mode,
-    {
-      timeout: 5000,
-    },
-  );
+  await new CalendarPage(page, READINESS_ONLY_SLUG).expectModeSelected(mode);
 }
 
 export function getCalendarModeTestId(mode: "day" | "week" | "month"): string {
@@ -261,150 +145,19 @@ export async function selectCalendarMode(
   page: Page,
   mode: "day" | "week" | "month",
 ): Promise<void> {
-  const toggle = page.getByTestId(getCalendarModeTestId(mode));
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      await toggle.scrollIntoViewIfNeeded();
-      await toggle.click();
-      await waitForCalendarModeSelected(page, mode);
-      return;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-    }
-
-    try {
-      await toggle.evaluate((element) => {
-        if (element instanceof HTMLButtonElement) {
-          element.click();
-        }
-      });
-      await waitForCalendarModeSelected(page, mode);
-      return;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-    }
-  }
-
-  throw new Error(
-    `calendar-${mode} mode did not become active: ${lastError?.message ?? "unknown error"}`,
-  );
+  await new CalendarPage(page, READINESS_ONLY_SLUG).switchToMode(mode);
 }
 
 export async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs;
-  const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
-  const previousButton = page.getByRole("button", { name: /^previous month$/i });
-  const nextButton = page.getByRole("button", { name: /^next month$/i });
-
-  const isExpired = () => Date.now() > deadline;
-  const hasEvents = async () => (await getLocatorCount(eventItems)) > 0;
-
-  const waitForCalendarState = async () => {
-    await waitForScreenshotReady(page);
-    await waitForCalendarReady(page);
-  };
-
-  const navigateUntilVisible = async (direction: "previous" | "next", steps: number) => {
-    const button = direction === "previous" ? previousButton : nextButton;
-
-    for (let step = 0; step < steps; step++) {
-      if (isExpired()) return false;
-      await button.click();
-      await waitForCalendarState();
-      if (await hasEvents()) return true;
-    }
-
-    return false;
-  };
-
-  // Quick check — events already visible?
-  if (await hasEvents()) return true;
-
-  // Try clicking "today" button
-  await page.getByRole("button", { name: /^today$/i }).click();
-  await waitForCalendarState();
-  if (await hasEvents()) return true;
-
-  if (isExpired()) return false;
-
-  // Navigate backward then forward looking for events
-  if (await navigateUntilVisible("previous", 2)) return true;
-  if (isExpired()) return false;
-  if (await navigateUntilVisible("next", 4)) return true;
-
-  return false;
+  return new CalendarPage(page, READINESS_ONLY_SLUG).waitForEvents(timeoutMs);
 }
 
 export async function focusCalendarTimedContentForCapture(page: Page): Promise<void> {
-  const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH);
-  const monthModeSelected = (await monthToggle.getAttribute("aria-checked")) === "true";
-  if (monthModeSelected) {
-    return;
-  }
-
-  const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
-  if ((await eventItems.count()) === 0) {
-    return;
-  }
-  const firstEvent = eventItems.first();
-
-  await firstEvent.evaluate((element) => {
-    if (element instanceof HTMLElement) {
-      element.scrollIntoView({ block: "center", inline: "nearest" });
-    }
-  });
-  await waitForScreenshotReady(page);
+  await new CalendarPage(page, READINESS_ONLY_SLUG).focusFirstEvent();
 }
 
 export async function waitForCalendarMonthReady(page: Page): Promise<void> {
-  const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH);
-  const waitForMonthToggleSelected = async (timeout: number) => {
-    await expect(monthToggle).toHaveAttribute("aria-checked", "true", { timeout });
-  };
-
-  await monthToggle.waitFor({ state: "visible", timeout: 5000 });
-
-  let lastError: Error | null = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const isSelected = (await monthToggle.getAttribute("aria-checked")) === "true";
-    if (isSelected) {
-      break;
-    }
-
-    try {
-      await monthToggle.scrollIntoViewIfNeeded();
-      await monthToggle.click();
-      await waitForMonthToggleSelected(1000);
-      break;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-    }
-
-    try {
-      await monthToggle.evaluate((element) => {
-        if (element instanceof HTMLButtonElement) {
-          element.click();
-        }
-      });
-      await waitForMonthToggleSelected(1000);
-      break;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-    }
-
-    if (attempt === 2) {
-      throw new Error(
-        `Calendar month toggle did not activate: ${lastError?.message ?? "unknown error"}`,
-      );
-    }
-  }
-
-  await waitForMonthToggleSelected(5000);
-  await waitForScreenshotReady(page);
-  await waitForCalendarReady(page);
-  await waitForCalendarMonthGrid(page);
+  await new CalendarPage(page, READINESS_ONLY_SLUG).ensureMonthView();
 }
 
 export function supportsCalendarDragAndDropCapture(configPrefix: string): boolean {
@@ -415,46 +168,11 @@ export async function waitForCalendarMonthGrid(
   page: Page,
   options?: { requireQuickAddButtons?: boolean },
 ): Promise<void> {
-  await expect
-    .poll(() => page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).count(), {
-      timeout: 5000,
-      intervals: [100, 200, 500],
-    })
-    .toBeGreaterThanOrEqual(28);
-
-  if (options?.requireQuickAddButtons) {
-    await expect
-      .poll(() => page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).count(), {
-        timeout: 5000,
-        intervals: [100, 200, 500],
-      })
-      .toBeGreaterThanOrEqual(28);
-  }
+  await new CalendarPage(page, READINESS_ONLY_SLUG).waitForMonthGrid(options);
 }
 
 export async function waitForBoardReady(page: Page): Promise<boolean> {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      await page.getByTestId(TEST_IDS.BOARD.ROOT).waitFor({
-        state: "visible",
-        timeout: 10000,
-      });
-      await page.getByTestId(TEST_IDS.BOARD.COLUMN).waitFor({
-        state: "visible",
-        timeout: 6000,
-      });
-      await waitForLoadingSkeletonsToClear(page, 4000);
-      await waitForSpinnersHidden(page, 4000);
-      return true;
-    } catch {
-      if (attempt === 0) {
-        await page.goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 });
-        await waitForScreenshotReady(page);
-      }
-    }
-  }
-
-  return false;
+  return new ProjectsPage(page, READINESS_ONLY_SLUG).ensureBoardReady();
 }
 
 export async function waitForProjectsReady(page: Page): Promise<void> {
@@ -475,37 +193,7 @@ export type CalendarDragState = {
 };
 
 export async function getCalendarDragState(page: Page): Promise<CalendarDragState> {
-  const dayCells = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
-  const dayCellCount = await getLocatorCount(dayCells);
-  const eventItemCount = await getLocatorCount(page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM));
-
-  let sourceIndex: number | null = null;
-  for (let index = 0; index < dayCellCount; index += 1) {
-    const cellEventCount = await getLocatorCount(
-      dayCells.nth(index).getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM),
-    );
-    if (cellEventCount > 0) {
-      sourceIndex = index;
-      break;
-    }
-  }
-
-  if (sourceIndex == null) {
-    return {
-      sourceIndex: null,
-      targetIndex: null,
-      dayCellCount,
-      eventItemCount,
-    };
-  }
-
-  const targetIndex = sourceIndex + 1 < dayCellCount ? sourceIndex + 1 : null;
-  return {
-    sourceIndex,
-    targetIndex,
-    dayCellCount,
-    eventItemCount,
-  };
+  return new CalendarPage(page, READINESS_ONLY_SLUG).getDragState();
 }
 
 export async function waitForWorkspacesReady(page: Page): Promise<void> {
@@ -595,20 +283,7 @@ export async function waitForExpectedContent(
   }
 
   if (URL_PATTERNS.dashboard.test(url) || name === "dashboard") {
-    // Wait for the sidebar to render — this proves the app shell + auth
-    // has completed (splash screen is gone, org context loaded).
-    await page
-      .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
-      .waitFor({ state: "visible", timeout: 30000 });
-    // Wait for dashboard heading (confirms route rendered)
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 15000 });
-    // Wait for dashboard shell to render
-    await page.getByTestId(TEST_IDS.DASHBOARD.CONTENT).waitFor({
-      state: "visible",
-      timeout: 20000,
-    });
+    await new DashboardPage(page, READINESS_ONLY_SLUG).waitForCaptureReady();
     await waitForSpinnersHidden(page);
     await waitForLoadingSkeletonsToClear(page, 4000);
     return;

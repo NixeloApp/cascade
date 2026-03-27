@@ -13,6 +13,13 @@
  * 4. Values are kebab-case strings (e.g., 'issue-card')
  */
 
+function toTestIdFragment(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export const TEST_IDS = {
   // ============================================================
   // Page Layout
@@ -27,6 +34,8 @@ export const TEST_IDS = {
     EMPTY_STATE: "page-empty-state",
     /** @see public/offline.html */
     OFFLINE_FALLBACK_HEADING: "offline-fallback-heading",
+    /** @see src/components/NotFoundPage.tsx */
+    NOT_FOUND_HEADING: "page-not-found-heading",
   },
 
   // ============================================================
@@ -42,6 +51,9 @@ export const TEST_IDS = {
     STATUS_FILTER: "issue-status-filter",
     /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
     PRIORITY_FILTER: "issue-priority-filter",
+    /** @see src/components/FilterBar.tsx */
+    PRIORITY_FILTER_OPTION: (priority: string) =>
+      `issue-priority-filter-option-${toTestIdFragment(priority)}`,
     /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
     TYPE_FILTER: "issue-type-filter",
     /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
@@ -54,6 +66,17 @@ export const TEST_IDS = {
     CREATE_TITLE_INPUT: "issue-create-title-input",
     /** @see src/components/IssueDetail/CreateIssueModal.tsx */
     CREATE_DESCRIPTION_EDITOR: "issue-create-description-editor",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_DRAFT_BANNER: "issue-create-draft-banner",
+    /** @see src/components/DuplicateDetection.tsx */
+    CREATE_DUPLICATE_DETECTION: "issue-create-duplicate-detection",
+    /** @see src/components/DuplicateDetection.tsx */
+    CREATE_DUPLICATE_ITEM: (issueKey: string) =>
+      `issue-create-duplicate-item-${toTestIdFragment(issueKey)}`,
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_ANOTHER_SWITCH: "issue-create-another-switch",
+    /** @see src/components/IssueDetail/IssueCard.tsx */
+    CARD_TRIGGER: (issueKey: string) => `issue-card-trigger-${toTestIdFragment(issueKey)}`,
     /** @see src/components/IssueCard.tsx */
     DRAG_HANDLE: "issue-drag-handle",
     /** @see src/components/IssueCard.tsx */
@@ -66,6 +89,10 @@ export const TEST_IDS = {
     ASSIGNEE: "issue-assignee",
     /** @see src/components/IssueDetailModal.tsx */
     DETAIL_MODAL: "issue-detail-modal",
+    /** @see src/components/IssueDetailModal.tsx */
+    DETAIL_KEY: "issue-detail-key",
+    /** @see src/components/IssueDetail/IssueDetailContent.tsx */
+    DETAIL_TITLE: "issue-detail-title",
     /** @see src/components/IssueDetail/IssueDetailContent.tsx */
     DESCRIPTION_EDITOR: "issue-description-editor",
     /** @see src/components/IssueDetail/IssueDetailContent.tsx */
@@ -90,6 +117,19 @@ export const TEST_IDS = {
     ROOT: "project-board",
     /** @see src/components/Kanban/BoardToolbar.tsx */
     TOOLBAR: "project-board-toolbar",
+    /** @see src/components/Kanban/SwimlanSelector.tsx */
+    SWIMLANE_TRIGGER: "board-swimlane-trigger",
+    /** @see src/components/Kanban/SwimlanSelector.tsx */
+    SWIMLANE_OPTION: (mode: "none" | "priority" | "assignee" | "type" | "label") =>
+      `board-swimlane-option-${mode}`,
+    /** @see src/components/Kanban/DisplayPropertiesSelector.tsx */
+    DISPLAY_PROPERTIES_TRIGGER: "board-display-properties-trigger",
+    /** @see src/components/Kanban/DisplayPropertiesSelector.tsx */
+    DISPLAY_PROPERTIES_OPTION: (
+      property: "issueType" | "priority" | "labels" | "assignee" | "storyPoints",
+    ) => `board-display-properties-option-${property}`,
+    /** @see src/components/Kanban/ViewModeToggle.tsx */
+    VIEW_MODE_TOGGLE: "board-view-mode-toggle",
     /** @see src/components/KanbanBoard.tsx */
     LOADING_STATE: "project-board-loading-state",
     /** @see src/components/KanbanBoard.tsx */
@@ -100,6 +140,20 @@ export const TEST_IDS = {
     COLUMN_HEADER: "board-column-header",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN_COUNT: "board-column-count",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    COLUMN_EMPTY_STATE: "board-column-empty-state",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    COLUMN_WIP_WARNING: "board-column-wip-warning",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    COLUMN_COLLAPSE_BUTTON: "board-column-collapse-button",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    COLUMN_EXPAND_BUTTON: "board-column-expand-button",
+    /** @see src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx */
+    SPRINT_TRIGGER: "board-sprint-trigger",
+    /** @see src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx */
+    SPRINT_CONTENT: "board-sprint-content",
+    /** @see src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx */
+    SPRINT_OPTION: (value: string) => `board-sprint-option-${toTestIdFragment(value)}`,
   },
 
   // ============================================================
@@ -111,6 +165,18 @@ export const TEST_IDS = {
     CARD: "workspace-card",
     /** @see src/components/WorkspaceCard.tsx */
     NAME: "workspace-name",
+    /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
+    CREATE_BUTTON: "workspace-create-button",
+    /** @see src/components/CreateWorkspaceModal.tsx */
+    CREATE_MODAL: "workspace-create-modal",
+    /** @see src/components/CreateWorkspaceModal.tsx */
+    CREATE_NAME_INPUT: "workspace-create-name-input",
+    /** @see src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/index.tsx */
+    CREATE_TEAM_BUTTON: "workspace-create-team-button",
+    /** @see src/components/CreateTeamModal.tsx */
+    CREATE_TEAM_MODAL: "workspace-create-team-modal",
+    /** @see src/components/CreateTeamModal.tsx */
+    CREATE_TEAM_NAME_INPUT: "workspace-create-team-name-input",
     /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
     SEARCH_INPUT: "workspace-search-input",
     /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
@@ -126,6 +192,10 @@ export const TEST_IDS = {
     BRAND_LOGO: "brand-logo",
     /** @see src/components/Sidebar.tsx */
     SIDEBAR: "sidebar",
+    /** @see src/components/App/AppSidebar.tsx */
+    SIDEBAR_TOGGLE: "sidebar-toggle",
+    /** @see src/components/App/AppSidebar.tsx */
+    SIDEBAR_CLOSE_BUTTON: "sidebar-close-button",
     /** @see src/components/App/AppSidebar.tsx */
     DASHBOARD_LINK: "sidebar-dashboard-link",
     /** @see src/components/App/AppSidebar.tsx */
@@ -148,9 +218,13 @@ export const TEST_IDS = {
     /** @see src/components/App/AppSidebar.tsx */
     DOCUMENT_ITEM: "sidebar-document-item",
     /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENT_FAVORITES_SECTION: "sidebar-document-favorites-section",
+    /** @see src/components/App/AppSidebar.tsx */
     WORKSPACE_LIST: "sidebar-workspace-list",
     /** @see src/components/App/AppSidebar.tsx */
     WORKSPACE_ITEM: "sidebar-workspace-item",
+    /** @see src/components/Sidebar/SidebarTeamItem.tsx */
+    PROJECT_ITEM: (projectKey: string) => `sidebar-project-item-${toTestIdFragment(projectKey)}`,
     /** @see src/routes/__root.tsx */
     MAIN_CONTENT: "main-content",
   },
@@ -237,6 +311,17 @@ export const TEST_IDS = {
     LOADING_STATE: "project-loading-state",
     /** @see src/components/ProjectsList.tsx */
     SINGLE_PROJECT_OVERVIEW: "project-single-project-overview",
+    /** @see src/components/ExportButton.tsx */
+    IMPORT_EXPORT_TRIGGER: "project-import-export-trigger",
+    /** @see src/components/ImportExportModal.tsx */
+    IMPORT_EXPORT_MODAL: "project-import-export-modal",
+    /** @see src/components/ImportExportModal.tsx */
+    IMPORT_EXPORT_MODE_IMPORT: "project-import-export-mode-import",
+    /** @see src/components/ImportExport/ImportExportPanelChrome.tsx */
+    IMPORT_EXPORT_FORMAT_OPTION: (format: "csv" | "json") =>
+      `project-import-export-format-option-${format}`,
+    /** @see src/components/ImportExport/ImportExportPanelChrome.tsx */
+    IMPORT_EXPORT_REQUIREMENTS: "project-import-export-requirements",
   },
 
   // ============================================================
@@ -283,6 +368,11 @@ export const TEST_IDS = {
     HYDRATED_STATE: "plate-editor-hydrated-state",
     /** @see src/components/CommandPalette.tsx */
     COMMAND_PALETTE: "command-palette",
+    /** @see src/components/Plate/ColorPickerButton.tsx */
+    FONT_COLOR_TRIGGER: "plate-editor-font-color-trigger",
+    /** @see src/components/Plate/ColorPickerButton.tsx */
+    FONT_COLOR_SWATCH: (colorName: string) =>
+      `plate-editor-font-color-swatch-${colorName.toLowerCase().replace(/\s+/g, "-")}`,
   },
 
   // ============================================================
@@ -370,6 +460,10 @@ export const TEST_IDS = {
     NAME: "sprint-name",
     /** @see src/components/Sprints/CreateSprintForm.tsx */
     CREATE_FORM: "sprint-create-form",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    CREATE_NAME_INPUT: "sprint-create-name-input",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    CREATE_SUBMIT_BUTTON: "sprint-create-submit-button",
     /** @see src/routes/_app.$orgSlug.projects.$key.sprints.tsx */
     CONTENT: "sprints-content",
     /** @see src/components/Sprints/SprintManager.tsx */
@@ -378,6 +472,35 @@ export const TEST_IDS = {
     CREATE_BUTTON: "sprints-create-button",
     /** @see src/components/Sprints/SprintManager.tsx */
     EMPTY_STATE: "sprints-empty-state",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_TRIGGER: (sprintName: string) => `sprint-start-trigger-${toTestIdFragment(sprintName)}`,
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_DIALOG: "sprint-start-dialog",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_PRESET: (presetId: string) => `sprint-start-preset-${presetId}`,
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_DATE_INPUT: "sprint-start-date-input",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_END_DATE_INPUT: "sprint-start-end-date-input",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_OVERLAP_WARNING: "sprint-start-overlap-warning",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_CONFIRM_BUTTON: "sprint-start-confirm-button",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    COMPLETE_TRIGGER: (sprintName: string) =>
+      `sprint-complete-trigger-${toTestIdFragment(sprintName)}`,
+    /** @see src/components/Sprints/SprintManager.tsx */
+    COMPLETE_DIALOG: "sprint-complete-dialog",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    COMPLETE_CONFIRM_BUTTON: "sprint-complete-confirm-button",
+    /** @see src/components/Sprints/SprintWorkload.tsx */
+    WORKLOAD_TRIGGER: "sprint-workload-trigger",
+    /** @see src/components/Sprints/SprintWorkload.tsx */
+    WORKLOAD_POPOVER: "sprint-workload-popover",
+    /** @see src/components/Analytics/SprintBurnChart.tsx */
+    CHART_BURNDOWN_TOGGLE: "sprint-chart-burndown-toggle",
+    /** @see src/components/Analytics/SprintBurnChart.tsx */
+    CHART_BURNUP_TOGGLE: "sprint-chart-burnup-toggle",
   },
 
   ROADMAP: {
@@ -559,6 +682,10 @@ export const TEST_IDS = {
     MEMBERS_SECTION: "project-settings-members-section",
     /** @see src/components/ProjectSettings/MemberManagement.tsx */
     MEMBER_REMOVE_BUTTON: "project-settings-member-remove-button",
+    /** @see src/components/ProjectSettings/DangerZone.tsx */
+    DELETE_TRIGGER: "project-settings-delete-trigger",
+    /** @see src/components/ProjectSettings/DangerZone.tsx */
+    DELETE_CONFIRM_INPUT: "project-settings-delete-confirm-input",
   },
 
   // ============================================================
@@ -619,6 +746,10 @@ export const TEST_IDS = {
     RECENT_ACTIVITY: "dashboard-recent-activity",
     /** @see src/components/Dashboard/WorkspacesList.tsx */
     WORKSPACES_LIST: "dashboard-workspaces-list",
+    /** @see src/components/Dashboard/DashboardCustomizeModal.tsx */
+    CUSTOMIZE_TRIGGER: "dashboard-customize-trigger",
+    /** @see src/components/Dashboard/DashboardCustomizeModal.tsx */
+    CUSTOMIZE_MODAL: "dashboard-customize-modal",
   },
 
   // ============================================================
@@ -654,6 +785,18 @@ export const TEST_IDS = {
     WORKSPACE_LIBRARY_SECTION: "documents-workspace-library-section",
     /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
     SEARCH_EMPTY_STATE: "documents-search-empty-state",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    HEADER_FAVORITE_BUTTON: "document-header-favorite-button",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    HEADER_MORE_ACTIONS_BUTTON: "document-header-more-actions-button",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    ACTION_MENU: "document-action-menu",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    ACTION_MOVE_TO_PROJECT: "document-action-move-to-project",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    ACTION_LOCK: "document-action-lock",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    ACTION_UNLOCK: "document-action-unlock",
   },
 
   // ============================================================
@@ -661,6 +804,10 @@ export const TEST_IDS = {
   // ============================================================
 
   TIME_TRACKING: {
+    /** @see src/components/TimeTracking/TimeEntriesList.tsx */
+    ADD_ENTRY_BUTTON: "time-tracking-add-entry-button",
+    /** @see src/components/TimeTracking/TimeEntryModal.tsx */
+    ENTRY_MODAL: "time-tracking-entry-modal",
     /** @see src/components/TimeTracking/TimeEntryModal.tsx */
     ENTRY_FORM: "time-entry-form",
     /** @see src/components/TimeTracking/TimeTrackingPage.tsx */
@@ -717,6 +864,19 @@ export const TEST_IDS = {
     TABLE: "invoices-table",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     STATUS_FILTER: "invoices-status-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_ALL: "invoices-status-filter-option-all",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_DRAFT: "invoices-status-filter-option-draft",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_SENT: "invoices-status-filter-option-sent",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_PAID: "invoices-status-filter-option-paid",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    STATUS_FILTER_OPTION_OVERDUE: "invoices-status-filter-option-overdue",
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
+    NEW_DRAFT_BUTTON: "invoices-new-draft-button",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
     EMPTY_STATE: "invoices-empty-state",
     /** @see src/routes/_auth/_app/$orgSlug/invoices/index.tsx */
@@ -794,6 +954,14 @@ export const TEST_IDS = {
     DUPLICATE_DIALOG: "project-inbox-duplicate-dialog",
     /** @see src/components/InboxList.tsx */
     ROW: "project-inbox-row",
+    /** @see src/components/InboxList.tsx */
+    ROW_DECLINE_BUTTON: "project-inbox-row-decline-button",
+    /** @see src/components/InboxList.tsx */
+    ROW_SNOOZE_BUTTON: "project-inbox-row-snooze-button",
+    /** @see src/components/InboxList.tsx */
+    ROW_MORE_ACTIONS_BUTTON: "project-inbox-row-more-actions-button",
+    /** @see src/components/InboxList.tsx */
+    DUPLICATE_ACTION: "project-inbox-duplicate-action",
   },
 
   // ============================================================
@@ -864,6 +1032,15 @@ export const TEST_IDS = {
     MEMORY_SECTION: "meetings-memory-section",
     /** @see src/routes/_app.$orgSlug.meetings.tsx */
     RECORDING_CARD: "meetings-recording-card",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    DETAIL_TITLE: "meetings-detail-title",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    DETAIL_SUMMARY: "meetings-detail-summary",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    MEMORY_DESCRIPTION: "meetings-memory-description",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    MEMORY_FILTER_BUTTON: (projectKey: string) =>
+      `meetings-memory-filter-button-${toTestIdFragment(projectKey)}`,
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - search input */
     SEARCH_INPUT: "meetings-search-input",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - transcript search */

@@ -662,12 +662,16 @@ function MeetingMemorySection({
       gap="sm"
       data-testid={TEST_IDS.MEETINGS.MEMORY_SECTION}
     >
+      <span className="sr-only" data-testid={TEST_IDS.MEETINGS.MEMORY_DESCRIPTION}>
+        {description}
+      </span>
       {projectLenses.length > 0 && (
         <Flex gap="xs" wrap>
           <Button
             variant={projectFilter === "all" ? "secondary" : "outline"}
             size="sm"
             onClick={() => onProjectSelect("all")}
+            data-testid={TEST_IDS.MEETINGS.MEMORY_FILTER_BUTTON("all")}
           >
             All meetings
           </Button>
@@ -677,6 +681,7 @@ function MeetingMemorySection({
               variant={projectFilter === lens.projectId ? "secondary" : "outline"}
               size="sm"
               onClick={() => onProjectSelect(lens.projectId)}
+              data-testid={TEST_IDS.MEETINGS.MEMORY_FILTER_BUTTON(lens.projectKey)}
             >
               <Flex gap="xs" align="center">
                 <Typography as="span" variant="strong">
@@ -1370,7 +1375,9 @@ function SummaryOverviewCard({ summary }: { summary: MeetingSummary }) {
   return (
     <Card variant="soft" padding="md">
       <Section title="Summary" gap="sm">
-        <Typography variant="muted">{summary.executiveSummary}</Typography>
+        <Typography variant="muted" data-testid={TEST_IDS.MEETINGS.DETAIL_SUMMARY}>
+          {summary.executiveSummary}
+        </Typography>
         <Flex gap="xs" wrap>
           {summary.overallSentiment && (
             <Badge size="sm">Sentiment: {summary.overallSentiment}</Badge>
@@ -1739,7 +1746,9 @@ function RecordingDetailPanel({
           <Flex justify="between" align="start" gap="sm" wrap>
             <FlexItem flex="1">
               <Stack gap="xs">
-                <Typography variant="h4">{recording.title}</Typography>
+                <Typography variant="h4" data-testid={TEST_IDS.MEETINGS.DETAIL_TITLE}>
+                  {recording.title}
+                </Typography>
                 <Typography variant="caption" color="secondary">
                   {formatMeetingPlatform(recording.meetingPlatform)}
                 </Typography>

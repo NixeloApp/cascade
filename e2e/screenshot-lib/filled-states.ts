@@ -9,9 +9,9 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
-import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   AnalyticsPage,
+  CalendarPage,
   DashboardPage,
   DocumentsPage,
   NotificationsPage,
@@ -21,14 +21,15 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
-import { isLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
   dismissIfOpen,
   waitForAnimation,
+  waitForDialogOpen,
   waitForScreenshotReady,
 } from "../utils/wait-helpers";
+import { ensureAuthenticatedScreenshotPage } from "./auth";
 import {
   captureCurrentView,
   captureState,
@@ -38,15 +39,19 @@ import {
   shouldCaptureAny,
   takeScreenshot,
 } from "./capture";
-import { BASE_URL, MARKDOWN_IMPORT_PREVIEW, MARKDOWN_RICH_CONTENT } from "./config";
 import {
-  openMobileSidebarMenu,
-  openStableAlertDialog,
-  openStableDialog,
-  waitForCreateIssueModalScreenshotReady,
-  waitForDashboardCustomizeDialogReady,
-} from "./dialog-helpers";
-import { clearIssueDrafts, discoverDocumentId, discoverIssueKey, seedIssueDraft } from "./helpers";
+  BASE_URL,
+  MARKDOWN_IMPORT_PREVIEW,
+  MARKDOWN_RICH_CONTENT,
+  SCREENSHOT_USER,
+} from "./config";
+import {
+  clearIssueDrafts,
+  getSeededTeamSlug,
+  requirePrimarySeededDocumentId,
+  requireSeededIssueKey,
+  seedIssueDraft,
+} from "./helpers";
 import {
   screenshotAssistantStates,
   screenshotBoardInteractiveStates,
@@ -68,15 +73,8 @@ import {
   screenshotSprintInteractiveStates,
 } from "./interactive-captures";
 import {
-  focusCalendarTimedContentForCapture,
-  getCalendarDragState,
   scrollSectionNearViewportTop,
-  selectCalendarMode,
   supportsCalendarDragAndDropCapture,
-  waitForCalendarEvents,
-  waitForCalendarMonthGrid,
-  waitForCalendarMonthReady,
-  waitForCalendarReady,
   waitForDuplicateDetectionSearchReady,
   waitForExpectedContent,
 } from "./readiness";
@@ -181,8 +179,8 @@ export async function screenshotFilledStates(
 
         if (shouldCapture(p, "org-analytics-sparse-data")) {
           await applyOrgAnalyticsState("sparseData");
-          const sparsePage = await page.context().newPage();
-          try {
+          await AnalyticsPage.withCapturePage(page, orgSlug, async (analyticsPage) => {
+            const { page: sparsePage } = analyticsPage;
             try {
               await captureOrgAnalyticsState({
                 capturePage: sparsePage,
@@ -192,15 +190,13 @@ export async function screenshotFilledStates(
             } finally {
               await applyOrgAnalyticsState("default");
             }
-          } finally {
-            await sparsePage.close();
-          }
+          });
         }
 
         if (shouldCapture(p, "org-analytics-no-activity")) {
           await applyOrgAnalyticsState("noActivity");
-          const noActivityPage = await page.context().newPage();
-          try {
+          await AnalyticsPage.withCapturePage(page, orgSlug, async (analyticsPage) => {
+            const { page: noActivityPage } = analyticsPage;
             try {
               await captureOrgAnalyticsState({
                 capturePage: noActivityPage,
@@ -210,9 +206,7 @@ export async function screenshotFilledStates(
             } finally {
               await applyOrgAnalyticsState("default");
             }
-          } finally {
-            await noActivityPage.close();
-          }
+          });
         }
 
         await applyOrgAnalyticsState("default");
@@ -364,18 +358,16 @@ export async function screenshotFilledStates(
 
     if (shouldCapture(p, "settings-notifications-permission-denied")) {
       await runCaptureStep("settings notifications permission denied", async () => {
-        const permissionPage = await page.context().newPage();
-        try {
-          const permissionSettingsPage = new SettingsPage(permissionPage, orgSlug);
-          await permissionSettingsPage.gotoNotificationsWithBlockedPermission();
-          await permissionSettingsPage.expectNotificationsPermissionDeniedState();
-          await waitForScreenshotReady(permissionPage);
-          await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
-        } finally {
-          if (!permissionPage.isClosed()) {
-            await permissionPage.close();
-          }
-        }
+        await SettingsPage.withNotificationsPermissionDeniedPage(
+          page,
+          orgSlug,
+          async (permissionSettingsPage) => {
+            const { page: permissionPage } = permissionSettingsPage;
+            await permissionSettingsPage.expectNotificationsPermissionDeniedState();
+            await waitForScreenshotReady(permissionPage);
+            await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
+          },
+        );
       });
     }
   }
@@ -467,28 +459,20 @@ export async function screenshotFilledStates(
               );
             }
 
-            const sparsePage = await page.context().newPage();
-            try {
-              await sparsePage.goto(`${BASE_URL}${analyticsUrl}`, {
-                waitUntil: "domcontentloaded",
-                timeout: 15000,
-              });
+            await ProjectsPage.withCapturePage(page, orgSlug, async (projectsPage) => {
+              const { page: sparsePage } = projectsPage;
+              await projectsPage.gotoProjectAnalytics(projectKey);
               await waitForExpectedContent(
                 sparsePage,
                 analyticsUrl,
                 `project-${normalizedProjectKey}-analytics`,
               );
-              const projectsPage = new ProjectsPage(sparsePage, orgSlug);
               await projectsPage.expectAnalyticsSparseDataState();
               await captureProjectAnalyticsState(
                 sparsePage,
                 `project-${normalizedProjectKey}-analytics-sparse-data`,
               );
-            } finally {
-              if (!sparsePage.isClosed()) {
-                await sparsePage.close();
-              }
-            }
+            });
           }
 
           if (shouldCapture(p, `project-${normalizedProjectKey}-analytics-no-activity`)) {
@@ -504,28 +488,20 @@ export async function screenshotFilledStates(
               );
             }
 
-            const noActivityPage = await page.context().newPage();
-            try {
-              await noActivityPage.goto(`${BASE_URL}${analyticsUrl}`, {
-                waitUntil: "domcontentloaded",
-                timeout: 15000,
-              });
+            await ProjectsPage.withCapturePage(page, orgSlug, async (projectsPage) => {
+              const { page: noActivityPage } = projectsPage;
+              await projectsPage.gotoProjectAnalytics(projectKey);
               await waitForExpectedContent(
                 noActivityPage,
                 analyticsUrl,
                 `project-${normalizedProjectKey}-analytics`,
               );
-              const projectsPage = new ProjectsPage(noActivityPage, orgSlug);
               await projectsPage.expectAnalyticsNoActivityState();
               await captureProjectAnalyticsState(
                 noActivityPage,
                 `project-${normalizedProjectKey}-analytics-no-activity`,
               );
-            } finally {
-              if (!noActivityPage.isClosed()) {
-                await noActivityPage.close();
-              }
-            }
+            });
           }
         } finally {
           await testUserService.configureProjectAnalyticsState(orgSlug, projectKey, "default");
@@ -540,30 +516,16 @@ export async function screenshotFilledStates(
       ])
     ) {
       await runCaptureStep("project members", async () => {
-        const settingsUrl = `/${orgSlug}/projects/${projectKey}/settings`;
-        await page.goto(`${BASE_URL}${settingsUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
+        const settingsUrl = ROUTES.projects.settings.build(orgSlug, projectKey);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await projectsPage.gotoProjectSettings(projectKey);
         await waitForExpectedContent(page, settingsUrl, `project-${normalizedProjectKey}-members`);
-        const membersHeading = page.getByRole("heading", { name: /^members$/i });
-        await scrollSectionNearViewportTop(membersHeading, page);
+        await scrollSectionNearViewportTop(projectsPage.projectMembersSection, page);
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-members`);
 
         if (shouldCapture(p, `project-${normalizedProjectKey}-members-confirm-dialog`)) {
-          const removeButton = page
-            .getByTestId(TEST_IDS.PROJECT_SETTINGS.MEMBER_REMOVE_BUTTON)
-            .first();
-          const dialog = await openStableDialog(
-            page,
-            removeButton,
-            page.getByRole("alertdialog", { name: /^remove member$/i }),
-            page
-              .getByRole("alertdialog", { name: /^remove member$/i })
-              .getByText(/lose access to all project resources\./i),
-            "remove member",
-          );
+          const dialog = await projectsPage.openFirstMemberRemoveDialog();
           await captureCurrentView(
             page,
             p,
@@ -576,18 +538,13 @@ export async function screenshotFilledStates(
 
     if (shouldCapture(p, `project-${normalizedProjectKey}-settings-delete-alert-dialog`)) {
       await runCaptureStep("project settings delete alert dialog", async () => {
-        const settingsUrl = `/${orgSlug}/projects/${projectKey}/settings`;
-        await page.goto(`${BASE_URL}${settingsUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
+        const settingsUrl = ROUTES.projects.settings.build(orgSlug, projectKey);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await projectsPage.gotoProjectSettings(projectKey);
         await waitForExpectedContent(page, settingsUrl, `project-${normalizedProjectKey}-settings`);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^delete project$/i });
-        const confirmInput = page.getByPlaceholder(`Type ${projectKey} to confirm`);
-        await trigger.waitFor({ state: "visible", timeout: 8000 });
-        const dialog = await openStableAlertDialog(page, trigger, confirmInput);
+        const dialog = await projectsPage.openDeleteProjectDialog();
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -621,11 +578,8 @@ export async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-        // Toggle "Create another" switch
-        const toggle = page.getByLabel(/create another/i);
-        await toggle.waitFor({ state: "visible", timeout: 5000 });
-        await toggle.click();
+        await projectsPage.expectCreateIssueModalCaptureReady();
+        await projectsPage.enableCreateAnother();
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -649,17 +603,8 @@ export async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-        // Wait for dialog, then find submit button
-        const modal = await waitForDialogOpen(page);
-        const submitBtn = modal.getByRole("button", { name: /create issue/i }).last();
-        await submitBtn.click();
-        await waitForScreenshotReady(page);
-        // Wait for validation error text to appear
-        await page
-          .getByText(/required|title is required|cannot be empty/i)
-          .first()
-          .waitFor({ state: "visible", timeout: 3000 });
+        await projectsPage.expectCreateIssueModalCaptureReady();
+        await projectsPage.submitCreateIssueExpectTitleValidationError();
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -685,23 +630,13 @@ export async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-        const modal = await waitForDialogOpen(page);
-        const titleInput = modal
-          .getByPlaceholder(/title|issue.*title/i)
-          .or(modal.getByRole("textbox", { name: /title/i }))
-          .first();
-        const submitButton = modal.getByRole("button", { name: /^create issue$/i }).last();
+        await projectsPage.expectCreateIssueModalCaptureReady();
         try {
-          await titleInput.fill(issueTitle);
-          await submitButton.click();
-          await modal.waitFor({ state: "hidden", timeout: 8000 });
+          await projectsPage.issueTitleInput.fill(issueTitle);
+          await projectsPage.submitIssueButton.click();
+          await projectsPage.createIssueModal.waitFor({ state: "hidden", timeout: 8000 });
           createdIssue = true;
-          const successToast = page
-            .getByTestId(TEST_IDS.TOAST.SUCCESS)
-            .filter({ hasText: /issue created successfully/i })
-            .first();
-          await successToast.waitFor({ state: "visible", timeout: 8000 });
+          await projectsPage.expectCreateIssueSuccessToastVisible(8000);
           await waitForScreenshotReady(page);
           await captureCurrentView(
             page,
@@ -753,13 +688,10 @@ export async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
+        await projectsPage.expectCreateIssueModalCaptureReady();
         await projectsPage.issueTitleInput.fill(duplicateQuery);
-        const duplicateBanner = page.getByText("Potential duplicates found", { exact: true });
-        await duplicateBanner.waitFor({ state: "visible", timeout: 20000 });
-        await page
-          .getByRole("button", { name: /DEMO-2.*fix login timeout on mobile/i })
-          .waitFor({ state: "visible", timeout: 8000 });
+        await projectsPage.expectCreateIssueDuplicateDetectionVisible();
+        await projectsPage.waitForCreateIssueDuplicateItem("DEMO-2");
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -791,10 +723,8 @@ export async function screenshotFilledStates(
         try {
           const projectsPage = new ProjectsPage(page, orgSlug);
           await projectsPage.openCreateIssueModal();
-          await waitForCreateIssueModalScreenshotReady(page, projectsPage);
-          await page
-            .getByText(/you have an unsaved draft/i)
-            .waitFor({ state: "visible", timeout: 8000 });
+          await projectsPage.expectCreateIssueModalCaptureReady();
+          await projectsPage.expectCreateIssueDraftBannerVisible();
           await waitForScreenshotReady(page);
           await captureCurrentView(
             page,
@@ -818,14 +748,8 @@ export async function screenshotFilledStates(
         });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
-        const sprintSelect = page
-          .getByRole("combobox")
-          .filter({ hasText: /sprint|active/i })
-          .first();
-        await sprintSelect.waitFor({ state: "visible", timeout: 25000 });
-        await sprintSelect.click();
-        // Wait for dropdown options
-        await page.getByRole("option").first().waitFor({ state: "visible", timeout: 3000 });
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await projectsPage.openBoardSprintSelector();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-board-sprint-selector`);
         await page.keyboard.press("Escape");
@@ -909,54 +833,27 @@ export async function screenshotFilledStates(
       ])
     ) {
       const calendarUrl = ROUTES.projects.calendar.build(orgSlug, projectKey);
+      const calendarPage = new CalendarPage(page, orgSlug);
       await page.goto(`${BASE_URL}${calendarUrl}`, {
         waitUntil: "domcontentloaded",
         timeout: 15000,
       });
       await waitForScreenshotReady(page);
-      const isCalendarReady = await waitForCalendarReady(page);
+      const isCalendarReady = await calendarPage.ensureReady();
       if (!isCalendarReady) {
         console.log("    ⚠️  [filled] calendar not ready, skipping mode-specific screenshots");
       } else {
-        // Calendar view-mode screenshots: day, week, month
-        const calendarModeTestIds = {
-          day: TEST_IDS.CALENDAR.MODE_DAY,
-          week: TEST_IDS.CALENDAR.MODE_WEEK,
-          month: TEST_IDS.CALENDAR.MODE_MONTH,
-        } as const;
         for (const mode of ["day", "week", "month"] as const) {
           if (!shouldCapture(p, `calendar-${mode}`)) {
             continue;
           }
-          const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-          await toggleItem.waitFor({ state: "visible", timeout: 5000 });
-          if ((await toggleItem.count()) === 0) {
-            throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
-          }
-          await selectCalendarMode(page, mode);
-          await waitForScreenshotReady(page);
-          const modeReady = await waitForCalendarReady(page);
-          if (!modeReady) {
-            throw new Error(`[${p}] calendar-${mode} not ready after mode switch`);
-          }
-          await focusCalendarTimedContentForCapture(page);
+          await calendarPage.switchToMode(mode);
+          await calendarPage.focusFirstEvent();
           await captureCurrentView(page, p, `calendar-${mode}`);
         }
 
         if (shouldCapture(p, "calendar-event-modal")) {
           await runCaptureStep("calendar event-detail modal", async () => {
-            const openDayView = async (): Promise<void> => {
-              const dayToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_DAY);
-              if ((await dayToggle.count()) > 0) {
-                await dayToggle.click();
-                await waitForScreenshotReady(page);
-                await waitForCalendarReady(page);
-              }
-            };
-
-            const locateEvent = () => page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
-
-            let eventItem = locateEvent();
             if (typeof seed.workspaceSlug === "string") {
               await page.goto(
                 `${BASE_URL}${ROUTES.workspaces.calendar.build(orgSlug, seed.workspaceSlug)}`,
@@ -966,54 +863,22 @@ export async function screenshotFilledStates(
                 },
               );
               await waitForScreenshotReady(page);
-              const workspaceCalendarReady = await waitForCalendarReady(page);
-              if (workspaceCalendarReady) {
-                await openDayView();
-                eventItem = locateEvent();
+              const workspaceCalendarReady = await calendarPage.ensureReady();
+              if (!workspaceCalendarReady) {
+                throw new Error(`[${p}] workspace calendar not ready for event modal screenshot`);
               }
-            } else {
-              await openDayView();
-              eventItem = locateEvent();
             }
 
-            if (!(await waitForCalendarEvents(page))) {
-              throw new Error(`[${p}] No calendar events found for modal screenshot`);
-            }
-
-            eventItem = locateEvent();
-            await eventItem.scrollIntoViewIfNeeded();
-            await eventItem.click();
-            const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
-            await dialog.waitFor({ state: "visible", timeout: 5000 });
+            await calendarPage.openFirstVisibleEventDetails();
             await captureCurrentView(page, p, "calendar-event-modal");
-            await dismissIfOpen(page, dialog);
+            await dismissIfOpen(page, calendarPage.eventDetailModal);
           });
         }
 
         if (shouldCapture(p, "calendar-quick-add")) {
           await runCaptureStep("calendar quick-add", async () => {
-            await waitForCalendarMonthReady(page);
-            await waitForCalendarMonthGrid(page, { requireQuickAddButtons: true });
-
-            const quickAddButton = page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).first();
-            if ((await quickAddButton.count()) > 0) {
-              if (!(await quickAddButton.isVisible())) {
-                const firstDayCell = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).first();
-                if ((await firstDayCell.count()) > 0) {
-                  await firstDayCell.hover();
-                }
-              }
-            }
-
-            if ((await quickAddButton.count()) > 0 && (await quickAddButton.isVisible())) {
-              await quickAddButton.click();
-            } else {
-              const headerAddButton = page.getByRole("button", { name: /add event/i });
-              await headerAddButton.waitFor({ state: "visible", timeout: 5000 });
-              await headerAddButton.click();
-            }
+            await calendarPage.openQuickAddComposer();
             const dialog = await waitForDialogOpen(page);
-            await page.getByLabel(/date/i).waitFor({ state: "visible", timeout: 5000 });
             await waitForScreenshotReady(page);
             await captureCurrentView(page, p, "calendar-quick-add");
             await dismissIfOpen(page, dialog);
@@ -1032,36 +897,10 @@ export async function screenshotFilledStates(
             });
             await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
             await waitForScreenshotReady(page);
-            await waitForCalendarMonthReady(page);
-            await waitForCalendarEvents(page);
-
-            const dragState = await getCalendarDragState(page);
-
-            if (dragState?.sourceIndex == null || dragState.targetIndex == null) {
-              throw new Error(
-                `[${p}] Unable to establish calendar drag state (day cells=${dragState?.dayCellCount ?? 0}, events=${dragState?.eventItemCount ?? 0})`,
-              );
-            }
-
-            const dayCells = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
-            const targetCell = dayCells.nth(dragState.targetIndex);
-            const sourceCell = dayCells.nth(dragState.sourceIndex);
-            const sourceEvent = sourceCell.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
-            const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
-
-            await sourceEvent.scrollIntoViewIfNeeded();
-            await targetCell.waitFor({ state: "visible", timeout: 5000 });
-            await targetCell.scrollIntoViewIfNeeded();
-            await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
-            await targetCell.dispatchEvent("dragenter", { dataTransfer });
-            await targetCell.dispatchEvent("dragover", { dataTransfer });
-            await targetCell
-              .getByTestId(TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET)
-              .waitFor({ state: "attached", timeout: 5000 });
+            const clearDragPreview = await calendarPage.startMonthDragPreview();
             await waitForScreenshotReady(page);
             await captureCurrentView(page, p, "calendar-drag-and-drop");
-
-            await sourceEvent.dispatchEvent("dragend", { dataTransfer });
+            await clearDragPreview();
           });
         }
       }
@@ -1071,21 +910,17 @@ export async function screenshotFilledStates(
   // Issue detail
   const seededIssueKey = seed.issueKeys?.[0];
   if (seededIssueKey && shouldCapture(p, `issue-${seededIssueKey.toLowerCase()}`)) {
-    const firstIssue = (await discoverIssueKey(page, orgSlug, projectKey)) ?? seededIssueKey;
-    if (firstIssue) {
-      await takeScreenshot(
-        page,
-        p,
-        `issue-${firstIssue.toLowerCase()}`,
-        ROUTES.issues.detail.build(orgSlug, firstIssue),
-      );
-    }
+    const firstIssue = requireSeededIssueKey(seed, "issue detail screenshot capture");
+    await takeScreenshot(
+      page,
+      p,
+      `issue-${firstIssue.toLowerCase()}`,
+      ROUTES.issues.detail.build(orgSlug, firstIssue),
+    );
   }
 
   // Workspace & team pages
   const wsSlug = seed.workspaceSlug;
-  const teamSlug = seed.teamSlug;
-
   if (wsSlug) {
     const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
     const wsTabs = ["backlog", "calendar", "sprints", "dependencies", "wiki", "settings"] as const;
@@ -1100,7 +935,7 @@ export async function screenshotFilledStates(
       }
     }
 
-    const resolvedTeam = teamSlug ?? (await discoverFirstHref(page, /\/teams\/([^/]+)/));
+    const resolvedTeam = getSeededTeamSlug(seed);
     if (resolvedTeam) {
       const teamBase = `${wsBase}/teams/${resolvedTeam}`;
       const teamTabs = ["board", "calendar", "wiki", "settings"] as const;
@@ -1132,10 +967,7 @@ export async function screenshotFilledStates(
     "document-editor-mention-popover",
   ];
   if (shouldCaptureAny(p, editorTargets)) {
-    const baseDocId =
-      seed.documentIds?.sprintRetrospectiveNotes ??
-      seed.documentIds?.projectRequirements ??
-      (await discoverDocumentId(page, orgSlug));
+    const baseDocId = requirePrimarySeededDocumentId(seed, "document editor screenshot capture");
     if (baseDocId) {
       const baseDocUrl = ROUTES.documents.detail.build(orgSlug, baseDocId);
       const documentsPage = new DocumentsPage(page, orgSlug);
@@ -1166,34 +998,19 @@ export async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-favorite")) {
         await runCaptureStep("document favorite state", async () => {
           await documentsPage.gotoDocument(baseDocId);
-          const toggle = page.getByRole("button", { name: /add to favorites/i });
-          await toggle.waitFor({ state: "visible", timeout: 8000 });
-          await toggle.click();
-          const activeToggle = page.getByRole("button", { name: /remove from favorites/i });
-          await activeToggle.waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
+          await documentsPage.toggleFavoriteOn();
           await captureCurrentView(page, p, "document-editor-favorite");
-          await activeToggle.click();
-          await toggle.waitFor({ state: "visible", timeout: 5000 });
+          await documentsPage.toggleFavoriteOff();
         });
       }
 
       if (shouldCapture(p, "document-editor-sidebar-favorites")) {
         await runCaptureStep("document sidebar favorites", async () => {
           await documentsPage.gotoDocument(baseDocId);
-          const toggle = page.getByRole("button", { name: /add to favorites/i });
-          await toggle.waitFor({ state: "visible", timeout: 8000 });
-          await toggle.click();
-          const activeToggle = page.getByRole("button", { name: /remove from favorites/i });
-          await activeToggle.waitFor({ state: "visible", timeout: 5000 });
-          await page
-            .locator("aside")
-            .getByText("Favorites")
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
+          await documentsPage.toggleFavoriteOn();
+          await documentsPage.expectSidebarFavoritesVisible();
           await captureCurrentView(page, p, "document-editor-sidebar-favorites");
-          await activeToggle.click();
-          await toggle.waitFor({ state: "visible", timeout: 5000 });
+          await documentsPage.toggleFavoriteOff();
         });
       }
 
@@ -1218,12 +1035,8 @@ export async function screenshotFilledStates(
             /Release Readiness/i,
           );
           await documentsPage.openFloatingToolbarForText("Release");
-          const colorButton = page.getByRole("button", { name: /text color|font color/i }).first();
-          await colorButton.waitFor({ state: "visible", timeout: 5000 });
-          await colorButton.evaluate((button: HTMLElement) => {
-            button.click();
-          });
-          await page.getByTitle("Red").waitFor({ state: "visible", timeout: 5000 });
+          await documentsPage.openFontColorPicker();
+          await documentsPage.expectFontColorSwatchVisible("Red");
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-color-picker");
           await page.keyboard.press("Escape");
@@ -1281,24 +1094,9 @@ export async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-locked")) {
         await runCaptureStep("document locked state", async () => {
           await documentsPage.gotoDocument(baseDocId);
-          await documentsPage.moreActionsButton.click();
-          await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
-          await page.getByRole("menuitem", { name: /^lock document$/i }).click();
-          await page
-            .getByRole("alert")
-            .filter({ hasText: /document locked/i })
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
+          await documentsPage.lockDocument();
           await captureCurrentView(page, p, "document-editor-locked");
-          await documentsPage.moreActionsButton.click();
-          await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
-          await page.getByRole("menuitem", { name: /^unlock document$/i }).click();
-          await page
-            .getByRole("alert")
-            .filter({ hasText: /document locked/i })
-            .first()
-            .waitFor({ state: "hidden", timeout: 5000 });
+          await documentsPage.unlockDocument();
         });
       }
     }
@@ -1309,24 +1107,12 @@ export async function screenshotFilledStates(
   // Dashboard customize modal
   if (shouldCapture(p, "dashboard-customize-modal")) {
     await runCaptureStep("dashboard customize modal", async () => {
-      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.goto();
+      await dashboardPage.openCustomizeModal();
       await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /^customize$/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /dashboard customization/i }),
-        page.getByText("Quick Stats", { exact: true }),
-        "dashboard customize",
-      );
-      await waitForDashboardCustomizeDialogReady(page);
       await captureCurrentView(page, p, "dashboard-customize-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, dashboardPage.customizeModal);
     });
   }
 
@@ -1338,40 +1124,26 @@ export async function screenshotFilledStates(
         timeout: 15000,
       });
       await waitForScreenshotReady(page);
-      await waitForCalendarReady(page);
-      const trigger = page.getByRole("button", { name: /add event/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /^create event$/i }),
-        page.getByLabel(/event title/i),
-        "calendar create event",
-      );
+      const calendarPage = new CalendarPage(page, orgSlug);
+      const calendarReady = await calendarPage.ensureReady();
+      if (!calendarReady) {
+        throw new Error(`[${p}] calendar create-event modal route did not become ready`);
+      }
+      await calendarPage.openCreateEventModal();
       await captureCurrentView(page, p, "calendar-create-event-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, calendarPage.createEventModal);
     });
   }
 
   // Create workspace modal
   if (shouldCapture(p, "workspaces-create-workspace-modal")) {
     await runCaptureStep("create workspace modal", async () => {
-      await page.goto(`${BASE_URL}${ROUTES.workspaces.list.build(orgSlug)}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
-      await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
       const workspacesPage = new WorkspacesPage(page, orgSlug);
-      const dialog = await openStableDialog(
-        page,
-        workspacesPage.newWorkspaceButton,
-        page.getByRole("dialog", { name: /^create workspace$/i }),
-        page.getByRole("dialog", { name: /^create workspace$/i }).getByLabel(/^workspace name$/i),
-        "create workspace",
-      );
+      await workspacesPage.goto();
+      await workspacesPage.openCreateWorkspaceDialog();
+      await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "workspaces-create-workspace-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, workspacesPage.createWorkspaceDialog);
     });
   }
 
@@ -1394,41 +1166,27 @@ export async function screenshotFilledStates(
   // Create team modal (from workspace detail)
   if (wsSlug && shouldCapture(p, "workspace-create-team-modal")) {
     await runCaptureStep("create team modal", async () => {
-      const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
       const workspacesPage = new WorkspacesPage(page, orgSlug);
-      await page.goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-      await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
+      const teamsUrl = ROUTES.workspaces.teams.list.build(orgSlug, wsSlug);
+      await page.goto(`${BASE_URL}${teamsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
+      await waitForExpectedContent(page, teamsUrl, `workspace-${wsSlug}`);
+      await workspacesPage.expectTeamsLoaded();
+      await workspacesPage.openCreateTeamDialog();
       await waitForScreenshotReady(page);
-      const dialog = await openStableDialog(
-        page,
-        workspacesPage.createTeamButton,
-        page.getByRole("dialog", { name: /^create team$/i }),
-        page.getByLabel(/^team name$/i),
-        "create team",
-      );
       await captureCurrentView(page, p, "workspace-create-team-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, workspacesPage.createTeamDialog);
     });
   }
 
   // Import/export modal (from board)
   if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal`)) {
     await runCaptureStep("import/export modal", async () => {
-      const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-      await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-      await waitForExpectedContent(page, boardUrl, "board");
+      const projectsPage = new ProjectsPage(page, orgSlug);
+      await projectsPage.gotoProjectBoard(projectKey);
+      await projectsPage.openImportExportModal();
       await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /import \/ export/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /^import \/ export issues$/i }),
-        page.getByText("Select Export Format", { exact: true }),
-        "import/export",
-      );
       await captureCurrentView(page, p, `project-${normalizedProjectKey}-import-export-modal`);
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, projectsPage.importExportModal);
     });
   }
 
@@ -1437,35 +1195,16 @@ export async function screenshotFilledStates(
     shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal-import`)
   ) {
     await runCaptureStep("import/export modal import state", async () => {
-      const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-      await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-      await waitForExpectedContent(page, boardUrl, "board");
-      await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /import \/ export/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /^import \/ export issues$/i }),
-        page.getByText("Select Export Format", { exact: true }),
-        "import/export",
-      );
-      await dialog.getByRole("radio", { name: /import issues/i }).click();
-      await dialog.getByText("JSON", { exact: true }).click();
-      await dialog
-        .getByText("JSON files must contain an issues array at the top level.", { exact: true })
-        .waitFor({
-          state: "visible",
-          timeout: 5000,
-        });
-      await waitForAnimation(page);
+      const projectsPage = new ProjectsPage(page, orgSlug);
+      await projectsPage.gotoProjectBoard(projectKey);
+      await projectsPage.openImportExportJsonMode();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
         p,
         `project-${normalizedProjectKey}-import-export-modal-import`,
       );
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, projectsPage.importExportModal);
     });
   }
 
@@ -1479,8 +1218,6 @@ export async function screenshotFilledStates(
 
   if (projectKey && shouldCaptureAny(p, [...timeTrackingCaptureNames])) {
     await runCaptureStep("time tracking review states", async () => {
-      const timeTrackingUrl = ROUTES.timeTracking.build(orgSlug);
-
       const applyTimeTrackingState = async (
         mode: "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated",
       ): Promise<void> => {
@@ -1501,13 +1238,9 @@ export async function screenshotFilledStates(
         expectedState: "entries" | "burn-rate" | "rates";
         name: (typeof timeTrackingCaptureNames)[number];
       }): Promise<void> => {
-        const capturePage = await page.context().newPage();
-        try {
-          await capturePage.goto(`${BASE_URL}${timeTrackingUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          const trackingPage = new TimeTrackingPage(capturePage, orgSlug);
+        await TimeTrackingPage.withCapturePage(page, orgSlug, async (trackingPage) => {
+          const { page: capturePage } = trackingPage;
+          await trackingPage.goto();
           if (expectedState === "burn-rate") {
             await trackingPage.expectBurnRateState();
           } else if (expectedState === "rates") {
@@ -1520,9 +1253,7 @@ export async function screenshotFilledStates(
           }
           await waitForScreenshotReady(capturePage);
           await captureCurrentView(capturePage, p, name);
-        } finally {
-          await capturePage.close();
-        }
+        });
       };
 
       await applyTimeTrackingState("default");
@@ -1597,23 +1328,12 @@ export async function screenshotFilledStates(
   // Manual time entry modal
   if (shouldCapture(p, "time-tracking-manual-entry-modal")) {
     await runCaptureStep("manual time entry modal", async () => {
-      await page.goto(`${BASE_URL}${ROUTES.timeTracking.build(orgSlug)}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, ROUTES.timeTracking.build(orgSlug), "time-tracking");
+      const trackingPage = new TimeTrackingPage(page, orgSlug);
+      await trackingPage.goto();
+      await trackingPage.openManualEntryModal();
       await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /add time entry/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /^log time$/i }),
-        page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM),
-        "manual time entry",
-      );
       await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, trackingPage.entryModal);
     });
   }
 
@@ -1626,23 +1346,14 @@ export async function screenshotFilledStates(
       captureState.currentConfigPrefix === "desktop-light")
   ) {
     await runCaptureStep("sidebar collapsed", async () => {
-      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.goto();
       await waitForScreenshotReady(page);
-      const collapseBtn = page.getByLabel("Collapse sidebar");
-      await collapseBtn.waitFor({ state: "visible", timeout: 5000 });
-      await collapseBtn.click();
+      await dashboardPage.collapseSidebar();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "sidebar-collapsed");
-      // Expand back
-      const expandBtn = page.getByLabel("Expand sidebar");
-      if (await isLocatorVisible(expandBtn)) {
-        await expandBtn.click();
-        await waitForScreenshotReady(page);
-      }
+      await dashboardPage.expandSidebarIfCollapsed();
+      await waitForScreenshotReady(page);
     });
   }
 
@@ -1652,15 +1363,10 @@ export async function screenshotFilledStates(
       captureState.currentConfigPrefix === "mobile-light")
   ) {
     await runCaptureStep("mobile hamburger", async () => {
-      const dashboardUrl = ROUTES.dashboard.build(orgSlug);
-      await page.goto(`${BASE_URL}${dashboardUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, dashboardUrl, "dashboard");
-      await waitForScreenshotReady(page);
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.goto();
       await dismissAllDialogs(page);
-      await openMobileSidebarMenu(page);
+      await dashboardPage.openMobileSidebarIfNeeded();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "mobile-hamburger");
     });
@@ -1680,17 +1386,16 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, teamBoardUrl, "team");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
+      const dashboardPage = new DashboardPage(page, orgSlug);
 
       if (
         captureState.currentConfigPrefix === "tablet-light" ||
         captureState.currentConfigPrefix === "mobile-light"
       ) {
-        await openMobileSidebarMenu(page);
+        await dashboardPage.openMobileSidebarIfNeeded();
       }
 
-      await page
-        .getByRole("link", { name: /DEMO - Demo Project/i })
-        .waitFor({ state: "visible", timeout: 8000 });
+      await dashboardPage.expectSidebarProjectItem(seed.projectKey ?? "DEMO");
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "project-tree");
     });
@@ -1704,11 +1409,8 @@ export async function screenshotFilledStates(
         timeout: 15000,
       });
       await waitForScreenshotReady(page);
-      // Wait for the 404 content to render
-      await page
-        .getByText(/not found|page.*not.*found|404/i)
-        .first()
-        .waitFor({ state: "visible", timeout: 8000 });
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.expectNotFoundPage();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "404-page");
     });
@@ -1892,6 +1594,7 @@ export async function screenshotFilledStates(
         orgSlug,
         projectKey,
         "inboxEmpty",
+        SCREENSHOT_USER.email,
       );
       if (!configureResult.success) {
         throw new Error(configureResult.error ?? "Failed to configure inbox-empty notifications");
@@ -1908,7 +1611,12 @@ export async function screenshotFilledStates(
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, "notifications-inbox-empty");
       } finally {
-        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+        await testUserService.configureNotificationsState(
+          orgSlug,
+          projectKey,
+          "default",
+          SCREENSHOT_USER.email,
+        );
       }
     });
   }
@@ -1919,6 +1627,7 @@ export async function screenshotFilledStates(
         orgSlug,
         projectKey,
         "archivedEmpty",
+        SCREENSHOT_USER.email,
       );
       if (!configureResult.success) {
         throw new Error(
@@ -1927,30 +1636,20 @@ export async function screenshotFilledStates(
       }
 
       try {
-        const archivedEmptyPage = await page.context().newPage();
-
-        try {
-          await archivedEmptyPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          await waitForExpectedContent(
-            archivedEmptyPage,
-            ROUTES.notifications.build(orgSlug),
-            "notifications",
-          );
-          const notificationsPage = new NotificationsPage(archivedEmptyPage, orgSlug);
+        await NotificationsPage.withCapturePage(page, orgSlug, async (notificationsPage) => {
+          await notificationsPage.goto();
           await notificationsPage.openArchivedTabAndWait();
-          await waitForScreenshotReady(archivedEmptyPage);
+          await waitForScreenshotReady(notificationsPage.page);
           await notificationsPage.expectArchivedEmptyState();
-          await captureCurrentView(archivedEmptyPage, p, "notifications-archived-empty");
-        } finally {
-          if (!archivedEmptyPage.isClosed()) {
-            await archivedEmptyPage.close();
-          }
-        }
+          await captureCurrentView(notificationsPage.page, p, "notifications-archived-empty");
+        });
       } finally {
-        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+        await testUserService.configureNotificationsState(
+          orgSlug,
+          projectKey,
+          "default",
+          SCREENSHOT_USER.email,
+        );
       }
     });
   }
@@ -1961,6 +1660,7 @@ export async function screenshotFilledStates(
         orgSlug,
         projectKey,
         "unreadOverflow",
+        SCREENSHOT_USER.email,
       );
       if (!configureResult.success) {
         throw new Error(
@@ -1969,45 +1669,70 @@ export async function screenshotFilledStates(
       }
 
       try {
-        await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
-        const notificationsPage = new NotificationsPage(page, orgSlug);
-        await notificationsPage.expectUnreadOverflowBadge();
-        await waitForScreenshotReady(page);
-        await captureCurrentView(page, p, "notifications-unread-overflow");
+        if (!(await ensureAuthenticatedScreenshotPage(page, orgSlug))) {
+          throw new Error("Failed to authenticate screenshot notifications");
+        }
+
+        await NotificationsPage.withUnreadOverflowPage(page, orgSlug, async (notificationsPage) =>
+          captureCurrentView(notificationsPage.page, p, "notifications-unread-overflow"),
+        );
       } finally {
-        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+        await testUserService.configureNotificationsState(
+          orgSlug,
+          projectKey,
+          "default",
+          SCREENSHOT_USER.email,
+        );
       }
     });
   }
 
   if (shouldCapture(p, "notifications-mark-all-read-loading")) {
     await runCaptureStep("notifications mark-all-read loading", async () => {
-      const loadingPage = await page.context().newPage();
-
       try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ = true;
-        });
-        await loadingPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(
-          loadingPage,
-          ROUTES.notifications.build(orgSlug),
-          "notifications",
+        if (!projectKey) {
+          throw new Error("Seeded screenshot data did not include a project key");
+        }
+
+        const configureResult = await testUserService.configureNotificationsState(
+          orgSlug,
+          projectKey,
+          "unreadOverflow",
+          SCREENSHOT_USER.email,
         );
-        const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
-        await expect(notificationsPage.markAllReadButton).toHaveAttribute("aria-busy", "true");
-        await waitForScreenshotReady(loadingPage);
-        await captureCurrentView(loadingPage, p, "notifications-mark-all-read-loading");
+        if (!configureResult.success) {
+          throw new Error(
+            configureResult.error ??
+              "Failed to configure unread-overflow notifications for mark-all-read loading",
+          );
+        }
+
+        if (!(await ensureAuthenticatedScreenshotPage(page, orgSlug))) {
+          throw new Error("Failed to authenticate screenshot notifications");
+        }
+
+        await NotificationsPage.withMarkAllReadLoadingPage(
+          page,
+          orgSlug,
+          async (notificationsPage) => {
+            await captureCurrentView(
+              notificationsPage.page,
+              p,
+              "notifications-mark-all-read-loading",
+              {
+                skipReadyCheck: true,
+              },
+            );
+          },
+        );
       } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
+        if (projectKey) {
+          await testUserService.configureNotificationsState(
+            orgSlug,
+            projectKey,
+            "default",
+            SCREENSHOT_USER.email,
+          );
         }
       }
     });

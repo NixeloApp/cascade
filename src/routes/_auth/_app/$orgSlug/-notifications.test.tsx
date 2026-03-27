@@ -16,12 +16,6 @@ import { SECOND } from "@/lib/time";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { NotificationsPage } from "./notifications";
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_NOTIFICATIONS_LOADING__?: boolean;
-  }
-}
-
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => () => ({}),
 }));
@@ -339,7 +333,6 @@ describe("NotificationsPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    delete window.__NIXELO_E2E_NOTIFICATIONS_LOADING__;
     window.sessionStorage.clear();
 
     let mutationIndex = 0;
@@ -496,11 +489,14 @@ describe("NotificationsPage", () => {
     expect(screen.getByText("100 unread notifications")).toBeInTheDocument();
   });
 
-  it("forces the mark-all-read loading state when the E2E override is enabled", () => {
-    window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ = true;
+  it("shows the mark-all-read loading state while the bulk mutation is in flight", async () => {
+    const user = userEvent.setup();
+    mockMarkAllAsRead.mockImplementation(() => new Promise(() => {}));
     mockUnreadQueries({ unreadCount: 3, unreadIds: [inboxNotification._id] });
 
     render(<NotificationsPage />);
+
+    await user.click(screen.getByTestId(TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON));
 
     expect(screen.getByTestId(TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON)).toHaveAttribute(
       "aria-busy",

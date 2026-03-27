@@ -11,7 +11,7 @@ import {
 } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { getToastLocator } from "../utils/toast-locators";
-import { waitForDashboardReady } from "../utils/wait-helpers";
+import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -208,6 +208,67 @@ export class AuthPage extends BasePage {
   async gotoLanding() {
     await this.page.goto("/");
     await this.waitForLoad();
+  }
+
+  async waitForCaptureReady(
+    state:
+      | "signin"
+      | "signup"
+      | "forgot-password"
+      | "signup-verify"
+      | "forgot-password-reset"
+      | "verify-email"
+      | "verify-2fa",
+  ): Promise<void> {
+    switch (state) {
+      case "signin":
+        await this.signInHeading.waitFor({ state: "visible", timeout: 12000 });
+        await this.page.getByText(/secure account access/i).waitFor({
+          state: "visible",
+          timeout: 12000,
+        });
+        break;
+      case "signup":
+        await this.signUpHeading.waitFor({ state: "visible", timeout: 12000 });
+        await this.page.getByText(/secure account access/i).waitFor({
+          state: "visible",
+          timeout: 12000,
+        });
+        break;
+      case "forgot-password":
+        await this.expectForgotPasswordEntryFormReady(12000);
+        break;
+      case "signup-verify":
+        await this.signUpHeading.waitFor({ state: "visible", timeout: 12000 });
+        await this.expectVerificationFormReady(12000);
+        await this.verifyCodeInput.waitFor({ state: "visible", timeout: 12000 });
+        break;
+      case "forgot-password-reset":
+        await this.expectForgotPasswordReady(12000);
+        await this.checkEmailHeading.waitFor({ state: "visible", timeout: 12000 });
+        await this.codeInput.waitFor({ state: "visible", timeout: 12000 });
+        break;
+      case "verify-email":
+        await this.checkEmailHeading.waitFor({ state: "visible", timeout: 12000 });
+        await this.verifyCodeInput.waitFor({ state: "visible", timeout: 12000 });
+        break;
+      case "verify-2fa":
+        await this.page.getByRole("heading", { name: /two-factor authentication/i }).waitFor({
+          state: "visible",
+          timeout: 12000,
+        });
+        await this.page.getByText(/enter the 6-digit code from your authenticator app/i).waitFor({
+          state: "visible",
+          timeout: 12000,
+        });
+        await this.page.getByRole("button", { name: /^verify$/i }).waitFor({
+          state: "visible",
+          timeout: 12000,
+        });
+        break;
+    }
+
+    await waitForScreenshotReady(this.page);
   }
 
   // ===================

@@ -25,12 +25,6 @@ const CalendarView = lazy(() =>
   import("@/components/Calendar/CalendarView").then((m) => ({ default: m.CalendarView })),
 );
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_ORG_CALENDAR_LOADING__?: boolean;
-  }
-}
-
 interface CalendarSearchParams {
   workspace?: string;
   team?: string;
@@ -52,10 +46,6 @@ type CalendarSelectionState = {
   selectedWorkspaceId: Id<"workspaces"> | "all";
   workspaceTeams: TeamSummary[];
 };
-
-function isE2EOrgCalendarLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_ORG_CALENDAR_LOADING__ === true;
-}
 
 function OrganizationCalendarSkeletonActions() {
   return (
@@ -314,7 +304,7 @@ export function OrganizationCalendarPage() {
     workspaces,
   ]);
 
-  if (isE2EOrgCalendarLoadingOverrideEnabled() || workspaces === undefined || teams === undefined) {
+  if (workspaces === undefined || teams === undefined) {
     return <OrganizationCalendarLoadingState />;
   }
 

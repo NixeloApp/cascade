@@ -50,4 +50,15 @@ describe("PageLayout", () => {
     expect(screen.getByText("Wide Panel")).toBeInTheDocument();
     expect(container.firstChild).toHaveClass("max-w-5xl");
   });
+
+  it("forwards DOM props to the container element", () => {
+    render(
+      <PageLayout data-testid="page-layout-shell" id="page-layout-id" aria-label="Page shell">
+        <div>Props</div>
+      </PageLayout>,
+    );
+
+    expect(screen.getByTestId("page-layout-shell")).toHaveAttribute("id", "page-layout-id");
+    expect(screen.getByLabelText("Page shell")).toBeInTheDocument();
+  });
 });

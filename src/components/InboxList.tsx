@@ -140,9 +140,6 @@ const STATUS_CONFIG = {
 } as const;
 
 const DUPLICATE_SEARCH_LIMIT = 8;
-type ProjectInboxE2EState = "closed-tab" | "decline-dialog" | "duplicate-dialog";
-const PROJECT_INBOX_E2E_STATE_STORAGE_KEY = "nixelo:e2e:project-inbox-state";
-
 function isTriageable(issue: Pick<InboxIssueWithDetails, "status">): boolean {
   return issue.status === "pending" || issue.status === "snoozed";
 }
@@ -446,6 +443,7 @@ function SnoozeDropdownButton({
           variant="outline"
           leftIcon={<Icon icon={Clock} size="sm" />}
           rightIcon={<Icon icon={ChevronDown} size="sm" />}
+          data-testid={TEST_IDS.PROJECT_INBOX.ROW_SNOOZE_BUTTON}
         >
           {label}
         </Button>
@@ -985,6 +983,7 @@ function InboxIssueActions({
             variant="ghost"
             onClick={() => onOpenDecline(item)}
             leftIcon={<Icon icon={XCircle} size="sm" />}
+            data-testid={TEST_IDS.PROJECT_INBOX.ROW_DECLINE_BUTTON}
           >
             Decline
           </Button>
@@ -1023,6 +1022,7 @@ function InboxIssueActions({
             variant="ghost"
             aria-label={`More actions for ${item.issue.key}`}
             leftIcon={<Icon icon={MoreHorizontal} size="sm" />}
+            data-testid={TEST_IDS.PROJECT_INBOX.ROW_MORE_ACTIONS_BUTTON}
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -1031,6 +1031,7 @@ function InboxIssueActions({
               <DropdownMenuItem
                 onSelect={() => onOpenDuplicate(item)}
                 icon={<Icon icon={Copy} size="sm" />}
+                data-testid={TEST_IDS.PROJECT_INBOX.DUPLICATE_ACTION}
               >
                 Mark duplicate
               </DropdownMenuItem>
@@ -1232,55 +1233,6 @@ export function InboxList({ projectId }: InboxListProps) {
     searchActive: normalizedQuery.length > 0,
     tab: "closed",
   });
-
-  useEffect(() => {
-    const requestedState = window.sessionStorage.getItem(
-      PROJECT_INBOX_E2E_STATE_STORAGE_KEY,
-    ) as ProjectInboxE2EState | null;
-
-    if (requestedState !== "closed-tab" || activeTab === "closed" || dialogs.actionTarget) {
-      return;
-    }
-
-    setActiveTab("closed");
-    selection.clear();
-    setSearchQuery("");
-    window.sessionStorage.removeItem(PROJECT_INBOX_E2E_STATE_STORAGE_KEY);
-  }, [activeTab, dialogs.actionTarget, selection]);
-
-  useEffect(() => {
-    if (activeTab !== "open" || dialogs.actionTarget || !filteredIssues) {
-      return;
-    }
-
-    const requestedState = window.sessionStorage.getItem(
-      PROJECT_INBOX_E2E_STATE_STORAGE_KEY,
-    ) as ProjectInboxE2EState | null;
-    const firstOpenIssue = filteredIssues.find(isTriageable);
-
-    if (!requestedState || !firstOpenIssue) {
-      return;
-    }
-
-    if (requestedState === "decline-dialog") {
-      dialogs.openDialog({
-        issueId: firstOpenIssue._id,
-        issueTitle: firstOpenIssue.issue.title,
-        kind: "declineOne",
-      });
-    }
-
-    if (requestedState === "duplicate-dialog") {
-      dialogs.openDialog({
-        issueId: firstOpenIssue._id,
-        issueTitle: firstOpenIssue.issue.title,
-        kind: "markDuplicate",
-        sourceIssueId: firstOpenIssue.issueId,
-      });
-    }
-
-    window.sessionStorage.removeItem(PROJECT_INBOX_E2E_STATE_STORAGE_KEY);
-  }, [activeTab, dialogs.actionTarget, dialogs.openDialog, filteredIssues]);
 
   if (inboxIssues === undefined || counts === undefined || !filteredIssues) {
     return (

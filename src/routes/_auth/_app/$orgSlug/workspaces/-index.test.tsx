@@ -103,12 +103,14 @@ vi.mock("@/components/ui/Button", () => ({
     children,
     onClick,
     "aria-label": ariaLabel,
+    "data-testid": testId,
   }: {
     children: ReactNode;
     onClick?: () => void;
     "aria-label"?: string;
+    "data-testid"?: string;
   }) => (
-    <button type="button" onClick={onClick} aria-label={ariaLabel}>
+    <button type="button" onClick={onClick} aria-label={ariaLabel} data-testid={testId}>
       {children}
     </button>
   ),
@@ -244,8 +246,11 @@ describe("WorkspacesList", () => {
 
     render(<WorkspacesList />);
 
-    expect(screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
+    const emptyState = screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
+
+    expect(emptyState).toBeInTheDocument();
     expect(screen.getByText("No workspaces yet")).toBeInTheDocument();
+    expect(within(emptyState).getByTestId(TEST_IDS.WORKSPACE.CREATE_BUTTON)).toBeInTheDocument();
   });
 
   it("filters workspaces and clears the search-empty state", async () => {
@@ -289,7 +294,7 @@ describe("WorkspacesList", () => {
 
     render(<WorkspacesList />);
 
-    await user.click(screen.getByRole("button", { name: "+ Create Workspace" }));
+    await user.click(screen.getByTestId(TEST_IDS.WORKSPACE.CREATE_BUTTON));
     await user.click(screen.getByRole("button", { name: "Simulate workspace created" }));
 
     expect(mockNavigate).toHaveBeenCalledWith({

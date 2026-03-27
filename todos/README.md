@@ -1,13 +1,14 @@
 # Nixelo Todo Index
 
-> **Last Updated:** 2026-03-26
+> **Last Updated:** 2026-03-27
 
 ## Infrastructure
 
-- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — P0: make screenshots a thin layer on top of reusable E2E/page-object state setup and keep shrinking screenshot-lib-only ownership.
-- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P1: remove route/API naming ambiguity, replace hidden `-*.test.tsx` conventions, and make file-routed structure readable without repo folklore.
-- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — P1: shrink oversized shared primitive surfaces (`Card`, `Button`, `Typography`, `Badge`) and burn down the remaining raw Tailwind ratchet.
-- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — P2: fix screenshot-visible regressions with actual before/after review, not theory-driven polish.
+- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — P0: nearly complete. Session orchestration reusability and docs remain.
+- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P1: untouched. Route/API naming ambiguity, `-*.test.tsx` conventions, file-route readability.
+- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — P1: untouched. Oversized primitives (Card 199, Button 108, Typography 71, Badge 24) and raw Tailwind ratchet.
+- [ ] [e2e-test-id-cleanup.md](./e2e-test-id-cleanup.md) — P1: partial. Recording card title targeting and sprint test ID halfway pattern remain. evaluate-click and toHaveTextContent fixed.
+- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — P2: automated guardrails done. Human review passes and screenshot coverage depth pending.
 
 ## Features
 

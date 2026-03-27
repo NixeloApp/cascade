@@ -270,7 +270,7 @@ export async function dismissAllDialogs(page: Page): Promise<void> {
  * Wait for ALL loading spinners to disappear, not just the first one.
  * A page may have multiple concurrent spinners (sidebar, main content, widgets).
  */
-async function waitForAllSpinnersToClear(page: Page, timeout: number): Promise<void> {
+export async function waitForAllSpinnersToClear(page: Page, timeout: number): Promise<void> {
   const spinnerLocator = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
   await expect
     .poll(
@@ -639,12 +639,10 @@ export type WorkspaceDialogElements = {
  * Shared selector contract for the create-workspace modal.
  */
 export function getWorkspaceDialogElements(page: Page): WorkspaceDialogElements {
-  const dialog = page.getByRole("dialog").filter({
-    hasText: /create workspace/i,
-  });
+  const dialog = page.getByTestId(TEST_IDS.WORKSPACE.CREATE_MODAL);
   return {
     dialog,
-    nameInput: dialog.getByLabel(/workspace name/i),
+    nameInput: dialog.getByTestId(TEST_IDS.WORKSPACE.CREATE_NAME_INPUT),
     descriptionInput: dialog.getByLabel(/description/i),
     submitButton: dialog.getByRole("button", { name: /create workspace/i }),
     createForm: page.locator("#create-workspace-form"),

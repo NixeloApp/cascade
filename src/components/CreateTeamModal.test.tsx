@@ -9,6 +9,7 @@ import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { CreateTeamModal } from "./CreateTeamModal";
@@ -36,14 +37,16 @@ vi.mock("@/components/ui/Dialog", () => ({
     title,
     children,
     footer,
+    "data-testid": testId,
   }: {
     open: boolean;
     title: string;
     children: ReactNode;
     footer?: ReactNode;
+    "data-testid"?: string;
   }) =>
     open ? (
-      <div role="dialog" aria-label={title}>
+      <div role="dialog" aria-label={title} data-testid={testId}>
         <div>{title}</div>
         {children}
         {footer}
@@ -82,6 +85,7 @@ describe("CreateTeamModal", () => {
     render(<CreateTeamModal isOpen={false} onClose={vi.fn()} />);
 
     expect(screen.queryByRole("dialog", { name: "Create Team" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_MODAL)).not.toBeInTheDocument();
   });
 
   it("creates a team, navigates to the team detail route, and resets the form", async () => {
@@ -98,7 +102,11 @@ describe("CreateTeamModal", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("Team Name"), "Frontend Platform");
+    expect(screen.getByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_MODAL)).toBeInTheDocument();
+    await user.type(
+      screen.getByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_NAME_INPUT),
+      "Frontend Platform",
+    );
     await user.type(
       screen.getByLabelText("Description (Optional)"),
       "  UI systems and app shell  ",

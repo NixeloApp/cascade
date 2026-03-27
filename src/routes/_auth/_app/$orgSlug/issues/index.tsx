@@ -38,12 +38,6 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/")({
   component: AllIssuesPage,
 });
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_ISSUES_LOADING__?: boolean;
-  }
-}
-
 const PRIORITY_OPTIONS = [
   { value: "all", label: "All Priorities" },
   ...ISSUE_PRIORITIES.map((p) => ({ value: p, label: p.charAt(0).toUpperCase() + p.slice(1) })),
@@ -53,10 +47,6 @@ const TYPE_OPTIONS = [
   { value: "all", label: "All Types" },
   ...ISSUE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) })),
 ];
-
-function isE2EIssuesLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_ISSUES_LOADING__ === true;
-}
 
 // =============================================================================
 // Filter Hook
@@ -134,9 +124,9 @@ function useIssueResults(
   });
 
   const searchResults = useAuthenticatedQuery(api.issues.searchOrganizationIssues, searchQueryArgs);
-  const isLoading =
-    isE2EIssuesLoadingOverrideEnabled() ||
-    (filters.isSearching ? searchResults === undefined : status === "LoadingFirstPage");
+  const isLoading = filters.isSearching
+    ? searchResults === undefined
+    : status === "LoadingFirstPage";
 
   return {
     filteredIssues: filters.isSearching ? (searchResults ?? []) : paginatedIssues,

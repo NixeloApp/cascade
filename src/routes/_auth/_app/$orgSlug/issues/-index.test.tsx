@@ -10,12 +10,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { AllIssuesPage } from "./index";
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_ISSUES_LOADING__?: boolean;
-  }
-}
-
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => () => ({}),
 }));
@@ -183,7 +177,6 @@ describe("AllIssuesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    delete window.__NIXELO_E2E_ISSUES_LOADING__;
 
     mockUseOrganization.mockReturnValue({
       orgSlug: "acme",
@@ -283,8 +276,13 @@ describe("AllIssuesPage", () => {
     expect(await screen.findByTestId(TEST_IDS.PAGE.EMPTY_STATE)).toBeInTheDocument();
   });
 
-  it("forces the loading state when the E2E loading override is enabled", () => {
-    window.__NIXELO_E2E_ISSUES_LOADING__ = true;
+  it("renders the loading state while the first issues page is unresolved", () => {
+    mockUsePaginatedQuery.mockReturnValue({
+      results: [],
+      status: "LoadingFirstPage",
+      loadMore: vi.fn(),
+      isLoading: true,
+    });
 
     render(
       <IssueViewModeProvider>

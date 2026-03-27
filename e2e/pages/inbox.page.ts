@@ -40,6 +40,11 @@ export class InboxPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async gotoAndWait(): Promise<void> {
+    await this.goto();
+    await this.waitUntilReady();
+  }
+
   async waitUntilReady(): Promise<void> {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
@@ -86,25 +91,39 @@ export class InboxPage extends BasePage {
   }
 
   async openFirstIssueSnoozeMenu(): Promise<void> {
-    const snoozeButton = this.page.getByRole("button", { name: /^snooze$/i }).first();
+    const snoozeButton = this.inboxRows
+      .first()
+      .getByTestId(TEST_IDS.PROJECT_INBOX.ROW_SNOOZE_BUTTON);
     await expect(snoozeButton).toBeVisible();
     await snoozeButton.click();
     await expect(this.snoozeMenu).toBeVisible();
   }
 
   async openFirstIssueDeclineDialog(): Promise<void> {
-    const declineButton = this.page.getByRole("button", { name: /^decline$/i }).first();
+    const declineButton = this.inboxRows
+      .first()
+      .getByTestId(TEST_IDS.PROJECT_INBOX.ROW_DECLINE_BUTTON);
     await expect(declineButton).toBeVisible();
     await declineButton.click();
     await expect(this.declineDialog).toBeVisible();
   }
 
   async openFirstIssueDuplicateDialog(): Promise<void> {
-    const actionsButton = this.page.getByRole("button", { name: /more actions for/i }).first();
+    const actionsButton = this.inboxRows
+      .first()
+      .getByTestId(TEST_IDS.PROJECT_INBOX.ROW_MORE_ACTIONS_BUTTON);
     await expect(actionsButton).toBeVisible();
     await actionsButton.click();
-    await this.page.getByRole("menuitem", { name: /mark duplicate/i }).click();
+    await this.page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_ACTION).click();
     await expect(this.duplicateDialog).toBeVisible();
+  }
+
+  async closeDeclineDialogIfOpen(): Promise<void> {
+    await this.dismissDialogIfVisible(this.declineDialog);
+  }
+
+  async closeDuplicateDialogIfOpen(): Promise<void> {
+    await this.dismissDialogIfVisible(this.duplicateDialog);
   }
 
   async openClosedTab(): Promise<void> {
@@ -124,5 +143,19 @@ export class InboxPage extends BasePage {
       .poll(async () => await isLocatorVisible(this.closedEmptyState), { timeout: 12000 })
       .toBe(true);
     await expect(this.closedEmptyState).toContainText(/no closed items/i);
+  }
+
+  private async dismissDialogIfVisible(dialog: Locator): Promise<void> {
+    if (!(await isLocatorVisible(dialog))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+
+    if (await isLocatorVisible(dialog)) {
+      await this.page.mouse.click(10, 10);
+    }
+
+    await expect(dialog).not.toBeVisible();
   }
 }

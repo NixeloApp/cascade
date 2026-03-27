@@ -141,6 +141,7 @@ const focusTask = { _id: "issue-focus", title: "Ship the weekly recap", projectK
 const stats = { completedThisWeek: 7 };
 
 interface QueryState {
+  user: { name: string } | undefined;
   userSettings:
     | {
         dashboardLayout?: {
@@ -171,9 +172,11 @@ function primeDashboardQueries(
     activity?: Array<{ _id: string }> | undefined;
     dashboardStats?: { completedThisWeek?: number } | undefined;
     task?: { _id: string; title: string; projectKey: string } | null | undefined;
+    user?: { name: string } | undefined;
   } = {},
 ) {
   const queryState: QueryState = {
+    user: "user" in input ? input.user : { name: "Ada Lovelace" },
     userSettings: input.userSettings,
     created: "created" in input ? input.created : createdIssues,
     workspaceProjects: "workspaceProjects" in input ? input.workspaceProjects : projects,
@@ -182,7 +185,7 @@ function primeDashboardQueries(
     task: "task" in input ? input.task : focusTask,
   };
   const orderedResults = [
-    { name: "Ada Lovelace" },
+    queryState.user,
     queryState.userSettings,
     queryState.created,
     queryState.workspaceProjects,
@@ -202,7 +205,6 @@ function primeDashboardQueries(
 describe("Dashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    delete window.__NIXELO_E2E_DASHBOARD_LOADING__;
     mockUseNavigate.mockReturnValue(mockNavigate);
     mockUseOrganization.mockReturnValue({
       orgSlug: "acme",
@@ -361,9 +363,21 @@ describe("Dashboard", () => {
     );
   });
 
-  it("forces dashboard loading placeholders when the E2E loading override is enabled", () => {
-    window.__NIXELO_E2E_DASHBOARD_LOADING__ = true;
-    primeDashboardQueries();
+  it("renders dashboard loading placeholders while the core queries are unresolved", () => {
+    mockUsePaginatedQuery.mockReturnValue({
+      results: [],
+      status: "LoadingFirstPage",
+      loadMore: vi.fn(),
+      isLoading: true,
+    });
+    primeDashboardQueries({
+      user: undefined,
+      created: undefined,
+      workspaceProjects: undefined,
+      activity: undefined,
+      dashboardStats: undefined,
+      task: undefined,
+    });
 
     render(<Dashboard />);
 

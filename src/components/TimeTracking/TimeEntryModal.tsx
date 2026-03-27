@@ -341,6 +341,7 @@ export function TimeEntryModal({
       onOpenChange={onOpenChange}
       title={computed.isTimerMode ? "Start Timer" : "Log Time"}
       size="md"
+      data-testid={TEST_IDS.TIME_TRACKING.ENTRY_MODAL}
       footer={
         <>
           <Button type="button" onClick={() => onOpenChange(false)} variant="secondary">

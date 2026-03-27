@@ -1,7 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { createContext, type ReactNode, useContext } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -9,12 +9,6 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { OrganizationCalendarPage } from "./calendar";
-
-declare global {
-  interface Window {
-    __NIXELO_E2E_ORG_CALENDAR_LOADING__?: boolean;
-  }
-}
 
 const mockNavigate = vi.fn();
 const mockUseSearch =
@@ -181,10 +175,6 @@ describe("OrganizationCalendarPage", () => {
     });
   });
 
-  afterEach(() => {
-    delete window.__NIXELO_E2E_ORG_CALENDAR_LOADING__;
-  });
-
   it("renders accessible filters and disables the team selector until a workspace is chosen", async () => {
     render(<OrganizationCalendarPage />);
 
@@ -198,8 +188,8 @@ describe("OrganizationCalendarPage", () => {
     );
   });
 
-  it("renders the calendar-shaped loading skeleton when the E2E loading override is enabled", () => {
-    window.__NIXELO_E2E_ORG_CALENDAR_LOADING__ = true;
+  it("renders the calendar-shaped loading skeleton while scope queries are unresolved", () => {
+    mockUseAuthenticatedQuery.mockReturnValue(undefined);
 
     render(<OrganizationCalendarPage />);
 

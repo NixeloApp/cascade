@@ -1,11 +1,24 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { withBlockedConvexPage } from "../utils/convex-loading";
 import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 export class InvoicesPage extends BasePage {
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (invoicesPage: InvoicesPage) => Promise<T>,
+  ): Promise<T> {
+    return withBlockedConvexPage(
+      sourcePage,
+      { kind: "transport", target: "sibling" },
+      async (loadingPage) => run(new InvoicesPage(loadingPage, orgSlug)),
+    );
+  }
+
   readonly content: Locator;
   readonly createDialog: Locator;
   readonly emptyState: Locator;
@@ -19,12 +32,12 @@ export class InvoicesPage extends BasePage {
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
     this.content = page.getByTestId(TEST_IDS.INVOICES.CONTENT);
-    this.createDialog = page.getByRole("dialog", { name: /create draft invoice/i });
+    this.createDialog = page.getByTestId(TEST_IDS.INVOICES.CREATE_DIALOG);
     this.emptyState = page.getByTestId(TEST_IDS.INVOICES.EMPTY_STATE);
     this.filteredEmptyState = page.getByTestId(TEST_IDS.INVOICES.FILTERED_EMPTY_STATE);
     this.loadingState = page.getByTestId(TEST_IDS.INVOICES.LOADING_STATE);
     this.mobileList = page.getByTestId(TEST_IDS.INVOICES.MOBILE_LIST);
-    this.newDraftButton = page.getByRole("button", { name: /^new draft$/i });
+    this.newDraftButton = page.getByTestId(TEST_IDS.INVOICES.NEW_DRAFT_BUTTON);
     this.statusFilter = page.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER);
     this.table = page.getByTestId(TEST_IDS.INVOICES.TABLE);
   }
@@ -79,9 +92,26 @@ export class InvoicesPage extends BasePage {
     await expect(this.createDialog).toBeVisible();
   }
 
-  async selectStatusFilter(label: "Draft" | "Sent" | "Paid" | "Overdue"): Promise<void> {
+  async selectStatusFilter(status: "all" | "draft" | "sent" | "paid" | "overdue"): Promise<void> {
     await expect(this.statusFilter).toBeVisible();
     await this.statusFilter.click();
-    await this.page.getByRole("option", { name: new RegExp(`^${label}$`, "i") }).click();
+
+    switch (status) {
+      case "all":
+        await this.page.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER_OPTION_ALL).click();
+        return;
+      case "draft":
+        await this.page.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER_OPTION_DRAFT).click();
+        return;
+      case "sent":
+        await this.page.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER_OPTION_SENT).click();
+        return;
+      case "paid":
+        await this.page.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER_OPTION_PAID).click();
+        return;
+      case "overdue":
+        await this.page.getByTestId(TEST_IDS.INVOICES.STATUS_FILTER_OPTION_OVERDUE).click();
+        return;
+    }
   }
 }

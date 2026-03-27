@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -52,6 +53,7 @@ export function ImportExportFormatSelector({
               recipe={isSelected ? "optionTileSelected" : "optionTile"}
               padding="md"
               onClick={() => onValueChange(format)}
+              data-testid={TEST_IDS.PROJECT.IMPORT_EXPORT_FORMAT_OPTION(format)}
               className="cursor-pointer"
               aria-pressed={isSelected}
             >
@@ -89,7 +91,7 @@ interface ImportExportInfoAlertProps {
  */
 export function ImportExportInfoAlert({ items, title, variant }: ImportExportInfoAlertProps) {
   return (
-    <Alert variant={variant}>
+    <Alert variant={variant} data-testid={TEST_IDS.PROJECT.IMPORT_EXPORT_REQUIREMENTS}>
       <AlertTitle>{title}</AlertTitle>
       <AlertDescription>
         <Stack as="ul" gap="xs" className="list-disc list-inside">

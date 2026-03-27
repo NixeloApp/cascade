@@ -5,11 +5,7 @@
  * and feature-specific UI flows (board interactions, sprint workflows, etc.).
  */
 
-import type { Page } from "@playwright/test";
-import { expect } from "@playwright/test";
-import { ROUTES } from "../../convex/shared/routes";
-import { TEST_IDS } from "../../src/lib/test-ids";
-import { E2E_TIMEZONE } from "../constants";
+import { expect, type Page } from "@playwright/test";
 import {
   AssistantPage,
   CalendarPage,
@@ -22,10 +18,9 @@ import {
   MyIssuesPage,
   ProjectsPage,
   RoadmapPage,
-  SettingsPage,
   SprintsPage,
 } from "../pages";
-import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
+import { waitForLocatorVisible } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -41,9 +36,6 @@ import {
   shouldCapture,
   shouldCaptureAny,
 } from "./capture";
-import { BASE_URL } from "./config";
-import { openStableDialog, waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
-import { waitForBoardReady, waitForExpectedContent } from "./readiness";
 
 export async function screenshotDashboardModals(
   page: Page,
@@ -104,11 +96,7 @@ export async function screenshotDashboardModals(
     await runCaptureStep("dashboard time-entry modal", async () => {
       await dismissAllDialogs(page);
       await dashboardPage.openTimeEntryModal();
-      await dashboardPage.timeEntryModal.waitFor({ state: "visible", timeout: 5000 });
-      await page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM).waitFor({
-        state: "visible",
-        timeout: 5000,
-      });
+      await dashboardPage.expectTimeEntryModalReady(5000);
       await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
       await dashboardPage.closeTimeEntryModal();
     });
@@ -125,35 +113,9 @@ export async function screenshotDashboardLoadingState(
   }
 
   await runCaptureStep("dashboard loading skeletons", async () => {
-    const loadingPage = await page.context().newPage();
-
-    try {
-      await loadingPage.addInitScript(() => {
-        window.__NIXELO_E2E_DASHBOARD_LOADING__ = true;
-      });
-
-      const dashboardUrl = ROUTES.dashboard.build(orgSlug);
-      await loadingPage.goto(`${BASE_URL}${dashboardUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await loadingPage.waitForURL(
-        (currentUrl) => /\/[^/]+\/dashboard$/.test(new URL(currentUrl).pathname),
-        {
-          timeout: 15000,
-        },
-      );
-      await loadingPage
-        .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
-        .waitFor({ state: "visible", timeout: 15000 });
-      await loadingPage
-        .getByRole("heading", { name: /^dashboard$/i })
-        .waitFor({ state: "visible", timeout: 12000 });
-      await expect
-        .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
-          timeout: 12000,
-        })
-        .toBeGreaterThanOrEqual(6);
+    await DashboardPage.withLoadingPage(page, orgSlug, async (loadingDashboardPage) => {
+      const { page: loadingPage } = loadingDashboardPage;
+      await loadingDashboardPage.gotoAndExpectLoadingSkeletons(12000);
       await waitForAnimation(loadingPage);
       await loadingPage.evaluate(
         () =>
@@ -166,11 +128,7 @@ export async function screenshotDashboardLoadingState(
       await captureCurrentView(loadingPage, prefix, "dashboard-loading-skeletons", {
         skipReadyCheck: true,
       });
-    } finally {
-      if (!loadingPage.isClosed()) {
-        await loadingPage.close();
-      }
-    }
+    });
   });
 }
 
@@ -187,18 +145,12 @@ export async function screenshotOrgCalendarStates(
     return;
   }
 
-  const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
-
   if (shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName])) {
     await runRequiredCaptureStep("org calendar filtered scope states", async () => {
-      await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
-      await waitForScreenshotReady(page);
-
       const calendarPage = new CalendarPage(page, orgSlug);
+      await calendarPage.goto();
+      await calendarPage.waitUntilReady();
+      await waitForScreenshotReady(page);
 
       if (shouldCapture(prefix, workspaceScopeName)) {
         await calendarPage.selectWorkspace("Product");
@@ -219,40 +171,14 @@ export async function screenshotOrgCalendarStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runRequiredCaptureStep("org calendar loading state", async () => {
-      const loadingPage = await page.context().newPage();
-
-      try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_ORG_CALENDAR_LOADING__ = true;
-        });
-
-        await loadingPage.goto(`${BASE_URL}${orgCalendarUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await loadingPage.waitForURL(
-          (currentUrl) => /\/[^/]+\/calendar$/.test(new URL(currentUrl).pathname),
-          {
-            timeout: 15000,
-          },
-        );
-        await loadingPage
-          .getByTestId(TEST_IDS.ORG_CALENDAR.LOADING_STATE)
-          .waitFor({ state: "visible", timeout: 12000 });
-        await expect
-          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThanOrEqual(10);
+      await CalendarPage.withLoadingPage(page, orgSlug, async (loadingCalendarPage) => {
+        const { page: loadingPage } = loadingCalendarPage;
+        await loadingCalendarPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,
         });
-      } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
-      }
+      });
     });
   }
 }
@@ -266,18 +192,14 @@ export async function screenshotProjectsModal(
     return;
   }
 
+  const projectsPage = new ProjectsPage(page, orgSlug);
   const projectsState = await testUserService.configureProjectsState(orgSlug, "default");
   if (!projectsState.success) {
     throw new Error(projectsState.error ?? "Failed to restore default projects state");
   }
 
-  await page.goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
-    waitUntil: "domcontentloaded",
-    timeout: 15000,
-  });
+  await projectsPage.goto();
   await waitForScreenshotReady(page);
-
-  const projectsPage = new ProjectsPage(page, orgSlug);
 
   await runCaptureStep("projects create-project modal", async () => {
     await projectsPage.openCreateProjectForm();
@@ -303,8 +225,6 @@ export async function screenshotProjectsStates(
     return;
   }
 
-  const projectsUrl = ROUTES.projects.list.build(orgSlug);
-
   const configureProjectsState = async (mode: "default" | "single" | "empty") => {
     const result = await testUserService.configureProjectsState(orgSlug, mode);
     if (!result.success) {
@@ -314,12 +234,8 @@ export async function screenshotProjectsStates(
 
   const openProjectsPage = async (mode: "default" | "single" | "empty") => {
     await configureProjectsState(mode);
-    await page.goto(`${BASE_URL}${projectsUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, projectsUrl, "projects");
     const projectsPage = new ProjectsPage(page, orgSlug);
+    await projectsPage.goto();
     await projectsPage.expectProjectsView();
     return projectsPage;
   };
@@ -354,36 +270,14 @@ export async function screenshotProjectsStates(
 
     if (shouldCapture(prefix, captureNames.loading)) {
       await runCaptureStep("projects loading", async () => {
-        const loadingPage = await page.context().newPage();
-
-        try {
-          await loadingPage.addInitScript(() => {
-            window.__NIXELO_E2E_PROJECTS_LOADING__ = true;
-          });
-
-          await loadingPage.goto(`${BASE_URL}${projectsUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
-          await loadingProjectsPage.expectProjectsLoadingStateVisible(12000);
-          await expect
-            .poll(
-              () => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(),
-              {
-                timeout: 12000,
-              },
-            )
-            .toBeGreaterThan(0);
+        await ProjectsPage.withProjectsLoadingPage(page, orgSlug, async (loadingProjectsPage) => {
+          const { page: loadingPage } = loadingProjectsPage;
+          await loadingProjectsPage.gotoAndExpectProjectsLoadingState(12000);
           await waitForAnimation(loadingPage);
           await captureCurrentView(loadingPage, prefix, captureNames.loading, {
             skipReadyCheck: true,
           });
-        } finally {
-          if (!loadingPage.isClosed()) {
-            await loadingPage.close();
-          }
-        }
+        });
       });
     }
   } finally {
@@ -396,7 +290,6 @@ export async function screenshotInvoicesStates(
   orgSlug: string,
   prefix: string,
 ): Promise<void> {
-  const invoicesE2EStateStorageKey = "nixelo:e2e:invoices-state";
   const captureNames = {
     canonical: "invoices",
     createDialog: "invoices-create-draft-dialog",
@@ -408,27 +301,9 @@ export async function screenshotInvoicesStates(
     return;
   }
 
-  const invoicesUrl = ROUTES.invoices.list.build(orgSlug);
-
-  const openInvoicesPage = async (
-    targetPage: Page = page,
-    requestedState?: "create-dialog" | "filtered-empty",
-  ) => {
-    if (requestedState) {
-      await targetPage.evaluate(
-        ([storageKey, state]) => {
-          window.sessionStorage.setItem(storageKey, state);
-        },
-        [invoicesE2EStateStorageKey, requestedState] as const,
-      );
-    }
-
-    await targetPage.goto(`${BASE_URL}${invoicesUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(targetPage, invoicesUrl, "invoices");
+  const openInvoicesPage = async (targetPage: Page = page) => {
     const invoicesPage = new InvoicesPage(targetPage, orgSlug);
+    await invoicesPage.goto();
     await invoicesPage.waitUntilReady();
     return invoicesPage;
   };
@@ -444,7 +319,8 @@ export async function screenshotInvoicesStates(
 
   if (shouldCapture(prefix, captureNames.filteredEmpty)) {
     await runCaptureStep("invoices filtered empty", async () => {
-      const invoicesPage = await openInvoicesPage(page, "filtered-empty");
+      const invoicesPage = await openInvoicesPage();
+      await invoicesPage.selectStatusFilter("overdue");
       await invoicesPage.expectFilteredEmptyStateVisible();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureNames.filteredEmpty);
@@ -453,8 +329,8 @@ export async function screenshotInvoicesStates(
 
   if (shouldCapture(prefix, captureNames.createDialog)) {
     await runCaptureStep("invoices create dialog", async () => {
-      const invoicesPage = await openInvoicesPage(page, "create-dialog");
-      await expect(invoicesPage.createDialog).toBeVisible();
+      const invoicesPage = await openInvoicesPage();
+      await invoicesPage.openCreateDialog();
       await waitForAnimation(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureNames.createDialog);
@@ -463,29 +339,16 @@ export async function screenshotInvoicesStates(
 
   if (shouldCapture(prefix, captureNames.loading)) {
     await runCaptureStep("invoices loading", async () => {
-      const loadingPage = await page.context().newPage();
-
-      try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_INVOICES_LOADING__ = true;
-        });
-
-        const loadingInvoicesPage = await openInvoicesPage(loadingPage);
+      await InvoicesPage.withLoadingPage(page, orgSlug, async (loadingInvoicesPage) => {
+        const { page: loadingPage } = loadingInvoicesPage;
+        await loadingInvoicesPage.goto();
+        await loadingInvoicesPage.waitUntilReady();
         await loadingInvoicesPage.expectLoadingStateVisible();
-        await expect
-          .poll(() => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThan(0);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
           skipReadyCheck: true,
         });
-      } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
-      }
+      });
     });
   }
 }
@@ -507,8 +370,6 @@ export async function screenshotAssistantStates(
     return;
   }
 
-  const assistantUrl = ROUTES.assistant.build(orgSlug);
-
   const configureAssistantState = async (mode: "default" | "empty") => {
     const result = await testUserService.configureAssistantState(orgSlug, mode);
     if (!result.success) {
@@ -526,12 +387,8 @@ export async function screenshotAssistantStates(
   };
 
   const openAssistantPage = async () => {
-    await page.goto(`${BASE_URL}${assistantUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, assistantUrl, "assistant");
     const assistantPage = new AssistantPage(page, orgSlug);
+    await assistantPage.goto();
     await assistantPage.waitUntilReady();
     return assistantPage;
   };
@@ -584,33 +441,14 @@ export async function screenshotAssistantStates(
 
   if (shouldCapture(prefix, captureNames.loading)) {
     await runCaptureStep("assistant loading", async () => {
-      const loadingPage = await page.context().newPage();
-
-      try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_ASSISTANT_LOADING__ = true;
-        });
-
-        await loadingPage.goto(`${BASE_URL}${assistantUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
-        await loadingAssistantPage.loadingState.waitFor({ state: "visible", timeout: 12000 });
-        await expect
-          .poll(() => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThan(0);
+      await AssistantPage.withLoadingPage(page, orgSlug, async (loadingAssistantPage) => {
+        const { page: loadingPage } = loadingAssistantPage;
+        await loadingAssistantPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
           skipReadyCheck: true,
         });
-      } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
-      }
+      });
     });
   }
 }
@@ -635,8 +473,6 @@ export async function screenshotRoadmapStates(
     return;
   }
 
-  const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
-
   const configureRoadmapState = async (mode: "default" | "empty" | "milestone") => {
     const result = await testUserService.configureRoadmapState(orgSlug, projectKey, mode);
     if (!result.success) {
@@ -654,12 +490,9 @@ export async function screenshotRoadmapStates(
     await configureRoadmapState(mode);
 
     try {
-      await page.goto(`${BASE_URL}${roadmapUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, roadmapUrl, "roadmap");
       const roadmapPage = new RoadmapPage(page, orgSlug);
+      await roadmapPage.gotoProject(projectKey);
+      await roadmapPage.waitUntilReady();
       return await run(page, roadmapPage);
     } finally {
       await configureRoadmapState("default");
@@ -773,12 +606,9 @@ export async function screenshotBoardModals(
     return;
   }
 
-  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-  await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-  await waitForExpectedContent(page, boardUrl, "board");
-  await waitForScreenshotReady(page);
-
   const projectsPage = new ProjectsPage(page, orgSlug);
+  await projectsPage.gotoProjectBoardAndWait(projectKey);
+  await waitForScreenshotReady(page);
   if (
     shouldCapture(prefix, createIssueModalName) &&
     (await projectsPage.createIssueButton.count()) > 0
@@ -792,36 +622,28 @@ export async function screenshotBoardModals(
     });
   }
 
-  let issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
-  if (issueKey) {
-    const matchingIssueCard = page
-      .getByTestId(TEST_IDS.ISSUE.CARD)
-      .filter({ hasText: issueKey })
-      .first();
-    if ((await matchingIssueCard.count()) > 0) {
-      issueCard = matchingIssueCard;
-    }
-  }
-
   if (
     shouldCaptureAny(prefix, [issueDetailModalName, issueDetailInlineEditingName]) &&
-    (await issueCard.count()) > 0
+    ((issueKey && (await projectsPage.getIssueCardTrigger(issueKey).count()) > 0) ||
+      (await projectsPage.issueCards.count()) > 0)
   ) {
     await runCaptureStep("board issue-detail modal", async () => {
-      await issueCard.scrollIntoViewIfNeeded();
-      const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
-      await issueCard.click();
-      const dialogOpened = await waitForLocatorVisible(issueDetailDialog, 3000);
-      if (!dialogOpened) {
-        await waitForScreenshotReady(page);
+      if (issueKey && (await projectsPage.getIssueCardTrigger(issueKey).count()) > 0) {
+        await projectsPage.getIssueCardTrigger(issueKey).scrollIntoViewIfNeeded();
+        await projectsPage.openIssueDetailByKey(issueKey);
+      } else {
+        const issueCard = projectsPage.issueCards.first();
+        await issueCard.scrollIntoViewIfNeeded();
         await issueCard.click();
-        await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+        const dialogOpened = await waitForLocatorVisible(projectsPage.issueDetailDialog, 3000);
+        if (!dialogOpened) {
+          await waitForScreenshotReady(page);
+          await issueCard.click();
+          await projectsPage.issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+        }
+        await expect(projectsPage.issueDetailKey).toBeVisible({ timeout: 5000 });
+        await expect(projectsPage.issueDetailTitle).toBeVisible({ timeout: 5000 });
       }
-      // Wait for issue content to hydrate - issue key pattern indicates content is loaded
-      await issueDetailDialog
-        .getByText(/[A-Z][A-Z0-9]+-\d+/)
-        .first()
-        .waitFor({ timeout: 5000 });
 
       if (shouldCapture(prefix, issueDetailModalName)) {
         await waitForScreenshotReady(page);
@@ -840,7 +662,7 @@ export async function screenshotBoardModals(
         await captureCurrentView(page, prefix, issueDetailInlineEditingName);
       }
 
-      await dismissIfOpen(page, issueDetailDialog);
+      await dismissIfOpen(page, projectsPage.issueDetailDialog);
     });
   }
 }
@@ -858,42 +680,15 @@ export async function screenshotBoardLoadingState(
     return;
   }
 
-  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-
   await runRequiredCaptureStep("board loading state", async () => {
-    const loadingPage = await page.context().newPage();
-    const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
-
-    try {
-      await loadingPage.addInitScript(() => {
-        window.__NIXELO_E2E_BOARD_LOADING__ = true;
-      });
-
-      await loadingPage.goto(`${BASE_URL}${boardUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await loadingPage.waitForURL(
-        (currentUrl) => /\/[^/]+\/projects\/[^/]+\/board$/.test(new URL(currentUrl).pathname),
-        {
-          timeout: 15000,
-        },
-      );
-      await loadingProjectsPage.expectBoardLoadingStateVisible(15000);
-      await expect
-        .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
-          timeout: 12000,
-        })
-        .toBeGreaterThanOrEqual(8);
+    await ProjectsPage.withBoardLoadingPage(page, orgSlug, async (loadingProjectsPage) => {
+      const { page: loadingPage } = loadingProjectsPage;
+      await loadingProjectsPage.gotoProjectBoardAndExpectLoadingState(projectKey, 15000);
       await waitForAnimation(loadingPage);
       await captureCurrentView(loadingPage, prefix, loadingStateName, {
         skipReadyCheck: true,
       });
-    } finally {
-      if (!loadingPage.isClosed()) {
-        await loadingPage.close();
-      }
-    }
+    });
   });
 }
 
@@ -908,7 +703,6 @@ export async function screenshotMeetingsStates(
   const processingName = "meetings-processing";
   const filterEmptyName = "meetings-filter-empty";
   const scheduleDialogName = "meetings-schedule-dialog";
-  const detailTimeoutMs = 15000;
   const isDesktopCapture = captureState.currentConfigPrefix.startsWith("desktop-");
   const isTabletCapture = captureState.currentConfigPrefix === "tablet-light";
   const shouldCaptureDetailState = isDesktopCapture;
@@ -928,39 +722,23 @@ export async function screenshotMeetingsStates(
     return;
   }
 
-  const meetingsUrl = ROUTES.meetings.build(orgSlug);
   const meetingsPage = new MeetingsPage(page, orgSlug);
-  const recentMeetingsSection = page.getByTestId(TEST_IDS.MEETINGS.RECENT_SECTION);
-  const meetingDetailSection = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
-  const meetingMemorySection = page.getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION);
 
   const openMeetingsForCapture = async () => {
-    await page.goto(`${BASE_URL}${meetingsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-    await waitForExpectedContent(page, meetingsUrl, "meetings");
+    await meetingsPage.goto();
+    await meetingsPage.waitForCaptureReady();
     await waitForScreenshotReady(page);
   };
 
   if (shouldCaptureDetailState && shouldCapture(prefix, meetingsDetailName)) {
     await runCaptureStep("meetings detail", async () => {
       await openMeetingsForCapture();
-      const clientLaunchReviewCard = recentMeetingsSection
-        .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
-        .filter({ hasText: /Client Launch Review/i })
-        .first();
-      await clientLaunchReviewCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
-      await clientLaunchReviewCard.evaluate((element) => {
-        if (element instanceof HTMLElement) {
-          element.click();
-        }
-      });
-      await meetingDetailSection
-        .getByText("Client Launch Review", { exact: true })
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
-      await meetingDetailSection
-        .getByText(
-          "The client also asked whether they need weekend coverage and a final handoff packet before launch.",
-        )
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await meetingsPage.expectRecordingVisible("Client Launch Review");
+      await meetingsPage.openRecording("Client Launch Review");
+      await meetingsPage.expectRecordingDetail("Client Launch Review");
+      await meetingsPage.expectRecordingSummary(
+        "The client also asked whether they need weekend coverage and a final handoff packet before launch.",
+      );
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, meetingsDetailName);
     });
@@ -973,11 +751,9 @@ export async function screenshotMeetingsStates(
       await meetingsPage.openRecording("Weekly Product Sync");
       await meetingsPage.expectRecordingDetail("Weekly Product Sync");
       await meetingsPage.filterTranscript("pricing");
-      await meetingDetailSection
-        .getByText(
-          "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
-        )
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await meetingsPage.expectTranscriptMatch(
+        "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
+      );
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, transcriptSearchName);
     });
@@ -986,21 +762,10 @@ export async function screenshotMeetingsStates(
   if (shouldCapture(prefix, memoryLensName)) {
     await runCaptureStep("meetings memory lens", async () => {
       await openMeetingsForCapture();
-      const opsLensButton = meetingMemorySection
-        .locator("button")
-        .filter({ hasText: /OPS/i })
-        .first();
-      await opsLensButton.waitFor({ state: "visible", timeout: detailTimeoutMs });
-      await opsLensButton.evaluate((element) => {
-        if (element instanceof HTMLElement) {
-          element.click();
-        }
-      });
-      await meetingMemorySection
-        .getByText(
-          "Cross-meeting decisions, open questions, and follow-ups for OPS - Client Operations Hub.",
-        )
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await meetingsPage.filterMemoryByProject("OPS");
+      await meetingsPage.expectMemoryDescription(
+        "Cross-meeting decisions, open questions, and follow-ups for OPS - Client Operations Hub.",
+      );
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, memoryLensName);
     });
@@ -1053,17 +818,13 @@ export async function screenshotDocumentsStates(
     return;
   }
 
-  const documentsUrl = ROUTES.documents.list.build(orgSlug);
   const documentsPage = new DocumentsPage(page, orgSlug);
 
   const openDocumentsForCapture = async () => {
-    await page.goto(`${BASE_URL}${documentsUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, documentsUrl, "documents", prefix);
-    await waitForScreenshotReady(page);
+    await documentsPage.goto();
+    await documentsPage.waitUntilReady();
     await documentsPage.expectDocumentsView();
+    await waitForScreenshotReady(page);
   };
 
   if (shouldCapture(prefix, filteredSearchName)) {
@@ -1110,15 +871,11 @@ export async function screenshotIssuesStates(
     return;
   }
 
-  const issuesUrl = ROUTES.issues.list.build(orgSlug);
   const issuesPage = new IssuesPage(page, orgSlug);
 
   const openIssuesForCapture = async () => {
-    await page.goto(`${BASE_URL}${issuesUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, issuesUrl, "issues", prefix);
+    await issuesPage.goto();
+    await issuesPage.waitUntilReady();
     await waitForScreenshotReady(page);
   };
 
@@ -1156,56 +913,23 @@ export async function screenshotIssuesStates(
     await runCaptureStep("issues create modal", async () => {
       await openIssuesForCapture();
       await dismissAllDialogs(page);
-      const createIssueDialog = page.getByRole("dialog", { name: /^create issue$/i });
-      await openStableDialog(
-        page,
-        issuesPage.createIssueButton,
-        createIssueDialog,
-        issuesPage.issueTitleInput,
-        "issues create issue",
-      );
-      await waitForCreateIssueModalScreenshotReady(page, issuesPage);
+      await issuesPage.openCreateIssueModal();
+      await issuesPage.expectCreateIssueModalCaptureReady();
       await captureCurrentView(page, prefix, createModalName);
-      await dismissIfOpen(page, createIssueDialog);
+      await dismissIfOpen(page, issuesPage.createIssueModal);
     });
   }
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("issues loading state", async () => {
-      const loadingPage = await page.context().newPage();
-      const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
-
-      try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_ISSUES_LOADING__ = true;
-        });
-
-        await loadingPage.goto(`${BASE_URL}${issuesUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await loadingPage.waitForURL(
-          (currentUrl) => /\/[^/]+\/issues$/.test(new URL(currentUrl).pathname),
-          {
-            timeout: 15000,
-          },
-        );
-        await loadingIssuesPage.searchInput.waitFor({ state: "visible", timeout: 12000 });
-        await loadingIssuesPage.createIssueButton.waitFor({ state: "visible", timeout: 12000 });
-        await expect
-          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThanOrEqual(1);
+      await IssuesPage.withLoadingPage(page, orgSlug, async (loadingIssuesPage) => {
+        const { page: loadingPage } = loadingIssuesPage;
+        await loadingIssuesPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,
         });
-      } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
-      }
+      });
     });
   }
 }
@@ -1225,82 +949,47 @@ export async function screenshotMyIssuesStates(
 
   if (shouldCapture(prefix, filterActiveName)) {
     await runCaptureStep("my issues filter active", async () => {
-      const filterActivePage = await page.context().newPage();
-
-      try {
-        const filteredMyIssuesPage = new MyIssuesPage(filterActivePage, orgSlug);
+      await MyIssuesPage.withCapturePage(page, orgSlug, async (filteredMyIssuesPage) => {
+        const { page: filterActivePage } = filteredMyIssuesPage;
         await filteredMyIssuesPage.goto();
         await filteredMyIssuesPage.waitUntilReady();
         await filteredMyIssuesPage.selectPriorityFilter("High");
         await filteredMyIssuesPage.expectFilterSummaryVisible();
         await waitForScreenshotReady(filterActivePage);
         await captureCurrentView(filterActivePage, prefix, filterActiveName);
-      } finally {
-        if (!filterActivePage.isClosed()) {
-          await filterActivePage.close();
-        }
-      }
+      });
     });
   }
 
   if (shouldCapture(prefix, filteredEmptyName)) {
     await runCaptureStep("my issues filtered empty state", async () => {
-      const filteredEmptyPage = await page.context().newPage();
-
-      try {
-        const filteredEmptyMyIssuesPage = new MyIssuesPage(filteredEmptyPage, orgSlug);
+      await MyIssuesPage.withCapturePage(page, orgSlug, async (filteredEmptyMyIssuesPage) => {
+        const { page: filteredEmptyPage } = filteredEmptyMyIssuesPage;
         await filteredEmptyMyIssuesPage.goto();
         await filteredEmptyMyIssuesPage.waitUntilReady();
         await filteredEmptyMyIssuesPage.selectPriorityFilter("Lowest");
         await filteredEmptyMyIssuesPage.expectFilteredEmptyState();
         await waitForScreenshotReady(filteredEmptyPage);
         await captureCurrentView(filteredEmptyPage, prefix, filteredEmptyName);
-      } finally {
-        if (!filteredEmptyPage.isClosed()) {
-          await filteredEmptyPage.close();
-        }
-      }
+      });
     });
   }
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("my issues loading state", async () => {
-      const browser = page.context().browser();
-      if (!browser) {
-        throw new Error("My issues loading capture requires an attached browser instance");
-      }
-
-      const isolatedContext = await browser.newContext({
-        storageState: await page.context().storageState(),
-        viewport: page.viewportSize() ?? undefined,
-        colorScheme: captureState.currentConfigPrefix.endsWith("dark") ? "dark" : "light",
-        timezoneId: E2E_TIMEZONE,
-      });
-      const loadingPage = await isolatedContext.newPage();
-
-      try {
-        const settingsPage = new SettingsPage(loadingPage, orgSlug);
-        await settingsPage.goto();
-        await settingsPage.waitForCaptureReady("profile");
-        await isolatedContext.setOffline(true);
-        await loadingPage
-          .getByTestId(TEST_IDS.NAV.MY_ISSUES_LINK)
-          .evaluate((element: HTMLAnchorElement) => {
-            element.click();
+      await MyIssuesPage.withLoadingPage(
+        page,
+        orgSlug,
+        captureState.currentConfigPrefix.endsWith("dark") ? "dark" : "light",
+        async (loadingMyIssuesPage) => {
+          const { page: loadingPage } = loadingMyIssuesPage;
+          await loadingMyIssuesPage.expectLoadingStateVisible();
+          await waitForAnimation(loadingPage);
+          await captureCurrentView(loadingPage, prefix, loadingStateName, {
+            skipReadyCheck: true,
           });
-        const loadingMyIssuesPage = new MyIssuesPage(loadingPage, orgSlug);
-        await loadingMyIssuesPage.expectLoadingStateVisible();
-        await waitForAnimation(loadingPage);
-        await captureCurrentView(loadingPage, prefix, loadingStateName, {
-          skipReadyCheck: true,
-        });
-      } finally {
-        await isolatedContext.setOffline(false);
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
-        await isolatedContext.close();
-      }
+        },
+      );
     });
   }
 }
@@ -1312,7 +1001,6 @@ export async function screenshotProjectInboxStates(
   prefix: string,
 ): Promise<void> {
   const normalizedProjectKey = projectKey.toLowerCase();
-  const inboxUrl = ROUTES.projects.inbox.build(orgSlug, projectKey);
   const closedTabName = `project-${normalizedProjectKey}-inbox-closed`;
   const bulkSelectionName = `project-${normalizedProjectKey}-inbox-bulk-selection`;
   const snoozeMenuName = `project-${normalizedProjectKey}-inbox-snooze-menu`;
@@ -1343,11 +1031,7 @@ export async function screenshotProjectInboxStates(
     }
   };
   const openInbox = async () => {
-    await page.goto(`${BASE_URL}${inboxUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, inboxUrl, "projectInbox", prefix);
+    await inboxPage.gotoAndWait();
     await waitForScreenshotReady(page);
   };
   await ensureInboxState("default");
@@ -1384,31 +1068,21 @@ export async function screenshotProjectInboxStates(
 
     if (shouldCapture(prefix, declineDialogName)) {
       await runCaptureStep("project inbox decline dialog", async () => {
-        await page.evaluate(() => {
-          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "decline-dialog");
-        });
         await openInbox();
-        await page
-          .getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG)
-          .waitFor({ state: "visible", timeout: 12000 });
+        await inboxPage.openFirstIssueDeclineDialog();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, declineDialogName);
-        await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG));
+        await inboxPage.closeDeclineDialogIfOpen();
       });
     }
 
     if (shouldCapture(prefix, duplicateDialogName)) {
       await runCaptureStep("project inbox duplicate dialog", async () => {
-        await page.evaluate(() => {
-          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "duplicate-dialog");
-        });
         await openInbox();
-        await page
-          .getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG)
-          .waitFor({ state: "visible", timeout: 12000 });
+        await inboxPage.openFirstIssueDuplicateDialog();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, duplicateDialogName);
-        await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG));
+        await inboxPage.closeDuplicateDialogIfOpen();
       });
     }
 
@@ -1425,10 +1099,8 @@ export async function screenshotProjectInboxStates(
     if (shouldCapture(prefix, closedEmptyName)) {
       await runCaptureStep("project inbox closed empty state", async () => {
         await ensureInboxState("closedEmpty");
-        await page.evaluate(() => {
-          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "closed-tab");
-        });
         await openInbox();
+        await inboxPage.openClosedTab();
         await inboxPage.expectClosedEmptyState();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, closedEmptyName);
@@ -1446,12 +1118,11 @@ export async function screenshotBoardInteractiveStates(
   prefix: string,
 ): Promise<void> {
   const normalizedProjectKey = projectKey.toLowerCase();
-  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+  const projectsPage = new ProjectsPage(page, orgSlug);
 
   // Helper: navigate to board and wait for toolbar
   const loadBoard = async () => {
-    await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 30000 });
-    await waitForBoardReady(page);
+    await projectsPage.gotoProjectBoardAndWait(projectKey);
     await waitForScreenshotReady(page);
   };
 
@@ -1463,19 +1134,7 @@ export async function screenshotBoardInteractiveStates(
 
     await runCaptureStep(`board swimlane ${mode}`, async () => {
       await loadBoard();
-      // Open swimlane dropdown — button says "Swimlanes" on fresh load
-      const swimlaneButton = page.getByText("Swimlanes", { exact: true });
-      await swimlaneButton.waitFor({ state: "visible", timeout: 8000 });
-      await swimlaneButton.click();
-      // Select the mode via menuitemcheckbox to avoid matching hidden mobile
-      // text or other page elements with the same label.
-      const modeLabel = mode[0].toUpperCase() + mode.slice(1);
-      const option = page.getByRole("menuitemcheckbox", { name: modeLabel, exact: true });
-      await option.waitFor({ state: "visible", timeout: 3000 });
-      // Radix DropdownMenuCheckboxItem may detach on check. Use scrollIntoView
-      // + click in quick succession to minimize the race window.
-      await option.scrollIntoViewIfNeeded();
-      await option.click();
+      await projectsPage.selectBoardSwimlaneMode(mode);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureName);
     });
@@ -1485,23 +1144,15 @@ export async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-column-collapsed`)) {
     await runCaptureStep("board column collapsed", async () => {
       await loadBoard();
-      // Find collapse button INSIDE a board column header (not sidebar)
-      const columnHeader = page.getByTestId(TEST_IDS.BOARD.COLUMN).first();
-      const collapseButton = columnHeader.getByLabel(/collapse/i);
-      await collapseButton.waitFor({ state: "visible", timeout: 8000 });
-      await collapseButton.click();
+      await projectsPage.collapseFirstBoardColumn();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
         prefix,
         `project-${normalizedProjectKey}-board-column-collapsed`,
       );
-      // Expand it back
-      const expandButton = page.getByLabel(/expand/i).first();
-      if (await isLocatorVisible(expandButton)) {
-        await expandButton.click();
-        await waitForScreenshotReady(page);
-      }
+      await projectsPage.expandFirstCollapsedBoardColumn();
+      await waitForScreenshotReady(page);
     });
   }
 
@@ -1526,9 +1177,7 @@ export async function screenshotBoardInteractiveStates(
 
       try {
         await loadBoard();
-        const triageColumn = page.getByLabel(/triage column/i);
-        await triageColumn.waitFor({ state: "visible", timeout: 8000 });
-        await triageColumn.getByText("No issues yet", { exact: true }).waitFor({ timeout: 8000 });
+        await projectsPage.expectBoardColumnEmpty("Triage");
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -1561,7 +1210,7 @@ export async function screenshotBoardInteractiveStates(
 
       try {
         await loadBoard();
-        await page.getByText("Over limit", { exact: true }).first().waitFor({ timeout: 8000 });
+        await projectsPage.expectBoardWipWarningVisible();
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -1578,18 +1227,7 @@ export async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-filter-active`)) {
     await runCaptureStep("board filter active", async () => {
       await loadBoard();
-      // The filter bar "Priority" button has icon text "Pri" + label "Priority"
-      const priorityFilter = page.getByRole("button", { name: /priority/i }).nth(0);
-      await priorityFilter.waitFor({ state: "visible", timeout: 8000 });
-      await priorityFilter.click();
-      const highOption = page
-        .locator("[role='menuitemcheckbox']")
-        .filter({ hasText: "High" })
-        .first();
-      await highOption.waitFor({ state: "visible", timeout: 5000 });
-      await highOption.click();
-      // Close dropdown
-      await page.keyboard.press("Escape");
+      await projectsPage.applyBoardPriorityFilter("high");
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-filter-active`);
     });
@@ -1599,11 +1237,7 @@ export async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-display-properties`)) {
     await runCaptureStep("board display properties", async () => {
       await loadBoard();
-      const propsButton = page.getByText("Properties", { exact: true });
-      await propsButton.waitFor({ state: "visible", timeout: 8000 });
-      await propsButton.click();
-      // Wait for dropdown to be visible
-      await page.getByRole("menuitemcheckbox").first().waitFor({ state: "visible", timeout: 3000 });
+      await projectsPage.openBoardDisplayPropertiesMenu();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
@@ -1619,31 +1253,15 @@ export async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-peek-mode`)) {
     await runCaptureStep("board peek mode", async () => {
       await loadBoard();
-      // Toggle to side panel mode
-      const toggleBtn = page.getByLabel(/switch to side panel view/i);
-      await toggleBtn.waitFor({ state: "visible", timeout: 8000 });
-      await toggleBtn.click();
+      await projectsPage.enablePeekMode();
       await waitForScreenshotReady(page);
-
-      // Click an issue card to open side panel
-      const board = page.getByTestId(TEST_IDS.BOARD.ROOT);
-      const issueCard = board.getByTestId(TEST_IDS.ISSUE.CARD).first();
-      await issueCard.waitFor({ state: "visible", timeout: 5000 });
-      await issueCard.click();
-
-      // Wait for the side panel to appear (Sheet component with data-testid)
-      await page
-        .getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL)
-        .waitFor({ state: "visible", timeout: 8000 });
+      await projectsPage.openFirstIssueDetailCard();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-peek-mode`);
 
       // Close panel and reset to modal view
       await page.keyboard.press("Escape");
-      const resetBtn = page.getByLabel(/switch to modal view/i);
-      if (await isLocatorVisible(resetBtn)) {
-        await resetBtn.click();
-      }
+      await projectsPage.enableModalMode();
     });
   }
 }
@@ -1655,21 +1273,18 @@ export async function screenshotSprintInteractiveStates(
   prefix: string,
 ): Promise<void> {
   const normalizedProjectKey = projectKey.toLowerCase();
-  const sprintsUrl = ROUTES.projects.sprints.build(orgSlug, projectKey);
-
-  // Navigate to sprints page
-  await page.goto(`${BASE_URL}${sprintsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-  await waitForExpectedContent(page, sprintsUrl, "sprints");
-  await waitForScreenshotReady(page);
+  const sprintsPage = new SprintsPage(page, orgSlug);
+  const loadSprints = async () => {
+    await sprintsPage.gotoProjectAndWait(projectKey);
+    await waitForScreenshotReady(page);
+  };
 
   // Burndown chart (default view — click "Burndown" to ensure it's active)
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burndown`)) {
     await runCaptureStep("sprint burndown chart", async () => {
-      const burndownBtn = page.getByRole("button", { name: /^burndown$/i });
-      if (await isLocatorVisible(burndownBtn)) {
-        await burndownBtn.click();
-        await waitForScreenshotReady(page);
-      }
+      await loadSprints();
+      await sprintsPage.switchChartMode("burndown");
+      await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burndown`);
     });
   }
@@ -1677,87 +1292,50 @@ export async function screenshotSprintInteractiveStates(
   // Burnup chart (toggle)
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burnup`)) {
     await runCaptureStep("sprint burnup chart", async () => {
-      const burnupBtn = page.getByRole("button", { name: /^burnup$/i });
-      await burnupBtn.waitFor({ state: "visible", timeout: 5000 });
-      await burnupBtn.click();
+      await loadSprints();
+      await sprintsPage.switchChartMode("burnup");
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burnup`);
-      // Switch back to burndown
-      const burndownBtn = page.getByRole("button", { name: /^burndown$/i });
-      if (await isLocatorVisible(burndownBtn)) {
-        await burndownBtn.click();
-      }
     });
   }
 
   // Workload popover
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-workload`)) {
     await runCaptureStep("sprint workload popover", async () => {
-      const workloadBtn = page.getByRole("button", { name: /assignees/i });
-      await workloadBtn.waitFor({ state: "visible", timeout: 5000 });
-      await workloadBtn.click();
-      // Wait for popover content
-      await page
-        .getByText(/workload distribution/i)
-        .first()
-        .waitFor({ state: "visible", timeout: 5000 });
+      await loadSprints();
+      await sprintsPage.openWorkloadPopover();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-workload`);
-      // Close popover
-      await page.keyboard.press("Escape");
+      await dismissIfOpen(page, sprintsPage.workloadPopover);
     });
   }
 
   // Create sprint overlap warning
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-date-overlap-warning`)) {
     await runCaptureStep("sprint date overlap warning", async () => {
-      let startSprintButton = page.getByRole("button", { name: /^start sprint$/i });
-
-      if (!(await isLocatorVisible(startSprintButton))) {
-        const createSprintButton = page
-          .getByRole("button", { name: /create sprint|\+\s*sprint/i })
-          .first();
-        await createSprintButton.waitFor({ state: "visible", timeout: 5000 });
-        await createSprintButton.click();
-
-        const sprintNameInput = page.getByLabel("Sprint Name");
-        await sprintNameInput.waitFor({ state: "visible", timeout: 5000 });
-
-        const createForm = page.getByTestId(TEST_IDS.SPRINT.CREATE_FORM);
-        await createForm.waitFor({ state: "visible", timeout: 5000 });
-        await sprintNameInput.fill("Overlap Warning Sprint");
-        await createForm.evaluate((form) => {
-          (form as HTMLFormElement).requestSubmit();
-        });
-
-        startSprintButton = page.getByRole("button", { name: /^start sprint$/i });
-        await startSprintButton.waitFor({ state: "visible", timeout: 5000 });
-      }
-
-      await startSprintButton.waitFor({ state: "visible", timeout: 5000 });
-      await startSprintButton.click();
-
-      const dialog = page.getByRole("dialog", { name: /^start sprint$/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
-      await waitForScreenshotReady(page);
-      const overlapWarning = dialog.getByText(/these dates overlap with:/i).first();
-      await overlapWarning.waitFor({ state: "visible", timeout: 5000 });
+      await loadSprints();
+      await sprintsPage.ensureFutureSprintReady();
+      await sprintsPage.openStartDialog();
+      await sprintsPage.chooseStartPreset("custom");
+      await sprintsPage.startDateInput.fill("2026-03-15");
+      await sprintsPage.startEndDateInput.fill("2026-03-25");
+      await sprintsPage.startOverlapWarning.waitFor({ state: "visible", timeout: 5000 });
       await waitForAnimation(page);
-      await overlapWarning.scrollIntoViewIfNeeded();
+      await sprintsPage.startOverlapWarning.scrollIntoViewIfNeeded();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
         prefix,
         `project-${normalizedProjectKey}-sprints-date-overlap-warning`,
       );
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, sprintsPage.startDialog);
     });
   }
 
   // Complete sprint modal
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-completion-modal`)) {
     await runCaptureStep("sprint completion modal", async () => {
-      const sprintsPage = new SprintsPage(page, orgSlug);
+      await loadSprints();
       await sprintsPage.openCompletionDialog();
       await waitForScreenshotReady(page);
       await captureCurrentView(
@@ -1779,14 +1357,11 @@ export async function screenshotIssueInteractiveStates(
     return;
   }
 
-  const issuesUrl = ROUTES.issues.list.build(orgSlug);
-
   await runCaptureStep("issues side panel", async () => {
-    await page.goto(`${BASE_URL}${issuesUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-    await waitForExpectedContent(page, issuesUrl, "issues", prefix);
-    await waitForScreenshotReady(page);
-
     const issuesPage = new IssuesPage(page, orgSlug);
+    await issuesPage.goto();
+    await issuesPage.waitUntilReady();
+    await waitForScreenshotReady(page);
     await issuesPage.switchToSidePanelMode();
     await waitForScreenshotReady(page);
 

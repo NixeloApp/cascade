@@ -7,6 +7,7 @@ import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { CreateWorkspaceModal } from "./CreateWorkspaceModal";
@@ -30,14 +31,16 @@ vi.mock("@/components/ui/Dialog", () => ({
     title,
     children,
     footer,
+    "data-testid": testId,
   }: {
     open: boolean;
     title: string;
     children: ReactNode;
     footer?: ReactNode;
+    "data-testid"?: string;
   }) =>
     open ? (
-      <div role="dialog" aria-label={title}>
+      <div role="dialog" aria-label={title} data-testid={testId}>
         <div>{title}</div>
         {children}
         {footer}
@@ -72,6 +75,7 @@ describe("CreateWorkspaceModal", () => {
     render(<CreateWorkspaceModal isOpen={false} onClose={vi.fn()} />);
 
     expect(screen.queryByRole("dialog", { name: "Create Workspace" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.WORKSPACE.CREATE_MODAL)).not.toBeInTheDocument();
   });
 
   it("creates a workspace with a normalized slug and trimmed description", async () => {
@@ -82,7 +86,11 @@ describe("CreateWorkspaceModal", () => {
 
     render(<CreateWorkspaceModal isOpen onClose={onClose} onCreated={onCreated} />);
 
-    await user.type(screen.getByLabelText("Workspace Name"), "  Platform Operations  ");
+    expect(screen.getByTestId(TEST_IDS.WORKSPACE.CREATE_MODAL)).toBeInTheDocument();
+    await user.type(
+      screen.getByTestId(TEST_IDS.WORKSPACE.CREATE_NAME_INPUT),
+      "  Platform Operations  ",
+    );
     await user.type(screen.getByLabelText("Description (Optional)"), "  Core product team  ");
     await user.click(screen.getByRole("button", { name: "Create Workspace" }));
 

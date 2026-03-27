@@ -3,7 +3,7 @@
  */
 
 import * as path from "node:path";
-import { TEST_USERS } from "../config";
+import { TEST_USERS, type TestUser } from "../config";
 import type { E2EWorkflowState } from "../utils/test-user-service";
 
 // ---------------------------------------------------------------------------
@@ -55,6 +55,20 @@ export const SCREENSHOT_USER = {
 export const SCREENSHOT_EMPTY_USER = {
   email: TEST_USERS.teamMember.email.replace("@", "-screenshots@"),
   password: TEST_USERS.teamMember.password,
+};
+
+export const SCREENSHOT_AUTH_USER: TestUser = {
+  ...SCREENSHOT_USER,
+  platformRole: "user",
+  onboardingPersona: "team_lead",
+  description: "Primary screenshot capture user",
+};
+
+export const SCREENSHOT_EMPTY_AUTH_USER: TestUser = {
+  ...SCREENSHOT_EMPTY_USER,
+  platformRole: "user",
+  onboardingPersona: "team_member",
+  description: "Empty-state screenshot capture user",
 };
 
 export const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";

@@ -12,6 +12,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { AlertDialog } from "../ui/AlertDialog";
 import { Button } from "../ui/Button";
@@ -116,7 +117,11 @@ export function DangerZone({
               open={showConfirm}
               onOpenChange={handleConfirmOpenChange}
               trigger={
-                <Button variant="danger" size="sm">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  data-testid={TEST_IDS.PROJECT_SETTINGS.DELETE_TRIGGER}
+                >
                   Delete Project
                 </Button>
               }
@@ -140,6 +145,7 @@ export function DangerZone({
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder={`Type ${projectKey} to confirm`}
+                  data-testid={TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT}
                 />
               </Stack>
             </AlertDialog>

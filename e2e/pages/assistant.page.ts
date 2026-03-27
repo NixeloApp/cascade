@@ -1,11 +1,28 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { withBlockedConvexPage } from "../utils/convex-loading";
 import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 export class AssistantPage extends BasePage {
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (assistantPage: AssistantPage) => Promise<T>,
+  ): Promise<T> {
+    return withBlockedConvexPage(
+      sourcePage,
+      {
+        kind: "queries",
+        paths: ["ai/queries:getUsageStats"],
+        target: "isolated",
+      },
+      async (loadingPage) => run(new AssistantPage(loadingPage, orgSlug)),
+    );
+  }
+
   readonly content: Locator;
   readonly conversationsEmptyState: Locator;
   readonly conversationsList: Locator;
@@ -48,6 +65,11 @@ export class AssistantPage extends BasePage {
       .toBe("ready");
   }
 
+  async gotoAndExpectLoadingState(timeout = 12000): Promise<void> {
+    await this.goto();
+    await this.expectLoadingStateVisible(timeout);
+  }
+
   async openConversationsTab(): Promise<void> {
     await expect(this.conversationsTab).toBeVisible();
     await this.conversationsTab.click();
@@ -74,5 +96,14 @@ export class AssistantPage extends BasePage {
     }
 
     await expect(this.conversationsList).toBeVisible();
+  }
+
+  async expectLoadingStateVisible(timeout = 12000): Promise<void> {
+    await this.loadingState.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+        timeout,
+      })
+      .toBeGreaterThan(0);
   }
 }

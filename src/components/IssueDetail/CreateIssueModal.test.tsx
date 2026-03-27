@@ -254,7 +254,7 @@ describe("CreateIssueModal", () => {
       <CreateIssueModal projectId={mockProjectId} open={true} onOpenChange={mockOnOpenChange} />,
     );
 
-    expect(screen.getByText(/You have an unsaved draft/i)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.CREATE_DRAFT_BANNER)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^restore$/i }));
 

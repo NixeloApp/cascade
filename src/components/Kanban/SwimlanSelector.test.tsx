@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { SwimlanSelector } from "./SwimlanSelector";
 
@@ -8,7 +9,7 @@ describe("SwimlanSelector", () => {
     it("should render trigger button", () => {
       render(<SwimlanSelector value="none" onChange={vi.fn()} />);
 
-      expect(screen.getByRole("button")).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.BOARD.SWIMLANE_TRIGGER)).toBeInTheDocument();
     });
 
     it("should display 'Swimlanes' when value is 'none'", () => {
@@ -58,6 +59,7 @@ describe("SwimlanSelector", () => {
 
       await user.click(screen.getByRole("button"));
 
+      expect(screen.getByTestId(TEST_IDS.BOARD.SWIMLANE_OPTION("priority"))).toBeInTheDocument();
       expect(screen.getByRole("menuitemcheckbox", { name: "No Swimlanes" })).toBeInTheDocument();
       expect(screen.getByRole("menuitemcheckbox", { name: "Priority" })).toBeInTheDocument();
       expect(screen.getByRole("menuitemcheckbox", { name: "Assignee" })).toBeInTheDocument();

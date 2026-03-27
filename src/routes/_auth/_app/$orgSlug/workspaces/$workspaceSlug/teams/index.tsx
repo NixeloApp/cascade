@@ -14,6 +14,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Users } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { useWorkspaceLayout } from "../route";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/")({
   component: TeamsList,
@@ -50,7 +51,11 @@ export function TeamsList() {
                 title: "No teams yet",
                 description: "Create your first team to start organizing work in this workspace.",
                 actions: (
-                  <Button variant="primary" onClick={openCreateTeamModal}>
+                  <Button
+                    variant="primary"
+                    onClick={openCreateTeamModal}
+                    data-testid={TEST_IDS.WORKSPACE.CREATE_TEAM_BUTTON}
+                  >
                     + Create Team
                   </Button>
                 ),
@@ -67,7 +72,11 @@ export function TeamsList() {
               </Typography>
             </Stack>
             {hasTeams ? (
-              <Button variant="primary" onClick={openCreateTeamModal}>
+              <Button
+                variant="primary"
+                onClick={openCreateTeamModal}
+                data-testid={TEST_IDS.WORKSPACE.CREATE_TEAM_BUTTON}
+              >
                 + Create Team
               </Button>
             ) : null}

@@ -51,8 +51,15 @@ export class DocumentsPage extends BasePage {
   readonly documentTitleInput: Locator;
   readonly importMarkdownButton: Locator;
   readonly moreActionsButton: Locator;
+  readonly favoriteButton: Locator;
+  readonly favoritesSection: Locator;
+  readonly actionMenu: Locator;
+  readonly moveToProjectMenuItem: Locator;
+  readonly lockMenuItem: Locator;
+  readonly unlockMenuItem: Locator;
   readonly markdownPreviewDialog: Locator;
   readonly markdownPreviewConfirmButton: Locator;
+  readonly fontColorTrigger: Locator;
   readonly appErrorHeading: Locator;
   readonly appErrorDetailsSummary: Locator;
   readonly appErrorDetailsMessage: Locator;
@@ -102,13 +109,20 @@ export class DocumentsPage extends BasePage {
     this.documentTitle = page.getByTestId(TEST_IDS.DOCUMENT.TITLE);
     this.documentTitleInput = page.getByTestId(TEST_IDS.DOCUMENT.TITLE_INPUT);
     this.importMarkdownButton = page.getByRole("button", { name: /import from markdown/i });
-    this.moreActionsButton = page.getByRole("button", { name: /more document actions/i });
+    this.favoriteButton = page.getByTestId(TEST_IDS.DOCUMENT.HEADER_FAVORITE_BUTTON);
+    this.moreActionsButton = page.getByTestId(TEST_IDS.DOCUMENT.HEADER_MORE_ACTIONS_BUTTON);
+    this.favoritesSection = page.getByTestId(TEST_IDS.NAV.DOCUMENT_FAVORITES_SECTION);
+    this.actionMenu = page.getByTestId(TEST_IDS.DOCUMENT.ACTION_MENU);
+    this.moveToProjectMenuItem = page.getByTestId(TEST_IDS.DOCUMENT.ACTION_MOVE_TO_PROJECT);
+    this.lockMenuItem = page.getByTestId(TEST_IDS.DOCUMENT.ACTION_LOCK);
+    this.unlockMenuItem = page.getByTestId(TEST_IDS.DOCUMENT.ACTION_UNLOCK);
     this.markdownPreviewDialog = page.getByRole("dialog", {
       name: /preview markdown import/i,
     });
     this.markdownPreviewConfirmButton = this.markdownPreviewDialog.getByRole("button", {
       name: /import & replace content/i,
     });
+    this.fontColorTrigger = page.getByTestId(TEST_IDS.EDITOR.FONT_COLOR_TRIGGER);
     this.appErrorHeading = page.getByRole("heading", { name: "500" });
     this.appErrorDetailsSummary = page.getByText(/view error details/i);
     this.appErrorDetailsMessage = page.locator("details pre");
@@ -192,8 +206,8 @@ export class DocumentsPage extends BasePage {
   async openMoveDialog(): Promise<Locator> {
     await expect(this.moreActionsButton).toBeVisible();
     await this.moreActionsButton.click();
-    await this.page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
-    await this.page.getByRole("menuitem", { name: /move to another project/i }).click();
+    await this.actionMenu.waitFor({ state: "visible", timeout: 5000 });
+    await this.moveToProjectMenuItem.click();
     const dialog = this.page.getByRole("dialog", { name: /move document/i });
     await expect(dialog).toBeVisible({ timeout: 8000 });
     await dialog.getByLabel(/target project/i).waitFor({ state: "visible", timeout: 8000 });
@@ -258,6 +272,77 @@ export class DocumentsPage extends BasePage {
     await this.page
       .getByRole("button", { name: /bold/i })
       .waitFor({ state: "visible", timeout: 5000 });
+    await waitForScreenshotReady(this.page);
+  }
+
+  async toggleFavoriteOn(): Promise<void> {
+    await expect(this.favoriteButton).toBeVisible({ timeout: 8000 });
+    await expect(this.favoriteButton).toHaveAttribute("aria-pressed", "false");
+    await this.favoriteButton.click();
+    await expect(this.favoriteButton).toHaveAttribute("aria-pressed", "true");
+    await waitForScreenshotReady(this.page);
+  }
+
+  async toggleFavoriteOff(): Promise<void> {
+    await expect(this.favoriteButton).toBeVisible({ timeout: 8000 });
+    await expect(this.favoriteButton).toHaveAttribute("aria-pressed", "true");
+    await this.favoriteButton.click();
+    await expect(this.favoriteButton).toHaveAttribute("aria-pressed", "false");
+    await waitForScreenshotReady(this.page);
+  }
+
+  async expectSidebarFavoritesVisible(): Promise<void> {
+    await expect(this.favoritesSection).toBeVisible({ timeout: 5000 });
+  }
+
+  async openFontColorPicker(): Promise<void> {
+    await expect(this.fontColorTrigger).toBeVisible({ timeout: 5000 });
+    await this.fontColorTrigger.click();
+  }
+
+  async expectFontColorSwatchVisible(colorName: string): Promise<void> {
+    await this.page
+      .getByTestId(TEST_IDS.EDITOR.FONT_COLOR_SWATCH(colorName))
+      .waitFor({ state: "visible", timeout: 5000 });
+  }
+
+  async lockDocument(): Promise<void> {
+    await expect(this.moreActionsButton).toBeVisible({ timeout: 5000 });
+    await this.moreActionsButton.click();
+    await this.actionMenu.waitFor({ state: "visible", timeout: 5000 });
+    await this.lockMenuItem.waitFor({ state: "visible", timeout: 5000 });
+    await this.lockMenuItem.click();
+    await expect(this.actionMenu).not.toBeVisible({ timeout: 5000 });
+
+    // Re-open menu and verify lock took effect (unlock option now visible)
+    await expect(async () => {
+      await this.moreActionsButton.click();
+      await expect(this.unlockMenuItem).toBeVisible({ timeout: 3000 });
+    }).toPass({ intervals: [500, 1000, 2000] });
+
+    // Close the menu after verification
+    await this.page.keyboard.press("Escape");
+    await expect(this.actionMenu).not.toBeVisible({ timeout: 3000 });
+    await waitForScreenshotReady(this.page);
+  }
+
+  async unlockDocument(): Promise<void> {
+    await expect(this.moreActionsButton).toBeVisible({ timeout: 5000 });
+    await this.moreActionsButton.click();
+    await this.actionMenu.waitFor({ state: "visible", timeout: 5000 });
+    await this.unlockMenuItem.waitFor({ state: "visible", timeout: 5000 });
+    await this.unlockMenuItem.click();
+    await expect(this.actionMenu).not.toBeVisible({ timeout: 5000 });
+
+    // Re-open menu and verify unlock took effect (lock option now visible)
+    await expect(async () => {
+      await this.moreActionsButton.click();
+      await expect(this.lockMenuItem).toBeVisible({ timeout: 3000 });
+    }).toPass({ intervals: [500, 1000, 2000] });
+
+    // Close the menu after verification
+    await this.page.keyboard.press("Escape");
+    await expect(this.actionMenu).not.toBeVisible({ timeout: 3000 });
     await waitForScreenshotReady(this.page);
   }
 

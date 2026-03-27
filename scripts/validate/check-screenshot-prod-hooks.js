@@ -14,10 +14,18 @@ const BANNED_SCREENSHOT_HOOK_PATTERNS = [
   "__NIXELO_E2E_ROADMAP_STATE__",
   "e2e-roadmap",
   "nixelo:e2e:notifications-state",
+  "nixelo:e2e:project-inbox-state",
+  "nixelo:e2e:invoices-state",
   "nixelo:e2e:time-tracking-state",
   "__NIXELO_E2E_TIME_TRACKING_STATE__",
   "nixelo:e2e:my-issues-state",
   "__NIXELO_E2E_MY_ISSUES_LOADING__",
+  "__NIXELO_E2E_ORG_CALENDAR_LOADING__",
+  "__NIXELO_E2E_INVOICES_LOADING__",
+  "__NIXELO_E2E_BOARD_LOADING__",
+  "__NIXELO_E2E_NOTIFICATIONS_LOADING__",
+  "__NIXELO_E2E_PROJECTS_LOADING__",
+  "__NIXELO_E2E_ASSISTANT_LOADING__",
 ];
 
 export function collectBannedScreenshotProdHooks(source, filePath) {

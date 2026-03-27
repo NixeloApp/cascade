@@ -28,6 +28,7 @@ import {
   deleteSeededProjectIssueEndpoint,
   deleteTestUserEndpoint,
   getLatestOTPEndpoint,
+  getScreenshotOrgSlugEndpoint,
   googleOAuthLoginEndpoint,
   loginTestUserEndpoint,
   nukeAllE2EWorkspacesEndpoint,
@@ -362,6 +363,13 @@ http.route({
   path: "/e2e/seed-screenshot-data",
   method: "POST",
   handler: seedScreenshotDataEndpoint,
+});
+
+// Resolve the screenshot organization slug without seeding screenshot data
+http.route({
+  path: "/e2e/resolve-screenshot-org-slug",
+  method: "POST",
+  handler: getScreenshotOrgSlugEndpoint,
 });
 
 // Delete screenshot-created issues so later captures stay deterministic

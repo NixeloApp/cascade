@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { ImportExportModal } from "./ImportExportModal";
@@ -78,7 +79,11 @@ function getExportModeControl() {
 }
 
 function getImportModeControl() {
-  return screen.getByRole("radio", { name: /import issues/i });
+  return screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODE_IMPORT);
+}
+
+function getImportJsonFormatOption() {
+  return screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_FORMAT_OPTION("json"));
 }
 
 describe("ImportExportModal - Component Behavior", () => {
@@ -125,6 +130,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
+      expect(screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL)).toBeInTheDocument();
       expect(screen.getByText("Select Export Format")).toBeInTheDocument();
     });
 
@@ -138,6 +144,8 @@ describe("ImportExportModal - Component Behavior", () => {
       await user.click(getImportModeControl());
 
       expect(screen.getByText("Select Import Format")).toBeInTheDocument();
+      expect(getImportJsonFormatOption()).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_REQUIREMENTS)).toBeInTheDocument();
       expect(screen.queryByText("Select Export Format")).not.toBeInTheDocument();
     });
 
@@ -198,6 +206,22 @@ describe("ImportExportModal - Component Behavior", () => {
       // Switch back to export (format resets to CSV with refactored component)
       await user.click(getExportModeControl());
       expect(screen.getByRole("button", { name: /Export as CSV/i })).toBeInTheDocument();
+    });
+
+    it("should expose a stable JSON import option and requirements callout", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
+      );
+
+      await user.click(getImportModeControl());
+      await user.click(getImportJsonFormatOption());
+
+      expect(screen.getByRole("button", { name: /Import from JSON/i })).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_REQUIREMENTS)).toHaveTextContent(
+        "JSON files must contain an issues array at the top level.",
+      );
     });
   });
 

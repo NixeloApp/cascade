@@ -98,7 +98,7 @@ describe("FilterBar", () => {
       );
 
       expect(screen.getByRole("button", { name: /type/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /priority/i })).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /assignee/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /labels/i })).toBeInTheDocument();
     });
@@ -146,6 +146,24 @@ describe("FilterBar", () => {
   });
 
   describe("Filter Selection", () => {
+    it("should expose stable priority filter option test ids", async () => {
+      const user = userEvent.setup();
+      render(
+        <FilterBar
+          projectId={mockProjectId}
+          filters={emptyFilters}
+          onFilterChange={mockOnFilterChange}
+        />,
+      );
+
+      await user.click(screen.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER));
+
+      expect(screen.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER_OPTION("high"))).toBeInTheDocument();
+      expect(
+        screen.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER_OPTION("medium")),
+      ).toBeInTheDocument();
+    });
+
     it("should call onFilterChange when selecting a type filter", async () => {
       const user = userEvent.setup();
       render(
@@ -201,6 +219,22 @@ describe("FilterBar", () => {
       await user.click(screen.getByRole("button", { name: /clear/i }));
 
       expect(mockOnFilterChange).toHaveBeenCalledWith({});
+    });
+
+    it("should call onFilterChange when selecting a priority filter through the stable id", async () => {
+      const user = userEvent.setup();
+      render(
+        <FilterBar
+          projectId={mockProjectId}
+          filters={emptyFilters}
+          onFilterChange={mockOnFilterChange}
+        />,
+      );
+
+      await user.click(screen.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER));
+      await user.click(screen.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER_OPTION("high")));
+
+      expect(mockOnFilterChange).toHaveBeenCalledWith({ priority: ["high"] });
     });
   });
 

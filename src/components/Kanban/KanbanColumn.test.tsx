@@ -118,6 +118,7 @@ describe("KanbanColumn", () => {
     it("should render empty state when no issues", () => {
       render(<KanbanColumn {...defaultProps} issues={[]} />);
 
+      expect(screen.getByTestId(TEST_IDS.BOARD.COLUMN_EMPTY_STATE)).toBeInTheDocument();
       expect(screen.getByText("No issues yet")).toBeInTheDocument();
       expect(screen.getByText("This stage is clear right now.")).toBeInTheDocument();
     });
@@ -159,6 +160,7 @@ describe("KanbanColumn", () => {
       ];
       render(<KanbanColumn {...defaultProps} state={stateWithWip} issues={issues} />);
 
+      expect(screen.getByTestId(TEST_IDS.BOARD.COLUMN_WIP_WARNING)).toBeInTheDocument();
       expect(screen.getByText("Over limit")).toBeInTheDocument();
     });
   });

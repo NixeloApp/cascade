@@ -1,74 +1,23 @@
 # E2E And Screenshot Consolidation
 
 > **Priority:** P0
-> **Status:** Open
-> **Last Updated:** 2026-03-26
+> **Status:** Nearly complete — structural work done, residual polish remains
+> **Last Updated:** 2026-03-27
 
-## Why This Is Still Open
+## What Was Done
 
-- [ ] The repo still has two overlapping automation systems: real E2E/product testing and a screenshot-specific Playwright harness. They duplicate readiness logic, state setup, and route-driving behavior instead of sharing one reusable path.
-- [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
-- [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
-- [ ] This is the first infrastructure priority again. The current overlap between screenshot-lib and reusable E2E/page objects is active execution debt, not just cleanup polish.
-- [ ] The current raw-locator baseline proves the screenshot harness is still acting like a parallel framework.
-  Current hotspots:
-  - `e2e/screenshot-lib/filled-states.ts` (`79`)
-  - `e2e/screenshot-lib/readiness.ts` (`64`)
-  - `e2e/screenshot-lib/interactive-captures.ts` (`46`)
-  - `e2e/screenshot-lib/helpers.ts` (`14`)
+The bulk of this todo has been addressed. All execution-plan derivation, phase planning, blocked-transport consolidation, manifest-driven target selection, raw-locator elimination, production-hook cleanup, and validator enforcement items are complete. Validators ratchet all baselines.
 
-## Target Architecture
+## Remaining Work
 
-- [ ] E2E/page-object logic is the single source of truth for route navigation, readiness, seeded states, modal/dialog opening, and proof that a state is real.
-- [ ] Screenshot capture is only an artifact layer:
-  - pick a reusable state helper
-  - open the state through normal E2E helpers
-  - capture the image
-  - write it to the reviewed spec folder
+### Session orchestration reusability
+- [ ] `readiness.ts` still exists as a screenshot-specific dispatch layer to page objects. Evaluate whether it can be inlined or deleted now that every check delegates to a page object.
+- [ ] `session.ts` is well-structured but screenshot-specific. It cannot yet be reused by product E2E tests for state setup. Evaluate whether the multi-config loop, phase ordering, and seed management can be extracted into shared helpers.
 
-## First Pass Targets
+### Documentation
+- [ ] Update CI workflow docs to make the surface area obvious: what validates product behavior, what validates static artifacts, what no longer exists as a default workflow.
+- [ ] Document the remaining webPush test hooks in production code (`src/lib/webPush.tsx`) with a concrete justification for each.
 
-- [ ] Split the main screenshot-lib hotspots into:
-  - reusable helpers that should live with E2E/page objects
-  - thin screenshot wrappers that stay in screenshot-lib
-  - harness-only complexity that should be deleted
-- [ ] Start with the biggest offenders:
-  - `e2e/screenshot-lib/filled-states.ts` (`79`)
-  - `e2e/screenshot-lib/readiness.ts` (`64`)
-  - `e2e/screenshot-lib/interactive-captures.ts` (`46`)
-  - `e2e/screenshot-lib/helpers.ts` (`14`)
-- [ ] Replace raw locator usage in those files with shared page-object helpers or route-specific readiness contracts until the screenshot-lib raw-locator baseline is materially smaller.
-- [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
-- [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
-
-## Production Hook Cleanup
-
-- [ ] Audit production components for screenshot/E2E-only hooks, events, globals, and branches.
-  First targets:
-  - route-specific state toggles added only for capture
-  - remaining screenshot boot-state shortcuts outside the document, roadmap, time-tracking, and notifications archived-tab surfaces
-- [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.
-- [ ] Prefer seeded backend state, route params, or normal UI interaction over window-event hooks.
-- [ ] If a hook remains, it must serve reusable test setup broadly, not just one screenshot state.
-
-## CI Simplification
-
-- [ ] Keep screenshot capture local/manual unless we later add a small reusable smoke subset that clearly earns its cost.
-- [ ] Update the workflow/docs so the CI surface area is obvious:
-  - what validates product behavior
-  - what validates static artifacts
-  - what no longer exists as a default workflow
-
-## Documentation And Rules
-
-- [ ] Add validator coverage so screenshot-only helper sprawl cannot quietly grow again.
-  At minimum:
-  - ratchet screenshot-specific raw locators downward
-  - block new screenshot-only route/state helpers when an E2E/page-object helper already exists
-  - block new production component hooks added only for screenshot capture without a documented exception
-
-## Exit Criteria
-
+### Exit criteria (still open)
 - [ ] A contributor can point to one reusable helper path for a given route/state instead of choosing between E2E helpers and screenshot-only helpers.
-- [ ] Production components no longer carry screenshot-only hooks unless there is a documented, justified exception.
 - [ ] Screenshot generation and screenshot integrity checking are clearly separate concepts in code and docs.

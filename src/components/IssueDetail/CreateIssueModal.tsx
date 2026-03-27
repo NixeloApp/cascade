@@ -119,7 +119,7 @@ function CreateIssueDraftBanner({
   onRestore,
 }: CreateIssueDraftBannerProps) {
   return (
-    <Alert variant="info">
+    <Alert variant="info" data-testid={TEST_IDS.ISSUE.CREATE_DRAFT_BANNER}>
       <Flex align="center" justify="between" className="w-full">
         <AlertDescription>
           You have an unsaved draft
@@ -1190,6 +1190,7 @@ export function CreateIssueModal({
                 checked={createAnother}
                 onCheckedChange={setCreateAnother}
                 label="Create another"
+                data-testid={TEST_IDS.ISSUE.CREATE_ANOTHER_SWITCH}
               />
               <Flex gap="sm">
                 <Button

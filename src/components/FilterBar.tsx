@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ChevronDown, Circle, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
@@ -95,6 +96,8 @@ interface FilterDropdownProps<T> {
   getKey: (item: T) => string;
   emptyMessage?: string;
   scrollable?: boolean;
+  triggerTestId?: string;
+  itemTestId?: (item: T) => string;
 }
 
 function FilterDropdown<T>({
@@ -108,6 +111,8 @@ function FilterDropdown<T>({
   getKey,
   emptyMessage = "No items",
   scrollable = false,
+  triggerTestId,
+  itemTestId,
 }: FilterDropdownProps<T>) {
   const isActive = activeCount > 0;
   return (
@@ -117,6 +122,7 @@ function FilterDropdown<T>({
           chrome={isActive ? "filterActive" : "filter"}
           chromeSize="filterPill"
           rightIcon={<Icon icon={ChevronDown} size="sm" />}
+          data-testid={triggerTestId}
         >
           <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
@@ -132,6 +138,7 @@ function FilterDropdown<T>({
             key={getKey(item)}
             checked={selectedValues?.includes(item) ?? false}
             onCheckedChange={() => onToggle(item)}
+            data-testid={itemTestId?.(item)}
           >
             {renderItem(item)}
           </DropdownMenuCheckboxItem>
@@ -468,6 +475,8 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           selectedValues={filters.priority}
           onToggle={(priority) => toggleArrayFilter("priority", priority)}
           getKey={(priority) => priority}
+          triggerTestId={TEST_IDS.ISSUE.PRIORITY_FILTER}
+          itemTestId={(priority) => TEST_IDS.ISSUE.PRIORITY_FILTER_OPTION(priority)}
           renderItem={(priority) => (
             <Typography variant="small" className="capitalize">
               {priority}

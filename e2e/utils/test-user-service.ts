@@ -55,6 +55,12 @@ export interface SeedScreenshotResult {
   error?: string;
 }
 
+export interface ResolveScreenshotOrgSlugResult {
+  success: boolean;
+  orgSlug?: string;
+  error?: string;
+}
+
 export interface UpdateProjectWorkflowStateResult {
   success: boolean;
   projectId?: string;
@@ -500,6 +506,26 @@ export class TestUserService {
   }
 
   /**
+   * Resolve the screenshot org slug for a test user without seeding screenshot data.
+   */
+  async resolveScreenshotOrgSlug(
+    email: string,
+    options: { orgSlug?: string } = {},
+  ): Promise<ResolveScreenshotOrgSlugResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.resolveScreenshotOrgSlug, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ email, orgSlug: options.orgSlug }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to resolve screenshot org slug:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
    * Delete a screenshot-created issue so later captures keep seeded counts stable.
    */
   async deleteSeededProjectIssue(
@@ -670,12 +696,13 @@ export class TestUserService {
     orgSlug: string,
     projectKey: string,
     mode: NotificationsScreenshotState,
+    email?: string,
   ): Promise<ConfigureNotificationsStateResult> {
     try {
       const response = await fetch(E2E_ENDPOINTS.configureNotificationsState, {
         method: "POST",
         headers: getE2EHeaders(),
-        body: JSON.stringify({ orgSlug, projectKey, mode }),
+        body: JSON.stringify({ email, orgSlug, projectKey, mode }),
       });
       return await response.json();
     } catch (error) {

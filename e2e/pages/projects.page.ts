@@ -13,7 +13,10 @@ import {
   waitForIssueUpdateSuccess,
   waitForProjectCreateSuccess,
 } from "../utils";
+import { withBlockedConvexPage } from "../utils/convex-loading";
+import { withSiblingPageTarget } from "../utils/page-targets";
 import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
+import { waitForAnimation, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -22,6 +25,40 @@ import { BasePage } from "./base.page";
  * Note: UI uses "Projects" terminology, URLs use /projects/ path
  */
 export class ProjectsPage extends BasePage {
+  static async withCapturePage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (projectsPage: ProjectsPage) => Promise<T>,
+  ): Promise<T> {
+    return withSiblingPageTarget(sourcePage, async ({ page }) =>
+      run(new ProjectsPage(page, orgSlug)),
+    );
+  }
+
+  static async withProjectsLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (projectsPage: ProjectsPage) => Promise<T>,
+  ): Promise<T> {
+    return withBlockedConvexPage(
+      sourcePage,
+      { kind: "transport", target: "sibling" },
+      async (loadingPage) => run(new ProjectsPage(loadingPage, orgSlug)),
+    );
+  }
+
+  static async withBoardLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (projectsPage: ProjectsPage) => Promise<T>,
+  ): Promise<T> {
+    return withBlockedConvexPage(
+      sourcePage,
+      { kind: "transport", target: "sibling" },
+      async (loadingPage) => run(new ProjectsPage(loadingPage, orgSlug)),
+    );
+  }
+
   // ===================
   // Locators - Sidebar
   // ===================
@@ -57,6 +94,13 @@ export class ProjectsPage extends BasePage {
   readonly projectBoard: Locator;
   readonly boardLoadingState: Locator;
   readonly boardColumns: Locator;
+  readonly boardSprintTrigger: Locator;
+  readonly boardSprintContent: Locator;
+  readonly boardSwimlaneTrigger: Locator;
+  readonly boardDisplayPropertiesTrigger: Locator;
+  readonly boardViewModeToggle: Locator;
+  readonly boardPriorityFilterTrigger: Locator;
+  readonly boardWipWarnings: Locator;
   readonly issueCards: Locator;
   readonly createIssueButton: Locator;
 
@@ -71,6 +115,9 @@ export class ProjectsPage extends BasePage {
   readonly issueAssigneeSelect: Locator;
   readonly createIssueForm: Locator;
   readonly submitIssueButton: Locator;
+  readonly createIssueDraftBanner: Locator;
+  readonly createIssueDuplicateDetection: Locator;
+  readonly createAnotherSwitch: Locator;
 
   // ===================
   // Locators - Project Tabs
@@ -118,11 +165,21 @@ export class ProjectsPage extends BasePage {
   readonly roadmapViewToggle: Locator;
   readonly roadmapEpicFilter: Locator;
   readonly projectSettingsHeader: Locator;
+  readonly projectMembersSection: Locator;
+  readonly projectMemberRemoveButton: Locator;
+  readonly projectDeleteTrigger: Locator;
+  readonly projectDeleteConfirmInput: Locator;
+  readonly importExportTrigger: Locator;
+  readonly importExportModal: Locator;
+  readonly importExportModeImport: Locator;
+  readonly importExportRequirements: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
   // ===================
   readonly issueDetailDialog: Locator;
+  readonly issueDetailKey: Locator;
+  readonly issueDetailTitle: Locator;
   readonly issueDetailEditButton: Locator;
   readonly issueDetailTitleInput: Locator;
   readonly issueDetailDescriptionEditor: Locator;
@@ -190,6 +247,15 @@ export class ProjectsPage extends BasePage {
     this.projectBoard = page.getByTestId(TEST_IDS.BOARD.ROOT);
     this.boardLoadingState = page.getByTestId(TEST_IDS.BOARD.LOADING_STATE);
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
+    this.boardSprintTrigger = page.getByTestId(TEST_IDS.BOARD.SPRINT_TRIGGER);
+    this.boardSprintContent = page.getByTestId(TEST_IDS.BOARD.SPRINT_CONTENT);
+    this.boardSwimlaneTrigger = page.getByTestId(TEST_IDS.BOARD.SWIMLANE_TRIGGER);
+    this.boardDisplayPropertiesTrigger = page.getByTestId(
+      TEST_IDS.BOARD.DISPLAY_PROPERTIES_TRIGGER,
+    );
+    this.boardViewModeToggle = page.getByTestId(TEST_IDS.BOARD.VIEW_MODE_TOGGLE);
+    this.boardPriorityFilterTrigger = page.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER).first();
+    this.boardWipWarnings = page.getByTestId(TEST_IDS.BOARD.COLUMN_WIP_WARNING);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - prefer the stable first-column trigger used by the tour,
     // fall back to "Add issue" or empty-state "Add first issue" button.
@@ -217,6 +283,15 @@ export class ProjectsPage extends BasePage {
     this.submitIssueButton = this.createIssueModal
       .getByRole("button", { name: /^create issue$/i })
       .or(this.createIssueModal.locator('button[type="submit"]'));
+    this.createIssueDraftBanner = this.createIssueModal.getByTestId(
+      TEST_IDS.ISSUE.CREATE_DRAFT_BANNER,
+    );
+    this.createIssueDuplicateDetection = this.createIssueModal.getByTestId(
+      TEST_IDS.ISSUE.CREATE_DUPLICATE_DETECTION,
+    );
+    this.createAnotherSwitch = this.createIssueModal.getByTestId(
+      TEST_IDS.ISSUE.CREATE_ANOTHER_SWITCH,
+    );
 
     // Project tabs - scope to the project tab strip to avoid collisions with global nav links.
     // There are separate mobile (sm:hidden) and desktop (sm:flex) navs, so use .first() to
@@ -264,9 +339,23 @@ export class ProjectsPage extends BasePage {
     this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
     this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });
     this.projectSettingsHeader = page.getByRole("heading", { name: /project settings/i });
+    this.projectMembersSection = page.getByTestId(TEST_IDS.PROJECT_SETTINGS.MEMBERS_SECTION);
+    this.projectMemberRemoveButton = page.getByTestId(
+      TEST_IDS.PROJECT_SETTINGS.MEMBER_REMOVE_BUTTON,
+    );
+    this.projectDeleteTrigger = page.getByTestId(TEST_IDS.PROJECT_SETTINGS.DELETE_TRIGGER);
+    this.projectDeleteConfirmInput = page.getByTestId(
+      TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT,
+    );
+    this.importExportTrigger = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_TRIGGER);
+    this.importExportModal = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL);
+    this.importExportModeImport = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODE_IMPORT);
+    this.importExportRequirements = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_REQUIREMENTS);
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
+    this.issueDetailKey = this.issueDetailDialog.getByTestId(TEST_IDS.ISSUE.DETAIL_KEY);
+    this.issueDetailTitle = this.issueDetailDialog.getByTestId(TEST_IDS.ISSUE.DETAIL_TITLE);
     this.issueDetailEditButton = this.issueDetailDialog.getByRole("button", { name: /^Edit$/ });
     this.issueDetailTitleInput = this.issueDetailDialog.getByPlaceholder("Issue title");
     this.issueDetailDescriptionEditor = this.issueDetailDialog.getByTestId(
@@ -333,9 +422,101 @@ export class ProjectsPage extends BasePage {
     await expect.poll(() => this.readProjectsViewState(), { timeout: 12000 }).toBe("ready");
   }
 
+  async ensureBoardReady(): Promise<boolean> {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await this.waitForBoardInteractive();
+        return true;
+      } catch {
+        if (attempt === 0) {
+          await this.page.goto(this.page.url(), {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          await this.page.waitForLoadState("load");
+        }
+      }
+    }
+
+    return false;
+  }
+
   async gotoProjectBoard(projectKey: string) {
     await this.gotoPath(ROUTES.projects.board.build(this.orgSlug, projectKey));
     await this.waitForLoad();
+  }
+
+  async gotoAndExpectProjectsLoadingState(timeout = 10000): Promise<void> {
+    await this.gotoPath(ROUTES.projects.list.build(this.orgSlug), {
+      waitUntil: "domcontentloaded",
+    });
+    await this.page.waitForLoadState("load");
+    await this.waitForLoad();
+    await this.expectProjectsLoadingStateVisible(timeout);
+  }
+
+  async gotoProjectBoardAndWait(projectKey: string) {
+    await this.gotoProjectBoard(projectKey);
+    await this.waitForBoardInteractive();
+  }
+
+  async gotoProjectBoardAndExpectLoadingState(projectKey: string, timeout = 12000): Promise<void> {
+    await this.gotoProjectBoard(projectKey);
+    await this.expectBoardLoadingStateVisible(timeout);
+  }
+
+  async gotoProjectSettings(projectKey: string) {
+    await this.gotoPath(ROUTES.projects.settings.build(this.orgSlug, projectKey));
+    await this.expectProjectSettingsLoaded();
+  }
+
+  async gotoProjectAnalytics(projectKey: string) {
+    await this.gotoPath(ROUTES.projects.analytics.build(this.orgSlug, projectKey));
+    await this.expectAnalyticsLoaded();
+  }
+
+  async openImportExportModal(): Promise<void> {
+    const trigger = await this.findVisibleImportExportTrigger();
+    await expect(trigger).toBeVisible();
+    await trigger.click();
+    await expect(this.importExportModal).toBeVisible();
+    await expect(
+      this.importExportModal.getByText("Select Export Format", { exact: true }),
+    ).toBeVisible();
+  }
+
+  async openImportExportImportMode(): Promise<void> {
+    await this.openImportExportModal();
+    await expect(this.importExportModeImport).toBeVisible();
+    await this.importExportModeImport.click();
+    await expect(
+      this.importExportModal.getByText("Select Import Format", { exact: true }),
+    ).toBeVisible();
+  }
+
+  async openImportExportJsonMode(): Promise<void> {
+    await this.openImportExportImportMode();
+    const jsonFormatOption = this.importExportModal.getByTestId(
+      TEST_IDS.PROJECT.IMPORT_EXPORT_FORMAT_OPTION("json"),
+    );
+    await expect(jsonFormatOption).toBeVisible();
+    await jsonFormatOption.click();
+    await expect(this.importExportRequirements).toBeVisible();
+    await expect(this.importExportRequirements).toContainText(
+      "JSON files must contain an issues array at the top level.",
+    );
+  }
+
+  private async findVisibleImportExportTrigger(): Promise<Locator> {
+    const count = await getLocatorCount(this.importExportTrigger);
+    for (let index = 0; index < count; index += 1) {
+      const trigger = this.importExportTrigger.nth(index);
+      if (await isLocatorVisible(trigger)) {
+        return trigger;
+      }
+    }
+
+    return this.importExportTrigger.first();
   }
 
   // ===================
@@ -470,6 +651,13 @@ export class ProjectsPage extends BasePage {
     await this.expectCreateIssueModalReady();
   }
 
+  async expectCreateIssueModalCaptureReady(timeout = 5000) {
+    await this.expectCreateIssueModalReady(timeout);
+    await expect(this.createAnotherSwitch).toBeVisible({ timeout });
+    await waitForAnimation(this.page);
+    await waitForScreenshotReady(this.page);
+  }
+
   private async findVisibleCreateIssueTrigger(timeout = 2000): Promise<Locator | null> {
     const triggerCandidates = [
       this.page.getByRole("button", { name: /add first issue/i }).first(),
@@ -515,6 +703,57 @@ export class ProjectsPage extends BasePage {
     await this.submitCreateIssue();
 
     await waitForIssueCreateSuccess(this.page, title);
+  }
+
+  async enableCreateAnother() {
+    await expect(this.createAnotherSwitch).toBeVisible();
+    await this.createAnotherSwitch.click();
+    await expect(this.createAnotherSwitch).toHaveAttribute("data-state", "checked");
+  }
+
+  async submitCreateIssueExpectTitleValidationError() {
+    await expect(this.submitIssueButton).toBeVisible();
+    await this.submitIssueButton.click();
+    await expect(
+      this.createIssueModal.getByText("Title is required", { exact: true }),
+    ).toBeVisible();
+  }
+
+  async expectCreateIssueDuplicateDetectionVisible() {
+    await expect(this.createIssueDuplicateDetection).toBeVisible();
+  }
+
+  getCreateIssueDuplicateItem(issueKey: string) {
+    return this.createIssueDuplicateDetection.getByTestId(
+      TEST_IDS.ISSUE.CREATE_DUPLICATE_ITEM(issueKey),
+    );
+  }
+
+  async waitForCreateIssueDuplicateItem(issueKey: string) {
+    const duplicateItem = this.getCreateIssueDuplicateItem(issueKey);
+    await expect(duplicateItem).toBeVisible();
+    return duplicateItem;
+  }
+
+  async expectCreateIssueDraftBannerVisible() {
+    await expect(this.createIssueDraftBanner).toBeVisible();
+  }
+
+  async openFirstMemberRemoveDialog() {
+    const dialog = this.page.getByRole("alertdialog", { name: /^remove member$/i });
+    await expect(this.projectMemberRemoveButton.first()).toBeVisible();
+    await this.projectMemberRemoveButton.first().click();
+    await expect(dialog).toBeVisible();
+    return dialog;
+  }
+
+  async openDeleteProjectDialog() {
+    const dialog = this.page.getByRole("alertdialog", { name: /^delete this project\?$/i });
+    await expect(this.projectDeleteTrigger).toBeVisible();
+    await this.projectDeleteTrigger.click();
+    await expect(dialog).toBeVisible();
+    await expect(this.projectDeleteConfirmInput).toBeVisible();
+    return dialog;
   }
 
   private async submitCreateIssue() {
@@ -857,6 +1096,10 @@ export class ProjectsPage extends BasePage {
     return this.page.getByRole("button", { name: new RegExp(escaped) });
   }
 
+  getIssueCardTrigger(issueKey: string) {
+    return this.page.getByTestId(TEST_IDS.ISSUE.CARD_TRIGGER(issueKey));
+  }
+
   getIssueCardContainer(title: string) {
     return this.page
       .getByTestId(TEST_IDS.ISSUE.CARD)
@@ -883,8 +1126,110 @@ export class ProjectsPage extends BasePage {
     return this.boardColumns.filter({ has: this.page.getByText(namePattern) }).first();
   }
 
+  getBoardColumnEmptyState(name: string | RegExp) {
+    return this.getBoardColumn(name).getByTestId(TEST_IDS.BOARD.COLUMN_EMPTY_STATE);
+  }
+
   getBoardColumnCountBadgeByIndex(index: number) {
     return this.boardColumns.nth(index).getByTestId(TEST_IDS.BOARD.COLUMN_COUNT);
+  }
+
+  getBoardSwimlaneOption(mode: "none" | "priority" | "assignee" | "type" | "label") {
+    return this.page.getByTestId(TEST_IDS.BOARD.SWIMLANE_OPTION(mode));
+  }
+
+  getBoardDisplayPropertyOption(
+    property: "issueType" | "priority" | "labels" | "assignee" | "storyPoints",
+  ) {
+    return this.page.getByTestId(TEST_IDS.BOARD.DISPLAY_PROPERTIES_OPTION(property));
+  }
+
+  getBoardPriorityFilterOption(priority: string) {
+    return this.page.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER_OPTION(priority));
+  }
+
+  getBoardSprintOption(value: string) {
+    return this.page.getByTestId(TEST_IDS.BOARD.SPRINT_OPTION(value));
+  }
+
+  async openBoardSprintSelector() {
+    await expect(this.boardSprintTrigger.first()).toBeVisible();
+    await this.boardSprintTrigger.first().click();
+    await expect(this.boardSprintContent.first()).toBeVisible();
+    await expect(this.getBoardSprintOption("active").first()).toBeVisible();
+  }
+
+  async openBoardSwimlaneMenu() {
+    await expect(this.boardSwimlaneTrigger).toBeVisible();
+    await this.boardSwimlaneTrigger.click();
+    await expect(this.getBoardSwimlaneOption("priority")).toBeVisible();
+  }
+
+  async selectBoardSwimlaneMode(mode: "priority" | "assignee" | "type" | "label") {
+    await this.openBoardSwimlaneMenu();
+    await this.getBoardSwimlaneOption(mode).click();
+  }
+
+  async openBoardDisplayPropertiesMenu() {
+    await expect(this.boardDisplayPropertiesTrigger).toBeVisible();
+    await this.boardDisplayPropertiesTrigger.click();
+    await expect(this.getBoardDisplayPropertyOption("issueType")).toBeVisible();
+  }
+
+  async openBoardPriorityFilter() {
+    await expect(this.boardPriorityFilterTrigger).toBeVisible();
+    await this.boardPriorityFilterTrigger.click();
+    await expect(this.getBoardPriorityFilterOption("high")).toBeVisible();
+  }
+
+  async applyBoardPriorityFilter(priority: "highest" | "high" | "medium" | "low" | "lowest") {
+    await this.openBoardPriorityFilter();
+    await this.getBoardPriorityFilterOption(priority).click();
+    await this.page.keyboard.press("Escape");
+    await expect(this.getBoardPriorityFilterOption(priority)).not.toBeVisible();
+  }
+
+  async expectBoardColumnEmpty(name: string | RegExp) {
+    await expect(this.getBoardColumn(name)).toBeVisible();
+    await expect(this.getBoardColumnEmptyState(name)).toBeVisible();
+  }
+
+  async expectBoardWipWarningVisible() {
+    await expect(this.boardWipWarnings.first()).toBeVisible();
+  }
+
+  async enablePeekMode() {
+    await expect(this.boardViewModeToggle).toBeVisible();
+    if ((await this.boardViewModeToggle.getAttribute("aria-pressed")) === "true") {
+      return;
+    }
+    await this.boardViewModeToggle.click();
+    await expect(this.boardViewModeToggle).toHaveAttribute("aria-pressed", "true");
+  }
+
+  async enableModalMode() {
+    await expect(this.boardViewModeToggle).toBeVisible();
+    if ((await this.boardViewModeToggle.getAttribute("aria-pressed")) !== "true") {
+      return;
+    }
+    await this.boardViewModeToggle.click();
+    await expect(this.boardViewModeToggle).toHaveAttribute("aria-pressed", "false");
+  }
+
+  async collapseFirstBoardColumn() {
+    const collapseButton = this.boardColumns
+      .first()
+      .getByTestId(TEST_IDS.BOARD.COLUMN_COLLAPSE_BUTTON);
+    await expect(collapseButton).toBeVisible();
+    await collapseButton.click();
+  }
+
+  async expandFirstCollapsedBoardColumn() {
+    const expandButton = this.page.getByTestId(TEST_IDS.BOARD.COLUMN_EXPAND_BUTTON).first();
+    if (!(await isLocatorVisible(expandButton))) {
+      return;
+    }
+    await expandButton.click();
   }
 
   /**
@@ -898,14 +1243,33 @@ export class ProjectsPage extends BasePage {
     await issueCard.click();
     await expect(this.issueDetailDialog).toBeVisible();
 
-    // Wait for modal content to be stable using the issue key metadata,
-    // which is consistently rendered regardless of sidebar section timing.
-    await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
+    await expect(this.issueDetailKey).toBeVisible();
+    await expect(this.issueDetailTitle).toBeVisible();
+  }
+
+  async openIssueDetailByKey(issueKey: string) {
+    const issueCardTrigger = this.getIssueCardTrigger(issueKey);
+    await this.closeIssueDetailIfOpen();
+    await expect(issueCardTrigger).toBeVisible();
+    await issueCardTrigger.click();
+    await expect(this.issueDetailDialog).toBeVisible();
+    await expect(this.issueDetailKey).toHaveText(issueKey);
+    await expect(this.issueDetailTitle).toBeVisible();
   }
 
   async closeIssueDetail() {
     await this.closeIssueDetailIfOpen();
     await expect(this.issueDetailDialog).not.toBeVisible();
+  }
+
+  async openFirstIssueDetailCard(): Promise<void> {
+    await this.closeIssueDetailIfOpen();
+    const issueCard = this.issueCards.first();
+    await expect(issueCard).toBeVisible();
+    await issueCard.click();
+    await expect(this.issueDetailDialog).toBeVisible();
+    await expect(this.issueDetailKey).toBeVisible();
+    await expect(this.issueDetailTitle).toBeVisible();
   }
 
   async closeIssueDetailIfOpen() {
@@ -1095,6 +1459,11 @@ export class ProjectsPage extends BasePage {
 
   async expectProjectsLoadingStateVisible(timeout = 10000) {
     await this.projectsLoadingState.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+        timeout,
+      })
+      .toBeGreaterThan(0);
   }
 
   async hasCreateProjectEntryPoint() {
@@ -1360,6 +1729,19 @@ export class ProjectsPage extends BasePage {
 
   async expectBoardLoadingStateVisible(timeout = 12000) {
     await this.boardLoadingState.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+        timeout,
+      })
+      .toBeGreaterThanOrEqual(8);
+  }
+
+  async expectCreateIssueSuccessToastVisible(timeout = 8000) {
+    await expect(
+      this.getToast("Issue created successfully").filter({
+        has: this.page.getByTestId(TEST_IDS.TOAST.SUCCESS),
+      }),
+    ).toBeVisible({ timeout });
   }
 
   async expectProjectCount(count: number) {

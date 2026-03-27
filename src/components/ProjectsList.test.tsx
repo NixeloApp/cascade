@@ -69,7 +69,6 @@ describe("ProjectsList", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    window.__NIXELO_E2E_PROJECTS_LOADING__ = false;
   });
 
   it("renders loading spinner when loading first page", () => {
@@ -178,11 +177,10 @@ describe("ProjectsList", () => {
     expect(screen.queryByTestId(TEST_IDS.PROJECT.SINGLE_PROJECT_OVERVIEW)).not.toBeInTheDocument();
   });
 
-  it("honors the E2E loading override", () => {
-    window.__NIXELO_E2E_PROJECTS_LOADING__ = true;
+  it("renders the loading state while the first projects page is unresolved", () => {
     mockUsePaginatedQuery.mockReturnValue({
-      results: mockProjects,
-      status: "Exhausted",
+      results: [],
+      status: "LoadingFirstPage",
       loadMore: mockLoadMore,
     });
 

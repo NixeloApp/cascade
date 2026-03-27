@@ -178,6 +178,7 @@ export function TimeEntriesList({
             variant="primary"
             size="sm"
             leftIcon={<Icon icon={Plus} size="sm" />}
+            data-testid={TEST_IDS.TIME_TRACKING.ADD_ENTRY_BUTTON}
           >
             Add Time Entry
           </Button>

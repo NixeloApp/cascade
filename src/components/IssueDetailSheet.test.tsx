@@ -100,7 +100,13 @@ vi.mock("./ui/Tooltip", () => ({
 }));
 
 vi.mock("./ui/Typography", () => ({
-  Typography: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Typography: ({
+    children,
+    "data-testid": testId,
+  }: {
+    children: ReactNode;
+    "data-testid"?: string;
+  }) => <div data-testid={testId}>{children}</div>,
 }));
 
 const mockUseOrganization = vi.mocked(useOrganization);
@@ -252,7 +258,7 @@ describe("IssueDetailSheet", () => {
     expect(screen.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL)).toBeInTheDocument();
     expect(screen.getByText("PROJ-12 - View and edit issue details")).toBeInTheDocument();
     expect(screen.getAllByText("Broken issue detail sheet")).toHaveLength(2);
-    expect(screen.getByText("PROJ-12")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.DETAIL_KEY)).toHaveTextContent("PROJ-12");
     expect(screen.getByText("high")).toBeInTheDocument();
     expect(screen.getByText("Copy issue key")).toBeInTheDocument();
     expect(screen.getByText("layout:billing:editable")).toBeInTheDocument();

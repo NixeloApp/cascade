@@ -50,55 +50,20 @@ const INVOICE_STATUS_OPTIONS: Array<{ label: string; value: InvoiceStatusFilter 
   { label: "Paid", value: "paid" },
   { label: "Overdue", value: "overdue" },
 ];
-const INVOICES_E2E_STATE_STORAGE_KEY = "nixelo:e2e:invoices-state";
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_INVOICES_LOADING__?: boolean;
+function getInvoiceStatusOptionTestId(status: InvoiceStatusFilter) {
+  switch (status) {
+    case "all":
+      return TEST_IDS.INVOICES.STATUS_FILTER_OPTION_ALL;
+    case "draft":
+      return TEST_IDS.INVOICES.STATUS_FILTER_OPTION_DRAFT;
+    case "sent":
+      return TEST_IDS.INVOICES.STATUS_FILTER_OPTION_SENT;
+    case "paid":
+      return TEST_IDS.INVOICES.STATUS_FILTER_OPTION_PAID;
+    case "overdue":
+      return TEST_IDS.INVOICES.STATUS_FILTER_OPTION_OVERDUE;
   }
-}
-
-type InvoicesE2EState = "create-dialog" | "filtered-empty";
-
-function isE2EInvoicesLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_INVOICES_LOADING__ === true;
-}
-
-function consumeInvoicesE2ERequestedState(): {
-  showCreateDialog: boolean;
-  status: InvoiceStatusFilter;
-} {
-  const defaultState = {
-    showCreateDialog: false,
-    status: "all" as InvoiceStatusFilter,
-  };
-
-  if (typeof window === "undefined") {
-    return defaultState;
-  }
-
-  try {
-    const requestedState = window.sessionStorage.getItem(INVOICES_E2E_STATE_STORAGE_KEY);
-    window.sessionStorage.removeItem(INVOICES_E2E_STATE_STORAGE_KEY);
-
-    if ((requestedState as InvoicesE2EState | null) === "filtered-empty") {
-      return {
-        showCreateDialog: false,
-        status: "overdue",
-      };
-    }
-
-    if ((requestedState as InvoicesE2EState | null) === "create-dialog") {
-      return {
-        showCreateDialog: true,
-        status: "all",
-      };
-    }
-  } catch {
-    return defaultState;
-  }
-
-  return defaultState;
 }
 
 export function getInvoiceEmptyStateConfig(args: {
@@ -475,9 +440,8 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/invoices/")({
 export function InvoicesListPage() {
   const { orgSlug, organizationId } = useOrganization();
   const navigate = useNavigate();
-  const [initialState] = useState(consumeInvoicesE2ERequestedState);
-  const [status, setStatus] = useState<InvoiceStatusFilter>(initialState.status);
-  const [showCreateDialog, setShowCreateDialog] = useState(initialState.showCreateDialog);
+  const [status, setStatus] = useState<InvoiceStatusFilter>("all");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const invoices = useAuthenticatedQuery(api.invoices.list, {
     organizationId,
@@ -486,7 +450,7 @@ export function InvoicesListPage() {
   const clients = useAuthenticatedQuery(api.clients.list, { organizationId }) as
     | Doc<"clients">[]
     | undefined;
-  const isLoading = isE2EInvoicesLoadingOverrideEnabled() || invoices === undefined;
+  const isLoading = invoices === undefined;
 
   const handleCreated = (invoiceId: Id<"invoices">) => {
     navigate({
@@ -521,13 +485,21 @@ export function InvoicesListPage() {
               </SelectTrigger>
               <SelectContent>
                 {INVOICE_STATUS_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    data-testid={getInvoiceStatusOptionTestId(option.value)}
+                  >
                     {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={() => setShowCreateDialog(true)} disabled={isLoading}>
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              disabled={isLoading}
+              data-testid={TEST_IDS.INVOICES.NEW_DRAFT_BUTTON}
+            >
               New draft
             </Button>
           </Flex>

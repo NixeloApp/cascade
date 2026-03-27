@@ -14,6 +14,12 @@ export default defineConfig({
   // Test directory
   testDir: "./e2e",
 
+  // Only match .spec.ts files — exclude .test.ts (vitest unit tests for e2e utils)
+  testMatch: "**/*.spec.ts",
+
+  // Preview tests require a production build + service worker; run them via playwright.preview.config.ts
+  testIgnore: "**/preview/**",
+
   // Global setup/teardown
   globalSetup: "./e2e/global-setup.ts",
   globalTeardown: "./e2e/global-teardown.ts",

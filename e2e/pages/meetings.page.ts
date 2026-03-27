@@ -98,24 +98,24 @@ export class MeetingsPage extends BasePage {
   }
 
   async expectRecordingVisible(title: string) {
-    const card = this.recentSection.getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD);
-    await expect(card.filter({ hasText: new RegExp(title, "i") }).first()).toBeVisible();
+    await expect(this.getRecordingCard(title)).toBeVisible();
   }
 
   async openRecording(title: string) {
-    const card = this.recentSection
-      .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
-      .filter({ hasText: new RegExp(title, "i") })
-      .first();
-    await card.evaluate((element) => {
-      if (element instanceof HTMLElement) {
-        element.click();
-      }
-    });
+    const card = this.getRecordingCard(title);
+    await card.click();
   }
 
   async expectRecordingDetail(title: string) {
-    await expect(this.detailSection.getByText(title, { exact: true })).toBeVisible();
+    await expect(this.detailSection.getByTestId(TEST_IDS.MEETINGS.DETAIL_TITLE)).toContainText(
+      title,
+    );
+  }
+
+  async expectRecordingSummary(text: string) {
+    await expect(this.detailSection.getByTestId(TEST_IDS.MEETINGS.DETAIL_SUMMARY)).toContainText(
+      text,
+    );
   }
 
   private detailTab(label: string) {
@@ -128,11 +128,7 @@ export class MeetingsPage extends BasePage {
       return;
     }
 
-    await tab.evaluate((element) => {
-      if (element instanceof HTMLElement) {
-        element.click();
-      }
-    });
+    await tab.click();
     await expect(tab).toHaveAttribute("data-state", "active");
   }
 
@@ -153,20 +149,12 @@ export class MeetingsPage extends BasePage {
 
   async filterByStatus(statusLabel: string) {
     await expect(this.statusFilter).toBeVisible();
-    await this.statusFilter.evaluate((element) => {
-      if (element instanceof HTMLElement) {
-        element.click();
-      }
-    });
+    await this.statusFilter.click();
     const option = this.page.getByRole("option", {
       name: new RegExp(`^${statusLabel}$`, "i"),
     });
     await expect(option).toBeVisible();
-    await option.evaluate((element) => {
-      if (element instanceof HTMLElement) {
-        element.click();
-      }
-    });
+    await option.click();
     await expect(this.statusFilter).toContainText(new RegExp(statusLabel, "i"));
   }
 
@@ -184,21 +172,17 @@ export class MeetingsPage extends BasePage {
   }
 
   async filterMemoryByProject(projectKey: string) {
-    const lensButton = this.memorySection
-      .locator("button")
-      .filter({ hasText: new RegExp(projectKey, "i") })
-      .first();
-
+    const lensButton = this.memorySection.getByTestId(
+      TEST_IDS.MEETINGS.MEMORY_FILTER_BUTTON(projectKey),
+    );
     await lensButton.waitFor({ state: "visible", timeout: 10000 });
-    await lensButton.evaluate((element) => {
-      if (element instanceof HTMLElement) {
-        element.click();
-      }
-    });
+    await lensButton.click();
   }
 
   async expectMemoryDescription(text: string) {
-    await expect(this.memorySection.getByText(text)).toBeVisible();
+    await expect(
+      this.memorySection.getByTestId(TEST_IDS.MEETINGS.MEMORY_DESCRIPTION),
+    ).toContainText(text);
   }
 
   async expectMemoryItemVisible(text: string) {
@@ -227,6 +211,18 @@ export class MeetingsPage extends BasePage {
     await this.expectToast("Issue created from action item");
   }
 
+  async getLinkedIssueKey(description: string): Promise<string> {
+    await this.openDetailTabIfPresent("Actions");
+    const actionItem = this.getActionItem(description);
+    await expect(actionItem.getByText("Issue linked")).toBeVisible();
+    const text = await actionItem.textContent();
+    const match = text?.match(/([A-Z]+-\d+)/);
+    if (!match) {
+      throw new Error(`Could not extract issue key from linked action item: "${text}"`);
+    }
+    return match[1];
+  }
+
   async expectLinkedIssue(description: string, issueKey: string, issueTitle: string) {
     await this.openDetailTabIfPresent("Actions");
     const actionItem = this.getActionItem(description);
@@ -241,5 +237,11 @@ export class MeetingsPage extends BasePage {
     await this.getActionItem(description)
       .getByRole("link", { name: /open issue/i })
       .click();
+  }
+
+  private getRecordingCard(title: string): Locator {
+    return this.recentSection
+      .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
+      .filter({ hasText: title });
   }
 }

@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
 interface CreateTeamModalProps {
@@ -84,6 +85,7 @@ export function CreateTeamModal({
       onOpenChange={onClose}
       title="Create Team"
       description="Create a new team to organize your projects and members."
+      data-testid={TEST_IDS.WORKSPACE.CREATE_TEAM_MODAL}
       footer={
         <>
           <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
@@ -101,6 +103,7 @@ export function CreateTeamModal({
             <Label htmlFor="team-name">Team Name</Label>
             <Input
               id="team-name"
+              data-testid={TEST_IDS.WORKSPACE.CREATE_TEAM_NAME_INPUT}
               placeholder="e.g. Frontend, Design..."
               value={name}
               onChange={(e) => setName(e.target.value)}

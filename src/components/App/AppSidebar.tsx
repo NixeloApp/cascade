@@ -336,7 +336,10 @@ function DocumentsSectionContent({
       </li>
       {favorites.length > 0 && (
         <>
-          <li className="list-none px-sidebar-section-label pt-sidebar-nav">
+          <li
+            className="list-none px-sidebar-section-label pt-sidebar-nav"
+            data-testid={TEST_IDS.NAV.DOCUMENT_FAVORITES_SECTION}
+          >
             <Flex align="center" gap="xs" className="text-ui-text-tertiary">
               <AppIcon icon={Star} size="xsPlus" tone="warning" className="fill-status-warning" />
               <Typography variant="caption">Favorites</Typography>
@@ -676,6 +679,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   variant="solid"
                   size="md"
                   onClick={toggleCollapse}
+                  data-testid={TEST_IDS.NAV.SIDEBAR_TOGGLE}
                   className={cn("hidden lg:flex", showCollapsed && "mx-auto")}
                   aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
@@ -691,6 +695,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   variant="solid"
                   size="md"
                   onClick={closeMobile}
+                  data-testid={TEST_IDS.NAV.SIDEBAR_CLOSE_BUTTON}
                   className="lg:hidden"
                   aria-label="Close sidebar"
                 >

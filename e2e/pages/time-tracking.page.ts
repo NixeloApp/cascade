@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import { withSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -10,14 +11,26 @@ import { BasePage } from "./base.page";
  * Handles tab, filter, and screenshot-review states for the admin time route.
  */
 export class TimeTrackingPage extends BasePage {
+  static async withCapturePage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (timeTrackingPage: TimeTrackingPage) => Promise<T>,
+  ): Promise<T> {
+    return withSiblingPageTarget(sourcePage, async ({ page }) =>
+      run(new TimeTrackingPage(page, orgSlug)),
+    );
+  }
+
   readonly burnRateHeading: Locator;
   readonly burnRatePanel: Locator;
   readonly burnRateTab: Locator;
   readonly content: Locator;
   readonly dateRangeFilter: Locator;
+  readonly entryModal: Locator;
   readonly entriesEmptyState: Locator;
   readonly entriesList: Locator;
   readonly entriesTab: Locator;
+  readonly addEntryButton: Locator;
   readonly projectFilter: Locator;
   readonly projectPrompt: Locator;
   readonly ratesHeading: Locator;
@@ -32,9 +45,11 @@ export class TimeTrackingPage extends BasePage {
     this.burnRateTab = page.getByTestId(TEST_IDS.TIME_TRACKING.TAB_BURN_RATE);
     this.content = page.getByTestId(TEST_IDS.TIME_TRACKING.CONTENT);
     this.dateRangeFilter = page.getByTestId(TEST_IDS.TIME_TRACKING.DATE_RANGE_FILTER);
+    this.entryModal = page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_MODAL);
     this.entriesEmptyState = page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRIES_EMPTY_STATE);
     this.entriesList = page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRIES_LIST);
     this.entriesTab = page.getByTestId(TEST_IDS.TIME_TRACKING.TAB_ENTRIES);
+    this.addEntryButton = page.getByTestId(TEST_IDS.TIME_TRACKING.ADD_ENTRY_BUTTON);
     this.projectFilter = page.getByTestId(TEST_IDS.TIME_TRACKING.PROJECT_FILTER);
     this.projectPrompt = page.getByRole("region", { name: /select a project/i });
     this.ratesHeading = page.getByRole("heading", { name: /^hourly rates$/i });
@@ -85,6 +100,16 @@ export class TimeTrackingPage extends BasePage {
         { timeout: 12000 },
       )
       .toBe("ready");
+  }
+
+  async openManualEntryModal(): Promise<void> {
+    await this.expectEntriesState();
+    await expect(this.addEntryButton).toBeVisible();
+    await this.addEntryButton.click();
+    await expect(this.entryModal).toBeVisible({ timeout: 12000 });
+    await expect(this.entryModal.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM)).toBeVisible({
+      timeout: 12000,
+    });
   }
 
   async expectBurnRateState(): Promise<void> {

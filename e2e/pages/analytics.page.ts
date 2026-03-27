@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { withSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
 import { waitForLoadingSkeletonsToClear } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
@@ -9,6 +10,16 @@ import { BasePage } from "./base.page";
  * Handles the organization analytics dashboard with metrics and charts.
  */
 export class AnalyticsPage extends BasePage {
+  static async withCapturePage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (analyticsPage: AnalyticsPage) => Promise<T>,
+  ): Promise<T> {
+    return withSiblingPageTarget(sourcePage, async ({ page }) =>
+      run(new AnalyticsPage(page, orgSlug)),
+    );
+  }
+
   readonly analyticsPage: Locator;
   readonly pageHeader: Locator;
   readonly totalIssuesMetric: Locator;

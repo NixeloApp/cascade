@@ -24,12 +24,6 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/assistant")({
   component: AssistantPage,
 });
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_ASSISTANT_LOADING__?: boolean;
-  }
-}
-
 type AssistantTab = "overview" | "conversations";
 type AssistantUsageStats = FunctionReturnType<typeof api.ai.queries.getUsageStats>;
 type AssistantChat = FunctionReturnType<typeof api.ai.queries.getUserChats>[number];
@@ -40,10 +34,6 @@ function formatCost(cents: number): string {
 
 function formatNumber(value: number): string {
   return value.toLocaleString();
-}
-
-function isE2EAssistantLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_ASSISTANT_LOADING__ === true;
 }
 
 function AssistantLoadingPill() {
@@ -393,7 +383,7 @@ export function AssistantPage() {
   const stats = useAuthenticatedQuery(api.ai.queries.getUsageStats, {});
   const chats = useAuthenticatedQuery(api.ai.queries.getUserChats, {});
 
-  if (isE2EAssistantLoadingOverrideEnabled() || stats === undefined) {
+  if (stats === undefined) {
     return <AssistantLoadingState />;
   }
 

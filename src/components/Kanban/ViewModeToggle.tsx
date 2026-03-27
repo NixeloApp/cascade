@@ -8,6 +8,7 @@
 
 import { useIssueViewMode } from "@/contexts/IssueViewModeContext";
 import { Columns2, PanelRightOpen } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Tooltip } from "../ui/Tooltip";
@@ -19,6 +20,7 @@ export function ViewModeToggle() {
     <Tooltip content={viewMode === "modal" ? "Switch to side panel view" : "Switch to modal view"}>
       <IconButton
         onClick={toggleViewMode}
+        data-testid={TEST_IDS.BOARD.VIEW_MODE_TOGGLE}
         aria-label={viewMode === "modal" ? "Switch to side panel view" : "Switch to modal view"}
         aria-pressed={viewMode === "peek"}
       >

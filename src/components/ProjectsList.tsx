@@ -100,16 +100,6 @@ const SINGLE_PROJECT_EXPANSION_SIGNALS = [
   "Use a new project when reporting, planning, or delivery timing needs diverge.",
 ] as const;
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_PROJECTS_LOADING__?: boolean;
-  }
-}
-
-function isE2EProjectsLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_PROJECTS_LOADING__ === true;
-}
-
 function getBoardTypeLabel(boardType: ProjectBoardType) {
   return boardType === "kanban" ? "Kanban" : "Scrum";
 }
@@ -661,7 +651,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
     { initialNumItems: 20 },
   );
 
-  if (isE2EProjectsLoadingOverrideEnabled() || status === "LoadingFirstPage") {
+  if (status === "LoadingFirstPage") {
     return <ProjectsLoadingState />;
   }
 

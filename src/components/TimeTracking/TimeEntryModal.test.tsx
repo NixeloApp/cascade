@@ -7,6 +7,7 @@ import { createContext, createElement, useContext } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
 import { TimeEntryModal } from "./TimeEntryModal";
@@ -70,14 +71,16 @@ vi.mock("../ui/Dialog", () => ({
     title,
     children,
     footer,
+    "data-testid": testId,
   }: {
     open: boolean;
     title: string;
     children: ReactNode;
     footer?: ReactNode;
+    "data-testid"?: string;
   }) =>
     open ? (
-      <div role="dialog" aria-label={title}>
+      <div role="dialog" aria-label={title} data-testid={testId}>
         <div>{title}</div>
         {children}
         {footer}
@@ -372,6 +375,7 @@ describe("TimeEntryModal", () => {
     render(<TimeEntryModal open={false} onOpenChange={vi.fn()} />);
 
     expect(screen.queryByRole("dialog", { name: "Log Time" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.TIME_TRACKING.ENTRY_MODAL)).not.toBeInTheDocument();
   });
 
   it("starts a timer with selected project, issue, tags, and billing details", async () => {

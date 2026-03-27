@@ -172,6 +172,7 @@ function CollapsedColumn({
               onClick={onToggleCollapse}
               size="xs"
               aria-label={`Expand ${state.name} column`}
+              data-testid={TEST_IDS.BOARD.COLUMN_EXPAND_BUTTON}
             >
               <Icon icon={Maximize2} size="sm" />
             </IconButton>
@@ -239,7 +240,7 @@ function ColumnHeader({
           </Badge>
           {isOverWipLimit && (
             <Tooltip content={`WIP limit exceeded (max ${state.wipLimit})`}>
-              <Badge variant="error" size="sm">
+              <Badge variant="error" size="sm" data-testid={TEST_IDS.BOARD.COLUMN_WIP_WARNING}>
                 Over limit
               </Badge>
             </Tooltip>
@@ -252,6 +253,7 @@ function ColumnHeader({
                 onClick={onToggleCollapse}
                 aria-label={`Collapse ${state.name} column`}
                 size="xs"
+                data-testid={TEST_IDS.BOARD.COLUMN_COLLAPSE_BUTTON}
               >
                 <Icon icon={Minimize2} size="xsPlus" />
               </IconButton>
@@ -289,6 +291,7 @@ function EmptyColumnState({
     <EmptyState
       icon={Plus}
       title="No issues yet"
+      data-testid={TEST_IDS.BOARD.COLUMN_EMPTY_STATE}
       description={
         canEdit && onCreateIssue
           ? "Drop issues here or use the add button to start this stage."

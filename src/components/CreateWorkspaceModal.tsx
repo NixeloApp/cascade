@@ -17,6 +17,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Textarea } from "@/components/ui/Textarea";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { buildWorkspaceSlug } from "@/lib/workspaces";
 
@@ -83,6 +84,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
         }
       }}
       title="Create Workspace"
+      data-testid={TEST_IDS.WORKSPACE.CREATE_MODAL}
       footer={
         <>
           <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
@@ -105,6 +107,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
             <Label htmlFor="workspace-name">Workspace Name</Label>
             <Input
               id="workspace-name"
+              data-testid={TEST_IDS.WORKSPACE.CREATE_NAME_INPUT}
               placeholder="e.g. Engineering, Marketing..."
               value={name}
               onChange={(e) => setName(e.target.value)}

@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { withBlockedConvexPage } from "../utils/convex-loading";
 import {
   getLocatorAttribute,
   getLocatorCount,
@@ -16,6 +17,18 @@ import { BasePage } from "./base.page";
  * Handles the main authenticated app interface
  */
 export class DashboardPage extends BasePage {
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (dashboardPage: DashboardPage) => Promise<T>,
+  ): Promise<T> {
+    return withBlockedConvexPage(
+      sourcePage,
+      { kind: "transport", target: "isolated" },
+      async (loadingPage) => run(new DashboardPage(loadingPage, orgSlug)),
+    );
+  }
+
   // ===================
   // Locators - Navigation Tabs
   // ===================
@@ -56,7 +69,10 @@ export class DashboardPage extends BasePage {
   // ===================
   readonly mainContent: Locator;
   readonly sidebar: Locator;
+  readonly sidebarToggleButton: Locator;
+  readonly sidebarCloseButton: Locator;
   readonly loadingSpinner: Locator;
+  readonly notFoundHeading: Locator;
 
   // ===================
   // Locators - Dashboard Content
@@ -65,8 +81,11 @@ export class DashboardPage extends BasePage {
   readonly workspacesSection: Locator;
   readonly recentActivitySection: Locator;
   readonly quickStatsSection: Locator;
+  readonly dashboardContent: Locator;
   readonly assignedTab: Locator;
   readonly createdTab: Locator;
+  readonly customizeButton: Locator;
+  readonly customizeModal: Locator;
 
   // ===================
   // Locators - Modals
@@ -169,14 +188,26 @@ export class DashboardPage extends BasePage {
     // Content areas - use last() to get innermost main element (nested layout)
     this.mainContent = page.getByRole("main").last();
     this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
+    this.sidebarToggleButton = page
+      .getByTestId(TEST_IDS.NAV.SIDEBAR_TOGGLE)
+      .or(page.getByLabel(/collapse sidebar|expand sidebar/i));
+    this.sidebarCloseButton = page
+      .getByTestId(TEST_IDS.NAV.SIDEBAR_CLOSE_BUTTON)
+      .or(this.sidebar.getByLabel("Close sidebar"));
     // Use aria-label="Loading" to target actual loading spinners, not empty states
     this.loadingSpinner = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
+    this.notFoundHeading = page
+      .getByTestId(TEST_IDS.PAGE.NOT_FOUND_HEADING)
+      .or(page.getByText("Page not found", { exact: true }));
 
     // Dashboard sections - use data-testid where available, semantic fallback where not
     this.myIssuesSection = page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING);
     this.workspacesSection = page.getByTestId(TEST_IDS.DASHBOARD.WORKSPACES_LIST);
     this.recentActivitySection = page.getByTestId(TEST_IDS.DASHBOARD.RECENT_ACTIVITY);
     this.quickStatsSection = page.getByTestId(TEST_IDS.DASHBOARD.QUICK_STATS);
+    this.dashboardContent = page.getByTestId(TEST_IDS.DASHBOARD.CONTENT);
+    this.customizeButton = page.getByTestId(TEST_IDS.DASHBOARD.CUSTOMIZE_TRIGGER);
+    this.customizeModal = page.getByTestId(TEST_IDS.DASHBOARD.CUSTOMIZE_MODAL);
     // Issue filter tabs: tab role in Radix/Tabs, with button fallback when rendered as buttons.
     this.assignedTab = page
       .getByRole("tab", { name: /^assigned/i })
@@ -279,6 +310,59 @@ export class DashboardPage extends BasePage {
     await waitForDashboardReady(this.page);
   }
 
+  async gotoAndExpectLoadingSkeletons(timeout = 12000): Promise<void> {
+    await this.goto();
+    await this.expectLoadingSkeletonsVisible(timeout);
+  }
+
+  async waitForCaptureReady(timeout = 15000): Promise<void> {
+    await this.expectDashboardReady(timeout);
+    await expect(this.pageHeaderTitle).toBeVisible({ timeout });
+    await expect(this.dashboardContent).toBeVisible({ timeout });
+  }
+
+  async openCustomizeModal(): Promise<void> {
+    await waitForDashboardReady(this.page);
+    await this.closeCustomizeModalIfOpen();
+    await expect(this.customizeButton).toBeVisible();
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await this.customizeButton.click();
+      if (await this.waitForCustomizeModalReady()) {
+        return;
+      }
+      await this.closeCustomizeModalIfOpen();
+    }
+
+    await this.expectCustomizeModalReady();
+  }
+
+  async closeCustomizeModalIfOpen(): Promise<void> {
+    await this.dismissModalIfOpen(this.customizeModal);
+  }
+
+  private async waitForCustomizeModalReady(timeout = 3000): Promise<boolean> {
+    try {
+      await this.expectCustomizeModalReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCustomizeModalReady(timeout = 10000): Promise<void> {
+    await expect(this.customizeModal).toBeVisible({ timeout });
+    await expect(this.customizeModal.getByText("Quick Stats", { exact: true })).toBeVisible({
+      timeout,
+    });
+    await expect(this.customizeModal.getByText("Recent Activity", { exact: true })).toBeVisible({
+      timeout,
+    });
+    await expect(this.customizeModal.getByText("My Workspaces", { exact: true })).toBeVisible({
+      timeout,
+    });
+  }
+
   private async expectDashboardReady(timeout = 15000) {
     const currentUrl = this.page.url();
     if (this.isOutsideOrgShell(currentUrl)) {
@@ -359,24 +443,72 @@ export class DashboardPage extends BasePage {
   }
 
   async openMyIssues(): Promise<void> {
-    if (await isLocatorVisible(this.mobileMenuButton)) {
-      const sidebar = this.page.getByTestId(TEST_IDS.NAV.SIDEBAR);
-      const closeButton = sidebar.getByLabel("Close sidebar");
-      await this.mobileMenuButton.click();
-      await closeButton.waitFor({ state: "visible", timeout: 5000 });
-      await expect
-        .poll(async () => (await getLocatorAttribute(sidebar, "class")) ?? "", {
-          timeout: 5000,
-          intervals: [100, 200, 500],
-        })
-        .toContain("translate-x-0");
-      await waitForAnimation(this.page);
-    }
+    await this.openMobileSidebarIfNeeded();
     await expect(this.myIssuesTab).toBeVisible();
     await this.myIssuesTab.evaluate((element) => {
       (element as HTMLAnchorElement).click();
     });
     await expect(this.page).toHaveURL(routePattern(ROUTES.myIssues.path, "(?:\\?.*)?$"));
+  }
+
+  async openMobileSidebarIfNeeded(): Promise<void> {
+    if (!(await isLocatorVisible(this.mobileMenuButton))) {
+      return;
+    }
+
+    await this.mobileMenuButton.click();
+    await this.sidebarCloseButton.waitFor({ state: "visible", timeout: 5000 });
+    await expect
+      .poll(async () => (await getLocatorAttribute(this.sidebar, "class")) ?? "", {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .toContain("translate-x-0");
+    await waitForAnimation(this.page);
+  }
+
+  async collapseSidebar(): Promise<void> {
+    await expect(this.sidebarToggleButton).toBeVisible();
+    const sidebarClass = (await getLocatorAttribute(this.sidebar, "class")) ?? "";
+    if (sidebarClass.includes("lg:w-sidebar-collapsed")) {
+      return;
+    }
+    await this.sidebarToggleButton.click();
+    await expect
+      .poll(async () => (await getLocatorAttribute(this.sidebar, "class")) ?? "", {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .toContain("lg:w-sidebar-collapsed");
+    await waitForAnimation(this.page);
+  }
+
+  async expandSidebarIfCollapsed(): Promise<void> {
+    const sidebarClass = (await getLocatorAttribute(this.sidebar, "class")) ?? "";
+    if (!sidebarClass.includes("lg:w-sidebar-collapsed")) {
+      return;
+    }
+    await expect(this.sidebarToggleButton).toBeVisible();
+    await this.sidebarToggleButton.click();
+    await expect
+      .poll(async () => (await getLocatorAttribute(this.sidebar, "class")) ?? "", {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .not.toContain("lg:w-sidebar-collapsed");
+    await waitForAnimation(this.page);
+  }
+
+  getSidebarProjectItem(projectKey: string): Locator {
+    return this.page.getByTestId(TEST_IDS.NAV.PROJECT_ITEM(projectKey));
+  }
+
+  async expectSidebarProjectItem(projectKey: string): Promise<void> {
+    await expect(this.getSidebarProjectItem(projectKey)).toBeVisible();
+  }
+
+  async expectNotFoundPage(): Promise<void> {
+    await expect(this.notFoundHeading).toBeVisible();
   }
 
   // ===================
@@ -734,6 +866,16 @@ export class DashboardPage extends BasePage {
     await this.expectTimeEntryBillingState(options.expectBillable);
   }
 
+  async expectLoadingSkeletonsVisible(timeout = 12000): Promise<void> {
+    await this.commandPaletteButton.waitFor({ state: "visible", timeout });
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+        timeout,
+      })
+      .toBeGreaterThanOrEqual(6);
+  }
+
   async reloadAppShell() {
     await this.page.reload({ waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
@@ -892,6 +1034,14 @@ export class DashboardPage extends BasePage {
   private async expectTimeEntryModalVisible(timeout = 10000) {
     const visible = await this.waitForTimeEntryModalVisible(timeout);
     expect(visible).toBe(true);
+  }
+
+  async expectTimeEntryModalReady(timeout = 10000) {
+    await this.expectTimeEntryModalVisible(timeout);
+    await this.timeEntryModal.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM).waitFor({
+      state: "visible",
+      timeout,
+    });
   }
 
   private async waitForTimeEntryBillingState(expectBillable: boolean, timeout = 3000) {

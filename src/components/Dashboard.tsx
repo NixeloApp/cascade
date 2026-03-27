@@ -35,16 +35,6 @@ type IssueFilter = "assigned" | "created" | "all";
 type DashboardIssueListItem = { projectKey: string };
 type DashboardProjectListItem = { key: string };
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_DASHBOARD_LOADING__?: boolean;
-  }
-}
-
-function isE2EDashboardLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_DASHBOARD_LOADING__ === true;
-}
-
 function DashboardOverview({
   focusTask,
   showStats,
@@ -221,7 +211,7 @@ function useDashboardNavigation({
 }
 
 function useDashboardData(issueFilter: IssueFilter) {
-  const forceLoading = isE2EDashboardLoadingOverrideEnabled();
+  const loadingStatus = "LoadingFirstPage" as const;
   const { queriedUser, showStats, showRecentActivity, showWorkspaces } =
     useDashboardLayoutSettings();
   const {
@@ -234,10 +224,18 @@ function useDashboardData(issueFilter: IssueFilter) {
     queriedRecentActivity,
     queriedStats,
   } = useDashboardQueries();
+  const forceLoading =
+    queriedUser === undefined ||
+    queriedMyIssuesStatus === "LoadingFirstPage" ||
+    queriedMyCreatedIssues === undefined ||
+    queriedMyProjects === undefined ||
+    queriedRecentActivity === undefined ||
+    queriedStats === undefined ||
+    queriedFocusTask === undefined;
 
   const user = forceLoading ? undefined : queriedUser;
   const myIssues = applyDashboardLoadingState(forceLoading, queriedMyIssues);
-  const myIssuesStatus = forceLoading ? "LoadingFirstPage" : queriedMyIssuesStatus;
+  const myIssuesStatus = forceLoading ? loadingStatus : queriedMyIssuesStatus;
   const myCreatedIssues = applyDashboardLoadingState(forceLoading, queriedMyCreatedIssues);
   const myProjects = applyDashboardLoadingState(forceLoading, queriedMyProjects);
   const recentActivity = applyDashboardLoadingState(forceLoading, queriedRecentActivity);

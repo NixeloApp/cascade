@@ -5,15 +5,56 @@ import {
   getMyIssuesPriorityFilterOptionTestId,
   TEST_IDS,
 } from "../../src/lib/test-ids";
+import { E2E_TIMEZONE } from "../constants";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import { withIsolatedPageTarget, withSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
+import { SettingsPage } from "./settings.page";
 
 /**
  * My Issues Page Object
  * Handles the personal issue board route and its filter states.
  */
 export class MyIssuesPage extends BasePage {
+  static async withCapturePage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (myIssuesPage: MyIssuesPage) => Promise<T>,
+  ): Promise<T> {
+    return withSiblingPageTarget(sourcePage, async ({ page }) =>
+      run(new MyIssuesPage(page, orgSlug)),
+    );
+  }
+
+  static async withLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    colorScheme: "light" | "dark",
+    run: (myIssuesPage: MyIssuesPage) => Promise<T>,
+  ): Promise<T> {
+    return withIsolatedPageTarget(
+      sourcePage,
+      async (loadingTarget) => {
+        const settingsPage = new SettingsPage(loadingTarget.page, orgSlug);
+        await settingsPage.goto();
+        await settingsPage.waitForCaptureReady("profile");
+        await loadingTarget.context.setOffline(true);
+
+        try {
+          await settingsPage.openMyIssuesWithoutWaiting();
+          return await run(new MyIssuesPage(loadingTarget.page, orgSlug));
+        } finally {
+          await loadingTarget.context.setOffline(false);
+        }
+      },
+      {
+        colorScheme,
+        timezoneId: E2E_TIMEZONE,
+      },
+    );
+  }
+
   readonly content: Locator;
   readonly columns: Locator;
   readonly dueDateFilter: Locator;

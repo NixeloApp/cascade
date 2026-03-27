@@ -287,7 +287,7 @@ describe("InboxList", () => {
 
     render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-    await user.click(screen.getByRole("button", { name: /decline/i }));
+    await user.click(screen.getByTestId(TEST_IDS.PROJECT_INBOX.ROW_DECLINE_BUTTON));
 
     const dialog = await screen.findByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG);
     expect(within(dialog).getByText(/needs triage/i)).toBeInTheDocument();
@@ -303,7 +303,7 @@ describe("InboxList", () => {
 
     render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-    await user.click(screen.getByRole("button", { name: /^snooze$/i }));
+    await user.click(screen.getByTestId(TEST_IDS.PROJECT_INBOX.ROW_SNOOZE_BUTTON));
     await user.click(await screen.findByText("Pick a date…"));
 
     expect(
@@ -332,8 +332,8 @@ describe("InboxList", () => {
 
     render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-    await user.click(screen.getByRole("button", { name: /more actions for test-5/i }));
-    await user.click(await screen.findByText(/mark duplicate/i));
+    await user.click(screen.getByTestId(TEST_IDS.PROJECT_INBOX.ROW_MORE_ACTIONS_BUTTON));
+    await user.click(await screen.findByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_ACTION));
 
     const dialog = await screen.findByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG);
     expect(within(dialog).getByText("TEST-4")).toBeInTheDocument();

@@ -18,6 +18,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { AlertTriangle } from "@/lib/icons";
 import type { IssueType } from "@/lib/issue-utils";
 import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface DuplicateDetectionProps {
   title: string;
@@ -45,7 +46,11 @@ export function DuplicateDetection({ title, projectId, onIssueClick }: Duplicate
   }
 
   return (
-    <Card padding="md" className="bg-status-warning-bg/30 border-status-warning-border/30">
+    <Card
+      padding="md"
+      className="bg-status-warning-bg/30 border-status-warning-border/30"
+      data-testid={TEST_IDS.ISSUE.CREATE_DUPLICATE_DETECTION}
+    >
       <Stack gap="sm">
         <Flex align="center" gap="xs">
           <Icon icon={AlertTriangle} size="sm" tone="warningText" />
@@ -59,6 +64,7 @@ export function DuplicateDetection({ title, projectId, onIssueClick }: Duplicate
               key={issue._id}
               variant="ghost"
               size="sm"
+              data-testid={TEST_IDS.ISSUE.CREATE_DUPLICATE_ITEM(issue.key)}
               onClick={() => onIssueClick?.(issue._id)}
               className="w-full justify-start"
             >
