@@ -95,15 +95,9 @@ export type ScreenshotCaptureExecutionStep =
       mode: ScreenshotSeededPhaseMode;
     };
 
-export type ScreenshotCaptureExecutionContext =
-  | {
-      authBootstrap: null;
-      seedOrgSlug: undefined;
-    }
-  | {
-      authBootstrap: ScreenshotAuthBootstrap;
-      seedOrgSlug: string;
-    };
+export interface ScreenshotCaptureExecutionContext {
+  authBootstrap: ScreenshotAuthBootstrap | null;
+}
 
 export type LaunchBrowser = () => Promise<Browser>;
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
@@ -465,7 +459,6 @@ export async function prepareScreenshotCaptureExecutionContext(
   if (bootstrapMode === "none") {
     return {
       authBootstrap: null,
-      seedOrgSlug: undefined,
     };
   }
 
@@ -476,7 +469,6 @@ export async function prepareScreenshotCaptureExecutionContext(
 
     return {
       authBootstrap: null,
-      seedOrgSlug: undefined,
     };
   }
 
@@ -488,7 +480,6 @@ export async function prepareScreenshotCaptureExecutionContext(
 
   return {
     authBootstrap,
-    seedOrgSlug: authBootstrap.orgSlug,
   };
 }
 
@@ -704,6 +695,12 @@ export function getAuthenticatedScreenshotBootstrap(
   return executionContext.authBootstrap;
 }
 
+export function getScreenshotSeedOrgSlug(
+  executionContext: ScreenshotCaptureExecutionContext,
+): string | undefined {
+  return executionContext.authBootstrap?.orgSlug;
+}
+
 export async function runSeedlessPublicScreenshotPhase(
   launchBrowser: LaunchBrowser,
   configs: ScreenshotCaptureConfig[],
@@ -759,12 +756,13 @@ export async function runSeededScreenshotPhase(
 ): Promise<void> {
   console.log(getSeededPhaseLogLabelForMode(seededPhaseMode));
   console.log("  Seeding screenshot data...");
+  const seedOrgSlug = getScreenshotSeedOrgSlug(executionContext);
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
-    orgSlug: executionContext.seedOrgSlug,
+    orgSlug: seedOrgSlug,
   });
   if (seedResult.success) {
     console.log(
-      `  ✓ Seeded: org=${seedResult.orgSlug ?? executionContext.seedOrgSlug ?? "unknown"}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
+      `  ✓ Seeded: org=${seedResult.orgSlug ?? seedOrgSlug ?? "unknown"}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
     );
   } else {
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);

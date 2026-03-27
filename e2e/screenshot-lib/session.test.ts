@@ -28,6 +28,7 @@ import {
   getScreenshotCaptureBootstrapMode,
   getScreenshotContextOptions,
   getScreenshotSeededPhaseMode,
+  getScreenshotSeedOrgSlug,
   getSeededPhaseLogLabel,
   getSeededPhaseLogLabelForMode,
   getSelectedScreenshotPageIds,
@@ -399,7 +400,6 @@ describe("screenshot session helpers", () => {
       getAuthenticatedScreenshotBootstrap(
         {
           authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
-          seedOrgSlug: "acme",
         },
         "empty-state",
       ),
@@ -412,11 +412,23 @@ describe("screenshot session helpers", () => {
       getAuthenticatedScreenshotBootstrap(
         {
           authBootstrap: null,
-          seedOrgSlug: undefined,
         },
         "filled-state",
       ),
     ).toThrow("Authenticated bootstrap is required for screenshot filled-state capture");
+  });
+
+  it("derives seed org slug from the authenticated bootstrap only", () => {
+    expect(
+      getScreenshotSeedOrgSlug({
+        authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
+      }),
+    ).toBe("acme");
+    expect(
+      getScreenshotSeedOrgSlug({
+        authBootstrap: null,
+      }),
+    ).toBeUndefined();
   });
 
   it("derives the selected screenshot page ids from the current CLI filters", () => {
@@ -587,7 +599,6 @@ describe("screenshot session helpers", () => {
 
     expect(executionContext).toEqual({
       authBootstrap: null,
-      seedOrgSlug: undefined,
     });
     expect(launchBrowser).not.toHaveBeenCalled();
   });
@@ -606,7 +617,6 @@ describe("screenshot session helpers", () => {
 
     expect(executionContext).toEqual({
       authBootstrap: null,
-      seedOrgSlug: undefined,
     });
     expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
     expect(createSpy).toHaveBeenCalledTimes(1);
@@ -653,7 +663,6 @@ describe("screenshot session helpers", () => {
         authStorageState: { cookies: [], origins: [] },
         orgSlug: "acme",
       },
-      seedOrgSlug: "acme",
     });
     expect(deleteSpy).toHaveBeenNthCalledWith(1, "e2e-member-s0-screenshots@inbox.mailtrap.io");
     expect(deleteSpy).toHaveBeenNthCalledWith(2, "e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
@@ -1180,7 +1189,6 @@ describe("screenshot session helpers", () => {
 
     await runEmptyScreenshotPhase(launchBrowser, [{ viewport: "desktop", theme: "light" }], {
       authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
-      seedOrgSlug: "acme",
     });
 
     expect(emptySpy).toHaveBeenCalledWith(emptyHarness.page, "acme", {
@@ -1270,7 +1278,6 @@ describe("screenshot session helpers", () => {
       "filled-only",
       {
         authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
-        seedOrgSlug: "acme",
       },
     );
 
@@ -1291,7 +1298,7 @@ describe("screenshot session helpers", () => {
     ).rejects.toThrow("Screenshot execution step empty requires execution context");
   });
 
-  it("keeps execution contexts free of duplicated bootstrap mode flags", async () => {
+  it("keeps execution contexts free of duplicated bootstrap state", async () => {
     const launchBrowser = vi.fn<() => Promise<Browser>>();
     const deleteSpy = vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
     const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
@@ -1305,9 +1312,9 @@ describe("screenshot session helpers", () => {
 
     expect(executionContext).toEqual({
       authBootstrap: null,
-      seedOrgSlug: undefined,
     });
     expect("bootstrapMode" in executionContext).toBe(false);
+    expect("seedOrgSlug" in executionContext).toBe(false);
     expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
     expect(createSpy).toHaveBeenCalledTimes(1);
   });
