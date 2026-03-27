@@ -13,6 +13,7 @@ import {
   promoteStagedScreenshots,
   resetCounters,
   shouldCapture,
+  shouldCaptureAny,
 } from "./capture";
 import {
   SCREENSHOT_AUTH_USER,
@@ -635,6 +636,12 @@ export async function captureEmptyStatesForConfig(
 ): Promise<void> {
   setCurrentConfig(viewport, theme, "empty");
   if (selectedEmptyCaptureGroups.length === 0) {
+    return;
+  }
+
+  // Skip browser launch when no empty targets match this config.
+  const emptyCaptureNames = selectedEmptyCaptureGroups.flatMap((g) => g.captureNames);
+  if (!shouldCaptureAny("empty", emptyCaptureNames)) {
     return;
   }
 

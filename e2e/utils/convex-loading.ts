@@ -359,6 +359,12 @@ async function withBlockedPageTarget<T>(
     );
   }
 
+  if (policy.timezoneId) {
+    throw new Error(
+      "timezoneId cannot be applied to sibling page targets; use target: 'isolated' instead",
+    );
+  }
+
   return withSiblingPageTarget(sourcePage, async ({ page }) => {
     if (policy.colorScheme) {
       await page.emulateMedia({ colorScheme: policy.colorScheme });
