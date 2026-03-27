@@ -49,7 +49,6 @@
 - [ ] Keep shrinking the centralized loading-hook exception list in `src/lib/e2e-loading-overrides.ts`.
   Current documented exceptions:
   - dashboard loading
-  - projects loading
   - assistant loading
   - issues loading
 - [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.

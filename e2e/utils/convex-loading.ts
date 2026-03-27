@@ -31,9 +31,12 @@ function isBlockedConvexHost(requestUrl: string): boolean {
   }
 }
 
-function getConvexMutationPath(route: Route): string | null {
+function getConvexRequestPath(
+  route: Route,
+  endpointSuffix: "/api/mutation" | "/api/query",
+): string | null {
   const request = route.request();
-  if (request.method() !== "POST" || !request.url().endsWith("/api/mutation")) {
+  if (request.method() !== "POST" || !request.url().endsWith(endpointSuffix)) {
     return null;
   }
 
@@ -168,7 +171,7 @@ export async function blockConvexMutation(
   mutationPath: string,
 ): Promise<() => Promise<void>> {
   const handler = async (route: Route): Promise<void> => {
-    const requestPath = getConvexMutationPath(route);
+    const requestPath = getConvexRequestPath(route, "/api/mutation");
 
     if (requestPath === mutationPath) {
       return new Promise<void>(() => {});

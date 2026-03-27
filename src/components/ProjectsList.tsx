@@ -30,7 +30,6 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { isE2ELoadingOverrideEnabled } from "@/lib/e2e-loading-overrides";
 import { Calendar, Folder, KanbanSquare, MapIcon, Plus } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
@@ -652,7 +651,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
     { initialNumItems: 20 },
   );
 
-  if (isE2ELoadingOverrideEnabled("projects") || status === "LoadingFirstPage") {
+  if (status === "LoadingFirstPage") {
     return <ProjectsLoadingState />;
   }
 

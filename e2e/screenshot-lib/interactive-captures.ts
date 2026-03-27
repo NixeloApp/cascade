@@ -351,13 +351,9 @@ export async function screenshotProjectsStates(
 
     if (shouldCapture(prefix, captureNames.loading)) {
       await runCaptureStep("projects loading", async () => {
-        const loadingPage = await page.context().newPage();
+        const loadingPage = await createConvexLoadingPage(page);
 
         try {
-          await loadingPage.addInitScript(() => {
-            window.__NIXELO_E2E_PROJECTS_LOADING__ = true;
-          });
-
           await loadingPage.goto(`${BASE_URL}${projectsUrl}`, {
             waitUntil: "domcontentloaded",
             timeout: 15000,
