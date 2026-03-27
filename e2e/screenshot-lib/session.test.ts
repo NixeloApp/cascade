@@ -17,6 +17,7 @@ import {
   captureFilledStatesForConfig,
   enumerateDryRunTargets,
   formatConfigLabel,
+  getAuthenticatedScreenshotBootstrap,
   getCaptureNamesForPrefix,
   getScreenshotContextOptions,
   getSeededPhaseLogLabel,
@@ -25,7 +26,10 @@ import {
   prepareScreenshotCaptureExecutionContext,
   runAuthenticatedScreenshotCapture,
   runConfiguredScreenshotCaptureSession,
+  runEmptyScreenshotPhase,
   runRetriedAuthenticatedScreenshotCapture,
+  runSeededScreenshotPhase,
+  runSeedlessPublicScreenshotPhase,
   withAuthenticatedScreenshotPage,
 } from "./session";
 
@@ -263,6 +267,33 @@ describe("screenshot session helpers", () => {
         buildScreenshotCaptureExecutionPlan(["public-portal-project", "filled-issues-loading"]),
       ),
     ).toBe("\n  📋 Phase 2: Seed data + public pages + filled states");
+  });
+
+  it("returns the authenticated bootstrap only for authenticated execution contexts", () => {
+    expect(
+      getAuthenticatedScreenshotBootstrap(
+        {
+          authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
+          bootstrapMode: "authenticated",
+          seedOrgSlug: "acme",
+        },
+        "empty-state",
+      ),
+    ).toEqual({
+      authStorageState: { cookies: [], origins: [] },
+      orgSlug: "acme",
+    });
+
+    expect(() =>
+      getAuthenticatedScreenshotBootstrap(
+        {
+          authBootstrap: null,
+          bootstrapMode: "primary-user",
+          seedOrgSlug: undefined,
+        },
+        "filled-state",
+      ),
+    ).toThrow("Authenticated bootstrap is required for screenshot filled-state capture");
   });
 
   it("derives the selected screenshot page ids from the current CLI filters", () => {
@@ -950,5 +981,74 @@ describe("screenshot session helpers", () => {
     expect(captureState.stagingRootDir).toBe("");
     expect(fs.readdirSync(stagingBaseDir)).toHaveLength(0);
     fs.rmSync(stagingBaseDir, { recursive: true, force: true });
+  });
+
+  it("runs the seedless public phase through the shared phase helper", async () => {
+    const publicHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(publicHarness.browser);
+    const publicSpy = vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
+    publicSpy.mockClear();
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runSeedlessPublicScreenshotPhase(launchBrowser, [
+      { viewport: "desktop", theme: "light" },
+    ]);
+
+    expect(publicSpy).toHaveBeenCalledWith(publicHarness.page, undefined, { group: "seedless" });
+    expect(
+      logSpy.mock.calls.some(([line]) =>
+        String(line).includes("Phase 0: Public pages (no seed required)"),
+      ),
+    ).toBe(true);
+  });
+
+  it("runs the empty phase through the shared phase helper", async () => {
+    const emptyHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(emptyHarness.browser);
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
+    emptySpy.mockClear();
+
+    await runEmptyScreenshotPhase(launchBrowser, [{ viewport: "desktop", theme: "light" }], {
+      authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
+      bootstrapMode: "authenticated",
+      seedOrgSlug: "acme",
+    });
+
+    expect(emptySpy).toHaveBeenCalledWith(emptyHarness.page, "acme");
+  });
+
+  it("runs the seeded phase as filled-only when the execution plan excludes seeded public pages", async () => {
+    const filledHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(filledHarness.browser);
+    vi.spyOn(testUserService, "seedScreenshotData").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    const publicSpy = vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
+    const filledSpy = vi.mocked(screenshotFilledStates).mockResolvedValue(undefined);
+    publicSpy.mockClear();
+    filledSpy.mockClear();
+
+    await runSeededScreenshotPhase(
+      launchBrowser,
+      [{ viewport: "desktop", theme: "light" }],
+      buildScreenshotCaptureExecutionPlan(["filled-issues-loading"]),
+      {
+        authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
+        bootstrapMode: "authenticated",
+        seedOrgSlug: "acme",
+      },
+    );
+
+    expect(publicSpy).not.toHaveBeenCalled();
+    expect(filledSpy).toHaveBeenCalledTimes(1);
   });
 });
