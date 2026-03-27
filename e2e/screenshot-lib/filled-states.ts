@@ -21,7 +21,6 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
-import { ensureUserExistsAndSignIn } from "../utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -30,6 +29,7 @@ import {
   waitForDialogOpen,
   waitForScreenshotReady,
 } from "../utils/wait-helpers";
+import { ensureAuthenticatedScreenshotPage } from "./auth";
 import {
   captureCurrentView,
   captureState,
@@ -43,7 +43,6 @@ import {
   BASE_URL,
   MARKDOWN_IMPORT_PREVIEW,
   MARKDOWN_RICH_CONTENT,
-  SCREENSHOT_AUTH_USER,
   SCREENSHOT_USER,
 } from "./config";
 import {
@@ -1670,7 +1669,7 @@ export async function screenshotFilledStates(
       }
 
       try {
-        if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
+        if (!(await ensureAuthenticatedScreenshotPage(page, orgSlug))) {
           throw new Error("Failed to authenticate screenshot notifications");
         }
 
@@ -1708,7 +1707,7 @@ export async function screenshotFilledStates(
           );
         }
 
-        if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
+        if (!(await ensureAuthenticatedScreenshotPage(page, orgSlug))) {
           throw new Error("Failed to authenticate screenshot notifications");
         }
 

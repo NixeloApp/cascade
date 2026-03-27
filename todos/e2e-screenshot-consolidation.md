@@ -10,7 +10,7 @@
 - [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
 - [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
 - [ ] This is the first infrastructure priority again. The current overlap between screenshot-lib and reusable E2E/page objects is active execution debt, not just cleanup polish.
-- [ ] The remaining debt is no longer one giant screenshot-lib selector hotspot. What is left is smaller but still structural: shared blocked-transport policy, screenshot session/bootstrap seams, and the remaining places where screenshot capture can still diverge from reusable E2E flows.
+- [ ] The remaining debt is no longer one giant screenshot-lib selector hotspot. What is left is smaller but still structural: shared blocked-transport policy, screenshot session/bootstrap orchestration, and the remaining places where screenshot capture can still diverge from reusable E2E flows.
 
 ## Target Architecture
 
@@ -27,7 +27,7 @@
   - reusable helpers that should live with E2E/page objects
   - thin screenshot wrappers that stay in screenshot-lib
   - harness-only complexity that should be deleted
-- [ ] Keep collapsing the remaining screenshot-specific auth/bootstrap logic onto reusable E2E auth helpers instead of letting screenshot session setup drift into new harness-only entrypoints or config-specific login paths.
+- [ ] Keep screenshot auth/bootstrap on the shared session helper path instead of letting new harness-only entrypoints or config-specific login paths reappear.
 - [ ] Keep the screenshot harness private-helper baseline at zero; new top-level harness-only helpers must either become tested public harness API or move into reusable E2E/page-object utilities.
 - [ ] Keep the screenshot-lib raw-locator baseline at zero for tracked screenshot helpers; do not let new route-specific selectors creep back into `readiness.ts`, `helpers.ts`, or new screenshot-lib files.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.

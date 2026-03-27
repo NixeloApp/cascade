@@ -1,9 +1,8 @@
 import type { Browser, BrowserContextOptions, Page, StorageState } from "@playwright/test";
-import { ROUTES } from "../../convex/shared/routes";
+import type { TestUser } from "../config";
 import { E2E_TIMEZONE } from "../constants";
-import { ensureUserExistsAndSignIn } from "../utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
-import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
+import { ensureAuthenticatedScreenshotPage } from "./auth";
 import {
   captureState,
   isCrashLikeError,
@@ -12,7 +11,6 @@ import {
   takeScreenshot,
 } from "./capture";
 import {
-  BASE_URL,
   SCREENSHOT_AUTH_USER,
   SCREENSHOT_EMPTY_AUTH_USER,
   SCREENSHOT_USER,
@@ -22,7 +20,6 @@ import {
 } from "./config";
 import { screenshotFilledStates } from "./filled-states";
 import { screenshotEmptyStates, screenshotPublicPages } from "./public-pages";
-import { waitForSpinnersHidden } from "./readiness";
 import { resolveCaptureTarget } from "./routing";
 import { SCREENSHOT_PAGE_IDS } from "./targets";
 
@@ -32,6 +29,10 @@ export interface ScreenshotAuthBootstrap {
 }
 
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
+type AuthenticatedScreenshotPageOptions = {
+  storageState?: StorageState;
+  user?: TestUser;
+};
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
   return `${viewport}-${theme}`;
@@ -75,17 +76,37 @@ export async function withScreenshotPage(
   }
 }
 
-export async function warmAuthenticatedContext(page: Page, orgSlug: string): Promise<void> {
-  const dashboardUrl = `${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`;
-  try {
-    await page.goto(dashboardUrl, { waitUntil: "load" });
-    await waitForDashboardReady(page);
-    await waitForSpinnersHidden(page, 10000);
-  } catch {
-    await page.reload({ waitUntil: "load" });
-    await waitForDashboardReady(page);
-    await waitForSpinnersHidden(page, 10000);
-  }
+export async function withAuthenticatedScreenshotPage(
+  browser: Browser,
+  viewport: ViewportName,
+  theme: ThemeName,
+  orgSlug: string,
+  callback: ScreenshotPageCallback,
+  options: AuthenticatedScreenshotPageOptions = {},
+): Promise<boolean> {
+  let authenticated = false;
+
+  await withScreenshotPage(
+    browser,
+    viewport,
+    theme,
+    async (page) => {
+      authenticated = await ensureAuthenticatedScreenshotPage(
+        page,
+        orgSlug,
+        options.user ?? SCREENSHOT_AUTH_USER,
+      );
+
+      if (!authenticated) {
+        return;
+      }
+
+      await callback(page);
+    },
+    options.storageState,
+  );
+
+  return authenticated;
 }
 
 export async function prepareScreenshotAuthBootstrap(
@@ -123,12 +144,10 @@ export async function prepareScreenshotAuthBootstrap(
         return null;
       }
 
-      if (!(await ensureUserExistsAndSignIn(setupPage, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
+      if (!(await ensureAuthenticatedScreenshotPage(setupPage, orgSlug, SCREENSHOT_AUTH_USER))) {
         console.error("  ❌ Could not authenticate. Aborting.");
         return null;
       }
-
-      await waitForScreenshotReady(setupPage);
       return {
         orgSlug,
         authStorageState: await setupContext.storageState(),
@@ -151,47 +170,50 @@ export async function captureEmptyStatesForConfig(
   setCurrentConfig(viewport, theme, "empty");
 
   try {
-    await withScreenshotPage(
+    const authenticated = await withAuthenticatedScreenshotPage(
       browser,
       viewport,
       theme,
+      orgSlug,
       async (page) => {
-        if (storageState) {
-          await warmAuthenticatedContext(page, orgSlug);
-        } else if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
-          captureState.captureFailures++;
-          console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
-          return;
-        }
-
         await screenshotEmptyStates(page, orgSlug);
 
         if (shouldCapture("empty", "my-issues")) {
-          await withScreenshotPage(browser, viewport, theme, async (myIssuesPage) => {
-            if (
-              !(await ensureUserExistsAndSignIn(
+          const myIssuesAuthenticated = await withAuthenticatedScreenshotPage(
+            browser,
+            viewport,
+            theme,
+            orgSlug,
+            async (myIssuesPage) => {
+              await takeScreenshot(
                 myIssuesPage,
-                BASE_URL,
-                SCREENSHOT_EMPTY_AUTH_USER,
-                true,
-              ))
-            ) {
-              throw new Error(
-                `Auth failed for my-issues empty state in ${captureState.currentConfigPrefix}`,
+                "empty",
+                "my-issues",
+                ROUTES.myIssues.build(orgSlug),
               );
-            }
+            },
+            {
+              user: SCREENSHOT_EMPTY_AUTH_USER,
+            },
+          );
 
-            await takeScreenshot(
-              myIssuesPage,
-              "empty",
-              "my-issues",
-              ROUTES.myIssues.build(orgSlug),
+          if (!myIssuesAuthenticated) {
+            throw new Error(
+              `Auth failed for my-issues empty state in ${captureState.currentConfigPrefix}`,
             );
-          });
+          }
         }
       },
-      storageState,
+      {
+        storageState,
+      },
     );
+
+    if (!authenticated) {
+      captureState.captureFailures++;
+      console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
+      return;
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (isCrashLikeError(message)) {
@@ -214,20 +236,15 @@ export async function captureFilledStatesForConfig(
 ): Promise<void> {
   setCurrentConfig(viewport, theme, "public + filled");
 
-  await withScreenshotPage(
+  const authenticated = await withAuthenticatedScreenshotPage(
     browser,
     viewport,
     theme,
+    orgSlug,
     async (page) => {
       await screenshotPublicPages(page, seedResult);
 
       try {
-        if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
-          captureState.captureFailures++;
-          console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
-          return;
-        }
-
         const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
         await screenshotFilledStates(page, filledOrgSlug, seedResult);
       } catch (error) {
@@ -241,8 +258,15 @@ export async function captureFilledStatesForConfig(
         );
       }
     },
-    storageState,
+    {
+      storageState,
+    },
   );
+
+  if (!authenticated) {
+    captureState.captureFailures++;
+    console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
+  }
 }
 
 export function enumerateDryRunTargets(
