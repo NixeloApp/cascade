@@ -85,6 +85,11 @@ export interface FilledScreenshotCaptureOptions {
   includeSeededPublicPages?: boolean;
 }
 
+export interface ScreenshotEmptyPhaseBehavior {
+  mode: EmptyScreenshotCaptureExecutionMode;
+  requiresPrimaryBootstrap: boolean;
+}
+
 export interface ScreenshotSeededPhaseBehavior {
   captureFilledStates: boolean;
   includeSeededPublicPages: boolean;
@@ -212,16 +217,31 @@ export function buildScreenshotCapturePhasePlan(
 export function getEmptyScreenshotCaptureExecutionMode(
   selectedGroups: SelectedEmptyScreenshotCaptureGroup[],
 ): EmptyScreenshotCaptureExecutionMode {
+  return getScreenshotEmptyPhaseBehavior(selectedGroups).mode;
+}
+
+export function getScreenshotEmptyPhaseBehavior(
+  selectedGroups: SelectedEmptyScreenshotCaptureGroup[],
+): ScreenshotEmptyPhaseBehavior {
   const selectedGroupNames = new Set(selectedGroups.map(({ group }) => group));
   if (selectedGroupNames.has("bootstrap") && selectedGroupNames.has("separate-auth")) {
-    return "mixed";
+    return {
+      mode: "mixed",
+      requiresPrimaryBootstrap: true,
+    };
   }
 
   if (selectedGroupNames.has("bootstrap")) {
-    return "bootstrap-only";
+    return {
+      mode: "bootstrap-only",
+      requiresPrimaryBootstrap: true,
+    };
   }
 
-  return "separate-auth-only";
+  return {
+    mode: "separate-auth-only",
+    requiresPrimaryBootstrap: false,
+  };
 }
 
 export function buildScreenshotCaptureExecutionPlan(
@@ -258,9 +278,12 @@ export function buildScreenshotCaptureExecutionSteps(
   }
 
   if (phasePlan.emptyCaptureNames.length > 0) {
+    const emptyPhaseBehavior = getScreenshotEmptyPhaseBehavior(
+      phasePlan.selectedEmptyCaptureGroups,
+    );
     executionSteps.push({
       kind: "empty",
-      mode: getEmptyScreenshotCaptureExecutionMode(phasePlan.selectedEmptyCaptureGroups),
+      mode: emptyPhaseBehavior.mode,
       selectedGroups: phasePlan.selectedEmptyCaptureGroups,
     });
   }
@@ -298,8 +321,10 @@ export function getScreenshotCaptureExecutionContextRequirement(
     return "none";
   }
 
-  if (executionStep.kind === "empty" && executionStep.mode === "separate-auth-only") {
-    return "primary-user";
+  if (executionStep.kind === "empty") {
+    return getScreenshotEmptyPhaseBehavior(executionStep.selectedGroups).requiresPrimaryBootstrap
+      ? "authenticated-bootstrap"
+      : "primary-user";
   }
 
   if (executionStep.kind === "seeded") {
@@ -608,11 +633,9 @@ export async function captureEmptyStatesForConfig(
   }
 
   try {
-    const needsPrimaryBootstrap = selectedEmptyCaptureGroups.some(({ group }) =>
-      emptyCaptureGroupRequiresPrimaryBootstrap(group),
-    );
+    const emptyPhaseBehavior = getScreenshotEmptyPhaseBehavior(selectedEmptyCaptureGroups);
 
-    if (!needsPrimaryBootstrap) {
+    if (!emptyPhaseBehavior.requiresPrimaryBootstrap) {
       await withLaunchedBrowser(launchBrowser, async (browser) =>
         captureSelectedEmptyCaptureGroups(
           { browser },
@@ -847,10 +870,8 @@ export async function runEmptyScreenshotPhase(
   selectedEmptyCaptureGroups: SelectedEmptyScreenshotCaptureGroup[],
   executionContext: ScreenshotCaptureExecutionContext,
 ): Promise<void> {
-  const needsPrimaryBootstrap = selectedEmptyCaptureGroups.some(({ group }) =>
-    emptyCaptureGroupRequiresPrimaryBootstrap(group),
-  );
-  const authStorageState = needsPrimaryBootstrap
+  const emptyPhaseBehavior = getScreenshotEmptyPhaseBehavior(selectedEmptyCaptureGroups);
+  const authStorageState = emptyPhaseBehavior.requiresPrimaryBootstrap
     ? getAuthenticatedScreenshotBootstrap(executionContext, "empty-state").authStorageState
     : undefined;
   const orgSlug = getScreenshotExecutionOrgSlug(executionContext);

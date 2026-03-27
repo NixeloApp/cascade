@@ -32,6 +32,7 @@ import {
   getEmptyScreenshotCaptureExecutionMode,
   getScreenshotCaptureExecutionContextRequirement,
   getScreenshotContextOptions,
+  getScreenshotEmptyPhaseBehavior,
   getScreenshotExecutionOrgSlug,
   getScreenshotSeededPhaseBehavior,
   getScreenshotSeededPhaseMode,
@@ -400,6 +401,46 @@ describe("screenshot session helpers", () => {
   it("derives whether an empty capture group needs the primary authenticated bootstrap", () => {
     expect(emptyCaptureGroupRequiresPrimaryBootstrap("bootstrap")).toBe(true);
     expect(emptyCaptureGroupRequiresPrimaryBootstrap("separate-auth")).toBe(false);
+  });
+
+  it("derives empty phase behavior from the selected empty capture groups", () => {
+    expect(
+      getScreenshotEmptyPhaseBehavior([
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+      ]),
+    ).toEqual({
+      mode: "bootstrap-only",
+      requiresPrimaryBootstrap: true,
+    });
+    expect(
+      getScreenshotEmptyPhaseBehavior([
+        {
+          group: "separate-auth",
+          names: ["my-issues"],
+        },
+      ]),
+    ).toEqual({
+      mode: "separate-auth-only",
+      requiresPrimaryBootstrap: false,
+    });
+    expect(
+      getScreenshotEmptyPhaseBehavior([
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+        {
+          group: "separate-auth",
+          names: ["my-issues"],
+        },
+      ]),
+    ).toEqual({
+      mode: "mixed",
+      requiresPrimaryBootstrap: true,
+    });
   });
 
   it("derives execution-context requirements from execution steps", () => {
