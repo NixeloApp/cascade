@@ -240,7 +240,7 @@ function ColumnHeader({
           </Badge>
           {isOverWipLimit && (
             <Tooltip content={`WIP limit exceeded (max ${state.wipLimit})`}>
-              <Badge variant="error" size="sm">
+              <Badge variant="error" size="sm" data-testid={TEST_IDS.BOARD.COLUMN_WIP_WARNING}>
                 Over limit
               </Badge>
             </Tooltip>
@@ -291,6 +291,7 @@ function EmptyColumnState({
     <EmptyState
       icon={Plus}
       title="No issues yet"
+      data-testid={TEST_IDS.BOARD.COLUMN_EMPTY_STATE}
       description={
         canEdit && onCreateIssue
           ? "Drop issues here or use the add button to start this stage."

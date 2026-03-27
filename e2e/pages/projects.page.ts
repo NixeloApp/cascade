@@ -62,6 +62,8 @@ export class ProjectsPage extends BasePage {
   readonly boardSwimlaneTrigger: Locator;
   readonly boardDisplayPropertiesTrigger: Locator;
   readonly boardViewModeToggle: Locator;
+  readonly boardPriorityFilterTrigger: Locator;
+  readonly boardWipWarnings: Locator;
   readonly issueCards: Locator;
   readonly createIssueButton: Locator;
 
@@ -213,6 +215,8 @@ export class ProjectsPage extends BasePage {
       TEST_IDS.BOARD.DISPLAY_PROPERTIES_TRIGGER,
     );
     this.boardViewModeToggle = page.getByTestId(TEST_IDS.BOARD.VIEW_MODE_TOGGLE);
+    this.boardPriorityFilterTrigger = page.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER).first();
+    this.boardWipWarnings = page.getByTestId(TEST_IDS.BOARD.COLUMN_WIP_WARNING);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - prefer the stable first-column trigger used by the tour,
     // fall back to "Add issue" or empty-state "Add first issue" button.
@@ -1032,6 +1036,10 @@ export class ProjectsPage extends BasePage {
     return this.boardColumns.filter({ has: this.page.getByText(namePattern) }).first();
   }
 
+  getBoardColumnEmptyState(name: string | RegExp) {
+    return this.getBoardColumn(name).getByTestId(TEST_IDS.BOARD.COLUMN_EMPTY_STATE);
+  }
+
   getBoardColumnCountBadgeByIndex(index: number) {
     return this.boardColumns.nth(index).getByTestId(TEST_IDS.BOARD.COLUMN_COUNT);
   }
@@ -1044,6 +1052,10 @@ export class ProjectsPage extends BasePage {
     property: "issueType" | "priority" | "labels" | "assignee" | "storyPoints",
   ) {
     return this.page.getByTestId(TEST_IDS.BOARD.DISPLAY_PROPERTIES_OPTION(property));
+  }
+
+  getBoardPriorityFilterOption(priority: string) {
+    return this.page.getByTestId(TEST_IDS.ISSUE.PRIORITY_FILTER_OPTION(priority));
   }
 
   getBoardSprintOption(value: string) {
@@ -1072,6 +1084,28 @@ export class ProjectsPage extends BasePage {
     await expect(this.boardDisplayPropertiesTrigger).toBeVisible();
     await this.boardDisplayPropertiesTrigger.click();
     await expect(this.getBoardDisplayPropertyOption("issueType")).toBeVisible();
+  }
+
+  async openBoardPriorityFilter() {
+    await expect(this.boardPriorityFilterTrigger).toBeVisible();
+    await this.boardPriorityFilterTrigger.click();
+    await expect(this.getBoardPriorityFilterOption("high")).toBeVisible();
+  }
+
+  async applyBoardPriorityFilter(priority: "highest" | "high" | "medium" | "low" | "lowest") {
+    await this.openBoardPriorityFilter();
+    await this.getBoardPriorityFilterOption(priority).click();
+    await this.page.keyboard.press("Escape");
+    await expect(this.getBoardPriorityFilterOption(priority)).not.toBeVisible();
+  }
+
+  async expectBoardColumnEmpty(name: string | RegExp) {
+    await expect(this.getBoardColumn(name)).toBeVisible();
+    await expect(this.getBoardColumnEmptyState(name)).toBeVisible();
+  }
+
+  async expectBoardWipWarningVisible() {
+    await expect(this.boardWipWarnings.first()).toBeVisible();
   }
 
   async enablePeekMode() {

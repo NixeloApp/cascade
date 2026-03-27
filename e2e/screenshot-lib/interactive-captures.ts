@@ -1505,9 +1505,7 @@ export async function screenshotBoardInteractiveStates(
 
       try {
         await loadBoard();
-        const triageColumn = page.getByLabel(/triage column/i);
-        await triageColumn.waitFor({ state: "visible", timeout: 8000 });
-        await triageColumn.getByText("No issues yet", { exact: true }).waitFor({ timeout: 8000 });
+        await projectsPage.expectBoardColumnEmpty("Triage");
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -1540,7 +1538,7 @@ export async function screenshotBoardInteractiveStates(
 
       try {
         await loadBoard();
-        await page.getByText("Over limit", { exact: true }).first().waitFor({ timeout: 8000 });
+        await projectsPage.expectBoardWipWarningVisible();
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -1557,18 +1555,7 @@ export async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-filter-active`)) {
     await runCaptureStep("board filter active", async () => {
       await loadBoard();
-      // The filter bar "Priority" button has icon text "Pri" + label "Priority"
-      const priorityFilter = page.getByRole("button", { name: /priority/i }).nth(0);
-      await priorityFilter.waitFor({ state: "visible", timeout: 8000 });
-      await priorityFilter.click();
-      const highOption = page
-        .locator("[role='menuitemcheckbox']")
-        .filter({ hasText: "High" })
-        .first();
-      await highOption.waitFor({ state: "visible", timeout: 5000 });
-      await highOption.click();
-      // Close dropdown
-      await page.keyboard.press("Escape");
+      await projectsPage.applyBoardPriorityFilter("high");
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-filter-active`);
     });

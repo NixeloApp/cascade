@@ -49,6 +49,9 @@ export const TEST_IDS = {
     STATUS_FILTER: "issue-status-filter",
     /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
     PRIORITY_FILTER: "issue-priority-filter",
+    /** @see src/components/FilterBar.tsx */
+    PRIORITY_FILTER_OPTION: (priority: string) =>
+      `issue-priority-filter-option-${toTestIdFragment(priority)}`,
     /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
     TYPE_FILTER: "issue-type-filter",
     /** @see src/routes/_auth/_app/$orgSlug/issues/index.tsx */
@@ -129,6 +132,10 @@ export const TEST_IDS = {
     COLUMN_HEADER: "board-column-header",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN_COUNT: "board-column-count",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    COLUMN_EMPTY_STATE: "board-column-empty-state",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    COLUMN_WIP_WARNING: "board-column-wip-warning",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN_COLLAPSE_BUTTON: "board-column-collapse-button",
     /** @see src/components/Kanban/KanbanColumn.tsx */

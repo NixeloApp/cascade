@@ -38,7 +38,7 @@
 - [ ] Replace raw locator usage in those files with shared page-object helpers or route-specific readiness contracts until the screenshot-lib raw-locator baseline is materially smaller.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
 - [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
-- [ ] Finish the remaining project/route leftovers in `filled-states.ts`, especially branches that still open special states without a page-object method.
+- [ ] Finish the remaining route/dialog leftovers in `filled-states.ts`, especially branches that still open special states without a page-object method.
 
 ## Production Hook Cleanup
 
