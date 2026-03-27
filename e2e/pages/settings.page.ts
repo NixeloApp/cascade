@@ -362,12 +362,12 @@ export class SettingsPage extends BasePage {
   }
 
   async gotoProfile(): Promise<void> {
-    await this.page.goto(ROUTES.settings.profile.build(this.orgSlug));
+    await this.gotoPath(ROUTES.settings.profile.build(this.orgSlug));
     await this.waitForCaptureReady("settings-profile");
   }
 
   async gotoNotifications(): Promise<void> {
-    await this.page.goto(ROUTES.settings.profile.build(this.orgSlug, "notifications"));
+    await this.gotoPath(ROUTES.settings.profile.build(this.orgSlug, "notifications"));
     await this.waitForCaptureReady("settings-notifications");
   }
 

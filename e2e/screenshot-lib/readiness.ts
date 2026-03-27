@@ -620,7 +620,9 @@ export async function waitForExpectedContent(
   }
 
   if (URL_PATTERNS.settings.test(url) || name === "settings" || name === "settings-profile") {
-    const settingsPage = new SettingsPage(page, READINESS_ONLY_SLUG);
+    const pathname = new URL(url, "http://cascade.local").pathname;
+    const [orgSlug] = pathname.split("/").filter(Boolean);
+    const settingsPage = new SettingsPage(page, orgSlug || READINESS_ONLY_SLUG);
     await settingsPage.waitForCaptureReady(
       name as
         | "settings"
