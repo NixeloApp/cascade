@@ -28,6 +28,7 @@ import {
   dismissAllDialogs,
   dismissIfOpen,
   waitForAnimation,
+  waitForDialogOpen,
   waitForScreenshotReady,
 } from "../utils/wait-helpers";
 import {
@@ -63,15 +64,8 @@ import {
   screenshotSprintInteractiveStates,
 } from "./interactive-captures";
 import {
-  focusCalendarTimedContentForCapture,
-  getCalendarDragState,
   scrollSectionNearViewportTop,
-  selectCalendarMode,
   supportsCalendarDragAndDropCapture,
-  waitForCalendarEvents,
-  waitForCalendarMonthGrid,
-  waitForCalendarMonthReady,
-  waitForCalendarReady,
   waitForDuplicateDetectionSearchReady,
   waitForExpectedContent,
 } from "./readiness";
@@ -864,54 +858,27 @@ export async function screenshotFilledStates(
       ])
     ) {
       const calendarUrl = ROUTES.projects.calendar.build(orgSlug, projectKey);
+      const calendarPage = new CalendarPage(page, orgSlug);
       await page.goto(`${BASE_URL}${calendarUrl}`, {
         waitUntil: "domcontentloaded",
         timeout: 15000,
       });
       await waitForScreenshotReady(page);
-      const isCalendarReady = await waitForCalendarReady(page);
+      const isCalendarReady = await calendarPage.ensureReady();
       if (!isCalendarReady) {
         console.log("    ⚠️  [filled] calendar not ready, skipping mode-specific screenshots");
       } else {
-        // Calendar view-mode screenshots: day, week, month
-        const calendarModeTestIds = {
-          day: TEST_IDS.CALENDAR.MODE_DAY,
-          week: TEST_IDS.CALENDAR.MODE_WEEK,
-          month: TEST_IDS.CALENDAR.MODE_MONTH,
-        } as const;
         for (const mode of ["day", "week", "month"] as const) {
           if (!shouldCapture(p, `calendar-${mode}`)) {
             continue;
           }
-          const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-          await toggleItem.waitFor({ state: "visible", timeout: 5000 });
-          if ((await toggleItem.count()) === 0) {
-            throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
-          }
-          await selectCalendarMode(page, mode);
-          await waitForScreenshotReady(page);
-          const modeReady = await waitForCalendarReady(page);
-          if (!modeReady) {
-            throw new Error(`[${p}] calendar-${mode} not ready after mode switch`);
-          }
-          await focusCalendarTimedContentForCapture(page);
+          await calendarPage.switchToMode(mode);
+          await calendarPage.focusFirstEvent();
           await captureCurrentView(page, p, `calendar-${mode}`);
         }
 
         if (shouldCapture(p, "calendar-event-modal")) {
           await runCaptureStep("calendar event-detail modal", async () => {
-            const openDayView = async (): Promise<void> => {
-              const dayToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_DAY);
-              if ((await dayToggle.count()) > 0) {
-                await dayToggle.click();
-                await waitForScreenshotReady(page);
-                await waitForCalendarReady(page);
-              }
-            };
-
-            const locateEvent = () => page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
-
-            let eventItem = locateEvent();
             if (typeof seed.workspaceSlug === "string") {
               await page.goto(
                 `${BASE_URL}${ROUTES.workspaces.calendar.build(orgSlug, seed.workspaceSlug)}`,
@@ -921,54 +888,22 @@ export async function screenshotFilledStates(
                 },
               );
               await waitForScreenshotReady(page);
-              const workspaceCalendarReady = await waitForCalendarReady(page);
-              if (workspaceCalendarReady) {
-                await openDayView();
-                eventItem = locateEvent();
+              const workspaceCalendarReady = await calendarPage.ensureReady();
+              if (!workspaceCalendarReady) {
+                throw new Error(`[${p}] workspace calendar not ready for event modal screenshot`);
               }
-            } else {
-              await openDayView();
-              eventItem = locateEvent();
             }
 
-            if (!(await waitForCalendarEvents(page))) {
-              throw new Error(`[${p}] No calendar events found for modal screenshot`);
-            }
-
-            eventItem = locateEvent();
-            await eventItem.scrollIntoViewIfNeeded();
-            await eventItem.click();
-            const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
-            await dialog.waitFor({ state: "visible", timeout: 5000 });
+            await calendarPage.openFirstVisibleEventDetails();
             await captureCurrentView(page, p, "calendar-event-modal");
-            await dismissIfOpen(page, dialog);
+            await dismissIfOpen(page, calendarPage.eventDetailModal);
           });
         }
 
         if (shouldCapture(p, "calendar-quick-add")) {
           await runCaptureStep("calendar quick-add", async () => {
-            await waitForCalendarMonthReady(page);
-            await waitForCalendarMonthGrid(page, { requireQuickAddButtons: true });
-
-            const quickAddButton = page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).first();
-            if ((await quickAddButton.count()) > 0) {
-              if (!(await quickAddButton.isVisible())) {
-                const firstDayCell = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).first();
-                if ((await firstDayCell.count()) > 0) {
-                  await firstDayCell.hover();
-                }
-              }
-            }
-
-            if ((await quickAddButton.count()) > 0 && (await quickAddButton.isVisible())) {
-              await quickAddButton.click();
-            } else {
-              const headerAddButton = page.getByRole("button", { name: /add event/i });
-              await headerAddButton.waitFor({ state: "visible", timeout: 5000 });
-              await headerAddButton.click();
-            }
+            await calendarPage.openQuickAddComposer();
             const dialog = await waitForDialogOpen(page);
-            await page.getByLabel(/date/i).waitFor({ state: "visible", timeout: 5000 });
             await waitForScreenshotReady(page);
             await captureCurrentView(page, p, "calendar-quick-add");
             await dismissIfOpen(page, dialog);
@@ -987,36 +922,10 @@ export async function screenshotFilledStates(
             });
             await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
             await waitForScreenshotReady(page);
-            await waitForCalendarMonthReady(page);
-            await waitForCalendarEvents(page);
-
-            const dragState = await getCalendarDragState(page);
-
-            if (dragState?.sourceIndex == null || dragState.targetIndex == null) {
-              throw new Error(
-                `[${p}] Unable to establish calendar drag state (day cells=${dragState?.dayCellCount ?? 0}, events=${dragState?.eventItemCount ?? 0})`,
-              );
-            }
-
-            const dayCells = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
-            const targetCell = dayCells.nth(dragState.targetIndex);
-            const sourceCell = dayCells.nth(dragState.sourceIndex);
-            const sourceEvent = sourceCell.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
-            const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
-
-            await sourceEvent.scrollIntoViewIfNeeded();
-            await targetCell.waitFor({ state: "visible", timeout: 5000 });
-            await targetCell.scrollIntoViewIfNeeded();
-            await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
-            await targetCell.dispatchEvent("dragenter", { dataTransfer });
-            await targetCell.dispatchEvent("dragover", { dataTransfer });
-            await targetCell
-              .getByTestId(TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET)
-              .waitFor({ state: "attached", timeout: 5000 });
+            const clearDragPreview = await calendarPage.startMonthDragPreview();
             await waitForScreenshotReady(page);
             await captureCurrentView(page, p, "calendar-drag-and-drop");
-
-            await sourceEvent.dispatchEvent("dragend", { dataTransfer });
+            await clearDragPreview();
           });
         }
       }
@@ -1281,8 +1190,11 @@ export async function screenshotFilledStates(
         timeout: 15000,
       });
       await waitForScreenshotReady(page);
-      await waitForCalendarReady(page);
       const calendarPage = new CalendarPage(page, orgSlug);
+      const calendarReady = await calendarPage.ensureReady();
+      if (!calendarReady) {
+        throw new Error(`[${p}] calendar create-event modal route did not become ready`);
+      }
       await calendarPage.openCreateEventModal();
       await captureCurrentView(page, p, "calendar-create-event-modal");
       await dismissIfOpen(page, calendarPage.createEventModal);

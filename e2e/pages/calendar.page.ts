@@ -3,7 +3,10 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
+import { waitForLoadingSkeletonsToClear, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
+
+type CalendarViewMode = "day" | "week" | "month";
 
 /**
  * Calendar Page Object
@@ -127,6 +130,26 @@ export class CalendarPage extends BasePage {
     await this.todayButton.waitFor({ state: "visible", timeout: 12000 });
   }
 
+  async ensureReady(): Promise<boolean> {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await this.waitUntilReady();
+        await waitForLoadingSkeletonsToClear(this.page, 4000);
+        return true;
+      } catch {
+        if (attempt === 0) {
+          await this.page.goto(this.page.url(), {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          await waitForScreenshotReady(this.page);
+        }
+      }
+    }
+
+    return false;
+  }
+
   // ===================
   // Actions - Navigation
   // ===================
@@ -153,6 +176,155 @@ export class CalendarPage extends BasePage {
 
   async switchToDayView() {
     await this.dayViewButton.click();
+  }
+
+  private getModeToggle(mode: CalendarViewMode): Locator {
+    switch (mode) {
+      case "day":
+        return this.dayViewButton;
+      case "week":
+        return this.weekViewButton;
+      case "month":
+        return this.monthViewButton;
+    }
+  }
+
+  private async waitForModeSelected(mode: CalendarViewMode): Promise<void> {
+    const toggle = this.getModeToggle(mode);
+    await expect(toggle).toHaveAttribute("aria-checked", "true", { timeout: 5000 });
+    await expect(this.calendarGrid).toHaveAttribute("data-calendar-view", mode, {
+      timeout: 5000,
+    });
+  }
+
+  async switchToMode(mode: CalendarViewMode): Promise<void> {
+    const toggle = this.getModeToggle(mode);
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await toggle.scrollIntoViewIfNeeded();
+        await toggle.click();
+        await this.waitForModeSelected(mode);
+        await waitForScreenshotReady(this.page);
+        return;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+      }
+
+      try {
+        await toggle.evaluate((element) => {
+          if (element instanceof HTMLButtonElement) {
+            element.click();
+          }
+        });
+        await this.waitForModeSelected(mode);
+        await waitForScreenshotReady(this.page);
+        return;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+      }
+    }
+
+    throw new Error(
+      `calendar-${mode} mode did not become active: ${lastError?.message ?? "unknown error"}`,
+    );
+  }
+
+  async ensureMonthView(): Promise<void> {
+    await this.monthViewButton.waitFor({ state: "visible", timeout: 5000 });
+    if ((await this.monthViewButton.getAttribute("aria-checked")) !== "true") {
+      await this.switchToMode("month");
+    }
+    await this.waitForMonthGrid();
+  }
+
+  async waitForMonthGrid(options?: { requireQuickAddButtons?: boolean }): Promise<void> {
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).count(), {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .toBeGreaterThanOrEqual(28);
+
+    if (options?.requireQuickAddButtons) {
+      await expect
+        .poll(() => this.page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).count(), {
+          timeout: 5000,
+          intervals: [100, 200, 500],
+        })
+        .toBeGreaterThanOrEqual(28);
+    }
+  }
+
+  async waitForEvents(timeoutMs = 8000): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+    const isExpired = () => Date.now() > deadline;
+    const hasEvents = async () => (await this.eventItems.count()) > 0;
+
+    const waitForCalendarState = async () => {
+      await waitForScreenshotReady(this.page);
+      const ready = await this.ensureReady();
+      if (!ready) {
+        throw new Error("Calendar did not become ready while waiting for events");
+      }
+    };
+
+    const navigateUntilVisible = async (button: Locator, steps: number) => {
+      for (let step = 0; step < steps; step += 1) {
+        if (isExpired()) {
+          return false;
+        }
+        await button.click();
+        await waitForCalendarState();
+        if (await hasEvents()) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    if (await hasEvents()) {
+      return true;
+    }
+
+    await this.goToToday();
+    await waitForCalendarState();
+    if (await hasEvents()) {
+      return true;
+    }
+
+    if (isExpired()) {
+      return false;
+    }
+
+    if (await navigateUntilVisible(this.prevButton, 2)) {
+      return true;
+    }
+    if (isExpired()) {
+      return false;
+    }
+    if (await navigateUntilVisible(this.nextButton, 4)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  async focusFirstEvent(): Promise<void> {
+    const monthModeSelected = (await this.monthViewButton.getAttribute("aria-checked")) === "true";
+    if (monthModeSelected || (await this.eventItems.count()) === 0) {
+      return;
+    }
+
+    const firstEvent = this.eventItems.first();
+    await firstEvent.evaluate((element) => {
+      if (element instanceof HTMLElement) {
+        element.scrollIntoView({ block: "center", inline: "nearest" });
+      }
+    });
+    await waitForScreenshotReady(this.page);
   }
 
   async selectWorkspace(name: string) {
@@ -216,6 +388,29 @@ export class CalendarPage extends BasePage {
     await expect(this.createEventModal).toBeVisible();
   }
 
+  async openQuickAddComposer(): Promise<void> {
+    await this.ensureMonthView();
+    await this.waitForMonthGrid({ requireQuickAddButtons: true });
+
+    const quickAddButton = this.page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).first();
+    if ((await quickAddButton.count()) > 0 && !(await quickAddButton.isVisible())) {
+      const firstDayCell = this.page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).first();
+      if ((await firstDayCell.count()) > 0) {
+        await firstDayCell.hover();
+      }
+    }
+
+    if ((await quickAddButton.count()) > 0 && (await quickAddButton.isVisible())) {
+      await quickAddButton.click();
+    } else {
+      await this.createEventButton.waitFor({ state: "visible", timeout: 5000 });
+      await this.createEventButton.click();
+    }
+
+    await expect(this.createEventModal).toBeVisible();
+    await this.eventStartDate.waitFor({ state: "visible", timeout: 5000 });
+  }
+
   async createEvent(
     title: string,
     options?: {
@@ -275,7 +470,7 @@ export class CalendarPage extends BasePage {
     await this.alignCalendarToToday();
 
     if ((await this.dayViewButton.count()) > 0) {
-      await this.switchToDayView();
+      await this.switchToMode("day");
     }
 
     await this.scrollCalendarToHour(8);
@@ -292,6 +487,76 @@ export class CalendarPage extends BasePage {
     await this.prepareEventForInteraction(event, `calendar event "${title}"`);
     await event.click();
     await expect(this.eventDetailModal).toBeVisible();
+  }
+
+  async openFirstVisibleEventDetails(): Promise<void> {
+    await this.alignCalendarToToday();
+    if ((await this.dayViewButton.count()) > 0) {
+      await this.switchToMode("day");
+    }
+
+    const hasEvents = await this.waitForEvents();
+    if (!hasEvents) {
+      throw new Error("No calendar events found to open event details");
+    }
+
+    const firstEvent = this.eventItems.first();
+    await this.prepareEventForInteraction(firstEvent, "first calendar event");
+    await firstEvent.click();
+    await expect(this.eventDetailModal).toBeVisible();
+  }
+
+  async startMonthDragPreview(): Promise<() => Promise<void>> {
+    await this.ensureMonthView();
+
+    const hasEvents = await this.waitForEvents();
+    if (!hasEvents) {
+      throw new Error("Unable to start calendar drag preview without visible events");
+    }
+
+    const dayCells = this.page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
+    const dayCellCount = await dayCells.count();
+
+    let sourceIndex: number | null = null;
+    for (let index = 0; index < dayCellCount; index += 1) {
+      const cellEventCount = await dayCells
+        .nth(index)
+        .getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM)
+        .count();
+      if (cellEventCount > 0) {
+        sourceIndex = index;
+        break;
+      }
+    }
+
+    const targetIndex =
+      sourceIndex != null && sourceIndex + 1 < dayCellCount ? sourceIndex + 1 : null;
+    if (sourceIndex == null || targetIndex == null) {
+      const eventItemCount = await this.eventItems.count();
+      throw new Error(
+        `Unable to establish calendar drag state (day cells=${dayCellCount}, events=${eventItemCount})`,
+      );
+    }
+
+    const sourceCell = dayCells.nth(sourceIndex);
+    const targetCell = dayCells.nth(targetIndex);
+    const sourceEvent = sourceCell.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
+    const dataTransfer = await this.page.evaluateHandle(() => new DataTransfer());
+
+    await sourceEvent.scrollIntoViewIfNeeded();
+    await targetCell.waitFor({ state: "visible", timeout: 5000 });
+    await targetCell.scrollIntoViewIfNeeded();
+    await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
+    await targetCell.dispatchEvent("dragenter", { dataTransfer });
+    await targetCell.dispatchEvent("dragover", { dataTransfer });
+    await targetCell
+      .getByTestId(TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET)
+      .waitFor({ state: "attached", timeout: 5000 });
+
+    return async () => {
+      await sourceEvent.dispatchEvent("dragend", { dataTransfer });
+      await dataTransfer.dispose();
+    };
   }
 
   private async scrollCalendarToHour(hour: number) {
