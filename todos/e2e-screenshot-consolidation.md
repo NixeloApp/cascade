@@ -54,6 +54,7 @@
 - [ ] Keep screenshot per-phase execution on shared session helpers. `captureConfiguredScreenshotStates()` should not keep re-growing inline phase loops, bootstrap assertions, and seeded-vs-filled branching after planning.
 - [ ] Keep empty-state auth-group execution derived from the canonical empty target manifest. Session helpers should not reintroduce ad hoc `separate-auth` filter checks or hard-coded knowledge of which empty target needs the second auth user.
 - [ ] Keep screenshot execution ordered by one derived step list. Session orchestration should execute seedless-public, empty, and seeded work from the execution plan instead of branching on multiple booleans after planning.
+- [ ] Keep screenshot execution policy canonical inside the execution plan itself. Do not let parallel `bootstrapMode` / `runEmptyPhase` / `runSeededPhase` style flags drift alongside the ordered execution steps.
 - [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
 
 ## Production Hook Cleanup

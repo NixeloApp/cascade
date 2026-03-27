@@ -72,13 +72,8 @@ export interface ScreenshotCapturePhasePlan {
 export type ScreenshotCaptureBootstrapMode = "none" | "primary-user" | "authenticated";
 
 export interface ScreenshotCaptureExecutionPlan {
-  bootstrapMode: ScreenshotCaptureBootstrapMode;
+  executionSteps: ScreenshotCaptureExecutionStep[];
   phasePlan: ScreenshotCapturePhasePlan;
-  runEmptyPhase: boolean;
-  runFilledPhase: boolean;
-  runSeededPhase: boolean;
-  runSeededPublicPhase: boolean;
-  runSeedlessPublicPhase: boolean;
 }
 
 export interface FilledScreenshotCaptureOptions {
@@ -199,75 +194,79 @@ export function buildScreenshotCaptureExecutionPlan(
   selectedPageIds: string[] = getSelectedScreenshotPageIds(),
 ): ScreenshotCaptureExecutionPlan {
   const phasePlan = buildScreenshotCapturePhasePlan(selectedPageIds);
-  const runSeedlessPublicPhase = phasePlan.seedlessPublicCaptureNames.length > 0;
-  const runEmptyPhase = phasePlan.emptyCaptureNames.length > 0;
-  const runFilledPhase = phasePlan.filledCaptureNames.length > 0;
-  const runSeededPublicPhase = phasePlan.seededPublicCaptureNames.length > 0;
-  const runSeededPhase = runSeededPublicPhase || runFilledPhase;
-
-  let bootstrapMode: ScreenshotCaptureBootstrapMode = "none";
-  if (runEmptyPhase || runFilledPhase) {
-    bootstrapMode = "authenticated";
-  } else if (runSeededPhase) {
-    bootstrapMode = "primary-user";
-  }
+  const executionSteps = buildScreenshotCaptureExecutionSteps(phasePlan);
 
   return {
-    bootstrapMode,
+    executionSteps,
     phasePlan,
-    runEmptyPhase,
-    runFilledPhase,
-    runSeededPhase,
-    runSeededPublicPhase,
-    runSeedlessPublicPhase,
   };
 }
 
 export function getScreenshotSeededPhaseMode(
   executionPlan: ScreenshotCaptureExecutionPlan,
 ): ScreenshotSeededPhaseMode | null {
-  if (!executionPlan.runSeededPhase) {
-    return null;
-  }
-
-  if (executionPlan.runFilledPhase && executionPlan.runSeededPublicPhase) {
-    return "public-and-filled";
-  }
-
-  if (executionPlan.runFilledPhase) {
-    return "filled-only";
-  }
-
-  return "public-only";
+  const seededStep = executionPlan.executionSteps.find(
+    (executionStep) => executionStep.kind === "seeded",
+  );
+  return seededStep?.mode ?? null;
 }
 
 export function buildScreenshotCaptureExecutionSteps(
-  executionPlan: ScreenshotCaptureExecutionPlan,
+  phasePlan: ScreenshotCapturePhasePlan,
 ): ScreenshotCaptureExecutionStep[] {
   const executionSteps: ScreenshotCaptureExecutionStep[] = [];
 
-  if (executionPlan.runSeedlessPublicPhase) {
+  if (phasePlan.seedlessPublicCaptureNames.length > 0) {
     executionSteps.push({
       group: "seedless",
       kind: "public",
     });
   }
 
-  if (executionPlan.runEmptyPhase) {
+  if (phasePlan.emptyCaptureNames.length > 0) {
     executionSteps.push({
       kind: "empty",
     });
   }
 
-  const seededPhaseMode = getScreenshotSeededPhaseMode(executionPlan);
-  if (seededPhaseMode) {
+  if (phasePlan.filledCaptureNames.length > 0 && phasePlan.seededPublicCaptureNames.length > 0) {
     executionSteps.push({
       kind: "seeded",
-      mode: seededPhaseMode,
+      mode: "public-and-filled",
+    });
+  } else if (phasePlan.filledCaptureNames.length > 0) {
+    executionSteps.push({
+      kind: "seeded",
+      mode: "filled-only",
+    });
+  } else if (phasePlan.seededPublicCaptureNames.length > 0) {
+    executionSteps.push({
+      kind: "seeded",
+      mode: "public-only",
     });
   }
 
   return executionSteps;
+}
+
+export function getScreenshotCaptureBootstrapMode(
+  executionPlan: ScreenshotCaptureExecutionPlan,
+): ScreenshotCaptureBootstrapMode {
+  if (
+    executionPlan.executionSteps.some(
+      (executionStep) =>
+        executionStep.kind === "empty" ||
+        (executionStep.kind === "seeded" && executionStep.mode !== "public-only"),
+    )
+  ) {
+    return "authenticated";
+  }
+
+  if (executionPlan.executionSteps.some((executionStep) => executionStep.kind === "seeded")) {
+    return "primary-user";
+  }
+
+  return "none";
 }
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
@@ -462,7 +461,9 @@ export async function prepareScreenshotCaptureExecutionContext(
   launchBrowser: LaunchBrowser,
   executionPlan: ScreenshotCaptureExecutionPlan,
 ): Promise<ScreenshotCaptureExecutionContext | null> {
-  if (executionPlan.bootstrapMode === "none") {
+  const bootstrapMode = getScreenshotCaptureBootstrapMode(executionPlan);
+
+  if (bootstrapMode === "none") {
     return {
       authBootstrap: null,
       bootstrapMode: "none",
@@ -470,7 +471,7 @@ export async function prepareScreenshotCaptureExecutionContext(
     };
   }
 
-  if (executionPlan.bootstrapMode === "primary-user") {
+  if (bootstrapMode === "primary-user") {
     if (!(await prepareScreenshotPrimaryUser())) {
       return null;
     }
@@ -794,7 +795,7 @@ export async function captureConfiguredScreenshotStates(
   configs: ScreenshotCaptureConfig[],
 ): Promise<boolean> {
   const executionPlan = buildScreenshotCaptureExecutionPlan();
-  const executionSteps = buildScreenshotCaptureExecutionSteps(executionPlan);
+  const { executionSteps } = executionPlan;
   if (executionSteps.length === 0) {
     return true;
   }

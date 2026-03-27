@@ -25,6 +25,7 @@ import {
   formatConfigLabel,
   getAuthenticatedScreenshotBootstrap,
   getCaptureNamesForPrefix,
+  getScreenshotCaptureBootstrapMode,
   getScreenshotContextOptions,
   getScreenshotSeededPhaseMode,
   getSeededPhaseLogLabel,
@@ -229,7 +230,12 @@ describe("screenshot session helpers", () => {
 
   it("builds one execution plan for bootstrap and seeded-phase policy", () => {
     expect(buildScreenshotCaptureExecutionPlan(["public-landing"])).toEqual({
-      bootstrapMode: "none",
+      executionSteps: [
+        {
+          group: "seedless",
+          kind: "public",
+        },
+      ],
       phasePlan: {
         emptyCaptureNames: [],
         filledCaptureNames: [],
@@ -237,15 +243,15 @@ describe("screenshot session helpers", () => {
         seedlessPublicCaptureNames: ["landing"],
         selectedPageIds: ["public-landing"],
       },
-      runEmptyPhase: false,
-      runFilledPhase: false,
-      runSeededPhase: false,
-      runSeededPublicPhase: false,
-      runSeedlessPublicPhase: true,
     });
 
     expect(buildScreenshotCaptureExecutionPlan(["public-portal-project"])).toEqual({
-      bootstrapMode: "primary-user",
+      executionSteps: [
+        {
+          kind: "seeded",
+          mode: "public-only",
+        },
+      ],
       phasePlan: {
         emptyCaptureNames: [],
         filledCaptureNames: [],
@@ -253,15 +259,14 @@ describe("screenshot session helpers", () => {
         seedlessPublicCaptureNames: [],
         selectedPageIds: ["public-portal-project"],
       },
-      runEmptyPhase: false,
-      runFilledPhase: false,
-      runSeededPhase: true,
-      runSeededPublicPhase: true,
-      runSeedlessPublicPhase: false,
     });
 
     expect(buildScreenshotCaptureExecutionPlan(["empty-dashboard"])).toEqual({
-      bootstrapMode: "authenticated",
+      executionSteps: [
+        {
+          kind: "empty",
+        },
+      ],
       phasePlan: {
         emptyCaptureNames: ["dashboard"],
         filledCaptureNames: [],
@@ -269,15 +274,15 @@ describe("screenshot session helpers", () => {
         seedlessPublicCaptureNames: [],
         selectedPageIds: ["empty-dashboard"],
       },
-      runEmptyPhase: true,
-      runFilledPhase: false,
-      runSeededPhase: false,
-      runSeededPublicPhase: false,
-      runSeedlessPublicPhase: false,
     });
 
     expect(buildScreenshotCaptureExecutionPlan(["filled-issues-loading"])).toEqual({
-      bootstrapMode: "authenticated",
+      executionSteps: [
+        {
+          kind: "seeded",
+          mode: "filled-only",
+        },
+      ],
       phasePlan: {
         emptyCaptureNames: [],
         filledCaptureNames: ["issues-loading"],
@@ -285,12 +290,26 @@ describe("screenshot session helpers", () => {
         seedlessPublicCaptureNames: [],
         selectedPageIds: ["filled-issues-loading"],
       },
-      runEmptyPhase: false,
-      runFilledPhase: true,
-      runSeededPhase: true,
-      runSeededPublicPhase: false,
-      runSeedlessPublicPhase: false,
     });
+  });
+
+  it("derives bootstrap mode from the canonical execution steps", () => {
+    expect(
+      getScreenshotCaptureBootstrapMode(buildScreenshotCaptureExecutionPlan(["public-landing"])),
+    ).toBe("none");
+    expect(
+      getScreenshotCaptureBootstrapMode(
+        buildScreenshotCaptureExecutionPlan(["public-portal-project"]),
+      ),
+    ).toBe("primary-user");
+    expect(
+      getScreenshotCaptureBootstrapMode(buildScreenshotCaptureExecutionPlan(["empty-dashboard"])),
+    ).toBe("authenticated");
+    expect(
+      getScreenshotCaptureBootstrapMode(
+        buildScreenshotCaptureExecutionPlan(["public-portal-project", "filled-issues-loading"]),
+      ),
+    ).toBe("authenticated");
   });
 
   it("derives the seeded phase log label from the execution plan", () => {
@@ -330,7 +349,7 @@ describe("screenshot session helpers", () => {
   it("builds one ordered execution-step list from the execution plan", () => {
     expect(
       buildScreenshotCaptureExecutionSteps(
-        buildScreenshotCaptureExecutionPlan([
+        buildScreenshotCapturePhasePlan([
           "public-landing",
           "empty-dashboard",
           "public-portal-project",
@@ -404,7 +423,16 @@ describe("screenshot session helpers", () => {
       ],
     });
     expect(buildScreenshotCaptureExecutionPlan()).toEqual({
-      bootstrapMode: "authenticated",
+      executionSteps: [
+        {
+          group: "seedless",
+          kind: "public",
+        },
+        {
+          kind: "seeded",
+          mode: "public-and-filled",
+        },
+      ],
       phasePlan: {
         emptyCaptureNames: [],
         filledCaptureNames: ["my-issues-loading", "issues-loading"],
@@ -417,11 +445,6 @@ describe("screenshot session helpers", () => {
           "filled-issues-loading",
         ],
       },
-      runEmptyPhase: false,
-      runFilledPhase: true,
-      runSeededPhase: true,
-      runSeededPublicPhase: true,
-      runSeedlessPublicPhase: true,
     });
   });
 
