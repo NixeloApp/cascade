@@ -1,6 +1,10 @@
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { describe, expect, it, vi } from "vitest";
-import { withBlockedConvexPage } from "./convex-loading";
+import {
+  prepareBlockedConvexPagePolicy,
+  resolveBlockedConvexHosts,
+  withBlockedConvexPage,
+} from "./convex-loading";
 
 function createConvexLoadingHarness() {
   const siblingPage = {
@@ -43,6 +47,45 @@ function createConvexLoadingHarness() {
 }
 
 describe("convex loading helpers", () => {
+  it("dedupes valid blocked convex hosts and ignores malformed candidates", () => {
+    expect(
+      resolveBlockedConvexHosts([
+        "https://demo.convex.cloud",
+        "https://demo.convex.cloud",
+        "https://demo.convex.site",
+        "not-a-url",
+        undefined,
+      ]),
+    ).toEqual(["demo.convex.cloud", "demo.convex.site"]);
+  });
+
+  it("prepares blocked-page policy with normalized paths and resolved hosts", () => {
+    expect(
+      prepareBlockedConvexPagePolicy(
+        {
+          kind: "queries",
+          paths: [
+            " issues/queries:listOrganizationIssues ",
+            "issues/queries:listOrganizationIssues",
+          ],
+          target: "isolated",
+        },
+        ["https://demo.convex.cloud", "https://demo.convex.site"],
+      ),
+    ).toEqual({
+      blockedHosts: ["demo.convex.cloud", "demo.convex.site"],
+      kind: "queries",
+      paths: ["issues/queries:listOrganizationIssues"],
+      target: "isolated",
+    });
+  });
+
+  it("rejects blocked policies when no valid convex hosts can be resolved", () => {
+    expect(() =>
+      prepareBlockedConvexPagePolicy({ kind: "transport", target: "sibling" }, ["", "not-a-url"]),
+    ).toThrow("Blocked Convex transport policy requires at least one valid Convex host candidate");
+  });
+
   it("installs the transport blocker on sibling loading pages and closes them", async () => {
     const harness = createConvexLoadingHarness();
     const result = await withBlockedConvexPage(
