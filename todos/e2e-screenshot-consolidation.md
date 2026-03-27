@@ -1,15 +1,16 @@
 # E2E And Screenshot Consolidation
 
-> **Priority:** P0
+> **Priority:** P1
 > **Status:** Open
 > **Last Updated:** 2026-03-26
 
-## Why This Is P0
+## Why This Is Still Open
 
 - [ ] The repo still has two overlapping automation systems: real E2E/product testing and a screenshot-specific Playwright harness. They duplicate readiness logic, state setup, and route-driving behavior instead of sharing one reusable path.
 - [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
 - [x] PR CI no longer runs the separate screenshot recapture workflow. Local/manual capture plus `static` artifact integrity is the new baseline.
 - [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
+- [ ] This is no longer the first infrastructure priority. Route naming/placement and shared primitive seams should be normalized first so the remaining E2E/page-object work lands on cleaner structure.
 - [ ] The current raw-locator baseline proves the screenshot harness is still acting like a parallel framework.
   Current hotspots:
   - `e2e/screenshot-lib/filled-states.ts` (`79`)
