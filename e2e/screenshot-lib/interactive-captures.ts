@@ -42,7 +42,6 @@ import {
   shouldCaptureAny,
 } from "./capture";
 import { BASE_URL } from "./config";
-import { openStableDialog, waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
 import { waitForExpectedContent } from "./readiness";
 
 export async function screenshotDashboardModals(
@@ -1049,14 +1048,8 @@ export async function screenshotIssuesStates(
     await runCaptureStep("issues create modal", async () => {
       await openIssuesForCapture();
       await dismissAllDialogs(page);
-      await openStableDialog(
-        page,
-        issuesPage.createIssueButton,
-        issuesPage.createIssueModal,
-        issuesPage.issueTitleInput,
-        "issues create issue",
-      );
-      await waitForCreateIssueModalScreenshotReady(page, issuesPage);
+      await issuesPage.openCreateIssueModal();
+      await issuesPage.expectCreateIssueModalCaptureReady();
       await captureCurrentView(page, prefix, createModalName);
       await dismissIfOpen(page, issuesPage.createIssueModal);
     });

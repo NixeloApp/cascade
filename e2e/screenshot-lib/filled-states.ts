@@ -45,7 +45,6 @@ import {
   MARKDOWN_RICH_CONTENT,
   SCREENSHOT_USER,
 } from "./config";
-import { waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
 import { clearIssueDrafts, discoverDocumentId, discoverIssueKey, seedIssueDraft } from "./helpers";
 import {
   screenshotAssistantStates,
@@ -595,7 +594,7 @@ export async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
+        await projectsPage.expectCreateIssueModalCaptureReady();
         await projectsPage.enableCreateAnother();
         await waitForScreenshotReady(page);
         await captureCurrentView(
@@ -620,7 +619,7 @@ export async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
+        await projectsPage.expectCreateIssueModalCaptureReady();
         await projectsPage.submitCreateIssueExpectTitleValidationError();
         await waitForScreenshotReady(page);
         await captureCurrentView(
@@ -647,7 +646,7 @@ export async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
+        await projectsPage.expectCreateIssueModalCaptureReady();
         try {
           await projectsPage.issueTitleInput.fill(issueTitle);
           await projectsPage.submitIssueButton.click();
@@ -705,7 +704,7 @@ export async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
+        await projectsPage.expectCreateIssueModalCaptureReady();
         await projectsPage.issueTitleInput.fill(duplicateQuery);
         await projectsPage.expectCreateIssueDuplicateDetectionVisible();
         await projectsPage.waitForCreateIssueDuplicateItem("DEMO-2");
@@ -740,7 +739,7 @@ export async function screenshotFilledStates(
         try {
           const projectsPage = new ProjectsPage(page, orgSlug);
           await projectsPage.openCreateIssueModal();
-          await waitForCreateIssueModalScreenshotReady(page, projectsPage);
+          await projectsPage.expectCreateIssueModalCaptureReady();
           await projectsPage.expectCreateIssueDraftBannerVisible();
           await waitForScreenshotReady(page);
           await captureCurrentView(

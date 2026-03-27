@@ -14,6 +14,7 @@ import {
   waitForProjectCreateSuccess,
 } from "../utils";
 import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
+import { waitForAnimation, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -593,6 +594,13 @@ export class ProjectsPage extends BasePage {
 
     await expect(this.createIssueModal).toBeVisible();
     await this.expectCreateIssueModalReady();
+  }
+
+  async expectCreateIssueModalCaptureReady(timeout = 5000) {
+    await this.expectCreateIssueModalReady(timeout);
+    await expect(this.createAnotherSwitch).toBeVisible({ timeout });
+    await waitForAnimation(this.page);
+    await waitForScreenshotReady(this.page);
   }
 
   private async findVisibleCreateIssueTrigger(timeout = 2000): Promise<Locator | null> {

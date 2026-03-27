@@ -3,6 +3,12 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
+import {
+  dismissAllDialogs,
+  dismissIfOpen,
+  waitForAnimation,
+  waitForScreenshotReady,
+} from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -85,9 +91,25 @@ export class IssuesPage extends BasePage {
   }
 
   async openCreateIssueModal(): Promise<void> {
-    await expect(this.createIssueButton).toBeVisible();
-    await this.createIssueButton.click();
-    await expect(this.createIssueModal).toBeVisible();
+    await dismissAllDialogs(this.page);
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await expect(this.createIssueButton).toBeVisible();
+      await this.createIssueButton.click();
+      if (await this.waitForCreateIssueModalReady(3000)) {
+        return;
+      }
+      await dismissIfOpen(this.page, this.createIssueModal);
+    }
+
+    await this.expectCreateIssueModalReady();
+  }
+
+  async expectCreateIssueModalCaptureReady(timeout = 5000): Promise<void> {
+    await this.expectCreateIssueModalReady(timeout);
+    await expect(this.page.getByLabel(/create another/i)).toBeVisible({ timeout });
+    await waitForAnimation(this.page);
+    await waitForScreenshotReady(this.page);
   }
 
   async expectSearchResultVisible(text: string): Promise<void> {
@@ -137,5 +159,23 @@ export class IssuesPage extends BasePage {
         timeout,
       })
       .toBeGreaterThanOrEqual(1);
+  }
+
+  private async waitForCreateIssueModalReady(timeout = 12000): Promise<boolean> {
+    try {
+      await this.expectCreateIssueModalReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCreateIssueModalReady(timeout = 12000): Promise<void> {
+    await expect(this.createIssueModal).toBeVisible({ timeout });
+    await expect(
+      this.issueTitleInput.or(
+        this.createIssueModal.getByRole("button", { name: /get ai suggestions/i }),
+      ),
+    ).toBeVisible({ timeout });
   }
 }
