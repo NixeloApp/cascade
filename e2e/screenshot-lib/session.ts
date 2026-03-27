@@ -918,13 +918,14 @@ export async function runSeededScreenshotPhase(
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
     orgSlug: seedOrgSlug,
   });
-  if (seedResult.success) {
-    console.log(
-      `  ✓ Seeded: org=${seedResult.orgSlug ?? seedOrgSlug ?? "unknown"}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
+  if (!seedResult.success) {
+    throw new Error(
+      `Screenshot seeding failed: ${seedResult.error}. Cannot capture filled states with incomplete data.`,
     );
-  } else {
-    console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
   }
+  console.log(
+    `  ✓ Seeded: org=${seedResult.orgSlug ?? seedOrgSlug ?? "unknown"}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
+  );
 
   if (seededPhaseBehavior.captureFilledStates) {
     const { authStorageState, orgSlug } = getAuthenticatedScreenshotBootstrap(

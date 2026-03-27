@@ -16,8 +16,9 @@ export type BlockedConvexPagePolicy =
   | {
       kind: "transport";
       target: BlockedConvexPageTarget;
+      colorScheme?: "dark" | "light";
     }
-  | BlockedConvexRequestPolicy;
+  | (BlockedConvexRequestPolicy & { colorScheme?: "dark" | "light" });
 
 type NormalizedBlockedConvexPagePolicy =
   | {
@@ -334,8 +335,10 @@ async function withBlockedPageTarget<T>(
   const preparedPolicy = prepareBlockedConvexPagePolicy(policy);
 
   if (preparedPolicy.target === "isolated") {
-    return withIsolatedPageTarget(sourcePage, ({ page }) =>
-      withBlockedRoutes(page, preparedPolicy, run),
+    return withIsolatedPageTarget(
+      sourcePage,
+      ({ page }) => withBlockedRoutes(page, preparedPolicy, run),
+      policy.colorScheme ? { colorScheme: policy.colorScheme } : {},
     );
   }
 
