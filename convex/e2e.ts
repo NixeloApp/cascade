@@ -3082,7 +3082,6 @@ export const createTestUserInternal = internalMutation({
         .withIndex("providerAndAccountId", (q) =>
           q.eq("provider", "password").eq("providerAccountId", args.email),
         )
-        .filter(notDeleted)
         .collect();
 
       const canonicalAccount = [...existingAccounts]
