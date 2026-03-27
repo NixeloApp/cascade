@@ -840,6 +840,16 @@ export class DashboardPage extends BasePage {
     await this.expectTimeEntryBillingState(options.expectBillable);
   }
 
+  async expectLoadingSkeletonsVisible(timeout = 12000): Promise<void> {
+    await this.commandPaletteButton.waitFor({ state: "visible", timeout });
+    await this.pageHeaderTitle.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+        timeout,
+      })
+      .toBeGreaterThanOrEqual(6);
+  }
+
   async reloadAppShell() {
     await this.page.reload({ waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");

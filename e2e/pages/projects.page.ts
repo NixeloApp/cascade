@@ -1367,6 +1367,11 @@ export class ProjectsPage extends BasePage {
 
   async expectProjectsLoadingStateVisible(timeout = 10000) {
     await this.projectsLoadingState.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+        timeout,
+      })
+      .toBeGreaterThan(0);
   }
 
   async hasCreateProjectEntryPoint() {
@@ -1632,6 +1637,11 @@ export class ProjectsPage extends BasePage {
 
   async expectBoardLoadingStateVisible(timeout = 12000) {
     await this.boardLoadingState.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+        timeout,
+      })
+      .toBeGreaterThanOrEqual(8);
   }
 
   async expectProjectCount(count: number) {

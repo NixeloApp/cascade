@@ -144,17 +144,8 @@ export async function screenshotDashboardLoadingState(
           timeout: 15000,
         },
       );
-      await loadingPage
-        .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
-        .waitFor({ state: "visible", timeout: 15000 });
-      await loadingPage
-        .getByRole("heading", { name: /^dashboard$/i })
-        .waitFor({ state: "visible", timeout: 12000 });
-      await expect
-        .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
-          timeout: 12000,
-        })
-        .toBeGreaterThanOrEqual(6);
+      const loadingDashboardPage = new DashboardPage(loadingPage, orgSlug);
+      await loadingDashboardPage.expectLoadingSkeletonsVisible(12000);
       await waitForAnimation(loadingPage);
       await loadingPage.evaluate(
         () =>
@@ -573,12 +564,7 @@ export async function screenshotAssistantStates(
           timeout: 15000,
         });
         const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
-        await loadingAssistantPage.loadingState.waitFor({ state: "visible", timeout: 12000 });
-        await expect
-          .poll(() => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThan(0);
+        await loadingAssistantPage.expectLoadingStateVisible(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
           skipReadyCheck: true,
@@ -845,11 +831,6 @@ export async function screenshotBoardLoadingState(
         },
       );
       await loadingProjectsPage.expectBoardLoadingStateVisible(15000);
-      await expect
-        .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
-          timeout: 12000,
-        })
-        .toBeGreaterThanOrEqual(8);
       await waitForAnimation(loadingPage);
       await captureCurrentView(loadingPage, prefix, loadingStateName, {
         skipReadyCheck: true,
@@ -1107,14 +1088,11 @@ export async function screenshotIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("issues loading state", async () => {
-      const loadingPage = await page.context().newPage();
+      const isolatedLoadingPage = await createIsolatedConvexLoadingPage(page);
+      const { page: loadingPage } = isolatedLoadingPage;
       const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
 
       try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_ISSUES_LOADING__ = true;
-        });
-
         await loadingPage.goto(`${BASE_URL}${issuesUrl}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
@@ -1137,9 +1115,7 @@ export async function screenshotIssuesStates(
           skipReadyCheck: true,
         });
       } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
+        await isolatedLoadingPage.close();
       }
     });
   }
