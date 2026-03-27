@@ -85,6 +85,12 @@ export interface FilledScreenshotCaptureOptions {
   includeSeededPublicPages?: boolean;
 }
 
+export interface ScreenshotSeededPhaseBehavior {
+  captureFilledStates: boolean;
+  includeSeededPublicPages: boolean;
+  logLabel: string;
+}
+
 export type AuthenticatedScreenshotCapturePhase = "empty-state" | "filled-state";
 export type EmptyScreenshotCaptureExecutionMode = "bootstrap-only" | "mixed" | "separate-auth-only";
 export type ScreenshotCaptureExecutionContextRequirement =
@@ -292,11 +298,14 @@ export function getScreenshotCaptureExecutionContextRequirement(
     return "none";
   }
 
-  if (
-    (executionStep.kind === "empty" && executionStep.mode === "separate-auth-only") ||
-    (executionStep.kind === "seeded" && executionStep.mode === "public-only")
-  ) {
+  if (executionStep.kind === "empty" && executionStep.mode === "separate-auth-only") {
     return "primary-user";
+  }
+
+  if (executionStep.kind === "seeded") {
+    return getScreenshotSeededPhaseBehavior(executionStep.mode).captureFilledStates
+      ? "authenticated-bootstrap"
+      : "primary-user";
   }
 
   return "authenticated-bootstrap";
@@ -770,15 +779,33 @@ export function getSeededPhaseLogLabel(executionPlan: ScreenshotCaptureExecution
 }
 
 export function getSeededPhaseLogLabelForMode(seededPhaseMode: ScreenshotSeededPhaseMode): string {
+  return getScreenshotSeededPhaseBehavior(seededPhaseMode).logLabel;
+}
+
+export function getScreenshotSeededPhaseBehavior(
+  seededPhaseMode: ScreenshotSeededPhaseMode,
+): ScreenshotSeededPhaseBehavior {
   if (seededPhaseMode === "public-and-filled") {
-    return "\n  📋 Phase 2: Seed data + public pages + filled states";
+    return {
+      captureFilledStates: true,
+      includeSeededPublicPages: true,
+      logLabel: "\n  📋 Phase 2: Seed data + public pages + filled states",
+    };
   }
 
   if (seededPhaseMode === "filled-only") {
-    return "\n  📋 Phase 2: Seed data + filled states";
+    return {
+      captureFilledStates: true,
+      includeSeededPublicPages: false,
+      logLabel: "\n  📋 Phase 2: Seed data + filled states",
+    };
   }
 
-  return "\n  📋 Phase 2: Seed data + token-backed public pages";
+  return {
+    captureFilledStates: false,
+    includeSeededPublicPages: true,
+    logLabel: "\n  📋 Phase 2: Seed data + token-backed public pages",
+  };
 }
 
 export function getAuthenticatedScreenshotBootstrap(
@@ -856,7 +883,9 @@ export async function runSeededScreenshotPhase(
   seededPhaseMode: ScreenshotSeededPhaseMode,
   executionContext: ScreenshotCaptureExecutionContext,
 ): Promise<void> {
-  console.log(getSeededPhaseLogLabelForMode(seededPhaseMode));
+  const seededPhaseBehavior = getScreenshotSeededPhaseBehavior(seededPhaseMode);
+
+  console.log(seededPhaseBehavior.logLabel);
   console.log("  Seeding screenshot data...");
   const seedOrgSlug = getScreenshotExecutionOrgSlug(executionContext);
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
@@ -870,7 +899,7 @@ export async function runSeededScreenshotPhase(
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
   }
 
-  if (seededPhaseMode !== "public-only") {
+  if (seededPhaseBehavior.captureFilledStates) {
     const { authStorageState, orgSlug } = getAuthenticatedScreenshotBootstrap(
       executionContext,
       "filled-state",
@@ -885,7 +914,7 @@ export async function runSeededScreenshotPhase(
         seedResult,
         authStorageState ?? undefined,
         {
-          includeSeededPublicPages: seededPhaseMode === "public-and-filled",
+          includeSeededPublicPages: seededPhaseBehavior.includeSeededPublicPages,
         },
       );
     }

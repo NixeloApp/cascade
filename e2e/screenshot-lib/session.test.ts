@@ -33,6 +33,7 @@ import {
   getScreenshotCaptureExecutionContextRequirement,
   getScreenshotContextOptions,
   getScreenshotExecutionOrgSlug,
+  getScreenshotSeededPhaseBehavior,
   getScreenshotSeededPhaseMode,
   getSeededPhaseLogLabel,
   getSeededPhaseLogLabelForMode,
@@ -502,6 +503,24 @@ describe("screenshot session helpers", () => {
     expect(getSeededPhaseLogLabelForMode("public-only")).toBe(
       "\n  📋 Phase 2: Seed data + token-backed public pages",
     );
+  });
+
+  it("derives seeded phase behavior from the seeded phase mode", () => {
+    expect(getScreenshotSeededPhaseBehavior("public-only")).toEqual({
+      captureFilledStates: false,
+      includeSeededPublicPages: true,
+      logLabel: "\n  📋 Phase 2: Seed data + token-backed public pages",
+    });
+    expect(getScreenshotSeededPhaseBehavior("filled-only")).toEqual({
+      captureFilledStates: true,
+      includeSeededPublicPages: false,
+      logLabel: "\n  📋 Phase 2: Seed data + filled states",
+    });
+    expect(getScreenshotSeededPhaseBehavior("public-and-filled")).toEqual({
+      captureFilledStates: true,
+      includeSeededPublicPages: true,
+      logLabel: "\n  📋 Phase 2: Seed data + public pages + filled states",
+    });
   });
 
   it("builds one ordered execution-step list from the execution plan", () => {
