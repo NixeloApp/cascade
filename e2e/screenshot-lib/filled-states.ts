@@ -12,6 +12,7 @@ import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   AnalyticsPage,
+  CalendarPage,
   DashboardPage,
   DocumentsPage,
   NotificationsPage,
@@ -39,12 +40,7 @@ import {
   takeScreenshot,
 } from "./capture";
 import { BASE_URL, MARKDOWN_IMPORT_PREVIEW, MARKDOWN_RICH_CONTENT } from "./config";
-import {
-  openMobileSidebarMenu,
-  openStableDialog,
-  waitForCreateIssueModalScreenshotReady,
-  waitForDashboardCustomizeDialogReady,
-} from "./dialog-helpers";
+import { openMobileSidebarMenu, waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
 import { clearIssueDrafts, discoverDocumentId, discoverIssueKey, seedIssueDraft } from "./helpers";
 import {
   screenshotAssistantStates,
@@ -1268,24 +1264,12 @@ export async function screenshotFilledStates(
   // Dashboard customize modal
   if (shouldCapture(p, "dashboard-customize-modal")) {
     await runCaptureStep("dashboard customize modal", async () => {
-      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.goto();
+      await dashboardPage.openCustomizeModal();
       await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /^customize$/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /dashboard customization/i }),
-        page.getByText("Quick Stats", { exact: true }),
-        "dashboard customize",
-      );
-      await waitForDashboardCustomizeDialogReady(page);
       await captureCurrentView(page, p, "dashboard-customize-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, dashboardPage.customizeModal);
     });
   }
 
@@ -1298,39 +1282,22 @@ export async function screenshotFilledStates(
       });
       await waitForScreenshotReady(page);
       await waitForCalendarReady(page);
-      const trigger = page.getByRole("button", { name: /add event/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /^create event$/i }),
-        page.getByLabel(/event title/i),
-        "calendar create event",
-      );
+      const calendarPage = new CalendarPage(page, orgSlug);
+      await calendarPage.openCreateEventModal();
       await captureCurrentView(page, p, "calendar-create-event-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, calendarPage.createEventModal);
     });
   }
 
   // Create workspace modal
   if (shouldCapture(p, "workspaces-create-workspace-modal")) {
     await runCaptureStep("create workspace modal", async () => {
-      await page.goto(`${BASE_URL}${ROUTES.workspaces.list.build(orgSlug)}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
-      await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
       const workspacesPage = new WorkspacesPage(page, orgSlug);
-      const dialog = await openStableDialog(
-        page,
-        workspacesPage.newWorkspaceButton,
-        page.getByRole("dialog", { name: /^create workspace$/i }),
-        page.getByRole("dialog", { name: /^create workspace$/i }).getByLabel(/^workspace name$/i),
-        "create workspace",
-      );
+      await workspacesPage.goto();
+      await workspacesPage.openCreateWorkspaceDialog();
+      await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "workspaces-create-workspace-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, workspacesPage.createWorkspaceDialog);
     });
   }
 
@@ -1353,41 +1320,27 @@ export async function screenshotFilledStates(
   // Create team modal (from workspace detail)
   if (wsSlug && shouldCapture(p, "workspace-create-team-modal")) {
     await runCaptureStep("create team modal", async () => {
-      const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
       const workspacesPage = new WorkspacesPage(page, orgSlug);
-      await page.goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-      await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
+      const teamsUrl = ROUTES.workspaces.teams.list.build(orgSlug, wsSlug);
+      await page.goto(`${BASE_URL}${teamsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
+      await waitForExpectedContent(page, teamsUrl, `workspace-${wsSlug}`);
+      await workspacesPage.expectTeamsLoaded();
+      await workspacesPage.openCreateTeamDialog();
       await waitForScreenshotReady(page);
-      const dialog = await openStableDialog(
-        page,
-        workspacesPage.createTeamButton,
-        page.getByRole("dialog", { name: /^create team$/i }),
-        page.getByLabel(/^team name$/i),
-        "create team",
-      );
       await captureCurrentView(page, p, "workspace-create-team-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, workspacesPage.createTeamDialog);
     });
   }
 
   // Import/export modal (from board)
   if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal`)) {
     await runCaptureStep("import/export modal", async () => {
-      const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-      await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-      await waitForExpectedContent(page, boardUrl, "board");
+      const projectsPage = new ProjectsPage(page, orgSlug);
+      await projectsPage.gotoProjectBoard(projectKey);
+      await projectsPage.openImportExportModal();
       await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /import \/ export/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /^import \/ export issues$/i }),
-        page.getByText("Select Export Format", { exact: true }),
-        "import/export",
-      );
       await captureCurrentView(page, p, `project-${normalizedProjectKey}-import-export-modal`);
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, projectsPage.importExportModal);
     });
   }
 
@@ -1396,22 +1349,11 @@ export async function screenshotFilledStates(
     shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal-import`)
   ) {
     await runCaptureStep("import/export modal import state", async () => {
-      const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-      await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-      await waitForExpectedContent(page, boardUrl, "board");
-      await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /import \/ export/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /^import \/ export issues$/i }),
-        page.getByText("Select Export Format", { exact: true }),
-        "import/export",
-      );
-      await dialog.getByRole("radio", { name: /import issues/i }).click();
-      await dialog.getByText("JSON", { exact: true }).click();
-      await dialog
+      const projectsPage = new ProjectsPage(page, orgSlug);
+      await projectsPage.gotoProjectBoard(projectKey);
+      await projectsPage.openImportExportImportMode();
+      await projectsPage.importExportModal.getByText("JSON", { exact: true }).click();
+      await projectsPage.importExportModal
         .getByText("JSON files must contain an issues array at the top level.", { exact: true })
         .waitFor({
           state: "visible",
@@ -1424,7 +1366,7 @@ export async function screenshotFilledStates(
         p,
         `project-${normalizedProjectKey}-import-export-modal-import`,
       );
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, projectsPage.importExportModal);
     });
   }
 
@@ -1556,23 +1498,12 @@ export async function screenshotFilledStates(
   // Manual time entry modal
   if (shouldCapture(p, "time-tracking-manual-entry-modal")) {
     await runCaptureStep("manual time entry modal", async () => {
-      await page.goto(`${BASE_URL}${ROUTES.timeTracking.build(orgSlug)}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, ROUTES.timeTracking.build(orgSlug), "time-tracking");
+      const trackingPage = new TimeTrackingPage(page, orgSlug);
+      await trackingPage.goto();
+      await trackingPage.openManualEntryModal();
       await waitForScreenshotReady(page);
-      await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /add time entry/i });
-      const dialog = await openStableDialog(
-        page,
-        trigger,
-        page.getByRole("dialog", { name: /^log time$/i }),
-        page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM),
-        "manual time entry",
-      );
       await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, trackingPage.entryModal);
     });
   }
 

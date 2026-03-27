@@ -19,11 +19,15 @@ export class WorkspacesPage extends BasePage {
   readonly searchEmptyState: Locator;
   readonly searchInput: Locator;
   readonly newWorkspaceButton: Locator;
+  readonly createWorkspaceDialog: Locator;
+  readonly createWorkspaceNameInput: Locator;
   readonly workspaceCards: Locator;
   readonly workspaceTabs: Locator;
   readonly workspaceTeamsTab: Locator;
   readonly workspaceSettingsTab: Locator;
   readonly createTeamButton: Locator;
+  readonly createTeamDialog: Locator;
+  readonly createTeamNameInput: Locator;
   readonly teamsEmptyStateHeading: Locator;
   readonly workspaceSettingsHeader: Locator;
 
@@ -33,10 +37,9 @@ export class WorkspacesPage extends BasePage {
     this.pageEmptyState = page.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
     this.searchEmptyState = page.getByTestId(TEST_IDS.WORKSPACE.SEARCH_EMPTY_STATE);
     this.searchInput = page.getByTestId(TEST_IDS.WORKSPACE.SEARCH_INPUT);
-    this.newWorkspaceButton = page
-      .getByRole("main")
-      .getByRole("button", { name: /\+ Create Workspace|Create Workspace/i })
-      .first();
+    this.newWorkspaceButton = page.getByTestId(TEST_IDS.WORKSPACE.CREATE_BUTTON).first();
+    this.createWorkspaceDialog = page.getByTestId(TEST_IDS.WORKSPACE.CREATE_MODAL);
+    this.createWorkspaceNameInput = page.getByTestId(TEST_IDS.WORKSPACE.CREATE_NAME_INPUT);
     this.workspaceCards = page.getByTestId(TEST_IDS.WORKSPACE.CARD);
     this.workspaceTabs = page
       .getByRole("navigation")
@@ -44,7 +47,9 @@ export class WorkspacesPage extends BasePage {
       .first();
     this.workspaceTeamsTab = this.workspaceTabs.getByRole("link", { name: /^Teams$/ });
     this.workspaceSettingsTab = this.workspaceTabs.getByRole("link", { name: /^Settings$/ });
-    this.createTeamButton = page.getByRole("button", { name: /create team/i }).first();
+    this.createTeamButton = page.getByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_BUTTON).first();
+    this.createTeamDialog = page.getByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_MODAL);
+    this.createTeamNameInput = page.getByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_NAME_INPUT);
     this.teamsEmptyStateHeading = page.getByRole("heading", { name: /no teams yet/i });
     this.workspaceSettingsHeader = page.getByRole("heading", { name: /workspace settings/i });
   }
@@ -110,7 +115,18 @@ export class WorkspacesPage extends BasePage {
   async openCreateWorkspaceDialog() {
     await this.ensureWorkspacesView();
     await this.clickNewWorkspaceButton();
-    return getWorkspaceDialogElements(this.page).dialog;
+    await expect(this.createWorkspaceDialog).toBeVisible();
+    await expect(this.createWorkspaceNameInput).toBeVisible();
+    return this.createWorkspaceDialog;
+  }
+
+  async openCreateTeamDialog() {
+    await this.expectTeamsLoaded();
+    await expect(this.createTeamButton).toBeVisible();
+    await this.createTeamButton.click();
+    await expect(this.createTeamDialog).toBeVisible();
+    await expect(this.createTeamNameInput).toBeVisible();
+    return this.createTeamDialog;
   }
 
   async expectWorkspacesView() {

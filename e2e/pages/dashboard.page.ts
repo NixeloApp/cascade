@@ -67,6 +67,8 @@ export class DashboardPage extends BasePage {
   readonly quickStatsSection: Locator;
   readonly assignedTab: Locator;
   readonly createdTab: Locator;
+  readonly customizeButton: Locator;
+  readonly customizeModal: Locator;
 
   // ===================
   // Locators - Modals
@@ -177,6 +179,8 @@ export class DashboardPage extends BasePage {
     this.workspacesSection = page.getByTestId(TEST_IDS.DASHBOARD.WORKSPACES_LIST);
     this.recentActivitySection = page.getByTestId(TEST_IDS.DASHBOARD.RECENT_ACTIVITY);
     this.quickStatsSection = page.getByTestId(TEST_IDS.DASHBOARD.QUICK_STATS);
+    this.customizeButton = page.getByTestId(TEST_IDS.DASHBOARD.CUSTOMIZE_TRIGGER);
+    this.customizeModal = page.getByTestId(TEST_IDS.DASHBOARD.CUSTOMIZE_MODAL);
     // Issue filter tabs: tab role in Radix/Tabs, with button fallback when rendered as buttons.
     this.assignedTab = page
       .getByRole("tab", { name: /^assigned/i })
@@ -277,6 +281,48 @@ export class DashboardPage extends BasePage {
 
   async waitUntilReady(): Promise<void> {
     await waitForDashboardReady(this.page);
+  }
+
+  async openCustomizeModal(): Promise<void> {
+    await waitForDashboardReady(this.page);
+    await this.closeCustomizeModalIfOpen();
+    await expect(this.customizeButton).toBeVisible();
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await this.customizeButton.click();
+      if (await this.waitForCustomizeModalReady()) {
+        return;
+      }
+      await this.closeCustomizeModalIfOpen();
+    }
+
+    await this.expectCustomizeModalReady();
+  }
+
+  async closeCustomizeModalIfOpen(): Promise<void> {
+    await this.dismissModalIfOpen(this.customizeModal);
+  }
+
+  private async waitForCustomizeModalReady(timeout = 3000): Promise<boolean> {
+    try {
+      await this.expectCustomizeModalReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCustomizeModalReady(timeout = 10000): Promise<void> {
+    await expect(this.customizeModal).toBeVisible({ timeout });
+    await expect(this.customizeModal.getByText("Quick Stats", { exact: true })).toBeVisible({
+      timeout,
+    });
+    await expect(this.customizeModal.getByText("Recent Activity", { exact: true })).toBeVisible({
+      timeout,
+    });
+    await expect(this.customizeModal.getByText("My Workspaces", { exact: true })).toBeVisible({
+      timeout,
+    });
   }
 
   private async expectDashboardReady(timeout = 15000) {

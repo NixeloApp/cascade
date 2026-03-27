@@ -118,6 +118,18 @@ export const TEST_IDS = {
     /** @see src/components/WorkspaceCard.tsx */
     NAME: "workspace-name",
     /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
+    CREATE_BUTTON: "workspace-create-button",
+    /** @see src/components/CreateWorkspaceModal.tsx */
+    CREATE_MODAL: "workspace-create-modal",
+    /** @see src/components/CreateWorkspaceModal.tsx */
+    CREATE_NAME_INPUT: "workspace-create-name-input",
+    /** @see src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/index.tsx */
+    CREATE_TEAM_BUTTON: "workspace-create-team-button",
+    /** @see src/components/CreateTeamModal.tsx */
+    CREATE_TEAM_MODAL: "workspace-create-team-modal",
+    /** @see src/components/CreateTeamModal.tsx */
+    CREATE_TEAM_NAME_INPUT: "workspace-create-team-name-input",
+    /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
     SEARCH_INPUT: "workspace-search-input",
     /** @see src/routes/_auth/_app/$orgSlug/workspaces/index.tsx */
     SEARCH_EMPTY_STATE: "workspace-search-empty-state",
@@ -243,6 +255,12 @@ export const TEST_IDS = {
     LOADING_STATE: "project-loading-state",
     /** @see src/components/ProjectsList.tsx */
     SINGLE_PROJECT_OVERVIEW: "project-single-project-overview",
+    /** @see src/components/ExportButton.tsx */
+    IMPORT_EXPORT_TRIGGER: "project-import-export-trigger",
+    /** @see src/components/ImportExportModal.tsx */
+    IMPORT_EXPORT_MODAL: "project-import-export-modal",
+    /** @see src/components/ImportExportModal.tsx */
+    IMPORT_EXPORT_MODE_IMPORT: "project-import-export-mode-import",
   },
 
   // ============================================================
@@ -629,6 +647,10 @@ export const TEST_IDS = {
     RECENT_ACTIVITY: "dashboard-recent-activity",
     /** @see src/components/Dashboard/WorkspacesList.tsx */
     WORKSPACES_LIST: "dashboard-workspaces-list",
+    /** @see src/components/Dashboard/DashboardCustomizeModal.tsx */
+    CUSTOMIZE_TRIGGER: "dashboard-customize-trigger",
+    /** @see src/components/Dashboard/DashboardCustomizeModal.tsx */
+    CUSTOMIZE_MODAL: "dashboard-customize-modal",
   },
 
   // ============================================================
@@ -671,6 +693,10 @@ export const TEST_IDS = {
   // ============================================================
 
   TIME_TRACKING: {
+    /** @see src/components/TimeTracking/TimeEntriesList.tsx */
+    ADD_ENTRY_BUTTON: "time-tracking-add-entry-button",
+    /** @see src/components/TimeTracking/TimeEntryModal.tsx */
+    ENTRY_MODAL: "time-tracking-entry-modal",
     /** @see src/components/TimeTracking/TimeEntryModal.tsx */
     ENTRY_FORM: "time-entry-form",
     /** @see src/components/TimeTracking/TimeTrackingPage.tsx */

@@ -1,6 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { ExportButton } from "./ExportButton";
 
@@ -9,7 +10,7 @@ vi.mock("./ImportExportModal", () => ({
   ImportExportModal: vi.fn(({ open, onOpenChange, projectId }) => {
     if (!open) return null;
     return (
-      <div data-testid="import-export-modal">
+      <div data-testid={TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL}>
         <button type="button" onClick={() => onOpenChange(false)}>
           Close Modal
         </button>
@@ -27,12 +28,13 @@ describe("ExportButton", () => {
 
     // Both mobile and desktop buttons render - check that at least one exists
     expect(screen.getAllByRole("button", { name: /Import \/ Export/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_TRIGGER).length).toBeGreaterThan(0);
   });
 
   it("should not show modal initially", () => {
     render(<ExportButton projectId={mockProjectId} />);
 
-    expect(screen.queryByTestId("import-export-modal")).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL)).not.toBeInTheDocument();
   });
 
   it("should open modal when button is clicked", async () => {
@@ -43,7 +45,7 @@ describe("ExportButton", () => {
     const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
-    expect(screen.getByTestId("import-export-modal")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL)).toBeInTheDocument();
   });
 
   it("should close modal when onClose is called", async () => {
@@ -54,13 +56,13 @@ describe("ExportButton", () => {
     const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
-    expect(screen.getByTestId("import-export-modal")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL)).toBeInTheDocument();
 
     // Close modal
     const closeButton = screen.getByRole("button", { name: /Close Modal/i });
     await user.click(closeButton);
 
-    expect(screen.queryByTestId("import-export-modal")).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL)).not.toBeInTheDocument();
   });
 
   it("should pass projectId to modal", async () => {
@@ -110,12 +112,12 @@ describe("ExportButton", () => {
     const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
-    expect(screen.getByTestId("import-export-modal")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL)).toBeInTheDocument();
 
     // Rerender with same props
     rerender(<ExportButton projectId={mockProjectId} />);
 
-    expect(screen.getByTestId("import-export-modal")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL)).toBeInTheDocument();
   });
 
   it("should work with different projectIds", async () => {

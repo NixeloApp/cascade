@@ -90,7 +90,7 @@ describe("TimeEntriesList", () => {
       render(<TimeEntriesList />);
 
       expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.ENTRIES_LIST)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /Add Time Entry/i })).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.ADD_ENTRY_BUTTON)).toBeInTheDocument();
     });
 
     it("should render entry description", () => {

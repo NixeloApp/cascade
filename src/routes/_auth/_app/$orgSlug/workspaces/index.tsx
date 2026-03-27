@@ -41,7 +41,11 @@ function getWorkspacePageEmptyState(onCreateWorkspace: () => void) {
     title: "No workspaces yet",
     description: "Create your first workspace to organize teams and projects",
     actions: (
-      <Button variant="primary" onClick={onCreateWorkspace}>
+      <Button
+        variant="primary"
+        onClick={onCreateWorkspace}
+        data-testid={TEST_IDS.WORKSPACE.CREATE_BUTTON}
+      >
         + Create Workspace
       </Button>
     ),
@@ -186,7 +190,11 @@ export function WorkspacesList() {
         title="Workspaces"
         description="Organize your teams and projects into departments"
         actions={
-          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+          <Button
+            variant="primary"
+            onClick={() => setIsCreateModalOpen(true)}
+            data-testid={TEST_IDS.WORKSPACE.CREATE_BUTTON}
+          >
             + Create Workspace
           </Button>
         }

@@ -4,6 +4,7 @@ import { usePaginatedQuery } from "convex/react";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { useWorkspaceLayout } from "../route";
 import { TeamsList } from "./index";
@@ -61,6 +62,22 @@ vi.mock("@/components/CreateTeamModal", () => ({
     ) : null,
 }));
 
+vi.mock("@/components/ui/Button", () => ({
+  Button: ({
+    children,
+    onClick,
+    "data-testid": testId,
+  }: {
+    children: ReactNode;
+    onClick?: () => void;
+    "data-testid"?: string;
+  }) => (
+    <button type="button" onClick={onClick} data-testid={testId}>
+      {children}
+    </button>
+  ),
+}));
+
 const mockUsePaginatedQuery = vi.mocked(usePaginatedQuery);
 const mockUseOrganization = vi.mocked(useOrganization);
 const mockUseWorkspaceLayout = vi.mocked(useWorkspaceLayout);
@@ -112,7 +129,7 @@ describe("TeamsList", () => {
       screen.queryByText("Organize your workspace into focused teams"),
     ).not.toBeInTheDocument();
     expect(screen.getByText("Delivery")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /\+ create team/i })).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_BUTTON)).toBeInTheDocument();
   });
 
   it("opens the create-team modal from the populated teams header action", async () => {
@@ -120,7 +137,7 @@ describe("TeamsList", () => {
 
     render(<TeamsList />);
 
-    await user.click(screen.getByRole("button", { name: /\+ create team/i }));
+    await user.click(screen.getByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_BUTTON));
 
     expect(screen.getByRole("dialog", { name: "Create Team" })).toHaveTextContent(
       "Create team modal:workspace-1:platform",
@@ -139,7 +156,7 @@ describe("TeamsList", () => {
 
     render(<TeamsList />);
 
-    await user.click(screen.getByRole("button", { name: /\+ create team/i }));
+    await user.click(screen.getByTestId(TEST_IDS.WORKSPACE.CREATE_TEAM_BUTTON));
 
     expect(screen.getByRole("dialog", { name: "Create Team" })).toBeInTheDocument();
     expect(screen.getByText("No teams yet")).toBeInTheDocument();

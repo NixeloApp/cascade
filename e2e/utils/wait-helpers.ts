@@ -639,12 +639,10 @@ export type WorkspaceDialogElements = {
  * Shared selector contract for the create-workspace modal.
  */
 export function getWorkspaceDialogElements(page: Page): WorkspaceDialogElements {
-  const dialog = page.getByRole("dialog").filter({
-    hasText: /create workspace/i,
-  });
+  const dialog = page.getByTestId(TEST_IDS.WORKSPACE.CREATE_MODAL);
   return {
     dialog,
-    nameInput: dialog.getByLabel(/workspace name/i),
+    nameInput: dialog.getByTestId(TEST_IDS.WORKSPACE.CREATE_NAME_INPUT),
     descriptionInput: dialog.getByLabel(/description/i),
     submitButton: dialog.getByRole("button", { name: /create workspace/i }),
     createForm: page.locator("#create-workspace-form"),

@@ -12,6 +12,7 @@ import { Icon } from "@/components/ui/Icon";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { Stack } from "@/components/ui/Stack";
 import { Download, Upload } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { ExportPanel } from "./ImportExport/ExportPanel";
 import { ImportPanel } from "./ImportExport/ImportPanel";
 import { Dialog } from "./ui/Dialog";
@@ -66,6 +67,7 @@ export function ImportExportModal({
       title="Import / Export Issues"
       description="Manage issue import and export"
       size="xl"
+      data-testid={TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL}
     >
       <Stack gap="lg">
         {/* Mode Selection */}
@@ -79,7 +81,11 @@ export function ImportExportModal({
             <Icon icon={Download} size="sm" />
             Export
           </SegmentedControlItem>
-          <SegmentedControlItem value="import" aria-label="Import issues">
+          <SegmentedControlItem
+            value="import"
+            aria-label="Import issues"
+            data-testid={TEST_IDS.PROJECT.IMPORT_EXPORT_MODE_IMPORT}
+          >
             <Icon icon={Upload} size="sm" />
             Import
           </SegmentedControlItem>

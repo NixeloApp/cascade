@@ -9,6 +9,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { ArrowLeftRight } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { ImportExportModal } from "./ImportExportModal";
 import { Button } from "./ui/Button";
 import { IconButton } from "./ui/IconButton";
@@ -31,6 +32,7 @@ export function ExportButton({ projectId, sprintId, status }: ExportButtonProps)
           size="xs"
           onClick={() => setIsModalOpen(true)}
           aria-label="Import / Export"
+          data-testid={TEST_IDS.PROJECT.IMPORT_EXPORT_TRIGGER}
         >
           <ArrowLeftRight className="size-3.5" />
         </IconButton>
@@ -41,6 +43,7 @@ export function ExportButton({ projectId, sprintId, status }: ExportButtonProps)
           size="sm"
           onClick={() => setIsModalOpen(true)}
           aria-label="Import / Export"
+          data-testid={TEST_IDS.PROJECT.IMPORT_EXPORT_TRIGGER}
           leftIcon={<ArrowLeftRight className="size-4" />}
         >
           <span>Import / Export</span>

@@ -125,6 +125,9 @@ export class ProjectsPage extends BasePage {
   readonly projectMemberRemoveButton: Locator;
   readonly projectDeleteTrigger: Locator;
   readonly projectDeleteConfirmInput: Locator;
+  readonly importExportTrigger: Locator;
+  readonly importExportModal: Locator;
+  readonly importExportModeImport: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
@@ -288,6 +291,9 @@ export class ProjectsPage extends BasePage {
     this.projectDeleteConfirmInput = page.getByTestId(
       TEST_IDS.PROJECT_SETTINGS.DELETE_CONFIRM_INPUT,
     );
+    this.importExportTrigger = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_TRIGGER);
+    this.importExportModal = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL);
+    this.importExportModeImport = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODE_IMPORT);
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
@@ -365,6 +371,37 @@ export class ProjectsPage extends BasePage {
   async gotoProjectSettings(projectKey: string) {
     await this.gotoPath(ROUTES.projects.settings.build(this.orgSlug, projectKey));
     await this.expectProjectSettingsLoaded();
+  }
+
+  async openImportExportModal(): Promise<void> {
+    const trigger = await this.findVisibleImportExportTrigger();
+    await expect(trigger).toBeVisible();
+    await trigger.click();
+    await expect(this.importExportModal).toBeVisible();
+    await expect(
+      this.importExportModal.getByText("Select Export Format", { exact: true }),
+    ).toBeVisible();
+  }
+
+  async openImportExportImportMode(): Promise<void> {
+    await this.openImportExportModal();
+    await expect(this.importExportModeImport).toBeVisible();
+    await this.importExportModeImport.click();
+    await expect(
+      this.importExportModal.getByText("Select Import Format", { exact: true }),
+    ).toBeVisible();
+  }
+
+  private async findVisibleImportExportTrigger(): Promise<Locator> {
+    const count = await getLocatorCount(this.importExportTrigger);
+    for (let index = 0; index < count; index += 1) {
+      const trigger = this.importExportTrigger.nth(index);
+      if (await isLocatorVisible(trigger)) {
+        return trigger;
+      }
+    }
+
+    return this.importExportTrigger.first();
   }
 
   // ===================

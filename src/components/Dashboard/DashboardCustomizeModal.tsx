@@ -6,6 +6,7 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpdate";
 import { Settings2 } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { Label } from "../ui/Label";
@@ -52,7 +53,12 @@ export function DashboardCustomizeModal() {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setOpen(true)}
+        data-testid={TEST_IDS.DASHBOARD.CUSTOMIZE_TRIGGER}
+      >
         <Flex align="center" gap="xs">
           <Icon icon={Settings2} size="sm" />
           Customize
@@ -65,6 +71,7 @@ export function DashboardCustomizeModal() {
         title="Dashboard Customization"
         description="Choose which widgets to display on your personal dashboard."
         size="sm"
+        data-testid={TEST_IDS.DASHBOARD.CUSTOMIZE_MODAL}
       >
         <Stack gap="md">
           <Flex align="center" justify="between" gap="sm">

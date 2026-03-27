@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { ImportExportModal } from "./ImportExportModal";
@@ -78,7 +79,7 @@ function getExportModeControl() {
 }
 
 function getImportModeControl() {
-  return screen.getByRole("radio", { name: /import issues/i });
+  return screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODE_IMPORT);
 }
 
 describe("ImportExportModal - Component Behavior", () => {
@@ -125,6 +126,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
+      expect(screen.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL)).toBeInTheDocument();
       expect(screen.getByText("Select Export Format")).toBeInTheDocument();
     });
 
