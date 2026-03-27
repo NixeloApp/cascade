@@ -1,7 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import type { Browser, BrowserContextOptions, Page, StorageState } from "@playwright/test";
-import { ROUTES } from "../../convex/shared/routes";
 import type { TestUser } from "../config";
 import { E2E_TIMEZONE } from "../constants";
 import { withBrowserPageTarget, withLaunchedBrowser } from "../utils/page-targets";
@@ -14,7 +13,7 @@ import {
   promoteStagedScreenshots,
   resetCounters,
   shouldCapture,
-  takeScreenshot,
+  shouldCaptureAny,
 } from "./capture";
 import {
   SCREENSHOT_AUTH_USER,
@@ -28,6 +27,7 @@ import {
 } from "./config";
 import { screenshotFilledStates } from "./filled-states";
 import {
+  getEmptyCaptureNames,
   getPublicCaptureNames,
   type PublicScreenshotCaptureGroup,
   screenshotEmptyStates,
@@ -385,19 +385,14 @@ export async function captureEmptyStatesForConfig(
       async ({ browser, page }) => {
         await screenshotEmptyStates(page, orgSlug);
 
-        if (shouldCapture("empty", "my-issues")) {
+        if (shouldCaptureAny("empty", getEmptyCaptureNames("separate-auth"))) {
           const myIssuesAuthenticated = await withAuthenticatedScreenshotPage(
             browser,
             viewport,
             theme,
             orgSlug,
             async (myIssuesPage) => {
-              await takeScreenshot(
-                myIssuesPage,
-                "empty",
-                "my-issues",
-                ROUTES.myIssues.build(orgSlug),
-              );
+              await screenshotEmptyStates(myIssuesPage, orgSlug, { group: "separate-auth" });
             },
             {
               user: SCREENSHOT_EMPTY_AUTH_USER,

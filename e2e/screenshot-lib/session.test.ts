@@ -35,6 +35,32 @@ vi.mock("./filled-states", () => ({
 }));
 
 vi.mock("./public-pages", () => ({
+  getEmptyCaptureNames: vi.fn((group: "all" | "bootstrap" | "separate-auth" = "all") => {
+    const bootstrap = [
+      "dashboard",
+      "projects",
+      "issues",
+      "documents",
+      "documents-templates",
+      "workspaces",
+      "time-tracking",
+      "notifications",
+      "invoices",
+      "clients",
+      "meetings",
+      "outreach",
+      "settings",
+      "settings-profile",
+    ];
+    const separateAuth = ["my-issues"];
+    if (group === "bootstrap") {
+      return bootstrap;
+    }
+    if (group === "separate-auth") {
+      return separateAuth;
+    }
+    return [...bootstrap, ...separateAuth];
+  }),
   getPublicCaptureNames: vi.fn((group: "all" | "seeded" | "seedless" = "all") => {
     const seedless = [
       "landing",

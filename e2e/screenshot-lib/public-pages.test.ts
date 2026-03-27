@@ -1,10 +1,16 @@
 import type { Page } from "@playwright/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getCanonicalCaptureNamesForPrefix,
+  getCanonicalEmptyCaptureNames,
   getCanonicalPublicCaptureNames,
+  getEmptyCaptureNames,
+  getEmptyScreenshotTargets,
   getPublicCaptureNames,
   getPublicScreenshotTargets,
+  screenshotEmptyStates,
   screenshotPublicPages,
+  validateEmptyScreenshotTargets,
   validatePublicScreenshotTargets,
 } from "./public-pages";
 import { SCREENSHOT_PAGE_IDS } from "./targets";
@@ -41,6 +47,7 @@ describe("public screenshot targets", () => {
     });
 
     expect(getPublicCaptureNames()).toEqual(canonicalPublicNames);
+    expect(getCanonicalCaptureNamesForPrefix("public")).toEqual(canonicalPublicNames);
     expect(getPublicCaptureNames("seeded")).toEqual([
       "invite",
       "unsubscribe",
@@ -53,6 +60,27 @@ describe("public screenshot targets", () => {
     expect(getCanonicalPublicCaptureNames()).toEqual(canonicalPublicNames);
     expect(getPublicScreenshotTargets("all")).toHaveLength(canonicalPublicNames.length);
     expect(() => validatePublicScreenshotTargets()).not.toThrow();
+  });
+
+  it("keeps the empty target manifest aligned with canonical screenshot ids", () => {
+    const canonicalEmptyNames = SCREENSHOT_PAGE_IDS.flatMap((pageId) => {
+      const [prefix, ...rest] = pageId.split("-");
+      if (prefix !== "empty" || rest.length === 0) {
+        return [];
+      }
+
+      return [rest.join("-")];
+    });
+
+    expect(getEmptyCaptureNames()).toEqual(canonicalEmptyNames);
+    expect(getCanonicalCaptureNamesForPrefix("empty")).toEqual(canonicalEmptyNames);
+    expect(getCanonicalEmptyCaptureNames()).toEqual(canonicalEmptyNames);
+    expect(getEmptyScreenshotTargets()).toHaveLength(canonicalEmptyNames.length);
+    expect(getEmptyCaptureNames("bootstrap")).toEqual(
+      canonicalEmptyNames.filter((name) => name !== "my-issues"),
+    );
+    expect(getEmptyCaptureNames("separate-auth")).toEqual(["my-issues"]);
+    expect(() => validateEmptyScreenshotTargets()).not.toThrow();
   });
 
   it("captures only seedless public routes in seedless mode", async () => {
@@ -109,5 +137,27 @@ describe("public screenshot targets", () => {
       takeScreenshot.mock.calls.map(([, prefix, name]) => `${String(prefix)}-${String(name)}`),
     ).toEqual(["public-invite"]);
     expect(getCurrentConfigUnsubscribeToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("captures bootstrap empty routes from the canonical empty target manifest", async () => {
+    await screenshotEmptyStates({ goto: vi.fn(async () => {}) } as Partial<Page> as Page, "acme");
+
+    expect(shouldCaptureAny).toHaveBeenCalledWith("empty", getEmptyCaptureNames("bootstrap"));
+    expect(takeScreenshot).toHaveBeenCalledTimes(getEmptyCaptureNames("bootstrap").length);
+    expect(
+      takeScreenshot.mock.calls.map(([, prefix, name]) => `${String(prefix)}-${String(name)}`),
+    ).toEqual(getEmptyCaptureNames("bootstrap").map((name) => `empty-${name}`));
+  });
+
+  it("captures separate-auth empty routes from the same canonical manifest", async () => {
+    await screenshotEmptyStates({ goto: vi.fn(async () => {}) } as Partial<Page> as Page, "acme", {
+      group: "separate-auth",
+    });
+
+    expect(shouldCaptureAny).toHaveBeenCalledWith("empty", getEmptyCaptureNames("separate-auth"));
+    expect(takeScreenshot).toHaveBeenCalledTimes(getEmptyCaptureNames("separate-auth").length);
+    expect(
+      takeScreenshot.mock.calls.map(([, prefix, name]) => `${String(prefix)}-${String(name)}`),
+    ).toEqual(getEmptyCaptureNames("separate-auth").map((name) => `empty-${name}`));
   });
 });

@@ -13,6 +13,8 @@ import { SCREENSHOT_PAGE_IDS } from "./targets";
 
 export type PublicScreenshotCaptureGroup = "all" | "seeded" | "seedless";
 type PublicScreenshotCaptureTargetGroup = Exclude<PublicScreenshotCaptureGroup, "all">;
+export type EmptyScreenshotCaptureGroup = "all" | "bootstrap" | "separate-auth";
+type EmptyScreenshotTargetGroup = Exclude<EmptyScreenshotCaptureGroup, "all">;
 
 type PublicScreenshotSeed = Pick<
   SeedScreenshotResult,
@@ -23,6 +25,12 @@ type PublicScreenshotTargetDefinition = {
   group: PublicScreenshotCaptureTargetGroup;
   name: string;
   resolvePath: (seed?: PublicScreenshotSeed) => string | null;
+};
+
+type EmptyScreenshotTargetDefinition = {
+  group: EmptyScreenshotTargetGroup;
+  name: string;
+  resolvePath: (orgSlug: string) => string;
 };
 
 const PUBLIC_SCREENSHOT_TARGETS = [
@@ -115,10 +123,96 @@ const PUBLIC_SCREENSHOT_TARGETS = [
   },
 ] satisfies PublicScreenshotTargetDefinition[];
 
+const EMPTY_SCREENSHOT_TARGETS = [
+  {
+    group: "bootstrap",
+    name: "dashboard",
+    resolvePath: (orgSlug) => ROUTES.dashboard.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "projects",
+    resolvePath: (orgSlug) => ROUTES.projects.list.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "issues",
+    resolvePath: (orgSlug) => ROUTES.issues.list.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "documents",
+    resolvePath: (orgSlug) => ROUTES.documents.list.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "documents-templates",
+    resolvePath: (orgSlug) => ROUTES.documents.templates.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "workspaces",
+    resolvePath: (orgSlug) => ROUTES.workspaces.list.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "time-tracking",
+    resolvePath: (orgSlug) => ROUTES.timeTracking.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "notifications",
+    resolvePath: (orgSlug) => ROUTES.notifications.build(orgSlug),
+  },
+  {
+    group: "separate-auth",
+    name: "my-issues",
+    resolvePath: (orgSlug) => ROUTES.myIssues.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "invoices",
+    resolvePath: (orgSlug) => ROUTES.invoices.list.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "clients",
+    resolvePath: (orgSlug) => ROUTES.clients.list.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "meetings",
+    resolvePath: (orgSlug) => ROUTES.meetings.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "outreach",
+    resolvePath: (orgSlug) => ROUTES.outreach.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "settings",
+    resolvePath: (orgSlug) => ROUTES.settings.profile.build(orgSlug),
+  },
+  {
+    group: "bootstrap",
+    name: "settings-profile",
+    resolvePath: (orgSlug) => ROUTES.settings.profile.build(orgSlug),
+  },
+] satisfies EmptyScreenshotTargetDefinition[];
+
 export function getCanonicalPublicCaptureNames(): string[] {
+  return getCanonicalCaptureNamesForPrefix("public");
+}
+
+export function getCanonicalEmptyCaptureNames(): string[] {
+  return getCanonicalCaptureNamesForPrefix("empty");
+}
+
+export function getCanonicalCaptureNamesForPrefix(prefix: "empty" | "public"): string[] {
   return SCREENSHOT_PAGE_IDS.flatMap((pageId) => {
-    const [prefix, ...rest] = pageId.split("-");
-    if (prefix !== "public" || rest.length === 0) {
+    const [pagePrefix, ...rest] = pageId.split("-");
+    if (pagePrefix !== prefix || rest.length === 0) {
       return [];
     }
 
@@ -155,6 +249,35 @@ export function validatePublicScreenshotTargets(): void {
   );
 }
 
+export function validateEmptyScreenshotTargets(): void {
+  const canonicalEmptyNames = getCanonicalEmptyCaptureNames();
+  const definedEmptyNames = EMPTY_SCREENSHOT_TARGETS.map((target) => target.name);
+  const missingNames = canonicalEmptyNames.filter((name) => !definedEmptyNames.includes(name));
+  const unexpectedNames = definedEmptyNames.filter((name) => !canonicalEmptyNames.includes(name));
+  const duplicateNames = definedEmptyNames.filter(
+    (name, index) => definedEmptyNames.indexOf(name) !== index,
+  );
+
+  if (missingNames.length === 0 && unexpectedNames.length === 0 && duplicateNames.length === 0) {
+    return;
+  }
+
+  const errorParts: string[] = [];
+  if (missingNames.length > 0) {
+    errorParts.push(`missing: ${missingNames.join(", ")}`);
+  }
+  if (unexpectedNames.length > 0) {
+    errorParts.push(`unexpected: ${unexpectedNames.join(", ")}`);
+  }
+  if (duplicateNames.length > 0) {
+    errorParts.push(`duplicate: ${[...new Set(duplicateNames)].join(", ")}`);
+  }
+
+  throw new Error(
+    `Empty screenshot target manifest drifted from SCREENSHOT_PAGE_IDS (${errorParts.join("; ")})`,
+  );
+}
+
 export function getPublicScreenshotTargets(
   group: PublicScreenshotCaptureGroup = "all",
 ): PublicScreenshotTargetDefinition[] {
@@ -169,6 +292,21 @@ export function getPublicScreenshotTargets(
 
 export function getPublicCaptureNames(group: PublicScreenshotCaptureGroup = "all"): string[] {
   return getPublicScreenshotTargets(group).map((target) => target.name);
+}
+
+export function getEmptyScreenshotTargets(
+  group: EmptyScreenshotCaptureGroup = "all",
+): EmptyScreenshotTargetDefinition[] {
+  validateEmptyScreenshotTargets();
+  if (group === "all") {
+    return EMPTY_SCREENSHOT_TARGETS;
+  }
+
+  return EMPTY_SCREENSHOT_TARGETS.filter((target) => target.group === group);
+}
+
+export function getEmptyCaptureNames(group: EmptyScreenshotCaptureGroup = "all"): string[] {
+  return getEmptyScreenshotTargets(group).map((target) => target.name);
 }
 
 export async function screenshotPublicPages(
@@ -194,41 +332,19 @@ export async function screenshotPublicPages(
   }
 }
 
-export async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void> {
-  const emptyNames = [
-    "dashboard",
-    "projects",
-    "issues",
-    "documents",
-    "documents-templates",
-    "workspaces",
-    "time-tracking",
-    "notifications",
-    "invoices",
-    "clients",
-    "meetings",
-    "outreach",
-    "settings",
-    "settings-profile",
-  ];
+export async function screenshotEmptyStates(
+  page: Page,
+  orgSlug: string,
+  options: { group?: EmptyScreenshotCaptureGroup } = {},
+): Promise<void> {
+  const emptyTargets = getEmptyScreenshotTargets(options.group ?? "bootstrap");
+  const emptyNames = emptyTargets.map((target) => target.name);
   if (!shouldCaptureAny("empty", emptyNames)) {
     return;
   }
 
   console.log("    --- Empty states ---");
-  const p = "empty";
-  await takeScreenshot(page, p, "dashboard", ROUTES.dashboard.build(orgSlug));
-  await takeScreenshot(page, p, "projects", ROUTES.projects.list.build(orgSlug));
-  await takeScreenshot(page, p, "issues", ROUTES.issues.list.build(orgSlug));
-  await takeScreenshot(page, p, "documents", ROUTES.documents.list.build(orgSlug));
-  await takeScreenshot(page, p, "documents-templates", ROUTES.documents.templates.build(orgSlug));
-  await takeScreenshot(page, p, "workspaces", ROUTES.workspaces.list.build(orgSlug));
-  await takeScreenshot(page, p, "time-tracking", ROUTES.timeTracking.build(orgSlug));
-  await takeScreenshot(page, p, "notifications", ROUTES.notifications.build(orgSlug));
-  await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
-  await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
-  await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
-  await takeScreenshot(page, p, "outreach", ROUTES.outreach.build(orgSlug));
-  await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
-  await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
+  for (const target of emptyTargets) {
+    await takeScreenshot(page, "empty", target.name, target.resolvePath(orgSlug));
+  }
 }
