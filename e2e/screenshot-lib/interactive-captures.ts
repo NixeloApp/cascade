@@ -46,7 +46,6 @@ import {
   shouldCaptureAny,
 } from "./capture";
 import { BASE_URL } from "./config";
-import { waitForExpectedContent } from "./readiness";
 
 export async function screenshotDashboardModals(
   page: Page,
@@ -176,14 +175,10 @@ export async function screenshotOrgCalendarStates(
 
   if (shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName])) {
     await runRequiredCaptureStep("org calendar filtered scope states", async () => {
-      await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
-      await waitForScreenshotReady(page);
-
       const calendarPage = new CalendarPage(page, orgSlug);
+      await calendarPage.goto();
+      await calendarPage.waitUntilReady();
+      await waitForScreenshotReady(page);
 
       if (shouldCapture(prefix, workspaceScopeName)) {
         await calendarPage.selectWorkspace("Product");
@@ -241,18 +236,14 @@ export async function screenshotProjectsModal(
     return;
   }
 
+  const projectsPage = new ProjectsPage(page, orgSlug);
   const projectsState = await testUserService.configureProjectsState(orgSlug, "default");
   if (!projectsState.success) {
     throw new Error(projectsState.error ?? "Failed to restore default projects state");
   }
 
-  await page.goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
-    waitUntil: "domcontentloaded",
-    timeout: 15000,
-  });
+  await projectsPage.goto();
   await waitForScreenshotReady(page);
-
-  const projectsPage = new ProjectsPage(page, orgSlug);
 
   await runCaptureStep("projects create-project modal", async () => {
     await projectsPage.openCreateProjectForm();
@@ -289,12 +280,8 @@ export async function screenshotProjectsStates(
 
   const openProjectsPage = async (mode: "default" | "single" | "empty") => {
     await configureProjectsState(mode);
-    await page.goto(`${BASE_URL}${projectsUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, projectsUrl, "projects");
     const projectsPage = new ProjectsPage(page, orgSlug);
+    await projectsPage.goto();
     await projectsPage.expectProjectsView();
     return projectsPage;
   };
@@ -370,15 +357,9 @@ export async function screenshotInvoicesStates(
     return;
   }
 
-  const invoicesUrl = ROUTES.invoices.list.build(orgSlug);
-
   const openInvoicesPage = async (targetPage: Page = page) => {
-    await targetPage.goto(`${BASE_URL}${invoicesUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(targetPage, invoicesUrl, "invoices");
     const invoicesPage = new InvoicesPage(targetPage, orgSlug);
+    await invoicesPage.goto();
     await invoicesPage.waitUntilReady();
     return invoicesPage;
   };
@@ -449,8 +430,6 @@ export async function screenshotAssistantStates(
     return;
   }
 
-  const assistantUrl = ROUTES.assistant.build(orgSlug);
-
   const configureAssistantState = async (mode: "default" | "empty") => {
     const result = await testUserService.configureAssistantState(orgSlug, mode);
     if (!result.success) {
@@ -468,12 +447,8 @@ export async function screenshotAssistantStates(
   };
 
   const openAssistantPage = async () => {
-    await page.goto(`${BASE_URL}${assistantUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, assistantUrl, "assistant");
     const assistantPage = new AssistantPage(page, orgSlug);
+    await assistantPage.goto();
     await assistantPage.waitUntilReady();
     return assistantPage;
   };
@@ -528,13 +503,10 @@ export async function screenshotAssistantStates(
     await runCaptureStep("assistant loading", async () => {
       const loadingTarget = await createQueryBlockedPage(page, ["ai/queries:getUsageStats"]);
       const { page: loadingPage } = loadingTarget;
+      const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
 
       try {
-        await loadingPage.goto(`${BASE_URL}${assistantUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
+        await loadingAssistantPage.goto();
         await loadingAssistantPage.expectLoadingStateVisible(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
@@ -567,8 +539,6 @@ export async function screenshotRoadmapStates(
     return;
   }
 
-  const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
-
   const configureRoadmapState = async (mode: "default" | "empty" | "milestone") => {
     const result = await testUserService.configureRoadmapState(orgSlug, projectKey, mode);
     if (!result.success) {
@@ -586,12 +556,9 @@ export async function screenshotRoadmapStates(
     await configureRoadmapState(mode);
 
     try {
-      await page.goto(`${BASE_URL}${roadmapUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, roadmapUrl, "roadmap");
       const roadmapPage = new RoadmapPage(page, orgSlug);
+      await roadmapPage.gotoProject(projectKey);
+      await roadmapPage.waitUntilReady();
       return await run(page, roadmapPage);
     } finally {
       await configureRoadmapState("default");
@@ -705,12 +672,9 @@ export async function screenshotBoardModals(
     return;
   }
 
-  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-  await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-  await waitForExpectedContent(page, boardUrl, "board");
-  await waitForScreenshotReady(page);
-
   const projectsPage = new ProjectsPage(page, orgSlug);
+  await projectsPage.gotoProjectBoardAndWait(projectKey);
+  await waitForScreenshotReady(page);
   if (
     shouldCapture(prefix, createIssueModalName) &&
     (await projectsPage.createIssueButton.count()) > 0
@@ -842,12 +806,11 @@ export async function screenshotMeetingsStates(
     return;
   }
 
-  const meetingsUrl = ROUTES.meetings.build(orgSlug);
   const meetingsPage = new MeetingsPage(page, orgSlug);
 
   const openMeetingsForCapture = async () => {
-    await page.goto(`${BASE_URL}${meetingsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-    await waitForExpectedContent(page, meetingsUrl, "meetings");
+    await meetingsPage.goto();
+    await meetingsPage.waitForCaptureReady();
     await waitForScreenshotReady(page);
   };
 
@@ -939,17 +902,13 @@ export async function screenshotDocumentsStates(
     return;
   }
 
-  const documentsUrl = ROUTES.documents.list.build(orgSlug);
   const documentsPage = new DocumentsPage(page, orgSlug);
 
   const openDocumentsForCapture = async () => {
-    await page.goto(`${BASE_URL}${documentsUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, documentsUrl, "documents", prefix);
-    await waitForScreenshotReady(page);
+    await documentsPage.goto();
+    await documentsPage.waitUntilReady();
     await documentsPage.expectDocumentsView();
+    await waitForScreenshotReady(page);
   };
 
   if (shouldCapture(prefix, filteredSearchName)) {
@@ -996,15 +955,11 @@ export async function screenshotIssuesStates(
     return;
   }
 
-  const issuesUrl = ROUTES.issues.list.build(orgSlug);
   const issuesPage = new IssuesPage(page, orgSlug);
 
   const openIssuesForCapture = async () => {
-    await page.goto(`${BASE_URL}${issuesUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, issuesUrl, "issues", prefix);
+    await issuesPage.goto();
+    await issuesPage.waitUntilReady();
     await waitForScreenshotReady(page);
   };
 
@@ -1058,16 +1013,7 @@ export async function screenshotIssuesStates(
       const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
 
       try {
-        await loadingPage.goto(`${BASE_URL}${issuesUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await loadingPage.waitForURL(
-          (currentUrl) => /\/[^/]+\/issues$/.test(new URL(currentUrl).pathname),
-          {
-            timeout: 15000,
-          },
-        );
+        await loadingIssuesPage.goto();
         await loadingIssuesPage.expectLoadingStateVisible(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
@@ -1533,14 +1479,11 @@ export async function screenshotIssueInteractiveStates(
     return;
   }
 
-  const issuesUrl = ROUTES.issues.list.build(orgSlug);
-
   await runCaptureStep("issues side panel", async () => {
-    await page.goto(`${BASE_URL}${issuesUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-    await waitForExpectedContent(page, issuesUrl, "issues", prefix);
-    await waitForScreenshotReady(page);
-
     const issuesPage = new IssuesPage(page, orgSlug);
+    await issuesPage.goto();
+    await issuesPage.waitUntilReady();
+    await waitForScreenshotReady(page);
     await issuesPage.switchToSidePanelMode();
     await waitForScreenshotReady(page);
 
