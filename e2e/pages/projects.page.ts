@@ -410,9 +410,19 @@ export class ProjectsPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async gotoAndExpectProjectsLoadingState(timeout = 10000): Promise<void> {
+    await this.goto();
+    await this.expectProjectsLoadingStateVisible(timeout);
+  }
+
   async gotoProjectBoardAndWait(projectKey: string) {
     await this.gotoProjectBoard(projectKey);
     await this.waitForBoardInteractive();
+  }
+
+  async gotoProjectBoardAndExpectLoadingState(projectKey: string, timeout = 12000): Promise<void> {
+    await this.gotoProjectBoard(projectKey);
+    await this.expectBoardLoadingStateVisible(timeout);
   }
 
   async gotoProjectSettings(projectKey: string) {

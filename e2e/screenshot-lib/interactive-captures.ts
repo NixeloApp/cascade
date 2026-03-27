@@ -6,7 +6,6 @@
  */
 
 import { expect, type Page } from "@playwright/test";
-import { ROUTES } from "../../convex/shared/routes";
 import { E2E_TIMEZONE } from "../constants";
 import {
   AssistantPage,
@@ -45,7 +44,6 @@ import {
   shouldCapture,
   shouldCaptureAny,
 } from "./capture";
-import { BASE_URL } from "./config";
 
 export async function screenshotDashboardModals(
   page: Page,
@@ -125,21 +123,10 @@ export async function screenshotDashboardLoadingState(
   await runCaptureStep("dashboard loading skeletons", async () => {
     const loadingTarget = await createIsolatedConvexLoadingPage(page);
     const { page: loadingPage } = loadingTarget;
+    const loadingDashboardPage = new DashboardPage(loadingPage, orgSlug);
 
     try {
-      const dashboardUrl = ROUTES.dashboard.build(orgSlug);
-      await loadingPage.goto(`${BASE_URL}${dashboardUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await loadingPage.waitForURL(
-        (currentUrl) => /\/[^/]+\/dashboard$/.test(new URL(currentUrl).pathname),
-        {
-          timeout: 15000,
-        },
-      );
-      const loadingDashboardPage = new DashboardPage(loadingPage, orgSlug);
-      await loadingDashboardPage.expectLoadingSkeletonsVisible(12000);
+      await loadingDashboardPage.gotoAndExpectLoadingSkeletons(12000);
       await waitForAnimation(loadingPage);
       await loadingPage.evaluate(
         () =>
@@ -171,8 +158,6 @@ export async function screenshotOrgCalendarStates(
     return;
   }
 
-  const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
-
   if (shouldCaptureAny(prefix, [workspaceScopeName, teamScopeName])) {
     await runRequiredCaptureStep("org calendar filtered scope states", async () => {
       const calendarPage = new CalendarPage(page, orgSlug);
@@ -200,20 +185,10 @@ export async function screenshotOrgCalendarStates(
   if (shouldCapture(prefix, loadingStateName)) {
     await runRequiredCaptureStep("org calendar loading state", async () => {
       const loadingPage = await createConvexLoadingPage(page);
+      const loadingCalendarPage = new CalendarPage(loadingPage, orgSlug);
 
       try {
-        await loadingPage.goto(`${BASE_URL}${orgCalendarUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await loadingPage.waitForURL(
-          (currentUrl) => /\/[^/]+\/calendar$/.test(new URL(currentUrl).pathname),
-          {
-            timeout: 15000,
-          },
-        );
-        const loadingCalendarPage = new CalendarPage(loadingPage, orgSlug);
-        await loadingCalendarPage.expectLoadingStateVisible(12000);
+        await loadingCalendarPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,
@@ -269,8 +244,6 @@ export async function screenshotProjectsStates(
     return;
   }
 
-  const projectsUrl = ROUTES.projects.list.build(orgSlug);
-
   const configureProjectsState = async (mode: "default" | "single" | "empty") => {
     const result = await testUserService.configureProjectsState(orgSlug, mode);
     if (!result.success) {
@@ -317,14 +290,10 @@ export async function screenshotProjectsStates(
     if (shouldCapture(prefix, captureNames.loading)) {
       await runCaptureStep("projects loading", async () => {
         const loadingPage = await createConvexLoadingPage(page);
+        const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
 
         try {
-          await loadingPage.goto(`${BASE_URL}${projectsUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
-          await loadingProjectsPage.expectProjectsLoadingStateVisible(12000);
+          await loadingProjectsPage.gotoAndExpectProjectsLoadingState(12000);
           await waitForAnimation(loadingPage);
           await captureCurrentView(loadingPage, prefix, captureNames.loading, {
             skipReadyCheck: true,
@@ -506,8 +475,7 @@ export async function screenshotAssistantStates(
       const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
 
       try {
-        await loadingAssistantPage.goto();
-        await loadingAssistantPage.expectLoadingStateVisible(12000);
+        await loadingAssistantPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
           skipReadyCheck: true,
@@ -746,24 +714,12 @@ export async function screenshotBoardLoadingState(
     return;
   }
 
-  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-
   await runRequiredCaptureStep("board loading state", async () => {
     const loadingPage = await createConvexLoadingPage(page);
     const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
 
     try {
-      await loadingPage.goto(`${BASE_URL}${boardUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await loadingPage.waitForURL(
-        (currentUrl) => /\/[^/]+\/projects\/[^/]+\/board$/.test(new URL(currentUrl).pathname),
-        {
-          timeout: 15000,
-        },
-      );
-      await loadingProjectsPage.expectBoardLoadingStateVisible(15000);
+      await loadingProjectsPage.gotoProjectBoardAndExpectLoadingState(projectKey, 15000);
       await waitForAnimation(loadingPage);
       await captureCurrentView(loadingPage, prefix, loadingStateName, {
         skipReadyCheck: true,
@@ -1013,8 +969,7 @@ export async function screenshotIssuesStates(
       const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
 
       try {
-        await loadingIssuesPage.goto();
-        await loadingIssuesPage.expectLoadingStateVisible(12000);
+        await loadingIssuesPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,

@@ -74,6 +74,11 @@ export class IssuesPage extends BasePage {
       .not.toBe("pending");
   }
 
+  async gotoAndExpectLoadingState(timeout = 12000): Promise<void> {
+    await this.goto();
+    await this.expectLoadingStateVisible(timeout);
+  }
+
   async searchIssues(query: string): Promise<void> {
     await expect(this.searchInput).toBeVisible();
     await this.searchInput.fill(query);

@@ -297,6 +297,11 @@ export class DashboardPage extends BasePage {
     await waitForDashboardReady(this.page);
   }
 
+  async gotoAndExpectLoadingSkeletons(timeout = 12000): Promise<void> {
+    await this.goto();
+    await this.expectLoadingSkeletonsVisible(timeout);
+  }
+
   async waitForCaptureReady(timeout = 15000): Promise<void> {
     await this.expectDashboardReady(timeout);
     await expect(this.pageHeaderTitle).toBeVisible({ timeout });

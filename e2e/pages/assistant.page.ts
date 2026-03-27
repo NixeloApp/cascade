@@ -48,6 +48,11 @@ export class AssistantPage extends BasePage {
       .toBe("ready");
   }
 
+  async gotoAndExpectLoadingState(timeout = 12000): Promise<void> {
+    await this.goto();
+    await this.expectLoadingStateVisible(timeout);
+  }
+
   async openConversationsTab(): Promise<void> {
     await expect(this.conversationsTab).toBeVisible();
     await this.conversationsTab.click();

@@ -61,6 +61,11 @@ export class NotificationsPage extends BasePage {
       .toBe("ready");
   }
 
+  async gotoAndWaitForUnreadOverflowReady(): Promise<void> {
+    await this.goto();
+    await this.waitForUnreadOverflowReady();
+  }
+
   async waitForCaptureReady(): Promise<void> {
     await waitForDashboardReady(this.page);
     await waitForScreenshotReady(this.page);

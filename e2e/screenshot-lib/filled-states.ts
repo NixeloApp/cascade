@@ -1771,12 +1771,8 @@ export async function screenshotFilledStates(
 
         const loadingPage = await page.context().newPage();
         try {
-          await loadingPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
           const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
-          await notificationsPage.waitForUnreadOverflowReady();
+          await notificationsPage.gotoAndWaitForUnreadOverflowReady();
           const releaseMutationBlock = await notificationsPage.openMarkAllReadLoadingState();
 
           try {

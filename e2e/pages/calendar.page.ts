@@ -154,6 +154,11 @@ export class CalendarPage extends BasePage {
     return false;
   }
 
+  async gotoAndExpectLoadingState(timeout = 12000): Promise<void> {
+    await this.goto();
+    await this.expectLoadingStateVisible(timeout);
+  }
+
   async expectLoadingStateVisible(timeout = 12000): Promise<void> {
     await this.loadingState.waitFor({ state: "visible", timeout });
     await expect
