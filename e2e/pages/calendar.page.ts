@@ -611,21 +611,39 @@ export class CalendarPage extends BasePage {
     const targetCell = dayCells.nth(targetIndex);
     const sourceEvent = sourceCell.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
     const dataTransfer = await this.page.evaluateHandle(() => new DataTransfer());
+    let dragStarted = false;
 
-    await sourceEvent.scrollIntoViewIfNeeded();
-    await targetCell.waitFor({ state: "visible", timeout: 5000 });
-    await targetCell.scrollIntoViewIfNeeded();
-    await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
-    await targetCell.dispatchEvent("dragenter", { dataTransfer });
-    await targetCell.dispatchEvent("dragover", { dataTransfer });
-    await targetCell
-      .getByTestId(TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET)
-      .waitFor({ state: "attached", timeout: 5000 });
+    try {
+      await sourceEvent.scrollIntoViewIfNeeded();
+      await targetCell.waitFor({ state: "visible", timeout: 5000 });
+      await targetCell.scrollIntoViewIfNeeded();
+      await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
+      dragStarted = true;
+      await targetCell.dispatchEvent("dragenter", { dataTransfer });
+      await targetCell.dispatchEvent("dragover", { dataTransfer });
+      await targetCell
+        .getByTestId(TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET)
+        .waitFor({ state: "attached", timeout: 5000 });
 
-    return async () => {
-      await sourceEvent.dispatchEvent("dragend", { dataTransfer });
-      await dataTransfer.dispose();
-    };
+      return async () => {
+        try {
+          if (dragStarted) {
+            await sourceEvent.dispatchEvent("dragend", { dataTransfer });
+          }
+        } finally {
+          await dataTransfer.dispose();
+        }
+      };
+    } catch (error) {
+      try {
+        if (dragStarted) {
+          await sourceEvent.dispatchEvent("dragend", { dataTransfer }).catch(() => undefined);
+        }
+      } finally {
+        await dataTransfer.dispose();
+      }
+      throw error;
+    }
   }
 
   private async scrollCalendarToHour(hour: number) {

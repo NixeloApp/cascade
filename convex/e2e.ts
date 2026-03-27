@@ -101,6 +101,7 @@ async function findLatestUserByEmail(ctx: E2EReadCtx, email: string): Promise<Do
   const users = await ctx.db
     .query("users")
     .withIndex("email", (q) => q.eq("email", email))
+    .filter(notDeleted)
     .collect();
   if (users.length === 0) {
     return null;
@@ -7170,7 +7171,7 @@ export const getScreenshotOrgSlugEndpoint = httpAction(async (ctx, request) => {
     });
 
     return new Response(JSON.stringify(result), {
-      status: result.success ? 200 : 500,
+      status: result.success ? 200 : 404,
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
