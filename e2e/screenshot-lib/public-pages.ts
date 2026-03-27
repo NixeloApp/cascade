@@ -12,21 +12,111 @@ import { getCurrentConfigUnsubscribeToken, shouldCaptureAny, takeScreenshot } fr
 import { SCREENSHOT_PAGE_IDS } from "./targets";
 
 export type PublicScreenshotCaptureGroup = "all" | "seeded" | "seedless";
+type PublicScreenshotCaptureTargetGroup = Exclude<PublicScreenshotCaptureGroup, "all">;
 
 type PublicScreenshotSeed = Pick<
   SeedScreenshotResult,
   "inviteToken" | "portalProjectId" | "portalToken" | "unsubscribeTokens"
 >;
 
-const SEEDED_PUBLIC_CAPTURE_NAME_SET = new Set([
-  "invite",
-  "unsubscribe",
-  "portal",
-  "portal-project",
-]);
+type PublicScreenshotTargetDefinition = {
+  group: PublicScreenshotCaptureTargetGroup;
+  name: string;
+  resolvePath: (seed?: PublicScreenshotSeed) => string | null;
+};
 
-export function getPublicCaptureNames(group: PublicScreenshotCaptureGroup = "all"): string[] {
-  const publicNames = SCREENSHOT_PAGE_IDS.flatMap((pageId) => {
+const PUBLIC_SCREENSHOT_TARGETS = [
+  {
+    group: "seedless",
+    name: "landing",
+    resolvePath: () => ROUTES.home.build(),
+  },
+  {
+    group: "seedless",
+    name: "signin",
+    resolvePath: () => ROUTES.signin.build(),
+  },
+  {
+    group: "seedless",
+    name: "signup",
+    resolvePath: () => ROUTES.signup.build(),
+  },
+  {
+    group: "seedless",
+    name: "signup-verify",
+    resolvePath: () => `${ROUTES.signup.build()}?step=verify&email=screenshots%40inbox.mailtrap.io`,
+  },
+  {
+    group: "seedless",
+    name: "forgot-password",
+    resolvePath: () => ROUTES.forgotPassword.build(),
+  },
+  {
+    group: "seedless",
+    name: "forgot-password-reset",
+    resolvePath: () =>
+      `${ROUTES.forgotPassword.build()}?step=reset&email=screenshots%40inbox.mailtrap.io`,
+  },
+  {
+    group: "seedless",
+    name: "verify-email",
+    resolvePath: () => ROUTES.verifyEmail.build("screenshots@inbox.mailtrap.io"),
+  },
+  {
+    group: "seedless",
+    name: "verify-2fa",
+    resolvePath: () => ROUTES.verify2FA.build(),
+  },
+  {
+    group: "seeded",
+    name: "invite",
+    resolvePath: (seed) => (seed?.inviteToken ? ROUTES.invite.build(seed.inviteToken) : null),
+  },
+  {
+    group: "seedless",
+    name: "invite-invalid",
+    resolvePath: () => "/invite/screenshot-test-token",
+  },
+  {
+    group: "seedless",
+    name: "invite-expired",
+    resolvePath: () => `${ROUTES.invite.build("screenshot-test-token")}?previewState=expired`,
+  },
+  {
+    group: "seedless",
+    name: "invite-revoked",
+    resolvePath: () => `${ROUTES.invite.build("screenshot-test-token")}?previewState=revoked`,
+  },
+  {
+    group: "seedless",
+    name: "invite-accepted",
+    resolvePath: () => `${ROUTES.invite.build("screenshot-test-token")}?previewState=accepted`,
+  },
+  {
+    group: "seeded",
+    name: "unsubscribe",
+    resolvePath: (seed) => {
+      const unsubscribeToken = seed ? getCurrentConfigUnsubscribeToken(seed) : undefined;
+      return unsubscribeToken ? ROUTES.unsubscribe.build(unsubscribeToken) : null;
+    },
+  },
+  {
+    group: "seeded",
+    name: "portal",
+    resolvePath: (seed) => (seed?.portalToken ? ROUTES.portal.entry.build(seed.portalToken) : null),
+  },
+  {
+    group: "seeded",
+    name: "portal-project",
+    resolvePath: (seed) =>
+      seed?.portalToken && seed.portalProjectId
+        ? ROUTES.portal.project.build(seed.portalToken, seed.portalProjectId)
+        : null,
+  },
+] satisfies PublicScreenshotTargetDefinition[];
+
+export function getCanonicalPublicCaptureNames(): string[] {
+  return SCREENSHOT_PAGE_IDS.flatMap((pageId) => {
     const [prefix, ...rest] = pageId.split("-");
     if (prefix !== "public" || rest.length === 0) {
       return [];
@@ -34,15 +124,51 @@ export function getPublicCaptureNames(group: PublicScreenshotCaptureGroup = "all
 
     return [rest.join("-")];
   });
+}
 
-  switch (group) {
-    case "seeded":
-      return publicNames.filter((name) => SEEDED_PUBLIC_CAPTURE_NAME_SET.has(name));
-    case "seedless":
-      return publicNames.filter((name) => !SEEDED_PUBLIC_CAPTURE_NAME_SET.has(name));
-    default:
-      return publicNames;
+export function validatePublicScreenshotTargets(): void {
+  const canonicalPublicNames = getCanonicalPublicCaptureNames();
+  const definedPublicNames = PUBLIC_SCREENSHOT_TARGETS.map((target) => target.name);
+  const missingNames = canonicalPublicNames.filter((name) => !definedPublicNames.includes(name));
+  const unexpectedNames = definedPublicNames.filter((name) => !canonicalPublicNames.includes(name));
+  const duplicateNames = definedPublicNames.filter(
+    (name, index) => definedPublicNames.indexOf(name) !== index,
+  );
+
+  if (missingNames.length === 0 && unexpectedNames.length === 0 && duplicateNames.length === 0) {
+    return;
   }
+
+  const errorParts: string[] = [];
+  if (missingNames.length > 0) {
+    errorParts.push(`missing: ${missingNames.join(", ")}`);
+  }
+  if (unexpectedNames.length > 0) {
+    errorParts.push(`unexpected: ${unexpectedNames.join(", ")}`);
+  }
+  if (duplicateNames.length > 0) {
+    errorParts.push(`duplicate: ${[...new Set(duplicateNames)].join(", ")}`);
+  }
+
+  throw new Error(
+    `Public screenshot target manifest drifted from SCREENSHOT_PAGE_IDS (${errorParts.join("; ")})`,
+  );
+}
+
+export function getPublicScreenshotTargets(
+  group: PublicScreenshotCaptureGroup = "all",
+): PublicScreenshotTargetDefinition[] {
+  validatePublicScreenshotTargets();
+
+  if (group === "all") {
+    return PUBLIC_SCREENSHOT_TARGETS;
+  }
+
+  return PUBLIC_SCREENSHOT_TARGETS.filter((target) => target.group === group);
+}
+
+export function getPublicCaptureNames(group: PublicScreenshotCaptureGroup = "all"): string[] {
+  return getPublicScreenshotTargets(group).map((target) => target.name);
 }
 
 export async function screenshotPublicPages(
@@ -51,83 +177,20 @@ export async function screenshotPublicPages(
   options: { group?: PublicScreenshotCaptureGroup } = {},
 ): Promise<void> {
   const group = options.group ?? "all";
-  const publicNames = getPublicCaptureNames(group);
+  const publicTargets = getPublicScreenshotTargets(group);
+  const publicNames = publicTargets.map((target) => target.name);
   if (!shouldCaptureAny("public", publicNames)) {
     return;
   }
 
   console.log("    --- Public pages ---");
-  if (group !== "seeded") {
-    await takeScreenshot(page, "public", "landing", ROUTES.home.build());
-    await takeScreenshot(page, "public", "signin", ROUTES.signin.build());
-    await takeScreenshot(page, "public", "signup", ROUTES.signup.build());
-    await takeScreenshot(
-      page,
-      "public",
-      "signup-verify",
-      `${ROUTES.signup.build()}?step=verify&email=screenshots%40inbox.mailtrap.io`,
-    );
-    await takeScreenshot(page, "public", "forgot-password", ROUTES.forgotPassword.build());
-    await takeScreenshot(
-      page,
-      "public",
-      "forgot-password-reset",
-      `${ROUTES.forgotPassword.build()}?step=reset&email=screenshots%40inbox.mailtrap.io`,
-    );
-    await takeScreenshot(
-      page,
-      "public",
-      "verify-email",
-      ROUTES.verifyEmail.build("screenshots@inbox.mailtrap.io"),
-    );
-    await takeScreenshot(page, "public", "verify-2fa", ROUTES.verify2FA.build());
-    await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
-    await takeScreenshot(
-      page,
-      "public",
-      "invite-expired",
-      `${ROUTES.invite.build("screenshot-test-token")}?previewState=expired`,
-    );
-    await takeScreenshot(
-      page,
-      "public",
-      "invite-revoked",
-      `${ROUTES.invite.build("screenshot-test-token")}?previewState=revoked`,
-    );
-    await takeScreenshot(
-      page,
-      "public",
-      "invite-accepted",
-      `${ROUTES.invite.build("screenshot-test-token")}?previewState=accepted`,
-    );
-  }
-
-  if (group !== "seedless" && seed?.inviteToken) {
-    await takeScreenshot(page, "public", "invite", ROUTES.invite.build(seed.inviteToken));
-  }
-
-  if (group !== "seedless") {
-    const unsubscribeToken = seed ? getCurrentConfigUnsubscribeToken(seed) : undefined;
-    if (unsubscribeToken) {
-      await takeScreenshot(
-        page,
-        "public",
-        "unsubscribe",
-        ROUTES.unsubscribe.build(unsubscribeToken),
-      );
+  for (const target of publicTargets) {
+    const route = target.resolvePath(seed);
+    if (!route) {
+      continue;
     }
 
-    if (seed?.portalToken) {
-      await takeScreenshot(page, "public", "portal", ROUTES.portal.entry.build(seed.portalToken));
-      if (seed.portalProjectId) {
-        await takeScreenshot(
-          page,
-          "public",
-          "portal-project",
-          ROUTES.portal.project.build(seed.portalToken, seed.portalProjectId),
-        );
-      }
-    }
+    await takeScreenshot(page, "public", target.name, route);
   }
 }
 

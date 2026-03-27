@@ -31,6 +31,7 @@
 - [ ] Keep config-level browser launch/auth/retry orchestration on shared screenshot session helpers instead of re-implementing browser sessions around empty vs filled capture paths.
 - [ ] Keep screenshot phase gating derived from the canonical screenshot target list so empty/public/filled orchestration cannot drift out of sync with actual capture ids.
 - [ ] Keep seedless public-page captures off the authenticated bootstrap and seeding path; landing/auth-style screenshots should not pay for screenshot user setup or seeded tokens they do not need.
+- [ ] Keep public screenshot target policy on one canonical manifest. Seeded vs seedless grouping and route/token requirements should not live in separate hand-maintained sets and imperative branches.
 - [ ] Keep browser launch/close, config retry policy, and auth bootstrap on the shared screenshot session helper path instead of re-implementing them in CLI entrypoints or route-specific capture code.
 - [ ] Keep staged screenshot output lifecycle on the shared session helper path instead of re-implementing staging-root setup, promotion, or cleanup in CLI entrypoints.
 - [ ] Keep generic browser/context/page target lifecycle on shared E2E utilities instead of rebuilding it inside screenshot-lib session helpers.
