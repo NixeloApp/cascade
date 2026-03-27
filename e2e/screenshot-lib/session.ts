@@ -1,13 +1,8 @@
-import type {
-  Browser,
-  BrowserContext,
-  BrowserContextOptions,
-  Page,
-  StorageState,
-} from "@playwright/test";
+import type { Browser, BrowserContextOptions, Page, StorageState } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import type { TestUser } from "../config";
 import { E2E_TIMEZONE } from "../constants";
+import { withBrowserPageTarget, withLaunchedBrowser } from "../utils/page-targets";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import { ensureAuthenticatedScreenshotPage } from "./auth";
 import {
@@ -43,12 +38,7 @@ export interface ScreenshotCaptureConfig {
 }
 
 export type LaunchBrowser = () => Promise<Browser>;
-export type ScreenshotPageTarget = {
-  context: BrowserContext;
-  page: Page;
-};
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
-type ScreenshotPageTargetCallback<T> = (target: ScreenshotPageTarget) => Promise<T>;
 type AuthenticatedScreenshotPageOptions = {
   storageState?: StorageState;
   user?: TestUser;
@@ -83,7 +73,7 @@ export function setCurrentConfig(viewport: ViewportName, theme: ThemeName, mode:
   );
 }
 
-export function getContextOptions(
+export function getScreenshotContextOptions(
   viewport: ViewportName,
   theme: ThemeName,
   storageState?: StorageState,
@@ -96,53 +86,6 @@ export function getContextOptions(
   };
 }
 
-export async function withLaunchedBrowser<T>(
-  launchBrowser: LaunchBrowser,
-  callback: (browser: Browser) => Promise<T>,
-): Promise<T> {
-  const browser = await launchBrowser();
-  try {
-    return await callback(browser);
-  } finally {
-    await browser.close();
-  }
-}
-
-export async function withScreenshotTarget<T>(
-  browser: Browser,
-  viewport: ViewportName,
-  theme: ThemeName,
-  callback: ScreenshotPageTargetCallback<T>,
-  storageState?: StorageState,
-): Promise<T> {
-  const context = await browser.newContext(getContextOptions(viewport, theme, storageState));
-
-  try {
-    const page = await context.newPage();
-    return await callback({ context, page });
-  } finally {
-    await context.close();
-  }
-}
-
-export async function withScreenshotPage(
-  browser: Browser,
-  viewport: ViewportName,
-  theme: ThemeName,
-  callback: ScreenshotPageCallback,
-  storageState?: StorageState,
-): Promise<void> {
-  await withScreenshotTarget(
-    browser,
-    viewport,
-    theme,
-    async ({ page }) => {
-      await callback(page);
-    },
-    storageState,
-  );
-}
-
 export async function withAuthenticatedScreenshotPage(
   browser: Browser,
   viewport: ViewportName,
@@ -153,10 +96,8 @@ export async function withAuthenticatedScreenshotPage(
 ): Promise<boolean> {
   let authenticated = false;
 
-  await withScreenshotTarget(
+  await withBrowserPageTarget(
     browser,
-    viewport,
-    theme,
     async ({ page }) => {
       authenticated = await ensureAuthenticatedScreenshotPage(
         page,
@@ -171,7 +112,7 @@ export async function withAuthenticatedScreenshotPage(
       await callback(page);
       return true;
     },
-    options.storageState,
+    getScreenshotContextOptions(viewport, theme, options.storageState),
   );
 
   return authenticated;
@@ -196,25 +137,29 @@ export async function prepareScreenshotAuthBootstrap(
   console.log(`  ✓ User: ${SCREENSHOT_USER.email}`);
 
   return withLaunchedBrowser(launchBrowser, async (setupBrowser) =>
-    withScreenshotTarget(setupBrowser, "desktop", "dark", async ({ context, page: setupPage }) => {
-      const seedProbe = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {});
-      const orgSlug = seedProbe.orgSlug;
+    withBrowserPageTarget(
+      setupBrowser,
+      async ({ context, page: setupPage }) => {
+        const seedProbe = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {});
+        const orgSlug = seedProbe.orgSlug;
 
-      if (!orgSlug) {
-        console.error("  ❌ Could not determine org slug from seed probe. Aborting.");
-        return null;
-      }
+        if (!orgSlug) {
+          console.error("  ❌ Could not determine org slug from seed probe. Aborting.");
+          return null;
+        }
 
-      if (!(await ensureAuthenticatedScreenshotPage(setupPage, orgSlug, SCREENSHOT_AUTH_USER))) {
-        console.error("  ❌ Could not authenticate. Aborting.");
-        return null;
-      }
+        if (!(await ensureAuthenticatedScreenshotPage(setupPage, orgSlug, SCREENSHOT_AUTH_USER))) {
+          console.error("  ❌ Could not authenticate. Aborting.");
+          return null;
+        }
 
-      return {
-        orgSlug,
-        authStorageState: await context.storageState(),
-      };
-    }),
+        return {
+          orgSlug,
+          authStorageState: await context.storageState(),
+        };
+      },
+      getScreenshotContextOptions("desktop", "dark"),
+    ),
   );
 }
 

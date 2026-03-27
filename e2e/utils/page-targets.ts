@@ -1,4 +1,4 @@
-import type { BrowserContext, BrowserContextOptions, Page } from "@playwright/test";
+import type { Browser, BrowserContext, BrowserContextOptions, Page } from "@playwright/test";
 
 type IsolatedPageOverrides = Pick<BrowserContextOptions, "colorScheme" | "timezoneId">;
 
@@ -10,6 +10,19 @@ export type PageTarget = {
 export type IsolatedPageTarget = PageTarget & {
   context: BrowserContext;
 };
+
+export async function withLaunchedBrowser<T>(
+  launchBrowser: () => Promise<Browser>,
+  run: (browser: Browser) => Promise<T>,
+): Promise<T> {
+  const browser = await launchBrowser();
+
+  try {
+    return await run(browser);
+  } finally {
+    await browser.close();
+  }
+}
 
 export async function withSiblingPageTarget<T>(
   sourcePage: Page,
@@ -38,6 +51,20 @@ export async function withIsolatedPageTarget<T>(
   }
 }
 
+export async function withBrowserPageTarget<T>(
+  browser: Browser,
+  run: (target: IsolatedPageTarget) => Promise<T>,
+  contextOptions: BrowserContextOptions = {},
+): Promise<T> {
+  const target = await createBrowserPageTarget(browser, contextOptions);
+
+  try {
+    return await run(target);
+  } finally {
+    await target.close();
+  }
+}
+
 export async function createSiblingPageTarget(sourcePage: Page): Promise<PageTarget> {
   const page = await sourcePage.context().newPage();
 
@@ -49,6 +76,28 @@ export async function createSiblingPageTarget(sourcePage: Page): Promise<PageTar
       }
     },
   };
+}
+
+export async function createBrowserPageTarget(
+  browser: Browser,
+  contextOptions: BrowserContextOptions = {},
+): Promise<IsolatedPageTarget> {
+  const context = await browser.newContext(contextOptions);
+
+  try {
+    const page = await context.newPage();
+
+    return {
+      context,
+      page,
+      close: async () => {
+        await context.close();
+      },
+    };
+  } catch (error) {
+    await context.close();
+    throw error;
+  }
 }
 
 export async function createIsolatedPageTarget(

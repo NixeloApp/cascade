@@ -11,6 +11,7 @@ import {
   captureFilledStatesForConfig,
   enumerateDryRunTargets,
   formatConfigLabel,
+  getScreenshotContextOptions,
   prepareScreenshotAuthBootstrap,
   withAuthenticatedScreenshotPage,
 } from "./session";
@@ -64,6 +65,20 @@ describe("screenshot session helpers", () => {
   it("formats viewport and theme pairs into config labels", () => {
     expect(formatConfigLabel("desktop", "dark")).toBe("desktop-dark");
     expect(formatConfigLabel("mobile", "light")).toBe("mobile-light");
+  });
+
+  it("builds screenshot context options from viewport, theme, and storage state", () => {
+    expect(
+      getScreenshotContextOptions("tablet", "light", {
+        cookies: [],
+        origins: [],
+      }),
+    ).toEqual({
+      colorScheme: "light",
+      storageState: { cookies: [], origins: [] },
+      timezoneId: E2E_TIMEZONE,
+      viewport: { height: 1024, width: 768 },
+    });
   });
 
   it("enumerates only targets that match the active filters", () => {
