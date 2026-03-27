@@ -13,7 +13,7 @@ import {
   waitForIssueUpdateSuccess,
   waitForProjectCreateSuccess,
 } from "../utils";
-import { withConvexLoadingPage } from "../utils/convex-loading";
+import { withBlockedConvexPage } from "../utils/convex-loading";
 import { withSiblingPageTarget } from "../utils/page-targets";
 import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import { waitForAnimation, waitForScreenshotReady } from "../utils/wait-helpers";
@@ -40,8 +40,10 @@ export class ProjectsPage extends BasePage {
     orgSlug: string,
     run: (projectsPage: ProjectsPage) => Promise<T>,
   ): Promise<T> {
-    return withConvexLoadingPage(sourcePage, async (loadingPage) =>
-      run(new ProjectsPage(loadingPage, orgSlug)),
+    return withBlockedConvexPage(
+      sourcePage,
+      { installTransportBlocker: true, isolated: false },
+      async (loadingPage) => run(new ProjectsPage(loadingPage, orgSlug)),
     );
   }
 
@@ -50,8 +52,10 @@ export class ProjectsPage extends BasePage {
     orgSlug: string,
     run: (projectsPage: ProjectsPage) => Promise<T>,
   ): Promise<T> {
-    return withConvexLoadingPage(sourcePage, async (loadingPage) =>
-      run(new ProjectsPage(loadingPage, orgSlug)),
+    return withBlockedConvexPage(
+      sourcePage,
+      { installTransportBlocker: true, isolated: false },
+      async (loadingPage) => run(new ProjectsPage(loadingPage, orgSlug)),
     );
   }
 

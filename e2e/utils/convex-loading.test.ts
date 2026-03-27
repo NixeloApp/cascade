@@ -1,11 +1,6 @@
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { describe, expect, it, vi } from "vitest";
-import {
-  withConvexLoadingPage,
-  withIsolatedConvexLoadingPage,
-  withMutationBlockedPage,
-  withQueryBlockedPage,
-} from "./convex-loading";
+import { withBlockedConvexPage } from "./convex-loading";
 
 function createConvexLoadingHarness() {
   const siblingPage = {
@@ -50,10 +45,14 @@ function createConvexLoadingHarness() {
 describe("convex loading helpers", () => {
   it("installs the transport blocker on sibling loading pages and closes them", async () => {
     const harness = createConvexLoadingHarness();
-    const result = await withConvexLoadingPage(harness.sourcePage, async (loadingPage) => {
-      expect(loadingPage).toBe(harness.siblingPage);
-      return "done";
-    });
+    const result = await withBlockedConvexPage(
+      harness.sourcePage,
+      { installTransportBlocker: true, isolated: false },
+      async (loadingPage) => {
+        expect(loadingPage).toBe(harness.siblingPage);
+        return "done";
+      },
+    );
 
     expect(result).toBe("done");
     expect(harness.siblingPage.addInitScript).toHaveBeenCalledTimes(1);
@@ -63,9 +62,9 @@ describe("convex loading helpers", () => {
   it("releases blocked queries and closes the isolated context after the run", async () => {
     const harness = createConvexLoadingHarness();
 
-    await withQueryBlockedPage(
+    await withBlockedConvexPage(
       harness.sourcePage,
-      ["issues/queries:listOrganizationIssues", "notifications:list"],
+      { blockedQueries: ["issues/queries:listOrganizationIssues", "notifications:list"] },
       async (blockedPage) => {
         expect(blockedPage).toBe(harness.isolatedPage);
       },
@@ -79,10 +78,14 @@ describe("convex loading helpers", () => {
   it("installs the transport blocker on isolated loading pages and closes their context", async () => {
     const harness = createConvexLoadingHarness();
 
-    const result = await withIsolatedConvexLoadingPage(harness.sourcePage, async (loadingPage) => {
-      expect(loadingPage).toBe(harness.isolatedPage);
-      return "done";
-    });
+    const result = await withBlockedConvexPage(
+      harness.sourcePage,
+      { installTransportBlocker: true },
+      async (loadingPage) => {
+        expect(loadingPage).toBe(harness.isolatedPage);
+        return "done";
+      },
+    );
 
     expect(result).toBe("done");
     expect(harness.isolatedPage.addInitScript).toHaveBeenCalledTimes(1);
@@ -93,9 +96,13 @@ describe("convex loading helpers", () => {
     const harness = createConvexLoadingHarness();
 
     await expect(
-      withMutationBlockedPage(harness.sourcePage, ["notifications:markAllAsRead"], async () => {
-        throw new Error("capture failed");
-      }),
+      withBlockedConvexPage(
+        harness.sourcePage,
+        { blockedMutations: ["notifications:markAllAsRead"] },
+        async () => {
+          throw new Error("capture failed");
+        },
+      ),
     ).rejects.toThrow("capture failed");
 
     expect(harness.isolatedPage.route).toHaveBeenCalledTimes(1);
@@ -110,14 +117,29 @@ describe("convex loading helpers", () => {
       .mockRejectedValueOnce(new Error("route install failed"));
 
     await expect(
-      withQueryBlockedPage(
+      withBlockedConvexPage(
         harness.sourcePage,
-        ["issues/queries:listOrganizationIssues", "notifications:list"],
+        { blockedQueries: ["issues/queries:listOrganizationIssues", "notifications:list"] },
         async () => "unreachable",
       ),
     ).rejects.toThrow("route install failed");
 
     expect(harness.isolatedPage.unroute).toHaveBeenCalledTimes(1);
     expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("defaults to an isolated page target when no explicit isolation policy is provided", async () => {
+    const harness = createConvexLoadingHarness();
+
+    await withBlockedConvexPage(
+      harness.sourcePage,
+      { blockedQueries: ["issues/queries:listOrganizationIssues"] },
+      async (blockedPage) => {
+        expect(blockedPage).toBe(harness.isolatedPage);
+      },
+    );
+
+    expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
+    expect(harness.siblingPage.close).not.toHaveBeenCalled();
   });
 });

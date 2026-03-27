@@ -2,6 +2,13 @@ import type { Page, Route } from "@playwright/test";
 import { CONVEX_SITE_URL } from "../config";
 import { withIsolatedPageTarget, withSiblingPageTarget } from "./page-targets";
 
+export type BlockedConvexPageOptions = {
+  blockedMutations?: string[];
+  blockedQueries?: string[];
+  installTransportBlocker?: boolean;
+  isolated?: boolean;
+};
+
 function collectBlockedConvexHosts(): string[] {
   const blockedHosts = new Set<string>();
   const candidates = [process.env.VITE_CONVEX_URL, CONVEX_SITE_URL];
@@ -161,34 +168,6 @@ export async function installConvexLoadingBlocker(page: Page): Promise<void> {
   );
 }
 
-export async function withConvexLoadingPage<T>(
-  sourcePage: Page,
-  run: (loadingPage: Page) => Promise<T>,
-): Promise<T> {
-  return withBlockedPageTarget(
-    sourcePage,
-    {
-      installTransportBlocker: true,
-      isolated: false,
-    },
-    run,
-  );
-}
-
-export async function withIsolatedConvexLoadingPage<T>(
-  sourcePage: Page,
-  run: (loadingPage: Page) => Promise<T>,
-): Promise<T> {
-  return withBlockedPageTarget(
-    sourcePage,
-    {
-      installTransportBlocker: true,
-      isolated: true,
-    },
-    run,
-  );
-}
-
 async function blockConvexRequestPath(
   page: Page,
   requestPath: string,
@@ -219,20 +198,13 @@ async function blockConvexQuery(page: Page, queryPath: string): Promise<() => Pr
   return blockConvexRequestPath(page, queryPath, "/api/query");
 }
 
-type BlockedPageOptions = {
-  blockedMutations?: string[];
-  blockedQueries?: string[];
-  installTransportBlocker?: boolean;
-  isolated: boolean;
-};
-
 async function releaseBlockedRoutes(releaseBlocks: Array<() => Promise<void>>): Promise<void> {
   await Promise.all([...releaseBlocks].reverse().map((releaseBlock) => releaseBlock()));
 }
 
 async function installBlockedRoutes(
   page: Page,
-  options: BlockedPageOptions,
+  options: BlockedConvexPageOptions,
 ): Promise<Array<() => Promise<void>>> {
   const releaseBlocks: Array<() => Promise<void>> = [];
 
@@ -254,7 +226,7 @@ async function installBlockedRoutes(
 
 async function withBlockedRoutes<T>(
   page: Page,
-  options: BlockedPageOptions,
+  options: BlockedConvexPageOptions,
   run: (page: Page) => Promise<T>,
 ): Promise<T> {
   if (options.installTransportBlocker) {
@@ -271,42 +243,20 @@ async function withBlockedRoutes<T>(
 
 async function withBlockedPageTarget<T>(
   sourcePage: Page,
-  options: BlockedPageOptions,
+  options: BlockedConvexPageOptions,
   run: (page: Page) => Promise<T>,
 ): Promise<T> {
-  if (options.isolated) {
+  if (options.isolated ?? true) {
     return withIsolatedPageTarget(sourcePage, ({ page }) => withBlockedRoutes(page, options, run));
   }
 
   return withSiblingPageTarget(sourcePage, ({ page }) => withBlockedRoutes(page, options, run));
 }
 
-export async function withQueryBlockedPage<T>(
+export async function withBlockedConvexPage<T>(
   sourcePage: Page,
-  queryPaths: string[],
+  options: BlockedConvexPageOptions,
   run: (blockedPage: Page) => Promise<T>,
 ): Promise<T> {
-  return withBlockedPageTarget(
-    sourcePage,
-    {
-      blockedQueries: queryPaths,
-      isolated: true,
-    },
-    run,
-  );
-}
-
-export async function withMutationBlockedPage<T>(
-  sourcePage: Page,
-  mutationPaths: string[],
-  run: (blockedPage: Page) => Promise<T>,
-): Promise<T> {
-  return withBlockedPageTarget(
-    sourcePage,
-    {
-      blockedMutations: mutationPaths,
-      isolated: true,
-    },
-    run,
-  );
+  return withBlockedPageTarget(sourcePage, options, run);
 }

@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { withMutationBlockedPage } from "../utils/convex-loading";
+import { withBlockedConvexPage } from "../utils/convex-loading";
 import { getLocatorCount, getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
 import { withSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
@@ -43,9 +43,11 @@ export class NotificationsPage extends BasePage {
     orgSlug: string,
     run: (notificationsPage: NotificationsPage) => Promise<T>,
   ): Promise<T> {
-    return withMutationBlockedPage(
+    return withBlockedConvexPage(
       sourcePage,
-      ["notifications:markAllAsRead"],
+      {
+        blockedMutations: ["notifications:markAllAsRead"],
+      },
       async (loadingPage) => {
         const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
         await notificationsPage.gotoAndWaitForUnreadOverflowReady();

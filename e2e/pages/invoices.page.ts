@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { withConvexLoadingPage } from "../utils/convex-loading";
+import { withBlockedConvexPage } from "../utils/convex-loading";
 import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
@@ -12,8 +12,10 @@ export class InvoicesPage extends BasePage {
     orgSlug: string,
     run: (invoicesPage: InvoicesPage) => Promise<T>,
   ): Promise<T> {
-    return withConvexLoadingPage(sourcePage, async (loadingPage) =>
-      run(new InvoicesPage(loadingPage, orgSlug)),
+    return withBlockedConvexPage(
+      sourcePage,
+      { installTransportBlocker: true, isolated: false },
+      async (loadingPage) => run(new InvoicesPage(loadingPage, orgSlug)),
     );
   }
 

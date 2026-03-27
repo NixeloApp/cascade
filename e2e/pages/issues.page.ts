@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { withQueryBlockedPage } from "../utils/convex-loading";
+import { withBlockedConvexPage } from "../utils/convex-loading";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import {
@@ -22,9 +22,11 @@ export class IssuesPage extends BasePage {
     orgSlug: string,
     run: (issuesPage: IssuesPage) => Promise<T>,
   ): Promise<T> {
-    return withQueryBlockedPage(
+    return withBlockedConvexPage(
       sourcePage,
-      ["issues/queries:listOrganizationIssues"],
+      {
+        blockedQueries: ["issues/queries:listOrganizationIssues"],
+      },
       async (loadingPage) => run(new IssuesPage(loadingPage, orgSlug)),
     );
   }

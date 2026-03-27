@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { withConvexLoadingPage } from "../utils/convex-loading";
+import { withBlockedConvexPage } from "../utils/convex-loading";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { waitForLoadingSkeletonsToClear, waitForScreenshotReady } from "../utils/wait-helpers";
@@ -19,8 +19,10 @@ export class CalendarPage extends BasePage {
     orgSlug: string,
     run: (calendarPage: CalendarPage) => Promise<T>,
   ): Promise<T> {
-    return withConvexLoadingPage(sourcePage, async (loadingPage) =>
-      run(new CalendarPage(loadingPage, orgSlug)),
+    return withBlockedConvexPage(
+      sourcePage,
+      { installTransportBlocker: true, isolated: false },
+      async (loadingPage) => run(new CalendarPage(loadingPage, orgSlug)),
     );
   }
 
