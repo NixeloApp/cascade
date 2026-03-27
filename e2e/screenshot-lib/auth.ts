@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import type { TestUser } from "../config";
-import { ensureUserExistsAndSignIn } from "../utils/auth-helpers";
+import { loginPageUserWithRepair } from "../utils/fixture-auth";
 import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BASE_URL, SCREENSHOT_AUTH_USER } from "./config";
 import { waitForSpinnersHidden } from "./readiness";
@@ -24,7 +24,9 @@ export async function ensureAuthenticatedScreenshotPage(
     return true;
   } catch {}
 
-  if (!(await ensureUserExistsAndSignIn(page, BASE_URL, user, true))) {
+  try {
+    await loginPageUserWithRepair(page, user, "screenshot auth fallback", true);
+  } catch {
     return false;
   }
 

@@ -1,14 +1,14 @@
 import type { Page } from "@playwright/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ROUTES } from "../../convex/shared/routes";
-import { ensureUserExistsAndSignIn } from "../utils/auth-helpers";
+import { loginPageUserWithRepair } from "../utils/fixture-auth";
 import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
 import { ensureAuthenticatedScreenshotPage } from "./auth";
 import { BASE_URL, SCREENSHOT_AUTH_USER } from "./config";
 import { waitForSpinnersHidden } from "./readiness";
 
-vi.mock("../utils/auth-helpers", () => ({
-  ensureUserExistsAndSignIn: vi.fn(),
+vi.mock("../utils/fixture-auth", () => ({
+  loginPageUserWithRepair: vi.fn(),
 }));
 
 vi.mock("../utils/wait-helpers", () => ({
@@ -22,6 +22,7 @@ vi.mock("./readiness", () => ({
 
 describe("screenshot auth helpers", () => {
   afterEach(() => {
+    vi.clearAllMocks();
     vi.restoreAllMocks();
   });
 
@@ -39,10 +40,10 @@ describe("screenshot auth helpers", () => {
     expect(page.goto).toHaveBeenCalledWith(`${BASE_URL}${ROUTES.dashboard.build("acme")}`, {
       waitUntil: "load",
     });
-    expect(ensureUserExistsAndSignIn).not.toHaveBeenCalled();
+    expect(loginPageUserWithRepair).not.toHaveBeenCalled();
   });
 
-  it("falls back to sign-in when dashboard warmup fails", async () => {
+  it("falls back to shared injected-token login when dashboard warmup fails", async () => {
     const page = {
       goto: vi.fn(async () => {}),
     } as Page;
@@ -51,30 +52,46 @@ describe("screenshot auth helpers", () => {
       .mockResolvedValueOnce();
     vi.mocked(waitForSpinnersHidden).mockResolvedValueOnce();
     vi.mocked(waitForScreenshotReady).mockResolvedValueOnce();
-    vi.mocked(ensureUserExistsAndSignIn).mockResolvedValueOnce(true);
+    vi.mocked(loginPageUserWithRepair).mockResolvedValueOnce();
 
     const result = await ensureAuthenticatedScreenshotPage(page, "acme");
 
     expect(result).toBe(true);
-    expect(ensureUserExistsAndSignIn).toHaveBeenCalledWith(
+    expect(loginPageUserWithRepair).toHaveBeenCalledWith(
       page,
-      BASE_URL,
       SCREENSHOT_AUTH_USER,
+      "screenshot auth fallback",
       true,
     );
     expect(page.goto).toHaveBeenCalledTimes(2);
   });
 
-  it("returns false when sign-in fallback fails", async () => {
+  it("returns false when shared injected-token login fallback fails", async () => {
     const page = {
       goto: vi.fn(async () => {}),
     } as Page;
     vi.mocked(waitForDashboardReady).mockRejectedValueOnce(new Error("not signed in"));
-    vi.mocked(ensureUserExistsAndSignIn).mockResolvedValueOnce(false);
+    vi.mocked(loginPageUserWithRepair).mockRejectedValueOnce(new Error("repair failed"));
 
     const result = await ensureAuthenticatedScreenshotPage(page, "acme");
 
     expect(result).toBe(false);
     expect(page.goto).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns false when dashboard warmup still fails after shared login fallback", async () => {
+    const page = {
+      goto: vi.fn(async () => {}),
+    } as Page;
+    vi.mocked(waitForDashboardReady)
+      .mockRejectedValueOnce(new Error("not signed in"))
+      .mockRejectedValueOnce(new Error("dashboard still not ready"));
+    vi.mocked(loginPageUserWithRepair).mockResolvedValueOnce();
+
+    const result = await ensureAuthenticatedScreenshotPage(page, "acme");
+
+    expect(result).toBe(false);
+    expect(loginPageUserWithRepair).toHaveBeenCalledTimes(1);
+    expect(page.goto).toHaveBeenCalledTimes(2);
   });
 });

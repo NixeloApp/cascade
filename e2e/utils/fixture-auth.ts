@@ -1,4 +1,4 @@
-import type { BrowserContext } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
 import type { TestUser } from "../config";
 import { testUserService } from "./test-user-service";
 
@@ -54,10 +54,10 @@ export async function injectContextAuthTokens(
   );
 }
 
-export async function loginFixtureUserWithRepair(
+export async function loginContextUserWithRepair(
   context: BrowserContext,
   user: TestUser,
-  contextLabel = "fixture bootstrap",
+  contextLabel = "context bootstrap",
   /** Skip onboarding when repairing stale accounts (fixture users expect org membership) */
   skipOnboarding = true,
 ): Promise<void> {
@@ -77,4 +77,22 @@ export async function loginFixtureUserWithRepair(
   }
 
   await injectContextAuthTokens(context, loginResult.token, loginResult.refreshToken);
+}
+
+export async function loginPageUserWithRepair(
+  page: Page,
+  user: TestUser,
+  contextLabel = "page bootstrap",
+  skipOnboarding = true,
+): Promise<void> {
+  await loginContextUserWithRepair(page.context(), user, contextLabel, skipOnboarding);
+}
+
+export async function loginFixtureUserWithRepair(
+  context: BrowserContext,
+  user: TestUser,
+  contextLabel = "fixture bootstrap",
+  skipOnboarding = true,
+): Promise<void> {
+  await loginContextUserWithRepair(context, user, contextLabel, skipOnboarding);
 }
