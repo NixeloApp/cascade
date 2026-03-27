@@ -3,53 +3,63 @@ import { CONVEX_SITE_URL } from "../config";
 import { withIsolatedPageTarget, withSiblingPageTarget } from "./page-targets";
 
 type BlockedConvexPageTarget = "isolated" | "sibling";
+type BlockedConvexRequestKind = "mutations" | "queries";
+type BlockedConvexRequestEndpointSuffix = "/api/mutation" | "/api/query";
+
+type BlockedConvexRequestPolicy = {
+  kind: BlockedConvexRequestKind;
+  paths: string[];
+  target: BlockedConvexPageTarget;
+};
 
 export type BlockedConvexPagePolicy =
   | {
       kind: "transport";
       target: BlockedConvexPageTarget;
     }
-  | {
-      kind: "queries";
-      paths: string[];
-      target: BlockedConvexPageTarget;
-    }
-  | {
-      kind: "mutations";
-      paths: string[];
-      target: BlockedConvexPageTarget;
-    };
+  | BlockedConvexRequestPolicy;
 
 type NormalizedBlockedConvexPagePolicy =
   | {
       kind: "transport";
       target: BlockedConvexPageTarget;
     }
-  | {
-      kind: "queries";
-      paths: string[];
-      target: BlockedConvexPageTarget;
-    }
-  | {
-      kind: "mutations";
-      paths: string[];
-      target: BlockedConvexPageTarget;
-    };
+  | BlockedConvexRequestPolicy;
 
 type PreparedBlockedConvexPagePolicy = NormalizedBlockedConvexPagePolicy & {
   blockedHosts: string[];
 };
 
-function getBlockedRequestPaths(
-  policy: Extract<BlockedConvexPagePolicy, { kind: "queries" | "mutations" }>,
-): string[] {
+type BlockedConvexRequestBehavior = {
+  endpointSuffix: BlockedConvexRequestEndpointSuffix;
+  label: BlockedConvexRequestKind;
+};
+
+export function getBlockedConvexRequestBehavior(
+  kind: BlockedConvexRequestKind,
+): BlockedConvexRequestBehavior {
+  if (kind === "queries") {
+    return {
+      endpointSuffix: "/api/query",
+      label: "queries",
+    };
+  }
+
+  return {
+    endpointSuffix: "/api/mutation",
+    label: "mutations",
+  };
+}
+
+function getBlockedRequestPaths(policy: BlockedConvexRequestPolicy): string[] {
+  const behavior = getBlockedConvexRequestBehavior(policy.kind);
   if (policy.paths.length === 0) {
-    throw new Error(`Blocked Convex ${policy.kind} policy requires at least one path`);
+    throw new Error(`Blocked Convex ${behavior.label} policy requires at least one path`);
   }
 
   const normalizedPaths = policy.paths.map((path) => path.trim());
   if (normalizedPaths.some((path) => path.length === 0)) {
-    throw new Error(`Blocked Convex ${policy.kind} policy must not include empty paths`);
+    throw new Error(`Blocked Convex ${behavior.label} policy must not include empty paths`);
   }
 
   return [...new Set(normalizedPaths)];
@@ -101,7 +111,7 @@ function isBlockedConvexHost(requestUrl: string, blockedHosts: string[]): boolea
 
 function getConvexRequestPath(
   route: Route,
-  endpointSuffix: "/api/mutation" | "/api/query",
+  endpointSuffix: BlockedConvexRequestEndpointSuffix,
   blockedHosts: string[],
 ): string | null {
   const request = route.request();
@@ -254,7 +264,7 @@ export function prepareBlockedConvexPagePolicy(
 async function blockConvexRequestPath(
   page: Page,
   requestPath: string,
-  endpointSuffix: "/api/mutation" | "/api/query",
+  endpointSuffix: BlockedConvexRequestEndpointSuffix,
   blockedHosts: string[],
 ): Promise<() => Promise<void>> {
   const handler = async (route: Route): Promise<void> => {
@@ -274,22 +284,6 @@ async function blockConvexRequestPath(
   };
 }
 
-async function blockConvexMutation(
-  page: Page,
-  mutationPath: string,
-  blockedHosts: string[],
-): Promise<() => Promise<void>> {
-  return blockConvexRequestPath(page, mutationPath, "/api/mutation", blockedHosts);
-}
-
-async function blockConvexQuery(
-  page: Page,
-  queryPath: string,
-  blockedHosts: string[],
-): Promise<() => Promise<void>> {
-  return blockConvexRequestPath(page, queryPath, "/api/query", blockedHosts);
-}
-
 async function releaseBlockedRoutes(releaseBlocks: Array<() => Promise<void>>): Promise<void> {
   await Promise.all([...releaseBlocks].reverse().map((releaseBlock) => releaseBlock()));
 }
@@ -302,14 +296,13 @@ async function installBlockedRoutes(
     return [];
   }
 
+  const behavior = getBlockedConvexRequestBehavior(policy.kind);
   const releaseBlocks: Array<() => Promise<void>> = [];
 
   try {
     for (const path of policy.paths) {
       releaseBlocks.push(
-        await (policy.kind === "queries"
-          ? blockConvexQuery(page, path, policy.blockedHosts)
-          : blockConvexMutation(page, path, policy.blockedHosts)),
+        await blockConvexRequestPath(page, path, behavior.endpointSuffix, policy.blockedHosts),
       );
     }
 

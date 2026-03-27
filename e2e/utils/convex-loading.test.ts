@@ -1,6 +1,7 @@
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { describe, expect, it, vi } from "vitest";
 import {
+  getBlockedConvexRequestBehavior,
   prepareBlockedConvexPagePolicy,
   resolveBlockedConvexHosts,
   withBlockedConvexPage,
@@ -47,6 +48,17 @@ function createConvexLoadingHarness() {
 }
 
 describe("convex loading helpers", () => {
+  it("derives blocked request behavior from the request kind", () => {
+    expect(getBlockedConvexRequestBehavior("queries")).toEqual({
+      endpointSuffix: "/api/query",
+      label: "queries",
+    });
+    expect(getBlockedConvexRequestBehavior("mutations")).toEqual({
+      endpointSuffix: "/api/mutation",
+      label: "mutations",
+    });
+  });
+
   it("dedupes valid blocked convex hosts and ignores malformed candidates", () => {
     expect(
       resolveBlockedConvexHosts([
