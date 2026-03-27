@@ -42,6 +42,7 @@
   Current documented exceptions:
   - dashboard loading
   - issues loading
+- [ ] Keep the remaining loading-hook exceptions centralized and validated so new window-key reads or ad-hoc call sites cannot spread outside the documented contract.
 - [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.
 - [ ] Prefer seeded backend state, route params, or normal UI interaction over window-event hooks.
 - [ ] If a hook remains, it must serve reusable test setup broadly, not just one screenshot state.

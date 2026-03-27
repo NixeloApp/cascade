@@ -5,7 +5,22 @@
  * cannot reproduce route-locally without stubbing production UI.
  */
 
-export type E2ELoadingOverrideKey = "dashboard" | "issues";
+export const E2E_LOADING_OVERRIDES = {
+  dashboard: {
+    reason:
+      "Dashboard loading still depends on multiple auth-gated Convex subscriptions plus app-shell chrome, and the current Playwright-side blockers cannot freeze only the body without collapsing the reviewed shell state.",
+    windowKey: "__NIXELO_E2E_DASHBOARD_LOADING__",
+  },
+  issues: {
+    reason:
+      "Issues loading still depends on Convex paginated-query state, and transport blocking alone does not reliably keep the route in LoadingFirstPage once the authenticated shell has mounted.",
+    windowKey: "__NIXELO_E2E_ISSUES_LOADING__",
+  },
+} as const;
+
+export type E2ELoadingOverrideKey = keyof typeof E2E_LOADING_OVERRIDES;
+export type E2ELoadingOverrideWindowKey =
+  (typeof E2E_LOADING_OVERRIDES)[E2ELoadingOverrideKey]["windowKey"];
 
 declare global {
   interface Window {
@@ -14,15 +29,20 @@ declare global {
   }
 }
 
-const E2E_LOADING_OVERRIDE_WINDOW_KEYS: Record<E2ELoadingOverrideKey, keyof Window> = {
-  dashboard: "__NIXELO_E2E_DASHBOARD_LOADING__",
-  issues: "__NIXELO_E2E_ISSUES_LOADING__",
-};
+export function getE2ELoadingOverrideWindowKey(
+  key: E2ELoadingOverrideKey,
+): E2ELoadingOverrideWindowKey {
+  return E2E_LOADING_OVERRIDES[key].windowKey;
+}
+
+export function getE2ELoadingOverrideReason(key: E2ELoadingOverrideKey): string {
+  return E2E_LOADING_OVERRIDES[key].reason;
+}
 
 export function isE2ELoadingOverrideEnabled(key: E2ELoadingOverrideKey): boolean {
   if (typeof window === "undefined") {
     return false;
   }
 
-  return window[E2E_LOADING_OVERRIDE_WINDOW_KEYS[key]] === true;
+  return window[getE2ELoadingOverrideWindowKey(key)] === true;
 }

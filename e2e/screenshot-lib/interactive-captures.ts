@@ -26,7 +26,7 @@ import {
 import { createMyIssuesLoadingPage } from "../pages/my-issues.page";
 import {
   createConvexLoadingPage,
-  createIsolatedPageWithInitScript,
+  createIsolatedLoadingOverridePage,
   createQueryBlockedPage,
 } from "../utils/convex-loading";
 import { waitForLocatorVisible } from "../utils/locator-state";
@@ -124,9 +124,7 @@ export async function screenshotDashboardLoadingState(
   }
 
   await runCaptureStep("dashboard loading skeletons", async () => {
-    const loadingTarget = await createIsolatedPageWithInitScript(page, () => {
-      window.__NIXELO_E2E_DASHBOARD_LOADING__ = true;
-    });
+    const loadingTarget = await createIsolatedLoadingOverridePage(page, "dashboard");
     const { page: loadingPage } = loadingTarget;
 
     try {
@@ -1053,9 +1051,7 @@ export async function screenshotIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("issues loading state", async () => {
-      const isolatedLoadingPage = await createIsolatedPageWithInitScript(page, () => {
-        window.__NIXELO_E2E_ISSUES_LOADING__ = true;
-      });
+      const isolatedLoadingPage = await createIsolatedLoadingOverridePage(page, "issues");
       const { page: loadingPage } = isolatedLoadingPage;
       const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
 
