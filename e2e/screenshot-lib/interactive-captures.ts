@@ -26,6 +26,7 @@ import {
 import { createMyIssuesLoadingPage } from "../pages/my-issues.page";
 import {
   createConvexLoadingPage,
+  createIsolatedConvexLoadingPage,
   createIsolatedLoadingOverridePage,
   createQueryBlockedPage,
 } from "../utils/convex-loading";
@@ -124,7 +125,7 @@ export async function screenshotDashboardLoadingState(
   }
 
   await runCaptureStep("dashboard loading skeletons", async () => {
-    const loadingTarget = await createIsolatedLoadingOverridePage(page, "dashboard");
+    const loadingTarget = await createIsolatedConvexLoadingPage(page);
     const { page: loadingPage } = loadingTarget;
 
     try {

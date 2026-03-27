@@ -6,11 +6,6 @@
  */
 
 export const E2E_LOADING_OVERRIDES = {
-  dashboard: {
-    reason:
-      "Dashboard loading still depends on multiple auth-gated Convex subscriptions plus app-shell chrome, and the current Playwright-side blockers cannot freeze only the body without collapsing the reviewed shell state.",
-    windowKey: "__NIXELO_E2E_DASHBOARD_LOADING__",
-  },
   issues: {
     reason:
       "Issues loading still depends on Convex paginated-query state, and transport blocking alone does not reliably keep the route in LoadingFirstPage once the authenticated shell has mounted.",
@@ -24,7 +19,6 @@ export type E2ELoadingOverrideWindowKey =
 
 declare global {
   interface Window {
-    __NIXELO_E2E_DASHBOARD_LOADING__?: boolean;
     __NIXELO_E2E_ISSUES_LOADING__?: boolean;
   }
 }

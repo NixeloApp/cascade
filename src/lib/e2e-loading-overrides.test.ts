@@ -8,7 +8,7 @@ import {
 
 describe("e2e-loading-overrides", () => {
   it("keeps the remaining loading overrides centralized with non-empty reasons", () => {
-    expect(Object.keys(E2E_LOADING_OVERRIDES)).toEqual(["dashboard", "issues"]);
+    expect(Object.keys(E2E_LOADING_OVERRIDES)).toEqual(["issues"]);
 
     for (const key of Object.keys(E2E_LOADING_OVERRIDES) as Array<
       keyof typeof E2E_LOADING_OVERRIDES
@@ -19,10 +19,11 @@ describe("e2e-loading-overrides", () => {
   });
 
   it("checks the documented window flag for the requested override key", () => {
-    window.__NIXELO_E2E_DASHBOARD_LOADING__ = true;
     window.__NIXELO_E2E_ISSUES_LOADING__ = false;
 
-    expect(isE2ELoadingOverrideEnabled("dashboard")).toBe(true);
     expect(isE2ELoadingOverrideEnabled("issues")).toBe(false);
+
+    window.__NIXELO_E2E_ISSUES_LOADING__ = true;
+    expect(isE2ELoadingOverrideEnabled("issues")).toBe(true);
   });
 });

@@ -16,7 +16,6 @@ import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery, useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { isE2ELoadingOverrideEnabled } from "@/lib/e2e-loading-overrides";
 import { TEST_IDS } from "@/lib/test-ids";
 import { useListNavigation } from "../hooks/useListNavigation";
 import {
@@ -213,7 +212,6 @@ function useDashboardNavigation({
 
 function useDashboardData(issueFilter: IssueFilter) {
   const loadingStatus = "LoadingFirstPage" as const;
-  const overrideLoading = isE2ELoadingOverrideEnabled("dashboard");
   const { queriedUser, showStats, showRecentActivity, showWorkspaces } =
     useDashboardLayoutSettings();
   const {
@@ -227,7 +225,6 @@ function useDashboardData(issueFilter: IssueFilter) {
     queriedStats,
   } = useDashboardQueries();
   const forceLoading =
-    overrideLoading ||
     queriedUser === undefined ||
     queriedMyIssuesStatus === "LoadingFirstPage" ||
     queriedMyCreatedIssues === undefined ||

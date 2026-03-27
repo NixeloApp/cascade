@@ -41,7 +41,6 @@
   - remaining screenshot boot-state shortcuts outside the document, roadmap, time-tracking, notifications archived-tab, project-inbox, and invoices surfaces
 - [ ] Keep shrinking the loading-hook exception list in `src/lib/e2e-loading-overrides.ts`.
   Current documented exceptions:
-  - dashboard loading
   - issues loading
 - [ ] Keep the remaining loading-hook exceptions centralized and validated so new window-key reads or ad-hoc call sites cannot spread outside the documented contract.
 - [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.

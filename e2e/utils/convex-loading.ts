@@ -182,6 +182,22 @@ async function createIsolatedContextFromPage(sourcePage: Page) {
   });
 }
 
+export async function createIsolatedConvexLoadingPage(sourcePage: Page): Promise<{
+  close: () => Promise<void>;
+  page: Page;
+}> {
+  const isolatedContext = await createIsolatedContextFromPage(sourcePage);
+  const isolatedPage = await isolatedContext.newPage();
+  await installConvexLoadingBlocker(isolatedPage);
+
+  return {
+    page: isolatedPage,
+    close: async () => {
+      await isolatedContext.close();
+    },
+  };
+}
+
 export async function createIsolatedLoadingOverridePage(
   sourcePage: Page,
   key: E2ELoadingOverrideKey,

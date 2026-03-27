@@ -3,17 +3,11 @@ import path from "node:path";
 import { createValidatorResult } from "./result-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-const LOADING_OVERRIDE_WINDOW_KEYS = [
-  "__NIXELO_E2E_DASHBOARD_LOADING__",
-  "__NIXELO_E2E_ISSUES_LOADING__",
-];
+const LOADING_OVERRIDE_WINDOW_KEYS = ["__NIXELO_E2E_ISSUES_LOADING__"];
 
 const ALLOWED_PRODUCTION_FILES = new Set(["src/lib/e2e-loading-overrides.ts"]);
 const ALLOWED_E2E_FILES = new Set(["e2e/utils/convex-loading.ts"]);
-const ALLOWED_OVERRIDE_CALLERS = new Set([
-  "src/components/Dashboard.tsx",
-  "src/routes/_auth/_app/$orgSlug/issues/index.tsx",
-]);
+const ALLOWED_OVERRIDE_CALLERS = new Set(["src/routes/_auth/_app/$orgSlug/issues/index.tsx"]);
 
 function collectWindowKeyViolations(filePath, source, allowedFiles) {
   if (allowedFiles.has(relPath(filePath))) {
@@ -64,7 +58,7 @@ function collectOverrideCallerViolations(filePath, source) {
     violations.push({
       file: relativePath,
       line: index + 1,
-      message: "Only the documented dashboard and issues routes may read E2E loading overrides.",
+      message: "Only the documented issues route may read E2E loading overrides.",
     });
   }
 
