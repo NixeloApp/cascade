@@ -39,10 +39,8 @@
   First targets:
   - route-specific state toggles added only for capture
   - remaining screenshot boot-state shortcuts outside the document, roadmap, time-tracking, notifications archived-tab, project-inbox, and invoices surfaces
-- [ ] Keep shrinking the loading-hook exception list in `src/lib/e2e-loading-overrides.ts`.
-  Current documented exceptions:
-  - issues loading
-- [ ] Keep the remaining loading-hook exceptions centralized and validated so new window-key reads or ad-hoc call sites cannot spread outside the documented contract.
+- [ ] Keep the loading-hook exception list at zero unless a new exception is explicitly justified.
+- [ ] Keep validator coverage in place so new window-key reads or ad-hoc loading override call sites cannot spread back into production or E2E code.
 - [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.
 - [ ] Prefer seeded backend state, route params, or normal UI interaction over window-event hooks.
 - [ ] If a hook remains, it must serve reusable test setup broadly, not just one screenshot state.

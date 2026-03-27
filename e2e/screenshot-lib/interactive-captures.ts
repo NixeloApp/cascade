@@ -27,7 +27,6 @@ import { createMyIssuesLoadingPage } from "../pages/my-issues.page";
 import {
   createConvexLoadingPage,
   createIsolatedConvexLoadingPage,
-  createIsolatedLoadingOverridePage,
   createQueryBlockedPage,
 } from "../utils/convex-loading";
 import { waitForLocatorVisible } from "../utils/locator-state";
@@ -1052,8 +1051,10 @@ export async function screenshotIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("issues loading state", async () => {
-      const isolatedLoadingPage = await createIsolatedLoadingOverridePage(page, "issues");
-      const { page: loadingPage } = isolatedLoadingPage;
+      const loadingTarget = await createQueryBlockedPage(page, [
+        "issues/queries:listOrganizationIssues",
+      ]);
+      const { page: loadingPage } = loadingTarget;
       const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
 
       try {
@@ -1073,7 +1074,7 @@ export async function screenshotIssuesStates(
           skipReadyCheck: true,
         });
       } finally {
-        await isolatedLoadingPage.close();
+        await loadingTarget.close();
       }
     });
   }

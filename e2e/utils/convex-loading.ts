@@ -1,8 +1,4 @@
 import type { Page, Route } from "@playwright/test";
-import {
-  type E2ELoadingOverrideKey,
-  getE2ELoadingOverrideWindowKey,
-} from "../../src/lib/e2e-loading-overrides";
 import { CONVEX_SITE_URL } from "../config";
 
 function collectBlockedConvexHosts(): string[] {
@@ -189,31 +185,6 @@ export async function createIsolatedConvexLoadingPage(sourcePage: Page): Promise
   const isolatedContext = await createIsolatedContextFromPage(sourcePage);
   const isolatedPage = await isolatedContext.newPage();
   await installConvexLoadingBlocker(isolatedPage);
-
-  return {
-    page: isolatedPage,
-    close: async () => {
-      await isolatedContext.close();
-    },
-  };
-}
-
-export async function createIsolatedLoadingOverridePage(
-  sourcePage: Page,
-  key: E2ELoadingOverrideKey,
-): Promise<{
-  close: () => Promise<void>;
-  page: Page;
-}> {
-  const isolatedContext = await createIsolatedContextFromPage(sourcePage);
-  const windowKey = getE2ELoadingOverrideWindowKey(key);
-  await isolatedContext.addInitScript(
-    ({ injectedWindowKey }) => {
-      (window as Window & Record<string, boolean | undefined>)[injectedWindowKey] = true;
-    },
-    { injectedWindowKey: windowKey },
-  );
-  const isolatedPage = await isolatedContext.newPage();
 
   return {
     page: isolatedPage,

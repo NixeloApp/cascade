@@ -31,7 +31,6 @@ import {
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { isE2ELoadingOverrideEnabled } from "@/lib/e2e-loading-overrides";
 import { Plus, SearchX, X } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 
@@ -125,9 +124,9 @@ function useIssueResults(
   });
 
   const searchResults = useAuthenticatedQuery(api.issues.searchOrganizationIssues, searchQueryArgs);
-  const isLoading =
-    isE2ELoadingOverrideEnabled("issues") ||
-    (filters.isSearching ? searchResults === undefined : status === "LoadingFirstPage");
+  const isLoading = filters.isSearching
+    ? searchResults === undefined
+    : status === "LoadingFirstPage";
 
   return {
     filteredIssues: filters.isSearching ? (searchResults ?? []) : paginatedIssues,

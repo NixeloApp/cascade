@@ -3,11 +3,7 @@ import { ROUTES } from "../../convex/shared/routes";
 import { E2E_TIMEZONE } from "../constants";
 import { ensureUserExistsAndSignIn } from "../utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
-import {
-  waitForDashboardReady,
-  waitForScreenshotReady,
-  waitForSpinnersHidden,
-} from "../utils/wait-helpers";
+import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
 import {
   captureState,
   isCrashLikeError,
@@ -26,6 +22,7 @@ import {
 } from "./config";
 import { screenshotFilledStates } from "./filled-states";
 import { screenshotEmptyStates, screenshotPublicPages } from "./public-pages";
+import { waitForSpinnersHidden } from "./readiness";
 import { resolveCaptureTarget } from "./routing";
 import { SCREENSHOT_PAGE_IDS } from "./targets";
 
