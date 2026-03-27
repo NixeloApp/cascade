@@ -56,7 +56,10 @@ export class DashboardPage extends BasePage {
   // ===================
   readonly mainContent: Locator;
   readonly sidebar: Locator;
+  readonly sidebarToggleButton: Locator;
+  readonly sidebarCloseButton: Locator;
   readonly loadingSpinner: Locator;
+  readonly notFoundHeading: Locator;
 
   // ===================
   // Locators - Dashboard Content
@@ -171,8 +174,17 @@ export class DashboardPage extends BasePage {
     // Content areas - use last() to get innermost main element (nested layout)
     this.mainContent = page.getByRole("main").last();
     this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
+    this.sidebarToggleButton = page
+      .getByTestId(TEST_IDS.NAV.SIDEBAR_TOGGLE)
+      .or(page.getByLabel(/collapse sidebar|expand sidebar/i));
+    this.sidebarCloseButton = page
+      .getByTestId(TEST_IDS.NAV.SIDEBAR_CLOSE_BUTTON)
+      .or(this.sidebar.getByLabel("Close sidebar"));
     // Use aria-label="Loading" to target actual loading spinners, not empty states
     this.loadingSpinner = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
+    this.notFoundHeading = page
+      .getByTestId(TEST_IDS.PAGE.NOT_FOUND_HEADING)
+      .or(page.getByText("Page not found", { exact: true }));
 
     // Dashboard sections - use data-testid where available, semantic fallback where not
     this.myIssuesSection = page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING);
@@ -405,24 +417,72 @@ export class DashboardPage extends BasePage {
   }
 
   async openMyIssues(): Promise<void> {
-    if (await isLocatorVisible(this.mobileMenuButton)) {
-      const sidebar = this.page.getByTestId(TEST_IDS.NAV.SIDEBAR);
-      const closeButton = sidebar.getByLabel("Close sidebar");
-      await this.mobileMenuButton.click();
-      await closeButton.waitFor({ state: "visible", timeout: 5000 });
-      await expect
-        .poll(async () => (await getLocatorAttribute(sidebar, "class")) ?? "", {
-          timeout: 5000,
-          intervals: [100, 200, 500],
-        })
-        .toContain("translate-x-0");
-      await waitForAnimation(this.page);
-    }
+    await this.openMobileSidebarIfNeeded();
     await expect(this.myIssuesTab).toBeVisible();
     await this.myIssuesTab.evaluate((element) => {
       (element as HTMLAnchorElement).click();
     });
     await expect(this.page).toHaveURL(routePattern(ROUTES.myIssues.path, "(?:\\?.*)?$"));
+  }
+
+  async openMobileSidebarIfNeeded(): Promise<void> {
+    if (!(await isLocatorVisible(this.mobileMenuButton))) {
+      return;
+    }
+
+    await this.mobileMenuButton.click();
+    await this.sidebarCloseButton.waitFor({ state: "visible", timeout: 5000 });
+    await expect
+      .poll(async () => (await getLocatorAttribute(this.sidebar, "class")) ?? "", {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .toContain("translate-x-0");
+    await waitForAnimation(this.page);
+  }
+
+  async collapseSidebar(): Promise<void> {
+    await expect(this.sidebarToggleButton).toBeVisible();
+    const sidebarClass = (await getLocatorAttribute(this.sidebar, "class")) ?? "";
+    if (sidebarClass.includes("lg:w-sidebar-collapsed")) {
+      return;
+    }
+    await this.sidebarToggleButton.click();
+    await expect
+      .poll(async () => (await getLocatorAttribute(this.sidebar, "class")) ?? "", {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .toContain("lg:w-sidebar-collapsed");
+    await waitForAnimation(this.page);
+  }
+
+  async expandSidebarIfCollapsed(): Promise<void> {
+    const sidebarClass = (await getLocatorAttribute(this.sidebar, "class")) ?? "";
+    if (!sidebarClass.includes("lg:w-sidebar-collapsed")) {
+      return;
+    }
+    await expect(this.sidebarToggleButton).toBeVisible();
+    await this.sidebarToggleButton.click();
+    await expect
+      .poll(async () => (await getLocatorAttribute(this.sidebar, "class")) ?? "", {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .not.toContain("lg:w-sidebar-collapsed");
+    await waitForAnimation(this.page);
+  }
+
+  getSidebarProjectItem(projectKey: string): Locator {
+    return this.page.getByTestId(TEST_IDS.NAV.PROJECT_ITEM(projectKey));
+  }
+
+  async expectSidebarProjectItem(projectKey: string): Promise<void> {
+    await expect(this.getSidebarProjectItem(projectKey)).toBeVisible();
+  }
+
+  async expectNotFoundPage(): Promise<void> {
+    await expect(this.notFoundHeading).toBeVisible();
   }
 
   // ===================

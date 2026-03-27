@@ -22,6 +22,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { ChevronDown, ChevronRight } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 
 type PaginatedQuery = FunctionReference<"query", "public">;
 
@@ -141,6 +142,7 @@ function SidebarTeamProjects({
                       orgSlug,
                       key: project.key,
                     }}
+                    data-testid={TEST_IDS.NAV.PROJECT_ITEM(project.key)}
                     onClick={onNavClick}
                   >
                     {project.key} - {project.name}

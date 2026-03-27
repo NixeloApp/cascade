@@ -34,6 +34,8 @@ export const TEST_IDS = {
     EMPTY_STATE: "page-empty-state",
     /** @see public/offline.html */
     OFFLINE_FALLBACK_HEADING: "offline-fallback-heading",
+    /** @see src/components/NotFoundPage.tsx */
+    NOT_FOUND_HEADING: "page-not-found-heading",
   },
 
   // ============================================================
@@ -185,6 +187,10 @@ export const TEST_IDS = {
     /** @see src/components/Sidebar.tsx */
     SIDEBAR: "sidebar",
     /** @see src/components/App/AppSidebar.tsx */
+    SIDEBAR_TOGGLE: "sidebar-toggle",
+    /** @see src/components/App/AppSidebar.tsx */
+    SIDEBAR_CLOSE_BUTTON: "sidebar-close-button",
+    /** @see src/components/App/AppSidebar.tsx */
     DASHBOARD_LINK: "sidebar-dashboard-link",
     /** @see src/components/App/AppSidebar.tsx */
     ISSUES_LINK: "sidebar-issues-link",
@@ -211,6 +217,8 @@ export const TEST_IDS = {
     WORKSPACE_LIST: "sidebar-workspace-list",
     /** @see src/components/App/AppSidebar.tsx */
     WORKSPACE_ITEM: "sidebar-workspace-item",
+    /** @see src/components/Sidebar/SidebarTeamItem.tsx */
+    PROJECT_ITEM: (projectKey: string) => `sidebar-project-item-${toTestIdFragment(projectKey)}`,
     /** @see src/routes/__root.tsx */
     MAIN_CONTENT: "main-content",
   },

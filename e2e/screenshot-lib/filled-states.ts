@@ -22,7 +22,6 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
-import { isLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -41,7 +40,7 @@ import {
   takeScreenshot,
 } from "./capture";
 import { BASE_URL, MARKDOWN_IMPORT_PREVIEW, MARKDOWN_RICH_CONTENT } from "./config";
-import { openMobileSidebarMenu, waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
+import { waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
 import { clearIssueDrafts, discoverDocumentId, discoverIssueKey, seedIssueDraft } from "./helpers";
 import {
   screenshotAssistantStates,
@@ -1378,23 +1377,14 @@ export async function screenshotFilledStates(
       captureState.currentConfigPrefix === "desktop-light")
   ) {
     await runCaptureStep("sidebar collapsed", async () => {
-      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.goto();
       await waitForScreenshotReady(page);
-      const collapseBtn = page.getByLabel("Collapse sidebar");
-      await collapseBtn.waitFor({ state: "visible", timeout: 5000 });
-      await collapseBtn.click();
+      await dashboardPage.collapseSidebar();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "sidebar-collapsed");
-      // Expand back
-      const expandBtn = page.getByLabel("Expand sidebar");
-      if (await isLocatorVisible(expandBtn)) {
-        await expandBtn.click();
-        await waitForScreenshotReady(page);
-      }
+      await dashboardPage.expandSidebarIfCollapsed();
+      await waitForScreenshotReady(page);
     });
   }
 
@@ -1404,15 +1394,10 @@ export async function screenshotFilledStates(
       captureState.currentConfigPrefix === "mobile-light")
   ) {
     await runCaptureStep("mobile hamburger", async () => {
-      const dashboardUrl = ROUTES.dashboard.build(orgSlug);
-      await page.goto(`${BASE_URL}${dashboardUrl}`, {
-        waitUntil: "domcontentloaded",
-        timeout: 15000,
-      });
-      await waitForExpectedContent(page, dashboardUrl, "dashboard");
-      await waitForScreenshotReady(page);
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.goto();
       await dismissAllDialogs(page);
-      await openMobileSidebarMenu(page);
+      await dashboardPage.openMobileSidebarIfNeeded();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "mobile-hamburger");
     });
@@ -1432,17 +1417,16 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, teamBoardUrl, "team");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
+      const dashboardPage = new DashboardPage(page, orgSlug);
 
       if (
         captureState.currentConfigPrefix === "tablet-light" ||
         captureState.currentConfigPrefix === "mobile-light"
       ) {
-        await openMobileSidebarMenu(page);
+        await dashboardPage.openMobileSidebarIfNeeded();
       }
 
-      await page
-        .getByRole("link", { name: /DEMO - Demo Project/i })
-        .waitFor({ state: "visible", timeout: 8000 });
+      await dashboardPage.expectSidebarProjectItem(seed.projectKey ?? "DEMO");
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "project-tree");
     });
@@ -1456,11 +1440,8 @@ export async function screenshotFilledStates(
         timeout: 15000,
       });
       await waitForScreenshotReady(page);
-      // Wait for the 404 content to render
-      await page
-        .getByText(/not found|page.*not.*found|404/i)
-        .first()
-        .waitFor({ state: "visible", timeout: 8000 });
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.expectNotFoundPage();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "404-page");
     });

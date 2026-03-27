@@ -679,6 +679,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   variant="solid"
                   size="md"
                   onClick={toggleCollapse}
+                  data-testid={TEST_IDS.NAV.SIDEBAR_TOGGLE}
                   className={cn("hidden lg:flex", showCollapsed && "mx-auto")}
                   aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
@@ -694,6 +695,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   variant="solid"
                   size="md"
                   onClick={closeMobile}
+                  data-testid={TEST_IDS.NAV.SIDEBAR_CLOSE_BUTTON}
                   className="lg:hidden"
                   aria-label="Close sidebar"
                 >

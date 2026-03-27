@@ -402,6 +402,7 @@ describe("AppSidebar Accessibility", () => {
     render(<AppSidebar />);
 
     expect(screen.getByTestId(TEST_IDS.NAV.SIDEBAR)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NAV.SIDEBAR_TOGGLE)).toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.NAV.DOCUMENT_LIST)).toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.NAV.WORKSPACE_LIST)).toBeInTheDocument();
   });
@@ -428,9 +429,10 @@ describe("AppSidebar Accessibility", () => {
         (btn) => btn.className.includes("lg:hidden") && !btn.className.includes("fixed inset-0"),
       );
       expect(mobileCloseBtn).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.NAV.SIDEBAR_CLOSE_BUTTON)).toBeInTheDocument();
 
       // Check Toggle button
-      const toggleBtn = screen.getByLabelText("Collapse sidebar");
+      const toggleBtn = screen.getByTestId(TEST_IDS.NAV.SIDEBAR_TOGGLE);
       expect(toggleBtn).toBeInTheDocument();
       expect(toggleBtn).toHaveClass("hidden", "lg:flex");
     });

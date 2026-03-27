@@ -15,6 +15,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { FileQuestion } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 
 /** 404 error page with link to return home. */
 export function NotFoundPage() {
@@ -38,7 +39,7 @@ export function NotFoundPage() {
           {/* Message with secondary text styling */}
           <Stack gap="sm" align="center">
             <Typography variant="large" color="secondary">
-              Page not found
+              <span data-testid={TEST_IDS.PAGE.NOT_FOUND_HEADING}>Page not found</span>
             </Typography>
             <Typography color="tertiary">
               The page you are looking for does not exist or has been moved.

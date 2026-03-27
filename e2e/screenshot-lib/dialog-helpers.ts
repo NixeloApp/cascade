@@ -5,9 +5,9 @@
  * These handle retry logic, animation settling, and dialog cleanup.
  */
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { getLocatorAttribute, isLocatorVisible } from "../utils/locator-state";
+import { isLocatorVisible } from "../utils/locator-state";
 import {
   dismissAllDialogs,
   waitForAnimation,
@@ -132,24 +132,6 @@ export async function waitForDashboardCustomizeDialogReady(page: Page): Promise<
   await waitForAnimation(page);
   await waitForScreenshotReady(page);
   return dialog;
-}
-
-/** Open the mobile sidebar menu and wait for slide animation to complete. */
-export async function openMobileSidebarMenu(page: Page): Promise<void> {
-  const trigger = page.getByRole("button", { name: /toggle sidebar menu/i });
-  const sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR);
-  const closeButton = sidebar.getByLabel("Close sidebar");
-
-  await trigger.waitFor({ state: "visible", timeout: 5000 });
-  await trigger.click();
-  await closeButton.waitFor({ state: "visible", timeout: 5000 });
-  await expect
-    .poll(async () => (await getLocatorAttribute(sidebar, "class")) ?? "", {
-      timeout: 5000,
-      intervals: [100, 200, 500],
-    })
-    .toContain("translate-x-0");
-  await waitForAnimation(page);
 }
 
 /** Wait for the Create Issue modal to be fully ready for screenshot capture. */
