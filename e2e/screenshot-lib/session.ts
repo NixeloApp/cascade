@@ -165,7 +165,9 @@ export function getSelectedScreenshotPageIds(): string[] {
       return false;
     }
 
-    return shouldCapture(prefix, rest.join("-"));
+    // Skip config-prefix filtering — this builds the run-wide plan before any
+    // per-config loop sets currentConfigPrefix.
+    return shouldCapture(prefix, rest.join("-"), { skipConfigFilter: true });
   });
 }
 
@@ -538,6 +540,10 @@ export async function resolveScreenshotPrimaryUserOrgSlug(): Promise<string | nu
 }
 
 export async function preparePrimaryUserScreenshotExecutionContext(): Promise<ScreenshotCaptureExecutionContext | null> {
+  // Reset the separate-auth empty user so stale data from prior runs doesn't
+  // leak into empty captures that authenticate as this user (e.g. my-issues).
+  await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
+
   if (!(await prepareScreenshotPrimaryUser())) {
     return null;
   }

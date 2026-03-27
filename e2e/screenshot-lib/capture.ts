@@ -111,8 +111,13 @@ export function isConfigSelected(viewport: ViewportName, theme: ThemeName): bool
   return captureState.cliOptions.configFilters.has(`${viewport}-${theme}`);
 }
 
-export function shouldCapture(prefix: string, name: string): boolean {
+export function shouldCapture(
+  prefix: string,
+  name: string,
+  options?: { skipConfigFilter?: boolean },
+): boolean {
   if (
+    !options?.skipConfigFilter &&
     captureState.cliOptions.configFilters &&
     !captureState.cliOptions.configFilters.has(captureState.currentConfigPrefix)
   ) {
