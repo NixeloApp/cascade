@@ -11,6 +11,7 @@ import { captureState } from "./capture";
 import { screenshotFilledStates } from "./filled-states";
 import { screenshotEmptyStates, screenshotPublicPages } from "./public-pages";
 import {
+  buildScreenshotCaptureExecutionPlan,
   buildScreenshotCapturePhasePlan,
   captureConfiguredScreenshotStates,
   captureFilledStatesForConfig,
@@ -182,6 +183,72 @@ describe("screenshot session helpers", () => {
     });
   });
 
+  it("builds one execution plan for bootstrap and seeded-phase policy", () => {
+    expect(buildScreenshotCaptureExecutionPlan(["public-landing"])).toEqual({
+      bootstrapMode: "none",
+      phasePlan: {
+        emptyCaptureNames: [],
+        filledCaptureNames: [],
+        seededPublicCaptureNames: [],
+        seedlessPublicCaptureNames: ["landing"],
+        selectedPageIds: ["public-landing"],
+      },
+      runEmptyPhase: false,
+      runFilledPhase: false,
+      runSeededPhase: false,
+      runSeededPublicPhase: false,
+      runSeedlessPublicPhase: true,
+    });
+
+    expect(buildScreenshotCaptureExecutionPlan(["public-portal-project"])).toEqual({
+      bootstrapMode: "primary-user",
+      phasePlan: {
+        emptyCaptureNames: [],
+        filledCaptureNames: [],
+        seededPublicCaptureNames: ["portal-project"],
+        seedlessPublicCaptureNames: [],
+        selectedPageIds: ["public-portal-project"],
+      },
+      runEmptyPhase: false,
+      runFilledPhase: false,
+      runSeededPhase: true,
+      runSeededPublicPhase: true,
+      runSeedlessPublicPhase: false,
+    });
+
+    expect(buildScreenshotCaptureExecutionPlan(["empty-dashboard"])).toEqual({
+      bootstrapMode: "authenticated",
+      phasePlan: {
+        emptyCaptureNames: ["dashboard"],
+        filledCaptureNames: [],
+        seededPublicCaptureNames: [],
+        seedlessPublicCaptureNames: [],
+        selectedPageIds: ["empty-dashboard"],
+      },
+      runEmptyPhase: true,
+      runFilledPhase: false,
+      runSeededPhase: false,
+      runSeededPublicPhase: false,
+      runSeedlessPublicPhase: false,
+    });
+
+    expect(buildScreenshotCaptureExecutionPlan(["filled-issues-loading"])).toEqual({
+      bootstrapMode: "authenticated",
+      phasePlan: {
+        emptyCaptureNames: [],
+        filledCaptureNames: ["issues-loading"],
+        seededPublicCaptureNames: [],
+        seedlessPublicCaptureNames: [],
+        selectedPageIds: ["filled-issues-loading"],
+      },
+      runEmptyPhase: false,
+      runFilledPhase: true,
+      runSeededPhase: true,
+      runSeededPublicPhase: false,
+      runSeedlessPublicPhase: false,
+    });
+  });
+
   it("derives the selected screenshot page ids from the current CLI filters", () => {
     captureState.cliOptions = {
       ...captureState.cliOptions,
@@ -205,6 +272,26 @@ describe("screenshot session helpers", () => {
         "filled-my-issues-loading",
         "filled-issues-loading",
       ],
+    });
+    expect(buildScreenshotCaptureExecutionPlan()).toEqual({
+      bootstrapMode: "authenticated",
+      phasePlan: {
+        emptyCaptureNames: [],
+        filledCaptureNames: ["my-issues-loading", "issues-loading"],
+        seededPublicCaptureNames: ["portal-project"],
+        seedlessPublicCaptureNames: ["landing"],
+        selectedPageIds: [
+          "public-landing",
+          "public-portal-project",
+          "filled-my-issues-loading",
+          "filled-issues-loading",
+        ],
+      },
+      runEmptyPhase: false,
+      runFilledPhase: true,
+      runSeededPhase: true,
+      runSeededPublicPhase: true,
+      runSeedlessPublicPhase: true,
     });
   });
 

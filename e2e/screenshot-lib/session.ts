@@ -70,6 +70,18 @@ export interface ScreenshotCapturePhasePlan {
   selectedPageIds: string[];
 }
 
+export type ScreenshotCaptureBootstrapMode = "none" | "primary-user" | "authenticated";
+
+export interface ScreenshotCaptureExecutionPlan {
+  bootstrapMode: ScreenshotCaptureBootstrapMode;
+  phasePlan: ScreenshotCapturePhasePlan;
+  runEmptyPhase: boolean;
+  runFilledPhase: boolean;
+  runSeededPhase: boolean;
+  runSeededPublicPhase: boolean;
+  runSeedlessPublicPhase: boolean;
+}
+
 export type LaunchBrowser = () => Promise<Browser>;
 type ScreenshotPageCallback = (page: Page) => Promise<void>;
 type AuthenticatedScreenshotPageOptions = {
@@ -146,6 +158,34 @@ export function buildScreenshotCapturePhasePlan(
   }
 
   return plan;
+}
+
+export function buildScreenshotCaptureExecutionPlan(
+  selectedPageIds: string[] = getSelectedScreenshotPageIds(),
+): ScreenshotCaptureExecutionPlan {
+  const phasePlan = buildScreenshotCapturePhasePlan(selectedPageIds);
+  const runSeedlessPublicPhase = phasePlan.seedlessPublicCaptureNames.length > 0;
+  const runEmptyPhase = phasePlan.emptyCaptureNames.length > 0;
+  const runFilledPhase = phasePlan.filledCaptureNames.length > 0;
+  const runSeededPublicPhase = phasePlan.seededPublicCaptureNames.length > 0;
+  const runSeededPhase = runSeededPublicPhase || runFilledPhase;
+
+  let bootstrapMode: ScreenshotCaptureBootstrapMode = "none";
+  if (runEmptyPhase || runFilledPhase) {
+    bootstrapMode = "authenticated";
+  } else if (runSeededPhase) {
+    bootstrapMode = "primary-user";
+  }
+
+  return {
+    bootstrapMode,
+    phasePlan,
+    runEmptyPhase,
+    runFilledPhase,
+    runSeededPhase,
+    runSeededPublicPhase,
+    runSeedlessPublicPhase,
+  };
 }
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
@@ -485,15 +525,9 @@ export async function captureConfiguredScreenshotStates(
   launchBrowser: LaunchBrowser,
   configs: ScreenshotCaptureConfig[],
 ): Promise<boolean> {
-  const phasePlan = buildScreenshotCapturePhasePlan();
-  const hasSeedlessPublicTargets = phasePlan.seedlessPublicCaptureNames.length > 0;
-  const hasSeededPublicTargets = phasePlan.seededPublicCaptureNames.length > 0;
-  const hasEmptyTargets = phasePlan.emptyCaptureNames.length > 0;
-  const hasFilledTargets = phasePlan.filledCaptureNames.length > 0;
-  const needsAuthBootstrap = hasEmptyTargets || hasFilledTargets;
-  const hasSeededTargets = hasSeededPublicTargets || hasFilledTargets;
+  const executionPlan = buildScreenshotCaptureExecutionPlan();
 
-  if (hasSeedlessPublicTargets) {
+  if (executionPlan.runSeedlessPublicPhase) {
     console.log("\n  📋 Phase 0: Public pages (no seed required)");
     for (const config of configs) {
       await capturePublicStatesForConfig(
@@ -506,23 +540,26 @@ export async function captureConfiguredScreenshotStates(
     }
   }
 
-  if (!hasEmptyTargets && !hasSeededTargets) {
+  if (!executionPlan.runEmptyPhase && !executionPlan.runSeededPhase) {
     return true;
   }
 
   let authBootstrap: ScreenshotAuthBootstrap | null = null;
-  if (needsAuthBootstrap) {
+  if (executionPlan.bootstrapMode === "authenticated") {
     await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
 
     authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
     if (!authBootstrap) {
       return false;
     }
-  } else if (!(await prepareScreenshotPrimaryUser())) {
+  } else if (
+    executionPlan.bootstrapMode === "primary-user" &&
+    !(await prepareScreenshotPrimaryUser())
+  ) {
     return false;
   }
 
-  if (hasEmptyTargets) {
+  if (executionPlan.runEmptyPhase) {
     const { authStorageState, orgSlug } = authBootstrap as ScreenshotAuthBootstrap;
     console.log("\n  📋 Phase 1: Empty states (before seeding)");
     for (const config of configs) {
@@ -545,12 +582,12 @@ export async function captureConfiguredScreenshotStates(
     }
   }
 
-  if (!hasSeededTargets) {
+  if (!executionPlan.runSeededPhase) {
     return true;
   }
 
   console.log(
-    hasFilledTargets
+    executionPlan.runFilledPhase
       ? "\n  📋 Phase 2: Seed data + public pages + filled states"
       : "\n  📋 Phase 2: Seed data + token-backed public pages",
   );
@@ -566,7 +603,7 @@ export async function captureConfiguredScreenshotStates(
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
   }
 
-  if (hasFilledTargets) {
+  if (executionPlan.runFilledPhase) {
     const { authStorageState, orgSlug } = authBootstrap as ScreenshotAuthBootstrap;
     for (const config of configs) {
       await captureFilledStatesForConfig(
@@ -578,7 +615,7 @@ export async function captureConfiguredScreenshotStates(
         authStorageState ?? undefined,
       );
     }
-  } else {
+  } else if (executionPlan.runSeededPublicPhase) {
     for (const config of configs) {
       await capturePublicStatesForConfig(
         launchBrowser,
