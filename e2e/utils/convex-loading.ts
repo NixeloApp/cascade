@@ -166,6 +166,21 @@ export async function createConvexLoadingPage(sourcePage: Page): Promise<Page> {
   return loadingPage;
 }
 
+export async function withConvexLoadingPage<T>(
+  sourcePage: Page,
+  run: (loadingPage: Page) => Promise<T>,
+): Promise<T> {
+  const loadingPage = await createConvexLoadingPage(sourcePage);
+
+  try {
+    return await run(loadingPage);
+  } finally {
+    if (!loadingPage.isClosed()) {
+      await loadingPage.close();
+    }
+  }
+}
+
 async function createIsolatedContextFromPage(sourcePage: Page) {
   const browser = sourcePage.context().browser();
   if (!browser) {
@@ -192,6 +207,19 @@ export async function createIsolatedConvexLoadingPage(sourcePage: Page): Promise
       await isolatedContext.close();
     },
   };
+}
+
+export async function withIsolatedConvexLoadingPage<T>(
+  sourcePage: Page,
+  run: (loadingPage: Page) => Promise<T>,
+): Promise<T> {
+  const loadingTarget = await createIsolatedConvexLoadingPage(sourcePage);
+
+  try {
+    return await run(loadingTarget.page);
+  } finally {
+    await loadingTarget.close();
+  }
 }
 
 export async function blockConvexMutation(
@@ -256,4 +284,18 @@ export async function createQueryBlockedPage(
       await isolatedContext.close();
     },
   };
+}
+
+export async function withQueryBlockedPage<T>(
+  sourcePage: Page,
+  queryPaths: string[],
+  run: (blockedPage: Page) => Promise<T>,
+): Promise<T> {
+  const blockedTarget = await createQueryBlockedPage(sourcePage, queryPaths);
+
+  try {
+    return await run(blockedTarget.page);
+  } finally {
+    await blockedTarget.close();
+  }
 }

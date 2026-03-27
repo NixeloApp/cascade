@@ -24,9 +24,9 @@ import {
 } from "../pages";
 import { createMyIssuesLoadingPage } from "../pages/my-issues.page";
 import {
-  createConvexLoadingPage,
-  createIsolatedConvexLoadingPage,
-  createQueryBlockedPage,
+  withConvexLoadingPage,
+  withIsolatedConvexLoadingPage,
+  withQueryBlockedPage,
 } from "../utils/convex-loading";
 import { waitForLocatorVisible } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
@@ -121,11 +121,8 @@ export async function screenshotDashboardLoadingState(
   }
 
   await runCaptureStep("dashboard loading skeletons", async () => {
-    const loadingTarget = await createIsolatedConvexLoadingPage(page);
-    const { page: loadingPage } = loadingTarget;
-    const loadingDashboardPage = new DashboardPage(loadingPage, orgSlug);
-
-    try {
+    await withIsolatedConvexLoadingPage(page, async (loadingPage) => {
+      const loadingDashboardPage = new DashboardPage(loadingPage, orgSlug);
       await loadingDashboardPage.gotoAndExpectLoadingSkeletons(12000);
       await waitForAnimation(loadingPage);
       await loadingPage.evaluate(
@@ -139,9 +136,7 @@ export async function screenshotDashboardLoadingState(
       await captureCurrentView(loadingPage, prefix, "dashboard-loading-skeletons", {
         skipReadyCheck: true,
       });
-    } finally {
-      await loadingTarget.close();
-    }
+    });
   });
 }
 
@@ -184,20 +179,14 @@ export async function screenshotOrgCalendarStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runRequiredCaptureStep("org calendar loading state", async () => {
-      const loadingPage = await createConvexLoadingPage(page);
-      const loadingCalendarPage = new CalendarPage(loadingPage, orgSlug);
-
-      try {
+      await withConvexLoadingPage(page, async (loadingPage) => {
+        const loadingCalendarPage = new CalendarPage(loadingPage, orgSlug);
         await loadingCalendarPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,
         });
-      } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
-      }
+      });
     });
   }
 }
@@ -289,20 +278,14 @@ export async function screenshotProjectsStates(
 
     if (shouldCapture(prefix, captureNames.loading)) {
       await runCaptureStep("projects loading", async () => {
-        const loadingPage = await createConvexLoadingPage(page);
-        const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
-
-        try {
+        await withConvexLoadingPage(page, async (loadingPage) => {
+          const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
           await loadingProjectsPage.gotoAndExpectProjectsLoadingState(12000);
           await waitForAnimation(loadingPage);
           await captureCurrentView(loadingPage, prefix, captureNames.loading, {
             skipReadyCheck: true,
           });
-        } finally {
-          if (!loadingPage.isClosed()) {
-            await loadingPage.close();
-          }
-        }
+        });
       });
     }
   } finally {
@@ -364,20 +347,14 @@ export async function screenshotInvoicesStates(
 
   if (shouldCapture(prefix, captureNames.loading)) {
     await runCaptureStep("invoices loading", async () => {
-      const loadingPage = await createConvexLoadingPage(page);
-
-      try {
+      await withConvexLoadingPage(page, async (loadingPage) => {
         const loadingInvoicesPage = await openInvoicesPage(loadingPage);
         await loadingInvoicesPage.expectLoadingStateVisible();
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
           skipReadyCheck: true,
         });
-      } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
-      }
+      });
     });
   }
 }
@@ -470,19 +447,14 @@ export async function screenshotAssistantStates(
 
   if (shouldCapture(prefix, captureNames.loading)) {
     await runCaptureStep("assistant loading", async () => {
-      const loadingTarget = await createQueryBlockedPage(page, ["ai/queries:getUsageStats"]);
-      const { page: loadingPage } = loadingTarget;
-      const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
-
-      try {
+      await withQueryBlockedPage(page, ["ai/queries:getUsageStats"], async (loadingPage) => {
+        const loadingAssistantPage = new AssistantPage(loadingPage, orgSlug);
         await loadingAssistantPage.gotoAndExpectLoadingState(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
           skipReadyCheck: true,
         });
-      } finally {
-        await loadingTarget.close();
-      }
+      });
     });
   }
 }
@@ -715,20 +687,14 @@ export async function screenshotBoardLoadingState(
   }
 
   await runRequiredCaptureStep("board loading state", async () => {
-    const loadingPage = await createConvexLoadingPage(page);
-    const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
-
-    try {
+    await withConvexLoadingPage(page, async (loadingPage) => {
+      const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
       await loadingProjectsPage.gotoProjectBoardAndExpectLoadingState(projectKey, 15000);
       await waitForAnimation(loadingPage);
       await captureCurrentView(loadingPage, prefix, loadingStateName, {
         skipReadyCheck: true,
       });
-    } finally {
-      if (!loadingPage.isClosed()) {
-        await loadingPage.close();
-      }
-    }
+    });
   });
 }
 
@@ -962,21 +928,18 @@ export async function screenshotIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("issues loading state", async () => {
-      const loadingTarget = await createQueryBlockedPage(page, [
-        "issues/queries:listOrganizationIssues",
-      ]);
-      const { page: loadingPage } = loadingTarget;
-      const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
-
-      try {
-        await loadingIssuesPage.gotoAndExpectLoadingState(12000);
-        await waitForAnimation(loadingPage);
-        await captureCurrentView(loadingPage, prefix, loadingStateName, {
-          skipReadyCheck: true,
-        });
-      } finally {
-        await loadingTarget.close();
-      }
+      await withQueryBlockedPage(
+        page,
+        ["issues/queries:listOrganizationIssues"],
+        async (loadingPage) => {
+          const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
+          await loadingIssuesPage.gotoAndExpectLoadingState(12000);
+          await waitForAnimation(loadingPage);
+          await captureCurrentView(loadingPage, prefix, loadingStateName, {
+            skipReadyCheck: true,
+          });
+        },
+      );
     });
   }
 }
