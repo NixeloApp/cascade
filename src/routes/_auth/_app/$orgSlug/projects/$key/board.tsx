@@ -32,6 +32,7 @@ import {
   searchParamsToFilters,
   validateBoardSearchFilters,
 } from "@/lib/filter-url";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface BoardSearch extends BoardSearchFilters {
   sprint?: string;
@@ -140,13 +141,19 @@ function BoardPage() {
               <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
               {project.boardType === "scrum" && sprints && (
                 <Select value={selectedSprint?._id || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger width="md">
+                  <SelectTrigger width="md" data-testid={TEST_IDS.BOARD.SPRINT_TRIGGER}>
                     <SelectValue placeholder="Active Sprint" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active Sprint</SelectItem>
+                  <SelectContent data-testid={TEST_IDS.BOARD.SPRINT_CONTENT}>
+                    <SelectItem value="active" data-testid={TEST_IDS.BOARD.SPRINT_OPTION("active")}>
+                      Active Sprint
+                    </SelectItem>
                     {sprints.map((sprint) => (
-                      <SelectItem key={sprint._id} value={sprint._id}>
+                      <SelectItem
+                        key={sprint._id}
+                        value={sprint._id}
+                        data-testid={TEST_IDS.BOARD.SPRINT_OPTION(sprint._id)}
+                      >
                         {sprint.name} ({sprint.status})
                       </SelectItem>
                     ))}
@@ -171,13 +178,22 @@ function BoardPage() {
             <>
               {showMobileSprintControls && sprints && (
                 <Select value={selectedSprint?._id || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="h-7 min-w-24 border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
+                  <SelectTrigger
+                    data-testid={TEST_IDS.BOARD.SPRINT_TRIGGER}
+                    className="h-7 min-w-24 border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft"
+                  >
                     <SelectValue placeholder="Sprint" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active Sprint</SelectItem>
+                  <SelectContent data-testid={TEST_IDS.BOARD.SPRINT_CONTENT}>
+                    <SelectItem value="active" data-testid={TEST_IDS.BOARD.SPRINT_OPTION("active")}>
+                      Active Sprint
+                    </SelectItem>
                     {sprints.map((sprint) => (
-                      <SelectItem key={sprint._id} value={sprint._id}>
+                      <SelectItem
+                        key={sprint._id}
+                        value={sprint._id}
+                        data-testid={TEST_IDS.BOARD.SPRINT_OPTION(sprint._id)}
+                      >
                         {sprint.name} ({sprint.status})
                       </SelectItem>
                     ))}

@@ -64,6 +64,7 @@ export function DuplicateDetection({ title, projectId, onIssueClick }: Duplicate
               key={issue._id}
               variant="ghost"
               size="sm"
+              data-testid={TEST_IDS.ISSUE.CREATE_DUPLICATE_ITEM(issue.key)}
               onClick={() => onIssueClick?.(issue._id)}
               className="w-full justify-start"
             >

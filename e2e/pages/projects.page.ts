@@ -57,6 +57,8 @@ export class ProjectsPage extends BasePage {
   readonly projectBoard: Locator;
   readonly boardLoadingState: Locator;
   readonly boardColumns: Locator;
+  readonly boardSprintTrigger: Locator;
+  readonly boardSprintContent: Locator;
   readonly boardSwimlaneTrigger: Locator;
   readonly boardDisplayPropertiesTrigger: Locator;
   readonly boardViewModeToggle: Locator;
@@ -131,6 +133,7 @@ export class ProjectsPage extends BasePage {
   readonly importExportTrigger: Locator;
   readonly importExportModal: Locator;
   readonly importExportModeImport: Locator;
+  readonly importExportRequirements: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
@@ -203,6 +206,8 @@ export class ProjectsPage extends BasePage {
     this.projectBoard = page.getByTestId(TEST_IDS.BOARD.ROOT);
     this.boardLoadingState = page.getByTestId(TEST_IDS.BOARD.LOADING_STATE);
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
+    this.boardSprintTrigger = page.getByTestId(TEST_IDS.BOARD.SPRINT_TRIGGER);
+    this.boardSprintContent = page.getByTestId(TEST_IDS.BOARD.SPRINT_CONTENT);
     this.boardSwimlaneTrigger = page.getByTestId(TEST_IDS.BOARD.SWIMLANE_TRIGGER);
     this.boardDisplayPropertiesTrigger = page.getByTestId(
       TEST_IDS.BOARD.DISPLAY_PROPERTIES_TRIGGER,
@@ -302,6 +307,7 @@ export class ProjectsPage extends BasePage {
     this.importExportTrigger = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_TRIGGER);
     this.importExportModal = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODAL);
     this.importExportModeImport = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_MODE_IMPORT);
+    this.importExportRequirements = page.getByTestId(TEST_IDS.PROJECT.IMPORT_EXPORT_REQUIREMENTS);
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
@@ -403,6 +409,19 @@ export class ProjectsPage extends BasePage {
     await expect(
       this.importExportModal.getByText("Select Import Format", { exact: true }),
     ).toBeVisible();
+  }
+
+  async openImportExportJsonMode(): Promise<void> {
+    await this.openImportExportImportMode();
+    const jsonFormatOption = this.importExportModal.getByTestId(
+      TEST_IDS.PROJECT.IMPORT_EXPORT_FORMAT_OPTION("json"),
+    );
+    await expect(jsonFormatOption).toBeVisible();
+    await jsonFormatOption.click();
+    await expect(this.importExportRequirements).toBeVisible();
+    await expect(this.importExportRequirements).toContainText(
+      "JSON files must contain an issues array at the top level.",
+    );
   }
 
   private async findVisibleImportExportTrigger(): Promise<Locator> {
@@ -612,6 +631,18 @@ export class ProjectsPage extends BasePage {
 
   async expectCreateIssueDuplicateDetectionVisible() {
     await expect(this.createIssueDuplicateDetection).toBeVisible();
+  }
+
+  getCreateIssueDuplicateItem(issueKey: string) {
+    return this.createIssueDuplicateDetection.getByTestId(
+      TEST_IDS.ISSUE.CREATE_DUPLICATE_ITEM(issueKey),
+    );
+  }
+
+  async waitForCreateIssueDuplicateItem(issueKey: string) {
+    const duplicateItem = this.getCreateIssueDuplicateItem(issueKey);
+    await expect(duplicateItem).toBeVisible();
+    return duplicateItem;
   }
 
   async expectCreateIssueDraftBannerVisible() {
@@ -1013,6 +1044,17 @@ export class ProjectsPage extends BasePage {
     property: "issueType" | "priority" | "labels" | "assignee" | "storyPoints",
   ) {
     return this.page.getByTestId(TEST_IDS.BOARD.DISPLAY_PROPERTIES_OPTION(property));
+  }
+
+  getBoardSprintOption(value: string) {
+    return this.page.getByTestId(TEST_IDS.BOARD.SPRINT_OPTION(value));
+  }
+
+  async openBoardSprintSelector() {
+    await expect(this.boardSprintTrigger.first()).toBeVisible();
+    await this.boardSprintTrigger.first().click();
+    await expect(this.boardSprintContent.first()).toBeVisible();
+    await expect(this.getBoardSprintOption("active").first()).toBeVisible();
   }
 
   async openBoardSwimlaneMenu() {

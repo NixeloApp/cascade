@@ -13,6 +13,13 @@
  * 4. Values are kebab-case strings (e.g., 'issue-card')
  */
 
+function toTestIdFragment(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export const TEST_IDS = {
   // ============================================================
   // Page Layout
@@ -58,6 +65,9 @@ export const TEST_IDS = {
     CREATE_DRAFT_BANNER: "issue-create-draft-banner",
     /** @see src/components/DuplicateDetection.tsx */
     CREATE_DUPLICATE_DETECTION: "issue-create-duplicate-detection",
+    /** @see src/components/DuplicateDetection.tsx */
+    CREATE_DUPLICATE_ITEM: (issueKey: string) =>
+      `issue-create-duplicate-item-${toTestIdFragment(issueKey)}`,
     /** @see src/components/IssueDetail/CreateIssueModal.tsx */
     CREATE_ANOTHER_SWITCH: "issue-create-another-switch",
     /** @see src/components/IssueCard.tsx */
@@ -123,6 +133,12 @@ export const TEST_IDS = {
     COLUMN_COLLAPSE_BUTTON: "board-column-collapse-button",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN_EXPAND_BUTTON: "board-column-expand-button",
+    /** @see src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx */
+    SPRINT_TRIGGER: "board-sprint-trigger",
+    /** @see src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx */
+    SPRINT_CONTENT: "board-sprint-content",
+    /** @see src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx */
+    SPRINT_OPTION: (value: string) => `board-sprint-option-${toTestIdFragment(value)}`,
   },
 
   // ============================================================
@@ -280,6 +296,11 @@ export const TEST_IDS = {
     IMPORT_EXPORT_MODAL: "project-import-export-modal",
     /** @see src/components/ImportExportModal.tsx */
     IMPORT_EXPORT_MODE_IMPORT: "project-import-export-mode-import",
+    /** @see src/components/ImportExport/ImportExportPanelChrome.tsx */
+    IMPORT_EXPORT_FORMAT_OPTION: (format: "csv" | "json") =>
+      `project-import-export-format-option-${format}`,
+    /** @see src/components/ImportExport/ImportExportPanelChrome.tsx */
+    IMPORT_EXPORT_REQUIREMENTS: "project-import-export-requirements",
   },
 
   // ============================================================

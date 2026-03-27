@@ -11,11 +11,10 @@
 - [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
 - [ ] This is the first infrastructure priority again. The current overlap between screenshot-lib and reusable E2E/page objects is active execution debt, not just cleanup polish.
 - [ ] The current raw-locator baseline proves the screenshot harness is still acting like a parallel framework.
-  Current hotspots:
+  Remaining hotspots:
   - `e2e/screenshot-lib/filled-states.ts`
-  - `e2e/screenshot-lib/readiness.ts`
   - `e2e/screenshot-lib/interactive-captures.ts`
-  - `e2e/screenshot-lib/helpers.ts`
+  - smaller leftovers in `e2e/screenshot-lib/readiness.ts`
 
 ## Target Architecture
 
@@ -34,12 +33,12 @@
   - harness-only complexity that should be deleted
 - [ ] Start with the biggest offenders:
   - `e2e/screenshot-lib/filled-states.ts`
-  - `e2e/screenshot-lib/readiness.ts`
   - `e2e/screenshot-lib/interactive-captures.ts`
-  - `e2e/screenshot-lib/helpers.ts`
+  - any remaining readiness branches that still bypass page objects
 - [ ] Replace raw locator usage in those files with shared page-object helpers or route-specific readiness contracts until the screenshot-lib raw-locator baseline is materially smaller.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
 - [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
+- [ ] Finish the remaining project/route leftovers in `filled-states.ts`, especially branches that still open special states without a page-object method.
 
 ## Production Hook Cleanup
 

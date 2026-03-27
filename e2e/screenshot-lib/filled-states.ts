@@ -708,9 +708,7 @@ export async function screenshotFilledStates(
         await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         await projectsPage.issueTitleInput.fill(duplicateQuery);
         await projectsPage.expectCreateIssueDuplicateDetectionVisible();
-        await page
-          .getByRole("button", { name: /DEMO-2.*fix login timeout on mobile/i })
-          .waitFor({ state: "visible", timeout: 8000 });
+        await projectsPage.waitForCreateIssueDuplicateItem("DEMO-2");
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -767,14 +765,8 @@ export async function screenshotFilledStates(
         });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
-        const sprintSelect = page
-          .getByRole("combobox")
-          .filter({ hasText: /sprint|active/i })
-          .first();
-        await sprintSelect.waitFor({ state: "visible", timeout: 25000 });
-        await sprintSelect.click();
-        // Wait for dropdown options
-        await page.getByRole("option").first().waitFor({ state: "visible", timeout: 3000 });
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await projectsPage.openBoardSprintSelector();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-board-sprint-selector`);
         await page.keyboard.press("Escape");
@@ -1229,15 +1221,7 @@ export async function screenshotFilledStates(
     await runCaptureStep("import/export modal import state", async () => {
       const projectsPage = new ProjectsPage(page, orgSlug);
       await projectsPage.gotoProjectBoard(projectKey);
-      await projectsPage.openImportExportImportMode();
-      await projectsPage.importExportModal.getByText("JSON", { exact: true }).click();
-      await projectsPage.importExportModal
-        .getByText("JSON files must contain an issues array at the top level.", { exact: true })
-        .waitFor({
-          state: "visible",
-          timeout: 5000,
-        });
-      await waitForAnimation(page);
+      await projectsPage.openImportExportJsonMode();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
