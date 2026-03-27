@@ -1,6 +1,6 @@
 # Design System Primitive Simplification
 
-> **Priority:** P0
+> **Priority:** P1
 > **Status:** Open
 > **Last Updated:** 2026-03-26
 
@@ -9,7 +9,7 @@
 - [ ] The old Tailwind/CVA hotspot pass cleaned the worst feature-local files, but the remaining styling debt has shifted into shared primitives and ratcheted leftovers.
 - [ ] The validator baselines show that the biggest complexity is no longer feature-local `cva()` sprawl. It is oversized shared variant surfaces and a still-large raw Tailwind allowance across many files.
 - [ ] If shared primitives keep accumulating one-off recipes/chromes/variants, we are just moving styling debt upward into the design system instead of removing it.
-- [ ] This now sits ahead of more E2E/screenshot consolidation work. Reusable page objects and route tests get easier once shared UI seams are smaller and less surprising.
+- [ ] This is still important, but it is no longer ahead of E2E/screenshot consolidation in backlog order.
 
 ## Shared Primitive Surface Area
 

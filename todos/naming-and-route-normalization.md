@@ -1,6 +1,6 @@
 # Naming And Route Normalization
 
-> **Priority:** P0
+> **Priority:** P1
 > **Status:** Open
 > **Last Updated:** 2026-03-26
 

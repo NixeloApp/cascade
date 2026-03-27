@@ -4,9 +4,9 @@
 
 ## Infrastructure
 
-- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P0: remove route/API naming ambiguity, replace hidden `-*.test.tsx` conventions, and make file-routed structure readable without repo folklore.
-- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — P0: shrink oversized shared primitive surfaces (`Card`, `Button`, `Typography`, `Badge`) and burn down the remaining raw Tailwind ratchet before more E2E/page-object layering.
-- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — P1: make screenshots a thin layer on top of reusable E2E/page-object state setup, but only after route naming and primitive seams are cleaner.
+- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — P0: make screenshots a thin layer on top of reusable E2E/page-object state setup and keep shrinking screenshot-lib-only ownership.
+- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — P1: remove route/API naming ambiguity, replace hidden `-*.test.tsx` conventions, and make file-routed structure readable without repo folklore.
+- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — P1: shrink oversized shared primitive surfaces (`Card`, `Button`, `Typography`, `Badge`) and burn down the remaining raw Tailwind ratchet.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — P2: fix screenshot-visible regressions with actual before/after review, not theory-driven polish.
 
 ## Features
