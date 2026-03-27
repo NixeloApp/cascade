@@ -225,25 +225,25 @@ export async function screenshotFilledStates(
     page,
     p,
     "settings-security",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=security`,
+    ROUTES.settings.profile.build(orgSlug, "security"),
   );
   await takeScreenshot(
     page,
     p,
     "settings-apikeys",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=apikeys`,
+    ROUTES.settings.profile.build(orgSlug, "apikeys"),
   );
   await takeScreenshot(
     page,
     p,
     "settings-preferences",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=preferences`,
+    ROUTES.settings.profile.build(orgSlug, "preferences"),
   );
   await takeScreenshot(
     page,
     p,
     "settings-offline",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=offline`,
+    ROUTES.settings.profile.build(orgSlug, "offline"),
   );
   await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
   await takeScreenshot(page, p, "add-ons", ROUTES.addOns.build(orgSlug));

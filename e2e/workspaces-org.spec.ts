@@ -67,7 +67,7 @@ rbacTest.describe("RBAC Verification", () => {
       await editorSettingsPage.expectAdminTabHidden();
 
       // Direct navigation to the admin tab should not surface admin-only content.
-      await editorPage.goto(`${ROUTES.settings.profile.build(rbacOrgSlug)}?tab=admin`);
+      await editorPage.goto(ROUTES.settings.profile.build(rbacOrgSlug, "admin"));
       await editorSettingsPage.expectAdminContentHidden();
     },
   );
