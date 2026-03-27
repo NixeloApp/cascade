@@ -180,11 +180,13 @@ export async function prepareScreenshotAuthBootstrap(
     withBrowserPageTarget(
       setupBrowser,
       async ({ context, page: setupPage }) => {
-        const seedProbe = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {});
-        const orgSlug = seedProbe.orgSlug;
+        const orgResolution = await testUserService.resolveScreenshotOrgSlug(SCREENSHOT_USER.email);
+        const orgSlug = orgResolution.orgSlug;
 
         if (!orgSlug) {
-          console.error("  ❌ Could not determine org slug from seed probe. Aborting.");
+          console.error(
+            `  ❌ Could not determine screenshot org slug without seeding: ${orgResolution.error ?? "unknown error"}. Aborting.`,
+          );
           return null;
         }
 

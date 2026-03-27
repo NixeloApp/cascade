@@ -176,7 +176,7 @@ describe("screenshot session helpers", () => {
     const launchBrowser = vi.fn(async () => harness.browser);
     vi.spyOn(testUserService, "deleteTestUser").mockResolvedValueOnce(true);
     vi.spyOn(testUserService, "createTestUser").mockResolvedValueOnce({ success: true });
-    vi.spyOn(testUserService, "seedScreenshotData").mockResolvedValueOnce({
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValueOnce({
       orgSlug: "acme",
       success: true,
     });
@@ -256,15 +256,14 @@ describe("screenshot session helpers", () => {
       callOrder.push("create:primary");
       return { success: true };
     });
-    vi.spyOn(testUserService, "seedScreenshotData")
-      .mockImplementationOnce(async () => {
-        callOrder.push("seed:probe");
-        return { orgSlug: "acme", success: true };
-      })
-      .mockImplementationOnce(async () => {
-        callOrder.push("seed:filled");
-        return { orgSlug: "acme", success: true };
-      });
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockImplementationOnce(async () => {
+      callOrder.push("resolve:bootstrap");
+      return { orgSlug: "acme", success: true };
+    });
+    vi.spyOn(testUserService, "seedScreenshotData").mockImplementationOnce(async () => {
+      callOrder.push("seed:filled");
+      return { orgSlug: "acme", success: true };
+    });
     vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
     vi.mocked(screenshotEmptyStates).mockImplementation(async () => {
       callOrder.push("capture:empty");
@@ -286,7 +285,7 @@ describe("screenshot session helpers", () => {
       "delete:e2e-member-s0-screenshots@inbox.mailtrap.io",
       "delete:e2e-teamlead-s0-screenshots@inbox.mailtrap.io",
       "create:primary",
-      "seed:probe",
+      "resolve:bootstrap",
       "capture:empty",
       "seed:filled",
       "capture:public",

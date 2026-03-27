@@ -32,6 +32,7 @@
 - [ ] Keep staged screenshot output lifecycle on the shared session helper path instead of re-implementing staging-root setup, promotion, or cleanup in CLI entrypoints.
 - [ ] Keep generic browser/context/page target lifecycle on shared E2E utilities instead of rebuilding it inside screenshot-lib session helpers.
 - [ ] Keep empty-before-seed ordering and screenshot seed/bootstrap orchestration on the shared session helper path instead of re-implementing capture phases in the CLI entrypoint.
+- [ ] Keep screenshot bootstrap org resolution non-seeding; the empty-state phase must not call screenshot data seeders just to discover org context.
 - [ ] Keep the screenshot harness private-helper baseline at zero; new top-level harness-only helpers must either become tested public harness API or move into reusable E2E/page-object utilities.
 - [ ] Keep the screenshot-lib raw-locator baseline at zero for tracked screenshot helpers; do not let new route-specific selectors creep back into `readiness.ts`, `helpers.ts`, or new screenshot-lib files.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.

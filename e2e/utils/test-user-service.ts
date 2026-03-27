@@ -55,6 +55,12 @@ export interface SeedScreenshotResult {
   error?: string;
 }
 
+export interface ResolveScreenshotOrgSlugResult {
+  success: boolean;
+  orgSlug?: string;
+  error?: string;
+}
+
 export interface UpdateProjectWorkflowStateResult {
   success: boolean;
   projectId?: string;
@@ -495,6 +501,26 @@ export class TestUserService {
       return await response.json();
     } catch (error) {
       console.warn(`  ⚠️ Failed to seed screenshot data:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Resolve the screenshot org slug for a test user without seeding screenshot data.
+   */
+  async resolveScreenshotOrgSlug(
+    email: string,
+    options: { orgSlug?: string } = {},
+  ): Promise<ResolveScreenshotOrgSlugResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.resolveScreenshotOrgSlug, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ email, orgSlug: options.orgSlug }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to resolve screenshot org slug:`, error);
       return { success: false, error: String(error) };
     }
   }
