@@ -86,24 +86,30 @@ export class InboxPage extends BasePage {
   }
 
   async openFirstIssueSnoozeMenu(): Promise<void> {
-    const snoozeButton = this.page.getByRole("button", { name: /^snooze$/i }).first();
+    const snoozeButton = this.inboxRows
+      .first()
+      .getByTestId(TEST_IDS.PROJECT_INBOX.ROW_SNOOZE_BUTTON);
     await expect(snoozeButton).toBeVisible();
     await snoozeButton.click();
     await expect(this.snoozeMenu).toBeVisible();
   }
 
   async openFirstIssueDeclineDialog(): Promise<void> {
-    const declineButton = this.page.getByRole("button", { name: /^decline$/i }).first();
+    const declineButton = this.inboxRows
+      .first()
+      .getByTestId(TEST_IDS.PROJECT_INBOX.ROW_DECLINE_BUTTON);
     await expect(declineButton).toBeVisible();
     await declineButton.click();
     await expect(this.declineDialog).toBeVisible();
   }
 
   async openFirstIssueDuplicateDialog(): Promise<void> {
-    const actionsButton = this.page.getByRole("button", { name: /more actions for/i }).first();
+    const actionsButton = this.inboxRows
+      .first()
+      .getByTestId(TEST_IDS.PROJECT_INBOX.ROW_MORE_ACTIONS_BUTTON);
     await expect(actionsButton).toBeVisible();
     await actionsButton.click();
-    await this.page.getByRole("menuitem", { name: /mark duplicate/i }).click();
+    await this.page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_ACTION).click();
     await expect(this.duplicateDialog).toBeVisible();
   }
 

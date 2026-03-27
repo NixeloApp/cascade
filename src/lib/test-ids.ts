@@ -926,6 +926,14 @@ export const TEST_IDS = {
     DUPLICATE_DIALOG: "project-inbox-duplicate-dialog",
     /** @see src/components/InboxList.tsx */
     ROW: "project-inbox-row",
+    /** @see src/components/InboxList.tsx */
+    ROW_DECLINE_BUTTON: "project-inbox-row-decline-button",
+    /** @see src/components/InboxList.tsx */
+    ROW_SNOOZE_BUTTON: "project-inbox-row-snooze-button",
+    /** @see src/components/InboxList.tsx */
+    ROW_MORE_ACTIONS_BUTTON: "project-inbox-row-more-actions-button",
+    /** @see src/components/InboxList.tsx */
+    DUPLICATE_ACTION: "project-inbox-duplicate-action",
   },
 
   // ============================================================

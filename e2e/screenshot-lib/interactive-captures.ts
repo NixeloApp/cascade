@@ -1384,13 +1384,8 @@ export async function screenshotProjectInboxStates(
 
     if (shouldCapture(prefix, declineDialogName)) {
       await runCaptureStep("project inbox decline dialog", async () => {
-        await page.evaluate(() => {
-          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "decline-dialog");
-        });
         await openInbox();
-        await page
-          .getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG)
-          .waitFor({ state: "visible", timeout: 12000 });
+        await inboxPage.openFirstIssueDeclineDialog();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, declineDialogName);
         await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG));
@@ -1399,13 +1394,8 @@ export async function screenshotProjectInboxStates(
 
     if (shouldCapture(prefix, duplicateDialogName)) {
       await runCaptureStep("project inbox duplicate dialog", async () => {
-        await page.evaluate(() => {
-          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "duplicate-dialog");
-        });
         await openInbox();
-        await page
-          .getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG)
-          .waitFor({ state: "visible", timeout: 12000 });
+        await inboxPage.openFirstIssueDuplicateDialog();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, duplicateDialogName);
         await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG));
@@ -1425,10 +1415,8 @@ export async function screenshotProjectInboxStates(
     if (shouldCapture(prefix, closedEmptyName)) {
       await runCaptureStep("project inbox closed empty state", async () => {
         await ensureInboxState("closedEmpty");
-        await page.evaluate(() => {
-          window.sessionStorage.setItem("nixelo:e2e:project-inbox-state", "closed-tab");
-        });
         await openInbox();
+        await inboxPage.openClosedTab();
         await inboxPage.expectClosedEmptyState();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, closedEmptyName);
