@@ -71,22 +71,18 @@ type AuthenticatedScreenshotCaptureOptions = AuthenticatedScreenshotPageOptions 
 };
 type RunConfiguredScreenshotStates = typeof captureConfiguredScreenshotStates;
 
-const EMPTY_CAPTURE_NAMES = [
-  "dashboard",
-  "projects",
-  "issues",
-  "documents",
-  "documents-templates",
-  "workspaces",
-  "time-tracking",
-  "notifications",
-  "my-issues",
-  "invoices",
-  "clients",
-  "meetings",
-  "settings",
-  "settings-profile",
-] as const;
+export type ScreenshotCapturePhasePrefix = "empty" | "filled" | "public";
+
+export function getCaptureNamesForPrefix(prefix: ScreenshotCapturePhasePrefix): string[] {
+  return SCREENSHOT_PAGE_IDS.flatMap((pageId) => {
+    const [pagePrefix, ...rest] = pageId.split("-");
+    if (pagePrefix !== prefix || rest.length === 0) {
+      return [];
+    }
+
+    return [rest.join("-")];
+  });
+}
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
   return `${viewport}-${theme}`;
@@ -392,6 +388,12 @@ export async function captureConfiguredScreenshotStates(
   launchBrowser: LaunchBrowser,
   configs: ScreenshotCaptureConfig[],
 ): Promise<boolean> {
+  const emptyCaptureNames = getCaptureNamesForPrefix("empty");
+  const hasEmptyTargets = shouldCaptureAny("empty", emptyCaptureNames);
+  const hasSeededTargets =
+    shouldCaptureAny("public", getCaptureNamesForPrefix("public")) ||
+    shouldCaptureAny("filled", getCaptureNamesForPrefix("filled"));
+
   await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
 
   const authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
@@ -401,7 +403,7 @@ export async function captureConfiguredScreenshotStates(
 
   const { authStorageState, orgSlug } = authBootstrap;
 
-  if (shouldCaptureAny("empty", [...EMPTY_CAPTURE_NAMES])) {
+  if (hasEmptyTargets) {
     console.log("\n  📋 Phase 1: Empty states (before seeding)");
     for (const config of configs) {
       try {
@@ -421,6 +423,10 @@ export async function captureConfiguredScreenshotStates(
         console.log(`    ⚠️ ${config.viewport}-${config.theme} empty capture failed: ${message}`);
       }
     }
+  }
+
+  if (!hasSeededTargets) {
+    return true;
   }
 
   console.log("\n  📋 Phase 2: Seed data + public pages + filled states");

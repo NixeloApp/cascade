@@ -15,6 +15,7 @@ import {
   captureFilledStatesForConfig,
   enumerateDryRunTargets,
   formatConfigLabel,
+  getCaptureNamesForPrefix,
   getScreenshotContextOptions,
   prepareScreenshotAuthBootstrap,
   runAuthenticatedScreenshotCapture,
@@ -90,6 +91,12 @@ describe("screenshot session helpers", () => {
       timezoneId: E2E_TIMEZONE,
       viewport: { height: 1024, width: 768 },
     });
+  });
+
+  it("derives capture names from the canonical page id list for each phase prefix", () => {
+    expect(getCaptureNamesForPrefix("empty")).toContain("outreach");
+    expect(getCaptureNamesForPrefix("public")).toContain("landing");
+    expect(getCaptureNamesForPrefix("filled")).toContain("issues-loading");
   });
 
   it("enumerates only targets that match the active filters", () => {
@@ -365,6 +372,96 @@ describe("screenshot session helpers", () => {
         String(line).includes("Phase 2: Seed data + public pages + filled states"),
       ),
     ).toBe(true);
+  });
+
+  it("skips the seeded phase entirely when filters only target empty captures", async () => {
+    captureState.cliOptions = {
+      ...captureState.cliOptions,
+      matchFilters: ["empty-outreach"],
+    };
+
+    const bootstrapHarness = createBrowserHarness();
+    const emptyHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(bootstrapHarness.browser)
+      .mockResolvedValueOnce(emptyHarness.browser);
+
+    vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
+    vi.spyOn(testUserService, "createTestUser").mockResolvedValue({ success: true });
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
+    const seedSpy = vi.spyOn(testUserService, "seedScreenshotData");
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
+    const publicSpy = vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
+    const filledSpy = vi.mocked(screenshotFilledStates).mockResolvedValue(undefined);
+    publicSpy.mockClear();
+    filledSpy.mockClear();
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const captured = await captureConfiguredScreenshotStates(launchBrowser, [
+      { viewport: "desktop", theme: "light" },
+    ]);
+
+    expect(captured).toBe(true);
+    expect(launchBrowser).toHaveBeenCalledTimes(2);
+    expect(seedSpy).not.toHaveBeenCalled();
+    expect(publicSpy).not.toHaveBeenCalled();
+    expect(filledSpy).not.toHaveBeenCalled();
+    expect(
+      logSpy.mock.calls.some(([line]) =>
+        String(line).includes("Phase 2: Seed data + public pages + filled states"),
+      ),
+    ).toBe(false);
+  });
+
+  it("skips the empty phase entirely when filters only target seeded captures", async () => {
+    captureState.cliOptions = {
+      ...captureState.cliOptions,
+      matchFilters: ["issues-loading"],
+    };
+
+    const bootstrapHarness = createBrowserHarness();
+    const filledHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(bootstrapHarness.browser)
+      .mockResolvedValueOnce(filledHarness.browser);
+
+    vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
+    vi.spyOn(testUserService, "createTestUser").mockResolvedValue({ success: true });
+    vi.spyOn(testUserService, "resolveScreenshotOrgSlug").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
+    vi.spyOn(testUserService, "seedScreenshotData").mockResolvedValue({
+      orgSlug: "acme",
+      success: true,
+    });
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
+    const publicSpy = vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
+    const filledSpy = vi.mocked(screenshotFilledStates).mockResolvedValue(undefined);
+    emptySpy.mockClear();
+    publicSpy.mockClear();
+    filledSpy.mockClear();
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const captured = await captureConfiguredScreenshotStates(launchBrowser, [
+      { viewport: "desktop", theme: "light" },
+    ]);
+
+    expect(captured).toBe(true);
+    expect(launchBrowser).toHaveBeenCalledTimes(2);
+    expect(emptySpy).not.toHaveBeenCalled();
+    expect(publicSpy).toHaveBeenCalledTimes(1);
+    expect(filledSpy).toHaveBeenCalledTimes(1);
+    expect(logSpy.mock.calls.some(([line]) => String(line).includes("Phase 1: Empty states"))).toBe(
+      false,
+    );
   });
 
   it("runs the staged screenshot lifecycle behind the shared session helper", async () => {
