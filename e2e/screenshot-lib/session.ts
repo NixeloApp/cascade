@@ -640,7 +640,7 @@ export async function captureEmptyStatesForConfig(
   }
 
   // Skip browser launch when no empty targets match this config.
-  const emptyCaptureNames = selectedEmptyCaptureGroups.flatMap((g) => g.captureNames);
+  const emptyCaptureNames = selectedEmptyCaptureGroups.flatMap((g) => g.names);
   if (!shouldCaptureAny("empty", emptyCaptureNames)) {
     return;
   }
