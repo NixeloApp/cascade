@@ -896,7 +896,6 @@ export async function screenshotMeetingsStates(
   const processingName = "meetings-processing";
   const filterEmptyName = "meetings-filter-empty";
   const scheduleDialogName = "meetings-schedule-dialog";
-  const detailTimeoutMs = 15000;
   const isDesktopCapture = captureState.currentConfigPrefix.startsWith("desktop-");
   const isTabletCapture = captureState.currentConfigPrefix === "tablet-light";
   const shouldCaptureDetailState = isDesktopCapture;
@@ -918,9 +917,6 @@ export async function screenshotMeetingsStates(
 
   const meetingsUrl = ROUTES.meetings.build(orgSlug);
   const meetingsPage = new MeetingsPage(page, orgSlug);
-  const recentMeetingsSection = page.getByTestId(TEST_IDS.MEETINGS.RECENT_SECTION);
-  const meetingDetailSection = page.getByTestId(TEST_IDS.MEETINGS.DETAIL_SECTION);
-  const meetingMemorySection = page.getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION);
 
   const openMeetingsForCapture = async () => {
     await page.goto(`${BASE_URL}${meetingsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
@@ -931,24 +927,12 @@ export async function screenshotMeetingsStates(
   if (shouldCaptureDetailState && shouldCapture(prefix, meetingsDetailName)) {
     await runCaptureStep("meetings detail", async () => {
       await openMeetingsForCapture();
-      const clientLaunchReviewCard = recentMeetingsSection
-        .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
-        .filter({ hasText: /Client Launch Review/i })
-        .first();
-      await clientLaunchReviewCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
-      await clientLaunchReviewCard.evaluate((element) => {
-        if (element instanceof HTMLElement) {
-          element.click();
-        }
-      });
-      await meetingDetailSection
-        .getByText("Client Launch Review", { exact: true })
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
-      await meetingDetailSection
-        .getByText(
-          "The client also asked whether they need weekend coverage and a final handoff packet before launch.",
-        )
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await meetingsPage.expectRecordingVisible("Client Launch Review");
+      await meetingsPage.openRecording("Client Launch Review");
+      await meetingsPage.expectRecordingDetail("Client Launch Review");
+      await meetingsPage.expectRecordingSummary(
+        "The client also asked whether they need weekend coverage and a final handoff packet before launch.",
+      );
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, meetingsDetailName);
     });
@@ -961,11 +945,9 @@ export async function screenshotMeetingsStates(
       await meetingsPage.openRecording("Weekly Product Sync");
       await meetingsPage.expectRecordingDetail("Weekly Product Sync");
       await meetingsPage.filterTranscript("pricing");
-      await meetingDetailSection
-        .getByText(
-          "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
-        )
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await meetingsPage.expectTranscriptMatch(
+        "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
+      );
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, transcriptSearchName);
     });
@@ -974,21 +956,10 @@ export async function screenshotMeetingsStates(
   if (shouldCapture(prefix, memoryLensName)) {
     await runCaptureStep("meetings memory lens", async () => {
       await openMeetingsForCapture();
-      const opsLensButton = meetingMemorySection
-        .locator("button")
-        .filter({ hasText: /OPS/i })
-        .first();
-      await opsLensButton.waitFor({ state: "visible", timeout: detailTimeoutMs });
-      await opsLensButton.evaluate((element) => {
-        if (element instanceof HTMLElement) {
-          element.click();
-        }
-      });
-      await meetingMemorySection
-        .getByText(
-          "Cross-meeting decisions, open questions, and follow-ups for OPS - Client Operations Hub.",
-        )
-        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await meetingsPage.filterMemoryByProject("OPS");
+      await meetingsPage.expectMemoryDescription(
+        "Cross-meeting decisions, open questions, and follow-ups for OPS - Client Operations Hub.",
+      );
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, memoryLensName);
     });

@@ -1025,6 +1025,17 @@ export const TEST_IDS = {
     MEMORY_SECTION: "meetings-memory-section",
     /** @see src/routes/_app.$orgSlug.meetings.tsx */
     RECORDING_CARD: "meetings-recording-card",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    RECORDING_CARD_ITEM: (title: string) => `meetings-recording-card-${toTestIdFragment(title)}`,
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    DETAIL_TITLE: "meetings-detail-title",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    DETAIL_SUMMARY: "meetings-detail-summary",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    MEMORY_DESCRIPTION: "meetings-memory-description",
+    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
+    MEMORY_FILTER_BUTTON: (projectKey: string) =>
+      `meetings-memory-filter-button-${toTestIdFragment(projectKey)}`,
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - search input */
     SEARCH_INPUT: "meetings-search-input",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx - transcript search */

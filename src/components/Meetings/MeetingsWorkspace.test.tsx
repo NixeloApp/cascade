@@ -816,16 +816,33 @@ describe("MeetingsWorkspace", () => {
 
     renderMeetingsWorkspace();
 
-    expect(screen.getByRole("button", { name: /OPS/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /OPS/i }));
+    const opsLensButton = screen.getByTestId(TEST_IDS.MEETINGS.MEMORY_FILTER_BUTTON("OPS"));
+    expect(opsLensButton).toBeInTheDocument();
+    fireEvent.click(opsLensButton);
 
-    expect(
-      screen.getByText(
-        "Cross-meeting decisions, open questions, and follow-ups for OPS - Ops Rollout.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.MEETINGS.MEMORY_DESCRIPTION)).toHaveTextContent(
+      "Cross-meeting decisions, open questions, and follow-ups for OPS - Ops Rollout.",
+    );
     expect(screen.getByText("Start the phased rollout on Monday")).toBeInTheDocument();
     expect(screen.queryByText("Ship the narrower first iteration")).not.toBeInTheDocument();
+  });
+
+  it("renders stable meetings detail and recording-card test ids for reusable E2E flows", () => {
+    installMeetingQueryMock({});
+
+    renderMeetingsWorkspace();
+
+    expect(
+      screen
+        .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
+        .closest(`[data-slot="${TEST_IDS.MEETINGS.RECORDING_CARD_ITEM("Weekly Product Review")}"]`),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.MEETINGS.DETAIL_TITLE)).toHaveTextContent(
+      "Weekly Product Review",
+    );
+    expect(screen.getByTestId(TEST_IDS.MEETINGS.DETAIL_SUMMARY)).toHaveTextContent(
+      "The team aligned on delivery scope.",
+    );
   });
 
   it("schedules a recording from the meetings page", async () => {
