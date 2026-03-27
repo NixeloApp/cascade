@@ -12,13 +12,17 @@ type BlockedConvexRequestPolicy = {
   target: BlockedConvexPageTarget;
 };
 
+type BlockedConvexPageContextOverrides = {
+  colorScheme?: "dark" | "light";
+  timezoneId?: string;
+};
+
 export type BlockedConvexPagePolicy =
-  | {
+  | ({
       kind: "transport";
       target: BlockedConvexPageTarget;
-      colorScheme?: "dark" | "light";
-    }
-  | (BlockedConvexRequestPolicy & { colorScheme?: "dark" | "light" });
+    } & BlockedConvexPageContextOverrides)
+  | (BlockedConvexRequestPolicy & BlockedConvexPageContextOverrides);
 
 type NormalizedBlockedConvexPagePolicy =
   | {
@@ -225,6 +229,14 @@ export async function installConvexLoadingBlocker(
         send(_data: string | ArrayBufferLike | Blob | ArrayBufferView): void {}
       }
 
+      // Expose ready-state constants on instances (Web IDL compliance).
+      for (const key of ["CONNECTING", "OPEN", "CLOSING", "CLOSED"] as const) {
+        Object.defineProperty(BlockedWebSocket.prototype, key, {
+          value: BlockedWebSocket[key],
+          enumerable: true,
+        });
+      }
+
       windowWithBlocker.WebSocket = new Proxy(OriginalWebSocket, {
         construct(target, argumentsList, newTarget) {
           const [url] = argumentsList as ConstructorParameters<typeof WebSocket>;
@@ -334,17 +346,25 @@ async function withBlockedPageTarget<T>(
 ): Promise<T> {
   const preparedPolicy = prepareBlockedConvexPagePolicy(policy);
 
+  const contextOverrides = {
+    ...(policy.colorScheme ? { colorScheme: policy.colorScheme } : {}),
+    ...(policy.timezoneId ? { timezoneId: policy.timezoneId } : {}),
+  };
+
   if (preparedPolicy.target === "isolated") {
     return withIsolatedPageTarget(
       sourcePage,
       ({ page }) => withBlockedRoutes(page, preparedPolicy, run),
-      policy.colorScheme ? { colorScheme: policy.colorScheme } : {},
+      contextOverrides,
     );
   }
 
-  return withSiblingPageTarget(sourcePage, ({ page }) =>
-    withBlockedRoutes(page, preparedPolicy, run),
-  );
+  return withSiblingPageTarget(sourcePage, async ({ page }) => {
+    if (policy.colorScheme) {
+      await page.emulateMedia({ colorScheme: policy.colorScheme });
+    }
+    return withBlockedRoutes(page, preparedPolicy, run);
+  });
 }
 
 export async function withBlockedConvexPage<T>(

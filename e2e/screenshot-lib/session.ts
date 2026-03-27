@@ -793,6 +793,9 @@ export async function captureFilledStatesForConfig(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    if (isCrashLikeError(message)) {
+      throw error;
+    }
     captureState.captureFailures++;
     console.log(`    ⚠️ Filled capture aborted for ${captureState.currentConfigPrefix}: ${message}`);
   }
