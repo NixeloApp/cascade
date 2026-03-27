@@ -269,6 +269,12 @@ export function getScreenshotCaptureBootstrapMode(
   return "none";
 }
 
+export function screenshotCaptureStepRequiresExecutionContext(
+  executionStep: ScreenshotCaptureExecutionStep,
+): boolean {
+  return executionStep.kind !== "public";
+}
+
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
   return `${viewport}-${theme}`;
 }
@@ -494,6 +500,23 @@ export async function prepareScreenshotCaptureExecutionContext(
     bootstrapMode: "authenticated",
     seedOrgSlug: authBootstrap.orgSlug,
   };
+}
+
+export async function prepareScreenshotCaptureExecutionContextForStep(
+  launchBrowser: LaunchBrowser,
+  executionPlan: ScreenshotCaptureExecutionPlan,
+  executionStep: ScreenshotCaptureExecutionStep,
+  executionContext: ScreenshotCaptureExecutionContext | null,
+): Promise<ScreenshotCaptureExecutionContext | null> {
+  if (!screenshotCaptureStepRequiresExecutionContext(executionStep)) {
+    return executionContext;
+  }
+
+  if (executionContext) {
+    return executionContext;
+  }
+
+  return prepareScreenshotCaptureExecutionContext(launchBrowser, executionPlan);
 }
 
 export async function capturePublicStatesForConfig(
@@ -790,6 +813,29 @@ export async function runSeededScreenshotPhase(
   }
 }
 
+export async function runScreenshotCaptureExecutionStep(
+  launchBrowser: LaunchBrowser,
+  configs: ScreenshotCaptureConfig[],
+  executionStep: ScreenshotCaptureExecutionStep,
+  executionContext: ScreenshotCaptureExecutionContext | null,
+): Promise<void> {
+  if (executionStep.kind === "public") {
+    await runSeedlessPublicScreenshotPhase(launchBrowser, configs);
+    return;
+  }
+
+  if (!executionContext) {
+    throw new Error(`Screenshot execution step ${executionStep.kind} requires execution context`);
+  }
+
+  if (executionStep.kind === "empty") {
+    await runEmptyScreenshotPhase(launchBrowser, configs, executionContext);
+    return;
+  }
+
+  await runSeededScreenshotPhase(launchBrowser, configs, executionStep.mode, executionContext);
+}
+
 export async function captureConfiguredScreenshotStates(
   launchBrowser: LaunchBrowser,
   configs: ScreenshotCaptureConfig[],
@@ -802,27 +848,22 @@ export async function captureConfiguredScreenshotStates(
 
   let executionContext: ScreenshotCaptureExecutionContext | null = null;
   for (const executionStep of executionSteps) {
-    if (executionStep.kind === "public") {
-      await runSeedlessPublicScreenshotPhase(launchBrowser, configs);
-      continue;
+    executionContext = await prepareScreenshotCaptureExecutionContextForStep(
+      launchBrowser,
+      executionPlan,
+      executionStep,
+      executionContext,
+    );
+    if (screenshotCaptureStepRequiresExecutionContext(executionStep) && !executionContext) {
+      return false;
     }
 
-    if (!executionContext) {
-      executionContext = await prepareScreenshotCaptureExecutionContext(
-        launchBrowser,
-        executionPlan,
-      );
-      if (!executionContext) {
-        return false;
-      }
-    }
-
-    if (executionStep.kind === "empty") {
-      await runEmptyScreenshotPhase(launchBrowser, configs, executionContext);
-      continue;
-    }
-
-    await runSeededScreenshotPhase(launchBrowser, configs, executionStep.mode, executionContext);
+    await runScreenshotCaptureExecutionStep(
+      launchBrowser,
+      configs,
+      executionStep,
+      executionContext,
+    );
   }
 
   return true;

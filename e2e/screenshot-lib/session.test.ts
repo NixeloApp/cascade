@@ -33,12 +33,15 @@ import {
   getSelectedScreenshotPageIds,
   prepareScreenshotAuthBootstrap,
   prepareScreenshotCaptureExecutionContext,
+  prepareScreenshotCaptureExecutionContextForStep,
   runAuthenticatedScreenshotCapture,
   runConfiguredScreenshotCaptureSession,
   runEmptyScreenshotPhase,
   runRetriedAuthenticatedScreenshotCapture,
+  runScreenshotCaptureExecutionStep,
   runSeededScreenshotPhase,
   runSeedlessPublicScreenshotPhase,
+  screenshotCaptureStepRequiresExecutionContext,
   withAuthenticatedScreenshotPage,
 } from "./session";
 
@@ -310,6 +313,26 @@ describe("screenshot session helpers", () => {
         buildScreenshotCaptureExecutionPlan(["public-portal-project", "filled-issues-loading"]),
       ),
     ).toBe("authenticated");
+  });
+
+  it("derives execution-context requirements from execution steps", () => {
+    expect(
+      screenshotCaptureStepRequiresExecutionContext({
+        group: "seedless",
+        kind: "public",
+      }),
+    ).toBe(false);
+    expect(
+      screenshotCaptureStepRequiresExecutionContext({
+        kind: "empty",
+      }),
+    ).toBe(true);
+    expect(
+      screenshotCaptureStepRequiresExecutionContext({
+        kind: "seeded",
+        mode: "filled-only",
+      }),
+    ).toBe(true);
   });
 
   it("derives the seeded phase log label from the execution plan", () => {
@@ -592,6 +615,25 @@ describe("screenshot session helpers", () => {
     expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
     expect(createSpy).toHaveBeenCalledTimes(1);
     expect(launchBrowser).not.toHaveBeenCalled();
+  });
+
+  it("does not prepare execution context for a seedless public step", async () => {
+    const launchBrowser = vi.fn<() => Promise<Browser>>();
+    const createSpy = vi.spyOn(testUserService, "createTestUser");
+
+    const executionContext = await prepareScreenshotCaptureExecutionContextForStep(
+      launchBrowser,
+      buildScreenshotCaptureExecutionPlan(["public-landing"]),
+      {
+        group: "seedless",
+        kind: "public",
+      },
+      null,
+    );
+
+    expect(executionContext).toBeNull();
+    expect(launchBrowser).not.toHaveBeenCalled();
+    expect(createSpy).not.toHaveBeenCalled();
   });
 
   it("prepares an authenticated execution context for empty and filled runs", async () => {
@@ -1111,6 +1153,27 @@ describe("screenshot session helpers", () => {
     ).toBe(true);
   });
 
+  it("runs a public execution step without requiring bootstrap context", async () => {
+    const publicHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(publicHarness.browser);
+    const publicSpy = vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
+    publicSpy.mockClear();
+
+    await runScreenshotCaptureExecutionStep(
+      launchBrowser,
+      [{ viewport: "desktop", theme: "light" }],
+      {
+        group: "seedless",
+        kind: "public",
+      },
+      null,
+    );
+
+    expect(publicSpy).toHaveBeenCalledWith(publicHarness.page, undefined, { group: "seedless" });
+  });
+
   it("runs the empty phase through the shared phase helper", async () => {
     const emptyHarness = createBrowserHarness();
     const launchBrowser = vi
@@ -1220,5 +1283,18 @@ describe("screenshot session helpers", () => {
 
     expect(publicSpy).not.toHaveBeenCalled();
     expect(filledSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws when a non-public execution step is run without prepared context", async () => {
+    await expect(
+      runScreenshotCaptureExecutionStep(
+        async () => createBrowserHarness().browser,
+        [{ viewport: "desktop", theme: "light" }],
+        {
+          kind: "empty",
+        },
+        null,
+      ),
+    ).rejects.toThrow("Screenshot execution step empty requires execution context");
   });
 });
