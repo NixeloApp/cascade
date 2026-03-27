@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { blockConvexMutation } from "../utils/convex-loading";
+import { withMutationBlockedPage } from "../utils/convex-loading";
 import { getLocatorCount, getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import {
@@ -16,6 +16,51 @@ import { BasePage } from "./base.page";
  * Handles the full-page notification center with filtering and pagination.
  */
 export class NotificationsPage extends BasePage {
+  static async withCapturePage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (notificationsPage: NotificationsPage) => Promise<T>,
+  ): Promise<T> {
+    const capturePage = await sourcePage.context().newPage();
+
+    try {
+      return await run(new NotificationsPage(capturePage, orgSlug));
+    } finally {
+      if (!capturePage.isClosed()) {
+        await capturePage.close();
+      }
+    }
+  }
+
+  static async withUnreadOverflowPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (notificationsPage: NotificationsPage) => Promise<T>,
+  ): Promise<T> {
+    return NotificationsPage.withCapturePage(sourcePage, orgSlug, async (notificationsPage) => {
+      await notificationsPage.gotoAndWaitForUnreadOverflowReady();
+      return run(notificationsPage);
+    });
+  }
+
+  static async withMarkAllReadLoadingPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (notificationsPage: NotificationsPage) => Promise<T>,
+  ): Promise<T> {
+    return withMutationBlockedPage(
+      sourcePage,
+      ["notifications:markAllAsRead"],
+      async (loadingPage) => {
+        const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
+        await notificationsPage.gotoAndWaitForUnreadOverflowReady();
+        await notificationsPage.openMarkAllReadLoadingState();
+        await waitForAnimation(loadingPage);
+        return run(notificationsPage);
+      },
+    );
+  }
+
   readonly archiveAllButton: Locator;
   readonly archivedEmptyState: Locator;
   readonly archivedTab: Locator;
@@ -191,21 +236,10 @@ export class NotificationsPage extends BasePage {
     await waitForAnimation(this.page);
   }
 
-  async openMarkAllReadLoadingState(): Promise<() => Promise<void>> {
-    const releaseMutationBlock = await blockConvexMutation(
-      this.page,
-      "notifications:markAllAsRead",
-    );
-
-    try {
-      await expect(this.markAllReadButton).toBeVisible();
-      await this.markAllReadButton.click();
-      await expect(this.markAllReadButton).toHaveAttribute("aria-busy", "true");
-      await expect(this.markAllReadButton).toBeDisabled();
-      return releaseMutationBlock;
-    } catch (error) {
-      await releaseMutationBlock();
-      throw error;
-    }
+  async openMarkAllReadLoadingState(): Promise<void> {
+    await expect(this.markAllReadButton).toBeVisible();
+    await this.markAllReadButton.click();
+    await expect(this.markAllReadButton).toHaveAttribute("aria-busy", "true");
+    await expect(this.markAllReadButton).toBeDisabled();
   }
 }

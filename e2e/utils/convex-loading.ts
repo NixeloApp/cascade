@@ -299,3 +299,39 @@ export async function withQueryBlockedPage<T>(
     await blockedTarget.close();
   }
 }
+
+export async function createMutationBlockedPage(
+  sourcePage: Page,
+  mutationPaths: string[],
+): Promise<{
+  close: () => Promise<void>;
+  page: Page;
+}> {
+  const isolatedContext = await createIsolatedContextFromPage(sourcePage);
+  const blockedPage = await isolatedContext.newPage();
+  const releaseBlocks = await Promise.all(
+    mutationPaths.map((mutationPath) => blockConvexMutation(blockedPage, mutationPath)),
+  );
+
+  return {
+    page: blockedPage,
+    close: async () => {
+      await Promise.all(releaseBlocks.map((releaseBlock) => releaseBlock()));
+      await isolatedContext.close();
+    },
+  };
+}
+
+export async function withMutationBlockedPage<T>(
+  sourcePage: Page,
+  mutationPaths: string[],
+  run: (blockedPage: Page) => Promise<T>,
+): Promise<T> {
+  const blockedTarget = await createMutationBlockedPage(sourcePage, mutationPaths);
+
+  try {
+    return await run(blockedTarget.page);
+  } finally {
+    await blockedTarget.close();
+  }
+}

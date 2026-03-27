@@ -1667,28 +1667,13 @@ export async function screenshotFilledStates(
       }
 
       try {
-        const archivedEmptyPage = await page.context().newPage();
-
-        try {
-          await archivedEmptyPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          await waitForExpectedContent(
-            archivedEmptyPage,
-            ROUTES.notifications.build(orgSlug),
-            "notifications",
-          );
-          const notificationsPage = new NotificationsPage(archivedEmptyPage, orgSlug);
+        await NotificationsPage.withCapturePage(page, orgSlug, async (notificationsPage) => {
+          await notificationsPage.goto();
           await notificationsPage.openArchivedTabAndWait();
-          await waitForScreenshotReady(archivedEmptyPage);
+          await waitForScreenshotReady(notificationsPage.page);
           await notificationsPage.expectArchivedEmptyState();
-          await captureCurrentView(archivedEmptyPage, p, "notifications-archived-empty");
-        } finally {
-          if (!archivedEmptyPage.isClosed()) {
-            await archivedEmptyPage.close();
-          }
-        }
+          await captureCurrentView(notificationsPage.page, p, "notifications-archived-empty");
+        });
       } finally {
         await testUserService.configureNotificationsState(
           orgSlug,
@@ -1719,21 +1704,9 @@ export async function screenshotFilledStates(
           throw new Error("Failed to authenticate screenshot notifications");
         }
 
-        const overflowPage = await page.context().newPage();
-        try {
-          await overflowPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          const notificationsPage = new NotificationsPage(overflowPage, orgSlug);
-          await notificationsPage.waitForUnreadOverflowReady();
-          await waitForScreenshotReady(overflowPage);
-          await captureCurrentView(overflowPage, p, "notifications-unread-overflow");
-        } finally {
-          if (!overflowPage.isClosed()) {
-            await overflowPage.close();
-          }
-        }
+        await NotificationsPage.withUnreadOverflowPage(page, orgSlug, async (notificationsPage) =>
+          captureCurrentView(notificationsPage.page, p, "notifications-unread-overflow"),
+        );
       } finally {
         await testUserService.configureNotificationsState(
           orgSlug,
@@ -1769,25 +1742,20 @@ export async function screenshotFilledStates(
           throw new Error("Failed to authenticate screenshot notifications");
         }
 
-        const loadingPage = await page.context().newPage();
-        try {
-          const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
-          await notificationsPage.gotoAndWaitForUnreadOverflowReady();
-          const releaseMutationBlock = await notificationsPage.openMarkAllReadLoadingState();
-
-          try {
-            await waitForAnimation(loadingPage);
-            await captureCurrentView(loadingPage, p, "notifications-mark-all-read-loading", {
-              skipReadyCheck: true,
-            });
-          } finally {
-            await releaseMutationBlock();
-          }
-        } finally {
-          if (!loadingPage.isClosed()) {
-            await loadingPage.close();
-          }
-        }
+        await NotificationsPage.withMarkAllReadLoadingPage(
+          page,
+          orgSlug,
+          async (notificationsPage) => {
+            await captureCurrentView(
+              notificationsPage.page,
+              p,
+              "notifications-mark-all-read-loading",
+              {
+                skipReadyCheck: true,
+              },
+            );
+          },
+        );
       } finally {
         if (projectKey) {
           await testUserService.configureNotificationsState(
