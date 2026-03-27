@@ -69,7 +69,6 @@ test.describe("Meetings", () => {
   }, testInfo) => {
     const workerEmail = getWorkerFixtureEmail(testInfo.parallelIndex);
     const actionItemDescription = "Turn the release checklist into tracked follow-up work";
-    const createdIssueKey = "DEMO-8";
 
     const resetResult = await testUserService.resetMeetingsData(workerEmail);
     if (!resetResult.success) {
@@ -86,6 +85,7 @@ test.describe("Meetings", () => {
     await meetingsPage.expectActionItemCreateIssueEnabled(actionItemDescription);
 
     await meetingsPage.createIssueFromActionItem(actionItemDescription);
+    const createdIssueKey = await meetingsPage.getLinkedIssueKey(actionItemDescription);
     await meetingsPage.expectLinkedIssue(
       actionItemDescription,
       createdIssueKey,
