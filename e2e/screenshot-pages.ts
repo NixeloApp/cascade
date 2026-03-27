@@ -25,10 +25,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { type Browser, chromium } from "@playwright/test";
-import { ROUTES } from "../convex/shared/routes";
-import { TEST_IDS } from "../src/lib/test-ids";
-import { E2E_TIMEZONE } from "./constants";
+import { chromium } from "@playwright/test";
 import {
   captureState,
   getStagedOutputSummary,
@@ -37,216 +34,27 @@ import {
   isCrashLikeError,
   promoteStagedScreenshots,
   registerWaitForExpectedContent,
-  resetCounters,
-  shouldCapture,
   shouldCaptureAny,
-  takeScreenshot,
 } from "./screenshot-lib/capture";
 import { parseCliOptions, printUsage } from "./screenshot-lib/cli";
 import {
   BASE_URL,
   CONFIGS,
-  SCREENSHOT_AUTH_USER,
-  SCREENSHOT_EMPTY_AUTH_USER,
   SCREENSHOT_EMPTY_USER,
   SCREENSHOT_STAGING_BASE_DIR,
   SCREENSHOT_USER,
-  VIEWPORTS,
-  type ViewportName,
 } from "./screenshot-lib/config";
-import { screenshotFilledStates } from "./screenshot-lib/filled-states";
-import { autoLogin } from "./screenshot-lib/helpers";
-import { screenshotEmptyStates, screenshotPublicPages } from "./screenshot-lib/public-pages";
-import { waitForExpectedContent, waitForSpinnersHidden } from "./screenshot-lib/readiness";
-import { getGeneratedSpecFolders, resolveCaptureTarget } from "./screenshot-lib/routing";
+import { waitForExpectedContent } from "./screenshot-lib/readiness";
+import { getGeneratedSpecFolders } from "./screenshot-lib/routing";
+import {
+  captureEmptyStatesForConfig,
+  captureFilledStatesForConfig,
+  enumerateDryRunTargets,
+  prepareScreenshotAuthBootstrap,
+} from "./screenshot-lib/session";
 import { buildScreenshotShards } from "./screenshot-lib/sharding";
 import { SCREENSHOT_PAGE_IDS } from "./screenshot-lib/targets";
-import { ensureUserExistsAndSignIn } from "./utils/auth-helpers";
-import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
-
-/**
- * Capture empty states for a single viewport/theme combination.
- * Must run BEFORE data is seeded so pages genuinely show empty UI.
- */
-async function captureEmptyForConfig(
-  browser: Browser,
-  viewport: ViewportName,
-  theme: ThemeName,
-  orgSlug: string,
-  storageState?: { cookies: unknown[]; origins: unknown[] },
-): Promise<void> {
-  captureState.currentConfigPrefix = `${viewport}-${theme}`;
-  resetCounters();
-
-  console.log(
-    `\n  📸 ${captureState.currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}) [empty]`,
-  );
-
-  const context = await browser.newContext({
-    viewport: VIEWPORTS[viewport],
-    colorScheme: theme,
-    timezoneId: E2E_TIMEZONE,
-    ...(storageState ? { storageState } : {}),
-  });
-  const page = await context.newPage();
-
-  try {
-    if (storageState) {
-      const dashboardUrl = `${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`;
-      try {
-        await page.goto(dashboardUrl, { waitUntil: "load" });
-        await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
-          state: "visible",
-          timeout: 30000,
-        });
-        await waitForSpinnersHidden(page, 10000);
-      } catch {
-        await page.reload({ waitUntil: "load" });
-        await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
-          state: "visible",
-          timeout: 20000,
-        });
-        await waitForSpinnersHidden(page, 10000);
-      }
-    } else if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
-      captureState.captureFailures++;
-      console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
-      return;
-    }
-
-    await screenshotEmptyStates(page, orgSlug);
-
-    if (shouldCapture("empty", "my-issues")) {
-      const myIssuesContext = await browser.newContext({
-        viewport: VIEWPORTS[viewport],
-        colorScheme: theme,
-        timezoneId: E2E_TIMEZONE,
-      });
-      const myIssuesPage = await myIssuesContext.newPage();
-
-      try {
-        if (
-          !(await ensureUserExistsAndSignIn(
-            myIssuesPage,
-            BASE_URL,
-            SCREENSHOT_EMPTY_AUTH_USER,
-            true,
-          ))
-        ) {
-          throw new Error(
-            `Auth failed for my-issues empty state in ${captureState.currentConfigPrefix}`,
-          );
-        }
-
-        await takeScreenshot(myIssuesPage, "empty", "my-issues", ROUTES.myIssues.build(orgSlug));
-      } finally {
-        await myIssuesContext.close();
-      }
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (isCrashLikeError(message)) {
-      throw error;
-    }
-    captureState.captureFailures++;
-    console.log(
-      `    ⚠️ Empty state capture failed for ${captureState.currentConfigPrefix}: ${message}`,
-    );
-  } finally {
-    await context.close();
-  }
-}
-
-/**
- * Capture public pages and filled states for a single viewport/theme combination.
- * Runs AFTER data has been seeded.
- */
-async function captureFilledForConfig(
-  browser: Browser,
-  viewport: ViewportName,
-  theme: ThemeName,
-  orgSlug: string,
-  seedResult: SeedScreenshotResult,
-  storageState?: { cookies: unknown[]; origins: unknown[] },
-): Promise<void> {
-  captureState.currentConfigPrefix = `${viewport}-${theme}`;
-  resetCounters();
-
-  console.log(
-    `\n  📸 ${captureState.currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}) [public + filled]`,
-  );
-
-  const context = await browser.newContext({
-    viewport: VIEWPORTS[viewport],
-    colorScheme: theme,
-    timezoneId: E2E_TIMEZONE,
-    ...(storageState ? { storageState } : {}),
-  });
-  const page = await context.newPage();
-
-  // Public pages (no auth needed, but some need seed data for tokens)
-  await screenshotPublicPages(page, seedResult);
-
-  try {
-    // Re-authenticate per filled-state config instead of relying solely on the
-    // setup-time storage snapshot. The screenshot run spans multiple fresh
-    // browser contexts, and re-establishing auth here is more deterministic
-    // for route-level captures than reusing a potentially stale token snapshot.
-    if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
-      captureState.captureFailures++;
-      console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} filled states`);
-      return;
-    }
-
-    const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
-    await screenshotFilledStates(page, filledOrgSlug, seedResult);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (isCrashLikeError(message)) {
-      throw error;
-    }
-    captureState.captureFailures++;
-    console.log(
-      `    ⚠️ Filled state capture failed for ${captureState.currentConfigPrefix}: ${message}`,
-    );
-  } finally {
-    await context.close();
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Dry run
-// ---------------------------------------------------------------------------
-
-function dryRunEnumerate(
-  configs: Array<{ viewport: keyof typeof VIEWPORTS; theme: "dark" | "light" }>,
-): void {
-  let count = 0;
-  for (const config of configs) {
-    const configName = `${config.viewport}-${config.theme}`;
-    captureState.currentConfigPrefix = configName;
-    console.log(
-      `  📸 ${configName.toUpperCase()} (${VIEWPORTS[config.viewport].width}x${VIEWPORTS[config.viewport].height})`,
-    );
-
-    for (const pageId of SCREENSHOT_PAGE_IDS) {
-      const [prefix, ...rest] = pageId.split("-");
-      const name = rest.join("-");
-      if (!shouldCapture(prefix, name)) {
-        continue;
-      }
-      const target = resolveCaptureTarget(prefix, name);
-      const specInfo = target.specFolder ? `→ ${target.specFolder}/` : "→ e2e/screenshots/";
-      console.log(`    [${prefix}] ${name}  ${specInfo}`);
-      count++;
-    }
-    console.log("");
-  }
-
-  console.log(
-    `  Total: ${count} screenshots would be captured across ${configs.length} config(s).\n`,
-  );
-}
+import { testUserService } from "./utils/test-user-service";
 
 // ---------------------------------------------------------------------------
 // Main
@@ -294,7 +102,7 @@ export async function run(): Promise<void> {
 
   if (captureState.cliOptions.dryRun) {
     console.log("\n  🏃 DRY RUN — listing targets without launching a browser\n");
-    dryRunEnumerate(selectedConfigs);
+    enumerateDryRunTargets(selectedConfigs);
     return;
   }
 
@@ -304,42 +112,12 @@ export async function run(): Promise<void> {
 
   const headless = captureState.cliOptions.headless;
   const launchBrowser = () => chromium.launch({ headless });
-  const setupBrowser = await launchBrowser();
-
-  // Setup: Create test user and seed data once
-  console.log("\n  🔧 Setting up test data...");
-  await testUserService.deleteTestUser(SCREENSHOT_USER.email);
   await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
-  const createResult = await testUserService.createTestUser(
-    SCREENSHOT_USER.email,
-    SCREENSHOT_USER.password,
-    true,
-  );
-  if (!createResult.success) {
-    console.error(`  ❌ Failed to create user: ${createResult.error}`);
-    await setupBrowser.close();
+  const authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
+  if (!authBootstrap) {
     return;
   }
-  console.log(`  ✓ User: ${SCREENSHOT_USER.email}`);
-
-  // Get org slug via initial login
-  const setupContext = await setupBrowser.newContext({
-    viewport: VIEWPORTS.desktop,
-    colorScheme: "dark",
-    timezoneId: E2E_TIMEZONE,
-  });
-  const setupPage = await setupContext.newPage();
-  const orgSlug = await autoLogin(setupPage);
-  // Capture the authenticated storage state so per-config contexts can reuse it
-  const authStorageState = orgSlug ? await setupContext.storageState() : null;
-  await setupContext.close();
-
-  if (!orgSlug) {
-    console.error("  ❌ Could not authenticate. Aborting.");
-    await setupBrowser.close();
-    return;
-  }
-  await setupBrowser.close();
+  const { authStorageState, orgSlug } = authBootstrap;
 
   // -----------------------------------------------------------------------
   // Phase 1: Empty states — capture BEFORE seeding so pages are genuinely
@@ -368,7 +146,7 @@ export async function run(): Promise<void> {
     for (const config of selectedConfigs) {
       const browser = await launchBrowser();
       try {
-        await captureEmptyForConfig(
+        await captureEmptyStatesForConfig(
           browser,
           config.viewport,
           config.theme,
@@ -408,7 +186,7 @@ export async function run(): Promise<void> {
     for (let attempt = 1; attempt <= 2 && !completed; attempt++) {
       const browser = await launchBrowser();
       try {
-        await captureFilledForConfig(
+        await captureFilledStatesForConfig(
           browser,
           config.viewport,
           config.theme,

@@ -1,15 +1,12 @@
 /**
- * Screenshot Helpers — seeded state access, issue drafts, and authentication.
+ * Screenshot Helpers — seeded state access and issue draft utilities.
  *
  * Utility functions used by the screenshot capture passes to read the seeded
- * screenshot contract, seed issue drafts, and handle test user login.
+ * screenshot contract and seed issue drafts.
  */
 
 import type { Page } from "@playwright/test";
-import { ensureUserExistsAndSignIn } from "../utils/auth-helpers";
-import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
-import { waitForScreenshotReady } from "../utils/wait-helpers";
-import { BASE_URL, SCREENSHOT_AUTH_USER, SCREENSHOT_USER } from "./config";
+import type { SeedScreenshotResult } from "../utils/test-user-service";
 
 export function getSeededIssueKey(seed: SeedScreenshotResult): string | null {
   return seed.issueKeys?.[0] ?? null;
@@ -91,44 +88,4 @@ export async function seedIssueDraft(page: Page, projectId: string, title: strin
     },
     { projectId, title },
   );
-}
-
-// ---------------------------------------------------------------------------
-// Authentication
-// ---------------------------------------------------------------------------
-
-export async function autoLogin(page: Page): Promise<string | null> {
-  console.log("    Creating test user...");
-  await testUserService.deleteTestUser(SCREENSHOT_USER.email);
-  const createResult = await testUserService.createTestUser(
-    SCREENSHOT_USER.email,
-    SCREENSHOT_USER.password,
-    true,
-  );
-  if (!createResult.success) {
-    console.error(`    Failed to create user: ${createResult.error}`);
-    return null;
-  }
-  console.log(`    User ready: ${SCREENSHOT_USER.email}`);
-
-  // Discover orgSlug by doing a lightweight seed (returns orgSlug)
-  const seedProbe = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {});
-  const orgSlug = seedProbe.orgSlug;
-  if (!orgSlug) {
-    console.error("    Could not determine org slug from seed probe");
-    return null;
-  }
-
-  console.log("    Logging in via reusable auth helper...");
-  if (!(await ensureUserExistsAndSignIn(page, BASE_URL, SCREENSHOT_AUTH_USER, true))) {
-    console.error(
-      "    Screenshot auth helper could not reach the dashboard. Current URL:",
-      page.url(),
-    );
-    return null;
-  }
-
-  await waitForScreenshotReady(page);
-  console.log(`    Logged in. Org: ${orgSlug}`);
-  return orgSlug;
 }

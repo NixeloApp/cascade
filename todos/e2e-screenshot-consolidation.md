@@ -27,7 +27,7 @@
   - reusable helpers that should live with E2E/page objects
   - thin screenshot wrappers that stay in screenshot-lib
   - harness-only complexity that should be deleted
-- [ ] Keep collapsing screenshot-specific auth/bootstrap logic onto reusable E2E auth helpers instead of letting `screenshot-pages.ts`, `filled-states.ts`, and `helpers.ts` each own their own login path.
+- [ ] Keep collapsing the remaining screenshot-specific auth/bootstrap logic onto reusable E2E auth helpers instead of letting screenshot session setup drift into new harness-only entrypoints or config-specific login paths.
 - [ ] Keep the screenshot-lib raw-locator baseline at zero for tracked screenshot helpers; do not let new route-specific selectors creep back into `readiness.ts`, `helpers.ts`, or new screenshot-lib files.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
 - [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
