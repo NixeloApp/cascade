@@ -2,6 +2,7 @@ import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { describe, expect, it, vi } from "vitest";
 import {
   withConvexLoadingPage,
+  withIsolatedConvexLoadingPage,
   withMutationBlockedPage,
   withQueryBlockedPage,
 } from "./convex-loading";
@@ -75,6 +76,19 @@ describe("convex loading helpers", () => {
     expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
   });
 
+  it("installs the transport blocker on isolated loading pages and closes their context", async () => {
+    const harness = createConvexLoadingHarness();
+
+    const result = await withIsolatedConvexLoadingPage(harness.sourcePage, async (loadingPage) => {
+      expect(loadingPage).toBe(harness.isolatedPage);
+      return "done";
+    });
+
+    expect(result).toBe("done");
+    expect(harness.isolatedPage.addInitScript).toHaveBeenCalledTimes(1);
+    expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
+  });
+
   it("releases blocked mutations and closes the isolated context after failures", async () => {
     const harness = createConvexLoadingHarness();
 
@@ -85,6 +99,24 @@ describe("convex loading helpers", () => {
     ).rejects.toThrow("capture failed");
 
     expect(harness.isolatedPage.route).toHaveBeenCalledTimes(1);
+    expect(harness.isolatedPage.unroute).toHaveBeenCalledTimes(1);
+    expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("unwinds already-installed blocked routes when later route setup fails", async () => {
+    const harness = createConvexLoadingHarness();
+    harness.isolatedPage.route
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("route install failed"));
+
+    await expect(
+      withQueryBlockedPage(
+        harness.sourcePage,
+        ["issues/queries:listOrganizationIssues", "notifications:list"],
+        async () => "unreachable",
+      ),
+    ).rejects.toThrow("route install failed");
+
     expect(harness.isolatedPage.unroute).toHaveBeenCalledTimes(1);
     expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
   });

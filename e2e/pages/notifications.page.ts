@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { withMutationBlockedPage } from "../utils/convex-loading";
 import { getLocatorCount, getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
-import { createSiblingPageTarget } from "../utils/page-targets";
+import { withSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
 import {
   waitForAnimation,
@@ -22,13 +22,9 @@ export class NotificationsPage extends BasePage {
     orgSlug: string,
     run: (notificationsPage: NotificationsPage) => Promise<T>,
   ): Promise<T> {
-    const captureTarget = await createSiblingPageTarget(sourcePage);
-
-    try {
-      return await run(new NotificationsPage(captureTarget.page, orgSlug));
-    } finally {
-      await captureTarget.close();
-    }
+    return withSiblingPageTarget(sourcePage, async ({ page }) =>
+      run(new NotificationsPage(page, orgSlug)),
+    );
   }
 
   static async withUnreadOverflowPage<T>(

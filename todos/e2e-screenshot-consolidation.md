@@ -2,7 +2,7 @@
 
 > **Priority:** P0
 > **Status:** Open
-> **Last Updated:** 2026-03-28
+> **Last Updated:** 2026-03-27
 
 ## Why This Is Still Open
 
@@ -32,7 +32,8 @@
 - [ ] Keep the screenshot-lib raw-locator baseline at zero for tracked screenshot helpers; do not let new route-specific selectors creep back into `readiness.ts`, `helpers.ts`, or new screenshot-lib files.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
 - [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
-- [ ] Keep shrinking direct screenshot-lib route-driving so ordinary canonical, modal, and loading captures go through page-object navigation, leaving only shared blocked-transport policy as the justified exception.
+- [ ] Keep shrinking direct screenshot-lib route-driving so ordinary canonical, modal, and loading captures go through page-object navigation, leaving only shared blocked-transport policy and shared screenshot-session bootstrap as the justified exceptions.
+- [ ] Keep blocked transport/page-target lifecycle on shared E2E helpers instead of re-creating sibling or isolated capture-page setup inside screenshot-lib or route-specific loading helpers.
 - [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
 
 ## Production Hook Cleanup
