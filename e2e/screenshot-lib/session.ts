@@ -75,8 +75,6 @@ export interface ScreenshotCapturePhasePlan {
   selectedPageIds: string[];
 }
 
-export type ScreenshotCaptureBootstrapMode = "none" | "primary-user" | "authenticated";
-
 export interface ScreenshotCaptureExecutionPlan {
   executionSteps: ScreenshotCaptureExecutionStep[];
   phasePlan: ScreenshotCapturePhasePlan;
@@ -245,26 +243,6 @@ export function buildScreenshotCaptureExecutionSteps(
   }
 
   return executionSteps;
-}
-
-export function getScreenshotCaptureBootstrapMode(
-  executionPlan: ScreenshotCaptureExecutionPlan,
-): ScreenshotCaptureBootstrapMode {
-  if (
-    executionPlan.executionSteps.some(
-      (executionStep) =>
-        executionStep.kind === "empty" ||
-        (executionStep.kind === "seeded" && executionStep.mode !== "public-only"),
-    )
-  ) {
-    return "authenticated";
-  }
-
-  if (executionPlan.executionSteps.some((executionStep) => executionStep.kind === "seeded")) {
-    return "primary-user";
-  }
-
-  return "none";
 }
 
 export function screenshotCaptureStepRequiresExecutionContext(
@@ -467,28 +445,19 @@ export async function prepareScreenshotAuthBootstrap(
   );
 }
 
-export async function prepareScreenshotCaptureExecutionContext(
+export async function preparePrimaryUserScreenshotExecutionContext(): Promise<ScreenshotCaptureExecutionContext | null> {
+  if (!(await prepareScreenshotPrimaryUser())) {
+    return null;
+  }
+
+  return {
+    authBootstrap: null,
+  };
+}
+
+export async function prepareAuthenticatedScreenshotExecutionContext(
   launchBrowser: LaunchBrowser,
-  executionPlan: ScreenshotCaptureExecutionPlan,
 ): Promise<ScreenshotCaptureExecutionContext | null> {
-  const bootstrapMode = getScreenshotCaptureBootstrapMode(executionPlan);
-
-  if (bootstrapMode === "none") {
-    return {
-      authBootstrap: null,
-    };
-  }
-
-  if (bootstrapMode === "primary-user") {
-    if (!(await prepareScreenshotPrimaryUser())) {
-      return null;
-    }
-
-    return {
-      authBootstrap: null,
-    };
-  }
-
   await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
   const authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
   if (!authBootstrap) {
@@ -502,7 +471,6 @@ export async function prepareScreenshotCaptureExecutionContext(
 
 export async function prepareScreenshotCaptureExecutionContextForStep(
   launchBrowser: LaunchBrowser,
-  executionPlan: ScreenshotCaptureExecutionPlan,
   executionStep: ScreenshotCaptureExecutionStep,
   executionContext: ScreenshotCaptureExecutionContext | null,
 ): Promise<ScreenshotCaptureExecutionContext | null> {
@@ -514,7 +482,11 @@ export async function prepareScreenshotCaptureExecutionContextForStep(
     return executionContext;
   }
 
-  return prepareScreenshotCaptureExecutionContext(launchBrowser, executionPlan);
+  if (executionStep.kind === "seeded" && executionStep.mode === "public-only") {
+    return preparePrimaryUserScreenshotExecutionContext();
+  }
+
+  return prepareAuthenticatedScreenshotExecutionContext(launchBrowser);
 }
 
 export async function capturePublicStatesForConfig(
@@ -898,7 +870,6 @@ export async function captureConfiguredScreenshotStates(
   for (const executionStep of executionSteps) {
     executionContext = await prepareScreenshotCaptureExecutionContextForStep(
       launchBrowser,
-      executionPlan,
       executionStep,
       executionContext,
     );

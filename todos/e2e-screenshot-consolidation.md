@@ -33,6 +33,7 @@
 - [ ] Keep screenshot phase planning on one selected-target plan derived from canonical screenshot ids. Session bootstrap, empty-before-seed ordering, and public/filled phase decisions should not rebuild their own boolean gating ad hoc.
 - [ ] Keep screenshot bootstrap and seed-phase policy on one derived execution plan. Session orchestration should not re-encode `needsAuthBootstrap` / `hasSeededTargets` style booleans inline after target planning.
 - [ ] Keep screenshot bootstrap preparation on one shared execution-context helper. Session orchestration should not inline `bootstrapMode` branching or assume authenticated bootstrap state with local casts after planning.
+- [ ] Keep screenshot execution-context preparation derived from the execution step being run. Session helpers should not rebuild a second plan-level bootstrap mode map when the ordered step list already tells us whether the next step needs no setup, primary-user setup, or authenticated bootstrap.
 - [ ] Keep empty screenshot target policy on one canonical manifest. Empty-state route ownership should not live in a separate hand-maintained list and imperative `takeScreenshot(...)` sequence.
 - [ ] Keep seedless public-page captures off the authenticated bootstrap and seeding path; landing/auth-style screenshots should not pay for screenshot user setup or seeded tokens they do not need.
 - [ ] Keep public screenshot target policy on one canonical manifest. Seeded vs seedless grouping and route/token requirements should not live in separate hand-maintained sets and imperative branches.
