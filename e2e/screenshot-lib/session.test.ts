@@ -33,6 +33,30 @@ vi.mock("./filled-states", () => ({
 }));
 
 vi.mock("./public-pages", () => ({
+  getPublicCaptureNames: vi.fn((group: "all" | "seeded" | "seedless" = "all") => {
+    const seedless = [
+      "landing",
+      "signin",
+      "signup",
+      "signup-verify",
+      "forgot-password",
+      "forgot-password-reset",
+      "verify-email",
+      "verify-2fa",
+      "invite-invalid",
+      "invite-expired",
+      "invite-revoked",
+      "invite-accepted",
+    ];
+    const seeded = ["invite", "unsubscribe", "portal", "portal-project"];
+    if (group === "seedless") {
+      return seedless;
+    }
+    if (group === "seeded") {
+      return seeded;
+    }
+    return [...seedless, ...seeded];
+  }),
   screenshotEmptyStates: vi.fn(),
   screenshotPublicPages: vi.fn(),
 }));
@@ -416,6 +440,113 @@ describe("screenshot session helpers", () => {
         String(line).includes("Phase 2: Seed data + public pages + filled states"),
       ),
     ).toBe(false);
+  });
+
+  it("captures seedless public filters without auth bootstrap or seeded setup", async () => {
+    captureState.cliOptions = {
+      ...captureState.cliOptions,
+      matchFilters: ["landing"],
+    };
+
+    const publicHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(publicHarness.browser);
+
+    const deleteSpy = vi.spyOn(testUserService, "deleteTestUser");
+    const createSpy = vi.spyOn(testUserService, "createTestUser");
+    const resolveSpy = vi.spyOn(testUserService, "resolveScreenshotOrgSlug");
+    const seedSpy = vi.spyOn(testUserService, "seedScreenshotData");
+    const publicSpy = vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
+    publicSpy.mockClear();
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockClear();
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const captured = await captureConfiguredScreenshotStates(launchBrowser, [
+      { viewport: "desktop", theme: "light" },
+    ]);
+
+    expect(captured).toBe(true);
+    expect(launchBrowser).toHaveBeenCalledTimes(1);
+    expect(publicSpy).toHaveBeenCalledTimes(1);
+    expect(publicSpy).toHaveBeenCalledWith(publicHarness.page, undefined, { group: "seedless" });
+    expect(deleteSpy).not.toHaveBeenCalled();
+    expect(createSpy).not.toHaveBeenCalled();
+    expect(resolveSpy).not.toHaveBeenCalled();
+    expect(seedSpy).not.toHaveBeenCalled();
+    expect(ensureAuthenticatedScreenshotPage).not.toHaveBeenCalled();
+    expect(
+      logSpy.mock.calls.some(([line]) =>
+        String(line).includes("Phase 0: Public pages (no seed required)"),
+      ),
+    ).toBe(true);
+    expect(logSpy.mock.calls.some(([line]) => String(line).includes("Phase 1: Empty states"))).toBe(
+      false,
+    );
+    expect(
+      logSpy.mock.calls.some(([line]) =>
+        String(line).includes("Phase 2: Seed data + token-backed public pages"),
+      ),
+    ).toBe(false);
+  });
+
+  it("captures seeded public filters without auth bootstrap when no authenticated states are selected", async () => {
+    captureState.cliOptions = {
+      ...captureState.cliOptions,
+      matchFilters: ["portal-project"],
+    };
+
+    const publicHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(publicHarness.browser);
+
+    const deleteSpy = vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
+    const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
+      success: true,
+    });
+    const resolveSpy = vi.spyOn(testUserService, "resolveScreenshotOrgSlug");
+    const seedSpy = vi.spyOn(testUserService, "seedScreenshotData").mockResolvedValue({
+      portalProjectId: "project-1",
+      portalToken: "portal-token",
+      success: true,
+    });
+    const publicSpy = vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
+    publicSpy.mockClear();
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockClear();
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const captured = await captureConfiguredScreenshotStates(launchBrowser, [
+      { viewport: "desktop", theme: "light" },
+    ]);
+
+    expect(captured).toBe(true);
+    expect(launchBrowser).toHaveBeenCalledTimes(1);
+    expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
+    expect(createSpy).toHaveBeenCalledTimes(1);
+    expect(resolveSpy).not.toHaveBeenCalled();
+    expect(seedSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io", {
+      orgSlug: undefined,
+    });
+    expect(publicSpy).toHaveBeenCalledTimes(1);
+    expect(publicSpy).toHaveBeenCalledWith(
+      publicHarness.page,
+      expect.objectContaining({
+        portalProjectId: "project-1",
+        portalToken: "portal-token",
+        success: true,
+      }),
+      { group: "seeded" },
+    );
+    expect(ensureAuthenticatedScreenshotPage).not.toHaveBeenCalled();
+    expect(logSpy.mock.calls.some(([line]) => String(line).includes("Phase 1: Empty states"))).toBe(
+      false,
+    );
+    expect(
+      logSpy.mock.calls.some(([line]) =>
+        String(line).includes("Phase 2: Seed data + token-backed public pages"),
+      ),
+    ).toBe(true);
   });
 
   it("skips the empty phase entirely when filters only target seeded captures", async () => {

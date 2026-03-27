@@ -9,90 +9,124 @@ import type { Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import type { SeedScreenshotResult } from "../utils/test-user-service";
 import { getCurrentConfigUnsubscribeToken, shouldCaptureAny, takeScreenshot } from "./capture";
+import { SCREENSHOT_PAGE_IDS } from "./targets";
 
-export async function screenshotPublicPages(page: Page, seed: SeedScreenshotResult): Promise<void> {
-  const publicNames = [
-    "landing",
-    "signin",
-    "signup",
-    "signup-verify",
-    "forgot-password",
-    "forgot-password-reset",
-    "verify-email",
-    "verify-2fa",
-    "invite",
-    "invite-invalid",
-    "invite-expired",
-    "invite-revoked",
-    "invite-accepted",
-    "unsubscribe",
-    "portal",
-    "portal-project",
-  ];
+export type PublicScreenshotCaptureGroup = "all" | "seeded" | "seedless";
+
+type PublicScreenshotSeed = Pick<
+  SeedScreenshotResult,
+  "inviteToken" | "portalProjectId" | "portalToken" | "unsubscribeTokens"
+>;
+
+const SEEDED_PUBLIC_CAPTURE_NAME_SET = new Set([
+  "invite",
+  "unsubscribe",
+  "portal",
+  "portal-project",
+]);
+
+export function getPublicCaptureNames(group: PublicScreenshotCaptureGroup = "all"): string[] {
+  const publicNames = SCREENSHOT_PAGE_IDS.flatMap((pageId) => {
+    const [prefix, ...rest] = pageId.split("-");
+    if (prefix !== "public" || rest.length === 0) {
+      return [];
+    }
+
+    return [rest.join("-")];
+  });
+
+  switch (group) {
+    case "seeded":
+      return publicNames.filter((name) => SEEDED_PUBLIC_CAPTURE_NAME_SET.has(name));
+    case "seedless":
+      return publicNames.filter((name) => !SEEDED_PUBLIC_CAPTURE_NAME_SET.has(name));
+    default:
+      return publicNames;
+  }
+}
+
+export async function screenshotPublicPages(
+  page: Page,
+  seed?: PublicScreenshotSeed,
+  options: { group?: PublicScreenshotCaptureGroup } = {},
+): Promise<void> {
+  const group = options.group ?? "all";
+  const publicNames = getPublicCaptureNames(group);
   if (!shouldCaptureAny("public", publicNames)) {
     return;
   }
 
   console.log("    --- Public pages ---");
-  await takeScreenshot(page, "public", "landing", ROUTES.home.build());
-  await takeScreenshot(page, "public", "signin", ROUTES.signin.build());
-  await takeScreenshot(page, "public", "signup", ROUTES.signup.build());
-  await takeScreenshot(
-    page,
-    "public",
-    "signup-verify",
-    `${ROUTES.signup.build()}?step=verify&email=screenshots%40inbox.mailtrap.io`,
-  );
-  await takeScreenshot(page, "public", "forgot-password", ROUTES.forgotPassword.build());
-  await takeScreenshot(
-    page,
-    "public",
-    "forgot-password-reset",
-    `${ROUTES.forgotPassword.build()}?step=reset&email=screenshots%40inbox.mailtrap.io`,
-  );
-  await takeScreenshot(
-    page,
-    "public",
-    "verify-email",
-    ROUTES.verifyEmail.build("screenshots@inbox.mailtrap.io"),
-  );
-  await takeScreenshot(page, "public", "verify-2fa", ROUTES.verify2FA.build());
-  if (seed.inviteToken) {
-    await takeScreenshot(page, "public", "invite", ROUTES.invite.build(seed.inviteToken));
-  }
-  await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
-  await takeScreenshot(
-    page,
-    "public",
-    "invite-expired",
-    `${ROUTES.invite.build("screenshot-test-token")}?previewState=expired`,
-  );
-  await takeScreenshot(
-    page,
-    "public",
-    "invite-revoked",
-    `${ROUTES.invite.build("screenshot-test-token")}?previewState=revoked`,
-  );
-  await takeScreenshot(
-    page,
-    "public",
-    "invite-accepted",
-    `${ROUTES.invite.build("screenshot-test-token")}?previewState=accepted`,
-  );
-  const unsubscribeToken = getCurrentConfigUnsubscribeToken(seed);
-  if (unsubscribeToken) {
-    await takeScreenshot(page, "public", "unsubscribe", ROUTES.unsubscribe.build(unsubscribeToken));
+  if (group !== "seeded") {
+    await takeScreenshot(page, "public", "landing", ROUTES.home.build());
+    await takeScreenshot(page, "public", "signin", ROUTES.signin.build());
+    await takeScreenshot(page, "public", "signup", ROUTES.signup.build());
+    await takeScreenshot(
+      page,
+      "public",
+      "signup-verify",
+      `${ROUTES.signup.build()}?step=verify&email=screenshots%40inbox.mailtrap.io`,
+    );
+    await takeScreenshot(page, "public", "forgot-password", ROUTES.forgotPassword.build());
+    await takeScreenshot(
+      page,
+      "public",
+      "forgot-password-reset",
+      `${ROUTES.forgotPassword.build()}?step=reset&email=screenshots%40inbox.mailtrap.io`,
+    );
+    await takeScreenshot(
+      page,
+      "public",
+      "verify-email",
+      ROUTES.verifyEmail.build("screenshots@inbox.mailtrap.io"),
+    );
+    await takeScreenshot(page, "public", "verify-2fa", ROUTES.verify2FA.build());
+    await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
+    await takeScreenshot(
+      page,
+      "public",
+      "invite-expired",
+      `${ROUTES.invite.build("screenshot-test-token")}?previewState=expired`,
+    );
+    await takeScreenshot(
+      page,
+      "public",
+      "invite-revoked",
+      `${ROUTES.invite.build("screenshot-test-token")}?previewState=revoked`,
+    );
+    await takeScreenshot(
+      page,
+      "public",
+      "invite-accepted",
+      `${ROUTES.invite.build("screenshot-test-token")}?previewState=accepted`,
+    );
   }
 
-  if (seed.portalToken) {
-    await takeScreenshot(page, "public", "portal", ROUTES.portal.entry.build(seed.portalToken));
-    if (seed.portalProjectId) {
+  if (group !== "seedless" && seed?.inviteToken) {
+    await takeScreenshot(page, "public", "invite", ROUTES.invite.build(seed.inviteToken));
+  }
+
+  if (group !== "seedless") {
+    const unsubscribeToken = seed ? getCurrentConfigUnsubscribeToken(seed) : undefined;
+    if (unsubscribeToken) {
       await takeScreenshot(
         page,
         "public",
-        "portal-project",
-        ROUTES.portal.project.build(seed.portalToken, seed.portalProjectId),
+        "unsubscribe",
+        ROUTES.unsubscribe.build(unsubscribeToken),
       );
+    }
+
+    if (seed?.portalToken) {
+      await takeScreenshot(page, "public", "portal", ROUTES.portal.entry.build(seed.portalToken));
+      if (seed.portalProjectId) {
+        await takeScreenshot(
+          page,
+          "public",
+          "portal-project",
+          ROUTES.portal.project.build(seed.portalToken, seed.portalProjectId),
+        );
+      }
     }
   }
 }

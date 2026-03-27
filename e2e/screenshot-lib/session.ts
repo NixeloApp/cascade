@@ -28,7 +28,12 @@ import {
   type ViewportName,
 } from "./config";
 import { screenshotFilledStates } from "./filled-states";
-import { screenshotEmptyStates, screenshotPublicPages } from "./public-pages";
+import {
+  getPublicCaptureNames,
+  type PublicScreenshotCaptureGroup,
+  screenshotEmptyStates,
+  screenshotPublicPages,
+} from "./public-pages";
 import { resolveCaptureTarget } from "./routing";
 import { SCREENSHOT_PAGE_IDS } from "./targets";
 
@@ -132,6 +137,23 @@ export function cleanupScreenshotStagingRoot(): void {
   captureState.stagingRootDir = "";
 }
 
+export async function prepareScreenshotPrimaryUser(): Promise<boolean> {
+  await testUserService.deleteTestUser(SCREENSHOT_USER.email);
+  const createResult = await testUserService.createTestUser(
+    SCREENSHOT_USER.email,
+    SCREENSHOT_USER.password,
+    true,
+  );
+
+  if (!createResult.success) {
+    console.error(`  ❌ Failed to create user: ${createResult.error}`);
+    return false;
+  }
+
+  console.log(`  ✓ User: ${SCREENSHOT_USER.email}`);
+  return true;
+}
+
 export async function withAuthenticatedScreenshotPage(
   browser: Browser,
   viewport: ViewportName,
@@ -222,19 +244,9 @@ export async function prepareScreenshotAuthBootstrap(
   launchBrowser: LaunchBrowser,
 ): Promise<ScreenshotAuthBootstrap | null> {
   console.log("\n  🔧 Setting up test data...");
-  await testUserService.deleteTestUser(SCREENSHOT_USER.email);
-  const createResult = await testUserService.createTestUser(
-    SCREENSHOT_USER.email,
-    SCREENSHOT_USER.password,
-    true,
-  );
-
-  if (!createResult.success) {
-    console.error(`  ❌ Failed to create user: ${createResult.error}`);
+  if (!(await prepareScreenshotPrimaryUser())) {
     return null;
   }
-
-  console.log(`  ✓ User: ${SCREENSHOT_USER.email}`);
 
   return withLaunchedBrowser(launchBrowser, async (setupBrowser) =>
     withBrowserPageTarget(
@@ -263,6 +275,37 @@ export async function prepareScreenshotAuthBootstrap(
       getScreenshotContextOptions("desktop", "dark"),
     ),
   );
+}
+
+export async function capturePublicStatesForConfig(
+  launchBrowser: LaunchBrowser,
+  viewport: ViewportName,
+  theme: ThemeName,
+  seed?: SeedScreenshotResult,
+  group: PublicScreenshotCaptureGroup = "all",
+): Promise<void> {
+  setCurrentConfig(viewport, theme, "public");
+
+  try {
+    await withLaunchedBrowser(launchBrowser, async (browser) =>
+      withBrowserPageTarget(
+        browser,
+        async ({ page }) => {
+          await screenshotPublicPages(page, seed, { group });
+        },
+        getScreenshotContextOptions(viewport, theme),
+      ),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (isCrashLikeError(message)) {
+      throw error;
+    }
+    captureState.captureFailures++;
+    console.log(
+      `    ⚠️ Public state capture failed for ${captureState.currentConfigPrefix}: ${message}`,
+    );
+  }
 }
 
 export async function captureEmptyStatesForConfig(
@@ -347,7 +390,7 @@ export async function captureFilledStatesForConfig(
       theme,
       orgSlug,
       async ({ page }) => {
-        await screenshotPublicPages(page, seedResult);
+        await screenshotPublicPages(page, seedResult, { group: "seeded" });
 
         try {
           const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
@@ -388,22 +431,48 @@ export async function captureConfiguredScreenshotStates(
   launchBrowser: LaunchBrowser,
   configs: ScreenshotCaptureConfig[],
 ): Promise<boolean> {
+  const seedlessPublicCaptureNames = getPublicCaptureNames("seedless");
+  const seededPublicCaptureNames = getPublicCaptureNames("seeded");
   const emptyCaptureNames = getCaptureNamesForPrefix("empty");
+  const filledCaptureNames = getCaptureNamesForPrefix("filled");
+  const hasSeedlessPublicTargets = shouldCaptureAny("public", seedlessPublicCaptureNames);
+  const hasSeededPublicTargets = shouldCaptureAny("public", seededPublicCaptureNames);
   const hasEmptyTargets = shouldCaptureAny("empty", emptyCaptureNames);
-  const hasSeededTargets =
-    shouldCaptureAny("public", getCaptureNamesForPrefix("public")) ||
-    shouldCaptureAny("filled", getCaptureNamesForPrefix("filled"));
+  const hasFilledTargets = shouldCaptureAny("filled", filledCaptureNames);
+  const needsAuthBootstrap = hasEmptyTargets || hasFilledTargets;
+  const hasSeededTargets = hasSeededPublicTargets || hasFilledTargets;
 
-  await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
+  if (hasSeedlessPublicTargets) {
+    console.log("\n  📋 Phase 0: Public pages (no seed required)");
+    for (const config of configs) {
+      await capturePublicStatesForConfig(
+        launchBrowser,
+        config.viewport,
+        config.theme,
+        undefined,
+        "seedless",
+      );
+    }
+  }
 
-  const authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
-  if (!authBootstrap) {
+  if (!hasEmptyTargets && !hasSeededTargets) {
+    return true;
+  }
+
+  let authBootstrap: ScreenshotAuthBootstrap | null = null;
+  if (needsAuthBootstrap) {
+    await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
+
+    authBootstrap = await prepareScreenshotAuthBootstrap(launchBrowser);
+    if (!authBootstrap) {
+      return false;
+    }
+  } else if (!(await prepareScreenshotPrimaryUser())) {
     return false;
   }
 
-  const { authStorageState, orgSlug } = authBootstrap;
-
   if (hasEmptyTargets) {
+    const { authStorageState, orgSlug } = authBootstrap as ScreenshotAuthBootstrap;
     console.log("\n  📋 Phase 1: Empty states (before seeding)");
     for (const config of configs) {
       try {
@@ -429,26 +498,45 @@ export async function captureConfiguredScreenshotStates(
     return true;
   }
 
-  console.log("\n  📋 Phase 2: Seed data + public pages + filled states");
+  console.log(
+    hasFilledTargets
+      ? "\n  📋 Phase 2: Seed data + public pages + filled states"
+      : "\n  📋 Phase 2: Seed data + token-backed public pages",
+  );
   console.log("  Seeding screenshot data...");
-  const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, { orgSlug });
+  const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
+    orgSlug: authBootstrap?.orgSlug,
+  });
   if (seedResult.success) {
     console.log(
-      `  ✓ Seeded: org=${seedResult.orgSlug ?? orgSlug}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
+      `  ✓ Seeded: org=${seedResult.orgSlug ?? authBootstrap?.orgSlug ?? "unknown"}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
     );
   } else {
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
   }
 
-  for (const config of configs) {
-    await captureFilledStatesForConfig(
-      launchBrowser,
-      config.viewport,
-      config.theme,
-      orgSlug,
-      seedResult,
-      authStorageState ?? undefined,
-    );
+  if (hasFilledTargets) {
+    const { authStorageState, orgSlug } = authBootstrap as ScreenshotAuthBootstrap;
+    for (const config of configs) {
+      await captureFilledStatesForConfig(
+        launchBrowser,
+        config.viewport,
+        config.theme,
+        orgSlug,
+        seedResult,
+        authStorageState ?? undefined,
+      );
+    }
+  } else {
+    for (const config of configs) {
+      await capturePublicStatesForConfig(
+        launchBrowser,
+        config.viewport,
+        config.theme,
+        seedResult,
+        "seeded",
+      );
+    }
   }
 
   return true;
