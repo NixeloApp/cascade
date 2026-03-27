@@ -180,8 +180,8 @@ export async function screenshotFilledStates(
 
         if (shouldCapture(p, "org-analytics-sparse-data")) {
           await applyOrgAnalyticsState("sparseData");
-          const sparsePage = await page.context().newPage();
-          try {
+          await AnalyticsPage.withCapturePage(page, orgSlug, async (analyticsPage) => {
+            const { page: sparsePage } = analyticsPage;
             try {
               await captureOrgAnalyticsState({
                 capturePage: sparsePage,
@@ -191,15 +191,13 @@ export async function screenshotFilledStates(
             } finally {
               await applyOrgAnalyticsState("default");
             }
-          } finally {
-            await sparsePage.close();
-          }
+          });
         }
 
         if (shouldCapture(p, "org-analytics-no-activity")) {
           await applyOrgAnalyticsState("noActivity");
-          const noActivityPage = await page.context().newPage();
-          try {
+          await AnalyticsPage.withCapturePage(page, orgSlug, async (analyticsPage) => {
+            const { page: noActivityPage } = analyticsPage;
             try {
               await captureOrgAnalyticsState({
                 capturePage: noActivityPage,
@@ -209,9 +207,7 @@ export async function screenshotFilledStates(
             } finally {
               await applyOrgAnalyticsState("default");
             }
-          } finally {
-            await noActivityPage.close();
-          }
+          });
         }
 
         await applyOrgAnalyticsState("default");
@@ -363,18 +359,16 @@ export async function screenshotFilledStates(
 
     if (shouldCapture(p, "settings-notifications-permission-denied")) {
       await runCaptureStep("settings notifications permission denied", async () => {
-        const permissionPage = await page.context().newPage();
-        try {
-          const permissionSettingsPage = new SettingsPage(permissionPage, orgSlug);
-          await permissionSettingsPage.gotoNotificationsWithBlockedPermission();
-          await permissionSettingsPage.expectNotificationsPermissionDeniedState();
-          await waitForScreenshotReady(permissionPage);
-          await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
-        } finally {
-          if (!permissionPage.isClosed()) {
-            await permissionPage.close();
-          }
-        }
+        await SettingsPage.withNotificationsPermissionDeniedPage(
+          page,
+          orgSlug,
+          async (permissionSettingsPage) => {
+            const { page: permissionPage } = permissionSettingsPage;
+            await permissionSettingsPage.expectNotificationsPermissionDeniedState();
+            await waitForScreenshotReady(permissionPage);
+            await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
+          },
+        );
       });
     }
   }
@@ -466,28 +460,20 @@ export async function screenshotFilledStates(
               );
             }
 
-            const sparsePage = await page.context().newPage();
-            try {
-              await sparsePage.goto(`${BASE_URL}${analyticsUrl}`, {
-                waitUntil: "domcontentloaded",
-                timeout: 15000,
-              });
+            await ProjectsPage.withCapturePage(page, orgSlug, async (projectsPage) => {
+              const { page: sparsePage } = projectsPage;
+              await projectsPage.gotoProjectAnalytics(projectKey);
               await waitForExpectedContent(
                 sparsePage,
                 analyticsUrl,
                 `project-${normalizedProjectKey}-analytics`,
               );
-              const projectsPage = new ProjectsPage(sparsePage, orgSlug);
               await projectsPage.expectAnalyticsSparseDataState();
               await captureProjectAnalyticsState(
                 sparsePage,
                 `project-${normalizedProjectKey}-analytics-sparse-data`,
               );
-            } finally {
-              if (!sparsePage.isClosed()) {
-                await sparsePage.close();
-              }
-            }
+            });
           }
 
           if (shouldCapture(p, `project-${normalizedProjectKey}-analytics-no-activity`)) {
@@ -503,28 +489,20 @@ export async function screenshotFilledStates(
               );
             }
 
-            const noActivityPage = await page.context().newPage();
-            try {
-              await noActivityPage.goto(`${BASE_URL}${analyticsUrl}`, {
-                waitUntil: "domcontentloaded",
-                timeout: 15000,
-              });
+            await ProjectsPage.withCapturePage(page, orgSlug, async (projectsPage) => {
+              const { page: noActivityPage } = projectsPage;
+              await projectsPage.gotoProjectAnalytics(projectKey);
               await waitForExpectedContent(
                 noActivityPage,
                 analyticsUrl,
                 `project-${normalizedProjectKey}-analytics`,
               );
-              const projectsPage = new ProjectsPage(noActivityPage, orgSlug);
               await projectsPage.expectAnalyticsNoActivityState();
               await captureProjectAnalyticsState(
                 noActivityPage,
                 `project-${normalizedProjectKey}-analytics-no-activity`,
               );
-            } finally {
-              if (!noActivityPage.isClosed()) {
-                await noActivityPage.close();
-              }
-            }
+            });
           }
         } finally {
           await testUserService.configureProjectAnalyticsState(orgSlug, projectKey, "default");
@@ -1241,8 +1219,6 @@ export async function screenshotFilledStates(
 
   if (projectKey && shouldCaptureAny(p, [...timeTrackingCaptureNames])) {
     await runCaptureStep("time tracking review states", async () => {
-      const timeTrackingUrl = ROUTES.timeTracking.build(orgSlug);
-
       const applyTimeTrackingState = async (
         mode: "default" | "entriesEmpty" | "ratesPopulated" | "summaryTruncated",
       ): Promise<void> => {
@@ -1263,13 +1239,9 @@ export async function screenshotFilledStates(
         expectedState: "entries" | "burn-rate" | "rates";
         name: (typeof timeTrackingCaptureNames)[number];
       }): Promise<void> => {
-        const capturePage = await page.context().newPage();
-        try {
-          await capturePage.goto(`${BASE_URL}${timeTrackingUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          const trackingPage = new TimeTrackingPage(capturePage, orgSlug);
+        await TimeTrackingPage.withCapturePage(page, orgSlug, async (trackingPage) => {
+          const { page: capturePage } = trackingPage;
+          await trackingPage.goto();
           if (expectedState === "burn-rate") {
             await trackingPage.expectBurnRateState();
           } else if (expectedState === "rates") {
@@ -1282,9 +1254,7 @@ export async function screenshotFilledStates(
           }
           await waitForScreenshotReady(capturePage);
           await captureCurrentView(capturePage, p, name);
-        } finally {
-          await capturePage.close();
-        }
+        });
       };
 
       await applyTimeTrackingState("default");

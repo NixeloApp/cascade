@@ -949,41 +949,29 @@ export async function screenshotMyIssuesStates(
 
   if (shouldCapture(prefix, filterActiveName)) {
     await runCaptureStep("my issues filter active", async () => {
-      const filterActivePage = await page.context().newPage();
-
-      try {
-        const filteredMyIssuesPage = new MyIssuesPage(filterActivePage, orgSlug);
+      await MyIssuesPage.withCapturePage(page, orgSlug, async (filteredMyIssuesPage) => {
+        const { page: filterActivePage } = filteredMyIssuesPage;
         await filteredMyIssuesPage.goto();
         await filteredMyIssuesPage.waitUntilReady();
         await filteredMyIssuesPage.selectPriorityFilter("High");
         await filteredMyIssuesPage.expectFilterSummaryVisible();
         await waitForScreenshotReady(filterActivePage);
         await captureCurrentView(filterActivePage, prefix, filterActiveName);
-      } finally {
-        if (!filterActivePage.isClosed()) {
-          await filterActivePage.close();
-        }
-      }
+      });
     });
   }
 
   if (shouldCapture(prefix, filteredEmptyName)) {
     await runCaptureStep("my issues filtered empty state", async () => {
-      const filteredEmptyPage = await page.context().newPage();
-
-      try {
-        const filteredEmptyMyIssuesPage = new MyIssuesPage(filteredEmptyPage, orgSlug);
+      await MyIssuesPage.withCapturePage(page, orgSlug, async (filteredEmptyMyIssuesPage) => {
+        const { page: filteredEmptyPage } = filteredEmptyMyIssuesPage;
         await filteredEmptyMyIssuesPage.goto();
         await filteredEmptyMyIssuesPage.waitUntilReady();
         await filteredEmptyMyIssuesPage.selectPriorityFilter("Lowest");
         await filteredEmptyMyIssuesPage.expectFilteredEmptyState();
         await waitForScreenshotReady(filteredEmptyPage);
         await captureCurrentView(filteredEmptyPage, prefix, filteredEmptyName);
-      } finally {
-        if (!filteredEmptyPage.isClosed()) {
-          await filteredEmptyPage.close();
-        }
-      }
+      });
     });
   }
 

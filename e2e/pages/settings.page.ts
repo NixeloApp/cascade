@@ -1,4 +1,4 @@
-import { expect, type Locator } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   getLocatorInputValue,
@@ -6,6 +6,7 @@ import {
   isLocatorEditable,
   isLocatorVisible,
 } from "../utils/locator-state";
+import { withSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -22,6 +23,18 @@ declare global {
  * Handles the settings view with integrations, API keys, and preferences
  */
 export class SettingsPage extends BasePage {
+  static async withNotificationsPermissionDeniedPage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (settingsPage: SettingsPage) => Promise<T>,
+  ): Promise<T> {
+    return withSiblingPageTarget(sourcePage, async ({ page }) => {
+      const settingsPage = new SettingsPage(page, orgSlug);
+      await settingsPage.gotoNotificationsWithBlockedPermission();
+      return run(settingsPage);
+    });
+  }
+
   // ===================
   // Locators - Settings Tabs
   // ===================

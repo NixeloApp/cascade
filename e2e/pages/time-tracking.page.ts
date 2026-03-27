@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import { withSiblingPageTarget } from "../utils/page-targets";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -10,6 +11,16 @@ import { BasePage } from "./base.page";
  * Handles tab, filter, and screenshot-review states for the admin time route.
  */
 export class TimeTrackingPage extends BasePage {
+  static async withCapturePage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (timeTrackingPage: TimeTrackingPage) => Promise<T>,
+  ): Promise<T> {
+    return withSiblingPageTarget(sourcePage, async ({ page }) =>
+      run(new TimeTrackingPage(page, orgSlug)),
+    );
+  }
+
   readonly burnRateHeading: Locator;
   readonly burnRatePanel: Locator;
   readonly burnRateTab: Locator;

@@ -1,6 +1,11 @@
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { describe, expect, it, vi } from "vitest";
-import { createIsolatedPageTarget, createSiblingPageTarget } from "./page-targets";
+import {
+  createIsolatedPageTarget,
+  createSiblingPageTarget,
+  withIsolatedPageTarget,
+  withSiblingPageTarget,
+} from "./page-targets";
 
 function createPageTargetHarness() {
   const siblingPage = {
@@ -52,6 +57,18 @@ describe("page target helpers", () => {
     expect(harness.siblingPage.close).toHaveBeenCalledTimes(1);
   });
 
+  it("wraps sibling pages with automatic cleanup", async () => {
+    const harness = createPageTargetHarness();
+
+    const result = await withSiblingPageTarget(harness.sourcePage, async ({ page }) => {
+      expect(page).toBe(harness.siblingPage);
+      return "done";
+    });
+
+    expect(result).toBe("done");
+    expect(harness.siblingPage.close).toHaveBeenCalledTimes(1);
+  });
+
   it("creates isolated pages with inherited auth and explicit overrides", async () => {
     const harness = createPageTargetHarness();
 
@@ -70,6 +87,30 @@ describe("page target helpers", () => {
 
     await target.close();
 
+    expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("wraps isolated pages with overrides and automatic cleanup", async () => {
+    const harness = createPageTargetHarness();
+
+    const result = await withIsolatedPageTarget(
+      harness.sourcePage,
+      async ({ context, page }) => {
+        expect(page).toBe(harness.isolatedPage);
+        expect(context).toBe(harness.isolatedContext);
+        return "done";
+      },
+      {
+        colorScheme: "light",
+      },
+    );
+
+    expect(result).toBe("done");
+    expect(harness.browser.newContext).toHaveBeenCalledWith({
+      colorScheme: "light",
+      storageState: { cookies: [], origins: [] },
+      viewport: { height: 900, width: 1440 },
+    });
     expect(harness.isolatedContext.close).toHaveBeenCalledTimes(1);
   });
 

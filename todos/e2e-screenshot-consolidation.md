@@ -10,7 +10,7 @@
 - [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
 - [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
 - [ ] This is the first infrastructure priority again. The current overlap between screenshot-lib and reusable E2E/page objects is active execution debt, not just cleanup polish.
-- [ ] The remaining debt is no longer one giant screenshot-lib selector hotspot. What is left is smaller but still structural: screenshot-specific helper seams, shared blocked-transport policy, and the remaining places where screenshot capture can still diverge from reusable E2E flows.
+- [ ] The remaining debt is no longer one giant screenshot-lib selector hotspot. What is left is smaller but still structural: shared blocked-transport policy, screenshot session/bootstrap seams, and the remaining places where screenshot capture can still diverge from reusable E2E flows.
 
 ## Target Architecture
 

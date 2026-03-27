@@ -14,6 +14,7 @@ import {
   waitForProjectCreateSuccess,
 } from "../utils";
 import { withConvexLoadingPage } from "../utils/convex-loading";
+import { withSiblingPageTarget } from "../utils/page-targets";
 import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import { waitForAnimation, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
@@ -24,6 +25,16 @@ import { BasePage } from "./base.page";
  * Note: UI uses "Projects" terminology, URLs use /projects/ path
  */
 export class ProjectsPage extends BasePage {
+  static async withCapturePage<T>(
+    sourcePage: Page,
+    orgSlug: string,
+    run: (projectsPage: ProjectsPage) => Promise<T>,
+  ): Promise<T> {
+    return withSiblingPageTarget(sourcePage, async ({ page }) =>
+      run(new ProjectsPage(page, orgSlug)),
+    );
+  }
+
   static async withProjectsLoadingPage<T>(
     sourcePage: Page,
     orgSlug: string,
@@ -449,6 +460,11 @@ export class ProjectsPage extends BasePage {
   async gotoProjectSettings(projectKey: string) {
     await this.gotoPath(ROUTES.projects.settings.build(this.orgSlug, projectKey));
     await this.expectProjectSettingsLoaded();
+  }
+
+  async gotoProjectAnalytics(projectKey: string) {
+    await this.gotoPath(ROUTES.projects.analytics.build(this.orgSlug, projectKey));
+    await this.expectAnalyticsLoaded();
   }
 
   async openImportExportModal(): Promise<void> {

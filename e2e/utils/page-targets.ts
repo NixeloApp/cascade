@@ -11,6 +11,33 @@ export type IsolatedPageTarget = PageTarget & {
   context: BrowserContext;
 };
 
+export async function withSiblingPageTarget<T>(
+  sourcePage: Page,
+  run: (target: PageTarget) => Promise<T>,
+): Promise<T> {
+  const target = await createSiblingPageTarget(sourcePage);
+
+  try {
+    return await run(target);
+  } finally {
+    await target.close();
+  }
+}
+
+export async function withIsolatedPageTarget<T>(
+  sourcePage: Page,
+  run: (target: IsolatedPageTarget) => Promise<T>,
+  overrides: IsolatedPageOverrides = {},
+): Promise<T> {
+  const target = await createIsolatedPageTarget(sourcePage, overrides);
+
+  try {
+    return await run(target);
+  } finally {
+    await target.close();
+  }
+}
+
 export async function createSiblingPageTarget(sourcePage: Page): Promise<PageTarget> {
   const page = await sourcePage.context().newPage();
 
