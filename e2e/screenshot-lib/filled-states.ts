@@ -45,7 +45,13 @@ import {
   MARKDOWN_RICH_CONTENT,
   SCREENSHOT_USER,
 } from "./config";
-import { clearIssueDrafts, discoverDocumentId, discoverIssueKey, seedIssueDraft } from "./helpers";
+import {
+  clearIssueDrafts,
+  getSeededTeamSlug,
+  requirePrimarySeededDocumentId,
+  requireSeededIssueKey,
+  seedIssueDraft,
+} from "./helpers";
 import {
   screenshotAssistantStates,
   screenshotBoardInteractiveStates,
@@ -926,21 +932,17 @@ export async function screenshotFilledStates(
   // Issue detail
   const seededIssueKey = seed.issueKeys?.[0];
   if (seededIssueKey && shouldCapture(p, `issue-${seededIssueKey.toLowerCase()}`)) {
-    const firstIssue = (await discoverIssueKey(page, orgSlug, projectKey)) ?? seededIssueKey;
-    if (firstIssue) {
-      await takeScreenshot(
-        page,
-        p,
-        `issue-${firstIssue.toLowerCase()}`,
-        ROUTES.issues.detail.build(orgSlug, firstIssue),
-      );
-    }
+    const firstIssue = requireSeededIssueKey(seed, "issue detail screenshot capture");
+    await takeScreenshot(
+      page,
+      p,
+      `issue-${firstIssue.toLowerCase()}`,
+      ROUTES.issues.detail.build(orgSlug, firstIssue),
+    );
   }
 
   // Workspace & team pages
   const wsSlug = seed.workspaceSlug;
-  const teamSlug = seed.teamSlug;
-
   if (wsSlug) {
     const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
     const wsTabs = ["backlog", "calendar", "sprints", "dependencies", "wiki", "settings"] as const;
@@ -955,7 +957,7 @@ export async function screenshotFilledStates(
       }
     }
 
-    const resolvedTeam = teamSlug ?? (await discoverFirstHref(page, /\/teams\/([^/]+)/));
+    const resolvedTeam = getSeededTeamSlug(seed);
     if (resolvedTeam) {
       const teamBase = `${wsBase}/teams/${resolvedTeam}`;
       const teamTabs = ["board", "calendar", "wiki", "settings"] as const;
@@ -987,10 +989,7 @@ export async function screenshotFilledStates(
     "document-editor-mention-popover",
   ];
   if (shouldCaptureAny(p, editorTargets)) {
-    const baseDocId =
-      seed.documentIds?.sprintRetrospectiveNotes ??
-      seed.documentIds?.projectRequirements ??
-      (await discoverDocumentId(page, orgSlug));
+    const baseDocId = requirePrimarySeededDocumentId(seed, "document editor screenshot capture");
     if (baseDocId) {
       const baseDocUrl = ROUTES.documents.detail.build(orgSlug, baseDocId);
       const documentsPage = new DocumentsPage(page, orgSlug);

@@ -1,106 +1,59 @@
 /**
- * Screenshot Helpers — discovery, issue drafts, and authentication.
+ * Screenshot Helpers — seeded state access, issue drafts, and authentication.
  *
- * Utility functions used by the screenshot capture passes to discover content,
- * seed issue drafts, and handle test user login.
+ * Utility functions used by the screenshot capture passes to read the seeded
+ * screenshot contract, seed issue drafts, and handle test user login.
  */
 
 import type { Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
-import { TEST_IDS } from "../../src/lib/test-ids";
 import { injectAuthTokens } from "../utils/auth-helpers";
-import { testUserService } from "../utils/test-user-service";
+import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BASE_URL, SCREENSHOT_USER } from "./config";
-import { waitForExpectedContent } from "./readiness";
 
-export async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | null> {
-  try {
-    const links = page.locator("a");
-    const count = await links.count();
-    for (let i = 0; i < count; i++) {
-      const href = await links.nth(i).getAttribute("href");
-      if (href) {
-        const match = href.match(pattern);
-        if (match?.[1]) return match[1];
-      }
-    }
-  } catch {}
-  return null;
+export function getSeededIssueKey(seed: SeedScreenshotResult): string | null {
+  return seed.issueKeys?.[0] ?? null;
 }
 
-export async function discoverIssueKey(
-  page: Page,
-  orgSlug: string,
-  projectKey: string,
-): Promise<string | null> {
-  const candidatePaths = [
-    ROUTES.issues.list.build(orgSlug),
-    ROUTES.projects.backlog.build(orgSlug, projectKey),
-    ROUTES.projects.board.build(orgSlug, projectKey),
-  ];
-
-  for (const pathName of candidatePaths) {
-    await page.goto(`${BASE_URL}${pathName}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-    await waitForExpectedContent(page, pathName, "issues");
-    await waitForScreenshotReady(page);
-
-    const issueKeyElement = page.getByTestId(TEST_IDS.ISSUE.KEY).first();
-    if ((await issueKeyElement.count()) > 0) {
-      const issueKeyText = (await issueKeyElement.textContent())?.trim();
-      if (issueKeyText) {
-        return issueKeyText;
-      }
-    }
-
-    const issueKey = await discoverFirstHref(page, /\/issues\/([^/?#]+)/);
-    if (issueKey) {
-      return issueKey;
-    }
+export function requireSeededIssueKey(seed: SeedScreenshotResult, context: string): string {
+  const issueKey = getSeededIssueKey(seed);
+  if (issueKey) {
+    return issueKey;
   }
 
-  return null;
+  throw new Error(`Missing seeded issue key for ${context}`);
 }
 
-export async function discoverDocumentId(page: Page, orgSlug: string): Promise<string | null> {
-  await page.goto(`${BASE_URL}${ROUTES.documents.list.build(orgSlug)}`, {
-    waitUntil: "domcontentloaded",
-    timeout: 15000,
-  });
-  await waitForExpectedContent(page, ROUTES.documents.list.build(orgSlug), "documents");
-  await waitForScreenshotReady(page);
+export function getPrimarySeededDocumentId(seed: SeedScreenshotResult): string | null {
+  return (
+    seed.documentIds?.sprintRetrospectiveNotes ?? seed.documentIds?.projectRequirements ?? null
+  );
+}
 
-  const preferredTitles = [/sprint retrospective notes/i, /project requirements/i];
-  const mainContent = page.getByRole("main");
+export function requirePrimarySeededDocumentId(
+  seed: SeedScreenshotResult,
+  context: string,
+): string {
+  const documentId = getPrimarySeededDocumentId(seed);
+  if (documentId) {
+    return documentId;
+  }
 
-  try {
-    const links = mainContent.locator("a");
-    const count = await links.count();
+  throw new Error(`Missing seeded document id for ${context}`);
+}
 
-    for (const preferredTitle of preferredTitles) {
-      for (let i = 0; i < count; i++) {
-        const link = links.nth(i);
-        const href = await link.getAttribute("href");
-        const text = (await link.innerText().catch(() => "")).trim();
-        const match = href?.match(/\/documents\/([^/?#]+)/);
-        const candidate = match?.[1];
-        if (candidate && candidate !== "templates" && preferredTitle.test(text)) {
-          return candidate;
-        }
-      }
-    }
+export function getSeededTeamSlug(seed: SeedScreenshotResult): string | null {
+  return seed.teamSlug ?? null;
+}
 
-    for (let i = 0; i < count; i++) {
-      const href = await links.nth(i).getAttribute("href");
-      const match = href?.match(/\/documents\/([^/?#]+)/);
-      const candidate = match?.[1];
-      if (candidate && candidate !== "templates") {
-        return candidate;
-      }
-    }
-  } catch {}
+export function requireSeededTeamSlug(seed: SeedScreenshotResult, context: string): string {
+  const teamSlug = getSeededTeamSlug(seed);
+  if (teamSlug) {
+    return teamSlug;
+  }
 
-  return null;
+  throw new Error(`Missing seeded team slug for ${context}`);
 }
 
 export async function clearIssueDrafts(page: Page): Promise<void> {
