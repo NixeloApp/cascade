@@ -196,7 +196,6 @@ const mockUseOrganization = vi.mocked(useOrganization);
 
 const projectId = "project_1" as Id<"projects">;
 const secondProjectId = "project_2" as Id<"projects">;
-const TIME_TRACKING_E2E_STATE_STORAGE_KEY = "nixelo:e2e:time-tracking-state";
 
 let currentProjects:
   | {
@@ -368,23 +367,5 @@ describe("TimeTrackingPage", () => {
     expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.SUMMARY_BILLABLE)).toHaveTextContent(
       "$1,800.00+",
     );
-  });
-
-  it("boots into the all-time review state when requested by the screenshot harness", () => {
-    window.sessionStorage.setItem(TIME_TRACKING_E2E_STATE_STORAGE_KEY, "all-time");
-
-    render(<TimeTrackingPage userRole="admin" />);
-
-    expect(screen.getByText(/^entries:all:none:none:billing$/)).toBeInTheDocument();
-  });
-
-  it("boots into the burn-rate review state and preselects the first project", async () => {
-    window.sessionStorage.setItem(TIME_TRACKING_E2E_STATE_STORAGE_KEY, "burn-rate");
-
-    render(<TimeTrackingPage userRole="admin" />);
-
-    await waitFor(() => {
-      expect(screen.getByText(`burn-rate:${projectId}`)).toBeInTheDocument();
-    });
   });
 });

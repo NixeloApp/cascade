@@ -281,7 +281,10 @@ export const ROUTES = {
   settings: {
     profile: {
       path: "/$orgSlug/settings/profile" as const,
-      build: (orgSlug: string) => `/${orgSlug}/settings/profile`,
+      build: (orgSlug: string, tab?: string) =>
+        tab
+          ? `/${orgSlug}/settings/profile?tab=${encodeURIComponent(tab)}`
+          : `/${orgSlug}/settings/profile`,
     },
   },
 

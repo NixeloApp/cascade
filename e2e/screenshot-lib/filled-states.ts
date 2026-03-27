@@ -6,19 +6,22 @@
  * calendar, workspaces, settings, and all their sub-states.
  */
 
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   AnalyticsPage,
+  DashboardPage,
+  DocumentsPage,
   NotificationsPage,
   ProjectsPage,
+  SettingsPage,
   TimeTrackingPage,
   WorkspacesPage,
 } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
-import { getLocatorCount, isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
+import { isLocatorVisible } from "../utils/locator-state";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -35,29 +38,15 @@ import {
   shouldCaptureAny,
   takeScreenshot,
 } from "./capture";
-import { BASE_URL, MARKDOWN_IMPORT_PREVIEW } from "./config";
+import { BASE_URL, MARKDOWN_IMPORT_PREVIEW, MARKDOWN_RICH_CONTENT } from "./config";
 import {
-  getUploadDialogReadyLocator,
   openMobileSidebarMenu,
   openStableAlertDialog,
   openStableDialog,
   waitForCreateIssueModalScreenshotReady,
   waitForDashboardCustomizeDialogReady,
 } from "./dialog-helpers";
-import {
-  clearIssueDrafts,
-  discoverDocumentId,
-  discoverIssueKey,
-  openDocumentActionsMenu,
-  openDocumentEditorFloatingToolbarForCapture,
-  openDocumentEditorForCapture,
-  openDocumentEditorMentionPopoverForCapture,
-  openDocumentEditorSlashMenuForCapture,
-  openDocumentMoveDialogForCapture,
-  openMarkdownImportPreviewDialog,
-  primeDocumentEditorRichContent,
-  seedIssueDraft,
-} from "./helpers";
+import { clearIssueDrafts, discoverDocumentId, discoverIssueKey, seedIssueDraft } from "./helpers";
 import {
   screenshotAssistantStates,
   screenshotBoardInteractiveStates,
@@ -125,19 +114,14 @@ export async function screenshotFilledStates(
     page,
     p,
     "settings-integrations",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=integrations`,
+    ROUTES.settings.profile.build(orgSlug, "integrations"),
   );
-  await takeScreenshot(
-    page,
-    p,
-    "settings-admin",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=admin`,
-  );
+  await takeScreenshot(page, p, "settings-admin", ROUTES.settings.profile.build(orgSlug, "admin"));
   await takeScreenshot(
     page,
     p,
     "settings-notifications",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=notifications`,
+    ROUTES.settings.profile.build(orgSlug, "notifications"),
   );
 
   if (projectKey) {
@@ -241,25 +225,25 @@ export async function screenshotFilledStates(
     page,
     p,
     "settings-security",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=security`,
+    ROUTES.settings.profile.build(orgSlug, "security"),
   );
   await takeScreenshot(
     page,
     p,
     "settings-apikeys",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=apikeys`,
+    ROUTES.settings.profile.build(orgSlug, "apikeys"),
   );
   await takeScreenshot(
     page,
     p,
     "settings-preferences",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=preferences`,
+    ROUTES.settings.profile.build(orgSlug, "preferences"),
   );
   await takeScreenshot(
     page,
     p,
     "settings-offline",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=offline`,
+    ROUTES.settings.profile.build(orgSlug, "offline"),
   );
   await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
   await takeScreenshot(page, p, "add-ons", ROUTES.addOns.build(orgSlug));
@@ -356,25 +340,13 @@ export async function screenshotFilledStates(
       "settings-notifications-permission-denied",
     ])
   ) {
-    const settingsUrl = ROUTES.settings.profile.build(orgSlug);
+    const settingsPage = new SettingsPage(page, orgSlug);
 
     if (shouldCapture(p, "settings-profile-avatar-upload-modal")) {
       await runCaptureStep("settings profile avatar upload modal", async () => {
-        await page.goto(`${BASE_URL}${settingsUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
-        await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^change avatar$/i });
-        const dialog = await openStableDialog(
-          page,
-          trigger,
-          page.getByRole("dialog", { name: /^upload avatar$/i }),
-          getUploadDialogReadyLocator(page.getByRole("dialog", { name: /^upload avatar$/i })),
-          "avatar upload",
-        );
+        const dialog = await settingsPage.openProfileAvatarUploadModal();
+        await waitForScreenshotReady(page);
         await captureCurrentView(page, p, "settings-profile-avatar-upload-modal");
         await dismissIfOpen(page, dialog);
       });
@@ -382,21 +354,9 @@ export async function screenshotFilledStates(
 
     if (shouldCapture(p, "settings-profile-cover-upload-modal")) {
       await runCaptureStep("settings profile cover upload modal", async () => {
-        await page.goto(`${BASE_URL}${settingsUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
-        await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
-        const trigger = page.getByRole("button", { name: /^(add|change) cover$/i });
-        const dialog = await openStableDialog(
-          page,
-          trigger,
-          page.getByRole("dialog", { name: /^upload cover image$/i }),
-          getUploadDialogReadyLocator(page.getByRole("dialog", { name: /^upload cover image$/i })),
-          "cover image upload",
-        );
+        const dialog = await settingsPage.openProfileCoverUploadModal();
+        await waitForScreenshotReady(page);
         await captureCurrentView(page, p, "settings-profile-cover-upload-modal");
         await dismissIfOpen(page, dialog);
       });
@@ -406,24 +366,9 @@ export async function screenshotFilledStates(
       await runCaptureStep("settings notifications permission denied", async () => {
         const permissionPage = await page.context().newPage();
         try {
-          await permissionPage.addInitScript(() => {
-            window.__NIXELO_E2E_NOTIFICATION_PERMISSION__ = "denied";
-            window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__ = true;
-            window.__NIXELO_E2E_VAPID_PUBLIC_KEY__ = "e2e-screenshot-vapid-key";
-          });
-
-          const notificationsSettingsUrl = `${settingsUrl}?tab=notifications`;
-          await permissionPage.goto(`${BASE_URL}${notificationsSettingsUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          await waitForExpectedContent(permissionPage, settingsUrl, "settings-profile", p);
-          await permissionPage
-            .getByText(/browser notifications blocked/i)
-            .waitFor({ state: "visible", timeout: 5000 });
-          await permissionPage
-            .getByRole("button", { name: /^blocked$/i })
-            .waitFor({ state: "visible", timeout: 5000 });
+          const permissionSettingsPage = new SettingsPage(permissionPage, orgSlug);
+          await permissionSettingsPage.gotoNotificationsWithBlockedPermission();
+          await permissionSettingsPage.expectNotificationsPermissionDeniedState();
           await waitForScreenshotReady(permissionPage);
           await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
         } finally {
@@ -1193,13 +1138,14 @@ export async function screenshotFilledStates(
       (await discoverDocumentId(page, orgSlug));
     if (baseDocId) {
       const baseDocUrl = ROUTES.documents.detail.build(orgSlug, baseDocId);
+      const documentsPage = new DocumentsPage(page, orgSlug);
       await takeScreenshot(page, p, "document-editor", baseDocUrl);
 
       // Document editor interactive states
       if (shouldCapture(p, "document-editor-move-dialog")) {
         await runCaptureStep("document move dialog", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
-          const dialog = await openDocumentMoveDialogForCapture(page);
+          await documentsPage.gotoDocument(baseDocId);
+          const dialog = await documentsPage.openMoveDialog();
           await captureCurrentView(page, p, "document-editor-move-dialog");
           await dismissIfOpen(page, dialog);
         });
@@ -1207,9 +1153,8 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-markdown-preview-modal")) {
         await runRequiredCaptureStep("document markdown preview modal", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
-          const dialog = await openMarkdownImportPreviewDialog(
-            page,
+          await documentsPage.gotoDocument(baseDocId);
+          const dialog = await documentsPage.openMarkdownImportPreview(
             MARKDOWN_IMPORT_PREVIEW,
             "import.md",
           );
@@ -1220,7 +1165,7 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-favorite")) {
         await runCaptureStep("document favorite state", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
           const toggle = page.getByRole("button", { name: /add to favorites/i });
           await toggle.waitFor({ state: "visible", timeout: 8000 });
           await toggle.click();
@@ -1235,7 +1180,7 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-sidebar-favorites")) {
         await runCaptureStep("document sidebar favorites", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
           const toggle = page.getByRole("button", { name: /add to favorites/i });
           await toggle.waitFor({ state: "visible", timeout: 8000 });
           await toggle.click();
@@ -1254,14 +1199,25 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-rich-blocks")) {
         await runRequiredCaptureStep("document rich blocks", async () => {
-          await primeDocumentEditorRichContent(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
           await captureCurrentView(page, p, "document-editor-rich-blocks");
         });
       }
 
       if (shouldCapture(p, "document-editor-color-picker")) {
         await runRequiredCaptureStep("document color picker", async () => {
-          await openDocumentEditorFloatingToolbarForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
+          await documentsPage.openFloatingToolbarForText("Release");
           const colorButton = page.getByRole("button", { name: /text color|font color/i }).first();
           await colorButton.waitFor({ state: "visible", timeout: 5000 });
           await colorButton.evaluate((button: HTMLElement) => {
@@ -1278,7 +1234,13 @@ export async function screenshotFilledStates(
       // Slash menu — type "/" at end of content
       if (shouldCapture(p, "document-editor-slash-menu")) {
         await runRequiredCaptureStep("document slash menu", async () => {
-          await openDocumentEditorSlashMenuForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
+          await documentsPage.openSlashMenuAtEditorEnd();
           await captureCurrentView(page, p, "document-editor-slash-menu");
           // Dismiss and undo
           await page.keyboard.press("Escape");
@@ -1288,7 +1250,13 @@ export async function screenshotFilledStates(
       // Floating toolbar — select text in the editor
       if (shouldCapture(p, "document-editor-floating-toolbar")) {
         await runRequiredCaptureStep("document floating toolbar", async () => {
-          await openDocumentEditorFloatingToolbarForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
+          await documentsPage.openFloatingToolbarForText("Release");
           await captureCurrentView(page, p, "document-editor-floating-toolbar");
           // Click away to deselect
           await page.mouse.click(10, 10);
@@ -1298,7 +1266,13 @@ export async function screenshotFilledStates(
       // @mention popover — type "@" in editor
       if (shouldCapture(p, "document-editor-mention-popover")) {
         await runRequiredCaptureStep("document mention popover", async () => {
-          await openDocumentEditorMentionPopoverForCapture(page, baseDocUrl);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.replaceEditorContentFromMarkdown(
+            MARKDOWN_RICH_CONTENT,
+            "release-readiness.md",
+            /Release Readiness/i,
+          );
+          await documentsPage.openMentionPopoverAtEditorEnd();
           await captureCurrentView(page, p, "document-editor-mention-popover");
           await page.keyboard.press("Escape");
         });
@@ -1306,8 +1280,9 @@ export async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-locked")) {
         await runCaptureStep("document locked state", async () => {
-          await openDocumentEditorForCapture(page, baseDocUrl);
-          await openDocumentActionsMenu(page);
+          await documentsPage.gotoDocument(baseDocId);
+          await documentsPage.moreActionsButton.click();
+          await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
           await page.getByRole("menuitem", { name: /^lock document$/i }).click();
           await page
             .getByRole("alert")
@@ -1316,7 +1291,8 @@ export async function screenshotFilledStates(
             .waitFor({ state: "visible", timeout: 5000 });
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-locked");
-          await openDocumentActionsMenu(page);
+          await documentsPage.moreActionsButton.click();
+          await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
           await page.getByRole("menuitem", { name: /^unlock document$/i }).click();
           await page
             .getByRole("alert")
@@ -1520,20 +1496,13 @@ export async function screenshotFilledStates(
         afterReady,
         expectedState,
         name,
-        requestedState,
       }: {
         afterReady?: (trackingPage: TimeTrackingPage) => Promise<void>;
         expectedState: "entries" | "burn-rate" | "rates";
         name: (typeof timeTrackingCaptureNames)[number];
-        requestedState?: "all-time" | "burn-rate" | "rates";
       }): Promise<void> => {
         const capturePage = await page.context().newPage();
         try {
-          if (requestedState) {
-            await capturePage.addInitScript((state: "all-time" | "burn-rate" | "rates") => {
-              window.sessionStorage.setItem("nixelo:e2e:time-tracking-state", state);
-            }, requestedState);
-          }
           await capturePage.goto(`${BASE_URL}${timeTrackingUrl}`, {
             waitUntil: "domcontentloaded",
             timeout: 15000,
@@ -1561,9 +1530,11 @@ export async function screenshotFilledStates(
       try {
         if (shouldCapture(p, "time-tracking-burn-rate")) {
           await captureTimeTrackingState({
-            expectedState: "burn-rate",
+            afterReady: async (trackingPage) => {
+              await trackingPage.openBurnRate();
+            },
+            expectedState: "entries",
             name: "time-tracking-burn-rate",
-            requestedState: "burn-rate",
           });
         }
 
@@ -1599,7 +1570,10 @@ export async function screenshotFilledStates(
           await captureTimeTrackingState({
             expectedState: "entries",
             name: "time-tracking-all-time",
-            requestedState: "all-time",
+            afterReady: async (trackingPage) => {
+              await trackingPage.selectDateRange("All Time");
+              await trackingPage.expectEntriesState();
+            },
           });
         }
 
@@ -1841,107 +1815,6 @@ export async function screenshotFilledStates(
 
   // ── Notification interactive states ──
 
-  async function openNotificationPanel(): Promise<Locator> {
-    const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
-    const panel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
-    let lastError: Error | null = null;
-
-    await bellButton.waitFor({ state: "visible", timeout: 5000 });
-
-    if (await panel.isVisible()) {
-      return panel;
-    }
-
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        await bellButton.click();
-        await panel.waitFor({ state: "visible", timeout: 5000 });
-        await panel.getByRole("heading", { name: /^notifications$/i }).waitFor({
-          state: "visible",
-          timeout: 5000,
-        });
-        await waitForAnimation(page);
-        return panel;
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
-        await page.keyboard.press("Escape");
-        await panel.waitFor({ state: "hidden", timeout: 2000 });
-      }
-    }
-
-    throw new Error(`Notification panel did not open: ${lastError?.message ?? "unknown error"}`);
-  }
-
-  async function waitForNotificationsContentReady(): Promise<void> {
-    const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    const emptyState = page
-      .getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE)
-      .or(page.getByTestId(TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE));
-    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
-
-    await expect
-      .poll(
-        async () => {
-          const mentionsVisible = await isLocatorVisible(mentionsFilter);
-          const itemCount = await getLocatorCount(notificationItems);
-          const emptyVisible = await isLocatorVisible(emptyState);
-
-          return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
-        },
-        {
-          timeout: 10000,
-          message: "Expected notifications content or empty state to become visible",
-        },
-      )
-      .toBe("ready");
-  }
-
-  async function waitForMentionsFilterState(): Promise<void> {
-    const mentionNotification = page.getByText(/you were mentioned/i);
-    const emptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
-
-    await expect
-      .poll(
-        async () => {
-          const mentionVisible = await isLocatorVisible(mentionNotification);
-          const emptyVisible = await isLocatorVisible(emptyState);
-
-          return mentionVisible || emptyVisible ? "ready" : "pending";
-        },
-        {
-          timeout: 10000,
-          message: "Expected Mentions filter results to finish rendering",
-        },
-      )
-      .toBe("ready");
-
-    await waitForAnimation(page);
-  }
-
-  async function openNotificationSnoozePopoverForCapture(): Promise<void> {
-    const firstNotification = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM).first();
-    const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
-    const snoozeMenuHeading = page.getByText(/snooze until/i);
-
-    await firstNotification.waitFor({ state: "visible", timeout: 5000 });
-
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      await firstNotification.hover();
-      await waitForAnimation(page);
-      await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
-      await snoozeButton.focus();
-      await snoozeButton.press("Enter");
-
-      if (await waitForLocatorVisible(snoozeMenuHeading, 2000)) {
-        return;
-      }
-
-      await page.keyboard.press("Escape");
-    }
-
-    throw new Error("Notification snooze popover did not open");
-  }
-
   // Notification popover (bell icon in header)
   if (shouldCapture(p, "notification-popover")) {
     await runCaptureStep("notification popover", async () => {
@@ -1953,7 +1826,9 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      await openNotificationPanel();
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.openNotifications();
+      await dashboardPage.waitForNotificationsPanelContentReady();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-popover");
       // Close popover
@@ -1970,7 +1845,9 @@ export async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      await openNotificationSnoozePopoverForCapture();
+      const dashboardPage = new DashboardPage(page, orgSlug);
+      await dashboardPage.openNotifications();
+      await dashboardPage.openNotificationSnoozePopover();
       await waitForAnimation(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-snooze-popover");
@@ -1987,9 +1864,8 @@ export async function screenshotFilledStates(
       });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
-      const archivedTab = page.getByRole("tab", { name: /archived/i });
-      await archivedTab.waitFor({ state: "visible", timeout: 5000 });
-      await archivedTab.click();
+      const notificationsPage = new NotificationsPage(page, orgSlug);
+      await notificationsPage.openArchivedTabAndWait();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notifications-archived");
     });
@@ -2003,10 +1879,9 @@ export async function screenshotFilledStates(
         timeout: 15000,
       });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
-      await waitForNotificationsContentReady();
       const notificationsPage = new NotificationsPage(page, orgSlug);
       await notificationsPage.activateMentionsFilter();
-      await waitForMentionsFilterState();
+      await notificationsPage.waitForMentionsFilterResults();
       await captureCurrentView(page, p, "notifications-filter-active");
     });
   }
@@ -2055,9 +1930,6 @@ export async function screenshotFilledStates(
         const archivedEmptyPage = await page.context().newPage();
 
         try {
-          await archivedEmptyPage.addInitScript(() => {
-            window.sessionStorage.setItem("nixelo:e2e:notifications-state", "archived-tab");
-          });
           await archivedEmptyPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
             waitUntil: "domcontentloaded",
             timeout: 15000,
@@ -2068,6 +1940,7 @@ export async function screenshotFilledStates(
             "notifications",
           );
           const notificationsPage = new NotificationsPage(archivedEmptyPage, orgSlug);
+          await notificationsPage.openArchivedTabAndWait();
           await waitForScreenshotReady(archivedEmptyPage);
           await notificationsPage.expectArchivedEmptyState();
           await captureCurrentView(archivedEmptyPage, p, "notifications-archived-empty");

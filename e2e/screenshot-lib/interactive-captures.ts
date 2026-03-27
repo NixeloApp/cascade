@@ -9,9 +9,11 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { E2E_TIMEZONE } from "../constants";
 import {
   AssistantPage,
   CalendarPage,
+  DashboardPage,
   DocumentsPage,
   InboxPage,
   InvoicesPage,
@@ -20,6 +22,7 @@ import {
   MyIssuesPage,
   ProjectsPage,
   RoadmapPage,
+  SettingsPage,
   SprintsPage,
 } from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
@@ -39,11 +42,7 @@ import {
   shouldCaptureAny,
 } from "./capture";
 import { BASE_URL } from "./config";
-import {
-  openOmnibox,
-  openStableDialog,
-  waitForCreateIssueModalScreenshotReady,
-} from "./dialog-helpers";
+import { openStableDialog, waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
 import { waitForBoardReady, waitForExpectedContent } from "./readiness";
 
 export async function screenshotDashboardModals(
@@ -62,72 +61,56 @@ export async function screenshotDashboardModals(
     return;
   }
 
-  await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-    waitUntil: "domcontentloaded",
-    timeout: 15000,
-  });
-  await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
+  const dashboardPage = new DashboardPage(page, orgSlug);
+  await dashboardPage.goto();
+  await dashboardPage.waitUntilReady();
   await waitForScreenshotReady(page);
 
-  const omniboxTrigger = page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON);
-  const omniboxDialog = page.getByTestId(TEST_IDS.SEARCH.MODAL);
-  if ((await omniboxTrigger.count()) > 0) {
+  if ((await dashboardPage.commandPaletteButton.count()) > 0) {
     await runCaptureStep("dashboard omnibox", async () => {
-      await openOmnibox(page, omniboxTrigger, omniboxDialog);
+      await dashboardPage.openCommandPalette();
+      await dashboardPage.expectGlobalSearchReady();
       await captureCurrentView(page, prefix, "dashboard-omnibox");
-      await dismissIfOpen(page, omniboxDialog);
+      await dashboardPage.closeCommandPalette();
     });
 
     await runCaptureStep("dashboard advanced-search modal", async () => {
       try {
-        await openOmnibox(page, omniboxTrigger, omniboxDialog);
-        const advancedSearchButton = omniboxDialog.getByRole("button", {
-          name: /^advanced search$/i,
-        });
-        await advancedSearchButton.waitFor({ state: "visible", timeout: 5000 });
-        await advancedSearchButton.click();
-        await omniboxDialog.waitFor({ state: "hidden", timeout: 5000 });
-        const advancedSearchDialog = page.getByTestId(TEST_IDS.SEARCH.ADVANCED_MODAL);
-        await advancedSearchDialog.waitFor({ state: "visible", timeout: 5000 });
+        await dashboardPage.openAdvancedSearch();
         await waitForAnimation(page);
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, "dashboard-advanced-search-modal");
-        await dismissIfOpen(page, advancedSearchDialog);
+        await dashboardPage.closeAdvancedSearch();
       } finally {
-        await dismissIfOpen(page, omniboxDialog);
+        await dashboardPage.closeCommandPaletteIfOpen();
+        await dashboardPage.closeAdvancedSearchIfOpen();
       }
     });
   }
 
-  const shortcutsTrigger = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
-  if (captureState.currentConfigPrefix !== "mobile-light" && (await shortcutsTrigger.count()) > 0) {
+  if (
+    captureState.currentConfigPrefix !== "mobile-light" &&
+    (await dashboardPage.shortcutsHelpButton.count()) > 0
+  ) {
     await runCaptureStep("dashboard shortcuts modal", async () => {
       await dismissAllDialogs(page);
-      const shortcutsDialog = await openStableDialog(
-        page,
-        shortcutsTrigger,
-        page.getByRole("dialog", { name: /keyboard shortcuts/i }),
-        page.getByPlaceholder("Search shortcuts..."),
-        "shortcuts help",
-      );
+      await dashboardPage.openShortcutsHelp();
       await captureCurrentView(page, prefix, "dashboard-shortcuts-modal");
-      await dismissIfOpen(page, shortcutsDialog);
+      await dashboardPage.closeShortcutsHelp();
     });
   }
 
-  const timeEntryTrigger = page.getByRole("button", { name: /^start timer$/i });
-  if ((await timeEntryTrigger.count()) > 0) {
+  if ((await dashboardPage.headerStartTimerButton.count()) > 0) {
     await runCaptureStep("dashboard time-entry modal", async () => {
       await dismissAllDialogs(page);
-      const timeEntryDialog = await openStableDialog(
-        page,
-        timeEntryTrigger,
-        page.getByRole("dialog", { name: /^start timer$/i }),
-        page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM),
-        "dashboard time entry",
-      );
+      await dashboardPage.openTimeEntryModal();
+      await dashboardPage.timeEntryModal.waitFor({ state: "visible", timeout: 5000 });
+      await page.getByTestId(TEST_IDS.TIME_TRACKING.ENTRY_FORM).waitFor({
+        state: "visible",
+        timeout: 5000,
+      });
       await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
-      await dismissIfOpen(page, timeEntryDialog);
+      await dashboardPage.closeTimeEntryModal();
     });
   }
 }
@@ -662,22 +645,16 @@ export async function screenshotRoadmapStates(
   };
 
   const withRoadmapPage = async <T>({
-    bootState,
     mode,
     run,
   }: {
-    bootState?: "detail" | "group-status";
     mode: "default" | "empty" | "milestone";
     run: (capturePage: Page, roadmapPage: RoadmapPage) => Promise<T>;
   }): Promise<T> => {
     await configureRoadmapState(mode);
-    const captureUrl = new URL(`${BASE_URL}${roadmapUrl}`);
-    if (bootState) {
-      captureUrl.searchParams.set("e2e-roadmap", bootState);
-    }
 
     try {
-      await page.goto(captureUrl.toString(), {
+      await page.goto(`${BASE_URL}${roadmapUrl}`, {
         waitUntil: "domcontentloaded",
         timeout: 15000,
       });
@@ -721,9 +698,9 @@ export async function screenshotRoadmapStates(
   if (shouldCapture(prefix, captureNames.grouped)) {
     await runRequiredCaptureStep("roadmap grouped", async () => {
       await withRoadmapPage({
-        bootState: "group-status",
         mode: "default",
         run: async (capturePage, roadmapPage) => {
+          await roadmapPage.groupByStatus();
           await roadmapPage.expectGroupedState();
           await waitForScreenshotReady(capturePage);
           await captureCurrentView(capturePage, prefix, captureNames.grouped);
@@ -735,9 +712,10 @@ export async function screenshotRoadmapStates(
   if (shouldCapture(prefix, captureNames.detail)) {
     await runRequiredCaptureStep("roadmap detail", async () => {
       await withRoadmapPage({
-        bootState: "detail",
         mode: "default",
         run: async (capturePage, roadmapPage) => {
+          await roadmapPage.expectTimelineState();
+          await roadmapPage.openPreferredIssueDetail();
           await roadmapPage.expectDetailState();
           await waitForScreenshotReady(capturePage);
           await captureCurrentView(capturePage, prefix, captureNames.detail);
@@ -1245,26 +1223,17 @@ export async function screenshotMyIssuesStates(
     return;
   }
 
-  const myIssuesUrl = ROUTES.myIssues.build(orgSlug);
-
   if (shouldCapture(prefix, filterActiveName)) {
     await runCaptureStep("my issues filter active", async () => {
       const filterActivePage = await page.context().newPage();
 
       try {
-        await filterActivePage.addInitScript(() => {
-          window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filter-active");
-        });
-
         const filteredMyIssuesPage = new MyIssuesPage(filterActivePage, orgSlug);
-        await filterActivePage.goto(`${BASE_URL}${myIssuesUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(filterActivePage, myIssuesUrl, "my-issues", prefix);
-        await waitForScreenshotReady(filterActivePage);
+        await filteredMyIssuesPage.goto();
         await filteredMyIssuesPage.waitUntilReady();
+        await filteredMyIssuesPage.selectPriorityFilter("High");
         await filteredMyIssuesPage.expectFilterSummaryVisible();
+        await waitForScreenshotReady(filterActivePage);
         await captureCurrentView(filterActivePage, prefix, filterActiveName);
       } finally {
         if (!filterActivePage.isClosed()) {
@@ -1279,19 +1248,12 @@ export async function screenshotMyIssuesStates(
       const filteredEmptyPage = await page.context().newPage();
 
       try {
-        await filteredEmptyPage.addInitScript(() => {
-          window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filtered-empty");
-        });
-
         const filteredEmptyMyIssuesPage = new MyIssuesPage(filteredEmptyPage, orgSlug);
-        await filteredEmptyPage.goto(`${BASE_URL}${myIssuesUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(filteredEmptyPage, myIssuesUrl, "my-issues", prefix);
-        await waitForScreenshotReady(filteredEmptyPage);
+        await filteredEmptyMyIssuesPage.goto();
         await filteredEmptyMyIssuesPage.waitUntilReady();
+        await filteredEmptyMyIssuesPage.selectPriorityFilter("Lowest");
         await filteredEmptyMyIssuesPage.expectFilteredEmptyState();
+        await waitForScreenshotReady(filteredEmptyPage);
         await captureCurrentView(filteredEmptyPage, prefix, filteredEmptyName);
       } finally {
         if (!filteredEmptyPage.isClosed()) {
@@ -1303,36 +1265,41 @@ export async function screenshotMyIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("my issues loading state", async () => {
-      const loadingPage = await page.context().newPage();
+      const browser = page.context().browser();
+      if (!browser) {
+        throw new Error("My issues loading capture requires an attached browser instance");
+      }
+
+      const isolatedContext = await browser.newContext({
+        storageState: await page.context().storageState(),
+        viewport: page.viewportSize() ?? undefined,
+        colorScheme: captureState.currentConfigPrefix.endsWith("dark") ? "dark" : "light",
+        timezoneId: E2E_TIMEZONE,
+      });
+      const loadingPage = await isolatedContext.newPage();
 
       try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_MY_ISSUES_LOADING__ = true;
-        });
-
-        await loadingPage.goto(`${BASE_URL}${myIssuesUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await loadingPage.waitForURL(
-          (currentUrl) => /\/[^/]+\/my-issues$/.test(new URL(currentUrl).pathname),
-          {
-            timeout: 15000,
-          },
-        );
-        await expect
-          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThanOrEqual(1);
+        const settingsPage = new SettingsPage(loadingPage, orgSlug);
+        await settingsPage.goto();
+        await settingsPage.waitForCaptureReady("profile");
+        await isolatedContext.setOffline(true);
+        await loadingPage
+          .getByTestId(TEST_IDS.NAV.MY_ISSUES_LINK)
+          .evaluate((element: HTMLAnchorElement) => {
+            element.click();
+          });
+        const loadingMyIssuesPage = new MyIssuesPage(loadingPage, orgSlug);
+        await loadingMyIssuesPage.expectLoadingStateVisible();
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,
         });
       } finally {
+        await isolatedContext.setOffline(false);
         if (!loadingPage.isClosed()) {
           await loadingPage.close();
         }
+        await isolatedContext.close();
       }
     });
   }

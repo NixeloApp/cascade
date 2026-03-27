@@ -173,19 +173,6 @@ interface MarkdownImportPreview {
 const DOCUMENT_SAVE_DEBOUNCE_MS = 1200;
 const SAVE_RETRY_DELAY_MS = 3000;
 
-interface E2EEditorMarkdownEventDetail {
-  markdown: string;
-}
-
-interface E2EEditorValueEventDetail {
-  value: Value;
-}
-
-interface E2EOpenMarkdownPreviewEventDetail {
-  markdown: string;
-  filename?: string;
-}
-
 const DOCUMENT_STARTER_SECTIONS = [
   {
     title: "Capture the context",
@@ -854,65 +841,6 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
       openDialog();
     });
   }, []);
-
-  useEffect(() => {
-    const handleE2EEditorMarkdown = (event: Event) => {
-      if (!(event instanceof CustomEvent)) {
-        return;
-      }
-
-      const detail = event.detail as E2EEditorMarkdownEventDetail | undefined;
-      if (typeof detail?.markdown !== "string") {
-        return;
-      }
-
-      try {
-        replaceEditorValue(markdownToValue(detail.markdown));
-      } catch (error) {
-        showError(error, "Failed to load e2e editor markdown");
-      }
-    };
-
-    const handleE2EEditorValue = (event: Event) => {
-      if (!(event instanceof CustomEvent)) {
-        return;
-      }
-
-      const detail = event.detail as E2EEditorValueEventDetail | undefined;
-      if (!Array.isArray(detail?.value)) {
-        return;
-      }
-
-      replaceEditorValue(detail.value);
-    };
-
-    const handleE2EOpenMarkdownPreview = (event: Event) => {
-      if (!(event instanceof CustomEvent)) {
-        return;
-      }
-
-      const detail = event.detail as E2EOpenMarkdownPreviewEventDetail | undefined;
-      if (typeof detail?.markdown !== "string") {
-        return;
-      }
-
-      scheduleDialogOpen(() => {
-        setMarkdownImportPreview({
-          markdown: detail.markdown,
-          filename: detail.filename ?? "document.md",
-        });
-      });
-    };
-
-    window.addEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
-    window.addEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
-    window.addEventListener("nixelo:e2e-open-markdown-preview", handleE2EOpenMarkdownPreview);
-    return () => {
-      window.removeEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
-      window.removeEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
-      window.removeEventListener("nixelo:e2e-open-markdown-preview", handleE2EOpenMarkdownPreview);
-    };
-  }, [replaceEditorValue, scheduleDialogOpen]);
 
   const {
     handleTitleEdit,

@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES, routePattern } from "../utils/routes";
+import { waitForAnimation, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 const DOCUMENT_EDITOR_PLACEHOLDER = "Start with a summary or press / for blocks";
@@ -48,6 +49,10 @@ export class DocumentsPage extends BasePage {
   readonly editorHydratedState: Locator;
   readonly documentTitle: Locator;
   readonly documentTitleInput: Locator;
+  readonly importMarkdownButton: Locator;
+  readonly moreActionsButton: Locator;
+  readonly markdownPreviewDialog: Locator;
+  readonly markdownPreviewConfirmButton: Locator;
   readonly appErrorHeading: Locator;
   readonly appErrorDetailsSummary: Locator;
   readonly appErrorDetailsMessage: Locator;
@@ -96,6 +101,14 @@ export class DocumentsPage extends BasePage {
     this.editorHydratedState = page.getByTestId(TEST_IDS.EDITOR.HYDRATED_STATE);
     this.documentTitle = page.getByTestId(TEST_IDS.DOCUMENT.TITLE);
     this.documentTitleInput = page.getByTestId(TEST_IDS.DOCUMENT.TITLE_INPUT);
+    this.importMarkdownButton = page.getByRole("button", { name: /import from markdown/i });
+    this.moreActionsButton = page.getByRole("button", { name: /more document actions/i });
+    this.markdownPreviewDialog = page.getByRole("dialog", {
+      name: /preview markdown import/i,
+    });
+    this.markdownPreviewConfirmButton = this.markdownPreviewDialog.getByRole("button", {
+      name: /import & replace content/i,
+    });
     this.appErrorHeading = page.getByRole("heading", { name: "500" });
     this.appErrorDetailsSummary = page.getByText(/view error details/i);
     this.appErrorDetailsMessage = page.locator("details pre");
@@ -174,6 +187,78 @@ export class DocumentsPage extends BasePage {
     await this.documentTitleInput.press("Enter");
     await expect(this.documentTitleInput).not.toBeVisible();
     await expect(this.documentTitle).toHaveText(title);
+  }
+
+  async openMoveDialog(): Promise<Locator> {
+    await expect(this.moreActionsButton).toBeVisible();
+    await this.moreActionsButton.click();
+    await this.page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
+    await this.page.getByRole("menuitem", { name: /move to another project/i }).click();
+    const dialog = this.page.getByRole("dialog", { name: /move document/i });
+    await expect(dialog).toBeVisible({ timeout: 8000 });
+    await dialog.getByLabel(/target project/i).waitFor({ state: "visible", timeout: 8000 });
+    await waitForAnimation(this.page);
+    await waitForScreenshotReady(this.page);
+    return dialog;
+  }
+
+  async openMarkdownImportPreview(markdown: string, filename: string): Promise<Locator> {
+    await expect(this.importMarkdownButton).toBeVisible();
+    const [fileChooser] = await Promise.all([
+      this.page.waitForEvent("filechooser"),
+      this.importMarkdownButton.click(),
+    ]);
+
+    await fileChooser.setFiles({
+      name: filename,
+      mimeType: "text/markdown",
+      buffer: Buffer.from(markdown, "utf8"),
+    });
+
+    await expect(this.markdownPreviewDialog).toBeVisible({ timeout: 8000 });
+    await this.markdownPreviewDialog.getByText(filename, { exact: true }).waitFor({
+      state: "visible",
+      timeout: 8000,
+    });
+    await expect(this.markdownPreviewConfirmButton).toBeVisible({ timeout: 8000 });
+    await waitForAnimation(this.page);
+    await waitForScreenshotReady(this.page);
+    return this.markdownPreviewDialog;
+  }
+
+  async replaceEditorContentFromMarkdown(
+    markdown: string,
+    filename: string,
+    expectedText: string | RegExp,
+  ): Promise<void> {
+    await this.openMarkdownImportPreview(markdown, filename);
+    await this.markdownPreviewConfirmButton.click();
+    await expect(this.markdownPreviewDialog).toBeHidden({ timeout: 8000 });
+    await this.expectEditorVisible();
+    await this.expectEditorText(expectedText);
+    await waitForScreenshotReady(this.page);
+  }
+
+  async openSlashMenuAtEditorEnd(command = "/"): Promise<void> {
+    await this.typeAtEditorEnd(command);
+    await this.page.locator("[role='option']").first().waitFor({ state: "visible", timeout: 5000 });
+    await waitForScreenshotReady(this.page);
+  }
+
+  async openMentionPopoverAtEditorEnd(query = "@em"): Promise<void> {
+    await this.typeAtEditorEnd(query);
+    await this.page.getByRole("combobox").waitFor({ state: "visible", timeout: 5000 });
+    await waitForScreenshotReady(this.page);
+  }
+
+  async openFloatingToolbarForText(text: string): Promise<void> {
+    const target = this.editor.getByText(text, { exact: false }).first();
+    await expect(target).toBeVisible({ timeout: 8000 });
+    await target.dblclick();
+    await this.page
+      .getByRole("button", { name: /bold/i })
+      .waitFor({ state: "visible", timeout: 5000 });
+    await waitForScreenshotReady(this.page);
   }
 
   async selectDocument(index: number) {
@@ -262,6 +347,12 @@ export class DocumentsPage extends BasePage {
     await this.throwIfAppErrorVisible();
   }
 
+  async expectEditorText(text: string | RegExp): Promise<void> {
+    await expect(this.editor.getByText(text, { exact: typeof text === "string" })).toBeVisible({
+      timeout: 8000,
+    });
+  }
+
   private async getEditorReadyState(): Promise<"editor" | "initializer" | "error" | "pending"> {
     if (await isLocatorVisible(this.appErrorHeading)) {
       return "error";
@@ -308,6 +399,62 @@ export class DocumentsPage extends BasePage {
     } catch {
       return false;
     }
+  }
+
+  private async getEditableSurface(): Promise<Locator> {
+    const editable = this.editor.locator("[contenteditable='true']").first();
+    if ((await editable.count()) > 0) {
+      return editable;
+    }
+    return this.editor;
+  }
+
+  private async focusEditorAtEnd(): Promise<void> {
+    const editable = await this.getEditableSurface();
+    await editable.scrollIntoViewIfNeeded();
+    await expect(editable).toBeVisible({ timeout: 8000 });
+    await editable.click();
+    await editable.evaluate((element) => {
+      const root =
+        element instanceof HTMLElement
+          ? element
+          : element.parentElement instanceof HTMLElement
+            ? element.parentElement
+            : null;
+      if (!root) {
+        return;
+      }
+
+      root.focus();
+      const selection = window.getSelection();
+      if (!selection) {
+        return;
+      }
+
+      const range = document.createRange();
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let lastTextNode: Node | null = null;
+      while (walker.nextNode()) {
+        lastTextNode = walker.currentNode;
+      }
+
+      if (lastTextNode?.textContent) {
+        range.setStart(lastTextNode, lastTextNode.textContent.length);
+      } else {
+        range.selectNodeContents(root);
+        range.collapse(false);
+      }
+
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    });
+  }
+
+  private async typeAtEditorEnd(text: string): Promise<void> {
+    await this.focusEditorAtEnd();
+    await this.page.keyboard.type(text);
+    await waitForAnimation(this.page);
   }
 
   private async throwIfAppErrorVisible() {

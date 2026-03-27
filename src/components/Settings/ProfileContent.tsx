@@ -21,6 +21,7 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate } from "@/lib/formatting";
 import { Camera, ImageIcon } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { UserActivityFeed } from "../UserActivityFeed";
 import { Avatar } from "../ui/Avatar";
@@ -176,7 +177,13 @@ export function ProfileHeader({
         />
         {isOwnProfile && onAvatarClick ? (
           <MediaPreviewAction placement="avatarUpload">
-            <IconButton variant="solid" size="sm" onClick={onAvatarClick} tooltip="Change avatar">
+            <IconButton
+              variant="solid"
+              size="sm"
+              onClick={onAvatarClick}
+              tooltip="Change avatar"
+              data-testid={TEST_IDS.SETTINGS.PROFILE_AVATAR_UPLOAD_TRIGGER}
+            >
               <Icon icon={Camera} size="sm" />
             </IconButton>
           </MediaPreviewAction>
@@ -312,6 +319,7 @@ function LoadedProfileContent({
               chromeSize="compactPill"
               size="sm"
               onClick={onCoverImageClick}
+              data-testid={TEST_IDS.SETTINGS.PROFILE_COVER_UPLOAD_TRIGGER}
               leftIcon={<Icon icon={ImageIcon} size="sm" />}
             >
               {coverImageUrl ? "Change" : "Add"} cover

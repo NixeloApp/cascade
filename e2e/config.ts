@@ -269,6 +269,7 @@ export const E2E_ENDPOINTS = {
   configureOrgAnalyticsState: `${CONVEX_SITE_URL}/e2e/configure-org-analytics-state`,
   // Reconfigure seeded notifications data for screenshot captures
   configureNotificationsState: `${CONVEX_SITE_URL}/e2e/configure-notifications-state`,
+  // Reconfigure seeded my-issues data for screenshot captures
   // Reconfigure seeded assistant data for screenshot captures
   configureAssistantState: `${CONVEX_SITE_URL}/e2e/configure-assistant-state`,
   // Reset meetings data for a specific E2E user

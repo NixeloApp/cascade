@@ -40,11 +40,13 @@ import {
   resetCounters,
   shouldCapture,
   shouldCaptureAny,
+  takeScreenshot,
 } from "./screenshot-lib/capture";
 import { parseCliOptions, printUsage } from "./screenshot-lib/cli";
 import {
   BASE_URL,
   CONFIGS,
+  SCREENSHOT_EMPTY_USER,
   SCREENSHOT_STAGING_BASE_DIR,
   SCREENSHOT_USER,
   VIEWPORTS,
@@ -61,42 +63,60 @@ import { injectAuthTokens } from "./utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
 import { waitForDashboardReady } from "./utils/wait-helpers";
 
-async function authenticateAndNavigate(page: Page, orgSlug: string): Promise<boolean> {
-  // Navigate to sign-in page and inject tokens
-  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "load" });
-  const loginResult = await testUserService.loginTestUser(
-    SCREENSHOT_USER.email,
-    SCREENSHOT_USER.password,
-  );
-  if (!loginResult.success || !loginResult.token) return false;
+type ScreenshotCredentials = {
+  email: string;
+  password: string;
+};
 
-  await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
+async function authenticateAndNavigateAs(
+  page: Page,
+  orgSlug: string,
+  credentials: ScreenshotCredentials,
+): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "load" });
+    await testUserService.createTestUser(credentials.email, credentials.password, true);
+    const loginResult = await testUserService.loginTestUserWithRepair(
+      credentials.email,
+      credentials.password,
+      true,
+    );
+    if (!loginResult.success || !loginResult.token) {
+      continue;
+    }
 
-  // Navigate to dashboard and wait for Convex to pick up tokens.
-  // The reload() is critical — it forces ConvexReactClient to re-initialize
-  // and read the JWT from localStorage during its constructor, which is the
-  // only reliable way to establish auth in a fresh browser context.
-  await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
+    await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
+    await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, { waitUntil: "load" });
 
-  // Wait for Convex WebSocket to connect and auth to settle.
-  // Check for the search button (rendered by the app shell after auth).
-  try {
-    await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
-      state: "visible",
-      timeout: 30000,
-    });
-  } catch {
-    // If search button doesn't appear, auth may not have settled.
-    // Reload once more to retry auth initialization.
-    await page.reload({ waitUntil: "load" });
-    await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
-      state: "visible",
-      timeout: 20000,
-    });
+    try {
+      await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
+        state: "visible",
+        timeout: 30000,
+      });
+      await waitForSpinnersHidden(page, 10000);
+      return true;
+    } catch {
+      try {
+        await page.reload({ waitUntil: "load" });
+        await page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON).waitFor({
+          state: "visible",
+          timeout: 20000,
+        });
+        await waitForSpinnersHidden(page, 10000);
+        return true;
+      } catch {
+        if (attempt === 1) {
+          return false;
+        }
+      }
+    }
   }
 
-  await waitForSpinnersHidden(page, 10000);
-  return true;
+  return false;
+}
+
+async function authenticateAndNavigate(page: Page, orgSlug: string): Promise<boolean> {
+  return authenticateAndNavigateAs(page, orgSlug, SCREENSHOT_USER);
 }
 
 /**
@@ -140,7 +160,29 @@ async function captureEmptyForConfig(
       console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
       return;
     }
+
     await screenshotEmptyStates(page, orgSlug);
+
+    if (shouldCapture("empty", "my-issues")) {
+      const myIssuesContext = await browser.newContext({
+        viewport: VIEWPORTS[viewport],
+        colorScheme: theme,
+        timezoneId: E2E_TIMEZONE,
+      });
+      const myIssuesPage = await myIssuesContext.newPage();
+
+      try {
+        if (!(await authenticateAndNavigateAs(myIssuesPage, orgSlug, SCREENSHOT_EMPTY_USER))) {
+          throw new Error(
+            `Auth failed for my-issues empty state in ${captureState.currentConfigPrefix}`,
+          );
+        }
+
+        await takeScreenshot(myIssuesPage, "empty", "my-issues", ROUTES.myIssues.build(orgSlug));
+      } finally {
+        await myIssuesContext.close();
+      }
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (isCrashLikeError(message)) {
@@ -250,7 +292,7 @@ function dryRunEnumerate(
 // Main
 // ---------------------------------------------------------------------------
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   captureState.cliOptions = parseCliOptions(process.argv.slice(2));
   registerWaitForExpectedContent(waitForExpectedContent);
   if (captureState.cliOptions.help) {
@@ -307,6 +349,7 @@ async function run(): Promise<void> {
   // Setup: Create test user and seed data once
   console.log("\n  🔧 Setting up test data...");
   await testUserService.deleteTestUser(SCREENSHOT_USER.email);
+  await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
   const createResult = await testUserService.createTestUser(
     SCREENSHOT_USER.email,
     SCREENSHOT_USER.password,

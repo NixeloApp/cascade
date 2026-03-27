@@ -1,6 +1,6 @@
 # Naming And Route Normalization
 
-> **Priority:** P0
+> **Priority:** P1
 > **Status:** Open
 > **Last Updated:** 2026-03-26
 
@@ -12,22 +12,31 @@
 
 ## Route And API Naming Cleanup
 
-- [ ] Audit public tokenized flows first: invite acceptance, password reset, unsubscribe, portal entry, and similar entry points where token URLs, page objects, route constants, and backend namespaces currently read like separate naming systems.
-- [ ] Decide and document the naming split between public token flows and authenticated admin collection pages.
-  Example target: a public acceptance route like `/join/$token` or `/invite/$token` should not be confused with a future admin page like `/settings/invites`.
-- [ ] Define one naming rule for collection resources vs single-resource flows.
-  The goal is not to force singular or plural everywhere; it is to make route names, page objects, queries, mutations, and local variables read coherently together.
+- [ ] Decide the public-token naming rule first.
+  First targets:
+  - `/invite/$token` vs a clearer public name like `/join/$token`
+  - authenticated admin collection pages like `/settings/invites`
+  - route constants, page objects, and route component names for the same flow
 - [ ] Normalize local frontend naming where collection APIs are correct but the route code becomes hard to read.
-  Use frontend-owned aliases, hooks, or wrapper helpers if needed so route files stop reading like `invite` vs `invites` vs `token` soup.
-- [ ] Audit route/page-object/test naming for similarly confusing singular-plural mismatches outside invites.
-  The output should be a file-by-file rename list, not another vague audit note.
+  The immediate smell to remove is `invite` vs `invites` vs `token` soup in one file.
+- [ ] Audit other tokenized flows with the same risk:
+  - password reset
+  - unsubscribe
+  - client portal/public entry
+- [ ] Produce a file-by-file rename list instead of another abstract audit note.
 
 ## Route Test Placement Cleanup
 
 - [ ] Replace the `-*.test.tsx` workaround inside `src/routes/**` with a clearer route-test structure.
-  Candidate direction: colocated `__tests__` directories or a mirrored `src/route-tests/**` tree that does not depend on magic filename prefixes.
+  First targets:
+  - `src/routes/-invite.$token.test.tsx`
+  - `src/routes/-signup.test.tsx`
+  - `src/routes/-forgot-password.test.tsx`
+  - nested `-index.test.tsx` / `-route.test.tsx` files under `src/routes/_auth/**`
+- [ ] Choose one replacement structure and use it consistently:
+  - colocated `__tests__`
+  - or a mirrored `src/route-tests/**` tree
 - [ ] Remove the dash-prefix variants consistently once the replacement structure is in place.
-  This includes `-route.test.tsx`, `-index.test.tsx`, and top-level `-foo.test.tsx` files.
 - [ ] Document the new route-test placement rule so future route work does not reintroduce hidden non-route files into the routed directory.
 - [ ] Add validator coverage once the structure lands so `src/routes/**` cannot quietly accumulate non-route files through naming hacks again.
 
@@ -38,7 +47,7 @@
 - [ ] Remove or rename confusing compatibility aliases when the underlying behavior is already gone.
   The goal is to delete ambiguity, not just rename comments.
 - [ ] Normalize route constant names, page-object names, and route component names together where one layer was renamed and the others drifted.
-- [ ] Update the backlog once the audit is complete so the remaining work is a concrete file-by-file list instead of a vague “normalization” bucket.
+- [ ] Keep this todo concrete. As each audit lands, replace broad bullets with a file-by-file rename list.
 
 ## Exit Criteria
 

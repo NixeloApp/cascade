@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   getLocatorInputValue,
@@ -8,6 +8,14 @@ import {
 } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
+
+declare global {
+  interface Window {
+    __NIXELO_E2E_NOTIFICATION_PERMISSION__?: NotificationPermission;
+    __NIXELO_E2E_VAPID_PUBLIC_KEY__?: string;
+    __NIXELO_E2E_WEB_PUSH_SUPPORTED__?: boolean;
+  }
+}
 
 /**
  * Settings Page Object
@@ -23,6 +31,9 @@ export class SettingsPage extends BasePage {
   readonly preferencesTab: Locator;
   readonly adminTab: Locator;
   readonly devToolsTab: Locator;
+  readonly profileTab: Locator;
+  readonly profileAvatarUploadTrigger: Locator;
+  readonly profileCoverUploadTrigger: Locator;
 
   // ===================
   // Locators - Theme Options (in Preferences tab)
@@ -65,6 +76,8 @@ export class SettingsPage extends BasePage {
   // Locators - Preferences
   // ===================
   readonly notificationPreferences: Locator;
+  readonly notificationsBlockedAlert: Locator;
+  readonly notificationsBlockedButton: Locator;
   readonly emailNotificationsToggle: Locator;
   readonly pushNotificationsToggle: Locator;
   readonly languageSelect: Locator;
@@ -100,6 +113,7 @@ export class SettingsPage extends BasePage {
   readonly requiresTimeApprovalSwitch: Locator;
   readonly saveSettingsButton: Locator;
   readonly organizationSettingsHeading: Locator;
+  readonly twoFactorSection: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -111,6 +125,13 @@ export class SettingsPage extends BasePage {
     this.preferencesTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_PREFERENCES);
     this.adminTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_ADMIN);
     this.devToolsTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_DEVELOPER);
+    this.profileTab = page.getByTestId(TEST_IDS.SETTINGS.TAB_PROFILE);
+    this.profileAvatarUploadTrigger = page.getByTestId(
+      TEST_IDS.SETTINGS.PROFILE_AVATAR_UPLOAD_TRIGGER,
+    );
+    this.profileCoverUploadTrigger = page.getByTestId(
+      TEST_IDS.SETTINGS.PROFILE_COVER_UPLOAD_TRIGGER,
+    );
 
     // Theme options (in Preferences tab) - ToggleGroupItems with aria-labels
     this.themeLightOption = page.getByRole("radio", { name: /light theme/i });
@@ -151,6 +172,12 @@ export class SettingsPage extends BasePage {
     this.notificationPreferences = page.getByTestId(
       TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION,
     );
+    this.notificationsBlockedAlert = page.getByTestId(
+      TEST_IDS.SETTINGS.NOTIFICATIONS_BLOCKED_ALERT,
+    );
+    this.notificationsBlockedButton = page.getByTestId(
+      TEST_IDS.SETTINGS.NOTIFICATIONS_BLOCKED_BUTTON,
+    );
     this.emailNotificationsToggle = page
       .getByRole("switch", { name: /email/i })
       .or(page.getByRole("checkbox", { name: /email.*notification/i }));
@@ -189,6 +216,7 @@ export class SettingsPage extends BasePage {
     this.organizationNameInput = page.locator("#orgName");
     this.requiresTimeApprovalSwitch = page.getByTestId(TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH);
     this.saveSettingsButton = page.getByTestId(TEST_IDS.SETTINGS.SAVE_BUTTON);
+    this.twoFactorSection = page.getByTestId(TEST_IDS.SETTINGS.TWO_FACTOR_SECTION);
   }
 
   // ===================
@@ -198,7 +226,7 @@ export class SettingsPage extends BasePage {
   async goto() {
     // Navigate directly to settings URL
     const url = ROUTES.settings.profile.build(this.orgSlug);
-    await this.page.goto(url);
+    await this.gotoPath(url);
 
     try {
       // Wait for the Settings heading as a sign of page load
@@ -243,9 +271,57 @@ export class SettingsPage extends BasePage {
 
   async waitUntilReady(): Promise<void> {
     await this.pageHeaderTitle.waitFor({ state: "visible", timeout: 12000 });
-    await this.page
-      .getByRole("tab", { name: /^profile$/i })
-      .waitFor({ state: "visible", timeout: 12000 });
+    await this.profileTab.waitFor({ state: "visible", timeout: 12000 });
+  }
+
+  async waitForCaptureReady(
+    name:
+      | "settings"
+      | "settings-profile"
+      | "settings-notifications"
+      | "settings-security"
+      | "settings-apikeys"
+      | "settings-integrations"
+      | "settings-admin"
+      | "settings-offline",
+  ): Promise<void> {
+    const expectedPathname = new URL(
+      ROUTES.settings.profile.build(this.orgSlug),
+      "http://cascade.local",
+    ).pathname;
+    await this.page.waitForURL((currentUrl) => new URL(currentUrl).pathname === expectedPathname, {
+      timeout: 12000,
+    });
+    await this.waitUntilReady();
+
+    if (name === "settings-notifications") {
+      await this.notificationPreferences.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-security") {
+      await this.twoFactorSection.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-apikeys") {
+      await this.apiKeysList.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-integrations") {
+      await this.githubIntegration.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-admin") {
+      await this.userManagementSection.waitFor({ state: "visible", timeout: 12000 });
+      return;
+    }
+
+    if (name === "settings-offline") {
+      await this.syncStatusIndicator.waitFor({ state: "visible", timeout: 12000 });
+    }
   }
 
   async switchToTab(
@@ -283,6 +359,59 @@ export class SettingsPage extends BasePage {
     }
 
     await this.waitForLoad();
+  }
+
+  async gotoProfile(): Promise<void> {
+    await this.gotoPath(ROUTES.settings.profile.build(this.orgSlug));
+    await this.waitForCaptureReady("settings-profile");
+  }
+
+  async gotoNotifications(): Promise<void> {
+    await this.gotoPath(ROUTES.settings.profile.build(this.orgSlug, "notifications"));
+    await this.waitForCaptureReady("settings-notifications");
+  }
+
+  async gotoNotificationsWithBlockedPermission(): Promise<void> {
+    if (this.page.url() !== "about:blank") {
+      throw new Error(
+        "gotoNotificationsWithBlockedPermission must run on a fresh page before any navigation",
+      );
+    }
+
+    await this.page.addInitScript(() => {
+      window.__NIXELO_E2E_NOTIFICATION_PERMISSION__ = "denied";
+      window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__ = true;
+      window.__NIXELO_E2E_VAPID_PUBLIC_KEY__ = "e2e-screenshot-vapid-key";
+    });
+    await this.gotoNotifications();
+  }
+
+  async openProfileAvatarUploadModal(): Promise<Locator> {
+    await this.gotoProfile();
+    await this.profileAvatarUploadTrigger.waitFor({ state: "visible", timeout: 8000 });
+    await this.profileAvatarUploadTrigger.scrollIntoViewIfNeeded();
+    await this.profileAvatarUploadTrigger.click();
+    const dialog = this.page.getByRole("dialog", { name: /^upload avatar$/i });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /^upload$/i })).toBeVisible();
+    return dialog;
+  }
+
+  async openProfileCoverUploadModal(): Promise<Locator> {
+    await this.gotoProfile();
+    await this.profileCoverUploadTrigger.waitFor({ state: "visible", timeout: 8000 });
+    await this.profileCoverUploadTrigger.scrollIntoViewIfNeeded();
+    await this.profileCoverUploadTrigger.click();
+    const dialog = this.page.getByRole("dialog", { name: /^upload cover image$/i });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /^upload$/i })).toBeVisible();
+    return dialog;
+  }
+
+  async expectNotificationsPermissionDeniedState(): Promise<void> {
+    await this.waitForCaptureReady("settings-notifications");
+    await expect(this.notificationsBlockedAlert).toBeVisible();
+    await expect(this.notificationsBlockedButton).toBeDisabled();
   }
 
   // ===================

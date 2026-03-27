@@ -121,6 +121,23 @@ export class RoadmapPage extends BasePage {
     await this.page.getByRole("option", { name: /^status$/i }).click();
   }
 
+  async openPreferredIssueDetail(preferredIssueKeys: string[] = ["DEMO-2"]): Promise<void> {
+    for (const issueKey of preferredIssueKeys) {
+      const issueButton = this.page.getByRole("button", {
+        name: new RegExp(`view issue ${issueKey}`, "i"),
+      });
+      if ((await issueButton.count()) > 0) {
+        await issueButton.first().waitFor({ state: "visible", timeout: 5000 });
+        await issueButton.first().click();
+        return;
+      }
+    }
+
+    const firstIssueButton = this.page.getByRole("button", { name: /view issue /i }).first();
+    await firstIssueButton.waitFor({ state: "visible", timeout: 5000 });
+    await firstIssueButton.click();
+  }
+
   async openIssueDetail(issueKey: string): Promise<void> {
     const issueButton = this.page.getByRole("button", {
       name: new RegExp(`view issue ${issueKey}`, "i"),

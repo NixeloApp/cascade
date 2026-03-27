@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
-import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState } from "react";
 import type { ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
@@ -34,16 +33,6 @@ interface RoadmapViewProps {
   projectId: Id<"projects">;
   sprintId?: Id<"sprints">;
   canEdit?: boolean;
-}
-
-type RoadmapE2EState = "detail" | "group-status";
-
-const ROADMAP_E2E_STATE_STORAGE_KEY = "nixelo:e2e:roadmap-state";
-
-declare global {
-  interface Window {
-    __NIXELO_E2E_ROADMAP_STATE__?: RoadmapE2EState;
-  }
 }
 
 import type {
@@ -76,56 +65,6 @@ import {
 } from "./Roadmap/utils";
 
 /** Build a map of issue ID to issue for O(1) lookups */
-
-function consumeRoadmapE2ERequestedState(): RoadmapE2EState | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const requestedSearchParam = new URLSearchParams(window.location.search).get("e2e-roadmap");
-    if (requestedSearchParam === "detail" || requestedSearchParam === "group-status") {
-      return requestedSearchParam;
-    }
-
-    const requestedState =
-      window.__NIXELO_E2E_ROADMAP_STATE__ ??
-      window.sessionStorage.getItem(ROADMAP_E2E_STATE_STORAGE_KEY);
-    delete window.__NIXELO_E2E_ROADMAP_STATE__;
-    window.sessionStorage.removeItem(ROADMAP_E2E_STATE_STORAGE_KEY);
-
-    if (requestedState === "detail" || requestedState === "group-status") {
-      return requestedState;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function getPreferredRoadmapIssueId(
-  issues: RoadmapIssue[] | undefined,
-  issueLinks: FunctionReturnType<typeof api.issueLinks.getForProject> | undefined,
-): Id<"issues"> | null {
-  if (!issues || issues.length === 0) {
-    return null;
-  }
-
-  const demoIssue = issues.find((issue) => issue.key === "DEMO-2");
-  if (demoIssue) {
-    return demoIssue._id;
-  }
-
-  const issueIdsWithLinks = new Set<string>();
-  for (const link of issueLinks?.links ?? []) {
-    issueIdsWithLinks.add(link.fromIssueId.toString());
-    issueIdsWithLinks.add(link.toIssueId.toString());
-  }
-
-  const linkedIssue = issues.find((issue) => issueIdsWithLinks.has(issue._id.toString()));
-  return linkedIssue?._id ?? issues[0]?._id ?? null;
-}
 
 function useRoadmapTimelineInteractions({
   canEdit,
@@ -254,10 +193,6 @@ function useRoadmapTimelineInteractions({
 /** Compute dependency lines from issue links */
 /** Gantt-style roadmap view with issue timeline bars and dependency lines. */
 export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapViewProps) {
-  const [requestedE2EState] = useState<RoadmapE2EState | null>(() =>
-    consumeRoadmapE2ERequestedState(),
-  );
-  const [hasAppliedE2EState, setHasAppliedE2EState] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("months");
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
@@ -436,37 +371,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     setGroupBy(value);
     setCollapsedGroupKeys([]);
   };
-
-  useEffect(() => {
-    if (hasAppliedE2EState) {
-      return;
-    }
-
-    if (!filteredIssues) {
-      return;
-    }
-
-    if (!requestedE2EState) {
-      setHasAppliedE2EState(true);
-      return;
-    }
-
-    if (requestedE2EState === "group-status") {
-      setGroupBy("status");
-      setCollapsedGroupKeys([]);
-      setCollapsedParentIssueIds([]);
-      setHasAppliedE2EState(true);
-      return;
-    }
-
-    const preferredIssueId = getPreferredRoadmapIssueId(filteredIssues, issueLinks);
-    if (requestedE2EState === "detail") {
-      if (preferredIssueId) {
-        setSelectedIssue(preferredIssueId);
-      }
-      setHasAppliedE2EState(true);
-    }
-  }, [filteredIssues, hasAppliedE2EState, issueLinks, requestedE2EState]);
 
   // Loading State
   if (!(project && filteredIssues && epics)) {

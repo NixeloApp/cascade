@@ -487,20 +487,6 @@ describe("NotificationsPage", () => {
     expect(screen.getByRole("button", { name: /view inbox/i })).toBeInTheDocument();
   });
 
-  it("honors the archived-tab E2E override on first render", async () => {
-    window.sessionStorage.setItem("nixelo:e2e:notifications-state", "archived-tab");
-    mockNotificationQueries({
-      inbox: [inboxNotification],
-      archived: [],
-    });
-
-    render(<NotificationsPage />);
-
-    expect(
-      await screen.findByTestId(TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE),
-    ).toBeInTheDocument();
-  });
-
   it("caps the unread badge at 99+ while preserving the header count", () => {
     mockUnreadQueries({ unreadCount: 100, unreadIds: [inboxNotification._id] });
 

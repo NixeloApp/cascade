@@ -257,8 +257,8 @@ export function calculateNextSendTime(delayDays: number): number {
   const date = new Date(now);
   let added = 0;
   while (added < delayDays) {
-    date.setDate(date.getDate() + 1);
-    const day = date.getDay();
+    date.setUTCDate(date.getUTCDate() + 1);
+    const day = date.getUTCDay();
     // Skip Saturday (6) and Sunday (0)
     if (day !== 0 && day !== 6) {
       added++;

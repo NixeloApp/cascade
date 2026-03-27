@@ -6,7 +6,7 @@
  * dispatch function and per-page readiness checks.
  */
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { AnalyticsPage } from "../pages/analytics.page";
 import { BacklogPage } from "../pages/backlog.page";
@@ -14,9 +14,13 @@ import { DocumentsPage } from "../pages/documents.page";
 import { InboxPage } from "../pages/inbox.page";
 import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
+import { MeetingsPage } from "../pages/meetings.page";
+import { MyIssuesPage } from "../pages/my-issues.page";
+import { NotificationsPage } from "../pages/notifications.page";
 import { OutreachPage } from "../pages/outreach.page";
 import { ProjectsPage } from "../pages/projects.page";
 import { RoadmapPage } from "../pages/roadmap.page";
+import { SettingsPage } from "../pages/settings.page";
 import { TeamPage } from "../pages/team.page";
 import { WorkspacesPage } from "../pages/workspaces.page";
 import {
@@ -24,9 +28,9 @@ import {
   getPageHeaderOrGenericEmptyState,
   isLocatorVisible,
 } from "../utils/locator-state";
+import { testUserService } from "../utils/test-user-service";
 import {
   waitForAnimation,
-  waitForDashboardReady,
   waitForLoadingSkeletonsToClear,
   waitForScreenshotReady,
 } from "../utils/wait-helpers";
@@ -616,55 +620,20 @@ export async function waitForExpectedContent(
   }
 
   if (URL_PATTERNS.settings.test(url) || name === "settings" || name === "settings-profile") {
-    await page.waitForURL(
-      (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
-      {
-        timeout: 12000,
-      },
+    const pathname = new URL(url, "http://cascade.local").pathname;
+    const [orgSlug] = pathname.split("/").filter(Boolean);
+    const settingsPage = new SettingsPage(page, orgSlug || READINESS_ONLY_SLUG);
+    await settingsPage.waitForCaptureReady(
+      name as
+        | "settings"
+        | "settings-profile"
+        | "settings-notifications"
+        | "settings-security"
+        | "settings-apikeys"
+        | "settings-integrations"
+        | "settings-admin"
+        | "settings-offline",
     );
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByRole("tab", { name: /^profile$/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-
-    if (name === "settings-notifications") {
-      await page
-        .getByTestId(TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION)
-        .waitFor({ state: "visible", timeout: 12000 });
-    }
-
-    if (name === "settings-security") {
-      await page
-        .getByTestId(TEST_IDS.SETTINGS.TWO_FACTOR_SECTION)
-        .waitFor({ state: "visible", timeout: 12000 });
-    }
-
-    if (name === "settings-apikeys") {
-      await page
-        .getByTestId(TEST_IDS.SETTINGS.API_KEYS_SECTION)
-        .waitFor({ state: "visible", timeout: 12000 });
-    }
-
-    if (name === "settings-integrations") {
-      await page
-        .getByTestId(TEST_IDS.SETTINGS.GITHUB_INTEGRATION)
-        .waitFor({ state: "visible", timeout: 12000 });
-    }
-
-    if (name === "settings-admin") {
-      await page
-        .getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION)
-        .waitFor({ state: "visible", timeout: 12000 });
-    }
-
-    if (name === "settings-offline") {
-      await page
-        .getByTestId(TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD)
-        .waitFor({ state: "visible", timeout: 12000 });
-    }
-
     await waitForSpinnersHidden(page);
     return;
   }
@@ -730,52 +699,13 @@ export async function waitForExpectedContent(
   }
 
   if (URL_PATTERNS.notifications.test(url) || name === "notifications") {
-    await waitForDashboardReady(page);
-    const headerTitle = page.getByTestId(TEST_IDS.PAGE.HEADER_TITLE);
-    const archivedTab = page.getByRole("tab", { name: /archived/i });
-    const inboxTab = page.getByRole("tab", { name: /inbox/i });
-    const archivedEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.ARCHIVED_EMPTY_STATE);
-    const inboxEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
-    const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
-    await expect
-      .poll(
-        async () => (await isLocatorVisible(headerTitle)) || (await isLocatorVisible(inboxTab)),
-        { timeout: 12000 },
-      )
-      .toBe(true);
+    await new NotificationsPage(page, READINESS_ONLY_SLUG).waitForCaptureReady();
     await waitForSpinnersHidden(page);
-    await expect
-      .poll(
-        async () => {
-          const mentionsVisible = await isLocatorVisible(mentionsFilter);
-          const archivedSelected = (await archivedTab.getAttribute("aria-selected")) === "true";
-          const itemCount = await getLocatorCount(notificationItems);
-          const inboxEmptyVisible = await isLocatorVisible(inboxEmptyState);
-          const archivedEmptyVisible = await isLocatorVisible(archivedEmptyState);
-          if (mentionsVisible && (itemCount > 0 || inboxEmptyVisible)) {
-            return "ready";
-          }
-          if (archivedSelected && (itemCount > 0 || archivedEmptyVisible)) {
-            return "ready";
-          }
-          return "pending";
-        },
-        { timeout: 10000 },
-      )
-      .toBe("ready");
     return;
   }
 
   if (URL_PATTERNS.meetings.test(url) || name === "meetings") {
-    await page
-      .getByTestId(TEST_IDS.PAGE.HEADER_TITLE)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByTestId(TEST_IDS.MEETINGS.MEMORY_SECTION)
-      .or(page.getByText(/no meeting recordings yet/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
+    await new MeetingsPage(page, READINESS_ONLY_SLUG).waitForCaptureReady();
     await waitForSpinnersHidden(page);
     return;
   }
@@ -809,6 +739,12 @@ export async function waitForExpectedContent(
   ) {
     await waitForCalendarReady(page);
     await waitForCalendarEvents(page, 5000);
+    return;
+  }
+
+  if (URL_PATTERNS.myIssues.test(url) || name === "my-issues") {
+    const myIssuesPage = new MyIssuesPage(page, READINESS_ONLY_SLUG);
+    await myIssuesPage.waitUntilReady();
     return;
   }
 

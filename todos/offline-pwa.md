@@ -1,7 +1,7 @@
 # Offline / PWA
 
 > **Status:** In Progress
-> **Last Updated:** 2026-03-25
+> **Last Updated:** 2026-03-26
 
 Related docs:
 
@@ -15,6 +15,7 @@ Related docs:
 - [ ] Verify push subscription survives service worker replacement.
 - [ ] Verify push still works after cache clear and worker re-registration.
 - [ ] Verify unsubscribe cleanup is correct when subscriptions rotate.
+- [ ] Confirm the real browser push/install/offline path on desktop and mobile instead of relying on harness confidence alone.
 
 ### Docs
 

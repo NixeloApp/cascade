@@ -27,22 +27,19 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDate } from "@/lib/formatting";
 import { ListTodo, SearchX } from "@/lib/icons";
 import { getPriorityBadgeTone } from "@/lib/issue-utils";
-import { TEST_IDS } from "@/lib/test-ids";
+import {
+  getMyIssuesDueDateFilterOptionTestId,
+  getMyIssuesPriorityFilterOptionTestId,
+  TEST_IDS,
+} from "@/lib/test-ids";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/my-issues")({
   component: MyIssuesBoardPage,
 });
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_MY_ISSUES_LOADING__?: boolean;
-  }
-}
-
 type GroupBy = "status" | "project";
 type PriorityFilter = "all" | (typeof ISSUE_PRIORITIES)[number];
 type DueDateFilter = "all" | "has-date" | "overdue" | "this-week" | "no-date";
-type MyIssuesE2EState = "filter-active" | "filtered-empty";
 
 type MyIssueSummary = {
   _id: string;
@@ -68,15 +65,6 @@ type MyIssuesColumn = {
 };
 
 const MOBILE_MY_ISSUES_MEDIA_QUERY = "(max-width: 767px)";
-
-type MyIssuesInitialState = {
-  dueDateFilter: DueDateFilter;
-  forceFilteredEmpty: boolean;
-  groupBy: GroupBy;
-  priorityFilter: PriorityFilter;
-};
-
-const MY_ISSUES_E2E_STATE_STORAGE_KEY = "nixelo:e2e:my-issues-state";
 
 const PRIORITY_OPTIONS: { value: PriorityFilter; label: string }[] = [
   { value: "all", label: "All Priorities" },
@@ -104,48 +92,6 @@ function matchesDueDateFilter(dueDate: number | undefined, filter: DueDateFilter
   if (filter === "overdue") return dueDate < now;
   if (filter === "this-week") return dueDate >= now && dueDate <= now + WEEK;
   return true;
-}
-
-function isE2EMyIssuesLoadingOverrideEnabled(): boolean {
-  return typeof window !== "undefined" && window.__NIXELO_E2E_MY_ISSUES_LOADING__ === true;
-}
-
-function consumeMyIssuesE2ERequestedState(): MyIssuesInitialState {
-  const defaultState: MyIssuesInitialState = {
-    dueDateFilter: "all",
-    forceFilteredEmpty: false,
-    groupBy: "status",
-    priorityFilter: "all",
-  };
-
-  if (typeof window === "undefined") {
-    return defaultState;
-  }
-
-  try {
-    const requestedState = window.sessionStorage.getItem(MY_ISSUES_E2E_STATE_STORAGE_KEY);
-    window.sessionStorage.removeItem(MY_ISSUES_E2E_STATE_STORAGE_KEY);
-    if ((requestedState as MyIssuesE2EState | null) === "filter-active") {
-      return {
-        dueDateFilter: "all",
-        forceFilteredEmpty: false,
-        groupBy: "status",
-        priorityFilter: "high",
-      };
-    }
-    if ((requestedState as MyIssuesE2EState | null) === "filtered-empty") {
-      return {
-        dueDateFilter: "all",
-        forceFilteredEmpty: true,
-        groupBy: "status",
-        priorityFilter: "lowest",
-      };
-    }
-  } catch {
-    return defaultState;
-  }
-
-  return defaultState;
 }
 
 function groupIssuesBySelectedKey(
@@ -195,15 +141,10 @@ function buildMyIssuesColumns(args: {
 
 function filterMyIssuesResults(args: {
   dueDateFilter: DueDateFilter;
-  forceFilteredEmpty: boolean;
   hasActiveFilters: boolean;
   priorityFilter: PriorityFilter;
   results: MyIssueSummary[];
 }): MyIssueSummary[] {
-  if (args.forceFilteredEmpty && args.hasActiveFilters) {
-    return [];
-  }
-
   if (!args.hasActiveFilters) {
     return args.results;
   }
@@ -314,10 +255,9 @@ function useVisibleMyIssuesColumns(args: {
 /** Personal issue board with client-side filters, grouped columns, and recovery empty states. */
 export function MyIssuesBoardPage() {
   const { orgSlug } = useOrganization();
-  const [initialState] = useState(consumeMyIssuesE2ERequestedState);
-  const [groupBy, setGroupBy] = useState<GroupBy>(initialState.groupBy);
-  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>(initialState.priorityFilter);
-  const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>(initialState.dueDateFilter);
+  const [groupBy, setGroupBy] = useState<GroupBy>("status");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+  const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>("all");
   const isMobileViewport = useMediaQuery(MOBILE_MY_ISSUES_MEDIA_QUERY);
 
   // Server-side group counts — always reflect the full dataset
@@ -331,18 +271,17 @@ export function MyIssuesBoardPage() {
   );
 
   const hasActiveFilters = priorityFilter !== "all" || dueDateFilter !== "all";
-  const isLoading = isE2EMyIssuesLoadingOverrideEnabled() || status === "LoadingFirstPage";
+  const isLoading = status === "LoadingFirstPage";
 
   // Apply client-side filters
   const filteredResults = useMemo(() => {
     return filterMyIssuesResults({
       dueDateFilter,
-      forceFilteredEmpty: initialState.forceFilteredEmpty,
       hasActiveFilters,
       priorityFilter,
       results,
     });
-  }, [results, priorityFilter, dueDateFilter, hasActiveFilters, initialState.forceFilteredEmpty]);
+  }, [results, priorityFilter, dueDateFilter, hasActiveFilters]);
 
   const columns = useMemo(
     () =>
@@ -391,7 +330,11 @@ export function MyIssuesBoardPage() {
               </SelectTrigger>
               <SelectContent>
                 {PRIORITY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    data-testid={getMyIssuesPriorityFilterOptionTestId(opt.value)}
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -411,7 +354,11 @@ export function MyIssuesBoardPage() {
               </SelectTrigger>
               <SelectContent>
                 {DUE_DATE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    data-testid={getMyIssuesDueDateFilterOptionTestId(opt.value)}
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}

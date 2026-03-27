@@ -9,9 +9,10 @@
 ### Screenshot-driven cleanup
 
 - [ ] Treat screenshot approval as real design review: inspect actual before/after images for every changed route state instead of relying on harness completeness, validators, or green diff checks.
-- [ ] Review approved screenshots page by page and turn every visibly broken or weird state into an explicit todo item instead of leaving it as vague review debt
-- [ ] Fix screenshot-exposed broken states before approving new baselines -- missing content, bad shells, off spacing, broken empty states, and modal/popover layout failures should not be normalized
-- [ ] Use screenshot review to find and remove AI-slop patterns -- nested cards, redundant shells, accidental panel-in-panel layouts, and inconsistent control groupings
+- [ ] Review approved screenshots page by page and turn every visibly broken or weird state into an explicit todo item instead of leaving it as vague review debt.
+- [ ] Fix screenshot-exposed broken states before approving new baselines. Missing content, bad shells, off spacing, broken empty states, and modal/popover layout failures should not be normalized.
+- [ ] Use screenshot review to find and remove AI-slop patterns: nested cards, redundant shells, accidental panel-in-panel layouts, and inconsistent control groupings.
+- [ ] Keep this route-by-route. Do not reopen broad visual cleanup unless a screenshot-visible regression actually justifies it.
 
 ### Screenshot coverage gaps
 
@@ -25,6 +26,7 @@
 
 ### Human-review blind spots
 
+- [ ] Keep these as explicit review categories, not vague taste notes. If a surface trips one of them, add a route-level follow-up instead of leaving it in this bucket forever.
 - [ ] motion / animation consistency
 - [ ] density and hierarchy consistency inside large complex surfaces
 - [ ] component-state cohesion across remaining tabs and card-heavy product surfaces outside the standardized overlay/dashboard shells

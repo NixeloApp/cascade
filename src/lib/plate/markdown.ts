@@ -9,15 +9,6 @@ import type { Value } from "platejs";
 import { showError, showSuccess } from "@/lib/toast";
 import { NODE_TYPES } from "./plugins";
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_MARKDOWN_IMPORT__?: {
-      markdown: string;
-      filename: string;
-    } | null;
-  }
-}
-
 // Slate node types
 interface SlateText {
   text: string;
@@ -508,13 +499,6 @@ export function readMarkdownFile(file: File): Promise<string> {
  * Trigger file picker for markdown import
  */
 export function triggerMarkdownImport(onSelect: (file: File) => void): void {
-  if (typeof window !== "undefined" && window.__NIXELO_E2E_MARKDOWN_IMPORT__) {
-    const queuedImport = window.__NIXELO_E2E_MARKDOWN_IMPORT__;
-    window.__NIXELO_E2E_MARKDOWN_IMPORT__ = null;
-    onSelect(new File([queuedImport.markdown], queuedImport.filename, { type: "text/markdown" }));
-    return;
-  }
-
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".md,.markdown,text/markdown";
