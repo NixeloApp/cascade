@@ -17,7 +17,9 @@ import {
   formatConfigLabel,
   getScreenshotContextOptions,
   prepareScreenshotAuthBootstrap,
+  runAuthenticatedScreenshotCapture,
   runConfiguredScreenshotCaptureSession,
+  runRetriedAuthenticatedScreenshotCapture,
   withAuthenticatedScreenshotPage,
 } from "./session";
 
@@ -196,6 +198,66 @@ describe("screenshot session helpers", () => {
     });
     expect(harness.context.close).toHaveBeenCalledTimes(1);
     expect(harness.browser.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs an authenticated screenshot capture behind one shared browser session", async () => {
+    const harness = createBrowserHarness();
+    const launchBrowser = vi.fn(async () => harness.browser);
+    const callback = vi.fn(async () => {});
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValueOnce(true);
+
+    const authenticated = await runAuthenticatedScreenshotCapture(
+      launchBrowser,
+      "desktop",
+      "light",
+      "acme",
+      callback,
+      {
+        storageState: { cookies: [], origins: [] },
+      },
+    );
+
+    expect(authenticated).toBe(true);
+    expect(callback).toHaveBeenCalledWith({
+      browser: harness.browser,
+      page: harness.page,
+    });
+    expect(harness.browser.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries crash-like authenticated screenshot captures and closes both browsers", async () => {
+    const firstAttempt = createBrowserHarness();
+    const secondAttempt = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(firstAttempt.browser)
+      .mockResolvedValueOnce(secondAttempt.browser);
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    const callback = vi
+      .fn<(context: { browser: Browser; page: Page }) => Promise<void>>()
+      .mockRejectedValueOnce(new Error("Target page, context or browser has been closed"))
+      .mockResolvedValueOnce(undefined);
+    const logFailures: string[] = [];
+
+    const authenticated = await runRetriedAuthenticatedScreenshotCapture(
+      launchBrowser,
+      "desktop",
+      "light",
+      "acme",
+      callback,
+      {
+        maxAttempts: 2,
+        onAttemptFailure: (attempt, message, retrying) => {
+          logFailures.push(`${attempt}:${message}:${retrying ? "retry" : "stop"}`);
+        },
+      },
+    );
+
+    expect(authenticated).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(2);
+    expect(firstAttempt.browser.close).toHaveBeenCalledTimes(1);
+    expect(secondAttempt.browser.close).toHaveBeenCalledTimes(1);
+    expect(logFailures).toEqual(["1:Target page, context or browser has been closed:retry"]);
   });
 
   it("retries filled-state capture once after a crash-like error and closes both browsers", async () => {

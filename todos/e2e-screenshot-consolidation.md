@@ -28,6 +28,7 @@
   - thin screenshot wrappers that stay in screenshot-lib
   - harness-only complexity that should be deleted
 - [ ] Keep screenshot auth/bootstrap on the shared session helper path and shared injected-token fixture-auth helpers instead of letting new harness-only entrypoints or config-specific login paths reappear.
+- [ ] Keep config-level browser launch/auth/retry orchestration on shared screenshot session helpers instead of re-implementing browser sessions around empty vs filled capture paths.
 - [ ] Keep browser launch/close, config retry policy, and auth bootstrap on the shared screenshot session helper path instead of re-implementing them in CLI entrypoints or route-specific capture code.
 - [ ] Keep staged screenshot output lifecycle on the shared session helper path instead of re-implementing staging-root setup, promotion, or cleanup in CLI entrypoints.
 - [ ] Keep generic browser/context/page target lifecycle on shared E2E utilities instead of rebuilding it inside screenshot-lib session helpers.
