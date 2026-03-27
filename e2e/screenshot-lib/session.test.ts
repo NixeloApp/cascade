@@ -21,11 +21,13 @@ import {
   captureConfiguredScreenshotStates,
   captureEmptyStatesForConfig,
   captureFilledStatesForConfig,
+  captureSelectedEmptyCaptureGroup,
+  captureSelectedEmptyCaptureGroups,
+  emptyCaptureGroupRequiresPrimaryBootstrap,
   enumerateDryRunTargets,
   formatConfigLabel,
   getAuthenticatedScreenshotBootstrap,
   getCaptureNamesForPrefix,
-  getScreenshotCaptureBootstrapMode,
   getScreenshotContextOptions,
   getScreenshotSeededPhaseMode,
   getScreenshotSeedOrgSlug,
@@ -297,23 +299,9 @@ describe("screenshot session helpers", () => {
     });
   });
 
-  it("derives bootstrap mode from the canonical execution steps", () => {
-    expect(
-      getScreenshotCaptureBootstrapMode(buildScreenshotCaptureExecutionPlan(["public-landing"])),
-    ).toBe("none");
-    expect(
-      getScreenshotCaptureBootstrapMode(
-        buildScreenshotCaptureExecutionPlan(["public-portal-project"]),
-      ),
-    ).toBe("primary-user");
-    expect(
-      getScreenshotCaptureBootstrapMode(buildScreenshotCaptureExecutionPlan(["empty-dashboard"])),
-    ).toBe("authenticated");
-    expect(
-      getScreenshotCaptureBootstrapMode(
-        buildScreenshotCaptureExecutionPlan(["public-portal-project", "filled-issues-loading"]),
-      ),
-    ).toBe("authenticated");
+  it("derives whether an empty capture group needs the primary authenticated bootstrap", () => {
+    expect(emptyCaptureGroupRequiresPrimaryBootstrap("bootstrap")).toBe(true);
+    expect(emptyCaptureGroupRequiresPrimaryBootstrap("separate-auth")).toBe(false);
   });
 
   it("derives execution-context requirements from execution steps", () => {
@@ -1223,6 +1211,32 @@ describe("screenshot session helpers", () => {
     expect(vi.mocked(ensureAuthenticatedScreenshotPage)).toHaveBeenCalledTimes(1);
   });
 
+  it("captures a bootstrap empty group on the primary authenticated page", async () => {
+    const emptyHarness = createBrowserHarness();
+    const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
+    emptySpy.mockClear();
+
+    await captureSelectedEmptyCaptureGroup(
+      {
+        browser: emptyHarness.browser,
+        primaryPage: emptyHarness.page,
+      },
+      "desktop",
+      "light",
+      "acme",
+      {
+        group: "bootstrap",
+        names: ["dashboard"],
+      },
+    );
+
+    expect(emptySpy).toHaveBeenCalledTimes(1);
+    expect(emptySpy).toHaveBeenCalledWith(emptyHarness.page, "acme", {
+      group: "bootstrap",
+    });
+    expect(vi.mocked(ensureAuthenticatedScreenshotPage)).not.toHaveBeenCalled();
+  });
+
   it("captures the separate-auth empty group through the shared selection helper", async () => {
     const emptyHarness = createBrowserHarness();
     const launchBrowser = vi
@@ -1255,6 +1269,68 @@ describe("screenshot session helpers", () => {
       group: "separate-auth",
     });
     expect(vi.mocked(ensureAuthenticatedScreenshotPage)).toHaveBeenCalledTimes(2);
+  });
+
+  it("captures separate-auth empty groups without paying for primary bootstrap auth", async () => {
+    const emptyHarness = createBrowserHarness();
+    const launchBrowser = vi
+      .fn<() => Promise<Browser>>()
+      .mockResolvedValueOnce(emptyHarness.browser);
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    vi.mocked(getSelectedEmptyCaptureGroups).mockReturnValueOnce([
+      {
+        group: "separate-auth",
+        names: ["my-issues"],
+      },
+    ]);
+    const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
+    emptySpy.mockClear();
+
+    await captureEmptyStatesForConfig(launchBrowser, "desktop", "light", "acme", {
+      cookies: [],
+      origins: [],
+    });
+
+    expect(emptySpy).toHaveBeenCalledTimes(1);
+    expect(emptySpy).toHaveBeenCalledWith(emptyHarness.page, "acme", {
+      group: "separate-auth",
+    });
+    expect(vi.mocked(ensureAuthenticatedScreenshotPage)).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs selected empty capture groups through one manifest-driven strategy loop", async () => {
+    const emptyHarness = createBrowserHarness();
+    vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
+    const emptySpy = vi.mocked(screenshotEmptyStates).mockResolvedValue(undefined);
+    emptySpy.mockClear();
+
+    await captureSelectedEmptyCaptureGroups(
+      {
+        browser: emptyHarness.browser,
+        primaryPage: emptyHarness.page,
+      },
+      "desktop",
+      "light",
+      "acme",
+      [
+        {
+          group: "bootstrap",
+          names: ["dashboard"],
+        },
+        {
+          group: "separate-auth",
+          names: ["my-issues"],
+        },
+      ],
+    );
+
+    expect(emptySpy).toHaveBeenCalledTimes(2);
+    expect(emptySpy).toHaveBeenNthCalledWith(1, emptyHarness.page, "acme", {
+      group: "bootstrap",
+    });
+    expect(emptySpy).toHaveBeenNthCalledWith(2, emptyHarness.page, "acme", {
+      group: "separate-auth",
+    });
   });
 
   it("runs the seeded phase as filled-only when the execution plan excludes seeded public pages", async () => {

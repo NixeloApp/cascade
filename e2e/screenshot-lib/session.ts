@@ -29,6 +29,7 @@ import {
   getPublicCaptureNames,
   getSelectedEmptyCaptureGroups,
   type PublicScreenshotCaptureGroup,
+  type SelectedEmptyScreenshotCaptureGroup,
   screenshotEmptyStates,
   screenshotPublicPages,
 } from "./public-pages";
@@ -54,6 +55,11 @@ export interface ScreenshotCaptureRunResult {
 export interface ScreenshotCapturePageContext {
   browser: Browser;
   page: Page;
+}
+
+interface EmptyScreenshotCaptureGroupContext {
+  browser: Browser;
+  primaryPage?: Page;
 }
 
 export interface ScreenshotCaptureSessionOptions {
@@ -111,6 +117,11 @@ type AuthenticatedScreenshotCaptureOptions = AuthenticatedScreenshotPageOptions 
   onAttemptFailure?: (attempt: number, message: string, retrying: boolean) => void;
 };
 type RunConfiguredScreenshotStates = typeof captureConfiguredScreenshotStates;
+
+const EMPTY_CAPTURE_GROUP_AUTH_USERS = {
+  bootstrap: null,
+  "separate-auth": SCREENSHOT_EMPTY_AUTH_USER,
+} as const satisfies Record<SelectedEmptyScreenshotCaptureGroup["group"], TestUser | null>;
 
 export type ScreenshotCapturePhasePrefix = "empty" | "filled" | "public";
 
@@ -260,6 +271,12 @@ export function screenshotCaptureStepRequiresExecutionContext(
   executionStep: ScreenshotCaptureExecutionStep,
 ): boolean {
   return executionStep.kind !== "public";
+}
+
+export function emptyCaptureGroupRequiresPrimaryBootstrap(
+  group: SelectedEmptyScreenshotCaptureGroup["group"],
+): boolean {
+  return EMPTY_CAPTURE_GROUP_AUTH_USERS[group] === null;
 }
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
@@ -540,57 +557,48 @@ export async function captureEmptyStatesForConfig(
 ): Promise<void> {
   setCurrentConfig(viewport, theme, "empty");
   const selectedEmptyCaptureGroups = getSelectedEmptyCaptureGroups();
-  const shouldCaptureBootstrapEmptyStates = selectedEmptyCaptureGroups.some(
-    ({ group }) => group === "bootstrap",
-  );
-  const shouldCaptureSeparateAuthEmptyStates = selectedEmptyCaptureGroups.some(
-    ({ group }) => group === "separate-auth",
-  );
-
   if (selectedEmptyCaptureGroups.length === 0) {
     return;
   }
 
   try {
+    const needsPrimaryBootstrap = selectedEmptyCaptureGroups.some(({ group }) =>
+      emptyCaptureGroupRequiresPrimaryBootstrap(group),
+    );
+
+    if (!needsPrimaryBootstrap) {
+      await withLaunchedBrowser(launchBrowser, async (browser) =>
+        captureSelectedEmptyCaptureGroups(
+          { browser },
+          viewport,
+          theme,
+          orgSlug,
+          selectedEmptyCaptureGroups,
+        ),
+      );
+      return;
+    }
+
     const authenticated = await runAuthenticatedScreenshotCapture(
       launchBrowser,
       viewport,
       theme,
       orgSlug,
-      async ({ browser, page }) => {
-        if (shouldCaptureBootstrapEmptyStates) {
-          await screenshotEmptyStates(page, orgSlug, { group: "bootstrap" });
-        }
-
-        if (shouldCaptureSeparateAuthEmptyStates) {
-          const myIssuesAuthenticated = await withAuthenticatedScreenshotPage(
-            browser,
-            viewport,
-            theme,
-            orgSlug,
-            async (myIssuesPage) => {
-              await screenshotEmptyStates(myIssuesPage, orgSlug, { group: "separate-auth" });
-            },
-            {
-              user: SCREENSHOT_EMPTY_AUTH_USER,
-            },
-          );
-
-          if (!myIssuesAuthenticated) {
-            throw new Error(
-              `Auth failed for my-issues empty state in ${captureState.currentConfigPrefix}`,
-            );
-          }
-        }
-      },
+      async ({ browser, page }) =>
+        captureSelectedEmptyCaptureGroups(
+          { browser, primaryPage: page },
+          viewport,
+          theme,
+          orgSlug,
+          selectedEmptyCaptureGroups,
+        ),
       {
         storageState,
       },
     );
 
     if (!authenticated) {
-      captureState.captureFailures++;
-      console.log(`    ⚠️ Auth failed for ${captureState.currentConfigPrefix} empty states`);
+      throw new Error(`Auth failed for ${captureState.currentConfigPrefix} empty states`);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -601,6 +609,58 @@ export async function captureEmptyStatesForConfig(
     console.log(
       `    ⚠️ Empty state capture failed for ${captureState.currentConfigPrefix}: ${message}`,
     );
+  }
+}
+
+export async function captureSelectedEmptyCaptureGroup(
+  context: EmptyScreenshotCaptureGroupContext,
+  viewport: ViewportName,
+  theme: ThemeName,
+  orgSlug: string,
+  selectedGroup: SelectedEmptyScreenshotCaptureGroup,
+): Promise<void> {
+  const authUser = EMPTY_CAPTURE_GROUP_AUTH_USERS[selectedGroup.group];
+
+  if (!authUser) {
+    if (!context.primaryPage) {
+      throw new Error(
+        `Empty capture group ${selectedGroup.group} requires the primary authenticated page`,
+      );
+    }
+
+    await screenshotEmptyStates(context.primaryPage, orgSlug, { group: selectedGroup.group });
+    return;
+  }
+
+  const authenticated = await withAuthenticatedScreenshotPage(
+    context.browser,
+    viewport,
+    theme,
+    orgSlug,
+    async (page) => {
+      await screenshotEmptyStates(page, orgSlug, { group: selectedGroup.group });
+    },
+    {
+      user: authUser,
+    },
+  );
+
+  if (!authenticated) {
+    throw new Error(
+      `Auth failed for ${selectedGroup.group} empty state in ${captureState.currentConfigPrefix}`,
+    );
+  }
+}
+
+export async function captureSelectedEmptyCaptureGroups(
+  context: EmptyScreenshotCaptureGroupContext,
+  viewport: ViewportName,
+  theme: ThemeName,
+  orgSlug: string,
+  selectedGroups: SelectedEmptyScreenshotCaptureGroup[],
+): Promise<void> {
+  for (const selectedGroup of selectedGroups) {
+    await captureSelectedEmptyCaptureGroup(context, viewport, theme, orgSlug, selectedGroup);
   }
 }
 
