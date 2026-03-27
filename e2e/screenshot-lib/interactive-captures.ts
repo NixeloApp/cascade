@@ -9,6 +9,7 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { E2E_TIMEZONE } from "../constants";
 import {
   AssistantPage,
   CalendarPage,
@@ -39,7 +40,7 @@ import {
   shouldCapture,
   shouldCaptureAny,
 } from "./capture";
-import { BASE_URL } from "./config";
+import { BASE_URL, SCREENSHOT_USER } from "./config";
 import { openStableDialog, waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
 import { waitForBoardReady, waitForExpectedContent } from "./readiness";
 
@@ -1221,6 +1222,15 @@ export async function screenshotMyIssuesStates(
     return;
   }
 
+  const myIssuesState = await testUserService.configureMyIssuesState(
+    orgSlug,
+    SCREENSHOT_USER.email,
+    "default",
+  );
+  if (!myIssuesState.success) {
+    throw new Error(myIssuesState.error ?? "Failed to normalize my-issues screenshot state");
+  }
+
   if (shouldCapture(prefix, filterActiveName)) {
     await runCaptureStep("my issues filter active", async () => {
       const filterActivePage = await page.context().newPage();
@@ -1249,7 +1259,8 @@ export async function screenshotMyIssuesStates(
         const filteredEmptyMyIssuesPage = new MyIssuesPage(filteredEmptyPage, orgSlug);
         await filteredEmptyMyIssuesPage.goto();
         await filteredEmptyMyIssuesPage.waitUntilReady();
-        await filteredEmptyMyIssuesPage.selectPriorityFilter("Lowest");
+        await filteredEmptyMyIssuesPage.selectPriorityFilter("Highest");
+        await filteredEmptyMyIssuesPage.selectDueDateFilter("No Due Date");
         await filteredEmptyMyIssuesPage.expectFilteredEmptyState();
         await waitForScreenshotReady(filteredEmptyPage);
         await captureCurrentView(filteredEmptyPage, prefix, filteredEmptyName);
@@ -1263,14 +1274,28 @@ export async function screenshotMyIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("my issues loading state", async () => {
-      const loadingPage = await page.context().newPage();
+      const browser = page.context().browser();
+      if (!browser) {
+        throw new Error("My issues loading capture requires an attached browser instance");
+      }
+
+      const isolatedContext = await browser.newContext({
+        storageState: await page.context().storageState(),
+        viewport: page.viewportSize() ?? undefined,
+        colorScheme: captureState.currentConfigPrefix.endsWith("dark") ? "dark" : "light",
+        timezoneId: E2E_TIMEZONE,
+      });
+      const loadingPage = await isolatedContext.newPage();
 
       try {
-        const dashboardPage = new DashboardPage(loadingPage, orgSlug);
-        await dashboardPage.goto();
-        await dashboardPage.waitUntilReady();
-        await loadingPage.context().setOffline(true);
-        await dashboardPage.openMyIssues();
+        const projectsPage = new ProjectsPage(loadingPage, orgSlug);
+        await projectsPage.goto();
+        await projectsPage.waitUntilReady();
+        await isolatedContext.setOffline(true);
+        await loadingPage.goto(`${BASE_URL}${ROUTES.myIssues.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         const loadingMyIssuesPage = new MyIssuesPage(loadingPage, orgSlug);
         await loadingMyIssuesPage.expectLoadingStateVisible();
         await waitForAnimation(loadingPage);
@@ -1278,10 +1303,11 @@ export async function screenshotMyIssuesStates(
           skipReadyCheck: true,
         });
       } finally {
-        await loadingPage.context().setOffline(false);
+        await isolatedContext.setOffline(false);
         if (!loadingPage.isClosed()) {
           await loadingPage.close();
         }
+        await isolatedContext.close();
       }
     });
   }

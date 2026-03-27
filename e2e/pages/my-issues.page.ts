@@ -1,6 +1,10 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { getMyIssuesPriorityFilterOptionTestId, TEST_IDS } from "../../src/lib/test-ids";
+import {
+  getMyIssuesDueDateFilterOptionTestId,
+  getMyIssuesPriorityFilterOptionTestId,
+  TEST_IDS,
+} from "../../src/lib/test-ids";
 import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
@@ -65,6 +69,16 @@ export class MyIssuesPage extends BasePage {
     await expect(option).toBeVisible();
     await option.click();
     await expect(this.priorityFilter).toContainText(new RegExp(label, "i"));
+  }
+
+  async selectDueDateFilter(label: string): Promise<void> {
+    const optionValue = label.toLowerCase();
+    await expect(this.dueDateFilter).toBeVisible();
+    await this.dueDateFilter.click();
+    const option = this.page.getByTestId(getMyIssuesDueDateFilterOptionTestId(optionValue));
+    await expect(option).toBeVisible();
+    await option.click();
+    await expect(this.dueDateFilter).toContainText(new RegExp(label, "i"));
   }
 
   async expectLoadingStateVisible(): Promise<void> {

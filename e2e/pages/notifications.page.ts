@@ -31,11 +31,11 @@ export class NotificationsPage extends BasePage {
     this.content = page.getByTestId(TEST_IDS.NOTIFICATIONS.CONTENT);
     this.inboxEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
     this.inboxTab = page.getByRole("tab", { name: /inbox/i });
-    this.markAllReadButton = page.getByTestId(TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON);
-    this.mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
-    this.notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    this.unreadBadge = page.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE);
-    this.mentionNotificationText = page.getByText(/you were mentioned/i);
+    this.markAllReadButton = this.content.getByTestId(TEST_IDS.NOTIFICATIONS.MARK_ALL_READ_BUTTON);
+    this.mentionsFilter = this.content.getByRole("button", { name: /^mentions$/i });
+    this.notificationItems = this.content.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
+    this.unreadBadge = this.content.getByTestId(TEST_IDS.NOTIFICATIONS.UNREAD_BADGE);
+    this.mentionNotificationText = this.content.getByText(/you were mentioned/i);
   }
 
   async goto() {

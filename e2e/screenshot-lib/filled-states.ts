@@ -114,19 +114,14 @@ export async function screenshotFilledStates(
     page,
     p,
     "settings-integrations",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=integrations`,
+    ROUTES.settings.profile.build(orgSlug, "integrations"),
   );
-  await takeScreenshot(
-    page,
-    p,
-    "settings-admin",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=admin`,
-  );
+  await takeScreenshot(page, p, "settings-admin", ROUTES.settings.profile.build(orgSlug, "admin"));
   await takeScreenshot(
     page,
     p,
     "settings-notifications",
-    `${ROUTES.settings.profile.build(orgSlug)}?tab=notifications`,
+    ROUTES.settings.profile.build(orgSlug, "notifications"),
   );
 
   if (projectKey) {

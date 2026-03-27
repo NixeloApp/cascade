@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   getLocatorInputValue,
@@ -286,7 +286,9 @@ export class SettingsPage extends BasePage {
       | "settings-offline",
   ): Promise<void> {
     await this.page.waitForURL(
-      (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
+      (currentUrl) =>
+        new URL(currentUrl).pathname ===
+        new URL(ROUTES.settings.profile.build(this.orgSlug)).pathname,
       {
         timeout: 12000,
       },
@@ -366,11 +368,17 @@ export class SettingsPage extends BasePage {
   }
 
   async gotoNotifications(): Promise<void> {
-    await this.page.goto(`${ROUTES.settings.profile.build(this.orgSlug)}?tab=notifications`);
+    await this.page.goto(ROUTES.settings.profile.build(this.orgSlug, "notifications"));
     await this.waitForCaptureReady("settings-notifications");
   }
 
   async gotoNotificationsWithBlockedPermission(): Promise<void> {
+    if (this.page.url() !== "about:blank") {
+      throw new Error(
+        "gotoNotificationsWithBlockedPermission must run on a fresh page before any navigation",
+      );
+    }
+
     await this.page.addInitScript(() => {
       window.__NIXELO_E2E_NOTIFICATION_PERMISSION__ = "denied";
       window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__ = true;

@@ -6,7 +6,7 @@
  * dispatch function and per-page readiness checks.
  */
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { AnalyticsPage } from "../pages/analytics.page";
 import { BacklogPage } from "../pages/backlog.page";
@@ -28,6 +28,7 @@ import {
   getPageHeaderOrGenericEmptyState,
   isLocatorVisible,
 } from "../utils/locator-state";
+import { testUserService } from "../utils/test-user-service";
 import {
   waitForAnimation,
   waitForLoadingSkeletonsToClear,

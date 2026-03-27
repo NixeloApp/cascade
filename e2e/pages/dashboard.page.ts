@@ -215,10 +215,14 @@ export class DashboardPage extends BasePage {
 
     // Notifications panel
     this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
-    this.markAllReadButton = page.getByRole("button", { name: /mark all read/i });
-    this.notificationsPanelEmptyState = page.getByTestId(TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE);
-    this.notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
-    this.notificationSnoozeButtons = page.getByRole("button", { name: /snooze notification/i });
+    this.markAllReadButton = this.notificationPanel.getByRole("button", { name: /mark all read/i });
+    this.notificationsPanelEmptyState = this.notificationPanel.getByTestId(
+      TEST_IDS.NOTIFICATIONS.INBOX_EMPTY_STATE,
+    );
+    this.notificationItems = this.notificationPanel.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
+    this.notificationSnoozeButtons = this.notificationPanel.getByRole("button", {
+      name: /snooze notification/i,
+    });
 
     // Documents sidebar
     this.documentSearchInput = page.getByPlaceholder(/search.*document/i);

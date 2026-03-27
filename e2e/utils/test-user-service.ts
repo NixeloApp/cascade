@@ -95,6 +95,7 @@ export type NotificationsScreenshotState =
   | "inboxEmpty"
   | "archivedEmpty"
   | "unreadOverflow";
+export type MyIssuesScreenshotState = "default";
 export type AssistantScreenshotState = "default" | "empty";
 
 export interface ConfigureProjectInboxStateResult {
@@ -133,6 +134,12 @@ export interface ConfigureNotificationsStateResult {
   unreadCount?: number;
   visibleCount?: number;
   projectId?: string;
+  error?: string;
+}
+
+export interface ConfigureMyIssuesStateResult {
+  success: boolean;
+  assignedCount?: number;
   error?: string;
 }
 
@@ -683,6 +690,24 @@ export class TestUserService {
         `  ⚠️ Failed to configure notifications state ${mode} for ${projectKey} in ${orgSlug}:`,
         error,
       );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  async configureMyIssuesState(
+    orgSlug: string,
+    email: string,
+    mode: MyIssuesScreenshotState,
+  ): Promise<ConfigureMyIssuesStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.configureMyIssuesState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, email, mode }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to configure my-issues state ${mode} for ${email}:`, error);
       return { success: false, error: String(error) };
     }
   }

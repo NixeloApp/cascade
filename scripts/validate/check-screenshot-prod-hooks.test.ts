@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { collectBannedScreenshotProdHooks, run } from "./check-screenshot-prod-hooks.js";
 
+const EXPECTED_VIOLATION_COUNT = 7;
+const EXAMPLE_FILE_PATH_SUFFIX = "tmp/example.tsx";
+
 describe("check-screenshot-prod-hooks", () => {
   it("flags removed screenshot-only editor hook strings in production code", () => {
     const violations = collectBannedScreenshotProdHooks(
@@ -22,42 +25,42 @@ describe("check-screenshot-prod-hooks", () => {
       "/tmp/example.tsx",
     );
 
-    expect(violations).toHaveLength(7);
+    expect(violations).toHaveLength(EXPECTED_VIOLATION_COUNT);
     expect(violations[0]).toMatchObject({
       line: 2,
       pattern: "nixelo:e2e-open-slash-menu",
     });
-    expect(violations[0]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[0]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[1]).toMatchObject({
       line: 3,
       pattern: "__NIXELO_E2E_MARKDOWN_IMPORT__",
     });
-    expect(violations[1]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[1]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[2]).toMatchObject({
       line: 6,
       pattern: "nixelo:e2e:roadmap-state",
     });
-    expect(violations[2]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[2]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[3]).toMatchObject({
       line: 7,
       pattern: "nixelo:e2e:notifications-state",
     });
-    expect(violations[3]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[3]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[4]).toMatchObject({
       line: 8,
       pattern: "__NIXELO_E2E_TIME_TRACKING_STATE__",
     });
-    expect(violations[4]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[4]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[5]).toMatchObject({
       line: 11,
       pattern: "nixelo:e2e:my-issues-state",
     });
-    expect(violations[5]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[5]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
     expect(violations[6]).toMatchObject({
       line: 12,
       pattern: "__NIXELO_E2E_MY_ISSUES_LOADING__",
     });
-    expect(violations[6]?.file.endsWith("tmp/example.tsx")).toBe(true);
+    expect(violations[6]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
   });
 
   it("passes against the current repo state", () => {

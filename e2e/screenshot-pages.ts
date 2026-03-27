@@ -349,6 +349,7 @@ export async function run(): Promise<void> {
   // Setup: Create test user and seed data once
   console.log("\n  🔧 Setting up test data...");
   await testUserService.deleteTestUser(SCREENSHOT_USER.email);
+  await testUserService.deleteTestUser(SCREENSHOT_EMPTY_USER.email);
   const createResult = await testUserService.createTestUser(
     SCREENSHOT_USER.email,
     SCREENSHOT_USER.password,

@@ -37,7 +37,6 @@
   - colocated `__tests__`
   - or a mirrored `src/route-tests/**` tree
 - [ ] Remove the dash-prefix variants consistently once the replacement structure is in place.
-- [ ] Remove the dash-prefix variants consistently once the replacement structure is in place.
 - [ ] Document the new route-test placement rule so future route work does not reintroduce hidden non-route files into the routed directory.
 - [ ] Add validator coverage once the structure lands so `src/routes/**` cannot quietly accumulate non-route files through naming hacks again.
 

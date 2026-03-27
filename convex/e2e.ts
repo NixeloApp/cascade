@@ -5628,6 +5628,127 @@ export const configureNotificationsStateEndpoint = httpAction(async (ctx, reques
   }
 });
 
+export const configureMyIssuesStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, email, mode } = body;
+
+    if (!(orgSlug && email && mode)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, email, or mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!["default"].includes(mode)) {
+      return new Response(JSON.stringify({ error: "Invalid my-issues mode" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateMyIssuesStateInternal, {
+      orgSlug,
+      email,
+      mode,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateMyIssuesStateInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    email: v.string(),
+    mode: v.literal("default"),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    assignedCount: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (!user) {
+      return { success: false, error: `user not found: ${args.email}` };
+    }
+
+    const allowedIssueKeys = new Set([
+      "DEMO-1",
+      "DEMO-2",
+      "DEMO-3",
+      "DEMO-5",
+      "DEMO-7",
+      "OPS-1",
+      "OPS-2",
+      "OPS-3",
+    ]);
+    const now = Date.now();
+    let assignedCount = 0;
+
+    const assignedIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_assignee", (q) => q.eq("assigneeId", user._id).lt("isDeleted", true))
+      .collect();
+
+    for (const issue of assignedIssues) {
+      if (issue.organizationId !== organization._id) {
+        continue;
+      }
+
+      if (!allowedIssueKeys.has(issue.key)) {
+        await ctx.db.patch(issue._id, {
+          assigneeId: undefined,
+          updatedAt: now,
+        });
+        continue;
+      }
+
+      assignedCount += 1;
+    }
+
+    return {
+      success: true,
+      assignedCount,
+    };
+  },
+});
+
 export const updateNotificationsStateInternal = internalMutation({
   args: {
     orgSlug: v.string(),
