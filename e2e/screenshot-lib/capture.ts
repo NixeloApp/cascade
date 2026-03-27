@@ -193,20 +193,16 @@ export function getFinalScreenshotPaths(prefix: string, name: string): string[] 
   return [...new Set(finalPaths)];
 }
 
-function ensureStagingRoot(): string {
+export function getStagingRoot(): string {
   if (!captureState.stagingRootDir) {
     throw new Error("Screenshot staging directory has not been initialized");
   }
   return captureState.stagingRootDir;
 }
 
-export function getStagingRoot(): string {
-  return ensureStagingRoot();
-}
-
 export function getStagedScreenshotPath(finalPath: string): string {
   const relativePath = path.relative(process.cwd(), finalPath);
-  const stagedPath = path.join(ensureStagingRoot(), relativePath);
+  const stagedPath = path.join(getStagingRoot(), relativePath);
   fs.mkdirSync(path.dirname(stagedPath), { recursive: true });
   return stagedPath;
 }
@@ -231,8 +227,9 @@ export function getStagedOutputSummary(): Map<string, number> {
   const modalSpecsPrefix = path.join("docs", "design", "specs", "modals", "screenshots") + path.sep;
   const fallbackPrefix = path.join("e2e", "screenshots") + path.sep;
 
-  for (const stagedFile of collectFilesRecursively(ensureStagingRoot())) {
-    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
+  const stagingRoot = getStagingRoot();
+  for (const stagedFile of collectFilesRecursively(stagingRoot)) {
+    const relativePath = path.relative(stagingRoot, stagedFile);
     let bucket: string | null = null;
 
     if (relativePath.startsWith(specsPrefix)) {
@@ -258,11 +255,12 @@ export function getStagedOutputSummary(): Map<string, number> {
 }
 
 export function promoteStagedScreenshots(): void {
-  const stagedFiles = collectFilesRecursively(ensureStagingRoot());
+  const stagingRoot = getStagingRoot();
+  const stagedFiles = collectFilesRecursively(stagingRoot);
 
   const targetDirToFiles = new Map<string, Set<string>>();
   for (const stagedFile of stagedFiles) {
-    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
+    const relativePath = path.relative(stagingRoot, stagedFile);
     const finalPath = path.join(process.cwd(), relativePath);
     const targetDir = path.dirname(finalPath);
     if (!targetDirToFiles.has(targetDir)) {

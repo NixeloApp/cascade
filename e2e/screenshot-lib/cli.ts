@@ -4,14 +4,14 @@
 
 import type { CliOptions } from "./config";
 
-function parseCsvValues(rawValues: string[]): string[] {
+export function parseCsvValues(rawValues: string[]): string[] {
   return rawValues
     .flatMap((value) => value.split(","))
     .map((value) => value.trim())
     .filter((value) => value.length > 0);
 }
 
-function collectFlagValues(args: string[], flag: string): string[] {
+export function collectFlagValues(args: string[], flag: string): string[] {
   const values: string[] = [];
 
   for (let index = 0; index < args.length; index++) {
@@ -33,54 +33,54 @@ function collectFlagValues(args: string[], flag: string): string[] {
   return parseCsvValues(values);
 }
 
+export function collectSingleFlagValue(args: string[], flag: string): string | null {
+  const values = collectFlagValues(args, flag);
+  if (values.length === 0) {
+    return null;
+  }
+  if (values.length > 1) {
+    throw new Error(`${flag} may only be provided once`);
+  }
+  return values[0] ?? null;
+}
+
+export function parsePositiveIntegerFlagValue(rawValue: string, flagName: string): number {
+  const parsedValue = Number.parseInt(rawValue, 10);
+  if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+    throw new Error(`${flagName} must be a positive integer`);
+  }
+  return parsedValue;
+}
+
 export function parseCliOptions(args: string[]): CliOptions {
-  const collectSingleFlagValue = (flag: string): string | null => {
-    const values = collectFlagValues(args, flag);
-    if (values.length === 0) {
-      return null;
-    }
-    if (values.length > 1) {
-      throw new Error(`${flag} may only be provided once`);
-    }
-    return values[0] ?? null;
-  };
-
-  const parsePositiveInteger = (rawValue: string, flagName: string): number => {
-    const parsedValue = Number.parseInt(rawValue, 10);
-    if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
-      throw new Error(`${flagName} must be a positive integer`);
-    }
-    return parsedValue;
-  };
-
   const configFilters = collectFlagValues(args, "--config");
   const specFilters = collectFlagValues(args, "--spec").map((value) => value.toLowerCase());
   const matchFilters = collectFlagValues(args, "--match").map((value) => value.toLowerCase());
 
   let shardIndex: number | null = null;
   let shardTotal: number | null = null;
-  const shardValue = collectSingleFlagValue("--shard");
+  const shardValue = collectSingleFlagValue(args, "--shard");
   if (shardValue) {
     const [indexPart, totalPart] = shardValue.split("/");
     if (!indexPart || !totalPart) {
       throw new Error("--shard must use the form <index>/<total>, e.g. --shard 2/4");
     }
 
-    shardIndex = parsePositiveInteger(indexPart, "--shard index");
-    shardTotal = parsePositiveInteger(totalPart, "--shard total");
+    shardIndex = parsePositiveIntegerFlagValue(indexPart, "--shard index");
+    shardTotal = parsePositiveIntegerFlagValue(totalPart, "--shard total");
     if (shardIndex > shardTotal) {
       throw new Error("--shard index cannot be greater than the shard total");
     }
   } else {
-    const shardIndexValue = collectSingleFlagValue("--shard-index");
-    const shardTotalValue = collectSingleFlagValue("--shard-total");
+    const shardIndexValue = collectSingleFlagValue(args, "--shard-index");
+    const shardTotalValue = collectSingleFlagValue(args, "--shard-total");
     if (shardIndexValue || shardTotalValue) {
       if (!shardIndexValue || !shardTotalValue) {
         throw new Error("--shard-index and --shard-total must be provided together");
       }
 
-      shardIndex = parsePositiveInteger(shardIndexValue, "--shard-index");
-      shardTotal = parsePositiveInteger(shardTotalValue, "--shard-total");
+      shardIndex = parsePositiveIntegerFlagValue(shardIndexValue, "--shard-index");
+      shardTotal = parsePositiveIntegerFlagValue(shardTotalValue, "--shard-total");
       if (shardIndex > shardTotal) {
         throw new Error("--shard-index cannot be greater than --shard-total");
       }
