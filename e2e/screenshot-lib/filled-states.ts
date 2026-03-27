@@ -345,7 +345,6 @@ export async function screenshotFilledStates(
       "settings-notifications-permission-denied",
     ])
   ) {
-    const settingsUrl = ROUTES.settings.profile.build(orgSlug);
     const settingsPage = new SettingsPage(page, orgSlug);
 
     if (shouldCapture(p, "settings-profile-avatar-upload-modal")) {

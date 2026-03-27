@@ -40,6 +40,7 @@
 - [x] Collapse settings, notifications, and meetings screenshot readiness onto page-object methods instead of keeping route-specific waits in `e2e/screenshot-lib/readiness.ts`.
 - [x] Collapse notifications archived/popover/filter screenshot state setup onto reusable page-object interactions instead of route-level session-storage boot state.
 - [x] Collapse `my-issues` filter/loading screenshot state setup onto reusable page-object interactions and an E2E-side Convex loading helper instead of route-level session-storage/window boot hooks.
+- [x] Collapse dashboard omnibox, advanced search, shortcuts, and time-entry screenshot setup onto `DashboardPage` helpers instead of reimplementing header modal flows in `interactive-captures.ts`.
 - [ ] Start with the biggest offenders:
   - `e2e/screenshot-lib/filled-states.ts` (`79`)
   - `e2e/screenshot-lib/readiness.ts` (`64`)
