@@ -11,12 +11,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, within } from "@/test/custom-render";
 import { MyIssuesBoardPage } from "./my-issues";
 
-declare global {
-  interface Window {
-    __NIXELO_E2E_MY_ISSUES_LOADING__?: boolean;
-  }
-}
-
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: ReactNode }) => <a href="/">{children}</a>,
   createFileRoute: () => () => ({}),
@@ -329,7 +323,6 @@ describe("MyIssuesBoardPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    window.__NIXELO_E2E_MY_ISSUES_LOADING__ = false;
 
     mockUseOrganization.mockReturnValue({
       billingEnabled: true,
@@ -388,8 +381,8 @@ describe("MyIssuesBoardPage", () => {
     expect(screen.getByText("Ops Hub")).toBeInTheDocument();
   });
 
-  it("honors the loading override for screenshot capture", () => {
-    window.__NIXELO_E2E_MY_ISSUES_LOADING__ = true;
+  it("renders the loading state while the first page is pending", () => {
+    mockMyIssuesQueries({ status: "LoadingFirstPage" });
 
     render(<MyIssuesBoardPage />);
 

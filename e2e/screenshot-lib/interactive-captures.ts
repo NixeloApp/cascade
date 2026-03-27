@@ -12,6 +12,7 @@ import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   AssistantPage,
   CalendarPage,
+  DashboardPage,
   DocumentsPage,
   InboxPage,
   InvoicesPage,
@@ -1240,26 +1241,17 @@ export async function screenshotMyIssuesStates(
     return;
   }
 
-  const myIssuesUrl = ROUTES.myIssues.build(orgSlug);
-
   if (shouldCapture(prefix, filterActiveName)) {
     await runCaptureStep("my issues filter active", async () => {
       const filterActivePage = await page.context().newPage();
 
       try {
-        await filterActivePage.addInitScript(() => {
-          window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filter-active");
-        });
-
         const filteredMyIssuesPage = new MyIssuesPage(filterActivePage, orgSlug);
-        await filterActivePage.goto(`${BASE_URL}${myIssuesUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(filterActivePage, myIssuesUrl, "my-issues", prefix);
-        await waitForScreenshotReady(filterActivePage);
+        await filteredMyIssuesPage.goto();
         await filteredMyIssuesPage.waitUntilReady();
+        await filteredMyIssuesPage.selectPriorityFilter("High");
         await filteredMyIssuesPage.expectFilterSummaryVisible();
+        await waitForScreenshotReady(filterActivePage);
         await captureCurrentView(filterActivePage, prefix, filterActiveName);
       } finally {
         if (!filterActivePage.isClosed()) {
@@ -1274,19 +1266,12 @@ export async function screenshotMyIssuesStates(
       const filteredEmptyPage = await page.context().newPage();
 
       try {
-        await filteredEmptyPage.addInitScript(() => {
-          window.sessionStorage.setItem("nixelo:e2e:my-issues-state", "filtered-empty");
-        });
-
         const filteredEmptyMyIssuesPage = new MyIssuesPage(filteredEmptyPage, orgSlug);
-        await filteredEmptyPage.goto(`${BASE_URL}${myIssuesUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(filteredEmptyPage, myIssuesUrl, "my-issues", prefix);
-        await waitForScreenshotReady(filteredEmptyPage);
+        await filteredEmptyMyIssuesPage.goto();
         await filteredEmptyMyIssuesPage.waitUntilReady();
+        await filteredEmptyMyIssuesPage.selectPriorityFilter("Lowest");
         await filteredEmptyMyIssuesPage.expectFilteredEmptyState();
+        await waitForScreenshotReady(filteredEmptyPage);
         await captureCurrentView(filteredEmptyPage, prefix, filteredEmptyName);
       } finally {
         if (!filteredEmptyPage.isClosed()) {
@@ -1301,30 +1286,19 @@ export async function screenshotMyIssuesStates(
       const loadingPage = await page.context().newPage();
 
       try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_MY_ISSUES_LOADING__ = true;
-        });
-
-        await loadingPage.goto(`${BASE_URL}${myIssuesUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await loadingPage.waitForURL(
-          (currentUrl) => /\/[^/]+\/my-issues$/.test(new URL(currentUrl).pathname),
-          {
-            timeout: 15000,
-          },
-        );
-        await expect
-          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThanOrEqual(1);
+        const dashboardPage = new DashboardPage(loadingPage, orgSlug);
+        await dashboardPage.goto();
+        await dashboardPage.waitUntilReady();
+        await loadingPage.context().setOffline(true);
+        await dashboardPage.openMyIssues();
+        const loadingMyIssuesPage = new MyIssuesPage(loadingPage, orgSlug);
+        await loadingMyIssuesPage.expectLoadingStateVisible();
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,
         });
       } finally {
+        await loadingPage.context().setOffline(false);
         if (!loadingPage.isClosed()) {
           await loadingPage.close();
         }

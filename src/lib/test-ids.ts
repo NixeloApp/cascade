@@ -129,8 +129,13 @@ export const TEST_IDS = {
     /** @see src/components/App/AppSidebar.tsx */
     DASHBOARD_LINK: "sidebar-dashboard-link",
     /** @see src/components/App/AppSidebar.tsx */
-    DOCUMENTS_LINK: "sidebar-documents-link",
+    ISSUES_LINK: "sidebar-issues-link",
     /** @see src/components/App/AppSidebar.tsx */
+    MY_ISSUES_LINK: "sidebar-my-issues-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    INVOICES_LINK: "sidebar-invoices-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENTS_LINK: "sidebar-documents-link",
     WORKSPACES_LINK: "sidebar-workspaces-link",
     /** @see src/components/App/AppSidebar.tsx */
     TIMESHEET_LINK: "sidebar-timesheet-link",
@@ -745,7 +750,11 @@ export const TEST_IDS = {
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     PRIORITY_FILTER: "my-issues-priority-filter",
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    PRIORITY_FILTER_OPTION_PREFIX: "my-issues-priority-filter-option",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     DUE_DATE_FILTER: "my-issues-due-date-filter",
+    /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+    DUE_DATE_FILTER_OPTION_PREFIX: "my-issues-due-date-filter-option",
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
     GROUP_BY_CONTROL: "my-issues-group-by-control",
     /** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
@@ -912,6 +921,16 @@ export const TEST_IDS = {
     NAME_PROJECT_HEADING: "onboarding-name-project-heading",
   },
 } as const;
+
+/** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+export function getMyIssuesPriorityFilterOptionTestId(priority: string): string {
+  return `${TEST_IDS.MY_ISSUES.PRIORITY_FILTER_OPTION_PREFIX}-${priority}`;
+}
+
+/** @see src/routes/_auth/_app/$orgSlug/my-issues.tsx */
+export function getMyIssuesDueDateFilterOptionTestId(filter: string): string {
+  return `${TEST_IDS.MY_ISSUES.DUE_DATE_FILTER_OPTION_PREFIX}-${filter}`;
+}
 
 /** Type helper for accessing TEST_IDS values */
 export type TestIdKey = keyof typeof TEST_IDS;

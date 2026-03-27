@@ -728,6 +728,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.issues.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
+                    data-testid={TEST_IDS.NAV.ISSUES_LINK}
                   />
                   <NavItem
                     to={ROUTES.myIssues.path}
@@ -737,6 +738,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.myIssues.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
+                    data-testid={TEST_IDS.NAV.MY_ISSUES_LINK}
                   />
                   <NavItem
                     to={ROUTES.invoices.list.path}
@@ -746,6 +748,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.invoices.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
+                    data-testid={TEST_IDS.NAV.INVOICES_LINK}
                   />
                   <NavItem
                     to={ROUTES.clients.list.path}

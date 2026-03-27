@@ -15,6 +15,7 @@ import { InboxPage } from "../pages/inbox.page";
 import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
 import { MeetingsPage } from "../pages/meetings.page";
+import { MyIssuesPage } from "../pages/my-issues.page";
 import { NotificationsPage } from "../pages/notifications.page";
 import { OutreachPage } from "../pages/outreach.page";
 import { ProjectsPage } from "../pages/projects.page";
@@ -735,6 +736,12 @@ export async function waitForExpectedContent(
   ) {
     await waitForCalendarReady(page);
     await waitForCalendarEvents(page, 5000);
+    return;
+  }
+
+  if (URL_PATTERNS.myIssues.test(url) || name === "my-issues") {
+    const myIssuesPage = new MyIssuesPage(page, READINESS_ONLY_SLUG);
+    await myIssuesPage.waitUntilReady();
     return;
   }
 

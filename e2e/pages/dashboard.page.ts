@@ -1,8 +1,13 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { getLocatorCount, getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
-import { escapeRegExp, ROUTES } from "../utils/routes";
+import {
+  getLocatorAttribute,
+  getLocatorCount,
+  getOptionalLocatorText,
+  isLocatorVisible,
+} from "../utils/locator-state";
+import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import { waitForAnimation, waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -19,6 +24,7 @@ export class DashboardPage extends BasePage {
   readonly workspacesTab: Locator;
   readonly timesheetTab: Locator;
   readonly calendarTab: Locator;
+  readonly myIssuesTab: Locator;
   readonly settingsTab: Locator;
 
   // ===================
@@ -130,6 +136,9 @@ export class DashboardPage extends BasePage {
     this.calendarTab = page
       .getByTestId(TEST_IDS.NAV.CALENDAR_LINK)
       .or(navSidebar.getByRole("link", { name: /^general$/i }));
+    this.myIssuesTab = page
+      .getByTestId(TEST_IDS.NAV.MY_ISSUES_LINK)
+      .or(navSidebar.getByRole("link", { name: /^my board$/i }));
     this.settingsTab = page
       .getByTestId(TEST_IDS.NAV.SETTINGS_LINK)
       .or(navSidebar.getByRole("link", { name: /^settings$/i }));
@@ -251,7 +260,7 @@ export class DashboardPage extends BasePage {
       }
     } else {
       await this.page.waitForLoadState("load");
-      await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
+      await this.gotoPath(dashboardUrl, { waitUntil: "domcontentloaded" });
       await this.page.waitForLoadState("load");
       if (await this.tryDashboardReady(5000)) {
         return;
@@ -292,14 +301,14 @@ export class DashboardPage extends BasePage {
 
   private async recoverDashboardRoute(dashboardUrl: string) {
     if (this.isOutsideOrgShell(this.page.url())) {
-      await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+      await this.gotoPath("/app", { waitUntil: "domcontentloaded" });
       await this.page.waitForLoadState("load");
       if (await this.tryDashboardReady(5000)) {
         return;
       }
     }
 
-    await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
+    await this.gotoPath(dashboardUrl, { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
 
     if (await this.tryDashboardReady(5000)) {
@@ -343,6 +352,27 @@ export class DashboardPage extends BasePage {
     await expect(this.page).toHaveURL(tabPaths[tab]);
 
     await waitForDashboardReady(this.page);
+  }
+
+  async openMyIssues(): Promise<void> {
+    if (await isLocatorVisible(this.mobileMenuButton)) {
+      const sidebar = this.page.getByTestId(TEST_IDS.NAV.SIDEBAR);
+      const closeButton = sidebar.getByLabel("Close sidebar");
+      await this.mobileMenuButton.click();
+      await closeButton.waitFor({ state: "visible", timeout: 5000 });
+      await expect
+        .poll(async () => (await getLocatorAttribute(sidebar, "class")) ?? "", {
+          timeout: 5000,
+          intervals: [100, 200, 500],
+        })
+        .toContain("translate-x-0");
+      await waitForAnimation(this.page);
+    }
+    await expect(this.myIssuesTab).toBeVisible();
+    await this.myIssuesTab.evaluate((element) => {
+      (element as HTMLAnchorElement).click();
+    });
+    await expect(this.page).toHaveURL(routePattern(ROUTES.myIssues.path, "(?:\\?.*)?$"));
   }
 
   // ===================

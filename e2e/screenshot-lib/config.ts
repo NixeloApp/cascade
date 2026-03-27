@@ -52,6 +52,11 @@ export const SCREENSHOT_USER = {
   password: TEST_USERS.teamLead.password,
 };
 
+export const SCREENSHOT_EMPTY_USER = {
+  email: TEST_USERS.teamMember.email.replace("@", "-screenshots@"),
+  password: TEST_USERS.teamMember.password,
+};
+
 export const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";
 
 export const MARKDOWN_IMPORT_PREVIEW = `# Imported Product Brief

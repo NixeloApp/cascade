@@ -16,6 +16,8 @@ const BANNED_SCREENSHOT_HOOK_PATTERNS = [
   "nixelo:e2e:notifications-state",
   "nixelo:e2e:time-tracking-state",
   "__NIXELO_E2E_TIME_TRACKING_STATE__",
+  "nixelo:e2e:my-issues-state",
+  "__NIXELO_E2E_MY_ISSUES_LOADING__",
 ];
 
 export function collectBannedScreenshotProdHooks(source, filePath) {
