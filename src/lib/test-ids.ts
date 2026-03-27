@@ -1033,8 +1033,6 @@ export const TEST_IDS = {
     /** @see src/routes/_app.$orgSlug.meetings.tsx */
     RECORDING_CARD: "meetings-recording-card",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx */
-    RECORDING_CARD_ITEM: (title: string) => `meetings-recording-card-${toTestIdFragment(title)}`,
-    /** @see src/components/Meetings/MeetingsWorkspace.tsx */
     DETAIL_TITLE: "meetings-detail-title",
     /** @see src/components/Meetings/MeetingsWorkspace.tsx */
     DETAIL_SUMMARY: "meetings-detail-summary",

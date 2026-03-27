@@ -1,102 +1,23 @@
 # E2E And Screenshot Consolidation
 
 > **Priority:** P0
-> **Status:** Open
+> **Status:** Nearly complete — structural work done, residual polish remains
 > **Last Updated:** 2026-03-27
 
-## Why This Is Still Open
+## What Was Done
 
-- [ ] The repo still has two overlapping automation systems: real E2E/product testing and a screenshot-specific Playwright harness. They duplicate readiness logic, state setup, and route-driving behavior instead of sharing one reusable path.
-- [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
-- [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
-- [ ] This is the first infrastructure priority again. The current overlap between screenshot-lib and reusable E2E/page objects is active execution debt, not just cleanup polish.
-- [ ] The remaining debt is no longer one giant screenshot-lib selector hotspot. What is left is smaller but still structural: shared blocked-transport policy, screenshot session/bootstrap orchestration, and the remaining places where screenshot capture can still diverge from reusable E2E flows.
+The bulk of this todo has been addressed. All execution-plan derivation, phase planning, blocked-transport consolidation, manifest-driven target selection, raw-locator elimination, production-hook cleanup, and validator enforcement items are complete. Validators ratchet all baselines.
 
-## Target Architecture
+## Remaining Work
 
-- [ ] E2E/page-object logic is the single source of truth for route navigation, readiness, seeded states, modal/dialog opening, and proof that a state is real.
-- [ ] Screenshot capture is only an artifact layer:
-  - pick a reusable state helper
-  - open the state through normal E2E helpers
-  - capture the image
-  - write it to the reviewed spec folder
+### Session orchestration reusability
+- [ ] `readiness.ts` still exists as a screenshot-specific dispatch layer to page objects. Evaluate whether it can be inlined or deleted now that every check delegates to a page object.
+- [ ] `session.ts` is well-structured but screenshot-specific. It cannot yet be reused by product E2E tests for state setup. Evaluate whether the multi-config loop, phase ordering, and seed management can be extracted into shared helpers.
 
-## First Pass Targets
+### Documentation
+- [ ] Update CI workflow docs to make the surface area obvious: what validates product behavior, what validates static artifacts, what no longer exists as a default workflow.
+- [ ] Document the remaining webPush test hooks in production code (`src/lib/webPush.tsx`) with a concrete justification for each.
 
-- [ ] Finish the remaining screenshot-lib cleanup into:
-  - reusable helpers that should live with E2E/page objects
-  - thin screenshot wrappers that stay in screenshot-lib
-  - harness-only complexity that should be deleted
-- [ ] Keep screenshot auth/bootstrap on the shared session helper path and shared injected-token fixture-auth helpers instead of letting new harness-only entrypoints or config-specific login paths reappear.
-- [ ] Keep config-level browser launch/auth/retry orchestration on shared screenshot session helpers instead of re-implementing browser sessions around empty vs filled capture paths.
-- [ ] Keep screenshot phase gating derived from the canonical screenshot target list so empty/public/filled orchestration cannot drift out of sync with actual capture ids.
-- [ ] Keep screenshot phase planning on one selected-target plan derived from canonical screenshot ids. Session bootstrap, empty-before-seed ordering, and public/filled phase decisions should not rebuild their own boolean gating ad hoc.
-- [ ] Keep screenshot bootstrap and seed-phase policy on one derived execution plan. Session orchestration should not re-encode `needsAuthBootstrap` / `hasSeededTargets` style booleans inline after target planning.
-- [ ] Keep screenshot bootstrap preparation on one shared execution-context helper. Session orchestration should not inline `bootstrapMode` branching or assume authenticated bootstrap state with local casts after planning.
-- [ ] Keep screenshot execution-context preparation derived from the execution step being run. Session helpers should not rebuild a second plan-level bootstrap mode map when the ordered step list already tells us whether the next step needs no setup, primary-user setup, or authenticated bootstrap.
-- [ ] Keep empty screenshot target policy on one canonical manifest. Empty-state route ownership should not live in a separate hand-maintained list and imperative `takeScreenshot(...)` sequence.
-- [ ] Keep seedless public-page captures off the authenticated bootstrap and seeding path; landing/auth-style screenshots should not pay for screenshot user setup or seeded tokens they do not need.
-- [ ] Keep public screenshot target policy on one canonical manifest. Seeded vs seedless grouping and route/token requirements should not live in separate hand-maintained sets and imperative branches.
-- [ ] Keep browser launch/close, config retry policy, and auth bootstrap on the shared screenshot session helper path instead of re-implementing them in CLI entrypoints or route-specific capture code.
-- [ ] Keep staged screenshot output lifecycle on the shared session helper path instead of re-implementing staging-root setup, promotion, or cleanup in CLI entrypoints.
-- [ ] Keep generic browser/context/page target lifecycle on shared E2E utilities instead of rebuilding it inside screenshot-lib session helpers.
-- [ ] Keep empty-before-seed ordering and screenshot seed/bootstrap orchestration on the shared session helper path instead of re-implementing capture phases in the CLI entrypoint.
-- [ ] Keep screenshot bootstrap org resolution non-seeding; the empty-state phase must not call screenshot data seeders just to discover org context.
-- [ ] Keep the screenshot harness private-helper baseline at zero; new top-level harness-only helpers must either become tested public harness API or move into reusable E2E/page-object utilities.
-- [ ] Keep the screenshot-lib raw-locator baseline at zero for tracked screenshot helpers; do not let new route-specific selectors creep back into `readiness.ts`, `helpers.ts`, or new screenshot-lib files.
-- [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
-- [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
-- [ ] Keep shrinking direct screenshot-lib route-driving so ordinary canonical, modal, and loading captures go through page-object navigation, leaving only shared blocked-transport policy and shared screenshot-session bootstrap as the justified exceptions.
-- [ ] Keep blocked transport/page-target lifecycle on shared E2E helpers instead of re-creating sibling or isolated capture-page setup inside screenshot-lib or route-specific loading helpers.
-- [ ] Keep blocked transport policy on one shared helper contract instead of growing separate `withConvexLoadingPage` / `withQueryBlockedPage` / `withMutationBlockedPage` variants again.
-- [ ] Keep blocked transport policy explicit at call sites. Loading helpers should declare `transport` vs `queries` vs `mutations` and `isolated` vs `sibling` directly instead of leaning on option-bag defaults or implicit harness folklore.
-- [ ] Keep blocked query-vs-mutation policy on one shared request contract. Endpoint suffixes, path validation, and blocked-route installation should not branch separately once the blocked request kind already tells the helper which Convex surface is being intercepted.
-- [ ] Keep blocked transport host resolution explicit and fail-fast. Loading helpers should not silently continue when no valid Convex host can be resolved for blocking.
-- [ ] Keep seeded screenshot phase selection explicit. Filled-state capture should only include seeded public pages when the derived execution plan actually selected them, instead of relying on nested `shouldCapture` checks to no-op.
-- [ ] Keep seeded screenshot phase behavior on one shared mode contract. Session helpers should not maintain separate `public-only` vs `filled-only` branching for context requirements, log labels, and capture behavior once the seeded phase mode already tells us what Phase 2 should do.
-- [ ] Keep screenshot per-phase execution on shared session helpers. `captureConfiguredScreenshotStates()` should not keep re-growing inline phase loops, bootstrap assertions, and seeded-vs-filled branching after planning.
-- [ ] Keep empty-state auth-group execution derived from the canonical empty target manifest. Session helpers should not reintroduce ad hoc `separate-auth` filter checks or hard-coded knowledge of which empty target needs the second auth user.
-- [ ] Keep empty-state auth-group execution manifest-driven end to end. Separate-auth-only empty captures should not pay for a primary bootstrap auth session just because the session layer hard-coded bootstrap-first control flow.
-- [ ] Keep empty-step execution mode derived from the selected empty capture groups. Separate-auth-only empty runs should resolve org context through the primary-user path without preparing an authenticated bootstrap that the manifest-driven capture strategy will never use.
-- [ ] Keep empty-phase behavior on one shared contract derived from the selected empty capture groups. Empty execution mode, primary-bootstrap requirements, and empty-phase context requirements should not be recomputed separately in planning, context prep, and config capture helpers.
-- [ ] Keep screenshot execution ordered by one derived step list. Session orchestration should execute seedless-public, empty, and seeded work from the execution plan instead of branching on multiple booleans after planning.
-- [ ] Keep screenshot execution policy canonical inside the execution plan itself. Do not let parallel `bootstrapMode` / `runEmptyPhase` / `runSeededPhase` style flags drift alongside the ordered execution steps.
-- [ ] Keep screenshot execution-context requirement derived from the execution step. Session helpers should not special-case `separate-auth-only` or `public-only` branching inline once the step already tells us whether the next phase needs no context, primary-user context, or authenticated bootstrap.
-- [ ] Keep screenshot step execution on shared step helpers. `captureConfiguredScreenshotStates()` should prepare context lazily and dispatch execution steps, not re-grow per-step branching inline.
-- [ ] Keep screenshot execution context shape canonical. Prepared session context should store actual bootstrap artifacts only, not a duplicate `bootstrapMode` flag beside data that already proves what setup exists.
-- [ ] Keep screenshot seed-org ownership canonical. Authenticated execution context should not duplicate `orgSlug` beside the auth bootstrap artifact that already owns it.
-- [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
-
-## Production Hook Cleanup
-
-- [ ] Audit production components for screenshot/E2E-only hooks, events, globals, and branches.
-  First targets:
-  - route-specific state toggles added only for capture
-  - remaining screenshot boot-state shortcuts outside the document, roadmap, time-tracking, notifications archived-tab, project-inbox, and invoices surfaces
-- [ ] Keep the loading-hook exception list at zero unless a new exception is explicitly justified.
-- [ ] Keep validator coverage in place so new window-key reads or ad-hoc loading override call sites cannot spread back into production or E2E code.
-- [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.
-- [ ] Prefer seeded backend state, route params, or normal UI interaction over window-event hooks.
-- [ ] If a hook remains, it must serve reusable test setup broadly, not just one screenshot state.
-
-## CI Simplification
-
-- [ ] Keep screenshot capture local/manual unless we later add a small reusable smoke subset that clearly earns its cost.
-- [ ] Update the workflow/docs so the CI surface area is obvious:
-  - what validates product behavior
-  - what validates static artifacts
-  - what no longer exists as a default workflow
-
-## Documentation And Rules
-
-- [ ] Add validator coverage so screenshot-only helper sprawl cannot quietly grow again.
-  At minimum:
-  - ratchet screenshot-specific raw locators downward
-  - block new screenshot-only route/state helpers when an E2E/page-object helper already exists
-  - block new production component hooks added only for screenshot capture without a documented exception
-
-## Exit Criteria
-
+### Exit criteria (still open)
 - [ ] A contributor can point to one reusable helper path for a given route/state instead of choosing between E2E helpers and screenshot-only helpers.
-- [ ] Production components no longer carry screenshot-only hooks unless there is a documented, justified exception.
 - [ ] Screenshot generation and screenshot integrity checking are clearly separate concepts in code and docs.
