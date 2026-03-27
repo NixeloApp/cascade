@@ -50,6 +50,7 @@
 - [ ] Keep blocked transport policy on one shared helper contract instead of growing separate `withConvexLoadingPage` / `withQueryBlockedPage` / `withMutationBlockedPage` variants again.
 - [ ] Keep blocked transport policy explicit at call sites. Loading helpers should declare `transport` vs `queries` vs `mutations` and `isolated` vs `sibling` directly instead of leaning on option-bag defaults or implicit harness folklore.
 - [ ] Keep blocked transport host resolution explicit and fail-fast. Loading helpers should not silently continue when no valid Convex host can be resolved for blocking.
+- [ ] Keep seeded screenshot phase selection explicit. Filled-state capture should only include seeded public pages when the derived execution plan actually selected them, instead of relying on nested `shouldCapture` checks to no-op.
 - [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
 
 ## Production Hook Cleanup

@@ -82,6 +82,10 @@ export interface ScreenshotCaptureExecutionPlan {
   runSeedlessPublicPhase: boolean;
 }
 
+export interface FilledScreenshotCaptureOptions {
+  includeSeededPublicPages?: boolean;
+}
+
 export type ScreenshotCaptureExecutionContext =
   | {
       authBootstrap: null;
@@ -528,8 +532,11 @@ export async function captureFilledStatesForConfig(
   orgSlug: string,
   seedResult: SeedScreenshotResult,
   storageState?: StorageState,
+  options: FilledScreenshotCaptureOptions = {},
 ): Promise<void> {
-  setCurrentConfig(viewport, theme, "public + filled");
+  const includeSeededPublicPages = options.includeSeededPublicPages ?? true;
+
+  setCurrentConfig(viewport, theme, includeSeededPublicPages ? "public + filled" : "filled");
 
   try {
     const authenticated = await runRetriedAuthenticatedScreenshotCapture(
@@ -538,7 +545,9 @@ export async function captureFilledStatesForConfig(
       theme,
       orgSlug,
       async ({ page }) => {
-        await screenshotPublicPages(page, seedResult, { group: "seeded" });
+        if (includeSeededPublicPages) {
+          await screenshotPublicPages(page, seedResult, { group: "seeded" });
+        }
 
         try {
           const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
@@ -573,6 +582,22 @@ export async function captureFilledStatesForConfig(
     captureState.captureFailures++;
     console.log(`    ⚠️ Filled capture aborted for ${captureState.currentConfigPrefix}: ${message}`);
   }
+}
+
+export function getSeededPhaseLogLabel(executionPlan: ScreenshotCaptureExecutionPlan): string {
+  if (!executionPlan.runSeededPhase) {
+    throw new Error("Seeded phase log label requires at least one seeded capture phase");
+  }
+
+  if (executionPlan.runFilledPhase && executionPlan.runSeededPublicPhase) {
+    return "\n  📋 Phase 2: Seed data + public pages + filled states";
+  }
+
+  if (executionPlan.runFilledPhase) {
+    return "\n  📋 Phase 2: Seed data + filled states";
+  }
+
+  return "\n  📋 Phase 2: Seed data + token-backed public pages";
 }
 
 export async function captureConfiguredScreenshotStates(
@@ -639,11 +664,7 @@ export async function captureConfiguredScreenshotStates(
     return true;
   }
 
-  console.log(
-    executionPlan.runFilledPhase
-      ? "\n  📋 Phase 2: Seed data + public pages + filled states"
-      : "\n  📋 Phase 2: Seed data + token-backed public pages",
-  );
+  console.log(getSeededPhaseLogLabel(executionPlan));
   console.log("  Seeding screenshot data...");
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
     orgSlug: executionContext.seedOrgSlug,
@@ -672,6 +693,9 @@ export async function captureConfiguredScreenshotStates(
         orgSlug,
         seedResult,
         authStorageState ?? undefined,
+        {
+          includeSeededPublicPages: executionPlan.runSeededPublicPhase,
+        },
       );
     }
   } else if (executionPlan.runSeededPublicPhase) {

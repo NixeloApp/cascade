@@ -19,6 +19,7 @@ import {
   formatConfigLabel,
   getCaptureNamesForPrefix,
   getScreenshotContextOptions,
+  getSeededPhaseLogLabel,
   getSelectedScreenshotPageIds,
   prepareScreenshotAuthBootstrap,
   prepareScreenshotCaptureExecutionContext,
@@ -248,6 +249,20 @@ describe("screenshot session helpers", () => {
       runSeededPublicPhase: false,
       runSeedlessPublicPhase: false,
     });
+  });
+
+  it("derives the seeded phase log label from the execution plan", () => {
+    expect(
+      getSeededPhaseLogLabel(buildScreenshotCaptureExecutionPlan(["public-portal-project"])),
+    ).toBe("\n  📋 Phase 2: Seed data + token-backed public pages");
+    expect(
+      getSeededPhaseLogLabel(buildScreenshotCaptureExecutionPlan(["filled-issues-loading"])),
+    ).toBe("\n  📋 Phase 2: Seed data + filled states");
+    expect(
+      getSeededPhaseLogLabel(
+        buildScreenshotCaptureExecutionPlan(["public-portal-project", "filled-issues-loading"]),
+      ),
+    ).toBe("\n  📋 Phase 2: Seed data + public pages + filled states");
   });
 
   it("derives the selected screenshot page ids from the current CLI filters", () => {
@@ -539,7 +554,7 @@ describe("screenshot session helpers", () => {
       .mockResolvedValueOnce(firstAttempt.browser)
       .mockResolvedValueOnce(secondAttempt.browser);
     vi.mocked(ensureAuthenticatedScreenshotPage).mockResolvedValue(true);
-    vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
+    const publicSpy = vi.mocked(screenshotPublicPages).mockResolvedValue(undefined);
     vi.mocked(screenshotFilledStates)
       .mockRejectedValueOnce(new Error("Target page, context or browser has been closed"))
       .mockResolvedValueOnce(undefined);
@@ -552,9 +567,11 @@ describe("screenshot session helpers", () => {
       "acme",
       { success: true, orgSlug: "acme" },
       { cookies: [], origins: [] },
+      { includeSeededPublicPages: false },
     );
 
     expect(launchBrowser).toHaveBeenCalledTimes(2);
+    expect(publicSpy).not.toHaveBeenCalled();
     expect(screenshotFilledStates).toHaveBeenCalledTimes(2);
     expect(firstAttempt.context.close).toHaveBeenCalledTimes(1);
     expect(firstAttempt.browser.close).toHaveBeenCalledTimes(1);
@@ -621,7 +638,6 @@ describe("screenshot session helpers", () => {
       "resolve:bootstrap",
       "capture:empty",
       "seed:filled",
-      "capture:public",
       "capture:filled",
     ]);
     expect(launchBrowser).toHaveBeenCalledTimes(3);
@@ -633,7 +649,7 @@ describe("screenshot session helpers", () => {
     );
     expect(
       logSpy.mock.calls.some(([line]) =>
-        String(line).includes("Phase 2: Seed data + public pages + filled states"),
+        String(line).includes("Phase 2: Seed data + filled states"),
       ),
     ).toBe(true);
   });
@@ -828,11 +844,16 @@ describe("screenshot session helpers", () => {
     expect(captured).toBe(true);
     expect(launchBrowser).toHaveBeenCalledTimes(2);
     expect(emptySpy).not.toHaveBeenCalled();
-    expect(publicSpy).toHaveBeenCalledTimes(1);
+    expect(publicSpy).not.toHaveBeenCalled();
     expect(filledSpy).toHaveBeenCalledTimes(1);
     expect(logSpy.mock.calls.some(([line]) => String(line).includes("Phase 1: Empty states"))).toBe(
       false,
     );
+    expect(
+      logSpy.mock.calls.some(([line]) =>
+        String(line).includes("Phase 2: Seed data + filled states"),
+      ),
+    ).toBe(true);
   });
 
   it("runs the staged screenshot lifecycle behind the shared session helper", async () => {
