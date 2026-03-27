@@ -670,12 +670,13 @@ export class TestUserService {
     orgSlug: string,
     projectKey: string,
     mode: NotificationsScreenshotState,
+    email?: string,
   ): Promise<ConfigureNotificationsStateResult> {
     try {
       const response = await fetch(E2E_ENDPOINTS.configureNotificationsState, {
         method: "POST",
         headers: getE2EHeaders(),
-        body: JSON.stringify({ orgSlug, projectKey, mode }),
+        body: JSON.stringify({ email, orgSlug, projectKey, mode }),
       });
       return await response.json();
     } catch (error) {

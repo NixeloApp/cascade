@@ -22,6 +22,7 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
+import { injectAuthTokens } from "../utils/auth-helpers";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -39,7 +40,12 @@ import {
   shouldCaptureAny,
   takeScreenshot,
 } from "./capture";
-import { BASE_URL, MARKDOWN_IMPORT_PREVIEW, MARKDOWN_RICH_CONTENT } from "./config";
+import {
+  BASE_URL,
+  MARKDOWN_IMPORT_PREVIEW,
+  MARKDOWN_RICH_CONTENT,
+  SCREENSHOT_USER,
+} from "./config";
 import { waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
 import { clearIssueDrafts, discoverDocumentId, discoverIssueKey, seedIssueDraft } from "./helpers";
 import {
@@ -1625,6 +1631,7 @@ export async function screenshotFilledStates(
         orgSlug,
         projectKey,
         "inboxEmpty",
+        SCREENSHOT_USER.email,
       );
       if (!configureResult.success) {
         throw new Error(configureResult.error ?? "Failed to configure inbox-empty notifications");
@@ -1641,7 +1648,12 @@ export async function screenshotFilledStates(
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, "notifications-inbox-empty");
       } finally {
-        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+        await testUserService.configureNotificationsState(
+          orgSlug,
+          projectKey,
+          "default",
+          SCREENSHOT_USER.email,
+        );
       }
     });
   }
@@ -1652,6 +1664,7 @@ export async function screenshotFilledStates(
         orgSlug,
         projectKey,
         "archivedEmpty",
+        SCREENSHOT_USER.email,
       );
       if (!configureResult.success) {
         throw new Error(
@@ -1683,7 +1696,12 @@ export async function screenshotFilledStates(
           }
         }
       } finally {
-        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+        await testUserService.configureNotificationsState(
+          orgSlug,
+          projectKey,
+          "default",
+          SCREENSHOT_USER.email,
+        );
       }
     });
   }
@@ -1694,6 +1712,7 @@ export async function screenshotFilledStates(
         orgSlug,
         projectKey,
         "unreadOverflow",
+        SCREENSHOT_USER.email,
       );
       if (!configureResult.success) {
         throw new Error(
@@ -1702,45 +1721,103 @@ export async function screenshotFilledStates(
       }
 
       try {
-        await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
-        const notificationsPage = new NotificationsPage(page, orgSlug);
-        await notificationsPage.expectUnreadOverflowBadge();
-        await waitForScreenshotReady(page);
-        await captureCurrentView(page, p, "notifications-unread-overflow");
+        const loginResult = await testUserService.loginTestUserWithRepair(
+          SCREENSHOT_USER.email,
+          SCREENSHOT_USER.password,
+          true,
+        );
+        if (!(loginResult.success && loginResult.token)) {
+          throw new Error(loginResult.error ?? "Failed to authenticate screenshot notifications");
+        }
+        await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
+
+        const overflowPage = await page.context().newPage();
+        try {
+          await overflowPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          const notificationsPage = new NotificationsPage(overflowPage, orgSlug);
+          await notificationsPage.waitForUnreadOverflowReady();
+          await waitForScreenshotReady(overflowPage);
+          await captureCurrentView(overflowPage, p, "notifications-unread-overflow");
+        } finally {
+          if (!overflowPage.isClosed()) {
+            await overflowPage.close();
+          }
+        }
       } finally {
-        await testUserService.configureNotificationsState(orgSlug, projectKey, "default");
+        await testUserService.configureNotificationsState(
+          orgSlug,
+          projectKey,
+          "default",
+          SCREENSHOT_USER.email,
+        );
       }
     });
   }
 
   if (shouldCapture(p, "notifications-mark-all-read-loading")) {
     await runCaptureStep("notifications mark-all-read loading", async () => {
-      const loadingPage = await page.context().newPage();
-
       try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_NOTIFICATIONS_LOADING__ = true;
-        });
-        await loadingPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-        await waitForExpectedContent(
-          loadingPage,
-          ROUTES.notifications.build(orgSlug),
-          "notifications",
+        if (!projectKey) {
+          throw new Error("Seeded screenshot data did not include a project key");
+        }
+
+        const configureResult = await testUserService.configureNotificationsState(
+          orgSlug,
+          projectKey,
+          "unreadOverflow",
+          SCREENSHOT_USER.email,
         );
-        const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
-        await expect(notificationsPage.markAllReadButton).toHaveAttribute("aria-busy", "true");
-        await waitForScreenshotReady(loadingPage);
-        await captureCurrentView(loadingPage, p, "notifications-mark-all-read-loading");
+        if (!configureResult.success) {
+          throw new Error(
+            configureResult.error ??
+              "Failed to configure unread-overflow notifications for mark-all-read loading",
+          );
+        }
+
+        const loginResult = await testUserService.loginTestUserWithRepair(
+          SCREENSHOT_USER.email,
+          SCREENSHOT_USER.password,
+          true,
+        );
+        if (!(loginResult.success && loginResult.token)) {
+          throw new Error(loginResult.error ?? "Failed to authenticate screenshot notifications");
+        }
+        await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
+
+        const loadingPage = await page.context().newPage();
+        try {
+          await loadingPage.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          const notificationsPage = new NotificationsPage(loadingPage, orgSlug);
+          await notificationsPage.waitForUnreadOverflowReady();
+          const releaseMutationBlock = await notificationsPage.openMarkAllReadLoadingState();
+
+          try {
+            await waitForAnimation(loadingPage);
+            await captureCurrentView(loadingPage, p, "notifications-mark-all-read-loading", {
+              skipReadyCheck: true,
+            });
+          } finally {
+            await releaseMutationBlock();
+          }
+        } finally {
+          if (!loadingPage.isClosed()) {
+            await loadingPage.close();
+          }
+        }
       } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
+        if (projectKey) {
+          await testUserService.configureNotificationsState(
+            orgSlug,
+            projectKey,
+            "default",
+            SCREENSHOT_USER.email,
+          );
         }
       }
     });

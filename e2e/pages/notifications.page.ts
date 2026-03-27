@@ -1,9 +1,14 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { getLocatorCount, isLocatorVisible } from "../utils/locator-state";
+import { blockConvexMutation } from "../utils/convex-loading";
+import { getLocatorCount, getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
-import { waitForAnimation, waitForDashboardReady } from "../utils/wait-helpers";
+import {
+  waitForAnimation,
+  waitForDashboardReady,
+  waitForScreenshotReady,
+} from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -58,6 +63,7 @@ export class NotificationsPage extends BasePage {
 
   async waitForCaptureReady(): Promise<void> {
     await waitForDashboardReady(this.page);
+    await waitForScreenshotReady(this.page);
     await expect
       .poll(
         async () =>
@@ -69,24 +75,51 @@ export class NotificationsPage extends BasePage {
     await expect
       .poll(
         async () => {
-          const mentionsVisible = await isLocatorVisible(this.mentionsFilter);
+          const unreadBadgeVisible = await isLocatorVisible(this.unreadBadge);
+          const markAllReadVisible = await isLocatorVisible(this.markAllReadButton);
+          const archiveAllVisible = await isLocatorVisible(this.archiveAllButton);
           const archivedSelected =
             (await this.archivedTab.getAttribute("aria-selected")) === "true";
           const itemCount = await getLocatorCount(this.notificationItems);
           const inboxEmptyVisible = await isLocatorVisible(this.inboxEmptyState);
           const archivedEmptyVisible = await isLocatorVisible(this.archivedEmptyState);
 
-          if (mentionsVisible && (itemCount > 0 || inboxEmptyVisible)) {
+          if (archivedSelected && (itemCount > 0 || archivedEmptyVisible)) {
             return "ready";
           }
 
-          if (archivedSelected && (itemCount > 0 || archivedEmptyVisible)) {
+          if (
+            itemCount > 0 ||
+            inboxEmptyVisible ||
+            unreadBadgeVisible ||
+            markAllReadVisible ||
+            archiveAllVisible
+          ) {
             return "ready";
           }
 
           return "pending";
         },
         { timeout: 10000 },
+      )
+      .toBe("ready");
+  }
+
+  async waitForUnreadOverflowReady(): Promise<void> {
+    await waitForDashboardReady(this.page);
+    await waitForScreenshotReady(this.page);
+    await expect
+      .poll(
+        async () => {
+          const unreadBadgeText = await getOptionalLocatorText(this.unreadBadge);
+          const markAllReadVisible = await isLocatorVisible(this.markAllReadButton);
+          const itemCount = await getLocatorCount(this.notificationItems);
+
+          return unreadBadgeText === "99+" && markAllReadVisible && itemCount > 0
+            ? "ready"
+            : "pending";
+        },
+        { timeout: 12000 },
       )
       .toBe("ready");
   }
@@ -151,5 +184,23 @@ export class NotificationsPage extends BasePage {
       .toBe("ready");
 
     await waitForAnimation(this.page);
+  }
+
+  async openMarkAllReadLoadingState(): Promise<() => Promise<void>> {
+    const releaseMutationBlock = await blockConvexMutation(
+      this.page,
+      "notifications:markAllAsRead",
+    );
+
+    try {
+      await expect(this.markAllReadButton).toBeVisible();
+      await this.markAllReadButton.click();
+      await expect(this.markAllReadButton).toHaveAttribute("aria-busy", "true");
+      await expect(this.markAllReadButton).toBeDisabled();
+      return releaseMutationBlock;
+    } catch (error) {
+      await releaseMutationBlock();
+      throw error;
+    }
   }
 }

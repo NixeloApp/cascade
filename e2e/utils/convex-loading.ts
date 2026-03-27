@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
 import { CONVEX_SITE_URL } from "../config";
 
 function collectBlockedConvexHosts(): string[] {
@@ -22,6 +22,37 @@ function collectBlockedConvexHosts(): string[] {
 }
 
 const BLOCKED_CONVEX_HOSTS = collectBlockedConvexHosts();
+
+function isBlockedConvexHost(requestUrl: string): boolean {
+  try {
+    return BLOCKED_CONVEX_HOSTS.includes(new URL(requestUrl).host);
+  } catch {
+    return false;
+  }
+}
+
+function getConvexMutationPath(route: Route): string | null {
+  const request = route.request();
+  if (request.method() !== "POST" || !request.url().endsWith("/api/mutation")) {
+    return null;
+  }
+
+  if (BLOCKED_CONVEX_HOSTS.length > 0 && !isBlockedConvexHost(request.url())) {
+    return null;
+  }
+
+  const body = request.postData();
+  if (!body) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(body) as { path?: unknown };
+    return typeof parsed.path === "string" ? parsed.path : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function installConvexLoadingBlocker(page: Page): Promise<void> {
   await page.addInitScript(
@@ -130,4 +161,25 @@ export async function createConvexLoadingPage(sourcePage: Page): Promise<Page> {
   const loadingPage = await sourcePage.context().newPage();
   await installConvexLoadingBlocker(loadingPage);
   return loadingPage;
+}
+
+export async function blockConvexMutation(
+  page: Page,
+  mutationPath: string,
+): Promise<() => Promise<void>> {
+  const handler = async (route: Route): Promise<void> => {
+    const requestPath = getConvexMutationPath(route);
+
+    if (requestPath === mutationPath) {
+      return new Promise<void>(() => {});
+    }
+
+    await route.continue();
+  };
+
+  await page.route("**/api/mutation", handler);
+
+  return async () => {
+    await page.unroute("**/api/mutation", handler);
+  };
 }

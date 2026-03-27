@@ -40,7 +40,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOfflineNotificationMarkAsRead } from "@/hooks/useOfflineNotificationMarkAsRead";
 import { useQueuedOfflineNotificationReadIds } from "@/hooks/useOfflineOptimisticState";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
-import { isE2ELoadingOverrideEnabled } from "@/lib/e2e-loading-overrides";
 import { Archive, Bell, CheckCheck, Inbox } from "@/lib/icons";
 import { getOptimisticUnreadCount } from "@/lib/notifications";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -183,9 +182,7 @@ function groupNotificationsByDate(
 
 /** Full-page notifications hub with filters, tabs, and per-notification actions. */
 export function NotificationsPage() {
-  const [bulkActionLoading, setBulkActionLoading] = useState<"markAll" | "archiveAll" | null>(() =>
-    isE2ELoadingOverrideEnabled("notifications") ? "markAll" : null,
-  );
+  const [bulkActionLoading, setBulkActionLoading] = useState<"markAll" | "archiveAll" | null>(null);
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
   const orgContext = useOrganizationOptional();

@@ -23,6 +23,7 @@ const BANNED_SCREENSHOT_HOOK_PATTERNS = [
   "__NIXELO_E2E_ORG_CALENDAR_LOADING__",
   "__NIXELO_E2E_INVOICES_LOADING__",
   "__NIXELO_E2E_BOARD_LOADING__",
+  "__NIXELO_E2E_NOTIFICATIONS_LOADING__",
 ];
 
 export function collectBannedScreenshotProdHooks(source, filePath) {

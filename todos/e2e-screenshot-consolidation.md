@@ -52,7 +52,6 @@
   - projects loading
   - assistant loading
   - issues loading
-  - notifications mark-all-read loading
 - [ ] Keep only the minimum test hooks that are truly unavoidable, and document each remaining one with a concrete reason.
 - [ ] Prefer seeded backend state, route params, or normal UI interaction over window-event hooks.
 - [ ] If a hook remains, it must serve reusable test setup broadly, not just one screenshot state.
