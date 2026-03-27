@@ -5,7 +5,7 @@
     "e2e/screenshot-lib/dialog-helpers.ts": 7,
     "e2e/screenshot-lib/filled-states.ts": 79,
     "e2e/screenshot-lib/helpers.ts": 14,
-    "e2e/screenshot-lib/interactive-captures.ts": 46,
+    "e2e/screenshot-lib/interactive-captures.ts": 3,
     "e2e/screenshot-lib/readiness.ts": 64,
     "e2e/screenshot-pages.ts": 2,
     "e2e/settings/offline-replay.spec.ts": 1

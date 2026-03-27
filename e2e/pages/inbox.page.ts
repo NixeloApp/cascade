@@ -40,6 +40,11 @@ export class InboxPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async gotoAndWait(): Promise<void> {
+    await this.goto();
+    await this.waitUntilReady();
+  }
+
   async waitUntilReady(): Promise<void> {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
@@ -113,6 +118,14 @@ export class InboxPage extends BasePage {
     await expect(this.duplicateDialog).toBeVisible();
   }
 
+  async closeDeclineDialogIfOpen(): Promise<void> {
+    await this.dismissDialogIfVisible(this.declineDialog);
+  }
+
+  async closeDuplicateDialogIfOpen(): Promise<void> {
+    await this.dismissDialogIfVisible(this.duplicateDialog);
+  }
+
   async openClosedTab(): Promise<void> {
     await expect(this.closedTab).toBeVisible();
     await this.closedTab.click();
@@ -130,5 +143,19 @@ export class InboxPage extends BasePage {
       .poll(async () => await isLocatorVisible(this.closedEmptyState), { timeout: 12000 })
       .toBe(true);
     await expect(this.closedEmptyState).toContainText(/no closed items/i);
+  }
+
+  private async dismissDialogIfVisible(dialog: Locator): Promise<void> {
+    if (!(await isLocatorVisible(dialog))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+
+    if (await isLocatorVisible(dialog)) {
+      await this.page.mouse.click(10, 10);
+    }
+
+    await expect(dialog).not.toBeVisible();
   }
 }

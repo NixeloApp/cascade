@@ -5,8 +5,7 @@
  * and feature-specific UI flows (board interactions, sprint workflows, etc.).
  */
 
-import type { Page } from "@playwright/test";
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { E2E_TIMEZONE } from "../constants";
@@ -25,6 +24,7 @@ import {
   SettingsPage,
   SprintsPage,
 } from "../pages";
+import { createMyIssuesLoadingPage } from "../pages/my-issues.page";
 import { createConvexLoadingPage } from "../utils/convex-loading";
 import { waitForLocatorVisible } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
@@ -351,14 +351,6 @@ export async function screenshotProjectsStates(
           });
           const loadingProjectsPage = new ProjectsPage(loadingPage, orgSlug);
           await loadingProjectsPage.expectProjectsLoadingStateVisible(12000);
-          await expect
-            .poll(
-              () => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(),
-              {
-                timeout: 12000,
-              },
-            )
-            .toBeGreaterThan(0);
           await waitForAnimation(loadingPage);
           await captureCurrentView(loadingPage, prefix, captureNames.loading, {
             skipReadyCheck: true,
@@ -440,11 +432,6 @@ export async function screenshotInvoicesStates(
       try {
         const loadingInvoicesPage = await openInvoicesPage(loadingPage);
         await loadingInvoicesPage.expectLoadingStateVisible();
-        await expect
-          .poll(() => loadingPage.locator(`[data-testid="${TEST_IDS.LOADING.SKELETON}"]`).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThan(0);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, captureNames.loading, {
           skipReadyCheck: true,
@@ -1103,13 +1090,7 @@ export async function screenshotIssuesStates(
             timeout: 15000,
           },
         );
-        await loadingIssuesPage.searchInput.waitFor({ state: "visible", timeout: 12000 });
-        await loadingIssuesPage.createIssueButton.waitFor({ state: "visible", timeout: 12000 });
-        await expect
-          .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SPINNER).count(), {
-            timeout: 12000,
-          })
-          .toBeGreaterThanOrEqual(1);
+        await loadingIssuesPage.expectLoadingStateVisible(12000);
         await waitForAnimation(loadingPage);
         await captureCurrentView(loadingPage, prefix, loadingStateName, {
           skipReadyCheck: true,
@@ -1181,24 +1162,19 @@ export async function screenshotMyIssuesStates(
         throw new Error("My issues loading capture requires an attached browser instance");
       }
 
-      const isolatedContext = await browser.newContext({
-        storageState: await page.context().storageState(),
-        viewport: page.viewportSize() ?? undefined,
-        colorScheme: captureState.currentConfigPrefix.endsWith("dark") ? "dark" : "light",
-        timezoneId: E2E_TIMEZONE,
-      });
-      const loadingPage = await isolatedContext.newPage();
+      const { context: isolatedContext, page: loadingPage } = await createMyIssuesLoadingPage(
+        page,
+        browser,
+        captureState.currentConfigPrefix.endsWith("dark") ? "dark" : "light",
+        E2E_TIMEZONE,
+      );
 
       try {
         const settingsPage = new SettingsPage(loadingPage, orgSlug);
         await settingsPage.goto();
         await settingsPage.waitForCaptureReady("profile");
         await isolatedContext.setOffline(true);
-        await loadingPage
-          .getByTestId(TEST_IDS.NAV.MY_ISSUES_LINK)
-          .evaluate((element: HTMLAnchorElement) => {
-            element.click();
-          });
+        await settingsPage.openMyIssuesWithoutWaiting();
         const loadingMyIssuesPage = new MyIssuesPage(loadingPage, orgSlug);
         await loadingMyIssuesPage.expectLoadingStateVisible();
         await waitForAnimation(loadingPage);
@@ -1223,7 +1199,6 @@ export async function screenshotProjectInboxStates(
   prefix: string,
 ): Promise<void> {
   const normalizedProjectKey = projectKey.toLowerCase();
-  const inboxUrl = ROUTES.projects.inbox.build(orgSlug, projectKey);
   const closedTabName = `project-${normalizedProjectKey}-inbox-closed`;
   const bulkSelectionName = `project-${normalizedProjectKey}-inbox-bulk-selection`;
   const snoozeMenuName = `project-${normalizedProjectKey}-inbox-snooze-menu`;
@@ -1254,11 +1229,7 @@ export async function screenshotProjectInboxStates(
     }
   };
   const openInbox = async () => {
-    await page.goto(`${BASE_URL}${inboxUrl}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    });
-    await waitForExpectedContent(page, inboxUrl, "projectInbox", prefix);
+    await inboxPage.gotoAndWait();
     await waitForScreenshotReady(page);
   };
   await ensureInboxState("default");
@@ -1299,7 +1270,7 @@ export async function screenshotProjectInboxStates(
         await inboxPage.openFirstIssueDeclineDialog();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, declineDialogName);
-        await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DECLINE_DIALOG));
+        await inboxPage.closeDeclineDialogIfOpen();
       });
     }
 
@@ -1309,7 +1280,7 @@ export async function screenshotProjectInboxStates(
         await inboxPage.openFirstIssueDuplicateDialog();
         await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, duplicateDialogName);
-        await dismissIfOpen(page, page.getByTestId(TEST_IDS.PROJECT_INBOX.DUPLICATE_DIALOG));
+        await inboxPage.closeDuplicateDialogIfOpen();
       });
     }
 
@@ -1482,17 +1453,7 @@ export async function screenshotBoardInteractiveStates(
       await loadBoard();
       await projectsPage.enablePeekMode();
       await waitForScreenshotReady(page);
-
-      // Click an issue card to open side panel
-      const board = page.getByTestId(TEST_IDS.BOARD.ROOT);
-      const issueCard = board.getByTestId(TEST_IDS.ISSUE.CARD).first();
-      await issueCard.waitFor({ state: "visible", timeout: 5000 });
-      await issueCard.click();
-
-      // Wait for the side panel to appear (Sheet component with data-testid)
-      await page
-        .getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL)
-        .waitFor({ state: "visible", timeout: 8000 });
+      await projectsPage.openFirstIssueDetailCard();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-peek-mode`);
 

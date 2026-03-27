@@ -23,6 +23,7 @@ export class IssuesPage extends BasePage {
   readonly pageEmptyState: Locator;
   readonly createIssueModal: Locator;
   readonly issueTitleInput: Locator;
+  readonly loadingSpinner: Locator;
   readonly sidePanelToggle: Locator;
   readonly modalToggle: Locator;
 
@@ -41,6 +42,7 @@ export class IssuesPage extends BasePage {
     this.pageEmptyState = page.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
     this.createIssueModal = page.getByTestId(TEST_IDS.ISSUE.CREATE_MODAL);
     this.issueTitleInput = page.getByTestId(TEST_IDS.ISSUE.CREATE_TITLE_INPUT);
+    this.loadingSpinner = page.getByTestId(TEST_IDS.LOADING.SPINNER);
     this.sidePanelToggle = page.getByRole("button", { name: /switch to side panel view/i }).first();
     this.modalToggle = page.getByRole("button", { name: /switch to modal view/i }).first();
   }
@@ -125,5 +127,15 @@ export class IssuesPage extends BasePage {
     }
     await this.detailModalIssueKey.waitFor({ timeout: 5000 });
     await this.detailModalTitle.waitFor({ timeout: 5000 });
+  }
+
+  async expectLoadingStateVisible(timeout = 12000): Promise<void> {
+    await this.searchInput.waitFor({ state: "visible", timeout });
+    await this.createIssueButton.waitFor({ state: "visible", timeout });
+    await expect
+      .poll(() => this.loadingSpinner.count(), {
+        timeout,
+      })
+      .toBeGreaterThanOrEqual(1);
   }
 }

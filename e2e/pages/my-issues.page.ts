@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import type { Browser, BrowserContext, Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import {
   getMyIssuesDueDateFilterOptionTestId,
@@ -96,4 +96,20 @@ export class MyIssuesPage extends BasePage {
     await expect(this.pageEmptyState).toBeVisible();
     await expect(this.pageEmptyState).toContainText("No issues match these filters");
   }
+}
+
+export async function createMyIssuesLoadingPage(
+  sourcePage: Page,
+  browser: Browser,
+  colorScheme: "light" | "dark",
+  timezoneId: string,
+): Promise<{ context: BrowserContext; page: Page }> {
+  const context = await browser.newContext({
+    storageState: await sourcePage.context().storageState(),
+    viewport: sourcePage.viewportSize() ?? undefined,
+    colorScheme,
+    timezoneId,
+  });
+  const loadingPage = await context.newPage();
+  return { context, page: loadingPage };
 }

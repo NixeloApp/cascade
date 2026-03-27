@@ -966,6 +966,14 @@ export class SettingsPage extends BasePage {
     );
   }
 
+  async openMyIssuesWithoutWaiting(): Promise<void> {
+    const myIssuesLink = this.page.getByTestId(TEST_IDS.NAV.MY_ISSUES_LINK);
+    await expect(myIssuesLink).toBeVisible();
+    await myIssuesLink.evaluate((element: HTMLAnchorElement) => {
+      element.click();
+    });
+  }
+
   private async getDebugValue(read: () => Promise<string>, fallback: string) {
     try {
       return await read();

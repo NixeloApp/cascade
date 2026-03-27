@@ -1180,6 +1180,16 @@ export class ProjectsPage extends BasePage {
     await expect(this.issueDetailDialog).not.toBeVisible();
   }
 
+  async openFirstIssueDetailCard(): Promise<void> {
+    await this.closeIssueDetailIfOpen();
+    const issueCard = this.issueCards.first();
+    await expect(issueCard).toBeVisible();
+    await issueCard.click();
+    await expect(this.issueDetailDialog).toBeVisible();
+    await expect(this.issueDetailKey).toBeVisible();
+    await expect(this.issueDetailTitle).toBeVisible();
+  }
+
   async closeIssueDetailIfOpen() {
     if (!(await isLocatorVisible(this.issueDetailDialog))) {
       return;
