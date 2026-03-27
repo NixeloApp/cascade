@@ -214,7 +214,12 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         {canEdit && (
           <Flex direction="column" directionSm="row" gap="sm" className="w-full sm:w-auto">
             {sprint.status === "future" && (
-              <Button onClick={() => void onStartSprint(sprint._id)} variant="success" size="sm">
+              <Button
+                onClick={() => void onStartSprint(sprint._id)}
+                variant="success"
+                size="sm"
+                data-testid={TEST_IDS.SPRINT.START_TRIGGER}
+              >
                 Start Sprint
               </Button>
             )}
@@ -223,6 +228,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                 onClick={() => void onCompleteSprint(sprint._id)}
                 variant="secondary"
                 size="sm"
+                data-testid={TEST_IDS.SPRINT.COMPLETE_TRIGGER}
               >
                 Complete Sprint
               </Button>
@@ -477,6 +483,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             <Input
               label="Sprint Name"
               type="text"
+              data-testid={TEST_IDS.SPRINT.CREATE_NAME_INPUT}
               value={newSprintName}
               onChange={(e) => setNewSprintName(e.target.value)}
               placeholder="e.g., Sprint 1"
@@ -548,7 +555,11 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             )}
 
             <Flex direction="column" directionSm="row" gap="sm">
-              <Button type="submit" variant="primary">
+              <Button
+                type="submit"
+                variant="primary"
+                data-testid={TEST_IDS.SPRINT.CREATE_SUBMIT_BUTTON}
+              >
                 Create Sprint
               </Button>
               <Button
@@ -627,6 +638,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="complete-sprint-title"
+                data-testid={TEST_IDS.SPRINT.COMPLETE_DIALOG}
               >
                 <Stack gap="lg">
                   <Stack gap="sm">
@@ -731,6 +743,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                         isCompleting ||
                         (transferOption === "sprint" && !targetSprintId && incompleteCount > 0)
                       }
+                      data-testid={TEST_IDS.SPRINT.COMPLETE_CONFIRM_BUTTON}
                     >
                       {isCompleting ? "Completing..." : "Complete Sprint"}
                     </Button>
@@ -760,6 +773,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             role="dialog"
             aria-modal="true"
             aria-labelledby="start-sprint-title"
+            data-testid={TEST_IDS.SPRINT.START_DIALOG}
           >
             <Stack gap="lg">
               <Stack gap="sm">
@@ -782,6 +796,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                       chrome={startPreset === preset.id ? "sprintPresetSelected" : "sprintPreset"}
                       chromeSize="sprintPreset"
                       onClick={() => setStartPreset(preset.id)}
+                      data-testid={TEST_IDS.SPRINT.START_PRESET(preset.id)}
                       className="items-start justify-start text-left flex-col"
                     >
                       <Typography variant="label" className="block">
@@ -802,6 +817,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                     <Input
                       label="Start Date"
                       type="date"
+                      data-testid={TEST_IDS.SPRINT.START_DATE_INPUT}
                       value={startCustomStart}
                       onChange={(e) => setStartCustomStart(e.target.value)}
                     />
@@ -810,6 +826,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                     <Input
                       label="End Date"
                       type="date"
+                      data-testid={TEST_IDS.SPRINT.START_END_DATE_INPUT}
                       value={startCustomEnd}
                       onChange={(e) => setStartCustomEnd(e.target.value)}
                     />
@@ -819,7 +836,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
 
               {/* Overlap warning */}
               {startOverlappingSprints.length > 0 && (
-                <Alert variant="warning">
+                <Alert variant="warning" data-testid={TEST_IDS.SPRINT.START_OVERLAP_WARNING}>
                   <Typography variant="small">
                     These dates overlap with:{" "}
                     {startOverlappingSprints.map((s) => s.name).join(", ")}
@@ -831,7 +848,11 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                 <Button variant="secondary" onClick={closeStartSprintModal}>
                   Cancel
                 </Button>
-                <Button variant="success" onClick={() => void handleStartSprint()}>
+                <Button
+                  variant="success"
+                  onClick={() => void handleStartSprint()}
+                  data-testid={TEST_IDS.SPRINT.START_CONFIRM_BUTTON}
+                >
                   Start Sprint
                 </Button>
               </Flex>

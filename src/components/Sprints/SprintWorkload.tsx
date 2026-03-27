@@ -18,6 +18,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Users } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface SprintWorkloadProps {
   sprintId: Id<"sprints">;
@@ -35,12 +36,16 @@ export function SprintWorkload({ sprintId }: SprintWorkloadProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button variant="ghost" size="sm" data-testid={TEST_IDS.SPRINT.WORKLOAD_TRIGGER}>
           <Icon icon={Users} size="sm" />
           <Typography variant="small">{breakdown.assignees.length} assignees</Typography>
         </Button>
       </PopoverTrigger>
-      <PopoverContent recipe="sprintWorkload" align="end">
+      <PopoverContent
+        recipe="sprintWorkload"
+        align="end"
+        data-testid={TEST_IDS.SPRINT.WORKLOAD_POPOVER}
+      >
         <Card recipe="sprintWorkloadHeader" padding="sm">
           <Typography variant="label">Workload Distribution</Typography>
           <Typography variant="caption" color="secondary">

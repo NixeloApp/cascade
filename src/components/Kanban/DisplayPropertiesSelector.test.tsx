@@ -6,11 +6,25 @@ import {
   type CardDisplayOptions,
   DEFAULT_CARD_DISPLAY,
 } from "@/lib/card-display-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { DisplayPropertiesSelector } from "./DisplayPropertiesSelector";
 
 vi.mock("@/components/ui/Button", () => ({
-  Button: ({ children }: { children: ReactNode }) => <button type="button">{children}</button>,
+  Button: ({
+    children,
+    leftIcon: _leftIcon,
+    rightIcon: _rightIcon,
+    ...props
+  }: {
+    children: ReactNode;
+    leftIcon?: ReactNode;
+    rightIcon?: ReactNode;
+  } & Record<string, unknown>) => (
+    <button type="button" {...props}>
+      {children}
+    </button>
+  ),
 }));
 
 vi.mock("@/components/ui/DropdownMenu", () => ({
@@ -24,12 +38,13 @@ vi.mock("@/components/ui/DropdownMenu", () => ({
     children,
     checked,
     onCheckedChange,
+    ...props
   }: {
     children: ReactNode;
     checked?: boolean;
     onCheckedChange?: () => void;
-  }) => (
-    <button type="button" onClick={onCheckedChange} aria-pressed={checked}>
+  } & Record<string, unknown>) => (
+    <button type="button" onClick={onCheckedChange} aria-pressed={checked} {...props}>
       {children}
     </button>
   ),
@@ -39,6 +54,7 @@ describe("DisplayPropertiesSelector", () => {
   it("shows the plain properties label when nothing is hidden", () => {
     render(<DisplayPropertiesSelector value={DEFAULT_CARD_DISPLAY} onChange={vi.fn()} />);
 
+    expect(screen.getByTestId(TEST_IDS.BOARD.DISPLAY_PROPERTIES_TRIGGER)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /properties/i })).toHaveTextContent("Properties");
     expect(screen.queryByRole("button", { name: "Show All" })).not.toBeInTheDocument();
   });
@@ -56,6 +72,9 @@ describe("DisplayPropertiesSelector", () => {
 
     render(<DisplayPropertiesSelector value={partiallyHidden} onChange={onChange} />);
 
+    expect(
+      screen.getByTestId(TEST_IDS.BOARD.DISPLAY_PROPERTIES_OPTION("issueType")),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /properties/i })).toHaveTextContent("Properties (3)");
 
     await user.click(screen.getByRole("button", { name: CARD_DISPLAY_LABELS.issueType }));

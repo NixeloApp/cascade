@@ -96,6 +96,19 @@ export const TEST_IDS = {
     ROOT: "project-board",
     /** @see src/components/Kanban/BoardToolbar.tsx */
     TOOLBAR: "project-board-toolbar",
+    /** @see src/components/Kanban/SwimlanSelector.tsx */
+    SWIMLANE_TRIGGER: "board-swimlane-trigger",
+    /** @see src/components/Kanban/SwimlanSelector.tsx */
+    SWIMLANE_OPTION: (mode: "none" | "priority" | "assignee" | "type" | "label") =>
+      `board-swimlane-option-${mode}`,
+    /** @see src/components/Kanban/DisplayPropertiesSelector.tsx */
+    DISPLAY_PROPERTIES_TRIGGER: "board-display-properties-trigger",
+    /** @see src/components/Kanban/DisplayPropertiesSelector.tsx */
+    DISPLAY_PROPERTIES_OPTION: (
+      property: "issueType" | "priority" | "labels" | "assignee" | "storyPoints",
+    ) => `board-display-properties-option-${property}`,
+    /** @see src/components/Kanban/ViewModeToggle.tsx */
+    VIEW_MODE_TOGGLE: "board-view-mode-toggle",
     /** @see src/components/KanbanBoard.tsx */
     LOADING_STATE: "project-board-loading-state",
     /** @see src/components/KanbanBoard.tsx */
@@ -106,6 +119,10 @@ export const TEST_IDS = {
     COLUMN_HEADER: "board-column-header",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN_COUNT: "board-column-count",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    COLUMN_COLLAPSE_BUTTON: "board-column-collapse-button",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    COLUMN_EXPAND_BUTTON: "board-column-expand-button",
   },
 
   // ============================================================
@@ -394,6 +411,10 @@ export const TEST_IDS = {
     NAME: "sprint-name",
     /** @see src/components/Sprints/CreateSprintForm.tsx */
     CREATE_FORM: "sprint-create-form",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    CREATE_NAME_INPUT: "sprint-create-name-input",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    CREATE_SUBMIT_BUTTON: "sprint-create-submit-button",
     /** @see src/routes/_app.$orgSlug.projects.$key.sprints.tsx */
     CONTENT: "sprints-content",
     /** @see src/components/Sprints/SprintManager.tsx */
@@ -402,6 +423,34 @@ export const TEST_IDS = {
     CREATE_BUTTON: "sprints-create-button",
     /** @see src/components/Sprints/SprintManager.tsx */
     EMPTY_STATE: "sprints-empty-state",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_TRIGGER: "sprint-start-trigger",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_DIALOG: "sprint-start-dialog",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_PRESET: (presetId: string) => `sprint-start-preset-${presetId}`,
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_DATE_INPUT: "sprint-start-date-input",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_END_DATE_INPUT: "sprint-start-end-date-input",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_OVERLAP_WARNING: "sprint-start-overlap-warning",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    START_CONFIRM_BUTTON: "sprint-start-confirm-button",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    COMPLETE_TRIGGER: "sprint-complete-trigger",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    COMPLETE_DIALOG: "sprint-complete-dialog",
+    /** @see src/components/Sprints/SprintManager.tsx */
+    COMPLETE_CONFIRM_BUTTON: "sprint-complete-confirm-button",
+    /** @see src/components/Sprints/SprintWorkload.tsx */
+    WORKLOAD_TRIGGER: "sprint-workload-trigger",
+    /** @see src/components/Sprints/SprintWorkload.tsx */
+    WORKLOAD_POPOVER: "sprint-workload-popover",
+    /** @see src/components/Analytics/SprintBurnChart.tsx */
+    CHART_BURNDOWN_TOGGLE: "sprint-chart-burndown-toggle",
+    /** @see src/components/Analytics/SprintBurnChart.tsx */
+    CHART_BURNUP_TOGGLE: "sprint-chart-burnup-toggle",
   },
 
   ROADMAP: {

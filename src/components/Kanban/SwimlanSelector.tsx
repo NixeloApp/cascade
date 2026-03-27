@@ -19,6 +19,7 @@ import {
 import { ChevronDown, Rows3 } from "@/lib/icons";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import { getSwimlanGroupByLabel, getSwimlanGroupByOptions } from "@/lib/swimlane-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Icon } from "../ui/Icon";
 
 interface SwimlanSelectorProps {
@@ -36,6 +37,7 @@ export function SwimlanSelector({ value, onChange }: SwimlanSelectorProps) {
         <Button
           variant="ghost"
           size="sm"
+          data-testid={TEST_IDS.BOARD.SWIMLANE_TRIGGER}
           className="text-ui-text-secondary"
           leftIcon={<Icon icon={Rows3} size="sm" />}
           rightIcon={<Icon icon={ChevronDown} size="xs" tone="tertiary" />}
@@ -47,6 +49,7 @@ export function SwimlanSelector({ value, onChange }: SwimlanSelectorProps) {
         {options.map((option) => (
           <DropdownMenuCheckboxItem
             key={option.value}
+            data-testid={TEST_IDS.BOARD.SWIMLANE_OPTION(option.value)}
             checked={value === option.value}
             onCheckedChange={() => onChange(option.value)}
           >

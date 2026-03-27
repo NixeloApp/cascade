@@ -1,6 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 
 // Mock data storage
@@ -62,6 +63,7 @@ describe("SprintWorkload", () => {
 
       render(<SprintWorkload {...defaultProps} />);
 
+      expect(screen.getByTestId(TEST_IDS.SPRINT.WORKLOAD_TRIGGER)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /2 assignees/i })).toBeInTheDocument();
     });
 
@@ -90,6 +92,7 @@ describe("SprintWorkload", () => {
 
       await user.click(screen.getByRole("button", { name: /1 assignees/i }));
 
+      expect(screen.getByTestId(TEST_IDS.SPRINT.WORKLOAD_POPOVER)).toBeInTheDocument();
       expect(screen.getByText("Workload Distribution")).toBeInTheDocument();
       expect(screen.getByText("10 issues in sprint")).toBeInTheDocument();
     });

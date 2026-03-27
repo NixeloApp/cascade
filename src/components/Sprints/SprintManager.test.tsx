@@ -8,6 +8,7 @@ import { createContext, type ReactNode, useContext } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor, within } from "@/test/custom-render";
 import { SprintManager } from "./SprintManager";
@@ -261,18 +262,18 @@ describe("SprintManager", () => {
 
     render(<SprintManager projectId={projectId} />);
 
-    await user.click(screen.getByRole("button", { name: "Start Sprint" }));
+    await user.click(screen.getByTestId(TEST_IDS.SPRINT.START_TRIGGER));
 
-    const dialog = screen.getByRole("dialog", { name: "Start Sprint" });
-    await user.click(within(dialog).getByRole("button", { name: /Custom/i }));
-    await user.type(within(dialog).getByLabelText("Start Date"), "2026-03-15");
-    await user.type(within(dialog).getByLabelText("End Date"), "2026-03-25");
+    const dialog = screen.getByTestId(TEST_IDS.SPRINT.START_DIALOG);
+    await user.click(within(dialog).getByTestId(TEST_IDS.SPRINT.START_PRESET("custom")));
+    await user.type(within(dialog).getByTestId(TEST_IDS.SPRINT.START_DATE_INPUT), "2026-03-15");
+    await user.type(within(dialog).getByTestId(TEST_IDS.SPRINT.START_END_DATE_INPUT), "2026-03-25");
 
-    expect(within(dialog).getByRole("alert")).toHaveTextContent(
+    expect(within(dialog).getByTestId(TEST_IDS.SPRINT.START_OVERLAP_WARNING)).toHaveTextContent(
       "These dates overlap with: Current Sprint",
     );
 
-    await user.click(within(dialog).getByRole("button", { name: /^Start Sprint$/ }));
+    await user.click(within(dialog).getByTestId(TEST_IDS.SPRINT.START_CONFIRM_BUTTON));
 
     await waitFor(() =>
       expect(mockStartSprint).toHaveBeenCalledWith({
@@ -283,7 +284,7 @@ describe("SprintManager", () => {
     );
 
     expect(mockShowSuccess).toHaveBeenCalledWith("Sprint started successfully");
-    expect(screen.queryByRole("dialog", { name: "Start Sprint" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.SPRINT.START_DIALOG)).not.toBeInTheDocument();
   });
 
   it("completes a sprint and transfers incomplete issues to another sprint", async () => {
@@ -293,9 +294,9 @@ describe("SprintManager", () => {
 
     render(<SprintManager projectId={projectId} />);
 
-    await user.click(screen.getByRole("button", { name: "Complete Sprint" }));
+    await user.click(screen.getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER));
 
-    const dialog = screen.getByRole("dialog", { name: "Complete Sprint" });
+    const dialog = screen.getByTestId(TEST_IDS.SPRINT.COMPLETE_DIALOG);
     expect(
       within(dialog).getByText("2 issues not completed. Choose what to do with them."),
     ).toBeInTheDocument();
@@ -303,7 +304,7 @@ describe("SprintManager", () => {
     await user.click(within(dialog).getByRole("button", { name: /Move to Another Sprint/ }));
     await user.click(within(dialog).getByRole("button", { name: /Sprint 8/ }));
     await user.click(within(dialog).getByLabelText("Auto-create next sprint"));
-    await user.click(within(dialog).getByRole("button", { name: "Complete Sprint" }));
+    await user.click(within(dialog).getByTestId(TEST_IDS.SPRINT.COMPLETE_CONFIRM_BUTTON));
 
     await waitFor(() =>
       expect(mockBulkMoveToSprint).toHaveBeenCalledWith({

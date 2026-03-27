@@ -25,7 +25,7 @@ import {
   SettingsPage,
   SprintsPage,
 } from "../pages";
-import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
+import { waitForLocatorVisible } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -43,7 +43,7 @@ import {
 } from "./capture";
 import { BASE_URL } from "./config";
 import { openStableDialog, waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
-import { waitForBoardReady, waitForExpectedContent } from "./readiness";
+import { waitForExpectedContent } from "./readiness";
 
 export async function screenshotDashboardModals(
   page: Page,
@@ -1446,12 +1446,11 @@ export async function screenshotBoardInteractiveStates(
   prefix: string,
 ): Promise<void> {
   const normalizedProjectKey = projectKey.toLowerCase();
-  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+  const projectsPage = new ProjectsPage(page, orgSlug);
 
   // Helper: navigate to board and wait for toolbar
   const loadBoard = async () => {
-    await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 30000 });
-    await waitForBoardReady(page);
+    await projectsPage.gotoProjectBoardAndWait(projectKey);
     await waitForScreenshotReady(page);
   };
 
@@ -1463,19 +1462,7 @@ export async function screenshotBoardInteractiveStates(
 
     await runCaptureStep(`board swimlane ${mode}`, async () => {
       await loadBoard();
-      // Open swimlane dropdown — button says "Swimlanes" on fresh load
-      const swimlaneButton = page.getByText("Swimlanes", { exact: true });
-      await swimlaneButton.waitFor({ state: "visible", timeout: 8000 });
-      await swimlaneButton.click();
-      // Select the mode via menuitemcheckbox to avoid matching hidden mobile
-      // text or other page elements with the same label.
-      const modeLabel = mode[0].toUpperCase() + mode.slice(1);
-      const option = page.getByRole("menuitemcheckbox", { name: modeLabel, exact: true });
-      await option.waitFor({ state: "visible", timeout: 3000 });
-      // Radix DropdownMenuCheckboxItem may detach on check. Use scrollIntoView
-      // + click in quick succession to minimize the race window.
-      await option.scrollIntoViewIfNeeded();
-      await option.click();
+      await projectsPage.selectBoardSwimlaneMode(mode);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureName);
     });
@@ -1485,23 +1472,15 @@ export async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-column-collapsed`)) {
     await runCaptureStep("board column collapsed", async () => {
       await loadBoard();
-      // Find collapse button INSIDE a board column header (not sidebar)
-      const columnHeader = page.getByTestId(TEST_IDS.BOARD.COLUMN).first();
-      const collapseButton = columnHeader.getByLabel(/collapse/i);
-      await collapseButton.waitFor({ state: "visible", timeout: 8000 });
-      await collapseButton.click();
+      await projectsPage.collapseFirstBoardColumn();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
         prefix,
         `project-${normalizedProjectKey}-board-column-collapsed`,
       );
-      // Expand it back
-      const expandButton = page.getByLabel(/expand/i).first();
-      if (await isLocatorVisible(expandButton)) {
-        await expandButton.click();
-        await waitForScreenshotReady(page);
-      }
+      await projectsPage.expandFirstCollapsedBoardColumn();
+      await waitForScreenshotReady(page);
     });
   }
 
@@ -1599,11 +1578,7 @@ export async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-display-properties`)) {
     await runCaptureStep("board display properties", async () => {
       await loadBoard();
-      const propsButton = page.getByText("Properties", { exact: true });
-      await propsButton.waitFor({ state: "visible", timeout: 8000 });
-      await propsButton.click();
-      // Wait for dropdown to be visible
-      await page.getByRole("menuitemcheckbox").first().waitFor({ state: "visible", timeout: 3000 });
+      await projectsPage.openBoardDisplayPropertiesMenu();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
@@ -1619,10 +1594,7 @@ export async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-peek-mode`)) {
     await runCaptureStep("board peek mode", async () => {
       await loadBoard();
-      // Toggle to side panel mode
-      const toggleBtn = page.getByLabel(/switch to side panel view/i);
-      await toggleBtn.waitFor({ state: "visible", timeout: 8000 });
-      await toggleBtn.click();
+      await projectsPage.enablePeekMode();
       await waitForScreenshotReady(page);
 
       // Click an issue card to open side panel
@@ -1640,10 +1612,7 @@ export async function screenshotBoardInteractiveStates(
 
       // Close panel and reset to modal view
       await page.keyboard.press("Escape");
-      const resetBtn = page.getByLabel(/switch to modal view/i);
-      if (await isLocatorVisible(resetBtn)) {
-        await resetBtn.click();
-      }
+      await projectsPage.enableModalMode();
     });
   }
 }
@@ -1655,21 +1624,18 @@ export async function screenshotSprintInteractiveStates(
   prefix: string,
 ): Promise<void> {
   const normalizedProjectKey = projectKey.toLowerCase();
-  const sprintsUrl = ROUTES.projects.sprints.build(orgSlug, projectKey);
-
-  // Navigate to sprints page
-  await page.goto(`${BASE_URL}${sprintsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-  await waitForExpectedContent(page, sprintsUrl, "sprints");
-  await waitForScreenshotReady(page);
+  const sprintsPage = new SprintsPage(page, orgSlug);
+  const loadSprints = async () => {
+    await sprintsPage.gotoProjectAndWait(projectKey);
+    await waitForScreenshotReady(page);
+  };
 
   // Burndown chart (default view — click "Burndown" to ensure it's active)
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burndown`)) {
     await runCaptureStep("sprint burndown chart", async () => {
-      const burndownBtn = page.getByRole("button", { name: /^burndown$/i });
-      if (await isLocatorVisible(burndownBtn)) {
-        await burndownBtn.click();
-        await waitForScreenshotReady(page);
-      }
+      await loadSprints();
+      await sprintsPage.switchChartMode("burndown");
+      await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burndown`);
     });
   }
@@ -1677,87 +1643,50 @@ export async function screenshotSprintInteractiveStates(
   // Burnup chart (toggle)
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burnup`)) {
     await runCaptureStep("sprint burnup chart", async () => {
-      const burnupBtn = page.getByRole("button", { name: /^burnup$/i });
-      await burnupBtn.waitFor({ state: "visible", timeout: 5000 });
-      await burnupBtn.click();
+      await loadSprints();
+      await sprintsPage.switchChartMode("burnup");
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burnup`);
-      // Switch back to burndown
-      const burndownBtn = page.getByRole("button", { name: /^burndown$/i });
-      if (await isLocatorVisible(burndownBtn)) {
-        await burndownBtn.click();
-      }
     });
   }
 
   // Workload popover
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-workload`)) {
     await runCaptureStep("sprint workload popover", async () => {
-      const workloadBtn = page.getByRole("button", { name: /assignees/i });
-      await workloadBtn.waitFor({ state: "visible", timeout: 5000 });
-      await workloadBtn.click();
-      // Wait for popover content
-      await page
-        .getByText(/workload distribution/i)
-        .first()
-        .waitFor({ state: "visible", timeout: 5000 });
+      await loadSprints();
+      await sprintsPage.openWorkloadPopover();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-workload`);
-      // Close popover
-      await page.keyboard.press("Escape");
+      await dismissIfOpen(page, sprintsPage.workloadPopover);
     });
   }
 
   // Create sprint overlap warning
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-date-overlap-warning`)) {
     await runCaptureStep("sprint date overlap warning", async () => {
-      let startSprintButton = page.getByRole("button", { name: /^start sprint$/i });
-
-      if (!(await isLocatorVisible(startSprintButton))) {
-        const createSprintButton = page
-          .getByRole("button", { name: /create sprint|\+\s*sprint/i })
-          .first();
-        await createSprintButton.waitFor({ state: "visible", timeout: 5000 });
-        await createSprintButton.click();
-
-        const sprintNameInput = page.getByLabel("Sprint Name");
-        await sprintNameInput.waitFor({ state: "visible", timeout: 5000 });
-
-        const createForm = page.getByTestId(TEST_IDS.SPRINT.CREATE_FORM);
-        await createForm.waitFor({ state: "visible", timeout: 5000 });
-        await sprintNameInput.fill("Overlap Warning Sprint");
-        await createForm.evaluate((form) => {
-          (form as HTMLFormElement).requestSubmit();
-        });
-
-        startSprintButton = page.getByRole("button", { name: /^start sprint$/i });
-        await startSprintButton.waitFor({ state: "visible", timeout: 5000 });
-      }
-
-      await startSprintButton.waitFor({ state: "visible", timeout: 5000 });
-      await startSprintButton.click();
-
-      const dialog = page.getByRole("dialog", { name: /^start sprint$/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
-      await waitForScreenshotReady(page);
-      const overlapWarning = dialog.getByText(/these dates overlap with:/i).first();
-      await overlapWarning.waitFor({ state: "visible", timeout: 5000 });
+      await loadSprints();
+      await sprintsPage.ensureFutureSprintReady();
+      await sprintsPage.openStartDialog();
+      await sprintsPage.chooseStartPreset("custom");
+      await sprintsPage.startDateInput.fill("2026-03-15");
+      await sprintsPage.startEndDateInput.fill("2026-03-25");
+      await sprintsPage.startOverlapWarning.waitFor({ state: "visible", timeout: 5000 });
       await waitForAnimation(page);
-      await overlapWarning.scrollIntoViewIfNeeded();
+      await sprintsPage.startOverlapWarning.scrollIntoViewIfNeeded();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
         prefix,
         `project-${normalizedProjectKey}-sprints-date-overlap-warning`,
       );
-      await dismissIfOpen(page, dialog);
+      await dismissIfOpen(page, sprintsPage.startDialog);
     });
   }
 
   // Complete sprint modal
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-completion-modal`)) {
     await runCaptureStep("sprint completion modal", async () => {
-      const sprintsPage = new SprintsPage(page, orgSlug);
+      await loadSprints();
       await sprintsPage.openCompletionDialog();
       await waitForScreenshotReady(page);
       await captureCurrentView(

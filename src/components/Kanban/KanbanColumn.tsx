@@ -172,6 +172,7 @@ function CollapsedColumn({
               onClick={onToggleCollapse}
               size="xs"
               aria-label={`Expand ${state.name} column`}
+              data-testid={TEST_IDS.BOARD.COLUMN_EXPAND_BUTTON}
             >
               <Icon icon={Maximize2} size="sm" />
             </IconButton>
@@ -252,6 +253,7 @@ function ColumnHeader({
                 onClick={onToggleCollapse}
                 aria-label={`Collapse ${state.name} column`}
                 size="xs"
+                data-testid={TEST_IDS.BOARD.COLUMN_COLLAPSE_BUTTON}
               >
                 <Icon icon={Minimize2} size="xsPlus" />
               </IconButton>

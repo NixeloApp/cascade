@@ -28,6 +28,7 @@ import {
   toggleProperty,
 } from "@/lib/card-display-utils";
 import { ChevronDown, SlidersHorizontal } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Icon } from "../ui/Icon";
 
 interface DisplayPropertiesSelectorProps {
@@ -54,6 +55,7 @@ export function DisplayPropertiesSelector({ value, onChange }: DisplayProperties
         <Button
           variant="ghost"
           size="sm"
+          data-testid={TEST_IDS.BOARD.DISPLAY_PROPERTIES_TRIGGER}
           className="text-ui-text-secondary"
           leftIcon={<Icon icon={SlidersHorizontal} size="sm" />}
           rightIcon={<Icon icon={ChevronDown} size="xs" tone="tertiary" />}
@@ -67,6 +69,7 @@ export function DisplayPropertiesSelector({ value, onChange }: DisplayProperties
         {properties.map((property) => (
           <DropdownMenuCheckboxItem
             key={property}
+            data-testid={TEST_IDS.BOARD.DISPLAY_PROPERTIES_OPTION(property)}
             checked={value[property]}
             onCheckedChange={() => handleToggle(property)}
           >

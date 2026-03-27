@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useIssueViewMode } from "@/contexts/IssueViewModeContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { ViewModeToggle } from "./ViewModeToggle";
 
@@ -15,13 +16,20 @@ vi.mock("../ui/IconButton", () => ({
     onClick,
     "aria-label": ariaLabel,
     "aria-pressed": ariaPressed,
+    ...props
   }: {
     children: ReactNode;
     onClick?: () => void;
     "aria-label": string;
     "aria-pressed"?: boolean;
-  }) => (
-    <button type="button" onClick={onClick} aria-label={ariaLabel} aria-pressed={ariaPressed}>
+  } & Record<string, unknown>) => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
+      {...props}
+    >
       {children}
     </button>
   ),
@@ -56,6 +64,7 @@ describe("ViewModeToggle", () => {
     render(<ViewModeToggle />);
 
     const button = screen.getByRole("button", { name: "Switch to side panel view" });
+    expect(screen.getByTestId(TEST_IDS.BOARD.VIEW_MODE_TOGGLE)).toBe(button);
     expect(screen.getByText("Switch to side panel view")).toBeInTheDocument();
     expect(button).toHaveAttribute("aria-pressed", "false");
 

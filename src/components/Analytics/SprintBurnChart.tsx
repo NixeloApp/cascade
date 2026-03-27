@@ -7,6 +7,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -101,6 +102,7 @@ export function SprintBurnChart({ sprintId }: SprintBurnChartProps) {
               variant={mode === "burndown" ? "primary" : "ghost"}
               size="sm"
               onClick={() => setMode("burndown")}
+              data-testid={TEST_IDS.SPRINT.CHART_BURNDOWN_TOGGLE}
             >
               Burndown
             </Button>
@@ -108,6 +110,7 @@ export function SprintBurnChart({ sprintId }: SprintBurnChartProps) {
               variant={mode === "burnup" ? "primary" : "ghost"}
               size="sm"
               onClick={() => setMode("burnup")}
+              data-testid={TEST_IDS.SPRINT.CHART_BURNUP_TOGGLE}
             >
               Burnup
             </Button>

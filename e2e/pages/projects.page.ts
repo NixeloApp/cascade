@@ -57,6 +57,9 @@ export class ProjectsPage extends BasePage {
   readonly projectBoard: Locator;
   readonly boardLoadingState: Locator;
   readonly boardColumns: Locator;
+  readonly boardSwimlaneTrigger: Locator;
+  readonly boardDisplayPropertiesTrigger: Locator;
+  readonly boardViewModeToggle: Locator;
   readonly issueCards: Locator;
   readonly createIssueButton: Locator;
 
@@ -200,6 +203,11 @@ export class ProjectsPage extends BasePage {
     this.projectBoard = page.getByTestId(TEST_IDS.BOARD.ROOT);
     this.boardLoadingState = page.getByTestId(TEST_IDS.BOARD.LOADING_STATE);
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
+    this.boardSwimlaneTrigger = page.getByTestId(TEST_IDS.BOARD.SWIMLANE_TRIGGER);
+    this.boardDisplayPropertiesTrigger = page.getByTestId(
+      TEST_IDS.BOARD.DISPLAY_PROPERTIES_TRIGGER,
+    );
+    this.boardViewModeToggle = page.getByTestId(TEST_IDS.BOARD.VIEW_MODE_TOGGLE);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - prefer the stable first-column trigger used by the tour,
     // fall back to "Add issue" or empty-state "Add first issue" button.
@@ -366,6 +374,11 @@ export class ProjectsPage extends BasePage {
   async gotoProjectBoard(projectKey: string) {
     await this.gotoPath(ROUTES.projects.board.build(this.orgSlug, projectKey));
     await this.waitForLoad();
+  }
+
+  async gotoProjectBoardAndWait(projectKey: string) {
+    await this.gotoProjectBoard(projectKey);
+    await this.waitForBoardInteractive();
   }
 
   async gotoProjectSettings(projectKey: string) {
@@ -990,6 +1003,67 @@ export class ProjectsPage extends BasePage {
 
   getBoardColumnCountBadgeByIndex(index: number) {
     return this.boardColumns.nth(index).getByTestId(TEST_IDS.BOARD.COLUMN_COUNT);
+  }
+
+  getBoardSwimlaneOption(mode: "none" | "priority" | "assignee" | "type" | "label") {
+    return this.page.getByTestId(TEST_IDS.BOARD.SWIMLANE_OPTION(mode));
+  }
+
+  getBoardDisplayPropertyOption(
+    property: "issueType" | "priority" | "labels" | "assignee" | "storyPoints",
+  ) {
+    return this.page.getByTestId(TEST_IDS.BOARD.DISPLAY_PROPERTIES_OPTION(property));
+  }
+
+  async openBoardSwimlaneMenu() {
+    await expect(this.boardSwimlaneTrigger).toBeVisible();
+    await this.boardSwimlaneTrigger.click();
+    await expect(this.getBoardSwimlaneOption("priority")).toBeVisible();
+  }
+
+  async selectBoardSwimlaneMode(mode: "priority" | "assignee" | "type" | "label") {
+    await this.openBoardSwimlaneMenu();
+    await this.getBoardSwimlaneOption(mode).click();
+  }
+
+  async openBoardDisplayPropertiesMenu() {
+    await expect(this.boardDisplayPropertiesTrigger).toBeVisible();
+    await this.boardDisplayPropertiesTrigger.click();
+    await expect(this.getBoardDisplayPropertyOption("issueType")).toBeVisible();
+  }
+
+  async enablePeekMode() {
+    await expect(this.boardViewModeToggle).toBeVisible();
+    if ((await this.boardViewModeToggle.getAttribute("aria-pressed")) === "true") {
+      return;
+    }
+    await this.boardViewModeToggle.click();
+    await expect(this.boardViewModeToggle).toHaveAttribute("aria-pressed", "true");
+  }
+
+  async enableModalMode() {
+    await expect(this.boardViewModeToggle).toBeVisible();
+    if ((await this.boardViewModeToggle.getAttribute("aria-pressed")) !== "true") {
+      return;
+    }
+    await this.boardViewModeToggle.click();
+    await expect(this.boardViewModeToggle).toHaveAttribute("aria-pressed", "false");
+  }
+
+  async collapseFirstBoardColumn() {
+    const collapseButton = this.boardColumns
+      .first()
+      .getByTestId(TEST_IDS.BOARD.COLUMN_COLLAPSE_BUTTON);
+    await expect(collapseButton).toBeVisible();
+    await collapseButton.click();
+  }
+
+  async expandFirstCollapsedBoardColumn() {
+    const expandButton = this.page.getByTestId(TEST_IDS.BOARD.COLUMN_EXPAND_BUTTON).first();
+    if (!(await isLocatorVisible(expandButton))) {
+      return;
+    }
+    await expandButton.click();
   }
 
   /**
