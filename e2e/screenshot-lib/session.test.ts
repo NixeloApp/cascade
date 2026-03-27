@@ -399,7 +399,6 @@ describe("screenshot session helpers", () => {
       getAuthenticatedScreenshotBootstrap(
         {
           authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
-          bootstrapMode: "authenticated",
           seedOrgSlug: "acme",
         },
         "empty-state",
@@ -413,7 +412,6 @@ describe("screenshot session helpers", () => {
       getAuthenticatedScreenshotBootstrap(
         {
           authBootstrap: null,
-          bootstrapMode: "primary-user",
           seedOrgSlug: undefined,
         },
         "filled-state",
@@ -589,7 +587,6 @@ describe("screenshot session helpers", () => {
 
     expect(executionContext).toEqual({
       authBootstrap: null,
-      bootstrapMode: "none",
       seedOrgSlug: undefined,
     });
     expect(launchBrowser).not.toHaveBeenCalled();
@@ -609,7 +606,6 @@ describe("screenshot session helpers", () => {
 
     expect(executionContext).toEqual({
       authBootstrap: null,
-      bootstrapMode: "primary-user",
       seedOrgSlug: undefined,
     });
     expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
@@ -657,7 +653,6 @@ describe("screenshot session helpers", () => {
         authStorageState: { cookies: [], origins: [] },
         orgSlug: "acme",
       },
-      bootstrapMode: "authenticated",
       seedOrgSlug: "acme",
     });
     expect(deleteSpy).toHaveBeenNthCalledWith(1, "e2e-member-s0-screenshots@inbox.mailtrap.io");
@@ -1185,7 +1180,6 @@ describe("screenshot session helpers", () => {
 
     await runEmptyScreenshotPhase(launchBrowser, [{ viewport: "desktop", theme: "light" }], {
       authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
-      bootstrapMode: "authenticated",
       seedOrgSlug: "acme",
     });
 
@@ -1276,7 +1270,6 @@ describe("screenshot session helpers", () => {
       "filled-only",
       {
         authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
-        bootstrapMode: "authenticated",
         seedOrgSlug: "acme",
       },
     );
@@ -1296,5 +1289,26 @@ describe("screenshot session helpers", () => {
         null,
       ),
     ).rejects.toThrow("Screenshot execution step empty requires execution context");
+  });
+
+  it("keeps execution contexts free of duplicated bootstrap mode flags", async () => {
+    const launchBrowser = vi.fn<() => Promise<Browser>>();
+    const deleteSpy = vi.spyOn(testUserService, "deleteTestUser").mockResolvedValue(true);
+    const createSpy = vi.spyOn(testUserService, "createTestUser").mockResolvedValue({
+      success: true,
+    });
+
+    const executionContext = await prepareScreenshotCaptureExecutionContext(
+      launchBrowser,
+      buildScreenshotCaptureExecutionPlan(["public-portal-project"]),
+    );
+
+    expect(executionContext).toEqual({
+      authBootstrap: null,
+      seedOrgSlug: undefined,
+    });
+    expect("bootstrapMode" in executionContext).toBe(false);
+    expect(deleteSpy).toHaveBeenCalledWith("e2e-teamlead-s0-screenshots@inbox.mailtrap.io");
+    expect(createSpy).toHaveBeenCalledTimes(1);
   });
 });

@@ -98,17 +98,10 @@ export type ScreenshotCaptureExecutionStep =
 export type ScreenshotCaptureExecutionContext =
   | {
       authBootstrap: null;
-      bootstrapMode: "none";
-      seedOrgSlug: undefined;
-    }
-  | {
-      authBootstrap: null;
-      bootstrapMode: "primary-user";
       seedOrgSlug: undefined;
     }
   | {
       authBootstrap: ScreenshotAuthBootstrap;
-      bootstrapMode: "authenticated";
       seedOrgSlug: string;
     };
 
@@ -472,7 +465,6 @@ export async function prepareScreenshotCaptureExecutionContext(
   if (bootstrapMode === "none") {
     return {
       authBootstrap: null,
-      bootstrapMode: "none",
       seedOrgSlug: undefined,
     };
   }
@@ -484,7 +476,6 @@ export async function prepareScreenshotCaptureExecutionContext(
 
     return {
       authBootstrap: null,
-      bootstrapMode: "primary-user",
       seedOrgSlug: undefined,
     };
   }
@@ -497,7 +488,6 @@ export async function prepareScreenshotCaptureExecutionContext(
 
   return {
     authBootstrap,
-    bootstrapMode: "authenticated",
     seedOrgSlug: authBootstrap.orgSlug,
   };
 }
@@ -707,7 +697,7 @@ export function getAuthenticatedScreenshotBootstrap(
   executionContext: ScreenshotCaptureExecutionContext,
   phase: AuthenticatedScreenshotCapturePhase,
 ): ScreenshotAuthBootstrap {
-  if (executionContext.bootstrapMode !== "authenticated") {
+  if (!executionContext.authBootstrap) {
     throw new Error(`Authenticated bootstrap is required for screenshot ${phase} capture`);
   }
 

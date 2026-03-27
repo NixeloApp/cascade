@@ -56,6 +56,7 @@
 - [ ] Keep screenshot execution ordered by one derived step list. Session orchestration should execute seedless-public, empty, and seeded work from the execution plan instead of branching on multiple booleans after planning.
 - [ ] Keep screenshot execution policy canonical inside the execution plan itself. Do not let parallel `bootstrapMode` / `runEmptyPhase` / `runSeededPhase` style flags drift alongside the ordered execution steps.
 - [ ] Keep screenshot step execution on shared step helpers. `captureConfiguredScreenshotStates()` should prepare context lazily and dispatch execution steps, not re-grow per-step branching inline.
+- [ ] Keep screenshot execution context shape canonical. Prepared session context should store actual bootstrap artifacts only, not a duplicate `bootstrapMode` flag beside data that already proves what setup exists.
 - [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
 
 ## Production Hook Cleanup
