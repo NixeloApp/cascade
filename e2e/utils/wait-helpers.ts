@@ -270,7 +270,7 @@ export async function dismissAllDialogs(page: Page): Promise<void> {
  * Wait for ALL loading spinners to disappear, not just the first one.
  * A page may have multiple concurrent spinners (sidebar, main content, widgets).
  */
-async function waitForAllSpinnersToClear(page: Page, timeout: number): Promise<void> {
+export async function waitForAllSpinnersToClear(page: Page, timeout: number): Promise<void> {
   const spinnerLocator = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
   await expect
     .poll(

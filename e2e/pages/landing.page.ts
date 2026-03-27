@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { isLocatorVisible } from "../utils/locator-state";
+import { waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -133,6 +134,12 @@ export class LandingPage extends BasePage {
     await this.page
       .getByRole("heading", { name: /replace scattered project tools/i })
       .waitFor({ state: "visible", timeout: 12000 });
+  }
+
+  async waitForCaptureReady(): Promise<void> {
+    await this.heroHeadline.waitFor({ state: "visible", timeout: 12000 });
+    await this.productShowcase.waitFor({ state: "visible", timeout: 12000 });
+    await waitForScreenshotReady(this.page);
   }
 
   // ===================

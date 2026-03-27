@@ -9,27 +9,32 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { AnalyticsPage } from "../pages/analytics.page";
+import { AuthPage } from "../pages/auth.page";
 import { BacklogPage } from "../pages/backlog.page";
 import { DashboardPage } from "../pages/dashboard.page";
 import { DocumentsPage } from "../pages/documents.page";
 import { InboxPage } from "../pages/inbox.page";
+import { InvitePage } from "../pages/invite.page";
 import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
+import { LandingPage } from "../pages/landing.page";
 import { MeetingsPage } from "../pages/meetings.page";
 import { MyIssuesPage } from "../pages/my-issues.page";
 import { NotificationsPage } from "../pages/notifications.page";
 import { OutreachPage } from "../pages/outreach.page";
+import { PortalPage } from "../pages/portal.page";
 import { ProjectsPage } from "../pages/projects.page";
 import { RoadmapPage } from "../pages/roadmap.page";
 import { SettingsPage } from "../pages/settings.page";
 import { TeamPage } from "../pages/team.page";
+import { UnsubscribePage } from "../pages/unsubscribe.page";
 import { WorkspacesPage } from "../pages/workspaces.page";
-import { getPageHeaderOrGenericEmptyState, isLocatorVisible } from "../utils/locator-state";
+import { getPageHeaderOrGenericEmptyState } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
 import {
+  waitForAllSpinnersToClear,
   waitForAnimation,
   waitForLoadingSkeletonsToClear,
-  waitForScreenshotReady,
 } from "../utils/wait-helpers";
 import { URL_PATTERNS } from "./routing";
 
@@ -39,28 +44,6 @@ import { URL_PATTERNS } from "./routing";
  * navigated to the page — we just need the readiness check.
  */
 const READINESS_ONLY_SLUG = "__readiness__";
-
-export async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> {
-  try {
-    await expect
-      .poll(
-        async () => {
-          const spinner = page.getByTestId(TEST_IDS.LOADING.SPINNER);
-          const count = await spinner.count();
-          if (count === 0) return 0;
-          let visible = 0;
-          for (let i = 0; i < count; i++) {
-            if (await isLocatorVisible(spinner.nth(i))) visible++;
-          }
-          return visible;
-        },
-        { timeout, intervals: [100, 200, 500] },
-      )
-      .toBe(0);
-  } catch {
-    // Spinner may have cleared between polls — non-critical
-  }
-}
 
 export async function waitForDuplicateDetectionSearchReady(
   orgSlug: string,
@@ -89,119 +72,49 @@ export async function waitForDuplicateDetectionSearchReady(
 
 export async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (name === "landing") {
-    await page
-      .getByRole("heading", { name: /replace scattered project tools/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByText(/product control tower/i).waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+    await new LandingPage(page, READINESS_ONLY_SLUG).waitForCaptureReady();
     return;
   }
 
-  if (["signin", "signup", "forgot-password"].includes(name)) {
-    await page.getByText(/secure account access/i).waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+  if (
+    name === "signin" ||
+    name === "signup" ||
+    name === "forgot-password" ||
+    name === "signup-verify" ||
+    name === "forgot-password-reset" ||
+    name === "verify-email" ||
+    name === "verify-2fa"
+  ) {
+    await new AuthPage(page, READINESS_ONLY_SLUG).waitForCaptureReady(name);
     return;
   }
 
-  if (name === "signup-verify") {
-    await page
-      .getByRole("heading", { name: /create your account/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByRole("heading", { name: /verify your email/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+  if (
+    name === "invite" ||
+    name === "invite-invalid" ||
+    name === "invite-expired" ||
+    name === "invite-revoked" ||
+    name === "invite-accepted"
+  ) {
+    await new InvitePage(page).waitForCaptureReady(name);
     return;
-  }
-
-  if (name === "forgot-password-reset") {
-    await page
-      .getByRole("heading", { name: /check your email/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByTestId(TEST_IDS.AUTH.RESET_CODE_INPUT)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
-  }
-
-  if (name === "verify-email") {
-    await page
-      .getByRole("heading", { name: /check your email/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
-  }
-
-  if (name === "invite") {
-    await page
-      .getByRole("heading", { name: /you're invited/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page.getByText(/has invited you to join/i).waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
-  }
-
-  if (name.startsWith("invite-")) {
-    const inviteStateHeadings: Partial<Record<string, RegExp>> = {
-      "invite-invalid": /invalid invitation/i,
-      "invite-expired": /invitation expired/i,
-      "invite-revoked": /invitation revoked/i,
-      "invite-accepted": /already accepted/i,
-    };
-    const inviteStateHeading = inviteStateHeadings[name];
-
-    if (inviteStateHeading) {
-      await page
-        .getByRole("heading", { name: inviteStateHeading })
-        .waitFor({ state: "visible", timeout: 12000 });
-      await waitForScreenshotReady(page);
-      return;
-    }
   }
 
   if (name === "unsubscribe") {
-    await page
-      .getByRole("heading", { name: /unsubscribed/i })
-      .or(page.getByRole("heading", { name: /invalid link/i }))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/you've been unsubscribed from email notifications/i)
-      .or(page.getByText(/this unsubscribe link is invalid or has expired/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+    await new UnsubscribePage(page).waitForCaptureReady();
     return;
   }
 
-  if (name === "portal") {
-    await page
-      .getByRole("heading", { name: /client portal/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await page
-      .getByText(/portal token received/i)
-      .or(page.getByText(/no projects are available for this portal token/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
-    return;
+  if (name === "portal" || name === "portal-project") {
+    await new PortalPage(page).waitForCaptureReady(name);
   }
+}
 
-  if (name === "portal-project") {
-    // The portal-project route currently renders the parent portal entry page
-    // (portal.$token.tsx lacks an Outlet for nested routes). Match what actually
-    // appears so the screenshot captures the current state.
-    await page
-      .getByRole("heading", { name: /client portal|project view/i })
-      .waitFor({ state: "visible", timeout: 12000 });
-    await waitForScreenshotReady(page);
+export async function waitForSpinnersHidden(page: Page, timeout = 5000): Promise<void> {
+  try {
+    await waitForAllSpinnersToClear(page, timeout);
+  } catch {
+    // Spinner may have cleared between polls — non-critical
   }
 }
 

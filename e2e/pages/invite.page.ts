@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
+import { waitForScreenshotReady } from "../utils/wait-helpers";
 
 type InviteRouteState = "loading" | "invalid" | "expired" | "revoked" | "accepted" | "pending";
 
@@ -78,6 +79,37 @@ export class InvitePage {
     await expect(this.stateScreen).toBeVisible();
     await expect(this.acceptedHeading).toBeVisible();
     await expect(this.goToDashboardButton).toBeVisible();
+  }
+
+  async waitForCaptureReady(
+    state: "invite" | "invite-invalid" | "invite-expired" | "invite-revoked" | "invite-accepted",
+  ): Promise<void> {
+    switch (state) {
+      case "invite":
+        await this.page.getByRole("heading", { name: /you're invited/i }).waitFor({
+          state: "visible",
+          timeout: 12000,
+        });
+        await this.page.getByText(/has invited you to join/i).waitFor({
+          state: "visible",
+          timeout: 12000,
+        });
+        break;
+      case "invite-invalid":
+        await this.expectInvalidInvitation();
+        break;
+      case "invite-expired":
+        await this.expectExpiredInvitation();
+        break;
+      case "invite-revoked":
+        await this.expectRevokedInvitation();
+        break;
+      case "invite-accepted":
+        await this.expectAcceptedInvitation();
+        break;
+    }
+
+    await waitForScreenshotReady(this.page);
   }
 
   private async getInviteRouteState(): Promise<InviteRouteState> {

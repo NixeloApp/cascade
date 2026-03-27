@@ -10,9 +10,7 @@
 - [ ] Screenshot capture has leaked into production code through test-only component hooks. That makes components harder to trust and harder to reason about.
 - [ ] The goal is reuse. If screenshot generation cannot be described as "thin capture on top of existing E2E state helpers," then the automation architecture is wrong.
 - [ ] This is the first infrastructure priority again. The current overlap between screenshot-lib and reusable E2E/page objects is active execution debt, not just cleanup polish.
-- [ ] The current raw-locator baseline proves the screenshot harness is still acting like a parallel framework.
-  Remaining hotspots:
-  - `e2e/screenshot-lib/readiness.ts`
+- [ ] The remaining debt is no longer one giant screenshot-lib selector hotspot. What is left is smaller but still structural: documented loading-hook exceptions, screenshot-specific helper seams, and the last places where screenshot capture can still diverge from reusable E2E flows.
 
 ## Target Architecture
 
@@ -25,16 +23,14 @@
 
 ## First Pass Targets
 
-- [ ] Split the main screenshot-lib hotspots into:
+- [ ] Finish the remaining screenshot-lib cleanup into:
   - reusable helpers that should live with E2E/page objects
   - thin screenshot wrappers that stay in screenshot-lib
   - harness-only complexity that should be deleted
-- [ ] Start with the biggest offenders:
-  - `e2e/screenshot-lib/readiness.ts`
-- [ ] Replace raw locator usage in those files with shared page-object helpers or route-specific readiness contracts until the screenshot-lib raw-locator baseline is materially smaller.
+- [ ] Keep the screenshot-lib raw-locator baseline at zero for tracked screenshot helpers; do not let new route-specific selectors creep back into `readiness.ts`, `helpers.ts`, or new screenshot-lib files.
 - [ ] Remove duplicate readiness logic where screenshot helpers re-implement waits already owned by page objects or route E2E utilities.
 - [ ] Remove duplicate modal/state openers where screenshot helpers bypass existing user-path helpers.
-- [ ] Finish the remaining route/dialog leftovers in `readiness.ts`, especially branches that still keep screenshot-lib-specific locator ownership instead of page-object methods.
+- [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
 
 ## Production Hook Cleanup
 
