@@ -927,11 +927,21 @@ export async function ensureUserExistsAndSignIn(
   user: TestUser,
   autoCompleteOnboarding = true,
 ): Promise<boolean> {
-  const createResult = await testUserService.createTestUser(
-    user.email,
-    user.password,
-    autoCompleteOnboarding,
-  );
+  let createResult: { success: boolean; existing?: boolean; error?: string } | undefined;
+  try {
+    createResult = await testUserService.createTestUser(
+      user.email,
+      user.password,
+      autoCompleteOnboarding,
+    );
+  } catch (error) {
+    console.log(
+      `  ⚠️ Failed to ensure user exists for ${user.email}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    return false;
+  }
 
   if (!createResult.success && !createResult.existing) {
     console.log(`  ⚠️ Failed to ensure user exists for ${user.email}: ${createResult.error}`);

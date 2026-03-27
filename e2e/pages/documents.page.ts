@@ -312,7 +312,17 @@ export class DocumentsPage extends BasePage {
     await this.actionMenu.waitFor({ state: "visible", timeout: 5000 });
     await this.lockMenuItem.waitFor({ state: "visible", timeout: 5000 });
     await this.lockMenuItem.click();
-    await expect(this.favoriteButton).toBeVisible({ timeout: 5000 });
+    await expect(this.actionMenu).not.toBeVisible({ timeout: 5000 });
+
+    // Re-open menu and verify lock took effect (unlock option now visible)
+    await expect(async () => {
+      await this.moreActionsButton.click();
+      await expect(this.unlockMenuItem).toBeVisible({ timeout: 3000 });
+    }).toPass({ intervals: [500, 1000, 2000] });
+
+    // Close the menu after verification
+    await this.page.keyboard.press("Escape");
+    await expect(this.actionMenu).not.toBeVisible({ timeout: 3000 });
     await waitForScreenshotReady(this.page);
   }
 
@@ -322,7 +332,17 @@ export class DocumentsPage extends BasePage {
     await this.actionMenu.waitFor({ state: "visible", timeout: 5000 });
     await this.unlockMenuItem.waitFor({ state: "visible", timeout: 5000 });
     await this.unlockMenuItem.click();
-    await expect(this.favoriteButton).toBeVisible({ timeout: 5000 });
+    await expect(this.actionMenu).not.toBeVisible({ timeout: 5000 });
+
+    // Re-open menu and verify unlock took effect (lock option now visible)
+    await expect(async () => {
+      await this.moreActionsButton.click();
+      await expect(this.lockMenuItem).toBeVisible({ timeout: 3000 });
+    }).toPass({ intervals: [500, 1000, 2000] });
+
+    // Close the menu after verification
+    await this.page.keyboard.press("Escape");
+    await expect(this.actionMenu).not.toBeVisible({ timeout: 3000 });
     await waitForScreenshotReady(this.page);
   }
 

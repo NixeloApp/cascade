@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { withBlockedConvexPage } from "../utils/convex-loading";
-import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
+import { getLocatorCount, isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { waitForLoadingSkeletonsToClear, waitForScreenshotReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";

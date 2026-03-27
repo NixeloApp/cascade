@@ -261,20 +261,22 @@ export function prepareBlockedConvexPagePolicy(
   };
 }
 
-async function blockConvexRequestPath(
+async function blockConvexRequestPaths(
   page: Page,
-  requestPath: string,
+  requestPaths: string[],
   endpointSuffix: BlockedConvexRequestEndpointSuffix,
   blockedHosts: string[],
 ): Promise<() => Promise<void>> {
+  const blockedPathSet = new Set(requestPaths);
+
   const handler = async (route: Route): Promise<void> => {
     const routedPath = getConvexRequestPath(route, endpointSuffix, blockedHosts);
 
-    if (routedPath === requestPath) {
+    if (routedPath !== null && blockedPathSet.has(routedPath)) {
       return new Promise<void>(() => {});
     }
 
-    await route.continue();
+    await route.fallback();
   };
 
   await page.route(`**${endpointSuffix}`, handler);
@@ -297,20 +299,14 @@ async function installBlockedRoutes(
   }
 
   const behavior = getBlockedConvexRequestBehavior(policy.kind);
-  const releaseBlocks: Array<() => Promise<void>> = [];
+  const release = await blockConvexRequestPaths(
+    page,
+    policy.paths,
+    behavior.endpointSuffix,
+    policy.blockedHosts,
+  );
 
-  try {
-    for (const path of policy.paths) {
-      releaseBlocks.push(
-        await blockConvexRequestPath(page, path, behavior.endpointSuffix, policy.blockedHosts),
-      );
-    }
-
-    return releaseBlocks;
-  } catch (error) {
-    await releaseBlockedRoutes(releaseBlocks);
-    throw error;
-  }
+  return [release];
 }
 
 async function withBlockedRoutes<T>(

@@ -447,7 +447,11 @@ export class ProjectsPage extends BasePage {
   }
 
   async gotoAndExpectProjectsLoadingState(timeout = 10000): Promise<void> {
-    await this.goto();
+    await this.gotoPath(ROUTES.projects.list.build(this.orgSlug), {
+      waitUntil: "domcontentloaded",
+    });
+    await this.page.waitForLoadState("load");
+    await this.waitForLoad();
     await this.expectProjectsLoadingStateVisible(timeout);
   }
 

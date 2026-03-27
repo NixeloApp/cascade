@@ -11,6 +11,7 @@ import { TEST_IDS } from "../../src/lib/test-ids";
 import { AnalyticsPage } from "../pages/analytics.page";
 import { AuthPage } from "../pages/auth.page";
 import { BacklogPage } from "../pages/backlog.page";
+import { CalendarPage } from "../pages/calendar.page";
 import { DashboardPage } from "../pages/dashboard.page";
 import { DocumentsPage } from "../pages/documents.page";
 import { InboxPage } from "../pages/inbox.page";

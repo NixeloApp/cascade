@@ -100,7 +100,7 @@ async function getProjectIssueCounterFloor(
 async function findLatestUserByEmail(ctx: E2EReadCtx, email: string): Promise<Doc<"users"> | null> {
   const users = await ctx.db
     .query("users")
-    .filter((q) => q.eq(q.field("email"), email))
+    .withIndex("email", (q) => q.eq("email", email))
     .collect();
   if (users.length === 0) {
     return null;
@@ -3082,6 +3082,7 @@ export const createTestUserInternal = internalMutation({
         .withIndex("providerAndAccountId", (q) =>
           q.eq("provider", "password").eq("providerAccountId", args.email),
         )
+        .filter(notDeleted)
         .collect();
 
       const canonicalAccount = [...existingAccounts]
@@ -3111,7 +3112,7 @@ export const createTestUserInternal = internalMutation({
 
       await ctx.db.patch(existingUser._id, {
         emailVerificationTime: existingUser.emailVerificationTime ?? now,
-        isTestUser: existingUser.isTestUser ?? true,
+        isTestUser: true,
         testUserCreatedAt: existingUser.testUserCreatedAt ?? now,
       });
 

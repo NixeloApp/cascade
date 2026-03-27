@@ -577,12 +577,12 @@ export async function prepareScreenshotCaptureExecutionContextForStep(
     return executionContext;
   }
 
-  if (executionContext) {
-    return executionContext;
+  if (contextRequirement === "primary-user") {
+    return executionContext ?? preparePrimaryUserScreenshotExecutionContext();
   }
 
-  if (contextRequirement === "primary-user") {
-    return preparePrimaryUserScreenshotExecutionContext();
+  if (executionContext?.authBootstrap) {
+    return executionContext;
   }
 
   return prepareAuthenticatedScreenshotExecutionContext(launchBrowser);
