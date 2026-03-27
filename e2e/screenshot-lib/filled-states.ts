@@ -1030,34 +1030,19 @@ export async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-favorite")) {
         await runCaptureStep("document favorite state", async () => {
           await documentsPage.gotoDocument(baseDocId);
-          const toggle = page.getByRole("button", { name: /add to favorites/i });
-          await toggle.waitFor({ state: "visible", timeout: 8000 });
-          await toggle.click();
-          const activeToggle = page.getByRole("button", { name: /remove from favorites/i });
-          await activeToggle.waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
+          await documentsPage.toggleFavoriteOn();
           await captureCurrentView(page, p, "document-editor-favorite");
-          await activeToggle.click();
-          await toggle.waitFor({ state: "visible", timeout: 5000 });
+          await documentsPage.toggleFavoriteOff();
         });
       }
 
       if (shouldCapture(p, "document-editor-sidebar-favorites")) {
         await runCaptureStep("document sidebar favorites", async () => {
           await documentsPage.gotoDocument(baseDocId);
-          const toggle = page.getByRole("button", { name: /add to favorites/i });
-          await toggle.waitFor({ state: "visible", timeout: 8000 });
-          await toggle.click();
-          const activeToggle = page.getByRole("button", { name: /remove from favorites/i });
-          await activeToggle.waitFor({ state: "visible", timeout: 5000 });
-          await page
-            .locator("aside")
-            .getByText("Favorites")
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
+          await documentsPage.toggleFavoriteOn();
+          await documentsPage.expectSidebarFavoritesVisible();
           await captureCurrentView(page, p, "document-editor-sidebar-favorites");
-          await activeToggle.click();
-          await toggle.waitFor({ state: "visible", timeout: 5000 });
+          await documentsPage.toggleFavoriteOff();
         });
       }
 
@@ -1082,12 +1067,8 @@ export async function screenshotFilledStates(
             /Release Readiness/i,
           );
           await documentsPage.openFloatingToolbarForText("Release");
-          const colorButton = page.getByRole("button", { name: /text color|font color/i }).first();
-          await colorButton.waitFor({ state: "visible", timeout: 5000 });
-          await colorButton.evaluate((button: HTMLElement) => {
-            button.click();
-          });
-          await page.getByTitle("Red").waitFor({ state: "visible", timeout: 5000 });
+          await documentsPage.openFontColorPicker();
+          await documentsPage.expectFontColorSwatchVisible("Red");
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-color-picker");
           await page.keyboard.press("Escape");
@@ -1145,24 +1126,9 @@ export async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-locked")) {
         await runCaptureStep("document locked state", async () => {
           await documentsPage.gotoDocument(baseDocId);
-          await documentsPage.moreActionsButton.click();
-          await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
-          await page.getByRole("menuitem", { name: /^lock document$/i }).click();
-          await page
-            .getByRole("alert")
-            .filter({ hasText: /document locked/i })
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
+          await documentsPage.lockDocument();
           await captureCurrentView(page, p, "document-editor-locked");
-          await documentsPage.moreActionsButton.click();
-          await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
-          await page.getByRole("menuitem", { name: /^unlock document$/i }).click();
-          await page
-            .getByRole("alert")
-            .filter({ hasText: /document locked/i })
-            .first()
-            .waitFor({ state: "hidden", timeout: 5000 });
+          await documentsPage.unlockDocument();
         });
       }
     }

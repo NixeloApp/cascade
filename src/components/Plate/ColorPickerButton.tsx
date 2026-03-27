@@ -13,6 +13,7 @@ import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
 import { ChevronDown, Highlighter, type LucideIcon, Type } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface ColorPickerButtonProps {
   type: "fontColor" | "backgroundColor";
@@ -50,6 +51,7 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
           chromeSize="toolbarControl"
           aria-label={tooltip}
           title={tooltip}
+          data-testid={type === "fontColor" ? TEST_IDS.EDITOR.FONT_COLOR_TRIGGER : undefined}
         >
           <span style={{ position: "relative", display: "inline-flex" }}>
             <Icon icon={TriggerIcon} size="sm" />
@@ -81,6 +83,9 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
           {colors.map((color) => (
             <ColorSwatchButton
               key={color.name}
+              data-testid={
+                type === "fontColor" ? TEST_IDS.EDITOR.FONT_COLOR_SWATCH(color.name) : undefined
+              }
               color={color.value}
               selected={color.value === currentColor}
               empty={!color.value}

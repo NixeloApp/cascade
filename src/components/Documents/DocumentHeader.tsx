@@ -129,6 +129,9 @@ function DocumentLockAction({ lockStatus, onToggleLock }: DocumentLockActionProp
 
   return (
     <DropdownMenuItem
+      data-testid={
+        lockStatus?.isLocked ? TEST_IDS.DOCUMENT.ACTION_UNLOCK : TEST_IDS.DOCUMENT.ACTION_LOCK
+      }
       disabled={lockStatus?.isLocked && !lockStatus.canUnlock}
       icon={<Icon icon={lockStatus?.isLocked ? Lock : LockOpen} size="sm" aria-hidden="true" />}
       onSelect={() => {
@@ -171,15 +174,17 @@ function OwnerDocumentActions({
             size="sm"
             aria-label="More document actions"
             tooltip="More document actions"
+            data-testid={TEST_IDS.DOCUMENT.HEADER_MORE_ACTIONS_BUTTON}
           >
             <Icon icon={Menu} size="sm" aria-hidden="true" />
           </IconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" width="lg">
+        <DropdownMenuContent align="end" width="lg" data-testid={TEST_IDS.DOCUMENT.ACTION_MENU}>
           <DocumentLockAction lockStatus={lockStatus} onToggleLock={onToggleLock} />
 
           {onMoveToProject && (
             <DropdownMenuItem
+              data-testid={TEST_IDS.DOCUMENT.ACTION_MOVE_TO_PROJECT}
               icon={<Icon icon={FolderInput} size="sm" aria-hidden="true" />}
               onSelect={() => {
                 onMoveToProject();
@@ -232,6 +237,7 @@ function DocumentHeaderActions({
           onClick={() => void onToggleFavorite()}
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           aria-pressed={isFavorite}
+          data-testid={TEST_IDS.DOCUMENT.HEADER_FAVORITE_BUTTON}
           className={cn(isFavorite && "text-status-warning")}
         >
           <Icon

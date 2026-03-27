@@ -290,6 +290,7 @@ describe("AppSidebar Accessibility", () => {
 
     render(<AppSidebar />);
 
+    expect(screen.getByTestId(TEST_IDS.NAV.DOCUMENT_FAVORITES_SECTION)).toBeInTheDocument();
     expect(screen.getByText("Favorites")).toBeInTheDocument();
 
     const favoriteLink = screen.getByRole("link", { name: "Project Requirements" });

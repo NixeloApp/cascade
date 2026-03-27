@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import { TEST_IDS } from "@/lib/test-ids";
 import { DocumentHeader } from "./DocumentHeader";
 
 // Mock PresenceIndicator
@@ -71,15 +72,15 @@ describe("DocumentHeader", () => {
         />
       </TooltipProvider>,
     );
-    expect(screen.getByRole("button", { name: "Add to favorites" })).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.HEADER_FAVORITE_BUTTON)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Version history" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Import from Markdown" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export as Markdown" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "More document actions" }));
+    await user.click(screen.getByTestId(TEST_IDS.DOCUMENT.HEADER_MORE_ACTIONS_BUTTON));
 
-    expect(await screen.findByRole("menuitem", { name: "Lock document" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Move to another project" })).toBeInTheDocument();
+    expect(await screen.findByTestId(TEST_IDS.DOCUMENT.ACTION_LOCK)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.DOCUMENT.ACTION_MOVE_TO_PROJECT)).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Archive document" })).toBeInTheDocument();
   });
 

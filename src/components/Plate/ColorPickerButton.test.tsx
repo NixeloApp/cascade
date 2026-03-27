@@ -1,6 +1,7 @@
 import { EDITOR_HIGHLIGHT_COLOR_OPTIONS, EDITOR_TEXT_COLOR_OPTIONS } from "@convex/shared/colors";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor, within } from "@/test/custom-render";
 import { ColorPickerButton } from "./ColorPickerButton";
 
@@ -27,13 +28,15 @@ describe("ColorPickerButton", () => {
 
     render(<ColorPickerButton type="fontColor" />);
 
-    const trigger = screen.getByRole("button", { name: "Text Color" });
+    const trigger = screen.getByTestId(TEST_IDS.EDITOR.FONT_COLOR_TRIGGER);
     expect(trigger).toBeInTheDocument();
 
     await user.click(trigger);
 
     for (const color of EDITOR_TEXT_COLOR_OPTIONS) {
-      expect(await screen.findByTitle(color.name)).toBeInTheDocument();
+      expect(
+        await screen.findByTestId(TEST_IDS.EDITOR.FONT_COLOR_SWATCH(color.name)),
+      ).toBeInTheDocument();
     }
 
     expect(addMark).not.toHaveBeenCalled();
@@ -54,17 +57,21 @@ describe("ColorPickerButton", () => {
 
     render(<ColorPickerButton type="fontColor" />);
 
-    const trigger = screen.getByRole("button", { name: "Text Color" });
+    const trigger = screen.getByTestId(TEST_IDS.EDITOR.FONT_COLOR_TRIGGER);
     await user.click(trigger);
-    await user.click(await screen.findByTitle("Gray"));
+    await user.click(await screen.findByTestId(TEST_IDS.EDITOR.FONT_COLOR_SWATCH("Gray")));
 
     expect(addMark).toHaveBeenCalledWith("fontColor", "#6b7280");
     expect(removeMark).not.toHaveBeenCalled();
 
-    await waitFor(() => expect(screen.queryByTitle("Gray")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(TEST_IDS.EDITOR.FONT_COLOR_SWATCH("Gray")),
+      ).not.toBeInTheDocument(),
+    );
 
     await user.click(trigger);
-    const graySwatch = await screen.findByTitle("Gray");
+    const graySwatch = await screen.findByTestId(TEST_IDS.EDITOR.FONT_COLOR_SWATCH("Gray"));
     expect(graySwatch).toHaveStyle({
       boxShadow: "0 0 0 2px var(--color-brand), 0 0 0 3px var(--color-ui-bg)",
     });
@@ -112,9 +119,11 @@ describe("ColorPickerButton", () => {
 
     render(<ColorPickerButton type="fontColor" />);
 
-    await user.click(screen.getByRole("button", { name: "Text Color" }));
-    await user.click(await screen.findByTitle("Red"));
+    await user.click(screen.getByTestId(TEST_IDS.EDITOR.FONT_COLOR_TRIGGER));
+    await user.click(await screen.findByTestId(TEST_IDS.EDITOR.FONT_COLOR_SWATCH("Red")));
 
-    await waitFor(() => expect(screen.getByTitle("Red")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByTestId(TEST_IDS.EDITOR.FONT_COLOR_SWATCH("Red"))).toBeInTheDocument(),
+    );
   });
 });

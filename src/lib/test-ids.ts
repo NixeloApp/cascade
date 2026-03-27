@@ -183,6 +183,8 @@ export const TEST_IDS = {
     /** @see src/components/App/AppSidebar.tsx */
     DOCUMENT_ITEM: "sidebar-document-item",
     /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENT_FAVORITES_SECTION: "sidebar-document-favorites-section",
+    /** @see src/components/App/AppSidebar.tsx */
     WORKSPACE_LIST: "sidebar-workspace-list",
     /** @see src/components/App/AppSidebar.tsx */
     WORKSPACE_ITEM: "sidebar-workspace-item",
@@ -324,6 +326,11 @@ export const TEST_IDS = {
     HYDRATED_STATE: "plate-editor-hydrated-state",
     /** @see src/components/CommandPalette.tsx */
     COMMAND_PALETTE: "command-palette",
+    /** @see src/components/Plate/ColorPickerButton.tsx */
+    FONT_COLOR_TRIGGER: "plate-editor-font-color-trigger",
+    /** @see src/components/Plate/ColorPickerButton.tsx */
+    FONT_COLOR_SWATCH: (colorName: string) =>
+      `plate-editor-font-color-swatch-${colorName.toLowerCase().replace(/\s+/g, "-")}`,
   },
 
   // ============================================================
@@ -735,6 +742,18 @@ export const TEST_IDS = {
     WORKSPACE_LIBRARY_SECTION: "documents-workspace-library-section",
     /** @see src/routes/_auth/_app/$orgSlug/documents/index.tsx */
     SEARCH_EMPTY_STATE: "documents-search-empty-state",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    HEADER_FAVORITE_BUTTON: "document-header-favorite-button",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    HEADER_MORE_ACTIONS_BUTTON: "document-header-more-actions-button",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    ACTION_MENU: "document-action-menu",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    ACTION_MOVE_TO_PROJECT: "document-action-move-to-project",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    ACTION_LOCK: "document-action-lock",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    ACTION_UNLOCK: "document-action-unlock",
   },
 
   // ============================================================

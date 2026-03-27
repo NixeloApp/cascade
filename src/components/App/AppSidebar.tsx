@@ -336,7 +336,10 @@ function DocumentsSectionContent({
       </li>
       {favorites.length > 0 && (
         <>
-          <li className="list-none px-sidebar-section-label pt-sidebar-nav">
+          <li
+            className="list-none px-sidebar-section-label pt-sidebar-nav"
+            data-testid={TEST_IDS.NAV.DOCUMENT_FAVORITES_SECTION}
+          >
             <Flex align="center" gap="xs" className="text-ui-text-tertiary">
               <AppIcon icon={Star} size="xsPlus" tone="warning" className="fill-status-warning" />
               <Typography variant="caption">Favorites</Typography>
