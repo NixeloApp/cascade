@@ -211,6 +211,7 @@ describe("IssueCard", () => {
       "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points, Labels: backend, urgent";
     const overlayButton = screen.getByLabelText(expectedLabel);
     expect(overlayButton).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.CARD_TRIGGER("TEST-123"))).toBe(overlayButton);
   });
 
   it("should include 0 story points in the accessible label", () => {

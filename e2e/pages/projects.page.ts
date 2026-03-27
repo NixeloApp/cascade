@@ -141,6 +141,8 @@ export class ProjectsPage extends BasePage {
   // Locators - Issue Detail Dialog
   // ===================
   readonly issueDetailDialog: Locator;
+  readonly issueDetailKey: Locator;
+  readonly issueDetailTitle: Locator;
   readonly issueDetailEditButton: Locator;
   readonly issueDetailTitleInput: Locator;
   readonly issueDetailDescriptionEditor: Locator;
@@ -315,6 +317,8 @@ export class ProjectsPage extends BasePage {
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
+    this.issueDetailKey = this.issueDetailDialog.getByTestId(TEST_IDS.ISSUE.DETAIL_KEY);
+    this.issueDetailTitle = this.issueDetailDialog.getByTestId(TEST_IDS.ISSUE.DETAIL_TITLE);
     this.issueDetailEditButton = this.issueDetailDialog.getByRole("button", { name: /^Edit$/ });
     this.issueDetailTitleInput = this.issueDetailDialog.getByPlaceholder("Issue title");
     this.issueDetailDescriptionEditor = this.issueDetailDialog.getByTestId(
@@ -1010,6 +1014,10 @@ export class ProjectsPage extends BasePage {
     return this.page.getByRole("button", { name: new RegExp(escaped) });
   }
 
+  getIssueCardTrigger(issueKey: string) {
+    return this.page.getByTestId(TEST_IDS.ISSUE.CARD_TRIGGER(issueKey));
+  }
+
   getIssueCardContainer(title: string) {
     return this.page
       .getByTestId(TEST_IDS.ISSUE.CARD)
@@ -1153,9 +1161,18 @@ export class ProjectsPage extends BasePage {
     await issueCard.click();
     await expect(this.issueDetailDialog).toBeVisible();
 
-    // Wait for modal content to be stable using the issue key metadata,
-    // which is consistently rendered regardless of sidebar section timing.
-    await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
+    await expect(this.issueDetailKey).toBeVisible();
+    await expect(this.issueDetailTitle).toBeVisible();
+  }
+
+  async openIssueDetailByKey(issueKey: string) {
+    const issueCardTrigger = this.getIssueCardTrigger(issueKey);
+    await this.closeIssueDetailIfOpen();
+    await expect(issueCardTrigger).toBeVisible();
+    await issueCardTrigger.click();
+    await expect(this.issueDetailDialog).toBeVisible();
+    await expect(this.issueDetailKey).toHaveText(issueKey);
+    await expect(this.issueDetailTitle).toBeVisible();
   }
 
   async closeIssueDetail() {

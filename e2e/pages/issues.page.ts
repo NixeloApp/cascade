@@ -13,6 +13,7 @@ export class IssuesPage extends BasePage {
   readonly createIssueButton: Locator;
   readonly detailModal: Locator;
   readonly detailModalIssueKey: Locator;
+  readonly detailModalTitle: Locator;
   readonly issueCards: Locator;
   readonly searchInput: Locator;
   readonly statusFilter: Locator;
@@ -29,7 +30,8 @@ export class IssuesPage extends BasePage {
     super(page, orgSlug);
     this.createIssueButton = page.getByRole("button", { name: /create issue/i });
     this.detailModal = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
-    this.detailModalIssueKey = this.detailModal.getByText(/[A-Z][A-Z0-9]+-\d+/).first();
+    this.detailModalIssueKey = this.detailModal.getByTestId(TEST_IDS.ISSUE.DETAIL_KEY);
+    this.detailModalTitle = this.detailModal.getByTestId(TEST_IDS.ISSUE.DETAIL_TITLE);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     this.searchInput = page.getByTestId(TEST_IDS.ISSUE.SEARCH_INPUT);
     this.statusFilter = page.getByTestId(TEST_IDS.ISSUE.STATUS_FILTER);
@@ -115,8 +117,13 @@ export class IssuesPage extends BasePage {
     }
   }
 
-  async waitForDetailPanel(): Promise<void> {
+  async waitForDetailPanel(expectedIssueKey?: string): Promise<void> {
     await expect(this.detailModal).toBeVisible({ timeout: 5000 });
+    if (expectedIssueKey) {
+      await expect(this.detailModalIssueKey).toHaveText(expectedIssueKey, { timeout: 5000 });
+      return;
+    }
     await this.detailModalIssueKey.waitFor({ timeout: 5000 });
+    await this.detailModalTitle.waitFor({ timeout: 5000 });
   }
 }

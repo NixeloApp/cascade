@@ -75,6 +75,8 @@ export const TEST_IDS = {
       `issue-create-duplicate-item-${toTestIdFragment(issueKey)}`,
     /** @see src/components/IssueDetail/CreateIssueModal.tsx */
     CREATE_ANOTHER_SWITCH: "issue-create-another-switch",
+    /** @see src/components/IssueDetail/IssueCard.tsx */
+    CARD_TRIGGER: (issueKey: string) => `issue-card-trigger-${toTestIdFragment(issueKey)}`,
     /** @see src/components/IssueCard.tsx */
     DRAG_HANDLE: "issue-drag-handle",
     /** @see src/components/IssueCard.tsx */
@@ -87,6 +89,10 @@ export const TEST_IDS = {
     ASSIGNEE: "issue-assignee",
     /** @see src/components/IssueDetailModal.tsx */
     DETAIL_MODAL: "issue-detail-modal",
+    /** @see src/components/IssueDetailModal.tsx */
+    DETAIL_KEY: "issue-detail-key",
+    /** @see src/components/IssueDetail/IssueDetailContent.tsx */
+    DETAIL_TITLE: "issue-detail-title",
     /** @see src/components/IssueDetail/IssueDetailContent.tsx */
     DESCRIPTION_EDITOR: "issue-description-editor",
     /** @see src/components/IssueDetail/IssueDetailContent.tsx */

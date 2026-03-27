@@ -88,7 +88,11 @@ export function IssueDetailContent({
               </Stack>
             ) : (
               <Stack gap="md">
-                <Typography variant="h2" className="border-none">
+                <Typography
+                  variant="h2"
+                  className="border-none"
+                  data-testid={TEST_IDS.ISSUE.DETAIL_TITLE}
+                >
                   {issueTitle}
                 </Typography>
                 {issueDescription ? (

@@ -551,7 +551,12 @@ export const IssueCard = memo(function IssueCard({
       )}
     >
       {/* Primary Action Overlay Button */}
-      <Button variant="overlay" onClick={handleClick} aria-label={getIssueAccessibleLabel(issue)} />
+      <Button
+        variant="overlay"
+        onClick={handleClick}
+        aria-label={getIssueAccessibleLabel(issue)}
+        data-testid={TEST_IDS.ISSUE.CARD_TRIGGER(issue.key)}
+      />
 
       {/* Content Wrapper - pointer-events-none allows clicks to pass through to overlay */}
       <div className="relative z-10 pointer-events-none">

@@ -780,36 +780,28 @@ export async function screenshotBoardModals(
     });
   }
 
-  let issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
-  if (issueKey) {
-    const matchingIssueCard = page
-      .getByTestId(TEST_IDS.ISSUE.CARD)
-      .filter({ hasText: issueKey })
-      .first();
-    if ((await matchingIssueCard.count()) > 0) {
-      issueCard = matchingIssueCard;
-    }
-  }
-
   if (
     shouldCaptureAny(prefix, [issueDetailModalName, issueDetailInlineEditingName]) &&
-    (await issueCard.count()) > 0
+    ((issueKey && (await projectsPage.getIssueCardTrigger(issueKey).count()) > 0) ||
+      (await projectsPage.issueCards.count()) > 0)
   ) {
     await runCaptureStep("board issue-detail modal", async () => {
-      await issueCard.scrollIntoViewIfNeeded();
-      const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
-      await issueCard.click();
-      const dialogOpened = await waitForLocatorVisible(issueDetailDialog, 3000);
-      if (!dialogOpened) {
-        await waitForScreenshotReady(page);
+      if (issueKey && (await projectsPage.getIssueCardTrigger(issueKey).count()) > 0) {
+        await projectsPage.getIssueCardTrigger(issueKey).scrollIntoViewIfNeeded();
+        await projectsPage.openIssueDetailByKey(issueKey);
+      } else {
+        const issueCard = projectsPage.issueCards.first();
+        await issueCard.scrollIntoViewIfNeeded();
         await issueCard.click();
-        await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+        const dialogOpened = await waitForLocatorVisible(projectsPage.issueDetailDialog, 3000);
+        if (!dialogOpened) {
+          await waitForScreenshotReady(page);
+          await issueCard.click();
+          await projectsPage.issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+        }
+        await expect(projectsPage.issueDetailKey).toBeVisible({ timeout: 5000 });
+        await expect(projectsPage.issueDetailTitle).toBeVisible({ timeout: 5000 });
       }
-      // Wait for issue content to hydrate - issue key pattern indicates content is loaded
-      await issueDetailDialog
-        .getByText(/[A-Z][A-Z0-9]+-\d+/)
-        .first()
-        .waitFor({ timeout: 5000 });
 
       if (shouldCapture(prefix, issueDetailModalName)) {
         await waitForScreenshotReady(page);
@@ -828,7 +820,7 @@ export async function screenshotBoardModals(
         await captureCurrentView(page, prefix, issueDetailInlineEditingName);
       }
 
-      await dismissIfOpen(page, issueDetailDialog);
+      await dismissIfOpen(page, projectsPage.issueDetailDialog);
     });
   }
 }
@@ -1115,17 +1107,16 @@ export async function screenshotIssuesStates(
     await runCaptureStep("issues create modal", async () => {
       await openIssuesForCapture();
       await dismissAllDialogs(page);
-      const createIssueDialog = page.getByRole("dialog", { name: /^create issue$/i });
       await openStableDialog(
         page,
         issuesPage.createIssueButton,
-        createIssueDialog,
+        issuesPage.createIssueModal,
         issuesPage.issueTitleInput,
         "issues create issue",
       );
       await waitForCreateIssueModalScreenshotReady(page, issuesPage);
       await captureCurrentView(page, prefix, createModalName);
-      await dismissIfOpen(page, createIssueDialog);
+      await dismissIfOpen(page, issuesPage.createIssueModal);
     });
   }
 

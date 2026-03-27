@@ -195,9 +195,10 @@ describe("IssueDetailModal", () => {
 
     renderModal();
 
-    expect(screen.getByText("TEST-123")).toBeInTheDocument();
-    // Title appears in modal header - use getAllByText since it may appear multiple times
-    expect(screen.getAllByText(/Fix authentication bug/i).length).toBeGreaterThan(0);
+    expect(screen.getByTestId(TEST_IDS.ISSUE.DETAIL_KEY)).toHaveTextContent("TEST-123");
+    expect(screen.getByTestId(TEST_IDS.ISSUE.DETAIL_TITLE)).toHaveTextContent(
+      "Fix authentication bug",
+    );
     expect(screen.getAllByText(/Users cannot login/i).length).toBeGreaterThan(0);
   });
 
