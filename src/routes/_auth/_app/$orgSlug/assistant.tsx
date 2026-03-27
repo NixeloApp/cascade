@@ -16,7 +16,6 @@ import { Stack } from "@/components/ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { isE2ELoadingOverrideEnabled } from "@/lib/e2e-loading-overrides";
 import { formatDate } from "@/lib/formatting";
 import { Bot, CheckCircle, DollarSign, MessageSquare, Sparkles } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -384,7 +383,7 @@ export function AssistantPage() {
   const stats = useAuthenticatedQuery(api.ai.queries.getUsageStats, {});
   const chats = useAuthenticatedQuery(api.ai.queries.getUserChats, {});
 
-  if (isE2ELoadingOverrideEnabled("assistant") || stats === undefined) {
+  if (stats === undefined) {
     return <AssistantLoadingState />;
   }
 

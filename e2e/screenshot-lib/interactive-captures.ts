@@ -24,7 +24,11 @@ import {
   SprintsPage,
 } from "../pages";
 import { createMyIssuesLoadingPage } from "../pages/my-issues.page";
-import { createConvexLoadingPage } from "../utils/convex-loading";
+import {
+  createConvexLoadingPage,
+  createIsolatedPageWithInitScript,
+  createQueryBlockedPage,
+} from "../utils/convex-loading";
 import { waitForLocatorVisible } from "../utils/locator-state";
 import { testUserService } from "../utils/test-user-service";
 import {
@@ -120,13 +124,12 @@ export async function screenshotDashboardLoadingState(
   }
 
   await runCaptureStep("dashboard loading skeletons", async () => {
-    const loadingPage = await page.context().newPage();
+    const loadingTarget = await createIsolatedPageWithInitScript(page, () => {
+      window.__NIXELO_E2E_DASHBOARD_LOADING__ = true;
+    });
+    const { page: loadingPage } = loadingTarget;
 
     try {
-      await loadingPage.addInitScript(() => {
-        window.__NIXELO_E2E_DASHBOARD_LOADING__ = true;
-      });
-
       const dashboardUrl = ROUTES.dashboard.build(orgSlug);
       await loadingPage.goto(`${BASE_URL}${dashboardUrl}`, {
         waitUntil: "domcontentloaded",
@@ -153,9 +156,7 @@ export async function screenshotDashboardLoadingState(
         skipReadyCheck: true,
       });
     } finally {
-      if (!loadingPage.isClosed()) {
-        await loadingPage.close();
-      }
+      await loadingTarget.close();
     }
   });
 }
@@ -527,13 +528,10 @@ export async function screenshotAssistantStates(
 
   if (shouldCapture(prefix, captureNames.loading)) {
     await runCaptureStep("assistant loading", async () => {
-      const loadingPage = await page.context().newPage();
+      const loadingTarget = await createQueryBlockedPage(page, ["ai/queries:getUsageStats"]);
+      const { page: loadingPage } = loadingTarget;
 
       try {
-        await loadingPage.addInitScript(() => {
-          window.__NIXELO_E2E_ASSISTANT_LOADING__ = true;
-        });
-
         await loadingPage.goto(`${BASE_URL}${assistantUrl}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
@@ -545,9 +543,7 @@ export async function screenshotAssistantStates(
           skipReadyCheck: true,
         });
       } finally {
-        if (!loadingPage.isClosed()) {
-          await loadingPage.close();
-        }
+        await loadingTarget.close();
       }
     });
   }
@@ -1057,7 +1053,9 @@ export async function screenshotIssuesStates(
 
   if (shouldCapture(prefix, loadingStateName)) {
     await runCaptureStep("issues loading state", async () => {
-      const isolatedLoadingPage = await createIsolatedConvexLoadingPage(page);
+      const isolatedLoadingPage = await createIsolatedPageWithInitScript(page, () => {
+        window.__NIXELO_E2E_ISSUES_LOADING__ = true;
+      });
       const { page: loadingPage } = isolatedLoadingPage;
       const loadingIssuesPage = new IssuesPage(loadingPage, orgSlug);
 

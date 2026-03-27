@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { collectBannedScreenshotProdHooks, run } from "./check-screenshot-prod-hooks.js";
 
-const EXPECTED_VIOLATION_COUNT = 14;
+const EXPECTED_VIOLATION_COUNT = 15;
 const EXAMPLE_FILE_PATH_SUFFIX = "tmp/example.tsx";
 
 describe("check-screenshot-prod-hooks", () => {
@@ -36,6 +36,9 @@ describe("check-screenshot-prod-hooks", () => {
           return;
         }
         if (window.__NIXELO_E2E_PROJECTS_LOADING__) {
+          return;
+        }
+        if (window.__NIXELO_E2E_ASSISTANT_LOADING__) {
           return;
         }
       `,
@@ -113,6 +116,11 @@ describe("check-screenshot-prod-hooks", () => {
       pattern: "__NIXELO_E2E_PROJECTS_LOADING__",
     });
     expect(violations[13]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
+    expect(violations[14]).toMatchObject({
+      line: 32,
+      pattern: "__NIXELO_E2E_ASSISTANT_LOADING__",
+    });
+    expect(violations[14]?.file.endsWith(EXAMPLE_FILE_PATH_SUFFIX)).toBe(true);
   });
 
   it("passes against the current repo state", () => {

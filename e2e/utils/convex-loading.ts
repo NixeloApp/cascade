@@ -166,6 +166,37 @@ export async function createConvexLoadingPage(sourcePage: Page): Promise<Page> {
   return loadingPage;
 }
 
+async function createIsolatedContextFromPage(sourcePage: Page) {
+  const browser = sourcePage.context().browser();
+  if (!browser) {
+    throw new Error("Unable to create isolated loading page without a browser instance");
+  }
+
+  return browser.newContext({
+    storageState: await sourcePage.context().storageState(),
+    viewport: sourcePage.viewportSize() ?? undefined,
+  });
+}
+
+export async function createIsolatedPageWithInitScript(
+  sourcePage: Page,
+  initScript: () => void,
+): Promise<{
+  close: () => Promise<void>;
+  page: Page;
+}> {
+  const isolatedContext = await createIsolatedContextFromPage(sourcePage);
+  await isolatedContext.addInitScript(initScript);
+  const isolatedPage = await isolatedContext.newPage();
+
+  return {
+    page: isolatedPage,
+    close: async () => {
+      await isolatedContext.close();
+    },
+  };
+}
+
 export async function blockConvexMutation(
   page: Page,
   mutationPath: string,
@@ -184,5 +215,48 @@ export async function blockConvexMutation(
 
   return async () => {
     await page.unroute("**/api/mutation", handler);
+  };
+}
+
+export async function blockConvexQuery(
+  page: Page,
+  queryPath: string,
+): Promise<() => Promise<void>> {
+  const handler = async (route: Route): Promise<void> => {
+    const requestPath = getConvexRequestPath(route, "/api/query");
+
+    if (requestPath === queryPath) {
+      return new Promise<void>(() => {});
+    }
+
+    await route.continue();
+  };
+
+  await page.route("**/api/query", handler);
+
+  return async () => {
+    await page.unroute("**/api/query", handler);
+  };
+}
+
+export async function createQueryBlockedPage(
+  sourcePage: Page,
+  queryPaths: string[],
+): Promise<{
+  close: () => Promise<void>;
+  page: Page;
+}> {
+  const isolatedContext = await createIsolatedContextFromPage(sourcePage);
+  const blockedPage = await isolatedContext.newPage();
+  const releaseBlocks = await Promise.all(
+    queryPaths.map((queryPath) => blockConvexQuery(blockedPage, queryPath)),
+  );
+
+  return {
+    page: blockedPage,
+    close: async () => {
+      await Promise.all(releaseBlocks.map((releaseBlock) => releaseBlock()));
+      await isolatedContext.close();
+    },
   };
 }
