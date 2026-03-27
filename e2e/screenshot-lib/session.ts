@@ -86,6 +86,19 @@ export interface FilledScreenshotCaptureOptions {
 }
 
 export type AuthenticatedScreenshotCapturePhase = "empty-state" | "filled-state";
+export type ScreenshotSeededPhaseMode = "filled-only" | "public-and-filled" | "public-only";
+export type ScreenshotCaptureExecutionStep =
+  | {
+      group: "seedless";
+      kind: "public";
+    }
+  | {
+      kind: "empty";
+    }
+  | {
+      kind: "seeded";
+      mode: ScreenshotSeededPhaseMode;
+    };
 
 export type ScreenshotCaptureExecutionContext =
   | {
@@ -208,6 +221,53 @@ export function buildScreenshotCaptureExecutionPlan(
     runSeededPublicPhase,
     runSeedlessPublicPhase,
   };
+}
+
+export function getScreenshotSeededPhaseMode(
+  executionPlan: ScreenshotCaptureExecutionPlan,
+): ScreenshotSeededPhaseMode | null {
+  if (!executionPlan.runSeededPhase) {
+    return null;
+  }
+
+  if (executionPlan.runFilledPhase && executionPlan.runSeededPublicPhase) {
+    return "public-and-filled";
+  }
+
+  if (executionPlan.runFilledPhase) {
+    return "filled-only";
+  }
+
+  return "public-only";
+}
+
+export function buildScreenshotCaptureExecutionSteps(
+  executionPlan: ScreenshotCaptureExecutionPlan,
+): ScreenshotCaptureExecutionStep[] {
+  const executionSteps: ScreenshotCaptureExecutionStep[] = [];
+
+  if (executionPlan.runSeedlessPublicPhase) {
+    executionSteps.push({
+      group: "seedless",
+      kind: "public",
+    });
+  }
+
+  if (executionPlan.runEmptyPhase) {
+    executionSteps.push({
+      kind: "empty",
+    });
+  }
+
+  const seededPhaseMode = getScreenshotSeededPhaseMode(executionPlan);
+  if (seededPhaseMode) {
+    executionSteps.push({
+      kind: "seeded",
+      mode: seededPhaseMode,
+    });
+  }
+
+  return executionSteps;
 }
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
@@ -599,15 +659,20 @@ export async function captureFilledStatesForConfig(
 }
 
 export function getSeededPhaseLogLabel(executionPlan: ScreenshotCaptureExecutionPlan): string {
-  if (!executionPlan.runSeededPhase) {
+  const seededPhaseMode = getScreenshotSeededPhaseMode(executionPlan);
+  if (!seededPhaseMode) {
     throw new Error("Seeded phase log label requires at least one seeded capture phase");
   }
 
-  if (executionPlan.runFilledPhase && executionPlan.runSeededPublicPhase) {
+  return getSeededPhaseLogLabelForMode(seededPhaseMode);
+}
+
+export function getSeededPhaseLogLabelForMode(seededPhaseMode: ScreenshotSeededPhaseMode): string {
+  if (seededPhaseMode === "public-and-filled") {
     return "\n  📋 Phase 2: Seed data + public pages + filled states";
   }
 
-  if (executionPlan.runFilledPhase) {
+  if (seededPhaseMode === "filled-only") {
     return "\n  📋 Phase 2: Seed data + filled states";
   }
 
@@ -675,10 +740,10 @@ export async function runEmptyScreenshotPhase(
 export async function runSeededScreenshotPhase(
   launchBrowser: LaunchBrowser,
   configs: ScreenshotCaptureConfig[],
-  executionPlan: ScreenshotCaptureExecutionPlan,
+  seededPhaseMode: ScreenshotSeededPhaseMode,
   executionContext: ScreenshotCaptureExecutionContext,
 ): Promise<void> {
-  console.log(getSeededPhaseLogLabel(executionPlan));
+  console.log(getSeededPhaseLogLabelForMode(seededPhaseMode));
   console.log("  Seeding screenshot data...");
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
     orgSlug: executionContext.seedOrgSlug,
@@ -691,7 +756,7 @@ export async function runSeededScreenshotPhase(
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
   }
 
-  if (executionPlan.runFilledPhase) {
+  if (seededPhaseMode !== "public-only") {
     const { authStorageState, orgSlug } = getAuthenticatedScreenshotBootstrap(
       executionContext,
       "filled-state",
@@ -706,14 +771,10 @@ export async function runSeededScreenshotPhase(
         seedResult,
         authStorageState ?? undefined,
         {
-          includeSeededPublicPages: executionPlan.runSeededPublicPhase,
+          includeSeededPublicPages: seededPhaseMode === "public-and-filled",
         },
       );
     }
-    return;
-  }
-
-  if (!executionPlan.runSeededPublicPhase) {
     return;
   }
 
@@ -733,32 +794,35 @@ export async function captureConfiguredScreenshotStates(
   configs: ScreenshotCaptureConfig[],
 ): Promise<boolean> {
   const executionPlan = buildScreenshotCaptureExecutionPlan();
-
-  if (executionPlan.runSeedlessPublicPhase) {
-    await runSeedlessPublicScreenshotPhase(launchBrowser, configs);
-  }
-
-  if (!executionPlan.runEmptyPhase && !executionPlan.runSeededPhase) {
+  const executionSteps = buildScreenshotCaptureExecutionSteps(executionPlan);
+  if (executionSteps.length === 0) {
     return true;
   }
 
-  const executionContext = await prepareScreenshotCaptureExecutionContext(
-    launchBrowser,
-    executionPlan,
-  );
-  if (!executionContext) {
-    return false;
-  }
+  let executionContext: ScreenshotCaptureExecutionContext | null = null;
+  for (const executionStep of executionSteps) {
+    if (executionStep.kind === "public") {
+      await runSeedlessPublicScreenshotPhase(launchBrowser, configs);
+      continue;
+    }
 
-  if (executionPlan.runEmptyPhase) {
-    await runEmptyScreenshotPhase(launchBrowser, configs, executionContext);
-  }
+    if (!executionContext) {
+      executionContext = await prepareScreenshotCaptureExecutionContext(
+        launchBrowser,
+        executionPlan,
+      );
+      if (!executionContext) {
+        return false;
+      }
+    }
 
-  if (!executionPlan.runSeededPhase) {
-    return true;
-  }
+    if (executionStep.kind === "empty") {
+      await runEmptyScreenshotPhase(launchBrowser, configs, executionContext);
+      continue;
+    }
 
-  await runSeededScreenshotPhase(launchBrowser, configs, executionPlan, executionContext);
+    await runSeededScreenshotPhase(launchBrowser, configs, executionStep.mode, executionContext);
+  }
 
   return true;
 }

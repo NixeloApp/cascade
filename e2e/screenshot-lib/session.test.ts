@@ -16,6 +16,7 @@ import {
 } from "./public-pages";
 import {
   buildScreenshotCaptureExecutionPlan,
+  buildScreenshotCaptureExecutionSteps,
   buildScreenshotCapturePhasePlan,
   captureConfiguredScreenshotStates,
   captureEmptyStatesForConfig,
@@ -25,7 +26,9 @@ import {
   getAuthenticatedScreenshotBootstrap,
   getCaptureNamesForPrefix,
   getScreenshotContextOptions,
+  getScreenshotSeededPhaseMode,
   getSeededPhaseLogLabel,
+  getSeededPhaseLogLabelForMode,
   getSelectedScreenshotPageIds,
   prepareScreenshotAuthBootstrap,
   prepareScreenshotCaptureExecutionContext,
@@ -302,6 +305,51 @@ describe("screenshot session helpers", () => {
         buildScreenshotCaptureExecutionPlan(["public-portal-project", "filled-issues-loading"]),
       ),
     ).toBe("\n  📋 Phase 2: Seed data + public pages + filled states");
+  });
+
+  it("derives explicit seeded phase modes from the execution plan", () => {
+    expect(
+      getScreenshotSeededPhaseMode(buildScreenshotCaptureExecutionPlan(["public-landing"])),
+    ).toBe(null);
+    expect(
+      getScreenshotSeededPhaseMode(buildScreenshotCaptureExecutionPlan(["public-portal-project"])),
+    ).toBe("public-only");
+    expect(
+      getScreenshotSeededPhaseMode(buildScreenshotCaptureExecutionPlan(["filled-issues-loading"])),
+    ).toBe("filled-only");
+    expect(
+      getScreenshotSeededPhaseMode(
+        buildScreenshotCaptureExecutionPlan(["public-portal-project", "filled-issues-loading"]),
+      ),
+    ).toBe("public-and-filled");
+    expect(getSeededPhaseLogLabelForMode("public-only")).toBe(
+      "\n  📋 Phase 2: Seed data + token-backed public pages",
+    );
+  });
+
+  it("builds one ordered execution-step list from the execution plan", () => {
+    expect(
+      buildScreenshotCaptureExecutionSteps(
+        buildScreenshotCaptureExecutionPlan([
+          "public-landing",
+          "empty-dashboard",
+          "public-portal-project",
+          "filled-issues-loading",
+        ]),
+      ),
+    ).toEqual([
+      {
+        group: "seedless",
+        kind: "public",
+      },
+      {
+        kind: "empty",
+      },
+      {
+        kind: "seeded",
+        mode: "public-and-filled",
+      },
+    ]);
   });
 
   it("returns the authenticated bootstrap only for authenticated execution contexts", () => {
@@ -1139,7 +1187,7 @@ describe("screenshot session helpers", () => {
     await runSeededScreenshotPhase(
       launchBrowser,
       [{ viewport: "desktop", theme: "light" }],
-      buildScreenshotCaptureExecutionPlan(["filled-issues-loading"]),
+      "filled-only",
       {
         authBootstrap: { authStorageState: { cookies: [], origins: [] }, orgSlug: "acme" },
         bootstrapMode: "authenticated",
