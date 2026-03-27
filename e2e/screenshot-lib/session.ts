@@ -13,7 +13,6 @@ import {
   promoteStagedScreenshots,
   resetCounters,
   shouldCapture,
-  shouldCaptureAny,
 } from "./capture";
 import {
   SCREENSHOT_AUTH_USER,
@@ -27,8 +26,8 @@ import {
 } from "./config";
 import { screenshotFilledStates } from "./filled-states";
 import {
-  getEmptyCaptureNames,
   getPublicCaptureNames,
+  getSelectedEmptyCaptureGroups,
   type PublicScreenshotCaptureGroup,
   screenshotEmptyStates,
   screenshotPublicPages,
@@ -475,6 +474,17 @@ export async function captureEmptyStatesForConfig(
   storageState?: StorageState,
 ): Promise<void> {
   setCurrentConfig(viewport, theme, "empty");
+  const selectedEmptyCaptureGroups = getSelectedEmptyCaptureGroups();
+  const shouldCaptureBootstrapEmptyStates = selectedEmptyCaptureGroups.some(
+    ({ group }) => group === "bootstrap",
+  );
+  const shouldCaptureSeparateAuthEmptyStates = selectedEmptyCaptureGroups.some(
+    ({ group }) => group === "separate-auth",
+  );
+
+  if (selectedEmptyCaptureGroups.length === 0) {
+    return;
+  }
 
   try {
     const authenticated = await runAuthenticatedScreenshotCapture(
@@ -483,9 +493,11 @@ export async function captureEmptyStatesForConfig(
       theme,
       orgSlug,
       async ({ browser, page }) => {
-        await screenshotEmptyStates(page, orgSlug);
+        if (shouldCaptureBootstrapEmptyStates) {
+          await screenshotEmptyStates(page, orgSlug, { group: "bootstrap" });
+        }
 
-        if (shouldCaptureAny("empty", getEmptyCaptureNames("separate-auth"))) {
+        if (shouldCaptureSeparateAuthEmptyStates) {
           const myIssuesAuthenticated = await withAuthenticatedScreenshotPage(
             browser,
             viewport,

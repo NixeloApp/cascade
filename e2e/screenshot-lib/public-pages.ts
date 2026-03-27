@@ -15,6 +15,10 @@ export type PublicScreenshotCaptureGroup = "all" | "seeded" | "seedless";
 type PublicScreenshotCaptureTargetGroup = Exclude<PublicScreenshotCaptureGroup, "all">;
 export type EmptyScreenshotCaptureGroup = "all" | "bootstrap" | "separate-auth";
 type EmptyScreenshotTargetGroup = Exclude<EmptyScreenshotCaptureGroup, "all">;
+export interface SelectedEmptyScreenshotCaptureGroup {
+  group: EmptyScreenshotTargetGroup;
+  names: string[];
+}
 
 type PublicScreenshotSeed = Pick<
   SeedScreenshotResult,
@@ -201,6 +205,8 @@ const EMPTY_SCREENSHOT_TARGETS = [
   },
 ] satisfies EmptyScreenshotTargetDefinition[];
 
+const EMPTY_SCREENSHOT_TARGET_GROUPS = ["bootstrap", "separate-auth"] as const;
+
 export function getCanonicalPublicCaptureNames(): string[] {
   return getCanonicalCaptureNamesForPrefix("public");
 }
@@ -307,6 +313,19 @@ export function getEmptyScreenshotTargets(
 
 export function getEmptyCaptureNames(group: EmptyScreenshotCaptureGroup = "all"): string[] {
   return getEmptyScreenshotTargets(group).map((target) => target.name);
+}
+
+export function getSelectedEmptyCaptureGroups(): SelectedEmptyScreenshotCaptureGroup[] {
+  validateEmptyScreenshotTargets();
+
+  return EMPTY_SCREENSHOT_TARGET_GROUPS.flatMap((group) => {
+    const names = getEmptyCaptureNames(group);
+    if (!shouldCaptureAny("empty", names)) {
+      return [];
+    }
+
+    return [{ group, names }];
+  });
 }
 
 export async function screenshotPublicPages(

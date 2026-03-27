@@ -52,6 +52,7 @@
 - [ ] Keep blocked transport host resolution explicit and fail-fast. Loading helpers should not silently continue when no valid Convex host can be resolved for blocking.
 - [ ] Keep seeded screenshot phase selection explicit. Filled-state capture should only include seeded public pages when the derived execution plan actually selected them, instead of relying on nested `shouldCapture` checks to no-op.
 - [ ] Keep screenshot per-phase execution on shared session helpers. `captureConfiguredScreenshotStates()` should not keep re-growing inline phase loops, bootstrap assertions, and seeded-vs-filled branching after planning.
+- [ ] Keep empty-state auth-group execution derived from the canonical empty target manifest. Session helpers should not reintroduce ad hoc `separate-auth` filter checks or hard-coded knowledge of which empty target needs the second auth user.
 - [ ] Finish the remaining helper extractions in screenshot-lib itself so the only tracked raw-locator debt left is normal E2E specs, not screenshot capture code.
 
 ## Production Hook Cleanup
