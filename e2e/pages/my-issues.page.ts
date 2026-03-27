@@ -72,7 +72,13 @@ export class MyIssuesPage extends BasePage {
   }
 
   async selectDueDateFilter(label: string): Promise<void> {
-    const optionValue = label.toLowerCase();
+    const normalizedLabel = label.trim().toLowerCase();
+    const optionValue =
+      normalizedLabel === "no due date"
+        ? "no-date"
+        : normalizedLabel === "all due dates"
+          ? "all"
+          : normalizedLabel;
     await expect(this.dueDateFilter).toBeVisible();
     await this.dueDateFilter.click();
     const option = this.page.getByTestId(getMyIssuesDueDateFilterOptionTestId(optionValue));

@@ -22,6 +22,7 @@ import {
   MyIssuesPage,
   ProjectsPage,
   RoadmapPage,
+  SettingsPage,
   SprintsPage,
 } from "../pages";
 import { isLocatorVisible, waitForLocatorVisible } from "../utils/locator-state";
@@ -40,7 +41,7 @@ import {
   shouldCapture,
   shouldCaptureAny,
 } from "./capture";
-import { BASE_URL, SCREENSHOT_USER } from "./config";
+import { BASE_URL } from "./config";
 import { openStableDialog, waitForCreateIssueModalScreenshotReady } from "./dialog-helpers";
 import { waitForBoardReady, waitForExpectedContent } from "./readiness";
 
@@ -1222,15 +1223,6 @@ export async function screenshotMyIssuesStates(
     return;
   }
 
-  const myIssuesState = await testUserService.configureMyIssuesState(
-    orgSlug,
-    SCREENSHOT_USER.email,
-    "default",
-  );
-  if (!myIssuesState.success) {
-    throw new Error(myIssuesState.error ?? "Failed to normalize my-issues screenshot state");
-  }
-
   if (shouldCapture(prefix, filterActiveName)) {
     await runCaptureStep("my issues filter active", async () => {
       const filterActivePage = await page.context().newPage();
@@ -1259,8 +1251,7 @@ export async function screenshotMyIssuesStates(
         const filteredEmptyMyIssuesPage = new MyIssuesPage(filteredEmptyPage, orgSlug);
         await filteredEmptyMyIssuesPage.goto();
         await filteredEmptyMyIssuesPage.waitUntilReady();
-        await filteredEmptyMyIssuesPage.selectPriorityFilter("Highest");
-        await filteredEmptyMyIssuesPage.selectDueDateFilter("No Due Date");
+        await filteredEmptyMyIssuesPage.selectPriorityFilter("Lowest");
         await filteredEmptyMyIssuesPage.expectFilteredEmptyState();
         await waitForScreenshotReady(filteredEmptyPage);
         await captureCurrentView(filteredEmptyPage, prefix, filteredEmptyName);
@@ -1288,14 +1279,15 @@ export async function screenshotMyIssuesStates(
       const loadingPage = await isolatedContext.newPage();
 
       try {
-        const projectsPage = new ProjectsPage(loadingPage, orgSlug);
-        await projectsPage.goto();
-        await projectsPage.waitUntilReady();
+        const settingsPage = new SettingsPage(loadingPage, orgSlug);
+        await settingsPage.goto();
+        await settingsPage.waitForCaptureReady("profile");
         await isolatedContext.setOffline(true);
-        await loadingPage.goto(`${BASE_URL}${ROUTES.myIssues.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
+        await loadingPage
+          .getByTestId(TEST_IDS.NAV.MY_ISSUES_LINK)
+          .evaluate((element: HTMLAnchorElement) => {
+            element.click();
+          });
         const loadingMyIssuesPage = new MyIssuesPage(loadingPage, orgSlug);
         await loadingMyIssuesPage.expectLoadingStateVisible();
         await waitForAnimation(loadingPage);

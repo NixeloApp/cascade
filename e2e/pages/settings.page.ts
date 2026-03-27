@@ -226,7 +226,7 @@ export class SettingsPage extends BasePage {
   async goto() {
     // Navigate directly to settings URL
     const url = ROUTES.settings.profile.build(this.orgSlug);
-    await this.page.goto(url);
+    await this.gotoPath(url);
 
     try {
       // Wait for the Settings heading as a sign of page load
@@ -285,14 +285,13 @@ export class SettingsPage extends BasePage {
       | "settings-admin"
       | "settings-offline",
   ): Promise<void> {
-    await this.page.waitForURL(
-      (currentUrl) =>
-        new URL(currentUrl).pathname ===
-        new URL(ROUTES.settings.profile.build(this.orgSlug)).pathname,
-      {
-        timeout: 12000,
-      },
-    );
+    const expectedPathname = new URL(
+      ROUTES.settings.profile.build(this.orgSlug),
+      "http://cascade.local",
+    ).pathname;
+    await this.page.waitForURL((currentUrl) => new URL(currentUrl).pathname === expectedPathname, {
+      timeout: 12000,
+    });
     await this.waitUntilReady();
 
     if (name === "settings-notifications") {

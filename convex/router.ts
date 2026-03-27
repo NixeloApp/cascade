@@ -16,7 +16,6 @@ import {
   cleanupRbacProjectEndpoint,
   cleanupTestUsersEndpoint,
   configureAssistantStateEndpoint,
-  configureMyIssuesStateEndpoint,
   configureNotificationsStateEndpoint,
   configureOrgAnalyticsStateEndpoint,
   configureProjectAnalyticsStateEndpoint,
@@ -414,12 +413,6 @@ http.route({
   path: "/e2e/configure-notifications-state",
   method: "POST",
   handler: configureNotificationsStateEndpoint,
-});
-
-http.route({
-  path: "/e2e/configure-my-issues-state",
-  method: "POST",
-  handler: configureMyIssuesStateEndpoint,
 });
 
 http.route({
