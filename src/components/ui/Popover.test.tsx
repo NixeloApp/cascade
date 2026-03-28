@@ -1,40 +1,55 @@
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { render, screen } from "@/test/custom-render";
-import {
-  Popover,
-  PopoverBody,
-  PopoverContent,
-  PopoverDescription,
-  PopoverFooter,
-  PopoverHeader,
-  PopoverTitle,
-} from "./Popover";
+import { Popover } from "./Popover";
+import { Typography } from "./Typography";
 
 describe("Popover", () => {
-  it("supports slot-based overlay anatomy without shell padding drift", () => {
+  it("renders structured header, body, and footer chrome through the wrapper API", () => {
     render(
-      <Popover open={true}>
-        <PopoverContent padding="none" data-testid="popover-content">
-          <PopoverHeader>
-            <PopoverTitle as="h3">Create label</PopoverTitle>
-            <PopoverDescription>Choose a label name and color.</PopoverDescription>
-          </PopoverHeader>
-          <PopoverBody>
-            <p>Label form body</p>
-          </PopoverBody>
-          <PopoverFooter>
-            <button type="button">Cancel</button>
-            <button type="button">Create</button>
-          </PopoverFooter>
-        </PopoverContent>
+      <Popover
+        bodyClassName="p-0"
+        contentTestId="popover-content"
+        footer={<button type="button">Create</button>}
+        header={<Typography variant="label">Create label</Typography>}
+        open={true}
+        padding="none"
+      >
+        <Typography>Choose a label name and color.</Typography>
       </Popover>,
     );
 
     expect(screen.getByTestId("popover-content")).toHaveClass("p-0");
-    expect(screen.getByRole("heading", { name: "Create label" })).toBeInTheDocument();
+    expect(screen.getByText("Create label")).toBeInTheDocument();
     expect(screen.getByText("Choose a label name and color.")).toBeInTheDocument();
-    expect(screen.getByText("Label form body")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
+  });
+
+  it("supports anchored overlays and render-prop close handling", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Popover
+        anchor={<div data-testid="selection-anchor" />}
+        className="w-auto"
+        defaultOpen={true}
+        footer={({ close }) => (
+          <button type="button" onClick={close}>
+            Done
+          </button>
+        )}
+        recipe="floatingToolbar"
+      >
+        {({ open }) => <Typography>{open ? "Toolbar open" : "Toolbar closed"}</Typography>}
+      </Popover>,
+    );
+
+    expect(screen.getByTestId("selection-anchor")).toBeInTheDocument();
+    expect(screen.getByText("Toolbar open")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Done" }));
+
+    expect(screen.queryByText("Toolbar open")).not.toBeInTheDocument();
   });
 });

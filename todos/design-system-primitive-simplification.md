@@ -38,6 +38,7 @@ Every shadcn compound component gets one wrapper. Subcomponent exports are delet
 - **Landed:** Wrapper-only `Select` API, grouped/custom-render support, empty-string option handling, migrated feature call sites, updated Storybook, and test-harness consolidation onto one shared mock.
 
 ### PopoverField (replaces 8 Popover subcomponent exports)
+- **Status:** Done (2026-03-28)
 - **Files to update:** 14
 - **API:**
   ```tsx
@@ -48,6 +49,7 @@ Every shadcn compound component gets one wrapper. Subcomponent exports are delet
 - **Supports:** `align`, `side`, `sideOffset`, controlled `open`/`onOpenChange`, `data-testid`
 - **Delete:** `PopoverTrigger`, `PopoverContent`, `PopoverAnchor`, `PopoverBody`, `PopoverHeader`, `PopoverFooter`, `PopoverTitle`, `PopoverDescription` exports
 - **End state:** 0 feature files importing Popover subcomponents
+- **Landed:** Wrapper-only `Popover` API with trigger tooltip support, anchored overlays, wrapper-owned header/body/footer chrome slots, migrated production call sites, refreshed Storybook, and shared test mocking for the new contract.
 
 ### CommandMenu (replaces 7 Command subcomponent exports)
 - **Files to update:** 8
@@ -136,7 +138,7 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 
 ## Exit Criteria
 
-- [ ] Every shadcn compound component has one wrapper. 0 feature files import subcomponents.
+- [ ] Every shadcn compound component has one wrapper. `Select` and `Popover` are done; `Command` remains.
 - [ ] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
 - [ ] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
 - [ ] No variant axis above 20 options in shared primitives.

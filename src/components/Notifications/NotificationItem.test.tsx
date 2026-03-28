@@ -81,11 +81,7 @@ vi.mock("@/components/ui/Metadata", () => ({
   MetadataTimestamp: ({ date }: { date: number }) => <time>{date}</time>,
 }));
 
-vi.mock("@/components/ui/Popover", () => ({
-  Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PopoverTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PopoverContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-}));
+vi.mock("@/components/ui/Popover", async () => await import("@/test/__tests__/popoverMock"));
 
 vi.mock("@/components/ui/Stack", () => ({
   Stack: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -261,6 +257,7 @@ describe("NotificationItem", () => {
       />,
     );
 
+    await user.click(screen.getByRole("button", { name: "Snooze notification" }));
     await user.click(screen.getByRole("button", { name: "3 hours" }));
 
     await waitFor(() =>

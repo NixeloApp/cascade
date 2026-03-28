@@ -14,7 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
+import { Popover } from "@/components/ui/Popover";
 import { Separator } from "@/components/ui/Separator";
 import {
   Bold,
@@ -151,55 +151,65 @@ export function FloatingToolbar() {
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverAnchor
-        style={{
-          position: "fixed",
-          left: anchorRect.left + anchorRect.width / 2,
-          top: anchorRect.top - 8,
-          width: 1,
-          height: 1,
-        }}
-      />
-      <PopoverContent
-        recipe="floatingToolbar"
-        side="top"
-        align="center"
-        sideOffset={8}
-        onOpenAutoFocus={(e) => e.preventDefault()}
-      >
-        <MarkButton nodeType={NODE_TYPES.bold} icon={Bold} tooltip="Bold (Ctrl+B)" />
-        <MarkButton nodeType={NODE_TYPES.italic} icon={Italic} tooltip="Italic (Ctrl+I)" />
-        <MarkButton nodeType={NODE_TYPES.underline} icon={Underline} tooltip="Underline (Ctrl+U)" />
-        <MarkButton
-          nodeType={NODE_TYPES.strikethrough}
-          icon={Strikethrough}
-          tooltip="Strikethrough"
+    <Popover
+      align="center"
+      anchor={
+        <div
+          style={{
+            position: "fixed",
+            left: anchorRect.left + anchorRect.width / 2,
+            top: anchorRect.top - 8,
+            width: 1,
+            height: 1,
+          }}
         />
+      }
+      open={open}
+      onOpenAutoFocus={(e) => e.preventDefault()}
+      onOpenChange={setOpen}
+      recipe="floatingToolbar"
+      side="top"
+      sideOffset={8}
+    >
+      {() => (
+        <>
+          <MarkButton nodeType={NODE_TYPES.bold} icon={Bold} tooltip="Bold (Ctrl+B)" />
+          <MarkButton nodeType={NODE_TYPES.italic} icon={Italic} tooltip="Italic (Ctrl+I)" />
+          <MarkButton
+            nodeType={NODE_TYPES.underline}
+            icon={Underline}
+            tooltip="Underline (Ctrl+U)"
+          />
+          <MarkButton
+            nodeType={NODE_TYPES.strikethrough}
+            icon={Strikethrough}
+            tooltip="Strikethrough"
+          />
 
-        <Separator orientation="vertical" recipe="floatingToolbar" />
+          <Separator orientation="vertical" recipe="floatingToolbar" />
 
-        <MarkButton nodeType={NODE_TYPES.code} icon={Code} tooltip="Inline Code (Ctrl+`)" />
+          <MarkButton nodeType={NODE_TYPES.code} icon={Code} tooltip="Inline Code (Ctrl+`)" />
 
-        <Separator orientation="vertical" recipe="floatingToolbar" />
+          <Separator orientation="vertical" recipe="floatingToolbar" />
 
-        <MarkButton nodeType={NODE_TYPES.highlight} icon={Highlighter} tooltip="Highlight" />
-        <ColorPickerButton type="fontColor" />
-        <ColorPickerButton type="backgroundColor" />
+          <MarkButton nodeType={NODE_TYPES.highlight} icon={Highlighter} tooltip="Highlight" />
+          <ColorPickerButton type="fontColor" />
+          <ColorPickerButton type="backgroundColor" />
 
-        <Separator orientation="vertical" recipe="floatingToolbar" />
+          <Separator orientation="vertical" recipe="floatingToolbar" />
 
-        <Button
-          variant="unstyled"
-          chrome="toolbar"
-          chromeSize="toolbarIcon"
-          onClick={handleLink}
-          aria-label="Insert Link"
-          title="Insert Link (Ctrl+K)"
-        >
-          <Icon icon={Link} size="sm" />
-        </Button>
-      </PopoverContent>
+          <Button
+            variant="unstyled"
+            chrome="toolbar"
+            chromeSize="toolbarIcon"
+            onClick={handleLink}
+            aria-label="Insert Link"
+            title="Insert Link (Ctrl+K)"
+          >
+            <Icon icon={Link} size="sm" />
+          </Button>
+        </>
+      )}
     </Popover>
   );
 }

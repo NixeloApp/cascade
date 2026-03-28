@@ -16,7 +16,7 @@ import type { ReactionInfo } from "../../convex/lib/issueHelpers";
 import { Button } from "./ui/Button";
 import { Flex } from "./ui/Flex";
 import { IconButton } from "./ui/IconButton";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
+import { Popover } from "./ui/Popover";
 import { Tooltip } from "./ui/Tooltip";
 
 interface CommentReactionsProps {
@@ -62,15 +62,20 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
         );
       })}
 
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <Tooltip content="Add reaction">
-          <PopoverTrigger asChild>
-            <IconButton size="xs" aria-label="Add reaction">
-              <Smile size={16} />
-            </IconButton>
-          </PopoverTrigger>
-        </Tooltip>
-        <PopoverContent side="top" align="start" recipe="reactionPicker">
+      <Popover
+        align="start"
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        recipe="reactionPicker"
+        side="top"
+        tooltip={{ content: "Add reaction" }}
+        trigger={
+          <IconButton size="xs" aria-label="Add reaction">
+            <Smile size={16} />
+          </IconButton>
+        }
+      >
+        {() => (
           <Flex gap="xs">
             {COMMON_EMOJIS.map((emoji) => (
               <Tooltip key={emoji} content={emoji}>
@@ -85,7 +90,7 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
               </Tooltip>
             ))}
           </Flex>
-        </PopoverContent>
+        )}
       </Popover>
     </Flex>
   );

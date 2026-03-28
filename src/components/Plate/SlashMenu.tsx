@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/Command";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
+import { Popover } from "@/components/ui/Popover";
 import { Typography } from "@/components/ui/Typography";
 import {
   Code,
@@ -411,24 +411,28 @@ export function SlashMenu() {
         aria-hidden="true"
         onChange={handleImageInputChange}
       />
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverAnchor
-          style={{
-            position: "fixed",
-            left: anchorRect.left,
-            top: anchorRect.bottom + 4,
-            width: 1,
-            height: 1,
-          }}
-        />
-        <PopoverContent
-          recipe="slashMenu"
-          className="w-72"
-          align="start"
-          side="bottom"
-          sideOffset={4}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
+      <Popover
+        align="start"
+        anchor={
+          <div
+            style={{
+              position: "fixed",
+              left: anchorRect.left,
+              top: anchorRect.bottom + 4,
+              width: 1,
+              height: 1,
+            }}
+          />
+        }
+        className="w-72"
+        open={open}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onOpenChange={setOpen}
+        recipe="slashMenu"
+        side="bottom"
+        sideOffset={4}
+      >
+        {() => (
           <Command>
             <CommandList viewport="slashMenu">
               <CommandEmpty tone="muted">No results found</CommandEmpty>
@@ -440,17 +444,19 @@ export function SlashMenu() {
                     onSelect={() => handleSelect(item)}
                     recipe="slashMenu"
                   >
-                    <Icon icon={item.icon} size="sm" className="mr-3" />
-                    <Flex direction="column" gap="xs">
-                      <Typography variant="label">{item.label}</Typography>
-                      <Typography variant="muted">{item.description}</Typography>
+                    <Flex align="center" gap="sm">
+                      <Icon icon={item.icon} size="sm" />
+                      <Flex direction="column" gap="xs">
+                        <Typography variant="label">{item.label}</Typography>
+                        <Typography variant="muted">{item.description}</Typography>
+                      </Flex>
                     </Flex>
                   </CommandItem>
                 ))}
               </CommandGroup>
             </CommandList>
           </Command>
-        </PopoverContent>
+        )}
       </Popover>
     </>
   );

@@ -27,15 +27,7 @@ import { Input, Select } from "@/components/ui/form";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { IssueLabelChip } from "@/components/ui/IssueLabelChip";
-import {
-  Popover,
-  PopoverBody,
-  PopoverContent,
-  PopoverFooter,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@/components/ui/Popover";
+import { Popover } from "@/components/ui/Popover";
 import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Typography } from "@/components/ui/Typography";
@@ -303,35 +295,11 @@ function CreateIssueLabelsSection({
             </IssueLabelChip>
           );
         })}
-        <Popover open={showCreateLabel} onOpenChange={onCreateOpenChange}>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" size="xs" aria-label="Create new label">
-              <Icon icon={Plus} size="sm" />
-              New
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" padding="none" className="w-64">
-            <PopoverHeader>
-              <PopoverTitle>Create Label</PopoverTitle>
-            </PopoverHeader>
-            <PopoverBody>
-              <Stack gap="md">
-                <Input
-                  placeholder="Label name"
-                  value={newLabelName}
-                  onChange={(e) => onNewLabelNameChange(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      onCreateLabel();
-                    }
-                  }}
-                  autoFocus
-                />
-                <ColorPicker value={newLabelColor} onChange={onNewLabelColorChange} label="Color" />
-              </Stack>
-            </PopoverBody>
-            <PopoverFooter>
+        <Popover
+          align="start"
+          className="w-64"
+          footer={
+            <>
               <Button
                 type="button"
                 variant="secondary"
@@ -349,8 +317,34 @@ function CreateIssueLabelsSection({
               >
                 Create
               </Button>
-            </PopoverFooter>
-          </PopoverContent>
+            </>
+          }
+          header={<Typography variant="label">Create Label</Typography>}
+          open={showCreateLabel}
+          onOpenChange={onCreateOpenChange}
+          padding="none"
+          trigger={
+            <Button type="button" variant="outline" size="xs" aria-label="Create new label">
+              <Icon icon={Plus} size="sm" />
+              New
+            </Button>
+          }
+        >
+          <Stack gap="md">
+            <Input
+              placeholder="Label name"
+              value={newLabelName}
+              onChange={(e) => onNewLabelNameChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onCreateLabel();
+                }
+              }}
+              autoFocus
+            />
+            <ColorPicker value={newLabelColor} onChange={onNewLabelColorChange} label="Color" />
+          </Stack>
         </Popover>
       </Flex>
     </Stack>
