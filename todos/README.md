@@ -10,7 +10,7 @@
 
 ## Core (Components & Validators)
 
-- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — `Select`, `Popover`, `Command`, string prop cleanup, raw HTML ban, plus the `Typography`, `Button`, `Badge`, and `Card` shrinks are done. Remaining work: raw Tailwind to 0, now down to 64 violations across 55 files.
+- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — `Select`, `Popover`, `Command`, string prop cleanup, raw HTML ban, plus the `Typography`, `Button`, `Badge`, and `Card` shrinks are done. Remaining work: raw Tailwind to 0, now down to 62 violations across 54 files.
 
 ## Features
 

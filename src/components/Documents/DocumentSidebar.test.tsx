@@ -85,6 +85,8 @@ describe("DocumentSidebar", () => {
     expect(screen.getByText("Archived")).toBeInTheDocument();
     expect(screen.getByText("Atlas")).toBeInTheDocument();
     expect(screen.queryByText("Paragraph content")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Overview/ })).toHaveStyle({ paddingLeft: "8px" });
+    expect(screen.getByRole("button", { name: /Next Steps/ })).toHaveStyle({ paddingLeft: "20px" });
 
     fireEvent.click(screen.getByRole("button", { name: /Next Steps/ }));
 
@@ -119,5 +121,28 @@ describe("DocumentSidebar", () => {
     expect(screen.getByText("Private")).toBeInTheDocument();
     expect(screen.queryByText("Archived")).not.toBeInTheDocument();
     expect(screen.queryByText("Atlas")).not.toBeInTheDocument();
+  });
+
+  it("applies the maximum supported toc indent for deepest headings", () => {
+    const deepHeadingValue: Value = [
+      {
+        type: "h6",
+        id: "max-depth",
+        children: [{ text: "Max Heading" }],
+      },
+    ];
+
+    render(
+      <DocumentSidebar
+        editorValue={deepHeadingValue}
+        documentInfo={documentInfo}
+        isOpen={true}
+        onToggle={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /Max Heading/ })).toHaveStyle({
+      paddingLeft: "68px",
+    });
   });
 });
