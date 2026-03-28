@@ -25,7 +25,6 @@ Done. All code in `convex/outreach/` + `convex/http/outreachOAuth.ts`.
 
 ### Setup
 
-- [x] ~~Tracking subdomain DNS (`t.nixelo.com` → Convex site URL)~~ — CNAME added in Cloudflare
 - [ ] Microsoft 365 OAuth (deferred — Gmail only for now)
 - [ ] Email validation on contact import (`deep-email-validator` — syntax + MX check)
 
@@ -38,7 +37,6 @@ Done. All code in `convex/outreach/` + `convex/http/outreachOAuth.ts`.
 - [ ] **Campaign launch** — select sequence + contacts, schedule or send now
 - [ ] **Analytics** — per-sequence funnel chart, per-contact timeline, mailbox health indicators
 - [ ] **Inbox** — view replies grouped by sequence/contact (simplified unified inbox)
-- [ ] Frontend postMessage handler for OAuth popup callback
 
 ### Backend (nice-to-have, not blocking)
 

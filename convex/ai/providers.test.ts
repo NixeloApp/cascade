@@ -24,7 +24,7 @@ describe("callAI", () => {
     const result = await callAI([{ role: "user", content: "Hello" }]);
 
     expect(result.content).toBe("Hello from AI");
-    expect(result.provider).toBe("test-model");
+    expect(result.provider).toBe("test");
     expect(result.usage).toEqual({
       promptTokens: 10,
       completionTokens: 5,

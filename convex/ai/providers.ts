@@ -37,7 +37,7 @@ export async function callAI(messages: AIMessage[]): Promise<AIResponse> {
 
   return {
     content: result.text,
-    provider: model.modelId,
+    provider: model.provider,
     usage: result.usage
       ? {
           promptTokens: result.usage.inputTokens ?? 0,

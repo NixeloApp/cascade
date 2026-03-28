@@ -17,7 +17,7 @@
 
 Every shadcn compound component gets one wrapper. Subcomponent exports are deleted. Feature code imports only the wrapper.
 
-### SelectField (replaces Select + 5 subcomponents)
+### SelectField (replaces 7 Select subcomponent exports)
 - **Files to update:** 36
 - **API:**
   ```tsx
@@ -35,7 +35,7 @@ Every shadcn compound component gets one wrapper. Subcomponent exports are delet
 - **Delete:** `SelectTrigger`, `SelectContent`, `SelectItem`, `SelectValue`, `SelectGroup`, `SelectLabel`, `SelectSeparator` exports from `ui/Select.tsx`
 - **End state:** 0 feature files importing Select subcomponents
 
-### PopoverField (replaces Popover + 3 subcomponents)
+### PopoverField (replaces 8 Popover subcomponent exports)
 - **Files to update:** 14
 - **API:**
   ```tsx
@@ -47,7 +47,7 @@ Every shadcn compound component gets one wrapper. Subcomponent exports are delet
 - **Delete:** `PopoverTrigger`, `PopoverContent`, `PopoverAnchor`, `PopoverBody`, `PopoverHeader`, `PopoverFooter`, `PopoverTitle`, `PopoverDescription` exports
 - **End state:** 0 feature files importing Popover subcomponents
 
-### CommandMenu (replaces Command + 6 subcomponents)
+### CommandMenu (replaces 7 Command subcomponent exports)
 - **Files to update:** 8
 - **API:**
   ```tsx

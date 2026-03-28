@@ -15,7 +15,7 @@ import { notFound, unauthenticated } from "../lib/errors";
 import { logger } from "../lib/logger";
 import { getPlainTextFromDescription } from "../lib/richText";
 import { rateLimit } from "../rateLimits";
-import { getActiveProvider, getModel } from "./config";
+import { getActiveProvider, getModel, isAIConfigured } from "./config";
 
 /**
  * Generate embedding for text using Voyage AI (Anthropic recommended)
@@ -132,11 +132,10 @@ Be concise, helpful, and professional.`;
     // Track response time
     const startTime = Date.now();
 
-    const model = getModel();
-    const provider = getActiveProvider();
-    const modelId = model.modelId;
-
     try {
+      const model = getModel();
+      const provider = getActiveProvider();
+      const modelId = model.modelId;
       const response = await generateText({
         model,
         messages: [
@@ -189,11 +188,13 @@ Be concise, helpful, and professional.`;
         content: `AI generation failed: ${errorMessage}`,
       });
 
-      // Track failed usage
+      // Track failed usage — provider/model may not exist if config itself threw
+      const failedProvider = isAIConfigured() ? getActiveProvider() : "anthropic";
+      const failedModel = "unknown";
       await ctx.runMutation(api.ai.mutations.trackUsage, {
         projectId: args.projectId,
-        provider,
-        model: modelId,
+        provider: failedProvider,
+        model: failedModel,
         operation: "chat",
         promptTokens: 0,
         completionTokens: 0,

@@ -13,6 +13,7 @@ vi.mock("./config", () => ({
   getModel: vi.fn(() => ({ modelId: "test-model", provider: "test" })),
   getActiveProvider: vi.fn(() => "anthropic"),
   getModelId: vi.fn(() => "test-model"),
+  isAIConfigured: vi.fn(() => true),
 }));
 
 function expectDefined<T>(value: T | undefined, label: string): T {
