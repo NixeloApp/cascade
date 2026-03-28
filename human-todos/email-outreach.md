@@ -25,7 +25,7 @@ Done. All code in `convex/outreach/` + `convex/http/outreachOAuth.ts`.
 
 ### Setup
 
-- [ ] Tracking subdomain DNS (`t.nixelo.com` → Convex site URL)
+- [x] ~~Tracking subdomain DNS (`t.nixelo.com` → Convex site URL)~~ — CNAME added in Cloudflare
 - [ ] Microsoft 365 OAuth (deferred — Gmail only for now)
 - [ ] Email validation on contact import (`deep-email-validator` — syntax + MX check)
 

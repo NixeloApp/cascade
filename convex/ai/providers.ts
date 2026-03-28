@@ -42,7 +42,9 @@ export async function callAI(messages: AIMessage[]): Promise<AIResponse> {
       ? {
           promptTokens: result.usage.inputTokens ?? 0,
           completionTokens: result.usage.outputTokens ?? 0,
-          totalTokens: (result.usage.inputTokens ?? 0) + (result.usage.outputTokens ?? 0),
+          totalTokens:
+            result.usage.totalTokens ??
+            (result.usage.inputTokens ?? 0) + (result.usage.outputTokens ?? 0),
         }
       : undefined,
   };

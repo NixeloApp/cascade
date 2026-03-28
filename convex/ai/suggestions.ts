@@ -19,7 +19,7 @@ import { HOUR } from "../lib/timeUtils";
 import { assertCanAccessProject, assertCanEditProject } from "../projectAccess";
 import { rateLimit } from "../rateLimits";
 import { issueTypes } from "../validators";
-import { getFastModel, getFastModelId } from "./config";
+import { getActiveProvider, getFastModel, getFastModelId } from "./config";
 
 /**
  * Action cache for AI suggestions
@@ -152,7 +152,7 @@ Description:`;
     // Track usage
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
-      provider: "anthropic",
+      provider: getActiveProvider(),
       model: getFastModelId(),
       operation: "suggestion",
       promptTokens: usage.promptTokens,
@@ -233,7 +233,7 @@ Priority:`;
     // Track usage
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
-      provider: "anthropic",
+      provider: getActiveProvider(),
       model: getFastModelId(),
       operation: "suggestion",
       promptTokens: usage.promptTokens,
@@ -321,7 +321,7 @@ Labels:`;
     // Track usage
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
-      provider: "anthropic",
+      provider: getActiveProvider(),
       model: getFastModelId(),
       operation: "suggestion",
       promptTokens: usage.promptTokens,
