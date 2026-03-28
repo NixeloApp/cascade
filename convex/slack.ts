@@ -9,6 +9,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
+  type ActionCtx,
   action,
   internalAction,
   internalMutation,
@@ -20,8 +21,8 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { encrypt } from "./lib/encryption";
 import { forbidden, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
+import { listProjectNotificationUserIds } from "./lib/projectNotificationDestinations";
 import { safeFetch } from "./lib/safeFetch";
-import { notDeleted } from "./lib/softDeleteHelpers";
 
 type SlackEvent =
   | "issue.created"
@@ -190,40 +191,10 @@ export const deliverMessageInternal = internalAction({
   },
   returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
-    const connection = await ctx.runQuery(internal.slack.getConnectionForDelivery, {
+    await deliverSlackConnectionMessage(ctx, {
       connectionId: args.connectionId,
+      text: args.text,
     });
-    if (!connection) {
-      return { success: true } as const;
-    }
-
-    try {
-      const response = await safeFetch(connection.incomingWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text: args.text }),
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw validation("slack", `Slack webhook failed: ${response.status} ${errorBody}`);
-      }
-
-      await ctx.runMutation(internal.slack.updateDeliveryStats, {
-        connectionId: args.connectionId,
-        success: true,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      await ctx.runMutation(internal.slack.updateDeliveryStats, {
-        connectionId: args.connectionId,
-        success: false,
-        error: errorMessage,
-      });
-      throw error;
-    }
 
     return { success: true } as const;
   },
@@ -387,21 +358,7 @@ export const listProjectDestinations = internalQuery({
     }),
   ),
   handler: async (ctx, args) => {
-    const project = await ctx.db.get(args.projectId);
-    if (!project || project.isDeleted) {
-      return [];
-    }
-
-    const members = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter(notDeleted)
-      .take(BOUNDED_LIST_LIMIT);
-
-    const userIds = new Set<Id<"users">>([project.createdBy]);
-    for (const member of members) {
-      userIds.add(member.userId);
-    }
+    const userIds = await listProjectNotificationUserIds(ctx, args.projectId);
 
     const destinations: Array<{ connectionId: Id<"slackConnections">; teamName: string }> = [];
     for (const userId of userIds) {
@@ -434,7 +391,7 @@ async function findUserSlackConnection(
   return connection;
 }
 
-function buildIssueNotificationText(
+export function buildIssueNotificationText(
   event: SlackEvent,
   issue: {
     key: string;
@@ -454,6 +411,52 @@ function buildIssueNotificationText(
     `Status: ${issue.status}`,
     `Assignee: ${assignee}`,
   ].join("\n");
+}
+
+export async function deliverSlackConnectionMessage(
+  ctx: {
+    runMutation: ActionCtx["runMutation"];
+    runQuery: ActionCtx["runQuery"];
+  },
+  args: {
+    connectionId: Id<"slackConnections">;
+    text: string;
+  },
+): Promise<void> {
+  const connection = await ctx.runQuery(internal.slack.getConnectionForDelivery, {
+    connectionId: args.connectionId,
+  });
+  if (!connection) {
+    return;
+  }
+
+  try {
+    const response = await safeFetch(connection.incomingWebhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text: args.text }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw validation("slack", `Slack webhook failed: ${response.status} ${errorBody}`);
+    }
+
+    await ctx.runMutation(internal.slack.updateDeliveryStats, {
+      connectionId: args.connectionId,
+      success: true,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    await ctx.runMutation(internal.slack.updateDeliveryStats, {
+      connectionId: args.connectionId,
+      success: false,
+      error: errorMessage,
+    });
+    throw error;
+  }
 }
 
 function getEventTitle(event: SlackEvent): string {

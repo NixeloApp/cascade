@@ -189,7 +189,8 @@ export const trigger = internalAction({
   },
 });
 
-async function triggerSingleWebhook(
+/** Deliver one webhook execution, persist the execution log, and update delivery metadata. */
+export async function triggerSingleWebhook(
   ctx: ActionCtx,
   webhook: Doc<"webhooks">,
   event: string,

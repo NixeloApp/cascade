@@ -16,13 +16,13 @@ import {
   issueViewerMutation,
   projectEditorMutation,
 } from "../customFunctions";
-import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { validate } from "../lib/constrainedValidators";
 import { conflict, forbidden, validation } from "../lib/errors";
 import { resolveOutOfOfficeDelegateUserId } from "../lib/outOfOffice";
 import { syncProjectIssueStats } from "../lib/projectIssueStats";
+import { hasProjectExternalNotificationDestinations } from "../lib/projectNotificationDestinations";
 import { normalizeIssueDescriptionForStorage } from "../lib/richText";
-import { notDeleted, softDeleteFields } from "../lib/softDeleteHelpers";
+import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { enforceRateLimit } from "../rateLimits";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
@@ -44,42 +44,6 @@ import {
   resolveLabelNames,
   validateParentIssue,
 } from "./helpers";
-
-async function hasSlackDestinationsForProject(
-  ctx: MutationCtx,
-  projectId: Id<"projects">,
-): Promise<boolean> {
-  const project = await ctx.db.get(projectId);
-  if (!project || project.isDeleted) {
-    return false;
-  }
-
-  const ownerConnection = await ctx.db
-    .query("slackConnections")
-    .withIndex("by_user", (q) => q.eq("userId", project.createdBy))
-    .first();
-  if (ownerConnection?.isActive && ownerConnection.incomingWebhookUrl) {
-    return true;
-  }
-
-  const members = await ctx.db
-    .query("projectMembers")
-    .withIndex("by_project", (q) => q.eq("projectId", projectId))
-    .filter(notDeleted)
-    .take(BOUNDED_LIST_LIMIT);
-
-  for (const member of members) {
-    const connection = await ctx.db
-      .query("slackConnections")
-      .withIndex("by_user", (q) => q.eq("userId", member.userId))
-      .first();
-    if (connection?.isActive && connection.incomingWebhookUrl) {
-      return true;
-    }
-  }
-
-  return false;
-}
 
 const createIssueArgs = {
   title: v.string(),
@@ -152,6 +116,39 @@ async function prepareCreateIssue(
   };
 }
 
+async function queueExternalIssueEventIfNeeded(
+  ctx: MutationCtx,
+  args: {
+    projectId: Id<"projects">;
+    issueId: Id<"issues">;
+    event:
+      | "issue.created"
+      | "issue.updated"
+      | "issue.assigned"
+      | "issue.completed"
+      | "issue.deleted"
+      | "comment.created";
+    actorId?: Id<"users">;
+    commentText?: string;
+  },
+): Promise<void> {
+  const hasDestinations = await hasProjectExternalNotificationDestinations(
+    ctx,
+    args.projectId,
+    args.event,
+  );
+  if (!hasDestinations) {
+    return;
+  }
+
+  await ctx.scheduler.runAfter(0, internal.issues.externalNotifications.processIssueEvent, {
+    issueId: args.issueId,
+    event: args.event,
+    actorId: args.actorId,
+    commentText: args.commentText,
+  });
+}
+
 /**
  * Shared implementation for creating an issue.
  */
@@ -209,13 +206,12 @@ async function createIssueImpl(
     action: "created",
   });
   await syncProjectIssueStats(ctx, ctx.projectId);
-  if (await hasSlackDestinationsForProject(ctx, ctx.projectId)) {
-    await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
-      issueId,
-      event: "issue.created",
-      userId: ctx.userId,
-    });
-  }
+  await queueExternalIssueEventIfNeeded(ctx, {
+    projectId: ctx.projectId,
+    issueId,
+    event: "issue.created",
+    actorId: ctx.userId,
+  });
 
   return { issueId, key: issueKey };
 }
@@ -394,24 +390,24 @@ export const update = issueMutation({
         ),
       );
 
-      if (await hasSlackDestinationsForProject(ctx, ctx.issue.projectId)) {
-        await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
-          issueId: ctx.issue._id,
-          event: "issue.updated",
-          userId: ctx.userId,
-        });
+      await queueExternalIssueEventIfNeeded(ctx, {
+        projectId: ctx.issue.projectId,
+        issueId: ctx.issue._id,
+        event: "issue.updated",
+        actorId: ctx.userId,
+      });
 
-        if (
-          resolvedAssigneeId !== undefined &&
-          resolvedAssigneeId !== ctx.issue.assigneeId &&
-          resolvedAssigneeId !== null
-        ) {
-          await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
-            issueId: ctx.issue._id,
-            event: "issue.assigned",
-            userId: ctx.userId,
-          });
-        }
+      if (
+        resolvedAssigneeId !== undefined &&
+        resolvedAssigneeId !== ctx.issue.assigneeId &&
+        resolvedAssigneeId !== null
+      ) {
+        await queueExternalIssueEventIfNeeded(ctx, {
+          projectId: ctx.issue.projectId,
+          issueId: ctx.issue._id,
+          event: "issue.assigned",
+          actorId: ctx.userId,
+        });
       }
     }
 
@@ -569,13 +565,13 @@ export const addComment = issueViewerMutation({
       project: ctx.project,
     });
 
-    if (await hasSlackDestinationsForProject(ctx, ctx.projectId)) {
-      await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
-        issueId: ctx.issue._id,
-        event: "comment.created",
-        userId: ctx.userId,
-      });
-    }
+    await queueExternalIssueEventIfNeeded(ctx, {
+      projectId: ctx.projectId,
+      issueId: ctx.issue._id,
+      event: "comment.created",
+      actorId: ctx.userId,
+      commentText: args.content,
+    });
 
     return { commentId };
   },
