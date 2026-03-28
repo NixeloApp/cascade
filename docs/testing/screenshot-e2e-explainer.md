@@ -76,6 +76,13 @@ The capture implementation still lives in:
 
 But the separate PR screenshot workflow is gone. Screenshot capture is now a local/manual tool, while CI only checks the approved artifact manifest through `static`.
 
+Shared helper entry points now live in:
+
+- [page-readiness.ts](../../e2e/utils/page-readiness.ts) for route/state readiness
+- [config-matrix.ts](../../e2e/utils/config-matrix.ts) for viewport/theme matrix iteration
+
+That means contributors no longer need to choose between screenshot-only readiness wiring and general E2E helpers for the same route state.
+
 ## What The Screenshot Tool Does Now
 
 The entrypoint is:
@@ -200,7 +207,8 @@ If we want this system to be easier to trust, the direction should be:
 Current model:
 
 - `pnpm screenshots` captures/reviews screenshots locally when needed.
-- `pnpm run static` checks screenshot artifact integrity in local hooks and CI.
+- `pnpm screenshots:integrity` checks approved screenshot artifacts without generating new ones.
+- `pnpm run static` runs screenshot integrity in local hooks and CI.
 - there is no separate sharded PR screenshot workflow anymore.
 
 For `PlateEditor` specifically:

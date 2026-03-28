@@ -1,8 +1,8 @@
 # E2E And Screenshot Consolidation
 
 > **Priority:** P0
-> **Status:** Nearly complete — structural work done, residual polish remains
-> **Last Updated:** 2026-03-27
+> **Status:** Complete
+> **Last Updated:** 2026-03-28
 
 ## What Was Done
 
@@ -11,13 +11,13 @@ The bulk of this todo has been addressed. All execution-plan derivation, phase p
 ## Remaining Work
 
 ### Session orchestration reusability
-- [ ] `readiness.ts` still exists as a screenshot-specific dispatch layer to page objects. Evaluate whether it can be inlined or deleted now that every check delegates to a page object.
-- [ ] `session.ts` is well-structured but screenshot-specific. It cannot yet be reused by product E2E tests for state setup. Evaluate whether the multi-config loop, phase ordering, and seed management can be extracted into shared helpers.
+- [x] Moved route/state readiness into `e2e/utils/page-readiness.ts` so screenshot capture and future product E2E flows share one page-object-based readiness path.
+- [x] Extracted the viewport/theme matrix loop into `e2e/utils/config-matrix.ts` so screenshot session orchestration no longer owns that reusable iteration logic.
 
 ### Documentation
-- [ ] Update CI workflow docs to make the surface area obvious: what validates product behavior, what validates static artifacts, what no longer exists as a default workflow.
-- [ ] Document the remaining webPush test hooks in production code (`src/lib/webPush.tsx`) with a concrete justification for each.
+- [x] Updated CI/workflow docs so screenshot generation (`pnpm screenshots`) and screenshot integrity (`pnpm screenshots:integrity`, `pnpm run static`) are called out as separate concerns.
+- [x] Documented the remaining webPush test hooks in `src/lib/webPush.tsx` and `docs/guides/pwa.md` with concrete justifications.
 
 ### Exit criteria (still open)
-- [ ] A contributor can point to one reusable helper path for a given route/state instead of choosing between E2E helpers and screenshot-only helpers.
-- [ ] Screenshot generation and screenshot integrity checking are clearly separate concepts in code and docs.
+- [x] A contributor can point to one reusable helper path for a given route/state instead of choosing between E2E helpers and screenshot-only helpers.
+- [x] Screenshot generation and screenshot integrity checking are clearly separate concepts in code and docs.

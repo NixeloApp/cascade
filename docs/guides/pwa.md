@@ -304,6 +304,19 @@ For a realistic local browser check:
 - Background Sync is optional and cannot be relied on for correctness.
 - If service workers are unavailable, offline fallback, install prompts, and push should be considered unsupported for that session.
 
+## Remaining Web Push E2E Overrides
+
+`src/lib/webPush.tsx` still carries three narrow E2E-only globals. They are intentional, documented exceptions rather than a pattern to expand:
+
+- `window.__NIXELO_E2E_NOTIFICATION_PERMISSION__`
+  Used to simulate browser permission outcomes in preview/runtime tests without relying on a real permission prompt, which is not deterministic in CI.
+- `window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__`
+  Used to force the "supported" and "unsupported" branches when the underlying browser/runtime does not expose a stable Push API surface for both cases in automation.
+- `window.__NIXELO_E2E_VAPID_PUBLIC_KEY__`
+  Used to inject a deterministic key for preview/runtime tests so the push subscription path can be exercised without depending on production env configuration.
+
+These hooks remain acceptable because they only override browser capability/permission edges that the app cannot seed through normal UI flows. They should stay limited to push capability simulation, not expand into broader product-state control.
+
 ## Production Deployment
 
 The service worker only registers in production builds to avoid caching issues during development.
@@ -398,4 +411,4 @@ For issues or questions about the PWA implementation, check:
 
 ---
 
-*Last Updated: 2026-03-21*
+*Last Updated: 2026-03-28*

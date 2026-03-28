@@ -21,6 +21,12 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { OutreachPage } from "../pages/outreach.page";
+import {
+  scrollSectionNearViewportTop,
+  supportsCalendarDragAndDropCapture,
+  waitForDuplicateDetectionSearchReady,
+  waitForExpectedContent,
+} from "../utils/page-readiness";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -72,12 +78,6 @@ import {
   screenshotRoadmapStates,
   screenshotSprintInteractiveStates,
 } from "./interactive-captures";
-import {
-  scrollSectionNearViewportTop,
-  supportsCalendarDragAndDropCapture,
-  waitForDuplicateDetectionSearchReady,
-  waitForExpectedContent,
-} from "./readiness";
 
 export async function screenshotFilledStates(
   page: Page,

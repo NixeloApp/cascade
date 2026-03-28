@@ -24,14 +24,9 @@
  */
 
 import { chromium } from "@playwright/test";
-import {
-  captureState,
-  isConfigSelected,
-  registerWaitForExpectedContent,
-} from "./screenshot-lib/capture";
+import { captureState, isConfigSelected } from "./screenshot-lib/capture";
 import { parseCliOptions, printUsage } from "./screenshot-lib/cli";
 import { BASE_URL, CONFIGS } from "./screenshot-lib/config";
-import { waitForExpectedContent } from "./screenshot-lib/readiness";
 import { getGeneratedSpecFolders } from "./screenshot-lib/routing";
 import {
   enumerateDryRunTargets,
@@ -46,7 +41,6 @@ import { SCREENSHOT_PAGE_IDS } from "./screenshot-lib/targets";
 
 export async function run(): Promise<void> {
   captureState.cliOptions = parseCliOptions(process.argv.slice(2));
-  registerWaitForExpectedContent(waitForExpectedContent);
   if (captureState.cliOptions.help) {
     printUsage();
     return;

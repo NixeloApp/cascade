@@ -1,9 +1,9 @@
 /**
- * Page Readiness Helpers for Screenshot Capture
+ * Shared page-readiness helpers for route captures and deep E2E state setup.
  *
- * Functions that wait for specific page content and UI state to be ready
- * before a screenshot is captured. Includes the central waitForExpectedContent
- * dispatch function and per-page readiness checks.
+ * These waits are intentionally page-object based so screenshot capture and
+ * product E2E flows can point to the same readiness path instead of keeping a
+ * separate screenshot-only dispatcher.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -30,14 +30,14 @@ import { SettingsPage } from "../pages/settings.page";
 import { TeamPage } from "../pages/team.page";
 import { UnsubscribePage } from "../pages/unsubscribe.page";
 import { WorkspacesPage } from "../pages/workspaces.page";
-import { getPageHeaderOrGenericEmptyState } from "../utils/locator-state";
-import { testUserService } from "../utils/test-user-service";
+import { URL_PATTERNS } from "../screenshot-lib/routing";
+import { getPageHeaderOrGenericEmptyState } from "./locator-state";
+import { testUserService } from "./test-user-service";
 import {
   waitForAllSpinnersToClear,
   waitForAnimation,
   waitForLoadingSkeletonsToClear,
-} from "../utils/wait-helpers";
-import { URL_PATTERNS } from "./routing";
+} from "./wait-helpers";
 
 /**
  * Placeholder orgSlug used when constructing page objects purely for

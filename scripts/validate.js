@@ -52,7 +52,7 @@
  *  48. Screenshot harness structure — ratchets private helper counts in screenshot modules
  *  49. Screenshot production hooks — blocks removed screenshot-only editor hooks from re-entering product code
  *  50. E2E loading overrides   — keeps the remaining documented production loading exceptions centralized
- *  51. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
+ *  51. Screenshot integrity    — blocks repeated screenshot hashes beyond legit dual-write
  *  52. Typography drift        — blocks Typography/style drift outside owned primitives
  *  53. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
  *  54. Shared shape drift      — blocks repeated inline entity summary shapes

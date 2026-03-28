@@ -12,6 +12,12 @@ import { showError, showSuccess } from "./toast";
 
 declare global {
   interface Window {
+    /**
+     * Narrow E2E-only overrides for preview/runtime tests.
+     * These exist because Playwright cannot reliably force real browser-level
+     * notification permission and PushManager support transitions in CI.
+     * See docs/guides/pwa.md for the current justification of each hook.
+     */
     __NIXELO_E2E_NOTIFICATION_PERMISSION__?: NotificationPermission;
     __NIXELO_E2E_WEB_PUSH_SUPPORTED__?: boolean;
     __NIXELO_E2E_VAPID_PUBLIC_KEY__?: string;
@@ -324,6 +330,8 @@ export function useWebPush(): WebPushContextValue {
  * Must be set in VITE_VAPID_PUBLIC_KEY
  */
 export function getVapidPublicKey(): string | undefined {
+  // Preview/runtime E2E can inject a deterministic key without requiring the
+  // full production env surface inside Playwright.
   if (typeof window !== "undefined" && window.__NIXELO_E2E_VAPID_PUBLIC_KEY__) {
     return window.__NIXELO_E2E_VAPID_PUBLIC_KEY__;
   }
