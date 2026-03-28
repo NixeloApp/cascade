@@ -140,7 +140,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
   const pointProgress = hasPoints ? (sprint.completedPoints / sprint.totalPoints) * 100 : 0;
 
   return (
-    <Card padding="md" className="animate-fade-in">
+    <Card padding="md" className="animate-fade-in" data-testid={TEST_IDS.SPRINT.CARD}>
       <Flex
         direction="column"
         align="start"
@@ -152,7 +152,9 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         <FlexItem flex="1" className="w-full sm:w-auto">
           <Stack gap="sm">
             <Flex wrap align="center" gap="sm">
-              <Typography variant="h5">{sprint.name}</Typography>
+              <Typography variant="h5" data-testid={TEST_IDS.SPRINT.NAME}>
+                {sprint.name}
+              </Typography>
               <Badge size="md" statusTone={getStatusBadgeTone(sprint.status)}>
                 {sprint.status}
               </Badge>
@@ -218,7 +220,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                 onClick={() => void onStartSprint(sprint._id)}
                 variant="success"
                 size="sm"
-                data-testid={TEST_IDS.SPRINT.START_TRIGGER(sprint.name)}
+                data-testid={TEST_IDS.SPRINT.START_TRIGGER}
               >
                 Start Sprint
               </Button>
@@ -228,7 +230,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                 onClick={() => void onCompleteSprint(sprint._id)}
                 variant="secondary"
                 size="sm"
-                data-testid={TEST_IDS.SPRINT.COMPLETE_TRIGGER(sprint.name)}
+                data-testid={TEST_IDS.SPRINT.COMPLETE_TRIGGER}
               >
                 Complete Sprint
               </Button>

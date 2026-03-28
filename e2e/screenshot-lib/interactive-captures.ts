@@ -21,6 +21,7 @@ import {
   SprintsPage,
 } from "../pages";
 import { waitForLocatorVisible } from "../utils/locator-state";
+import { SEEDED_MEETING_RECORDINGS } from "../utils/seeded-meetings";
 import { testUserService } from "../utils/test-user-service";
 import {
   dismissAllDialogs,
@@ -733,9 +734,15 @@ export async function screenshotMeetingsStates(
   if (shouldCaptureDetailState && shouldCapture(prefix, meetingsDetailName)) {
     await runCaptureStep("meetings detail", async () => {
       await openMeetingsForCapture();
-      await meetingsPage.expectRecordingVisible("Client Launch Review");
-      await meetingsPage.openRecording("Client Launch Review");
-      await meetingsPage.expectRecordingDetail("Client Launch Review");
+      await meetingsPage.expectRecordingVisibleAt(
+        SEEDED_MEETING_RECORDINGS.clientLaunchReview.index,
+        SEEDED_MEETING_RECORDINGS.clientLaunchReview.title,
+      );
+      await meetingsPage.openRecordingAt(
+        SEEDED_MEETING_RECORDINGS.clientLaunchReview.index,
+        SEEDED_MEETING_RECORDINGS.clientLaunchReview.title,
+      );
+      await meetingsPage.expectRecordingDetail(SEEDED_MEETING_RECORDINGS.clientLaunchReview.title);
       await meetingsPage.expectRecordingSummary(
         "The client also asked whether they need weekend coverage and a final handoff packet before launch.",
       );
@@ -747,9 +754,15 @@ export async function screenshotMeetingsStates(
   if (shouldCapture(prefix, transcriptSearchName)) {
     await runCaptureStep("meetings transcript search", async () => {
       await openMeetingsForCapture();
-      await meetingsPage.expectRecordingVisible("Weekly Product Sync");
-      await meetingsPage.openRecording("Weekly Product Sync");
-      await meetingsPage.expectRecordingDetail("Weekly Product Sync");
+      await meetingsPage.expectRecordingVisibleAt(
+        SEEDED_MEETING_RECORDINGS.weeklyProductSync.index,
+        SEEDED_MEETING_RECORDINGS.weeklyProductSync.title,
+      );
+      await meetingsPage.openRecordingAt(
+        SEEDED_MEETING_RECORDINGS.weeklyProductSync.index,
+        SEEDED_MEETING_RECORDINGS.weeklyProductSync.title,
+      );
+      await meetingsPage.expectRecordingDetail(SEEDED_MEETING_RECORDINGS.weeklyProductSync.title);
       await meetingsPage.filterTranscript("pricing");
       await meetingsPage.expectTranscriptMatch(
         "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
@@ -775,9 +788,14 @@ export async function screenshotMeetingsStates(
     await runCaptureStep("meetings processing detail", async () => {
       await openMeetingsForCapture();
       await meetingsPage.filterByStatus("Processing");
-      await meetingsPage.expectRecordingVisible("Go-live Support Runbook");
-      await meetingsPage.openRecording("Go-live Support Runbook");
-      await meetingsPage.expectRecordingDetail("Go-live Support Runbook");
+      await meetingsPage.expectRecordingVisibleAt(
+        0,
+        SEEDED_MEETING_RECORDINGS.goLiveSupportRunbook.title,
+      );
+      await meetingsPage.openRecordingAt(0, SEEDED_MEETING_RECORDINGS.goLiveSupportRunbook.title);
+      await meetingsPage.expectRecordingDetail(
+        SEEDED_MEETING_RECORDINGS.goLiveSupportRunbook.title,
+      );
       await meetingsPage.expectSummaryProcessingState();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, processingName);

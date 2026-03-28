@@ -161,6 +161,21 @@ function createSprint(
   };
 }
 
+function getSprintCard(name: string): HTMLElement {
+  const card = screen
+    .getAllByTestId(TEST_IDS.SPRINT.CARD)
+    .find(
+      (candidate) =>
+        within(candidate).queryByTestId(TEST_IDS.SPRINT.NAME)?.textContent?.trim() === name,
+    );
+
+  if (!card) {
+    throw new Error(`Sprint card not found: ${name}`);
+  }
+
+  return card;
+}
+
 describe("SprintManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -262,7 +277,7 @@ describe("SprintManager", () => {
 
     render(<SprintManager projectId={projectId} />);
 
-    await user.click(screen.getByTestId(TEST_IDS.SPRINT.START_TRIGGER("Sprint 8")));
+    await user.click(within(getSprintCard("Sprint 8")).getByTestId(TEST_IDS.SPRINT.START_TRIGGER));
 
     const dialog = screen.getByTestId(TEST_IDS.SPRINT.START_DIALOG);
     await user.click(within(dialog).getByTestId(TEST_IDS.SPRINT.START_PRESET("custom")));
@@ -294,7 +309,9 @@ describe("SprintManager", () => {
 
     render(<SprintManager projectId={projectId} />);
 
-    await user.click(screen.getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER("Current Sprint")));
+    await user.click(
+      within(getSprintCard("Current Sprint")).getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER),
+    );
 
     const dialog = screen.getByTestId(TEST_IDS.SPRINT.COMPLETE_DIALOG);
     expect(

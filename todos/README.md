@@ -4,7 +4,7 @@
 
 ## Quick Wins
 
-- [ ] [e2e-test-id-cleanup.md](./e2e-test-id-cleanup.md) — Recording card title targeting and sprint test ID halfway pattern. Two small fixes.
+- [x] [e2e-test-id-cleanup.md](./e2e-test-id-cleanup.md) — Recording card title targeting and sprint test ID halfway pattern. Two small fixes.
 - [ ] [offline-pwa.md](./offline-pwa.md) — Move serviceWorker banners from raw DOM to React. Fix AdminTab/DocumentSidebar getElementById. Push/worker verification.
 - [x] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — Route/API naming ambiguity, kill `-*.test.tsx` convention, file-route readability.
 
@@ -22,7 +22,7 @@
 
 ## E2E & Visual
 
-- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — Nearly complete. Session orchestration reusability and docs remain.
+- [x] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — Shared screenshot readiness/config matrix landed; docs and integrity flow updated.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Automated guardrails done. Human review passes and screenshot coverage depth pending.
 
 ## Human Todos (manual action required)

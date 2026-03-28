@@ -97,12 +97,23 @@ export class MeetingsPage extends BasePage {
     await expect(this.pageEmptyState).toBeVisible();
   }
 
-  async expectRecordingVisible(title: string) {
-    await expect(this.getRecordingCard(title)).toBeVisible();
+  async expectRecordingVisibleAt(index: number, expectedTitle?: string) {
+    const card = this.getRecordingCardAt(index);
+    await expect(card).toBeVisible();
+
+    if (expectedTitle) {
+      await expect(card).toContainText(expectedTitle);
+    }
   }
 
-  async openRecording(title: string) {
-    const card = this.getRecordingCard(title);
+  async openRecordingAt(index: number, expectedTitle?: string) {
+    const card = this.getRecordingCardAt(index);
+    await expect(card).toBeVisible();
+
+    if (expectedTitle) {
+      await expect(card).toContainText(expectedTitle);
+    }
+
     await card.click();
   }
 
@@ -239,9 +250,7 @@ export class MeetingsPage extends BasePage {
       .click();
   }
 
-  private getRecordingCard(title: string): Locator {
-    return this.recentSection
-      .getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD)
-      .filter({ hasText: title });
+  private getRecordingCardAt(index: number): Locator {
+    return this.recentSection.getByTestId(TEST_IDS.MEETINGS.RECORDING_CARD).nth(index);
   }
 }

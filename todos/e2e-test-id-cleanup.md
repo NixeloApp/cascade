@@ -1,23 +1,26 @@
 # E2E Test ID & Selector Cleanup
 
 > **Priority:** P1
-> **Last Updated:** 2026-03-27
+> **Status:** Complete
+> **Last Updated:** 2026-03-28
 
-## Remaining Work
+## Shipped
 
-### 1. Recording card still uses title-based E2E targeting
+- [x] Replaced meeting recording selection by title-filtered card text with ordered-card helpers in the meetings page object.
+  Implemented in:
+  - `e2e/pages/meetings.page.ts`
+  - `e2e/meetings.spec.ts`
+  - `e2e/screenshot-lib/interactive-captures.ts`
+  - `e2e/utils/seeded-meetings.ts`
+- [x] Reworked sprint start and complete triggers to use static test IDs scoped within sprint cards instead of name-encoded IDs.
+  Implemented in:
+  - `src/lib/test-ids.ts`
+  - `src/components/Sprints/SprintManager.tsx`
+  - `src/components/Sprints/SprintManager.test.tsx`
+  - `e2e/pages/sprints.page.ts`
+- [x] Added explicit sprint card and sprint name test hooks so both unit tests and E2E page objects can target the right card without prefix selectors.
 
-`MeetingsPage.getRecordingCard(title)` finds a specific recording by filtering all `RECORDING_CARD` elements with `{ hasText: title }`. This is fragile — two recordings with overlapping titles will match wrong, and the test is coupled to seed data text.
-
-**Fix:** Rewrite the meetings E2E tests to not target individual recordings by title. Use list position (`.first()`, `.nth(n)`) since seed data order is deterministic, or scope by a parent container. Drop `getRecordingCard(title)` and all callers.
-
-### 2. Sprint test IDs are functions but E2E uses prefix selectors
-
-`START_TRIGGER` and `COMPLETE_TRIGGER` are `(sprintName) => ...` functions. The E2E page object uses prefix-match selectors (`[data-testid^="sprint-start-trigger-"]`) with `.first()` fallbacks — effectively the same as static IDs.
-
-**Fix:** Decide: if tests always scope to a single visible sprint card, revert to static IDs. If tests need to disambiguate multiple cards, scope by card container instead of baking names into test IDs.
-
-## Done (remove from tracking)
+## Done (kept for history)
 
 - ~~`evaluate` click patterns in E2E page objects~~ — All replaced with Playwright `.click()`.
 - ~~`toHaveTextContent` in E2E~~ — All replaced with `toContainText`.
