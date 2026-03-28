@@ -31,9 +31,15 @@ import {
   getCalendarMonthOverflowButtonClassName,
 } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
+import {
+  getCalendarMonthDesktopEventListClassName,
+  getCalendarMonthMobileEventListClassName,
+  getCalendarMonthOverflowTriggerClassName,
+} from "@/components/ui/calendarMonthSurfaceClassNames";
 import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
@@ -111,7 +117,7 @@ function CalendarMonthMobileEventList({ dayEvents }: { dayEvents: CalendarEventT
   }
 
   return (
-    <Flex wrap gap="xs" className="mt-1 md:hidden">
+    <Flex wrap gap="xs" mt="xs" className={getCalendarMonthMobileEventListClassName()}>
       {dayEvents.slice(0, 3).map((event) => (
         <Dot
           key={`dot-${event.id}`}
@@ -148,28 +154,27 @@ function CalendarMonthDesktopEventList({
 }) {
   return (
     <AnimatePresence mode="wait">
-      <div className="mt-1 hidden md:block">
+      <Stack gap="xs" mt="xs" className={getCalendarMonthDesktopEventListClassName()}>
         {dayEvents.slice(0, 3).map((event) => (
-          <div key={event.id} className="mb-1 last:mb-0">
-            <CalendarEvent
-              event={event}
-              className="relative h-auto"
-              month
-              draggable
-              isDragging={draggedEventId === event.id}
-              onDragStart={(dragEvent) => {
-                dragEvent.stopPropagation();
-                dragEvent.dataTransfer?.setData("text/plain", event.id);
-                dragEvent.dataTransfer?.setDragImage(dragEvent.currentTarget, 16, 16);
-                setDraggedEventId(event.id);
-                setDropTargetDate(dayKey);
-              }}
-              onDragEnd={() => {
-                setDraggedEventId(null);
-                setDropTargetDate(null);
-              }}
-            />
-          </div>
+          <CalendarEvent
+            key={event.id}
+            event={event}
+            className="relative h-auto"
+            month
+            draggable
+            isDragging={draggedEventId === event.id}
+            onDragStart={(dragEvent) => {
+              dragEvent.stopPropagation();
+              dragEvent.dataTransfer?.setData("text/plain", event.id);
+              dragEvent.dataTransfer?.setDragImage(dragEvent.currentTarget, 16, 16);
+              setDraggedEventId(event.id);
+              setDropTargetDate(dayKey);
+            }}
+            onDragEnd={() => {
+              setDraggedEventId(null);
+              setDropTargetDate(null);
+            }}
+          />
         ))}
         {dayEvents.length > 3 && (
           <Button
@@ -183,7 +188,7 @@ function CalendarMonthDesktopEventList({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="mt-0.5"
+              className={getCalendarMonthOverflowTriggerClassName()}
               onClick={(e) => {
                 e.stopPropagation();
                 openDay(day);
@@ -193,7 +198,7 @@ function CalendarMonthDesktopEventList({
             </motion.button>
           </Button>
         )}
-      </div>
+      </Stack>
     </AnimatePresence>
   );
 }

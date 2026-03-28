@@ -82,4 +82,54 @@ describe("CalendarBodyMonth", () => {
 
     expect(screen.getByTestId(TEST_IDS.CALENDAR.GRID)).toBeInTheDocument();
   });
+
+  it("shows the overflow action when a day has more than three events", () => {
+    const events: CalendarEvent[] = [
+      {
+        id: "evt-1",
+        title: "Planning",
+        color: "blue",
+        start: new Date("2026-03-20T09:00:00.000Z"),
+        end: new Date("2026-03-20T10:00:00.000Z"),
+      },
+      {
+        id: "evt-2",
+        title: "Design review",
+        color: "green",
+        start: new Date("2026-03-20T11:00:00.000Z"),
+        end: new Date("2026-03-20T12:00:00.000Z"),
+      },
+      {
+        id: "evt-3",
+        title: "Customer sync",
+        color: "purple",
+        start: new Date("2026-03-20T13:00:00.000Z"),
+        end: new Date("2026-03-20T14:00:00.000Z"),
+      },
+      {
+        id: "evt-4",
+        title: "Retro",
+        color: "orange",
+        start: new Date("2026-03-20T15:00:00.000Z"),
+        end: new Date("2026-03-20T16:00:00.000Z"),
+      },
+    ];
+
+    render(
+      <CalendarProvider
+        events={events}
+        mode="month"
+        setMode={vi.fn()}
+        date={new Date("2026-03-20T12:00:00.000Z")}
+        setDate={vi.fn()}
+        onAddEvent={vi.fn()}
+        onEventMove={vi.fn()}
+        onEventClick={vi.fn()}
+      >
+        <CalendarBodyMonth />
+      </CalendarProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "+1 more" })).toBeInTheDocument();
+  });
 });

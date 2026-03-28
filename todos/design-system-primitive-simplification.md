@@ -142,10 +142,10 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 
 ## 5. Raw Tailwind Ratchet
 
-- **Current:** 85 violations across 65 files
-- **Landed (2026-03-28):** `IssueCard` no longer owns raw spacing/sizing chrome directly. The card shell, title spacing, label row spacing, assignee fallback, and drag-handle icon now resolve through `src/components/ui/issueCardSurfaceClassNames.ts`, and the validator baseline dropped that file entirely. Earlier on the same day, `GlobalSearch` also moved its intro, empty-state, and icon-shell chrome into `src/components/ui/globalSearchSurfaceClassNames.ts`, and the raw-tailwind baseline was ratcheted down to match files that were already cleaned by prior work (`SignInForm`, `SignUpForm`, `Dashboard`, `DocumentTree`, `MentionInput`, `ProjectSettings/GeneralSettings`, and `RoadmapView`).
+- **Current:** 81 violations across 64 files
+- **Landed (2026-03-28):** `calendar-body-month` no longer owns raw margin utilities for the month-event lists and overflow affordance. The mobile/desktop event-list visibility and the overflow trigger offset now resolve through `src/components/ui/calendarMonthSurfaceClassNames.ts`, while the month body itself uses shared `Flex`/`Stack` spacing props instead of inline margin classes. Earlier on the same day, `IssueCard` moved its remaining spacing/sizing chrome into `src/components/ui/issueCardSurfaceClassNames.ts`, and `GlobalSearch` moved its intro, empty-state, and icon-shell chrome into `src/components/ui/globalSearchSurfaceClassNames.ts`; the baseline was also ratcheted down to match other already-cleaned files (`SignInForm`, `SignUpForm`, `Dashboard`, `DocumentTree`, `MentionInput`, `ProjectSettings/GeneralSettings`, and `RoadmapView`).
 - **End state:** 0 violations
-- **Start with:** calendar-body-month (4), ProductShowcase (3), Dashboard/RecentActivity (2)
+- **Start with:** ProductShowcase (3), Dashboard/RecentActivity (2), Notifications/NotificationCenter (2)
 
 ---
 

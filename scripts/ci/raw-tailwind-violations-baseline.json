@@ -15,7 +15,6 @@
     "src/components/Auth/AuthPageLayout.tsx": 1,
     "src/components/Automation/AutomationRuleCard.tsx": 1,
     "src/components/Calendar/shadcn-calendar/body/day/calendar-body-margin-day-margin.tsx": 1,
-    "src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx": 4,
     "src/components/Calendar/shadcn-calendar/body/week/calendar-body-week.tsx": 1,
     "src/components/Calendar/shadcn-calendar/calendar-event.tsx": 1,
     "src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx": 1,
