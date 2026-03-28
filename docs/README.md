@@ -68,7 +68,7 @@ docs/
 | `design/STANDARDS.md` | Core principles, tokens, semantic HTML |
 | `design/REFERENCE.md` | Token values and component inventory |
 | `design/GAPS.md` | Actionable improvements (prioritized) |
-| `design/specs/pages/` | 40 page-by-page design specs with screenshots |
+| `design/specs/pages/` | 42 page-by-page design specs with screenshots and a shared current-state template |
 | `design/specs/components/` | Component deep-dives |
 | `design/specs/modals/` | Modal dialog specs |
 | `design/specs/onboarding/` | Onboarding flow specs |

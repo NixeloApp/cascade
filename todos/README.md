@@ -18,7 +18,7 @@
 - [ ] [email-outreach.md](./email-outreach.md) — Reliability polish, analytics depth, provider expansion.
 - [ ] [cal-com-features.md](./cal-com-features.md) — Scheduling, branding, portal ideas needing product decisions.
 - [x] [plane-features.md](./plane-features.md) — External notification routing.
-- [ ] [feature-docs-expansion.md](./feature-docs-expansion.md) — Current-state feature docs need coverage and standard structure.
+- [x] [feature-docs-expansion.md](./feature-docs-expansion.md) — Current-state template, coverage audit, and high-value surface docs expanded.
 
 ## E2E & Visual
 

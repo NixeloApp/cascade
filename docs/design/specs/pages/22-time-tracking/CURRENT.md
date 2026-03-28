@@ -23,6 +23,14 @@ tabbed view.
 
 ---
 
+## Permissions & Access
+
+- The route is organization-admin only.
+- Non-admin users are redirected before the time-tracking dashboard renders.
+- Burn-rate and user-rate surfaces are admin review tools, not end-user timesheet views.
+
+---
+
 ## Screenshot Matrix
 
 ### Canonical route captures
@@ -146,6 +154,37 @@ Three tabs with role-gated visibility:
 
 ---
 
+## Primary Flow
+
+1. An admin opens the organization time-tracking route.
+2. The page shows overview metrics scoped to the active project and date-range filters.
+3. The entries tab stays available org-wide for entry review and manual logging.
+4. Burn rate becomes meaningful once a specific project is selected.
+5. User rates stays available as the configuration surface for the current admin's rate records.
+
+---
+
+## Alternate / Failure Flows
+
+- The all-project state keeps entries visible but intentionally prompts for project selection before
+  burn-rate analysis becomes useful.
+- The reviewed screenshot matrix includes empty entries, manual entry modal, truncated summaries,
+  all-time range, and both secondary tabs so contributors do not have to infer those branches from
+  filenames.
+- Export and manual-entry actions are documented as part of the route even though the header timer
+  widget remains the primary quick-entry surface elsewhere in the app.
+
+---
+
+## Empty / Loading / Error States
+
+- The route redirects non-admin users instead of rendering a partial, disabled dashboard.
+- Empty entry data renders an explicit reviewed empty state instead of blanking the tab content.
+- Loading resolves through the route wrapper and the internal queries; the burn-rate and rate views
+  do not render until their scoped data is available.
+
+---
+
 ## State Coverage
 
 ### States the current spec explicitly covers
@@ -195,6 +234,15 @@ Three tabs with role-gated visibility:
 | `src/components/TimeTracking/TimeEntryModal.tsx` | -- | Shared log-time modal used on this route and from the timer widget |
 | `src/components/TimeTracking/TimerWidget.tsx` | -- | Global timer in app header |
 | `e2e/screenshot-pages.ts` | -- | `filled-time-tracking` spec |
+
+---
+
+## Acceptance Criteria
+
+- The doc makes the admin-only gate explicit.
+- Canonical screenshots and reviewed alternate states are listed with their exact filenames.
+- The difference between org-wide entries review and project-scoped burn-rate review is documented.
+- Empty, loading, and manual-entry states are described without requiring route-code inspection.
 
 ---
 

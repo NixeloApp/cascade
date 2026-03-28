@@ -14,7 +14,7 @@
 
 Detailed page and component breakdowns with ASCII wireframes:
 
-- [specs/pages/](./specs/pages/) - Page-by-page analysis
+- [specs/pages/](./specs/pages/) - Page-by-page analysis and current-state template
 - [specs/components/](./specs/components/) - Component deep-dives
 - [specs/modals/](./specs/modals/) - Modal and overlay specs
 
