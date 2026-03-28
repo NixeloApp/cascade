@@ -750,6 +750,10 @@ export const TEST_IDS = {
     QUICK_STATS: "dashboard-quick-stats",
     /** @see src/components/Dashboard/RecentActivity.tsx */
     RECENT_ACTIVITY: "dashboard-recent-activity",
+    /** @see src/components/Dashboard/RecentActivity.tsx */
+    RECENT_ACTIVITY_SCROLL: "dashboard-recent-activity-scroll",
+    /** @see src/components/Dashboard/RecentActivity.tsx */
+    RECENT_ACTIVITY_TIMELINE_RAIL: "dashboard-recent-activity-timeline-rail",
     /** @see src/components/Dashboard/WorkspacesList.tsx */
     WORKSPACES_LIST: "dashboard-workspaces-list",
     /** @see src/components/Dashboard/DashboardCustomizeModal.tsx */

@@ -142,10 +142,10 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 
 ## 5. Raw Tailwind Ratchet
 
-- **Current:** 78 violations across 63 files
-- **Landed (2026-03-28):** `ProductShowcase` no longer owns the remaining landing shell and showcase chrome utility strings. The root shell, ambient glow, header rail, panel fills, heading copy constraints, and action-icon offset now resolve through `src/components/ui/productShowcaseSurfaceClassNames.ts`, while the cockpit copy stack also no longer needs raw `block` utilities. Earlier on the same day, `calendar-body-month` moved its month-event list visibility and overflow spacing into `src/components/ui/calendarMonthSurfaceClassNames.ts`, `IssueCard` moved its remaining spacing/sizing chrome into `src/components/ui/issueCardSurfaceClassNames.ts`, and `GlobalSearch` moved its intro, empty-state, and icon-shell chrome into `src/components/ui/globalSearchSurfaceClassNames.ts`; the baseline was also ratcheted down to match other already-cleaned files (`SignInForm`, `SignUpForm`, `Dashboard`, `DocumentTree`, `MentionInput`, `ProjectSettings/GeneralSettings`, and `RoadmapView`).
+- **Current:** 76 violations across 62 files
+- **Landed (2026-03-28):** `RecentActivity` no longer owns its timeline scroll shell, rail, item padding, avatar ring, min-width clamp, or issue-key badge fit class directly. Those surfaces now resolve through `src/components/ui/dashboardRecentActivitySurfaceClassNames.ts`, and the timeline rail/scroll shell also expose stable test IDs instead of relying on Tailwind selectors in tests. Earlier on the same day, `ProductShowcase` moved its remaining landing shell and showcase chrome utility strings into `src/components/ui/productShowcaseSurfaceClassNames.ts`, `calendar-body-month` moved its month-event list visibility and overflow spacing into `src/components/ui/calendarMonthSurfaceClassNames.ts`, `IssueCard` moved its remaining spacing/sizing chrome into `src/components/ui/issueCardSurfaceClassNames.ts`, and `GlobalSearch` moved its intro, empty-state, and icon-shell chrome into `src/components/ui/globalSearchSurfaceClassNames.ts`; the baseline was also ratcheted down to match other already-cleaned files (`SignInForm`, `SignUpForm`, `Dashboard`, `DocumentTree`, `MentionInput`, `ProjectSettings/GeneralSettings`, and `RoadmapView`).
 - **End state:** 0 violations
-- **Start with:** Dashboard/RecentActivity (2), Notifications/NotificationCenter (2), Settings/SSOSettings (2)
+- **Start with:** Notifications/NotificationCenter (2), Settings/SSOSettings (2), Analytics/RecentActivity (1)
 
 ---
 

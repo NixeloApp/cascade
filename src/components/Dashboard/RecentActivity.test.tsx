@@ -1,5 +1,6 @@
 import { DAY, HOUR } from "@convex/lib/timeUtils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { RecentActivity } from "./RecentActivity";
 
@@ -54,7 +55,7 @@ describe("RecentActivity", () => {
   });
 
   it("renders the activity timeline with metadata and timeline rail", () => {
-    const { container } = render(<RecentActivity activities={activities} />);
+    render(<RecentActivity activities={activities} />);
 
     expect(screen.getByText("Taylor Rivera")).toBeInTheDocument();
     expect(screen.getByText(/closed onboarding gaps/)).toBeInTheDocument();
@@ -67,15 +68,17 @@ describe("RecentActivity", () => {
     expect(screen.getAllByText("|")).toHaveLength(2);
     expect(screen.getAllByText("Mar 14")).toHaveLength(1);
     expect(screen.getAllByText("Mar 12")).toHaveLength(1);
-
-    const timelineRail = container.querySelector(".absolute.bottom-4.left-4.top-4.w-px");
-    expect(timelineRail).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.DASHBOARD.RECENT_ACTIVITY_SCROLL)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(TEST_IDS.DASHBOARD.RECENT_ACTIVITY_TIMELINE_RAIL),
+    ).toBeInTheDocument();
   });
 
   it("omits the timeline rail when there is only one activity", () => {
-    const { container } = render(<RecentActivity activities={[activities[0]]} />);
+    render(<RecentActivity activities={[activities[0]]} />);
 
-    const timelineRail = container.querySelector(".absolute.bottom-4.left-4.top-4.w-px");
-    expect(timelineRail).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(TEST_IDS.DASHBOARD.RECENT_ACTIVITY_TIMELINE_RAIL),
+    ).not.toBeInTheDocument();
   });
 });
