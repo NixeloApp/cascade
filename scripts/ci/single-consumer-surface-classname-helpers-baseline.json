@@ -1,0 +1,20 @@
+{
+  "surfaceClassNameHelpersByFile": {
+    "src/components/ui/activityFeedSurfaceClassNames.ts": 1,
+    "src/components/ui/analyticsRecentActivitySurfaceClassNames.ts": 1,
+    "src/components/ui/appSplashScreenSurfaceClassNames.ts": 1,
+    "src/components/ui/barChartSurfaceClassNames.ts": 1,
+    "src/components/ui/calendarMonthSurfaceClassNames.ts": 1,
+    "src/components/ui/cardSurfaceClassNames.ts": 1,
+    "src/components/ui/dashboardRecentActivitySurfaceClassNames.ts": 1,
+    "src/components/ui/documentHeaderSurfaceClassNames.ts": 1,
+    "src/components/ui/documentSidebarSurfaceClassNames.ts": 1,
+    "src/components/ui/globalSearchSurfaceClassNames.ts": 1,
+    "src/components/ui/issueCardSurfaceClassNames.ts": 1,
+    "src/components/ui/issuesCalendarSurfaceClassNames.ts": 1,
+    "src/components/ui/kanbanColumnSurfaceClassNames.ts": 1,
+    "src/components/ui/notificationCenterSurfaceClassNames.ts": 1,
+    "src/components/ui/organizationSettingsSurfaceClassNames.ts": 1,
+    "src/components/ui/productShowcaseSurfaceClassNames.ts": 1
+  }
+}

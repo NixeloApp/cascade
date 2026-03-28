@@ -1,7 +1,9 @@
 /**
- * CHECK: Raw Styling
+ * CHECK: Classname Ownership
  * Flags raw styling outside the owned primitive boundary — both className
- * (Tailwind utilities) and inline style props (hardcoded CSS values).
+ * (Tailwind utilities) and inline style props (hardcoded CSS values) — and
+ * also catches single-consumer ui/*SurfaceClassNames.ts helper files that only
+ * launder class strings out of feature components.
  *
  * This check is intentionally narrow:
  * - generic raw utility policing lives here
@@ -20,6 +22,7 @@ import {
   detectClassStringHiding,
   findOpeningTag,
   isRawTailwindBoundary,
+  RAW_TAILWIND_NON_PRODUCT_EXTENSIONS,
   RAW_TAILWIND_PATTERNS,
   RAW_TAILWIND_STRUCTURAL_ALLOWLIST,
 } from "./tailwind-policy.js";
@@ -43,9 +46,16 @@ const FILE_VIOLATIONS_BASELINE_PATH = path.join(
   "ci",
   "raw-tailwind-violations-baseline.json",
 );
+const SINGLE_CONSUMER_SURFACE_HELPERS_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "single-consumer-surface-classname-helpers-baseline.json",
+);
 const ROUTE_CLUSTER_MIN_REUSE_COUNT = 3;
 const ROUTE_CLUSTER_MIN_TOKEN_COUNT = 3;
 const CROSS_FILE_CLUSTER_MIN_FILE_COUNT = 2;
+const SURFACE_CLASSNAME_HELPER_SUFFIX = "SurfaceClassNames.ts";
 
 /**
  * Escape hatches for raw Tailwind check.
@@ -215,6 +225,88 @@ function loadCrossFileClusterBaseline() {
   return new Map(Object.entries(parsed.clusters ?? {}));
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isNonProductSupportFile(rel) {
+  return (
+    rel.includes("/__tests__/") ||
+    rel.endsWith(".test.ts") ||
+    rel.endsWith(".test.tsx") ||
+    rel.endsWith(".spec.ts") ||
+    rel.endsWith(".spec.tsx") ||
+    RAW_TAILWIND_NON_PRODUCT_EXTENSIONS.some((extension) => rel.endsWith(extension))
+  );
+}
+
+function isUtilityLikeClassToken(token) {
+  return /^(?:[a-z0-9-]+:)*-?[a-z]+(?:-[a-z0-9/.[\]]+)+$/.test(token);
+}
+
+export function collectUtilityLikeClassLiterals(content) {
+  const literals = [];
+
+  for (const match of content.matchAll(/["'`]([^"'`\n]+)["'`]/g)) {
+    const literal = match[1].trim();
+    if (literal.length === 0) continue;
+
+    const tokens = literal.split(/\s+/).filter(Boolean);
+    if (!tokens.some(isUtilityLikeClassToken)) continue;
+
+    const line = content.slice(0, match.index ?? 0).split("\n").length;
+    literals.push({ line, literal });
+  }
+
+  return literals;
+}
+
+export function findSingleConsumerSurfaceClassNameHelpers(fileContentsByPath) {
+  const helperPaths = Object.keys(fileContentsByPath)
+    .filter(
+      (rel) =>
+        rel.startsWith("src/components/ui/") &&
+        rel.endsWith(SURFACE_CLASSNAME_HELPER_SUFFIX) &&
+        !isNonProductSupportFile(rel),
+    )
+    .sort((a, b) => a.localeCompare(b));
+
+  const productComponentEntries = Object.entries(fileContentsByPath).filter(
+    ([rel]) => rel.startsWith("src/components/") && !isNonProductSupportFile(rel),
+  );
+
+  const violationsByFile = {};
+
+  for (const helperPath of helperPaths) {
+    const helperContent = fileContentsByPath[helperPath];
+    const utilityLiterals = collectUtilityLikeClassLiterals(helperContent);
+    if (utilityLiterals.length === 0) continue;
+
+    const importBaseName = path.basename(helperPath, ".ts");
+    const importPattern = new RegExp(`from\\s+["'][^"']*${escapeRegExp(importBaseName)}["']`);
+
+    const consumerFiles = productComponentEntries
+      .filter(([rel, content]) => rel !== helperPath && importPattern.test(content))
+      .map(([rel]) => rel)
+      .sort((a, b) => a.localeCompare(b));
+
+    if (consumerFiles.length > 1) continue;
+
+    const bucket = violationsByFile[helperPath] ?? [];
+    bucket.push({
+      consumers: consumerFiles,
+      line: utilityLiterals[0].line,
+      replacement:
+        consumerFiles.length === 1
+          ? `single-consumer class helper for ${consumerFiles[0]} — inline locally or promote to a shared semantic primitive API`
+          : "unconsumed class helper — delete it or promote it to a real shared semantic primitive API",
+    });
+    violationsByFile[helperPath] = bucket;
+  }
+
+  return violationsByFile;
+}
+
 function collectLiteralRawTailwindClusterGroups(scanDir, options = {}) {
   const {
     extensions = new Set([".tsx"]),
@@ -292,10 +384,14 @@ function collectCrossFileClusterGroups() {
 
 export function run() {
   const srcDir = path.join(ROOT, "src/components");
-  const files = walkDir(srcDir, { extensions: new Set([".tsx"]) });
+  const files = walkDir(srcDir, { extensions: new Set([".ts", ".tsx"]) });
   const fileViolationsBaseline = loadCountBaseline(
     FILE_VIOLATIONS_BASELINE_PATH,
     "rawTailwindViolationsByFile",
+  );
+  const singleConsumerSurfaceHelperBaseline = loadCountBaseline(
+    SINGLE_CONSUMER_SURFACE_HELPERS_BASELINE_PATH,
+    "surfaceClassNameHelpersByFile",
   );
   const violationsByFile = {};
   const crossFileClusterBaseline = loadCrossFileClusterBaseline();
@@ -304,14 +400,19 @@ export function run() {
   const routeClusterBaseline = loadRouteClusterBaseline();
   const routeClusterViolations = [];
   const baselinedRouteClusters = [];
+  const fileContentsByPath = {};
 
   for (const filePath of files) {
     const rel = relPath(filePath);
+    const content = fs.readFileSync(filePath, "utf-8");
+    fileContentsByPath[rel] = content;
+
+    if (!rel.endsWith(".tsx")) {
+      continue;
+    }
     if (isRawTailwindBoundary(rel)) {
       continue;
     }
-
-    const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
     // Pre-scan: detect class-string hiding (const strings and object maps)
@@ -457,6 +558,21 @@ export function run() {
     }
   }
 
+  const singleConsumerSurfaceHelperRatchet = analyzeCountRatchet(
+    findSingleConsumerSurfaceClassNameHelpers(fileContentsByPath),
+    singleConsumerSurfaceHelperBaseline,
+  );
+  const singleConsumerSurfaceHelperOverages = Object.entries(
+    singleConsumerSurfaceHelperRatchet.overagesByKey,
+  )
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      violations: overage.overageItems,
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+
   for (const group of collectCrossFileClusterGroups()) {
     const baselineCount = crossFileClusterBaseline.get(group.cluster) ?? 0;
     if (group.locations.length > baselineCount) {
@@ -491,7 +607,7 @@ export function run() {
 
   if (rawStylingOverages.length > 0) {
     messages.push(
-      `${c.red}Raw styling violations are ratcheted by file:${c.reset} shrink existing debt instead of keeping files on a permanent allowlist.`,
+      `${c.red}Classname ownership violations are ratcheted by file:${c.reset} shrink existing debt instead of keeping files on a permanent allowlist.`,
     );
 
     for (const item of rawStylingOverages) {
@@ -503,6 +619,25 @@ export function run() {
       }
       if (item.violations.length > 3) {
         messages.push(`    ${c.dim}... and ${item.violations.length - 3} more${c.reset}`);
+      }
+    }
+  }
+
+  if (singleConsumerSurfaceHelperOverages.length > 0) {
+    messages.push(`${c.red}Single-consumer surface classname helpers:${c.reset}`);
+
+    for (const item of singleConsumerSurfaceHelperOverages) {
+      messages.push(
+        `  ${c.bold}${item.file}${c.reset} baseline ${item.baselineCount} → current ${item.currentCount}`,
+      );
+      for (const violation of item.violations) {
+        const consumerSuffix =
+          violation.consumers.length === 1
+            ? ` (${violation.consumers[0]})`
+            : " (no non-test consumer)";
+        messages.push(
+          `    ${c.dim}L${violation.line}${c.reset} → ${violation.replacement}${consumerSuffix}`,
+        );
       }
     }
   }
@@ -550,6 +685,11 @@ export function run() {
       `${fileViolationRatchet.totalCurrent} baselined in ${fileViolationRatchet.activeKeyCount} files`,
     );
   }
+  if (singleConsumerSurfaceHelperRatchet.totalCurrent > 0) {
+    baselineDetails.push(
+      `${singleConsumerSurfaceHelperRatchet.totalCurrent} baselined single-consumer helper files`,
+    );
+  }
   if (baselinedCrossFileClusters.length > 0) {
     baselineDetails.push(`${baselinedCrossFileClusters.length} baselined cross-file clusters`);
   }
@@ -569,17 +709,25 @@ export function run() {
   return {
     passed:
       rawStylingOverages.length === 0 &&
+      singleConsumerSurfaceHelperOverages.length === 0 &&
       crossFileClusterViolations.length === 0 &&
       routeClusterViolations.length === 0,
     errors:
-      rawStylingOverages.length + crossFileClusterViolations.length + routeClusterViolations.length,
+      rawStylingOverages.length +
+      singleConsumerSurfaceHelperOverages.length +
+      crossFileClusterViolations.length +
+      routeClusterViolations.length,
     detail:
       rawStylingOverages.length > 0 ||
+      singleConsumerSurfaceHelperOverages.length > 0 ||
       crossFileClusterViolations.length > 0 ||
       routeClusterViolations.length > 0
         ? [
             rawStylingOverages.length > 0
-              ? `${rawStylingOverages.length} file(s) exceed raw styling baseline`
+              ? `${rawStylingOverages.length} file(s) exceed classname ownership baseline`
+              : null,
+            singleConsumerSurfaceHelperOverages.length > 0
+              ? `${singleConsumerSurfaceHelperOverages.length} single-consumer classname helper file(s)`
               : null,
             crossFileClusterViolations.length > 0
               ? `${crossFileClusterViolations.length} repeated cross-file class cluster(s)`
