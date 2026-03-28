@@ -5,6 +5,7 @@
 ## P0
 
 - [ ] [outcome-driven-validation-overhaul.md](./outcome-driven-validation-overhaul.md) — Deep repo-state audit, blocking validator cleanup, noisy-green test cleanup, and a burn-the-baselines-to-zero plan.
+- [ ] [ban-defensive-fallback-chains.md](./ban-defensive-fallback-chains.md) — Validators to ban deep ternary fallback chains and silent `undefined` render returns in owned code.
 
 ## Product / Platform
 

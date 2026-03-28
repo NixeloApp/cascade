@@ -164,11 +164,9 @@ export function Select<
   const selectedValueContent =
     selectedOption && renderValue
       ? renderValue(selectedOption)
-      : selectedOption
-        ? undefined
-        : currentValue !== undefined
-          ? currentValue
-          : undefined;
+      : isControlled && selectedOption
+        ? selectedOption.label
+        : undefined;
 
   const handleValueChange = (nextValue: string) => {
     const decodedValue = decodeOptionValue<TValue>(nextValue);
