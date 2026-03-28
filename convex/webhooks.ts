@@ -18,6 +18,7 @@ import {
 } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { logAudit } from "./lib/audit";
+import { boundedCollectWithFilter } from "./lib/boundedQueries";
 import { notFound, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
@@ -258,15 +259,18 @@ export const getActiveWebhooksForEvent = internalQuery({
     event: v.string(),
   },
   handler: async (ctx, args) => {
-    const webhooks = await ctx.db
-      .query("webhooks")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter(notDeleted)
-      .filter((q) => q.eq(q.field("isActive"), true))
-      .take(MAX_PAGE_SIZE);
-
-    // @convex-validation-ignore TAKE_BEFORE_FILTER — events is an array field; Convex filters can't do includes(). 100 active webhooks per project is unrealistic.
-    return webhooks.filter((w) => w.events.includes(args.event));
+    const { items } = await boundedCollectWithFilter(
+      ctx.db
+        .query("webhooks")
+        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+        .filter(notDeleted)
+        .filter((q) => q.eq(q.field("isActive"), true)),
+      {
+        filter: (w) => w.events.includes(args.event),
+        targetLimit: MAX_PAGE_SIZE,
+      },
+    );
+    return items;
   },
 });
 
