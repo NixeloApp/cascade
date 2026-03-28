@@ -1,6 +1,6 @@
 # PWA (Progressive Web App) Setup
 
-Nixelo has partial PWA infrastructure. This guide reflects the current shipped code paths as of 2026-03-20, and the runtime findings currently proven in local production-preview browser automation.
+Nixelo has partial PWA infrastructure. This guide reflects the current shipped code paths as of 2026-03-27, and the runtime findings currently proven in local production-preview browser automation.
 
 Related doc:
 
@@ -8,7 +8,7 @@ Related doc:
 
 ## Current Status
 
-As of 2026-03-20, the repo still has split worker generation, but only one app-owned registration path.
+As of 2026-03-27, the repo still has split worker generation, but only one app-owned registration path.
 
 What is true right now:
 
@@ -22,7 +22,9 @@ What is true right now:
 - `window.__convex_test_client` is now exposed only in `--mode e2e`, so normal production builds no longer suppress service-worker registration by mistake.
 - `src/lib/serviceWorker.ts` now registers immediately if the document is already loaded, so app-shell startup no longer depends on catching a late `window.load` event.
 - The dead `src/service-worker.ts` worker candidate has been removed from source because it was not part of the shipped build pipeline.
-- `promptInstall()` is now wired from the root app shell for production, non-E2E builds.
+- `src/lib/serviceWorker.ts` now exposes React-facing install/update state instead of injecting banners into the DOM directly.
+- `src/hooks/usePwaInstall.ts` and `src/hooks/useSwUpdate.ts` bridge the runtime worker/install events into React.
+- `src/components/Pwa/PwaBanners.tsx` owns the install/update UI in the app shell.
 - `processOfflineQueue()` in `src/lib/offline.ts` now rejects unsupported replay types explicitly instead of marking them synced without contacting a backend.
 - The live replay lane now covers `userSettings.update`, `notifications.markAsRead`, `issues.updateStatus`, and `issues.addComment`.
 - Queued comment replays now carry a client request ID so reconnect/network-flap retries do not double-post the same issue comment.
@@ -48,7 +50,7 @@ Verified now:
 - truthful queue diagnostics in Settings
 - manual queue processing from Settings
 - four real replayable mutation families: `userSettings.update`, `notifications.markAsRead`, `issues.updateStatus`, and `issues.addComment`
-- install/update helper wiring in the app shell
+- install/update helper wiring in the app shell through React hooks and a dedicated banner host
 - queued status changes, notification reads, and issue comments now apply optimistic UI immediately while they wait in the offline queue
 - production-preview browser automation confirms an authenticated Settings session stays usable offline once loaded
 - production-preview browser automation confirms previously visited authenticated Settings and dashboard routes restore offline in preview
@@ -77,7 +79,9 @@ To replace them with your own branding, overwrite those files with PNGs of the s
 The current service worker setup is split. Relevant files:
 
 - `/src/routes/__root.tsx` - Current registration entry point
-- `/src/lib/serviceWorker.ts` - Manual registration and install/update helpers
+- `/src/lib/serviceWorker.ts` - Manual registration plus install/update state store
+- `/src/hooks/usePwaInstall.ts`, `/src/hooks/useSwUpdate.ts` - React hooks for install/update state
+- `/src/components/Pwa/PwaBanners.tsx` - React-rendered install/update banners
 - `/src/lib/offline.ts` - Local queue state and replay processor
 - `/src/lib/offlineUserSettings.ts` - First real replayable mutation mapping
 - `/public/service-worker.js` - Worker currently shipped at `/service-worker.js`
@@ -118,7 +122,7 @@ Then open Chrome DevTools:
 Useful current commands:
 
 ```bash
-pnpm test --run src/lib/offline.test.ts src/hooks/useOffline.test.ts src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/serviceWorker.test.ts
+pnpm test --run src/lib/offline.test.ts src/hooks/useOffline.test.ts src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/serviceWorker.test.ts src/components/Pwa/PwaBanners.test.tsx
 pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/pwa-runtime.spec.ts --workers=1
 pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/offline-replay-preview.spec.ts --workers=1
 pnpm build
@@ -130,7 +134,7 @@ Those checks currently cover:
 - replay handler registration behavior
 - manual queue processing from Settings
 - last successful replay metadata
-- install/update helper behavior
+- install/update helper behavior, including the React banner host
 - preview-runtime worker ownership (`/service-worker.js` yes, `/sw.js` no)
 - preview-runtime manifest ownership and core shell cache contents
 - preview-runtime Chromium installability checks with zero reported installability errors
@@ -144,7 +148,7 @@ Those checks currently cover:
 These are still runtime-verification tasks, not solved by unit tests:
 
 1. Confirm push subscriptions still work after worker updates or cache clears.
-2. If desired, do one manual Chromium spot-check of the custom install banner; installability criteria are already clean in preview, but `beforeinstallprompt` display remains engagement- and browser-heuristic-dependent.
+2. If desired, do one manual Chromium spot-check of the React-managed install banner; installability criteria are already clean in preview, but `beforeinstallprompt` display remains engagement- and browser-heuristic-dependent.
 
 ## Build Pipeline
 
@@ -253,7 +257,7 @@ For the full replay model, see `docs/guides/offline-architecture.md`.
 
 ### Desktop (Chrome, Edge)
 
-The app now binds `beforeinstallprompt` from the root app shell in production, and will show a custom install banner when:
+The app now binds `beforeinstallprompt` into a React store from the app shell in production, and will show a custom install banner when:
 - User hasn't previously dismissed it
 - App is not already installed
 - `beforeinstallprompt` event fires

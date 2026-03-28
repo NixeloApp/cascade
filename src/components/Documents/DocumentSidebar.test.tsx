@@ -1,7 +1,7 @@
 import { DAY, HOUR } from "@convex/lib/timeUtils";
 import type { Value } from "platejs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getDocumentHeadingAnchorId } from "@/lib/documents/headingAnchors";
+import { setDocumentHeadingAnchorElement } from "@/lib/documents/headingAnchors";
 import { fireEvent, render, screen } from "@/test/custom-render";
 import { DocumentSidebar } from "./DocumentSidebar";
 
@@ -65,9 +65,8 @@ describe("DocumentSidebar", () => {
     const onHeadingClick = vi.fn();
     const scrollIntoView = vi.fn();
     const targetHeading = document.createElement("div");
-    targetHeading.id = getDocumentHeadingAnchorId("next-steps");
     targetHeading.scrollIntoView = scrollIntoView;
-    document.body.appendChild(targetHeading);
+    setDocumentHeadingAnchorElement("next-steps", targetHeading);
 
     render(
       <DocumentSidebar
@@ -91,6 +90,7 @@ describe("DocumentSidebar", () => {
 
     expect(onHeadingClick).toHaveBeenCalledWith("next-steps");
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
+    setDocumentHeadingAnchorElement("next-steps", null);
   });
 
   it("shows the empty contents state when no headings exist", () => {

@@ -1,5 +1,8 @@
 import type { PlateElementProps } from "platejs/react";
-import { getDocumentHeadingAnchorId } from "@/lib/documents/headingAnchors";
+import {
+  getDocumentHeadingAnchorId,
+  setDocumentHeadingAnchorElement,
+} from "@/lib/documents/headingAnchors";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +43,13 @@ export function HeadingElement({
     <Tag
       {...attributes}
       id={headingId ? getDocumentHeadingAnchorId(headingId) : undefined}
+      ref={(node: HTMLElement | null) => {
+        if (!headingId) {
+          return;
+        }
+
+        setDocumentHeadingAnchorElement(headingId, node);
+      }}
       data-testid={headingId ? TEST_IDS.DOCUMENT.HEADING_ANCHOR : undefined}
       className={cn(className)}
     >

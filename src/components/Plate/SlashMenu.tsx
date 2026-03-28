@@ -7,7 +7,8 @@
 
 import type { PlateEditor } from "platejs/react";
 import { useEditorRef, useEditorSelection } from "platejs/react";
-import { useEffect, useState } from "react";
+import type { ChangeEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -41,42 +42,34 @@ import { showError } from "@/lib/toast";
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
-/** Opens a file picker, validates the image, and inserts it into the editor. */
-function triggerImageUpload(editor: PlateEditor): void {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = IMAGE_TYPES.join(",");
+function insertImageFromFile(editor: PlateEditor, file: File): void {
+  if (!IMAGE_TYPES.includes(file.type)) {
+    showError("Invalid file type. Use JPG, PNG, GIF, or WebP.");
+    return;
+  }
 
-  input.onchange = async () => {
-    const file = input.files?.[0];
-    if (!file) return;
+  if (file.size > MAX_IMAGE_SIZE) {
+    showError("Image too large. Maximum size is 5MB.");
+    return;
+  }
 
-    if (!IMAGE_TYPES.includes(file.type)) {
-      showError("Invalid file type. Use JPG, PNG, GIF, or WebP.");
-      return;
-    }
-    if (file.size > MAX_IMAGE_SIZE) {
-      showError("Image too large. Maximum size is 5MB.");
-      return;
-    }
-
-    // Read file as data URL and insert as image node
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      editor.tf.insertNodes({
-        type: NODE_TYPES.image,
-        url: dataUrl,
-        children: [{ text: "" }],
-      });
-    };
-    reader.onerror = () => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (typeof reader.result !== "string") {
       showError("Failed to read image file");
-    };
-    reader.readAsDataURL(file);
-  };
+      return;
+    }
 
-  input.click();
+    editor.tf.insertNodes({
+      type: NODE_TYPES.image,
+      url: reader.result,
+      children: [{ text: "" }],
+    });
+  };
+  reader.onerror = () => {
+    showError("Failed to read image file");
+  };
+  reader.readAsDataURL(file);
 }
 
 interface SlashMenuItem {
@@ -87,155 +80,157 @@ interface SlashMenuItem {
   action: (editor: PlateEditor) => void;
 }
 
-const SLASH_MENU_ITEMS: SlashMenuItem[] = [
-  {
-    id: "paragraph",
-    label: "Text",
-    description: "Plain text paragraph",
-    icon: Type,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.paragraph });
+function getSlashMenuItems(openImagePicker: () => void): SlashMenuItem[] {
+  return [
+    {
+      id: "paragraph",
+      label: "Text",
+      description: "Plain text paragraph",
+      icon: Type,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.paragraph });
+      },
     },
-  },
-  {
-    id: "h1",
-    label: "Heading 1",
-    description: "Large section heading",
-    icon: Heading1,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.heading1 });
+    {
+      id: "h1",
+      label: "Heading 1",
+      description: "Large section heading",
+      icon: Heading1,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.heading1 });
+      },
     },
-  },
-  {
-    id: "h2",
-    label: "Heading 2",
-    description: "Medium section heading",
-    icon: Heading2,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.heading2 });
+    {
+      id: "h2",
+      label: "Heading 2",
+      description: "Medium section heading",
+      icon: Heading2,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.heading2 });
+      },
     },
-  },
-  {
-    id: "h3",
-    label: "Heading 3",
-    description: "Small section heading",
-    icon: Heading3,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.heading3 });
+    {
+      id: "h3",
+      label: "Heading 3",
+      description: "Small section heading",
+      icon: Heading3,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.heading3 });
+      },
     },
-  },
-  {
-    id: "h4",
-    label: "Heading 4",
-    description: "Subsection heading",
-    icon: Heading4,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.heading4 });
+    {
+      id: "h4",
+      label: "Heading 4",
+      description: "Subsection heading",
+      icon: Heading4,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.heading4 });
+      },
     },
-  },
-  {
-    id: "h5",
-    label: "Heading 5",
-    description: "Minor heading",
-    icon: Heading5,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.heading5 });
+    {
+      id: "h5",
+      label: "Heading 5",
+      description: "Minor heading",
+      icon: Heading5,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.heading5 });
+      },
     },
-  },
-  {
-    id: "h6",
-    label: "Heading 6",
-    description: "Smallest heading",
-    icon: Heading6,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.heading6 });
+    {
+      id: "h6",
+      label: "Heading 6",
+      description: "Smallest heading",
+      icon: Heading6,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.heading6 });
+      },
     },
-  },
-  {
-    id: "bullet-list",
-    label: "Bullet List",
-    description: "Unordered list with bullets",
-    icon: List,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.bulletedList });
+    {
+      id: "bullet-list",
+      label: "Bullet List",
+      description: "Unordered list with bullets",
+      icon: List,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.bulletedList });
+      },
     },
-  },
-  {
-    id: "numbered-list",
-    label: "Numbered List",
-    description: "Ordered list with numbers",
-    icon: ListOrdered,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.numberedList });
+    {
+      id: "numbered-list",
+      label: "Numbered List",
+      description: "Ordered list with numbers",
+      icon: ListOrdered,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.numberedList });
+      },
     },
-  },
-  {
-    id: "blockquote",
-    label: "Quote",
-    description: "Block quote for citations",
-    icon: Quote,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.blockquote });
+    {
+      id: "blockquote",
+      label: "Quote",
+      description: "Block quote for citations",
+      icon: Quote,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.blockquote });
+      },
     },
-  },
-  {
-    id: "code-block",
-    label: "Code Block",
-    description: "Code with syntax highlighting",
-    icon: Code,
-    action: (editor) => {
-      editor.tf.setNodes({ type: NODE_TYPES.codeBlock });
+    {
+      id: "code-block",
+      label: "Code Block",
+      description: "Code with syntax highlighting",
+      icon: Code,
+      action: (editor) => {
+        editor.tf.setNodes({ type: NODE_TYPES.codeBlock });
+      },
     },
-  },
-  {
-    id: "table",
-    label: "Table",
-    description: "Insert a table",
-    icon: Table,
-    action: (editor) => {
-      // Insert a 3x3 table
-      const table = {
-        type: NODE_TYPES.table,
-        children: [
-          {
-            type: NODE_TYPES.tableRow,
-            children: [
-              { type: NODE_TYPES.tableCellHeader, children: [{ text: "" }] },
-              { type: NODE_TYPES.tableCellHeader, children: [{ text: "" }] },
-              { type: NODE_TYPES.tableCellHeader, children: [{ text: "" }] },
-            ],
-          },
-          {
-            type: NODE_TYPES.tableRow,
-            children: [
-              { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
-              { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
-              { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
-            ],
-          },
-          {
-            type: NODE_TYPES.tableRow,
-            children: [
-              { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
-              { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
-              { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
-            ],
-          },
-        ],
-      };
-      editor.tf.insertNodes(table);
+    {
+      id: "table",
+      label: "Table",
+      description: "Insert a table",
+      icon: Table,
+      action: (editor) => {
+        // Insert a 3x3 table
+        const table = {
+          type: NODE_TYPES.table,
+          children: [
+            {
+              type: NODE_TYPES.tableRow,
+              children: [
+                { type: NODE_TYPES.tableCellHeader, children: [{ text: "" }] },
+                { type: NODE_TYPES.tableCellHeader, children: [{ text: "" }] },
+                { type: NODE_TYPES.tableCellHeader, children: [{ text: "" }] },
+              ],
+            },
+            {
+              type: NODE_TYPES.tableRow,
+              children: [
+                { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
+                { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
+                { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
+              ],
+            },
+            {
+              type: NODE_TYPES.tableRow,
+              children: [
+                { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
+                { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
+                { type: NODE_TYPES.tableCell, children: [{ text: "" }] },
+              ],
+            },
+          ],
+        };
+        editor.tf.insertNodes(table);
+      },
     },
-  },
-  {
-    id: "image",
-    label: "Image",
-    description: "Upload or embed an image",
-    icon: Image,
-    action: (editor) => {
-      triggerImageUpload(editor);
+    {
+      id: "image",
+      label: "Image",
+      description: "Upload or embed an image",
+      icon: Image,
+      action: () => {
+        openImagePicker();
+      },
     },
-  },
-];
+  ];
+}
 
 /**
  * Helper to check if selection is collapsed
@@ -320,9 +315,19 @@ function deleteSlashCommand(editor: PlateEditor): number {
 export function SlashMenu() {
   const editor = useEditorRef();
   const selection = useEditorSelection();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const slashMenuItems = getSlashMenuItems(() => {
+    const input = fileInputRef.current;
+    if (!input) {
+      return;
+    }
+
+    input.value = "";
+    input.click();
+  });
 
   // Check for slash trigger
   useEffect(() => {
@@ -341,6 +346,16 @@ export function SlashMenu() {
       setSearch("");
     }
   }, [selection]);
+
+  const handleImageInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    insertImageFromFile(editor, file);
+    event.currentTarget.value = "";
+  };
 
   // Handle item selection
   const handleSelect = (item: SlashMenuItem) => {
@@ -365,57 +380,78 @@ export function SlashMenu() {
   }, [open]);
 
   // Filter items based on search
-  const filteredItems = SLASH_MENU_ITEMS.filter(
+  const filteredItems = slashMenuItems.filter(
     (item) =>
       item.label.toLowerCase().includes(search.toLowerCase()) ||
       item.description.toLowerCase().includes(search.toLowerCase()),
   );
 
   if (!open || !anchorRect) {
-    return null;
+    return (
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={IMAGE_TYPES.join(",")}
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={handleImageInputChange}
+      />
+    );
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverAnchor
-        style={{
-          position: "fixed",
-          left: anchorRect.left,
-          top: anchorRect.bottom + 4,
-          width: 1,
-          height: 1,
-        }}
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={IMAGE_TYPES.join(",")}
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={handleImageInputChange}
       />
-      <PopoverContent
-        recipe="slashMenu"
-        className="w-72"
-        align="start"
-        side="bottom"
-        sideOffset={4}
-        onOpenAutoFocus={(e) => e.preventDefault()}
-      >
-        <Command>
-          <CommandList viewport="slashMenu">
-            <CommandEmpty tone="muted">No results found</CommandEmpty>
-            <CommandGroup heading="Basic blocks" recipe="slashMenu">
-              {filteredItems.map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={item.id}
-                  onSelect={() => handleSelect(item)}
-                  recipe="slashMenu"
-                >
-                  <Icon icon={item.icon} size="sm" className="mr-3" />
-                  <Flex direction="column" gap="xs">
-                    <Typography variant="label">{item.label}</Typography>
-                    <Typography variant="muted">{item.description}</Typography>
-                  </Flex>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverAnchor
+          style={{
+            position: "fixed",
+            left: anchorRect.left,
+            top: anchorRect.bottom + 4,
+            width: 1,
+            height: 1,
+          }}
+        />
+        <PopoverContent
+          recipe="slashMenu"
+          className="w-72"
+          align="start"
+          side="bottom"
+          sideOffset={4}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <Command>
+            <CommandList viewport="slashMenu">
+              <CommandEmpty tone="muted">No results found</CommandEmpty>
+              <CommandGroup heading="Basic blocks" recipe="slashMenu">
+                {filteredItems.map((item) => (
+                  <CommandItem
+                    key={item.id}
+                    value={item.id}
+                    onSelect={() => handleSelect(item)}
+                    recipe="slashMenu"
+                  >
+                    <Icon icon={item.icon} size="sm" className="mr-3" />
+                    <Flex direction="column" gap="xs">
+                      <Typography variant="label">{item.label}</Typography>
+                      <Typography variant="muted">{item.description}</Typography>
+                    </Flex>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ConvexReactClient, useConvex } from "convex/react";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PwaBanners } from "@/components/Pwa/PwaBanners";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
@@ -35,7 +36,7 @@ import { NotFoundPage } from "../components/NotFoundPage";
 import { TooltipProvider } from "../components/ui/Tooltip";
 import { Typography } from "../components/ui/Typography";
 import { ThemeProvider } from "../contexts/ThemeContext";
-import { promptInstall, register as registerServiceWorker } from "../lib/serviceWorker";
+import { register as registerServiceWorker } from "../lib/serviceWorker";
 
 declare global {
   interface Window {
@@ -79,7 +80,6 @@ function RootComponent() {
   useEffect(() => {
     if (import.meta.env.PROD) {
       registerServiceWorker();
-      promptInstall();
     }
   }, []);
 
@@ -127,6 +127,7 @@ function RootComponent() {
               </Flex>
             </Flex>
           )}
+          <PwaBanners />
           <Toaster />
         </TooltipProvider>
       </LazyPostHog>

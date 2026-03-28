@@ -168,4 +168,59 @@ describe("SlashMenu", () => {
     expect(editor.tf.setNodes).toHaveBeenCalledWith({ type: "code_block" });
     expect(screen.queryByText("Basic blocks")).not.toBeInTheDocument();
   });
+
+  it("uses the React-managed file input to insert uploaded images", async () => {
+    const user = userEvent.setup();
+    const editor = {
+      tf: {
+        deleteBackward: vi.fn(),
+        insertNodes: vi.fn(),
+        setNodes: vi.fn(),
+      },
+    };
+    const inputClick = vi.fn();
+    vi.spyOn(FileReader.prototype, "readAsDataURL").mockImplementation(function (
+      this: FileReader,
+      _file: Blob,
+    ) {
+      Object.defineProperty(this, "result", {
+        configurable: true,
+        value: "data:image/png;base64,encoded",
+      });
+      this.onload?.call(this, new ProgressEvent("load") as ProgressEvent<FileReader>);
+    });
+    Object.defineProperty(HTMLInputElement.prototype, "click", {
+      configurable: true,
+      value: inputClick,
+    });
+
+    mockUseEditorRef.mockReturnValue(editor);
+    mockUseEditorSelection.mockReturnValue({
+      anchor: { path: [0, 0], offset: 3 },
+      focus: { path: [0, 0], offset: 3 },
+    });
+    setDomSelection({ text: "/im", cursorOffset: 3 });
+
+    const { container } = render(<SlashMenu />);
+
+    await user.click(screen.getByText("Image"));
+
+    expect(editor.tf.deleteBackward).toHaveBeenCalledTimes(3);
+    expect(inputClick).toHaveBeenCalledTimes(1);
+
+    const input = container.querySelector("input[type='file']");
+    expect(input).not.toBeNull();
+
+    fireEvent.change(input as HTMLInputElement, {
+      target: {
+        files: [new File(["image"], "diagram.png", { type: "image/png" })],
+      },
+    });
+
+    expect(editor.tf.insertNodes).toHaveBeenCalledWith({
+      type: "img",
+      url: "data:image/png;base64,encoded",
+      children: [{ text: "" }],
+    });
+  });
 });

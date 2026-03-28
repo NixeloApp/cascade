@@ -20,7 +20,7 @@ import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
-import { getDocumentHeadingAnchorId } from "@/lib/documents/headingAnchors";
+import { getDocumentHeadingAnchorElement } from "@/lib/documents/headingAnchors";
 import {
   ChevronDown,
   FileText,
@@ -255,7 +255,7 @@ export function DocumentSidebar({
   // Handle heading click - scroll to element
   const handleHeadingClick = (headingId: string) => {
     onHeadingClick?.(headingId);
-    const element = document.getElementById(getDocumentHeadingAnchorId(headingId));
+    const element = getDocumentHeadingAnchorElement(headingId);
     if (element instanceof HTMLElement) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
     }

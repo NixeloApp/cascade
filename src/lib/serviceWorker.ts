@@ -2,8 +2,8 @@
  * Service Worker Registration
  *
  * PWA service worker registration and lifecycle management.
- * Handles periodic updates, cache clearing, and install prompts.
- * Provides update notifications and standalone mode detection.
+ * Handles periodic updates, cache clearing, install prompts, and React-facing
+ * state for install/update banners.
  */
 
 import { HOUR } from "@convex/lib/timeUtils";
@@ -19,12 +19,142 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+interface PwaInstallState {
+  isAvailable: boolean;
+  isDismissed: boolean;
+  isPrompting: boolean;
+}
+
+interface SwUpdateState {
+  isDismissed: boolean;
+  isUpdateAvailable: boolean;
+  registration: ServiceWorkerRegistration | null;
+}
+
+export interface PwaInstallSnapshot {
+  canInstall: boolean;
+  isPrompting: boolean;
+}
+
+export interface SwUpdateSnapshot {
+  isUpdateAvailable: boolean;
+}
+
+type StoreListener = () => void;
+
+const PWA_INSTALL_DISMISSED_KEY = "pwa-install-dismissed";
+
 let hasRegisteredServiceWorker = false;
 let hasBoundInstallPrompt = false;
 let hasBoundControllerChange = false;
+let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 
-function getExistingElement(id: string): HTMLElement | null {
-  return document.getElementById(id);
+const pwaInstallListeners = new Set<StoreListener>();
+const swUpdateListeners = new Set<StoreListener>();
+
+const pwaInstallState: PwaInstallState = {
+  isAvailable: false,
+  isDismissed: false,
+  isPrompting: false,
+};
+
+const swUpdateState: SwUpdateState = {
+  isDismissed: false,
+  isUpdateAvailable: false,
+  registration: null,
+};
+
+let pwaInstallSnapshot: PwaInstallSnapshot = {
+  canInstall: false,
+  isPrompting: false,
+};
+
+let swUpdateSnapshot: SwUpdateSnapshot = {
+  isUpdateAvailable: false,
+};
+
+function updatePwaInstallSnapshot() {
+  const nextCanInstall =
+    pwaInstallState.isAvailable && !pwaInstallState.isDismissed && !isStandalone();
+
+  if (
+    pwaInstallSnapshot.canInstall === nextCanInstall &&
+    pwaInstallSnapshot.isPrompting === pwaInstallState.isPrompting
+  ) {
+    return;
+  }
+
+  pwaInstallSnapshot = {
+    canInstall: nextCanInstall,
+    isPrompting: pwaInstallState.isPrompting,
+  };
+}
+
+function updateSwUpdateSnapshot() {
+  const nextIsUpdateAvailable = swUpdateState.isUpdateAvailable && !swUpdateState.isDismissed;
+
+  if (swUpdateSnapshot.isUpdateAvailable === nextIsUpdateAvailable) {
+    return;
+  }
+
+  swUpdateSnapshot = {
+    isUpdateAvailable: nextIsUpdateAvailable,
+  };
+}
+
+function notifyPwaInstallListeners() {
+  updatePwaInstallSnapshot();
+  for (const listener of pwaInstallListeners) {
+    listener();
+  }
+}
+
+function notifySwUpdateListeners() {
+  updateSwUpdateSnapshot();
+  for (const listener of swUpdateListeners) {
+    listener();
+  }
+}
+
+function readInstallPromptDismissal(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    return window.localStorage.getItem(PWA_INSTALL_DISMISSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeInstallPromptDismissal(isDismissed: boolean) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    if (isDismissed) {
+      window.localStorage.setItem(PWA_INSTALL_DISMISSED_KEY, "true");
+      return;
+    }
+
+    window.localStorage.removeItem(PWA_INSTALL_DISMISSED_KEY);
+  } catch {
+    // Persistence failures should not break the app shell.
+  }
+}
+
+function setPwaInstallAvailability(isAvailable: boolean) {
+  pwaInstallState.isAvailable = isAvailable;
+  notifyPwaInstallListeners();
+}
+
+function setSwUpdateAvailable(registration: ServiceWorkerRegistration) {
+  swUpdateState.registration = registration;
+  swUpdateState.isDismissed = false;
+  swUpdateState.isUpdateAvailable = true;
+  notifySwUpdateListeners();
 }
 
 function reloadOnControllerChange() {
@@ -40,6 +170,57 @@ function bindControllerChangeReload() {
   hasBoundControllerChange = true;
 }
 
+function handleBeforeInstallPrompt(event: Event) {
+  const promptEvent = event as BeforeInstallPromptEvent;
+  promptEvent.preventDefault();
+  deferredInstallPrompt = promptEvent;
+  pwaInstallState.isDismissed = readInstallPromptDismissal();
+  pwaInstallState.isPrompting = false;
+  setPwaInstallAvailability(true);
+}
+
+function handleAppInstalled() {
+  deferredInstallPrompt = null;
+  pwaInstallState.isDismissed = false;
+  pwaInstallState.isPrompting = false;
+  writeInstallPromptDismissal(false);
+  setPwaInstallAvailability(false);
+}
+
+export function ensureInstallPromptTracking() {
+  if (hasBoundInstallPrompt || typeof window === "undefined") {
+    return;
+  }
+
+  hasBoundInstallPrompt = true;
+  pwaInstallState.isDismissed = readInstallPromptDismissal();
+  notifyPwaInstallListeners();
+
+  window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  window.addEventListener("appinstalled", handleAppInstalled);
+}
+
+function trackRegistrationUpdates(registration: ServiceWorkerRegistration) {
+  swUpdateState.registration = registration;
+
+  if (registration.waiting && navigator.serviceWorker.controller) {
+    setSwUpdateAvailable(registration);
+  }
+
+  registration.addEventListener("updatefound", () => {
+    const newWorker = registration.installing;
+    if (!newWorker) {
+      return;
+    }
+
+    newWorker.addEventListener("statechange", () => {
+      if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+        setSwUpdateAvailable(registration);
+      }
+    });
+  });
+}
+
 function startServiceWorkerRegistration() {
   if (!("serviceWorker" in navigator) || hasRegisteredServiceWorker) {
     return;
@@ -50,21 +231,12 @@ function startServiceWorkerRegistration() {
   navigator.serviceWorker
     .register("/service-worker.js")
     .then((registration) => {
+      trackRegistrationUpdates(registration);
+
       // Check for updates every hour
       setInterval(() => {
-        registration.update();
+        void registration.update();
       }, HOUR);
-
-      registration.addEventListener("updatefound", () => {
-        const newWorker = registration.installing;
-        if (newWorker) {
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              showUpdateNotification(registration);
-            }
-          });
-        }
-      });
     })
     .catch(() => {
       hasRegisteredServiceWorker = false;
@@ -97,6 +269,11 @@ export function register() {
 export function unregister() {
   if ("serviceWorker" in navigator) {
     hasRegisteredServiceWorker = false;
+    swUpdateState.registration = null;
+    swUpdateState.isDismissed = false;
+    swUpdateState.isUpdateAvailable = false;
+    notifySwUpdateListeners();
+
     navigator.serviceWorker.ready
       .then((registration) => {
         registration.unregister();
@@ -118,113 +295,88 @@ export function clearCache() {
   }
 }
 
-function showUpdateNotification(registration: ServiceWorkerRegistration) {
-  if (getExistingElement("sw-update-banner")) {
-    return;
-  }
-
-  // Create a simple banner to notify users of an update
-  const banner = document.createElement("div");
-  banner.id = "sw-update-banner";
-  banner.className =
-    "fixed bottom-5 left-1/2 -translate-x-1/2 bg-brand text-ui-text-inverse px-6 py-4 rounded-lg shadow-xl z-toast-critical flex items-center gap-4 font-sans max-w-toast";
-  banner.innerHTML = `
-    <span>A new version is available!</span>
-    <button id="sw-update-button" class="bg-ui-bg text-brand border-none px-4 py-2 rounded font-semibold cursor-pointer">Update</button>
-    <button id="sw-dismiss-button" class="bg-transparent text-ui-text-inverse border border-ui-text-inverse px-4 py-2 rounded font-semibold cursor-pointer">Dismiss</button>
-  `;
-
-  document.body.appendChild(banner);
-
-  // Handle update button click — post to the waiting worker, not the active controller
-  document.getElementById("sw-update-button")?.addEventListener("click", () => {
-    if (registration.waiting) {
-      registration.waiting.postMessage({ type: "SKIP_WAITING" });
-    }
-  });
-
-  // Handle dismiss button click
-  document.getElementById("sw-dismiss-button")?.addEventListener("click", () => {
-    banner.remove();
-  });
-}
-
 /**
  * Checks if the app is running in standalone mode (installed as PWA).
  * Detects both standard display-mode and iOS standalone property.
  */
 export function isStandalone(): boolean {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as NavigatorStandalone).standalone === true
-  );
-}
-
-/**
- * Sets up PWA install prompt handling.
- * Listens for beforeinstallprompt event and shows custom install UI.
- */
-export function promptInstall() {
-  if (hasBoundInstallPrompt) {
-    return;
+  if (typeof window === "undefined") {
+    return false;
   }
 
-  hasBoundInstallPrompt = true;
-  let deferredPrompt: BeforeInstallPromptEvent | null = null;
+  const displayModeStandalone =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia("(display-mode: standalone)").matches
+      : false;
 
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e as BeforeInstallPromptEvent;
-
-    // Show custom install button/banner
-    showInstallPrompt(() => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult: { outcome: "accepted" | "dismissed" }) => {
-          if (choiceResult.outcome === "accepted") {
-            // User accepted the install prompt
-          } else {
-            // User dismissed the install prompt
-          }
-          deferredPrompt = null;
-        });
-      }
-    });
-  });
-
-  window.addEventListener("appinstalled", () => {
-    deferredPrompt = null;
-  });
+  return displayModeStandalone || (window.navigator as NavigatorStandalone).standalone === true;
 }
 
-function showInstallPrompt(onInstall: () => void) {
-  // Only show if not already installed
-  if (isStandalone()) return;
+export function subscribeToPwaInstall(listener: StoreListener) {
+  pwaInstallListeners.add(listener);
+  return () => {
+    pwaInstallListeners.delete(listener);
+  };
+}
 
-  // Check if user has previously dismissed
-  if (localStorage.getItem("pwa-install-dismissed") === "true") return;
-  if (getExistingElement("pwa-install-banner")) return;
+export function getPwaInstallSnapshot(): PwaInstallSnapshot {
+  updatePwaInstallSnapshot();
+  return pwaInstallSnapshot;
+}
 
-  const banner = document.createElement("div");
-  banner.id = "pwa-install-banner";
-  banner.className =
-    "fixed top-5 left-1/2 -translate-x-1/2 bg-ui-bg-elevated text-ui-text px-6 py-4 rounded-container shadow-xl z-toast-critical flex items-center gap-4 font-sans max-w-toast border-2 border-brand";
+export async function promptToInstallPwa(): Promise<"accepted" | "dismissed" | "unavailable"> {
+  if (!deferredInstallPrompt) {
+    return "unavailable";
+  }
 
-  banner.innerHTML = `
-    <span>Install Nixelo for quick access!</span>
-    <button id="pwa-install-button" class="bg-brand text-ui-text-inverse border-none px-4 py-2 rounded font-semibold cursor-pointer">Install</button>
-    <button id="pwa-dismiss-button" class="bg-transparent text-brand border border-brand px-4 py-2 rounded font-semibold cursor-pointer">Not now</button>
-  `;
+  pwaInstallState.isPrompting = true;
+  notifyPwaInstallListeners();
 
-  document.body.appendChild(banner);
+  try {
+    await deferredInstallPrompt.prompt();
+    const choiceResult = await deferredInstallPrompt.userChoice;
+    return choiceResult.outcome;
+  } finally {
+    deferredInstallPrompt = null;
+    pwaInstallState.isPrompting = false;
+    setPwaInstallAvailability(false);
+  }
+}
 
-  document.getElementById("pwa-install-button")?.addEventListener("click", () => {
-    onInstall();
-    banner.remove();
-  });
+export function dismissPwaInstall() {
+  deferredInstallPrompt = null;
+  pwaInstallState.isDismissed = true;
+  pwaInstallState.isPrompting = false;
+  writeInstallPromptDismissal(true);
+  setPwaInstallAvailability(false);
+}
 
-  document.getElementById("pwa-dismiss-button")?.addEventListener("click", () => {
-    localStorage.setItem("pwa-install-dismissed", "true");
-    banner.remove();
-  });
+export function subscribeToSwUpdate(listener: StoreListener) {
+  swUpdateListeners.add(listener);
+  return () => {
+    swUpdateListeners.delete(listener);
+  };
+}
+
+export function getSwUpdateSnapshot(): SwUpdateSnapshot {
+  updateSwUpdateSnapshot();
+  return swUpdateSnapshot;
+}
+
+export function dismissSwUpdate() {
+  swUpdateState.isDismissed = true;
+  swUpdateState.isUpdateAvailable = false;
+  notifySwUpdateListeners();
+}
+
+export function applySwUpdate(): boolean {
+  const waitingWorker = swUpdateState.registration?.waiting;
+  if (!waitingWorker) {
+    return false;
+  }
+
+  waitingWorker.postMessage({ type: "SKIP_WAITING" });
+  swUpdateState.isUpdateAvailable = false;
+  notifySwUpdateListeners();
+  return true;
 }

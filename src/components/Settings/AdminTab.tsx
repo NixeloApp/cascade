@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HourComplianceDashboard } from "../Admin/HourComplianceDashboard";
 import { IpRestrictionsSettings } from "../Admin/IpRestrictionsSettings";
 import { OAuthFeatureFlagSettings } from "../Admin/OAuthFeatureFlagSettings";
@@ -46,8 +46,11 @@ function getInitialActiveSection() {
   return getSectionFromHash(window.location.hash) ?? ADMIN_SECTIONS[0].key;
 }
 
-function scrollToAdminSection(sectionKey: AdminSectionKey) {
-  const section = document.getElementById(getAdminSectionId(sectionKey));
+function scrollToAdminSection(
+  sectionRefs: Record<AdminSectionKey, HTMLElement | null>,
+  sectionKey: AdminSectionKey,
+) {
+  const section = sectionRefs[sectionKey];
   section?.scrollIntoView?.({ behavior: "smooth", block: "start" });
 }
 
@@ -59,13 +62,22 @@ export function AdminTab() {
   const [activeSection, setActiveSection] = useState<AdminSectionKey>(() =>
     getInitialActiveSection(),
   );
+  const sectionRefs = useRef<Record<AdminSectionKey, HTMLElement | null>>({
+    organization: null,
+    "oauth-health": null,
+    "oauth-flags": null,
+    "ip-restrictions": null,
+    "user-management": null,
+    "user-types": null,
+    "hour-compliance": null,
+  });
 
   useEffect(() => {
     const syncActiveSection = () => {
       const sectionFromHash = getSectionFromHash(window.location.hash);
       if (sectionFromHash) {
         setActiveSection(sectionFromHash);
-        scrollToAdminSection(sectionFromHash);
+        scrollToAdminSection(sectionRefs.current, sectionFromHash);
       }
     };
 
@@ -99,7 +111,7 @@ export function AdminTab() {
                 onClick={() => {
                   window.location.hash = getAdminSectionId(key);
                   setActiveSection(key);
-                  scrollToAdminSection(key);
+                  scrollToAdminSection(sectionRefs.current, key);
                 }}
               >
                 {label}
@@ -111,7 +123,14 @@ export function AdminTab() {
 
       <Stack gap="xl">
         {ADMIN_SECTIONS.map(({ key, label, Component }) => (
-          <section key={key} id={getAdminSectionId(key)} aria-label={label}>
+          <section
+            key={key}
+            id={getAdminSectionId(key)}
+            aria-label={label}
+            ref={(node) => {
+              sectionRefs.current[key] = node;
+            }}
+          >
             <Component />
           </section>
         ))}
