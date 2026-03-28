@@ -116,8 +116,10 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 ## 4. Shrink Oversized Variant Surfaces
 
 ### Card.tsx
-- **Current:** `recipe` axis at 199 options
-- **End state:** < 20 recipes. Move one-off visual treatments to feature components or CVA variants owned by the feature, not the primitive.
+- **Status:** Done (2026-03-28)
+- **Current:** `recipe` axis was at 199 options
+- **Landed:** The oversized `cardRecipeVariants` CVA axis was removed from `Card.tsx` and extracted into the typed helper map in `src/components/ui/cardSurfaceClassNames.ts`. The shared primitive now owns only the semantic base surface while feature surfaces resolve through helper lookups, direct helper consumers/tests were updated, and the validator baseline no longer treats `Card` as an oversized primitive axis.
+- **End state:** Keep future card chrome additions in helper ownership rather than reintroducing a large primitive-owned variant axis.
 
 ### Button.tsx
 - **Status:** Done (2026-03-28)
@@ -151,5 +153,5 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 - [x] Every shadcn compound component has one wrapper. `Select`, `Popover`, and `Command` are done.
 - [x] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
 - [x] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
-- [ ] No variant axis above 20 options in shared primitives. `Badge` is done; `Card.recipe` is still the large remaining surface.
+- [x] No variant axis above 20 options in shared primitives. `Badge` and `Card` are done.
 - [ ] Raw Tailwind violations at 0.

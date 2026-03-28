@@ -1,7 +1,6 @@
 {
   "maxVariantOptionsPerAxis": 10,
   "variantOptionsByAxis": {
-    "src/components/ui/Card.tsx#cardRecipeVariants.recipe": 199,
     "src/components/ui/Typography.tsx#typographyVariants.color": 11,
     "src/components/ui/Typography.tsx#typographyVariants.variant": 60
   }

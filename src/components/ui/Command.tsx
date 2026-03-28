@@ -11,7 +11,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
 import * as React from "react";
-import { cardRecipeVariants } from "@/components/ui/Card";
+import { getCardRecipeClassName } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
@@ -189,7 +189,7 @@ function renderSection(
     <CommandPrimitive.Group
       key={section.id}
       className={cn(
-        cardRecipeVariants({ recipe: "commandSection" }),
+        getCardRecipeClassName("commandSection"),
         commandGroupVariants({ recipe: section.recipe ?? defaultGroupRecipe }),
         section.className,
       )}
@@ -243,10 +243,7 @@ export const Command = React.forwardRef<React.ElementRef<typeof CommandPrimitive
     <CommandPrimitive ref={ref} className={cn(commandVariants({ recipe }), className)} {...props}>
       {search ? (
         <div
-          className={cn(
-            cardRecipeVariants({ recipe: "overlayInset" }),
-            "mx-4 mt-4 flex items-center px-3",
-          )}
+          className={cn(getCardRecipeClassName("overlayInset"), "mx-4 mt-4 flex items-center px-3")}
           cmdk-input-wrapper=""
         >
           <Search className="mr-2 h-4 w-4 shrink-0 text-ui-text-tertiary" />
