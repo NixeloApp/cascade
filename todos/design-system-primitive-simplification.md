@@ -127,7 +127,7 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 ## 5. Raw Tailwind Ratchet
 
 - **Current:** 102 violations across 73 files
-- **End state:** < 30 violations, concentrated in justified edge cases
+- **End state:** 0 violations
 - **Start with:** calendar-body-month (4), IssueCard (4), GlobalSearch (3), ProductShowcase (3), RoadmapView (3)
 
 ---
@@ -138,4 +138,4 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 - [ ] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
 - [ ] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
 - [ ] No variant axis above 20 options in shared primitives.
-- [ ] Raw Tailwind violations < 30.
+- [ ] Raw Tailwind violations at 0.
