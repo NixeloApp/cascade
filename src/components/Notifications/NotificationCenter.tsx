@@ -14,14 +14,24 @@ import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { getAlertCountBadgeClassName } from "@/components/ui/badgeSurfaceClassNames";
-import {
-  getNotificationFilterButtonClassName,
-  getQuietRoundIconButtonClassName,
-} from "@/components/ui/buttonSurfaceClassNames";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import {
+  getNotificationCenterBodyClassName,
+  getNotificationCenterContentClassName,
+  getNotificationCenterEmptyStateClassName,
+  getNotificationCenterFilterClassName,
+  getNotificationCenterFooterActionClassName,
+  getNotificationCenterFooterClassName,
+  getNotificationCenterGroupClassName,
+  getNotificationCenterGroupHeaderClassName,
+  getNotificationCenterGroupListClassName,
+  getNotificationCenterHeaderClassName,
+  getNotificationCenterPanelClassName,
+  getNotificationCenterTriggerClassName,
+  getNotificationCenterUnreadBadgeClassName,
+} from "@/components/ui/notificationCenterSurfaceClassNames";
 import { Popover } from "@/components/ui/Popover";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -39,7 +49,6 @@ import { Bell, ExternalLink, Inbox } from "@/lib/icons";
 import { getOptimisticUnreadCount } from "@/lib/notifications";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
 
 /** Notification filter categories */
@@ -189,12 +198,17 @@ export function NotificationCenter() {
   return (
     <Popover
       align="end"
-      bodyClassName="min-h-0 flex-1 overflow-y-auto p-0 scrollbar-subtle"
-      className="max-h-popover-panel w-full max-w-dialog-mobile sm:w-96"
+      bodyClassName={getNotificationCenterBodyClassName()}
+      className={getNotificationCenterPanelClassName()}
       contentTestId={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       footer={
         orgContext?.orgSlug ? (
-          <Button asChild variant="link" size="content" className="w-full justify-center gap-2">
+          <Button
+            asChild
+            variant="link"
+            size="content"
+            className={getNotificationCenterFooterActionClassName()}
+          >
             <Link
               to={ROUTES.notifications.path}
               params={{ orgSlug: orgContext.orgSlug }}
@@ -206,7 +220,7 @@ export function NotificationCenter() {
           </Button>
         ) : undefined
       }
-      footerClassName={orgContext?.orgSlug ? "bg-ui-bg" : undefined}
+      footerClassName={getNotificationCenterFooterClassName(Boolean(orgContext?.orgSlug))}
       header={
         <Stack gap="sm">
           <Flex align="center" justify="between">
@@ -240,7 +254,7 @@ export function NotificationCenter() {
                 variant="unstyled"
                 size="content"
                 onClick={() => setFilter(key)}
-                className={cn("shrink-0", getNotificationFilterButtonClassName(filter === key))}
+                className={getNotificationCenterFilterClassName(filter === key)}
               >
                 {label}
               </Button>
@@ -248,7 +262,7 @@ export function NotificationCenter() {
           </Flex>
         </Stack>
       }
-      headerClassName="sticky top-0 z-10 bg-ui-bg"
+      headerClassName={getNotificationCenterHeaderClassName()}
       open={isOpen}
       onOpenChange={setIsOpen}
       padding="none"
@@ -258,20 +272,18 @@ export function NotificationCenter() {
         <Button
           variant="unstyled"
           size="icon"
-          className={cn("relative", getQuietRoundIconButtonClassName())}
+          className={getNotificationCenterTriggerClassName()}
           aria-label={dynamicLabel}
           data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
         >
           <Icon icon={Bell} size="md" />
           {optimisticUnreadCount != null && optimisticUnreadCount > 0 && (
             <Badge
+              data-testid={TEST_IDS.HEADER.NOTIFICATION_BADGE}
               variant="error"
               size="sm"
               shape="pill"
-              className={cn(
-                getAlertCountBadgeClassName(),
-                "absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 animate-scale-in",
-              )}
+              className={getNotificationCenterUnreadBadgeClassName()}
             >
               {optimisticUnreadCount > 99 ? "99+" : optimisticUnreadCount}
             </Badge>
@@ -279,14 +291,14 @@ export function NotificationCenter() {
         </Button>
       }
     >
-      <Stack gap="none" className="h-full">
+      <Stack gap="none" className={getNotificationCenterContentClassName()}>
         {!notifications || notifications.length === 0 ? (
           <EmptyState
             icon={Inbox}
             title="No notifications"
             size="compact"
             surface="bare"
-            className="min-h-56 px-6 py-10"
+            className={getNotificationCenterEmptyStateClassName()}
           />
         ) : (
           <Stack gap="xs">
@@ -295,11 +307,11 @@ export function NotificationCenter() {
               if (!groupNotifs || groupNotifs.length === 0) return null;
 
               return (
-                <div key={group} className="animate-fade-in">
-                  <div className="sticky top-0 z-10 border-b border-ui-border-secondary/60 bg-ui-bg px-4 py-2.5">
+                <div key={group} className={getNotificationCenterGroupClassName()}>
+                  <div className={getNotificationCenterGroupHeaderClassName()}>
                     <Typography variant="eyebrow">{DATE_GROUP_LABELS[group]}</Typography>
                   </div>
-                  <div className="divide-y divide-ui-border">
+                  <div className={getNotificationCenterGroupListClassName()}>
                     {groupNotifs.map((notification) => (
                       <NotificationItem
                         key={notification._id}

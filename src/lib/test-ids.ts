@@ -238,6 +238,8 @@ export const TEST_IDS = {
     NOTIFICATION_BUTTON: "header-notification-button",
     /** @see src/components/NotificationCenter.tsx */
     NOTIFICATION_PANEL: "header-notification-panel",
+    /** @see src/components/NotificationCenter.tsx */
+    NOTIFICATION_BADGE: "header-notification-badge",
     /** @see src/components/CommandPalette.tsx */
     COMMAND_PALETTE_BUTTON: "header-command-palette-button",
     /** @see src/components/GlobalSearch.tsx */
