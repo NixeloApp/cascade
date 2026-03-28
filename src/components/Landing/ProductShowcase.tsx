@@ -9,6 +9,22 @@ import { Flex } from "../ui/Flex";
 import { Grid, GridItem } from "../ui/Grid";
 import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
+import {
+  getProductShowcaseActionIconClassName,
+  getProductShowcaseBadgeRowClassName,
+  getProductShowcaseBodyClassName,
+  getProductShowcaseCardShellClassName,
+  getProductShowcaseDescriptionClassName,
+  getProductShowcaseGlowClassName,
+  getProductShowcaseHeaderContentClassName,
+  getProductShowcaseHeaderRailClassName,
+  getProductShowcaseHeaderRowClassName,
+  getProductShowcaseHeaderSurfaceClassName,
+  getProductShowcaseHeadingClassName,
+  getProductShowcasePanelClassName,
+  getProductShowcaseRootClassName,
+  getProductShowcaseTitleClassName,
+} from "../ui/productShowcaseSurfaceClassNames";
 import { Stack } from "../ui/Stack";
 import { MetricText, MonoText, SectionTitleText, Typography } from "../ui/Typography";
 
@@ -108,39 +124,56 @@ const showcaseAssistantActions = [
 /** Product preview card used in the landing hero. */
 export function ProductShowcase() {
   return (
-    <div id="product-showcase" className="relative mx-auto max-w-6xl">
+    <div id="product-showcase" className={getProductShowcaseRootClassName()}>
       <div
-        className="pointer-events-none absolute inset-x-16 top-8 h-52 bg-landing-accent/14 blur-glow"
+        className={getProductShowcaseGlowClassName()}
         style={{ borderRadius: "var(--radius-pill)" }}
       />
 
-      <Card recipe="dashboardShell" padding="none" className="overflow-hidden">
-        <div className={cn(getCardRecipeClassName("appHeaderShell"), "p-0")}>
-          <Flex align="center" justify="between" gap="sm" className="w-full">
-            <Flex align="center" gap="sm" className="min-w-0">
-              <div className={cn(getCardRecipeClassName("workspaceCockpitChip"), "min-w-0")}>
+      <Card
+        recipe="dashboardShell"
+        padding="none"
+        className={getProductShowcaseCardShellClassName()}
+      >
+        <div
+          className={cn(
+            getCardRecipeClassName("appHeaderShell"),
+            getProductShowcaseHeaderSurfaceClassName(),
+          )}
+        >
+          <Flex
+            align="center"
+            justify="between"
+            gap="sm"
+            className={getProductShowcaseHeaderRowClassName()}
+          >
+            <Flex align="center" gap="sm" className={getProductShowcaseHeaderContentClassName()}>
+              <div
+                className={cn(
+                  getCardRecipeClassName("workspaceCockpitChip"),
+                  getProductShowcaseHeaderContentClassName(),
+                )}
+              >
                 <Flex align="center" gap="sm">
                   <Dot size="md" halo />
-                  <div className="min-w-0">
-                    <Typography variant="eyebrowWide" className="block">
-                      Workspace cockpit
-                    </Typography>
-                    <Typography variant="label" className="block truncate">
+                  <Stack gap="none" className={getProductShowcaseHeaderContentClassName()}>
+                    <Typography variant="eyebrowWide">Workspace cockpit</Typography>
+                    <Typography variant="label" className={getProductShowcaseTitleClassName()}>
                       Search, plan, ship, and brief clients from one surface
                     </Typography>
-                  </div>
+                  </Stack>
                 </Flex>
               </div>
             </Flex>
 
-            <Flex align="center" gap="sm" className="hidden shrink-0 lg:flex">
+            <Flex align="center" gap="sm" className={getProductShowcaseHeaderRailClassName()}>
               <WorkspaceHeaderChip icon={Bot} iconTone="brand" label="AI summaries" />
               <WorkspaceHeaderChip icon={Clock} iconTone="secondary" label="Time tracking" />
             </Flex>
           </Flex>
         </div>
 
-        <div className="bg-linear-to-b from-ui-bg-soft/82 via-ui-bg-elevated/96 to-ui-bg px-4 py-5 sm:px-6 sm:py-6">
+        <div className={getProductShowcaseBodyClassName()}>
           <Grid cols={1} colsLg={12} gap="lg">
             <GridItem colSpanLg={8}>
               <ProductShowcaseBoardSurface />
@@ -158,7 +191,13 @@ export function ProductShowcase() {
 
 function ProductShowcaseBoardSurface() {
   return (
-    <CardSection size="lg" className={cn(getCardRecipeClassName("dashboardPanelInset"), "h-full")}>
+    <CardSection
+      size="lg"
+      className={cn(
+        getCardRecipeClassName("dashboardPanelInset"),
+        getProductShowcasePanelClassName(),
+      )}
+    >
       <Stack gap="lg">
         <Flex direction="column" directionSm="row" align="start" justify="between" gap="md">
           <ShowcaseHeading
@@ -167,7 +206,7 @@ function ProductShowcaseBoardSurface() {
             description="Work, documentation, and client-facing summaries stay attached to the same execution flow instead of being recopied into separate status theater."
           />
 
-          <Flex align="center" gap="sm" wrap className="shrink-0">
+          <Flex align="center" gap="sm" wrap className={getProductShowcaseBadgeRowClassName()}>
             <Badge variant="outline" shape="pill">
               <Icon icon={FileText} size="xs" tone="secondary" />
               Client-ready updates
@@ -191,7 +230,10 @@ function ProductShowcaseBoardSurface() {
 
 function ProductShowcasePulseSurface() {
   return (
-    <CardSection size="lg" className={cn(getCardRecipeClassName("dashboardPanel"), "h-full")}>
+    <CardSection
+      size="lg"
+      className={cn(getCardRecipeClassName("dashboardPanel"), getProductShowcasePanelClassName())}
+    >
       <Stack gap="lg">
         <Flex align="center" justify="between" gap="md">
           <ShowcaseHeading eyebrow="Workspace pulse" title="Context that stays attached" />
@@ -228,7 +270,7 @@ function ShowcaseHeading({
   title: string;
 }) {
   return (
-    <Stack gap="xs" className="min-w-0">
+    <Stack gap="xs" className={getProductShowcaseHeadingClassName()}>
       <Typography variant="eyebrowWide">{eyebrow}</Typography>
       {description ? (
         <SectionTitleText as="h3">{title}</SectionTitleText>
@@ -236,7 +278,11 @@ function ShowcaseHeading({
         <CardTitle>{title}</CardTitle>
       )}
       {description ? (
-        <Typography variant="small" color="tertiary" className="max-w-3xl leading-5">
+        <Typography
+          variant="small"
+          color="tertiary"
+          className={getProductShowcaseDescriptionClassName()}
+        >
           {description}
         </Typography>
       ) : null}
@@ -254,7 +300,12 @@ function BoardPreviewColumn({
   title: string;
 }) {
   return (
-    <Card recipe="showcasePanelQuiet" variant="section" padding="sm" className="h-full">
+    <Card
+      recipe="showcasePanelQuiet"
+      variant="section"
+      padding="sm"
+      className={getProductShowcasePanelClassName()}
+    >
       <Stack gap="md">
         <Flex align="center" justify="between">
           <Typography variant="label" color="secondary" as="p">
@@ -276,7 +327,7 @@ function BoardPreviewColumn({
 function BoardPreviewCard({ detail, issueKey, priorityTone, title }: BoardCardPreview) {
   return (
     <div className={getCardRecipeClassName("issueCard")}>
-      <Stack gap="xs" className="min-w-0">
+      <Stack gap="xs" className={getProductShowcaseHeadingClassName()}>
         <Flex align="center" justify="between" gap="sm">
           <MonoText size="sm">{issueKey}</MonoText>
           <Badge variant="outline" shape="pill" size="sm" priorityTone={priorityTone}>
@@ -293,7 +344,7 @@ function BoardPreviewCard({ detail, issueKey, priorityTone, title }: BoardCardPr
 function ShowcaseActionRow({ children }: { children: string }) {
   return (
     <Flex align="start" gap="sm">
-      <IconCircle size="xs" variant="success" className="mt-0.5">
+      <IconCircle size="xs" variant="success" className={getProductShowcaseActionIconClassName()}>
         <Icon icon={ArrowRight} size="xs" tone="successText" />
       </IconCircle>
       <Typography variant="small" color="secondary">

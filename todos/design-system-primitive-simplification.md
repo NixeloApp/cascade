@@ -142,10 +142,10 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 
 ## 5. Raw Tailwind Ratchet
 
-- **Current:** 81 violations across 64 files
-- **Landed (2026-03-28):** `calendar-body-month` no longer owns raw margin utilities for the month-event lists and overflow affordance. The mobile/desktop event-list visibility and the overflow trigger offset now resolve through `src/components/ui/calendarMonthSurfaceClassNames.ts`, while the month body itself uses shared `Flex`/`Stack` spacing props instead of inline margin classes. Earlier on the same day, `IssueCard` moved its remaining spacing/sizing chrome into `src/components/ui/issueCardSurfaceClassNames.ts`, and `GlobalSearch` moved its intro, empty-state, and icon-shell chrome into `src/components/ui/globalSearchSurfaceClassNames.ts`; the baseline was also ratcheted down to match other already-cleaned files (`SignInForm`, `SignUpForm`, `Dashboard`, `DocumentTree`, `MentionInput`, `ProjectSettings/GeneralSettings`, and `RoadmapView`).
+- **Current:** 78 violations across 63 files
+- **Landed (2026-03-28):** `ProductShowcase` no longer owns the remaining landing shell and showcase chrome utility strings. The root shell, ambient glow, header rail, panel fills, heading copy constraints, and action-icon offset now resolve through `src/components/ui/productShowcaseSurfaceClassNames.ts`, while the cockpit copy stack also no longer needs raw `block` utilities. Earlier on the same day, `calendar-body-month` moved its month-event list visibility and overflow spacing into `src/components/ui/calendarMonthSurfaceClassNames.ts`, `IssueCard` moved its remaining spacing/sizing chrome into `src/components/ui/issueCardSurfaceClassNames.ts`, and `GlobalSearch` moved its intro, empty-state, and icon-shell chrome into `src/components/ui/globalSearchSurfaceClassNames.ts`; the baseline was also ratcheted down to match other already-cleaned files (`SignInForm`, `SignUpForm`, `Dashboard`, `DocumentTree`, `MentionInput`, `ProjectSettings/GeneralSettings`, and `RoadmapView`).
 - **End state:** 0 violations
-- **Start with:** ProductShowcase (3), Dashboard/RecentActivity (2), Notifications/NotificationCenter (2)
+- **Start with:** Dashboard/RecentActivity (2), Notifications/NotificationCenter (2), Settings/SSOSettings (2)
 
 ---
 
