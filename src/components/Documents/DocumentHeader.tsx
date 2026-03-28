@@ -16,6 +16,7 @@ import {
   getDocumentHeaderToggleButtonClassName,
 } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
+import { Container } from "@/components/ui/Container";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
+import { getDocumentHeaderResponsiveWidthClassName } from "@/components/ui/documentHeaderSurfaceClassNames";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
 import { Icon } from "@/components/ui/Icon";
@@ -229,7 +231,7 @@ function DocumentHeaderActions({
   ownerActions,
 }: DocumentHeaderActionsProps) {
   return (
-    <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
+    <Flex wrap align="center" gap="xs" className={getDocumentHeaderResponsiveWidthClassName()}>
       <PresenceIndicator roomId={document._id} userId={userId} />
 
       <DocumentSyncStatusBadge syncState={syncState} />
@@ -262,14 +264,14 @@ function DocumentHeaderActions({
           aria-label="Version history"
           className={getDocumentHeaderActionButtonClassName("neutral")}
         >
-          <Typography variant="small" as="span" className="hidden sm:inline">
-            History
-          </Typography>
-          {versionCount !== undefined && versionCount > 0 && (
-            <Badge variant="secondary" className="ml-1">
-              {versionCount}
-            </Badge>
-          )}
+          <Flex as="span" inline align="center" gap="xs">
+            <Typography variant="small" as="span" className="hidden sm:inline">
+              History
+            </Typography>
+            {versionCount !== undefined && versionCount > 0 ? (
+              <Badge variant="secondary">{versionCount}</Badge>
+            ) : null}
+          </Flex>
         </Button>
       </Tooltip>
 
@@ -379,7 +381,7 @@ export function DocumentHeader({
 
   return (
     <Card recipe="documentHeaderShell" padding="md">
-      <div className="mx-auto w-full max-w-5xl">
+      <Container size="5xl">
         <Stack gap="sm">
           <Flex
             direction="column"
@@ -389,7 +391,7 @@ export function DocumentHeader({
             justify="between"
             gap="md"
           >
-            <FlexItem flex="1" className="w-full sm:w-auto">
+            <FlexItem flex="1" className={getDocumentHeaderResponsiveWidthClassName()}>
               {isEditingTitle ? (
                 <Input
                   type="text"
@@ -435,7 +437,7 @@ export function DocumentHeader({
             </MetadataItem>
           </Metadata>
         </Stack>
-      </div>
+      </Container>
     </Card>
   );
 }
