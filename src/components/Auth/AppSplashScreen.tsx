@@ -1,3 +1,14 @@
+import {
+  getAppSplashScreenBackdropClassName,
+  getAppSplashScreenContentClassName,
+  getAppSplashScreenGlowClassName,
+  getAppSplashScreenLoaderFillClassName,
+  getAppSplashScreenLoaderMotionClassName,
+  getAppSplashScreenLogoHaloClassName,
+  getAppSplashScreenLogoMotionClassName,
+  getAppSplashScreenLogoShellClassName,
+  getAppSplashScreenRootClassName,
+} from "@/components/ui/appSplashScreenSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -13,18 +24,23 @@ export function AppSplashScreen({ message }: { message?: string }) {
       direction="column"
       align="center"
       justify="center"
-      className="fixed inset-0 bg-ui-bg-hero z-50"
+      className={getAppSplashScreenRootClassName()}
     >
       {/* Background Glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-125 bg-landing-accent/10 rounded-full blur-glow" />
+      <div className={getAppSplashScreenBackdropClassName()}>
+        <div className={getAppSplashScreenGlowClassName()} />
       </div>
 
-      <Flex direction="column" align="center" gap="2xl" className="relative">
+      <Flex
+        direction="column"
+        align="center"
+        gap="2xl"
+        className={getAppSplashScreenContentClassName()}
+      >
         {/* Animated Logo Container */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-landing-accent/20 rounded-full blur-2xl animate-pulse" />
-          <div className="relative animate-in fade-in zoom-in duration-enter ease-out">
+        <div className={getAppSplashScreenLogoShellClassName()}>
+          <div className={getAppSplashScreenLogoHaloClassName()} />
+          <div className={getAppSplashScreenLogoMotionClassName()}>
             <NixeloLogo size={64} />
           </div>
         </div>
@@ -34,14 +50,13 @@ export function AppSplashScreen({ message }: { message?: string }) {
           direction="column"
           align="center"
           gap="xl"
-          className="animate-in fade-in slide-in-from-bottom-4 duration-enter-slow delay-300 fill-mode-both"
+          className={getAppSplashScreenLoaderMotionClassName()}
         >
           {/* Minimal high-end loader - Always show to indicate activity */}
           <Card recipe="authSplashLoaderRail" padding="none">
             <div
               data-testid={TEST_IDS.LOADING.SKELETON}
-              className="h-full bg-linear-to-r from-landing-accent to-landing-accent-alt w-full -translate-x-full animate-shimmer"
-              style={{ animation: "shimmer 1.5s infinite linear" }}
+              className={getAppSplashScreenLoaderFillClassName()}
             />
           </Card>
 
@@ -53,15 +68,6 @@ export function AppSplashScreen({ message }: { message?: string }) {
           )}
         </Flex>
       </Flex>
-
-      <style>
-        {`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        `}
-      </style>
     </Flex>
   );
 }
