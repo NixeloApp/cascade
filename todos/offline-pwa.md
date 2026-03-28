@@ -1,7 +1,7 @@
 # Offline / PWA
 
 > **Status:** In Progress
-> **Last Updated:** 2026-03-26
+> **Last Updated:** 2026-03-27
 
 Related docs:
 
@@ -9,6 +9,17 @@ Related docs:
 - `docs/guides/pwa.md`
 
 ## Remaining
+
+### PWA Install Banner — Move to React
+
+The install banner in `src/lib/serviceWorker.ts:200-229` is raw DOM manipulation (`document.createElement`, `innerHTML`, manual event listeners). It renders outside React, fights z-index layers, and is visually broken (renders under other UI).
+
+- [ ] Replace with a proper React component (e.g. `PwaInstallBanner`)
+- [ ] Use the app's existing UI primitives (`Card`, `Button`, `Flex`, `Typography`)
+- [ ] Respect the app's z-index token system (`z-toast-critical` etc.)
+- [ ] Use React state for show/dismiss instead of `localStorage` + manual DOM removal
+- [ ] Keep the `beforeinstallprompt` event listener in `serviceWorker.ts` but expose the prompt via a React-friendly hook (e.g. `usePwaInstall()`) instead of calling `showInstallPrompt()` with raw DOM
+- [ ] Delete all raw `innerHTML` and `document.createElement` code from `serviceWorker.ts`
 
 ### Push / Worker Safety
 
