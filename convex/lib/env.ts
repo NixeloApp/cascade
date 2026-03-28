@@ -123,12 +123,28 @@ export function getAnthropicApiKey(): string {
   return requireEnv("ANTHROPIC_API_KEY");
 }
 
-export function getAnthropicModel(): string {
-  return requireEnv("ANTHROPIC_MODEL");
+export function getAnthropicBaseUrl(): string | undefined {
+  return process.env.ANTHROPIC_BASE_URL;
 }
 
 export function isAnthropicConfigured(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY && !!process.env.ANTHROPIC_MODEL;
+  return !!process.env.ANTHROPIC_API_KEY;
+}
+
+// ===========================================
+// AI - OpenAI
+// ===========================================
+
+export function getOpenAIApiKey(): string {
+  return requireEnv("OPENAI_API_KEY");
+}
+
+export function getOpenAIBaseUrl(): string | undefined {
+  return process.env.OPENAI_BASE_URL;
+}
+
+export function isOpenAIConfigured(): boolean {
+  return !!process.env.OPENAI_API_KEY;
 }
 
 // ===========================================
