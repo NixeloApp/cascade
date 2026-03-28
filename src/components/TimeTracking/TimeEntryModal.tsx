@@ -8,6 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import type { ReactMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ACTIVITY_TYPES } from "@/lib/constants";
@@ -39,9 +40,135 @@ import { useTimeEntryForm } from "./useTimeEntryForm";
 type ProjectItem = FunctionReturnType<typeof api.projects.getCurrentUserProjects>["page"][number];
 type IssueItem = FunctionReturnType<typeof api.issues.listSelectableIssues>[number];
 type TimeEntryMode = "timer" | "duration" | "timeRange";
+type TimeEntryFormState = ReturnType<typeof useTimeEntryForm>["state"];
+type TimeEntryFormComputed = ReturnType<typeof useTimeEntryForm>["computed"];
+type CreateTimeEntryMutation = ReactMutation<typeof api.timeTracking.createTimeEntry>;
+type StartTimerMutation = ReactMutation<typeof api.timeTracking.startTimer>;
+
+const ACTIVITY_OPTIONS = [
+  { value: "none", label: "Select activity..." },
+  ...ACTIVITY_TYPES.map((activityType) => ({
+    value: activityType,
+    label: activityType,
+  })),
+];
 
 function isTimeEntryMode(value: string): value is TimeEntryMode {
   return value === "timer" || value === "duration" || value === "timeRange";
+}
+
+function toOptionalValue(value: string) {
+  return value || undefined;
+}
+
+function getProjectSelectOptions(projects: ProjectItem[] | undefined) {
+  return [
+    { value: "none", label: "No project" },
+    ...(projects?.map((project) => ({
+      value: project._id,
+      label: project.name,
+    })) ?? []),
+  ];
+}
+
+function getIssueSelectOptions(projectIssues: IssueItem[] | undefined) {
+  return [
+    { value: "none", label: "No issue" },
+    ...(projectIssues
+      ?.slice()
+      .sort((a, b) => {
+        const aLabel = a.title ?? a.key ?? "";
+        const bLabel = b.title ?? b.key ?? "";
+        return aLabel.localeCompare(bLabel);
+      })
+      .map((issue) => ({
+        value: issue._id,
+        label: issue.title ? `${issue.key} - ${issue.title}` : issue.key,
+      })) ?? []),
+  ];
+}
+
+function getProjectIdFromSelectValue(value: string): Id<"projects"> | undefined {
+  return value === "none" ? undefined : (value as Id<"projects">);
+}
+
+function getIssueIdFromSelectValue(value: string): Id<"issues"> | undefined {
+  return value === "none" ? undefined : (value as Id<"issues">);
+}
+
+async function submitStartTimer({
+  state,
+  hasValidContext,
+  startTimerMutation,
+  onSuccess,
+}: {
+  state: TimeEntryFormState;
+  hasValidContext: boolean;
+  startTimerMutation: StartTimerMutation;
+  onSuccess: () => void;
+}) {
+  const contextResult = validateContext(hasValidContext);
+  if (!contextResult.isValid) {
+    showError(contextResult.errorMessage);
+    return;
+  }
+
+  try {
+    await startTimerMutation({
+      projectId: state.projectId,
+      issueId: state.issueId,
+      description: toOptionalValue(state.description),
+      activity: toOptionalValue(state.activity),
+      billable: state.billable,
+      tags: state.tags.length > 0 ? state.tags : undefined,
+    });
+    showSuccess("Timer started");
+    onSuccess();
+  } catch (error) {
+    showError(error, "Failed to start timer");
+  }
+}
+
+async function submitLogTime({
+  state,
+  computed,
+  createTimeEntry,
+  onSuccess,
+}: {
+  state: TimeEntryFormState;
+  computed: TimeEntryFormComputed;
+  createTimeEntry: CreateTimeEntryMutation;
+  onSuccess: () => void;
+}) {
+  const validationResult = validateLogTimeSubmission(
+    state,
+    computed.hasValidContext,
+    computed.effectiveDuration,
+  );
+
+  if (!validationResult.isValid) {
+    showError(validationResult.errorMessage);
+    return;
+  }
+
+  const { startTime, endTime } = calculateEntryTimes(state, computed.effectiveDuration);
+
+  try {
+    await createTimeEntry({
+      projectId: state.projectId,
+      issueId: state.issueId,
+      startTime,
+      endTime,
+      description: toOptionalValue(state.description),
+      activity: toOptionalValue(state.activity),
+      tags: state.tags,
+      billable: state.billable,
+    });
+    showSuccess("Time entry created");
+    onSuccess();
+  } catch (error) {
+    showError(error, "Failed to create time entry");
+  }
 }
 
 interface TimeEntryModalProps {
@@ -239,6 +366,33 @@ function TimeRangeModeFields({
   );
 }
 
+function TimeEntryModalFooter({
+  closeModal,
+  isSubmitDisabled,
+  isTimerMode,
+}: {
+  closeModal: () => void;
+  isSubmitDisabled: boolean;
+  isTimerMode: boolean;
+}) {
+  return (
+    <>
+      <Button type="button" onClick={closeModal} variant="secondary">
+        Cancel
+      </Button>
+      <Button
+        type="submit"
+        form="time-entry-form"
+        variant="primary"
+        disabled={isSubmitDisabled}
+        leftIcon={isTimerMode ? <Icon icon={Play} size="sm" /> : undefined}
+      >
+        {isTimerMode ? "Start Timer" : "Log Time"}
+      </Button>
+    </>
+  );
+}
+
 /**
  * Unified Time Entry Modal
  *
@@ -273,66 +427,41 @@ export function TimeEntryModal({
     api.issues.listSelectableIssues,
     shouldLoadData && state.projectId ? { projectId: state.projectId } : "skip",
   );
-
-  const handleStartTimer = async () => {
-    const contextResult = validateContext(computed.hasValidContext);
-    if (!contextResult.isValid) {
-      showError(contextResult.errorMessage);
-      return;
-    }
-
-    try {
-      await startTimerMutation({
-        projectId: state.projectId,
-        issueId: state.issueId,
-        description: state.description || undefined,
-        activity: state.activity || undefined,
-        billable: state.billable,
-        tags: state.tags.length > 0 ? state.tags : undefined,
-      });
-      showSuccess("Timer started");
-      onOpenChange(false);
-    } catch (error) {
-      showError(error, "Failed to start timer");
+  const closeModal = () => onOpenChange(false);
+  const projectOptions = getProjectSelectOptions(projects?.page);
+  const issueOptions = getIssueSelectOptions(projectIssues);
+  const handleModeChange = (value: string) => {
+    if (isTimeEntryMode(value)) {
+      actions.setEntryMode(value);
     }
   };
-
-  const handleLogTime = async () => {
-    const validationResult = validateLogTimeSubmission(
-      state,
-      computed.hasValidContext,
-      computed.effectiveDuration,
-    );
-
-    if (!validationResult.isValid) {
-      showError(validationResult.errorMessage);
-      return;
-    }
-
-    const { startTime: entryStartTime, endTime: entryEndTime } = calculateEntryTimes(
-      state,
-      computed.effectiveDuration,
-    );
-
-    try {
-      await createTimeEntry({
-        projectId: state.projectId,
-        issueId: state.issueId,
-        startTime: entryStartTime,
-        endTime: entryEndTime,
-        description: state.description || undefined,
-        activity: state.activity || undefined,
-        tags: state.tags,
-        billable: state.billable,
-      });
-      showSuccess("Time entry created");
-      onOpenChange(false);
-    } catch (error) {
-      showError(error, "Failed to create time entry");
-    }
+  const handleProjectChange = (value: string) => {
+    actions.setProjectId(getProjectIdFromSelectValue(value));
+    actions.setIssueId(undefined);
   };
-
-  const handleSubmit = computed.isTimerMode ? handleStartTimer : handleLogTime;
+  const handleIssueChange = (value: string) => {
+    actions.setIssueId(getIssueIdFromSelectValue(value));
+  };
+  const handleActivityChange = (value: string) => {
+    actions.setActivity(value === "none" ? "" : value);
+  };
+  const isSubmitDisabled =
+    !shouldLoadData || (!computed.isTimerMode && computed.effectiveDuration <= 0);
+  const handleSubmit = computed.isTimerMode
+    ? async () =>
+        submitStartTimer({
+          state,
+          hasValidContext: computed.hasValidContext,
+          startTimerMutation,
+          onSuccess: closeModal,
+        })
+    : async () =>
+        submitLogTime({
+          state,
+          computed,
+          createTimeEntry,
+          onSuccess: closeModal,
+        });
 
   return (
     <Dialog
@@ -342,20 +471,11 @@ export function TimeEntryModal({
       size="md"
       data-testid={TEST_IDS.TIME_TRACKING.ENTRY_MODAL}
       footer={
-        <>
-          <Button type="button" onClick={() => onOpenChange(false)} variant="secondary">
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            form="time-entry-form"
-            variant="primary"
-            disabled={!shouldLoadData || (!computed.isTimerMode && computed.effectiveDuration <= 0)}
-            leftIcon={computed.isTimerMode ? <Icon icon={Play} size="sm" /> : undefined}
-          >
-            {computed.isTimerMode ? "Start Timer" : "Log Time"}
-          </Button>
-        </>
+        <TimeEntryModalFooter
+          closeModal={closeModal}
+          isSubmitDisabled={isSubmitDisabled}
+          isTimerMode={computed.isTimerMode}
+        />
       }
     >
       <Stack
@@ -375,11 +495,7 @@ export function TimeEntryModal({
           layout="stackOnMobile"
           variant="default"
           width="fill"
-          onValueChange={(value: string) => {
-            if (isTimeEntryMode(value)) {
-              actions.setEntryMode(value);
-            }
-          }}
+          onValueChange={handleModeChange}
         >
           <SegmentedControlItem value="timer" variant="default" width="fill">
             <Icon icon={Play} size="sm" />
@@ -400,17 +516,8 @@ export function TimeEntryModal({
           <Label htmlFor="time-entry-project">Project</Label>
           <Select
             id="time-entry-project"
-            onChange={(value) => {
-              actions.setProjectId(value === "none" ? undefined : (value as Id<"projects">));
-              actions.setIssueId(undefined);
-            }}
-            options={[
-              { value: "none", label: "No project" },
-              ...((projects?.page?.map((project: ProjectItem) => ({
-                value: project._id,
-                label: project.name,
-              })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
-            ]}
+            onChange={handleProjectChange}
+            options={projectOptions}
             placeholder="Select project..."
             value={state.projectId || "none"}
           />
@@ -422,18 +529,8 @@ export function TimeEntryModal({
             <Label htmlFor="time-entry-issue">Issue</Label>
             <Select
               id="time-entry-issue"
-              onChange={(value) =>
-                actions.setIssueId(value === "none" ? undefined : (value as Id<"issues">))
-              }
-              options={[
-                { value: "none", label: "No issue" },
-                ...projectIssues
-                  .sort((a: IssueItem, b: IssueItem) => (a.title > b.title ? 1 : -1))
-                  .map((issue: IssueItem) => ({
-                    value: issue._id,
-                    label: `${issue.key} - ${issue.title}`,
-                  })),
-              ]}
+              onChange={handleIssueChange}
+              options={issueOptions}
               placeholder="Select issue..."
               value={state.issueId || "none"}
             />
@@ -454,14 +551,8 @@ export function TimeEntryModal({
           <Label htmlFor="time-entry-activity">Activity</Label>
           <Select
             id="time-entry-activity"
-            onChange={(value) => actions.setActivity(value === "none" ? "" : value)}
-            options={[
-              { value: "none", label: "Select activity..." },
-              ...ACTIVITY_TYPES.map((activityType) => ({
-                value: activityType,
-                label: activityType,
-              })),
-            ]}
+            onChange={handleActivityChange}
+            options={ACTIVITY_OPTIONS}
             placeholder="Select activity..."
             value={state.activity || "none"}
           />

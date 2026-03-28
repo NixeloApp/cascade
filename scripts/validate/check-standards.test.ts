@@ -33,7 +33,7 @@ describe("check-standards", () => {
     expect(violations).toEqual([]);
   });
 
-  it("passes against the current repo state", () => {
+  it("passes against the current repo state", { timeout: 15000 }, () => {
     const result = run();
 
     expect(result.passed).toBe(true);

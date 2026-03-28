@@ -151,7 +151,7 @@ const checks = [
   },
   {
     name: "Classname ownership",
-    modulePath: new URL("./validate/check-raw-styling.js", import.meta.url).href,
+    modulePath: new URL("./validate/check-classname-ownership.js", import.meta.url).href,
   },
   {
     name: "Surface shells",

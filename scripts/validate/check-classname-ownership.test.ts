@@ -3,9 +3,9 @@ import {
   collectUtilityLikeClassLiterals,
   findSingleConsumerSurfaceClassNameHelpers,
   run,
-} from "./check-raw-styling.js";
+} from "./check-classname-ownership.js";
 
-describe("check-raw-styling", () => {
+describe("check-classname-ownership", () => {
   it("collects utility-like class string literals from helper modules", () => {
     expect(
       collectUtilityLikeClassLiterals(`

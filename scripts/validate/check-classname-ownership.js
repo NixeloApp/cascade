@@ -1,6 +1,6 @@
 /**
  * CHECK: Classname Ownership
- * Flags raw styling outside the owned primitive boundary — both className
+ * Flags classname ownership drift outside the owned primitive boundary — both className
  * (Tailwind utilities) and inline style props (hardcoded CSS values) — and
  * also catches single-consumer ui/*SurfaceClassNames.ts helper files that only
  * launder class strings out of feature components.
@@ -480,7 +480,7 @@ export function run() {
         for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
           if (!pattern.test(filteredSpan)) continue;
 
-          const suffix = isConstRef ? " (hidden in const — still raw styling)" : "";
+          const suffix = isConstRef ? " (hidden in const — still classname ownership drift)" : "";
           const violation = {
             line: index + 1,
             replacement: `${replacement}${suffix}`,
@@ -744,7 +744,7 @@ export function run() {
   };
 }
 
-// Standalone audit mode: node scripts/validate/check-raw-styling.js --audit
+// Standalone audit mode: node scripts/validate/check-classname-ownership.js --audit
 if (process.argv.includes("--audit")) {
   const result = run();
   const ratchetable = result.ratchetableBaselineFiles ?? [];
