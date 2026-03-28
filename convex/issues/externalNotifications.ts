@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { internalAction, internalQuery } from "../_generated/server";
+import { logger } from "../lib/logger";
 import { getPlainTextFromDescription } from "../lib/richText";
 import { deliverPumbleWebhookMessage, getColorForEvent, getTitleForEvent } from "../pumble";
 import { buildIssueNotificationText, deliverSlackConnectionMessage } from "../slack";
@@ -157,10 +158,17 @@ export const processIssueEvent = internalAction({
         projectId: payload.project.id,
       });
       for (const destination of slackDestinations) {
-        await deliverSlackConnectionMessage(ctx, {
-          connectionId: destination.connectionId,
-          text: slackText,
-        });
+        try {
+          await deliverSlackConnectionMessage(ctx, {
+            connectionId: destination.connectionId,
+            text: slackText,
+          });
+        } catch (error) {
+          logger.error("Slack delivery failed, continuing to next destination", {
+            connectionId: destination.connectionId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
       }
     }
 
@@ -172,34 +180,41 @@ export const processIssueEvent = internalAction({
     const pumbleTitle = getTitleForEvent(args.event);
     const pumbleColor = getColorForEvent(args.event);
     for (const destination of pumbleDestinations) {
-      await deliverPumbleWebhookMessage(ctx, {
-        webhookId: destination._id,
-        text: pumbleText,
-        title: pumbleTitle,
-        color: pumbleColor,
-        fields: [
-          {
-            title: "Issue",
-            value: `${payload.issue.key}: ${payload.issue.title}`,
-            short: false,
-          },
-          {
-            title: "Type",
-            value: payload.issue.type,
-            short: true,
-          },
-          {
-            title: "Priority",
-            value: payload.issue.priority,
-            short: true,
-          },
-          {
-            title: "Status",
-            value: payload.issue.status,
-            short: true,
-          },
-        ],
-      });
+      try {
+        await deliverPumbleWebhookMessage(ctx, {
+          webhookId: destination._id,
+          text: pumbleText,
+          title: pumbleTitle,
+          color: pumbleColor,
+          fields: [
+            {
+              title: "Issue",
+              value: `${payload.issue.key}: ${payload.issue.title}`,
+              short: false,
+            },
+            {
+              title: "Type",
+              value: payload.issue.type,
+              short: true,
+            },
+            {
+              title: "Priority",
+              value: payload.issue.priority,
+              short: true,
+            },
+            {
+              title: "Status",
+              value: payload.issue.status,
+              short: true,
+            },
+          ],
+        });
+      } catch (error) {
+        logger.error("Pumble delivery failed, continuing to next destination", {
+          webhookId: destination._id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
 
     const webhookDestinations = await ctx.runQuery(internal.webhooks.getActiveWebhooksForEvent, {
@@ -207,7 +222,14 @@ export const processIssueEvent = internalAction({
       event: args.event,
     });
     for (const webhook of webhookDestinations) {
-      await triggerSingleWebhook(ctx, webhook, args.event, payload);
+      try {
+        await triggerSingleWebhook(ctx, webhook, args.event, payload);
+      } catch (error) {
+        logger.error("Webhook delivery failed, continuing to next destination", {
+          webhookId: webhook._id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
 
     return { success: true } as const;

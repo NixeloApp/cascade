@@ -34,6 +34,10 @@ export const ROUTES = {
     path: "/join/$token" as const,
     build: (token: string) => `/join/${token}`,
   },
+  /** @deprecated Legacy redirect — kept so old /invite/ emails still work. */
+  inviteLegacy: {
+    path: "/invite/$token" as const,
+  },
   clientPortal: {
     entry: {
       path: "/portal/$token" as const,
