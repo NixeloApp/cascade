@@ -28,6 +28,20 @@ import {
 } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
+import {
+  getActivityFeedActionColorClassName,
+  getActivityFeedContainerClassName,
+  getActivityFeedContentClassName,
+  getActivityFeedDetailClassName,
+  getActivityFeedEmptyStateClassName,
+  getActivityFeedEntryClassName,
+  getActivityFeedIconCenterClassName,
+  getActivityFeedIconShellClassName,
+  getActivityFeedIssueLinkClassName,
+  getActivityFeedMessageClassName,
+  getActivityFeedRailClassName,
+  getActivityFeedTimestampClassName,
+} from "./ui/activityFeedSurfaceClassNames";
 import { Button } from "./ui/Button";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
@@ -89,24 +103,6 @@ export function ActivityFeed({
         return Ban;
       default:
         return Clock;
-    }
-  };
-
-  const getActionColorClass = (action: string): string => {
-    switch (action) {
-      case "created":
-        return "text-status-success";
-      case "updated":
-        return "text-ui-text";
-      case "commented":
-        return "text-accent";
-      case "assigned":
-        return "text-status-warning";
-      case "linked":
-      case "unlinked":
-        return "text-ui-text";
-      default:
-        return "text-ui-text-secondary";
     }
   };
 
@@ -184,24 +180,29 @@ export function ActivityFeed({
           description="Activity will appear here as work progresses"
           align={compact ? "center" : "start"}
           size={compact ? "compact" : "default"}
-          className={compact ? undefined : "max-w-full"}
+          className={compact ? undefined : getActivityFeedEmptyStateClassName()}
         />
       </div>
     );
   }
 
   return (
-    <Flex direction="column" gap="none" className="relative" data-testid={TEST_IDS.ACTIVITY.FEED}>
+    <Flex
+      direction="column"
+      gap="none"
+      className={getActivityFeedContainerClassName()}
+      data-testid={TEST_IDS.ACTIVITY.FEED}
+    >
       {/* Timeline line */}
       {!compact && activities.length > 1 && (
-        <div className="absolute left-3 top-6 bottom-6 w-px bg-ui-border" />
+        <div className={getActivityFeedRailClassName()} data-testid={TEST_IDS.ACTIVITY.RAIL} />
       )}
 
       {activities.map((activity: Activity) => (
         <Card
           key={activity._id}
           recipe={compact ? "activityFeedEntryCompact" : "activityFeedEntry"}
-          className="relative"
+          className={getActivityFeedEntryClassName()}
           data-testid={TEST_IDS.ACTIVITY.ENTRY}
         >
           <Flex gap="lg">
@@ -209,44 +210,51 @@ export function ActivityFeed({
             <div
               className={cn(
                 getCardRecipeClassName("activityTimelineIcon"),
-                compact ? "size-5 shrink-0 relative z-10" : "size-6 shrink-0 relative z-10",
+                getActivityFeedIconShellClassName(compact),
               )}
             >
-              <Flex align="center" justify="center" className="h-full">
+              <Flex
+                align="center"
+                justify="center"
+                className={getActivityFeedIconCenterClassName()}
+              >
                 <Icon icon={getActionIcon(activity.action)} size={compact ? "xs" : "sm"} />
               </Flex>
             </div>
 
             {/* Activity content */}
-            <FlexItem flex="1" className="min-w-0">
+            <FlexItem flex="1" className={getActivityFeedContentClassName()}>
               <Flex align="start" justify="between" gap="sm">
-                <FlexItem flex="1" className="min-w-0">
-                  <Typography variant={compact ? "small" : "p"} className="m-0">
+                <FlexItem flex="1" className={getActivityFeedContentClassName()}>
+                  <Typography
+                    variant={compact ? "small" : "p"}
+                    className={getActivityFeedMessageClassName()}
+                  >
                     <Typography as="strong" variant="strong">
                       {activity.userName}
                     </Typography>{" "}
-                    <Inline className={getActionColorClass(activity.action)}>
+                    <Inline className={getActivityFeedActionColorClassName(activity.action)}>
                       {formatActivityMessage(activity)}
                     </Inline>
                     {activity.issueKey && (
                       <Link
                         to={ROUTES.issues.detail.path}
                         params={{ orgSlug, key: activity.issueKey }}
-                        className="ml-1 font-mono text-brand"
+                        className={getActivityFeedIssueLinkClassName()}
                       >
                         {activity.issueKey}
                       </Link>
                     )}
                   </Typography>
                   {!compact && activity.field && activity.newValue && (
-                    <Typography variant="muted" className="mt-1 truncate text-ui-text-secondary">
+                    <Typography variant="muted" className={getActivityFeedDetailClassName()}>
                       {activity.field}: {activity.newValue}
                     </Typography>
                   )}
                 </FlexItem>
                 <Typography
                   variant={compact ? "meta" : "small"}
-                  className="shrink-0 text-ui-text-tertiary"
+                  className={getActivityFeedTimestampClassName()}
                   data-testid={TEST_IDS.ACTIVITY.TIMESTAMP}
                 >
                   {formatRelativeTime(activity._creationTime)}

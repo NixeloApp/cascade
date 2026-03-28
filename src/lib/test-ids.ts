@@ -445,6 +445,8 @@ export const TEST_IDS = {
     FEED: "activity-feed",
     /** @see src/components/ActivityFeed.tsx */
     ENTRY: "activity-entry",
+    /** @see src/components/ActivityFeed.tsx - timeline rail in non-compact mode */
+    RAIL: "activity-rail",
     /** @see src/components/ActivityFeed.tsx - shown when no activity */
     EMPTY_STATE: "activity-empty-state",
     /** @see src/components/ActivityFeed.tsx - relative timestamp on each entry */
