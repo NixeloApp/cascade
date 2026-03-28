@@ -21,10 +21,11 @@ interface BreadcrumbData {
 
 interface PageHeaderProps {
   title: string;
-  description?: ReactNode;
+  description?: string;
   actions?: ReactNode;
   breadcrumbs?: BreadcrumbData[];
-  eyebrow?: ReactNode;
+  eyebrow?: string;
+  descriptionTestId?: string;
   className?: string;
   spacing?: "standalone" | "stack";
 }
@@ -36,6 +37,7 @@ export function PageHeader({
   actions,
   breadcrumbs,
   eyebrow,
+  descriptionTestId,
   className,
   spacing = "standalone",
 }: PageHeaderProps): ReactNode {
@@ -75,7 +77,11 @@ export function PageHeader({
             <Typography variant="pageHeaderTitle" as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
               {title}
             </Typography>
-            {description && <Typography variant="pageHeaderDescription">{description}</Typography>}
+            {description ? (
+              <Typography variant="pageHeaderDescription" data-testid={descriptionTestId}>
+                {description}
+              </Typography>
+            ) : null}
           </Stack>
           {actions && (
             <Flex gap="sm" align="center" wrap className="w-full shrink-0 sm:w-auto sm:justify-end">

@@ -7,9 +7,9 @@ import { Typography, type TypographyProps } from "./Typography";
 type SectionIntroAlign = "start" | "center";
 
 interface SectionIntroOwnProps {
-  eyebrow?: React.ReactNode;
-  title: React.ReactNode;
-  description?: React.ReactNode;
+  eyebrow?: string;
+  title: string;
+  description?: string;
   align?: SectionIntroAlign;
   titleVariant?: TypographyProps["variant"];
   titleColor?: TypographyProps["color"];

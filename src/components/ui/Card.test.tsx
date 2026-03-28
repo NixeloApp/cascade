@@ -362,6 +362,13 @@ describe("CardHeader", () => {
 
       expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
     });
+
+    it("should render a badge alongside the title", () => {
+      render(<CardHeader title="Title" badge={<span>Active</span>} />);
+
+      expect(screen.getByRole("heading", { name: "Title" })).toBeInTheDocument();
+      expect(screen.getByText("Active")).toBeInTheDocument();
+    });
   });
 
   describe("Description", () => {

@@ -44,12 +44,8 @@ export function EntityCard({
   return (
     <Card>
       <CardHeader
-        title={
-          <Flex gap="sm" align="center">
-            {title}
-            {badge}
-          </Flex>
-        }
+        title={title}
+        badge={badge}
         description={description}
         action={actions || defaultActions}
       />

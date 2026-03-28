@@ -148,24 +148,21 @@ function TimeTrackingOverview({
         metrics={[
           {
             label: "Logged",
-            value: <span data-testid={TEST_IDS.TIME_TRACKING.SUMMARY_LOGGED}>{loggedValue}</span>,
+            value: loggedValue,
             detail: dateRange === "all" ? "Across all saved entries" : rangeLabel,
+            testId: TEST_IDS.TIME_TRACKING.SUMMARY_LOGGED,
           },
           {
             label: "Entries",
-            value: (
-              <span data-testid={TEST_IDS.TIME_TRACKING.SUMMARY_ENTRIES}>
-                {isTruncated ? `${entryCount}+` : entryCount}
-              </span>
-            ),
+            value: isTruncated ? `${entryCount}+` : entryCount,
             detail: entriesDetail,
+            testId: TEST_IDS.TIME_TRACKING.SUMMARY_ENTRIES,
           },
           {
             label: "Billable",
-            value: (
-              <span data-testid={TEST_IDS.TIME_TRACKING.SUMMARY_BILLABLE}>{billableValue}</span>
-            ),
+            value: billableValue,
             detail: billingEnabled ? "Tracked billable value" : "Billable time captured",
+            testId: TEST_IDS.TIME_TRACKING.SUMMARY_BILLABLE,
           },
         ]}
         aside={

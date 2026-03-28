@@ -507,13 +507,14 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 Card.displayName = "Card";
 
 export interface CardHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
-  title?: React.ReactNode;
-  description?: React.ReactNode;
+  title?: string;
+  description?: string;
+  badge?: React.ReactNode;
   action?: React.ReactNode;
 }
 
 const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
-  ({ className, title, description, action, children, ...props }, ref) => {
+  ({ className, title, description, badge, action, children, ...props }, ref) => {
     // Support both structured props and children
     if (children) {
       if (action) {
@@ -547,19 +548,24 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
         className={cn("p-4 border-b border-ui-border", className)}
         {...props}
       >
-        <Flex direction="column" gap="xs">
-          {title && (
-            <Typography variant="h4" as="h3" className="text-lg font-semibold">
-              {title}
-            </Typography>
-          )}
+        <Flex direction="column" gap="xs" className="min-w-0 flex-1">
+          {title || badge ? (
+            <Flex align="center" gap="sm" wrap className="min-w-0">
+              {title ? (
+                <Typography variant="h4" as="h3" className="text-lg font-semibold">
+                  {title}
+                </Typography>
+              ) : null}
+              {badge}
+            </Flex>
+          ) : null}
           {description && (
             <Typography variant="muted" className="text-sm">
               {description}
             </Typography>
           )}
         </Flex>
-        {action && <Flex>{action}</Flex>}
+        {action && <Flex className="shrink-0">{action}</Flex>}
       </Flex>
     );
   },

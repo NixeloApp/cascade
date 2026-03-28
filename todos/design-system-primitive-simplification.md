@@ -80,23 +80,27 @@ Every shadcn compound component gets one wrapper. Subcomponent exports are delet
 Components own text rendering. Callers pass strings.
 
 ### OverviewBand
+- **Status:** Done (2026-03-28)
 - **Change:** `metrics.value: ReactNode` → `string | number`, `metrics.detail: ReactNode` → `string`
 - **Impact:** Eliminates `<span data-testid>` wrappers in TimeTrackingPage
-- **End state:** Component renders values via `<Typography>`, accepts `data-testid` on the metric config
+- **Landed:** Wrapper-owned metric text rendering plus `testId` support on metric config, with time-tracking callers migrated off inline span wrappers
 
 ### PageHeader
+- **Status:** Done (2026-03-28)
 - **Change:** `description: ReactNode` → `string`, `eyebrow: ReactNode` → `string`
 - **Impact:** Eliminates `<span data-testid>` in AnalyticsDashboard
-- **End state:** Component renders description via `<Typography>`, accepts `descriptionTestId` prop
+- **Landed:** Wrapper-owned description rendering plus `descriptionTestId`, with analytics callers migrated off inline span wrappers
 
 ### CardHeader
+- **Status:** Done (2026-03-28)
 - **Change:** `title: ReactNode` → `string`, `description: ReactNode` → `string`
 - **Add:** `badge?: ReactNode` slot prop so EntityCard stops wrapping title in `<Flex>`
-- **End state:** EntityCard passes `title="..."` + `badge={<Badge>Active</Badge>}` instead of `title={<Flex>...</Flex>}`
+- **Landed:** Structured header copy is string-only and `badge` is wrapper-owned, so EntityCard no longer passes layout JSX through `title`
 
 ### SectionIntro
+- **Status:** Done (2026-03-28)
 - **Change:** `eyebrow: ReactNode` → `string`, `title: ReactNode` → `string`, `description: ReactNode` → `string`
-- **End state:** All callers pass plain strings (they already do, just typed wrong)
+- **Landed:** Public API is string-only and matches existing production usage
 
 ---
 
@@ -141,7 +145,7 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 ## Exit Criteria
 
 - [x] Every shadcn compound component has one wrapper. `Select`, `Popover`, and `Command` are done.
-- [ ] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
+- [x] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
 - [ ] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
 - [ ] No variant axis above 20 options in shared primitives.
 - [ ] Raw Tailwind violations at 0.

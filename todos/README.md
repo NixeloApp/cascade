@@ -10,7 +10,7 @@
 
 ## Core (Components & Validators)
 
-- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — `Select`, `Popover`, and `Command` encapsulation are done. Remaining work: string prop cleanup, raw HTML ban, variant shrink, raw Tailwind to 0.
+- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — `Select`, `Popover`, `Command`, and string prop cleanup are done. Remaining work: raw HTML ban, variant shrink, raw Tailwind to 0.
 
 ## Features
 

@@ -47,7 +47,7 @@ vi.mock("../ui/OverviewBand", () => ({
     eyebrow: string;
     title: string;
     description: string;
-    metrics: Array<{ label: string; value: string | number; detail: string }>;
+    metrics: Array<{ label: string; value: string | number; detail: string; testId?: string }>;
     aside?: ReactNode;
   }) => (
     <div>
@@ -57,7 +57,7 @@ vi.mock("../ui/OverviewBand", () => ({
       {metrics.map((metric) => (
         <div key={metric.label}>
           <div>{metric.label}</div>
-          <div>{metric.value}</div>
+          <div data-testid={metric.testId}>{metric.value}</div>
           <div>{metric.detail}</div>
         </div>
       ))}

@@ -7,13 +7,14 @@ import { Typography } from "./Typography";
 
 interface OverviewMetric {
   label: string;
-  value: ReactNode;
-  detail?: ReactNode;
+  value: string | number;
+  detail?: string;
+  testId?: string;
 }
 
 interface OverviewBandProps {
   title: string;
-  description: ReactNode;
+  description: string;
   eyebrow?: string;
   metrics?: OverviewMetric[];
   aside?: ReactNode;
@@ -65,7 +66,11 @@ function OverviewMetricCard({
         <Typography variant="caption" className="uppercase tracking-wide text-ui-text-tertiary">
           {metric.label}
         </Typography>
-        <Typography variant={density === "compact" ? "h5" : "h4"} color="brand">
+        <Typography
+          variant={density === "compact" ? "h5" : "h4"}
+          color="brand"
+          data-testid={metric.testId}
+        >
           {metric.value}
         </Typography>
         {metric.detail ? (
