@@ -82,9 +82,10 @@ async function hasGenericWebhookForEvent(
     .query("webhooks")
     .withIndex("by_project", (q) => q.eq("projectId", projectId))
     .filter(notDeleted)
+    .filter((q) => q.eq(q.field("isActive"), true))
     .take(BOUNDED_LIST_LIMIT);
 
-  return webhooks.some((webhook) => webhook.isActive && webhook.events.includes(event));
+  return webhooks.some((webhook) => webhook.events.includes(event));
 }
 
 /**
