@@ -2,17 +2,8 @@
 
 > **Priority:** P1
 > **Status:** In Progress
-> **Last Updated:** 2026-03-23
+> **Last Updated:** 2026-03-27
 > **Context:** See `docs/ai/voice/ARCHITECTURE.md` for full build-vs-buy research
-
-## What's Done
-
-- [x] 3-tier provider system built and integrated
-- [x] Deepgram provider (`deepgram.ts`) — $200 one-time credit (~700 hrs), speaker ID, Nova-3 model
-- [x] AssemblyAI provider (`assemblyai.ts`) — 185 hrs one-time credit, speaker ID, language detection
-- [x] Provider registry updated with 6 providers in 3 tiers
-- [x] Convex seed data updated (Gladia corrected to 10hrs/month, Deepgram + AssemblyAI added)
-- [x] Docs updated (ARCHITECTURE.md, SETUP.md, meeting-intelligence.md)
 
 ## Current Capacity
 
@@ -47,6 +38,40 @@
 - [ ] Update transcript UI to show speaker labels
 - [ ] Update Claude summary prompt to use speaker names for action item attribution
 
+## Next: Audio + Video Storage
+
+Current bot captures audio only to /tmp — never persisted, no video. Competitors keep both.
+
+### Storage recommendation: Cloudflare R2
+- $0.015/GB/mo, no egress fees (playback is free)
+- 100 meetings at 720p video = ~$1.50/mo
+- If we get Hetzner box later, 1.9 TB included storage can take over
+
+### Tasks
+- [ ] Set up Cloudflare R2 bucket
+- [ ] Upload audio to R2 after transcription, store URL in `meetingRecordings.recordingUrl`
+- [ ] Delete temp files after successful upload
+- [ ] Add audio playback to meeting recording UI
+- [ ] Video capture — requires adopting Vexa/Attendee (our Playwright bot can't do video well)
+- [ ] Video playback UI once capture exists
+
+## Next: Multi-Platform + Video (Vexa/Attendee)
+
+Vexa/Attendee solve two problems at once:
+1. Multi-platform (Zoom + Teams, not just Google Meet)
+2. Video capture (our Playwright bot only does audio)
+
+- Vexa: Apache-2.0, ~1,800 stars, built-in transcription, MCP server, video capture
+- Attendee: Open source, ~522 stars, 3,766 commits, more battle-tested, video capture
+- Both self-hostable — runs under the hood, users see same UI
+
+### Tasks
+- [ ] Pilot Vexa locally — join a test meeting, verify audio + video capture
+- [ ] If Vexa works → replace our Playwright bot, get Zoom/Teams/video for free
+- [ ] If too rough → try Attendee as fallback
+- [ ] Wire captured video to R2 storage
+- [ ] Update meeting UI with video player
+
 ## Future: Self-Host WhisperX (when volume justifies ~$200/mo)
 
 Only relevant at 170+ hrs/month. See `docs/ai/voice/ARCHITECTURE.md` for full specs.
@@ -55,10 +80,6 @@ Only relevant at 170+ hrs/month. See `docs/ai/voice/ARCHITECTURE.md` for full sp
 - WhisperX: transcription + speaker ID + word timestamps, all in one
 - ~3-6 min processing per hour of audio
 - WebM/Opus from our bot works directly (no conversion)
-
-## Future: Multi-Platform (Vexa/Attendee)
-
-Swap our Playwright bot for Vexa (Apache-2.0) to get Zoom + Teams. Separate effort.
 
 ## Future: Buy Premium (Recall.ai)
 
