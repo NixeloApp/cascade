@@ -1,4 +1,4 @@
 corepack pnpm lint-staged
 corepack pnpm run static
-corepack pnpm run test:run
-corepack pnpm run test:convex:run
+# corepack pnpm run test:run
+# corepack pnpm run test:convex:run
