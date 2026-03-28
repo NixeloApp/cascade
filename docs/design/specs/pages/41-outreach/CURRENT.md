@@ -159,7 +159,7 @@ sequence and event data.
 
 | Area | Current Read |
 |------|--------------|
-| Product completeness | Strong for a Gmail-first MVP. The route is operational, not decorative. |
+| Product completeness | Strong for a lightweight multi-provider MVP. The route is operational, not decorative. |
 | Screenshot coverage | Strong. The route now has canonical, tab-specific, dialog, and destructive-state captures. |
 | Cross-surface cohesion | Better than before because mailbox health, sequence runtime state, and analytics live in one place. |
 
@@ -171,7 +171,7 @@ sequence and event data.
 |---|---------|------|----------|
 | 1 | CSV import and validation still read as an operator tool, not a polished high-volume workflow | UX | MEDIUM |
 | 2 | Analytics are operationally useful but still shallow compared to dedicated campaign tools | product depth | MEDIUM |
-| 3 | Mailbox connection is intentionally Gmail-first, so multi-provider expectations need to stay clearly out of the primary story | scope clarity | LOW |
+| 3 | Reply polling remains Gmail-only, so the Microsoft path should stay framed as connection + sending rather than full mailbox parity | scope clarity | LOW |
 
 ---
 
@@ -200,5 +200,5 @@ sequence and event data.
 ## Summary
 
 Outreach is now part of the formal screenshot/spec review loop. The route ships as a real
-Gmail-first workspace with deterministic empty and filled-state coverage, including the major tabs,
-operational dialogs, and mailbox disconnect confirmation that matter for product QA.
+multi-provider workspace with deterministic empty and filled-state coverage, including the major
+tabs, operational dialogs, and mailbox disconnect confirmation that matter for product QA.

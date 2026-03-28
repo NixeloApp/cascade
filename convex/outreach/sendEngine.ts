@@ -20,6 +20,7 @@ import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { buildTerminalEnrollmentPatch } from "../lib/lifecyclePatches";
 import { logger } from "../lib/logger";
 import { MINUTE } from "../lib/timeUtils";
+import { outreachMailboxProviders } from "../validators";
 import { isSuppressed, suppress } from "./contacts";
 import { advanceEnrollment, stopEnrollment } from "./enrollments";
 import {
@@ -102,6 +103,7 @@ export const processDueEnrollments = internalAction({
         contactId: enrollment.contactId,
         step: enrollment.currentStep,
         mailboxId: checkResult.mailboxId,
+        mailboxProvider: checkResult.mailboxProvider,
         to: checkResult.contactEmail,
         subject: checkResult.renderedSubject,
         body: checkResult.renderedBody,
@@ -212,6 +214,7 @@ export const checkPreSend = internalMutation({
     return {
       canSend: true as const,
       mailboxId: sequence.mailboxId,
+      mailboxProvider: mailbox.provider,
       contactEmail: contact.email,
       renderedSubject,
       renderedBody,
@@ -234,6 +237,7 @@ export const sendSequenceEmail = internalAction({
     contactId: v.id("outreachContacts"),
     step: v.number(),
     mailboxId: v.id("outreachMailboxes"),
+    mailboxProvider: outreachMailboxProviders,
     to: v.string(),
     subject: v.string(),
     body: v.string(),
@@ -245,8 +249,22 @@ export const sendSequenceEmail = internalAction({
     ctx,
     args,
   ): Promise<{ success: boolean; error?: string; gmailThreadId?: string }> => {
-    // Delegate to Gmail sender (Microsoft Graph can be added later)
-    const result = await ctx.runAction(internal.outreach.gmail.sendViaGmailAction, {
+    if (args.mailboxProvider === "google") {
+      const result = await ctx.runAction(internal.outreach.gmail.sendViaGmailAction, {
+        mailboxId: args.mailboxId,
+        enrollmentId: args.enrollmentId,
+        to: args.to,
+        subject: args.subject,
+        body: args.body,
+        fromEmail: args.fromEmail,
+        fromName: args.fromName,
+        trackingDomain: args.trackingDomain,
+      });
+
+      return { success: result.success, error: result.error, gmailThreadId: result.threadId };
+    }
+
+    const result = await ctx.runAction(internal.outreach.microsoft.sendViaMicrosoftAction, {
       mailboxId: args.mailboxId,
       enrollmentId: args.enrollmentId,
       to: args.to,
@@ -257,7 +275,7 @@ export const sendSequenceEmail = internalAction({
       trackingDomain: args.trackingDomain,
     });
 
-    return { success: result.success, error: result.error, gmailThreadId: result.threadId };
+    return { success: result.success, error: result.error };
   },
 });
 

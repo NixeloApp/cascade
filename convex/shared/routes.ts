@@ -92,6 +92,10 @@ export const ROUTES = {
     path: "/outreach/google/auth" as const,
     build: () => "/outreach/google/auth",
   },
+  outreachMicrosoftAuth: {
+    path: "/outreach/microsoft/auth" as const,
+    build: () => "/outreach/microsoft/auth",
+  },
   team: {
     path: "/$orgSlug/team" as const,
     build: (orgSlug: string) => `/${orgSlug}/team`,

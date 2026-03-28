@@ -24,6 +24,7 @@ type SendFixtureOptions = {
   firstName?: string;
   company?: string;
   customFields?: Record<string, string>;
+  provider?: "google" | "microsoft";
   subject?: string;
   body?: string;
 };
@@ -59,7 +60,7 @@ async function createSendFixture(
   const mailboxId = await t.mutation(internal.outreach.mailboxes.createMailboxFromOAuth, {
     userId,
     organizationId,
-    provider: "google",
+    provider: options.provider ?? "google",
     email: "sender@example.com",
     displayName: "Sender",
     accessToken: "access-token",
@@ -288,6 +289,48 @@ describe("outreach sendEngine", () => {
     );
     expect(events).toHaveLength(1);
     expect(events[0].type).toBe("sent");
+  });
+
+  it("routes Microsoft-connected sequences through Graph sendMail and still advances the enrollment", async () => {
+    const { t, fixture } = await createSendFixture({
+      provider: "microsoft",
+      subject: "Hello {{firstName}}",
+      body: "<p>Hi {{firstName}}</p>",
+    });
+
+    fetchMock.mockResolvedValue(new Response(null, { status: 202 }));
+
+    const result = await t.action(internal.outreach.sendEngine.processDueEnrollments, {});
+    expect(result).toEqual({ processed: 1, skipped: 0 });
+
+    const sendCall = fetchMock.mock.calls.find(([input]) => String(input).includes("/me/sendMail"));
+    if (!sendCall) throw new Error("Expected Microsoft Graph sendMail request");
+
+    const [, init] = sendCall;
+    expect(init?.headers).toMatchObject({
+      Authorization: "Bearer access-token",
+      "Content-Type": "application/json",
+    });
+
+    const parsedBody =
+      typeof init?.body === "string" ? (JSON.parse(init.body) as Record<string, unknown>) : null;
+    expect(parsedBody).not.toBeNull();
+    expect(parsedBody).toMatchObject({
+      message: {
+        body: {
+          contentType: "HTML",
+        },
+        subject: "Hello Jamie",
+      },
+      saveToSentItems: true,
+    });
+    expect(JSON.stringify(parsedBody)).toContain(`track.nixelo.test/t/u/${fixture.enrollmentId}`);
+
+    const enrollmentAfterSuccess = await t.run(async (ctx) => ctx.db.get(fixture.enrollmentId));
+    expect(enrollmentAfterSuccess).not.toBeNull();
+    if (enrollmentAfterSuccess === null) throw new Error("enrollmentAfterSuccess is null");
+    expect(enrollmentAfterSuccess.status).toBe("completed");
+    expect(enrollmentAfterSuccess.gmailThreadIds).toBeUndefined();
   });
 
   it("auto-stops suppressed contacts during pre-send validation without attempting a mailbox send", async () => {

@@ -21,7 +21,12 @@ import { DAY, MINUTE } from "../lib/timeUtils";
 import { suppress } from "./contacts";
 import { stopEnrollment } from "./enrollments";
 import { isAutoReply } from "./helpers";
-import { encryptMailboxTokensForStorage, getDecryptedMailboxTokenSnapshot } from "./mailboxTokens";
+import {
+  getMailboxRuntimeState,
+  listActiveMailboxesForProvider,
+  updateMailboxRuntimeHealthCheck,
+  updateMailboxRuntimeTokens,
+} from "./mailboxRuntime";
 
 // =============================================================================
 // Gmail API Helpers
@@ -677,23 +682,7 @@ export const checkAllMailboxReplies = internalAction({
 /** Get mailbox tokens for sending (internal — tokens never go to client) */
 export const getMailboxTokens = internalMutation({
   args: { mailboxId: v.id("outreachMailboxes") },
-  handler: async (ctx, args) => {
-    const mailbox = await ctx.db.get(args.mailboxId);
-    if (!mailbox?.isActive) return null;
-    const tokenSnapshot = await getDecryptedMailboxTokenSnapshot({
-      accessToken: mailbox.accessToken,
-      refreshToken: mailbox.refreshToken,
-    });
-
-    return {
-      accessToken: tokenSnapshot.decryptedAccessToken,
-      refreshToken: tokenSnapshot.decryptedRefreshToken,
-      expiresAt: mailbox.expiresAt,
-      email: mailbox.email,
-      displayName: mailbox.displayName,
-      lastHealthCheckAt: mailbox.lastHealthCheckAt,
-    };
-  },
+  handler: async (ctx, args) => await getMailboxRuntimeState(ctx, args.mailboxId),
 });
 
 /** Update tokens after refresh */
@@ -703,39 +692,19 @@ export const updateMailboxTokens = internalMutation({
     accessToken: v.string(),
     expiresAt: v.number(),
   },
-  handler: async (ctx, args) => {
-    const encryptedTokens = await encryptMailboxTokensForStorage({
-      accessToken: args.accessToken,
-      refreshToken: undefined,
-    });
-
-    await ctx.db.patch(args.mailboxId, {
-      accessToken: encryptedTokens.accessToken,
-      expiresAt: args.expiresAt,
-      updatedAt: Date.now(),
-    });
-  },
+  handler: async (ctx, args) => await updateMailboxRuntimeTokens(ctx, args),
 });
 
 /** Update last health check timestamp */
 export const updateMailboxHealthCheck = internalMutation({
   args: { mailboxId: v.id("outreachMailboxes") },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.mailboxId, {
-      lastHealthCheckAt: Date.now(),
-    });
-  },
+  handler: async (ctx, args) => await updateMailboxRuntimeHealthCheck(ctx, args.mailboxId),
 });
 
 /** List active mailboxes for reply polling */
 export const listActiveMailboxes = internalQuery({
   args: {},
-  handler: async (ctx) => {
-    return await ctx.db
-      .query("outreachMailboxes")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
-      .take(BOUNDED_LIST_LIMIT);
-  },
+  handler: async (ctx) => await listActiveMailboxesForProvider(ctx, "google"),
 });
 
 async function getActiveMailboxEnrollmentsForContact(

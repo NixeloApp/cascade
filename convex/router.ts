@@ -53,7 +53,12 @@ import {
 } from "./http/githubOAuth";
 import { handleCallback, initiateAuth, triggerSync } from "./http/googleOAuth";
 import { handleIntakePreflight, handleIntakeSubmission } from "./http/intake";
-import { handleGmailCallback, initiateGmailAuth } from "./http/outreachOAuth";
+import {
+  handleGmailCallback,
+  handleMicrosoftCallback,
+  initiateGmailAuth,
+  initiateMicrosoftAuth,
+} from "./http/outreachOAuth";
 import { handleSlashCommand } from "./http/slackCommands";
 import {
   handleCallback as handleSlackCallback,
@@ -175,6 +180,18 @@ http.route({
   path: "/outreach/google/callback",
   method: "GET",
   handler: handleGmailCallback,
+});
+
+http.route({
+  path: "/outreach/microsoft/auth",
+  method: "GET",
+  handler: initiateMicrosoftAuth,
+});
+
+http.route({
+  path: "/outreach/microsoft/callback",
+  method: "GET",
+  handler: handleMicrosoftCallback,
 });
 
 // Outreach tracking routes (open pixel, click redirect, unsubscribe)

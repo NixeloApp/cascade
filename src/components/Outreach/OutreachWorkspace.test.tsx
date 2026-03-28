@@ -571,7 +571,7 @@ describe("OutreachWorkspace", () => {
 
     render(<OutreachWorkspace />);
 
-    await user.click(screen.getAllByRole("button", { name: /connect gmail/i })[0]);
+    await user.click(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_CONNECT_GMAIL)[0]);
 
     expect(window.open).toHaveBeenCalledWith(
       "https://demo.convex.site/outreach/google/auth?userId=user_1&organizationId=org_1",
@@ -591,13 +591,28 @@ describe("OutreachWorkspace", () => {
     expect(mockShowSuccess).toHaveBeenCalledWith("Mailbox connected successfully");
   });
 
+  it("opens the Microsoft 365 OAuth popup with the provider-specific route", async () => {
+    const user = userEvent.setup();
+    mockMailboxConnectionQueryState();
+
+    render(<OutreachWorkspace />);
+
+    await user.click(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_CONNECT_MICROSOFT)[0]);
+
+    expect(window.open).toHaveBeenCalledWith(
+      "https://demo.convex.site/outreach/microsoft/auth?userId=user_1&organizationId=org_1",
+      "Outreach Microsoft 365 OAuth",
+      expect.stringContaining("width=620"),
+    );
+  });
+
   it("ignores mailbox-connected messages from the app origin", async () => {
     const user = userEvent.setup();
     mockMailboxConnectionQueryState();
 
     render(<OutreachWorkspace />);
 
-    await user.click(screen.getAllByRole("button", { name: /connect gmail/i })[0]);
+    await user.click(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_CONNECT_GMAIL)[0]);
 
     await act(async () => {
       window.dispatchEvent(
@@ -618,9 +633,23 @@ describe("OutreachWorkspace", () => {
 
     render(<OutreachWorkspace />);
 
-    await user.click(screen.getAllByRole("button", { name: /connect gmail/i })[0]);
+    await user.click(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_CONNECT_GMAIL)[0]);
 
     expect(mockShowError).toHaveBeenCalledWith("Please allow popups to connect a Gmail mailbox.");
+  });
+
+  it("shows a popup error when Microsoft OAuth is blocked", async () => {
+    const user = userEvent.setup();
+    vi.mocked(window.open).mockReturnValueOnce(null);
+    mockMailboxConnectionQueryState();
+
+    render(<OutreachWorkspace />);
+
+    await user.click(screen.getAllByTestId(TEST_IDS.OUTREACH.ACTION_CONNECT_MICROSOFT)[0]);
+
+    expect(mockShowError).toHaveBeenCalledWith(
+      "Please allow popups to connect a Microsoft 365 mailbox.",
+    );
   });
 
   it("renders stable outreach screenshot hooks across the main tabs", async () => {

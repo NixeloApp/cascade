@@ -88,6 +88,7 @@ type EnrollmentTimeline = NonNullable<
 type ContactImportPreview = ReturnType<typeof parseOutreachContactImportCsv>;
 type ImportPreviewState = { ok: true; value: ContactImportPreview } | { error: string; ok: false };
 type ContactImportBatchResult = FunctionReturnType<typeof outreachApi.contacts.importBatch>;
+type OutreachMailboxProvider = MailboxListItem["provider"];
 
 interface ContactFormState {
   company: string;
@@ -137,10 +138,43 @@ const DEFAULT_SEQUENCE_FORM: SequenceFormState = {
 };
 
 const MAX_SEQUENCE_STEPS = 5;
-const GMAIL_AUTH_ORIGIN = new URL(getConvexSiteUrl()).origin;
+const OUTREACH_AUTH_ORIGIN = new URL(getConvexSiteUrl()).origin;
+const MAILBOX_CONNECT_PROVIDERS = [
+  "google",
+  "microsoft",
+] as const satisfies OutreachMailboxProvider[];
+const MAILBOX_PROVIDER_CONFIG: Record<
+  OutreachMailboxProvider,
+  {
+    authRoute: () => string;
+    blockedPopupMessage: string;
+    connectLabel: string;
+    popupTitle: string;
+    testId: string;
+  }
+> = {
+  google: {
+    authRoute: () => ROUTES.outreachGoogleAuth.build(),
+    blockedPopupMessage: "Please allow popups to connect a Gmail mailbox.",
+    connectLabel: "Connect Gmail",
+    popupTitle: "Outreach Gmail OAuth",
+    testId: TEST_IDS.OUTREACH.ACTION_CONNECT_GMAIL,
+  },
+  microsoft: {
+    authRoute: () => ROUTES.outreachMicrosoftAuth.build(),
+    blockedPopupMessage: "Please allow popups to connect a Microsoft 365 mailbox.",
+    connectLabel: "Connect Microsoft 365",
+    popupTitle: "Outreach Microsoft 365 OAuth",
+    testId: TEST_IDS.OUTREACH.ACTION_CONNECT_MICROSOFT,
+  },
+};
 
-function buildGmailAuthUrl(userId: Id<"users">, organizationId: Id<"organizations">): string {
-  const authUrl = new URL(ROUTES.outreachGoogleAuth.build(), getConvexSiteUrl());
+function buildMailboxAuthUrl(
+  provider: OutreachMailboxProvider,
+  userId: Id<"users">,
+  organizationId: Id<"organizations">,
+): string {
+  const authUrl = new URL(MAILBOX_PROVIDER_CONFIG[provider].authRoute(), getConvexSiteUrl());
   authUrl.searchParams.set("userId", userId);
   authUrl.searchParams.set("organizationId", organizationId);
   return authUrl.toString();
@@ -217,6 +251,34 @@ function formatPluralizedCount(count: number, singular: string, plural = `${sing
 
 function getProviderLabel(provider: MailboxListItem["provider"]): string {
   return provider === "google" ? "Gmail" : "Microsoft 365";
+}
+
+function MailboxConnectButtons({
+  onConnectMailbox,
+  size = "sm",
+}: {
+  onConnectMailbox: (provider: OutreachMailboxProvider) => void;
+  size?: "sm" | "md";
+}) {
+  return (
+    <Flex gap="sm" wrap>
+      {MAILBOX_CONNECT_PROVIDERS.map((provider) => {
+        const config = MAILBOX_PROVIDER_CONFIG[provider];
+        return (
+          <Button
+            key={provider}
+            variant={provider === "google" ? "primary" : "secondary"}
+            size={size}
+            onClick={() => onConnectMailbox(provider)}
+            data-testid={config.testId}
+          >
+            <Icon icon={ArrowUpRight} size="sm" />
+            {config.connectLabel}
+          </Button>
+        );
+      })}
+    </Flex>
+  );
 }
 
 function getStatusBadgeVariant(
@@ -399,7 +461,7 @@ export function OutreachWorkspace() {
   const headerActions = getHeaderActions({
     activeTab,
     hasMailboxes: mailboxes.length > 0,
-    onConnectMailbox: () => handleConnectMailbox(),
+    onConnectMailbox: handleConnectMailbox,
     onCreateContact: () => openContactDialog(),
     onCreateSequence: () => openSequenceDialog(mailboxes),
     onImportContacts: () => setIsImportDialogOpen(true),
@@ -595,7 +657,7 @@ export function OutreachWorkspace() {
     <PageLayout maxWidth="full">
       <PageHeader
         title="Outreach"
-        description="Run Gmail-first outbound sequences, manage recipients, control mailbox capacity, and inspect engagement without leaving the workspace."
+        description="Run outbound sequences, manage recipients, control mailbox capacity, and inspect engagement across connected Gmail and Microsoft 365 senders."
         actions={headerActions}
       />
 
@@ -882,7 +944,7 @@ export function OutreachWorkspace() {
     setIsSequenceDialogOpen(true);
   }
 
-  function handleConnectMailbox() {
+  function handleConnectMailbox(provider: OutreachMailboxProvider) {
     if (!currentUser?._id) {
       showError("We could not verify your account. Refresh and try again.");
       return;
@@ -892,16 +954,17 @@ export function OutreachWorkspace() {
     const height = 760;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
-    const gmailAuthUrl = buildGmailAuthUrl(currentUser._id, organizationId);
+    const providerConfig = MAILBOX_PROVIDER_CONFIG[provider];
+    const authUrl = buildMailboxAuthUrl(provider, currentUser._id, organizationId);
 
     const popup = window.open(
-      gmailAuthUrl,
-      "Outreach Gmail OAuth",
+      authUrl,
+      providerConfig.popupTitle,
       `width=${width},height=${height},left=${left},top=${top},popup=yes`,
     );
 
     if (!popup) {
-      showError("Please allow popups to connect a Gmail mailbox.");
+      showError(providerConfig.blockedPopupMessage);
     }
   }
 }
@@ -920,7 +983,7 @@ function OverviewTabContent({
   mailboxHealth: MailboxHealthListItem[];
   overview: SequenceOverview;
   sequences: SequenceListItem[];
-  onConnectMailbox: () => void;
+  onConnectMailbox: (provider: OutreachMailboxProvider) => void;
   onCreateSequence: () => void;
 }) {
   return (
@@ -1012,8 +1075,8 @@ function OverviewTabContent({
                 <EmptyState
                   icon={Mail}
                   title="No connected mailboxes"
-                  description="Connect Gmail to unlock sending."
-                  action={{ label: "Connect Gmail", onClick: onConnectMailbox }}
+                  description="Connect Gmail or Microsoft 365 to unlock sending."
+                  action={<MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />}
                   size="compact"
                 />
               ) : (
@@ -1652,7 +1715,7 @@ function MailboxesTabContent({
   mailboxHealth: MailboxHealthListItem[];
   mailboxLimitInputs: Record<string, string>;
   mailboxes: MailboxListItem[];
-  onConnectMailbox: () => void;
+  onConnectMailbox: (provider: OutreachMailboxProvider) => void;
   onDisconnectMailbox: (mailbox: MailboxListItem) => void;
   onLimitInputChange: (mailboxId: Id<"outreachMailboxes">, value: string) => void;
   onSaveMailboxLimit: (mailboxId: Id<"outreachMailboxes">) => void;
@@ -1661,10 +1724,10 @@ function MailboxesTabContent({
     <TabsContent value="mailboxes" data-testid={TEST_IDS.OUTREACH.MAILBOXES_SECTION}>
       <Stack gap="md">
         <Alert variant="info">
-          <AlertTitle>Gmail-first mailbox connections</AlertTitle>
+          <AlertTitle>Mailbox connections</AlertTitle>
           <AlertDescription>
-            Outlook support exists in the schema, but this product surface intentionally ships the
-            Gmail path first so users can connect, throttle, and monitor one provider cleanly.
+            Gmail and Microsoft 365 are both supported for outbound sending. Reply polling remains
+            Gmail-only while the Microsoft path focuses on connection, throttling, and delivery.
           </AlertDescription>
         </Alert>
 
@@ -1672,8 +1735,8 @@ function MailboxesTabContent({
           <EmptyState
             icon={Mail}
             title="No connected mailboxes"
-            description="Connect a Gmail inbox to unlock sending, health checks, and reply tracking."
-            action={{ label: "Connect Gmail", onClick: onConnectMailbox }}
+            description="Connect Gmail or Microsoft 365 to unlock sending, throttling, and mailbox health checks."
+            action={<MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />}
           />
         ) : (
           <Grid cols={1} colsLg={2} gap="lg">
@@ -2845,7 +2908,7 @@ function getLaunchChecklistMessage({
   noSequenceCreated: boolean;
 }) {
   if (noMailboxConnected) {
-    return "Connect a Gmail mailbox first. Sequences and enrollments stay blocked until a sender is available.";
+    return "Connect a mailbox first. Sequences and enrollments stay blocked until a sender is available.";
   }
 
   if (noSequenceCreated) {
@@ -2929,7 +2992,7 @@ function useMailboxConnectedListener(
 ) {
   useEffect(() => {
     const handleMailboxConnected = (event: MessageEvent) => {
-      if (event.origin !== GMAIL_AUTH_ORIGIN) {
+      if (event.origin !== OUTREACH_AUTH_ORIGIN) {
         return;
       }
 
@@ -3014,7 +3077,7 @@ function getHeaderActions({
 }: {
   activeTab: OutreachTab;
   hasMailboxes: boolean;
-  onConnectMailbox: () => void;
+  onConnectMailbox: (provider: OutreachMailboxProvider) => void;
   onCreateContact: () => void;
   onCreateSequence: () => void;
   onImportContacts: () => void;
@@ -3044,22 +3107,14 @@ function getHeaderActions({
   }
 
   if (activeTab === "mailboxes") {
-    return (
-      <Button size="sm" onClick={onConnectMailbox}>
-        <Icon icon={ArrowUpRight} size="sm" />
-        Connect Gmail
-      </Button>
-    );
+    return <MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />;
   }
 
   if (activeTab === "sequences") {
     return (
       <Flex gap="sm" wrap>
         {!hasMailboxes ? (
-          <Button size="sm" onClick={onConnectMailbox}>
-            <Icon icon={ArrowUpRight} size="sm" />
-            Connect Gmail
-          </Button>
+          <MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />
         ) : null}
         <Button
           size="sm"
@@ -3076,10 +3131,7 @@ function getHeaderActions({
   return (
     <Flex gap="sm" wrap>
       {!hasMailboxes ? (
-        <Button variant="secondary" size="sm" onClick={onConnectMailbox}>
-          <Icon icon={ArrowUpRight} size="sm" />
-          Connect Gmail
-        </Button>
+        <MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />
       ) : null}
       <Button
         variant="secondary"

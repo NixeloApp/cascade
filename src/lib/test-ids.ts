@@ -984,6 +984,10 @@ export const TEST_IDS = {
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ACTION_NEW_CONTACT: "outreach-action-new-contact",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_CONNECT_GMAIL: "outreach-action-connect-gmail",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_CONNECT_MICROSOFT: "outreach-action-connect-microsoft",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ACTION_NEW_SEQUENCE: "outreach-action-new-sequence",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ACTION_ENROLL_CONTACTS: "outreach-action-enroll-contacts",

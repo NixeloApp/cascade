@@ -29,6 +29,7 @@ const KNOWN_CONFIG_ONLY_ROUTE_PATHS = new Map([
     "Team backlog route is configured but not implemented",
   ],
   ["/outreach/google/auth", "HTTP OAuth endpoint, not a TanStack app route"],
+  ["/outreach/microsoft/auth", "HTTP OAuth endpoint, not a TanStack app route"],
   ["/privacy", "Shared route exists before the public page is implemented"],
   ["/terms", "Shared route exists before the public page is implemented"],
 ]);

@@ -1857,7 +1857,8 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_organization", ["organizationId"])
     .index("by_user_provider", ["userId", "provider"])
-    .index("by_active", ["isActive"]),
+    .index("by_active", ["isActive"])
+    .index("by_active_and_provider", ["isActive", "provider"]),
 
   // Single-use OAuth state nonces for outreach mailbox connection flows
   outreachOAuthNonces: defineTable({
