@@ -1,5 +1,9 @@
 import { format, isSameDay } from "date-fns";
 import { Badge } from "@/components/ui/Badge";
+import {
+  type CalendarDayBadgeTone,
+  getCalendarDayBadgeClassName,
+} from "@/components/ui/badgeSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
@@ -13,7 +17,7 @@ export function CalendarBodyHeader({
   onlyDay?: boolean;
 }): React.ReactElement {
   const isToday = isSameDay(date, new Date());
-  const dayBadgeVariant = isToday ? "calendarDayToday" : "calendarDayCurrent";
+  const dayBadgeTone: CalendarDayBadgeTone = isToday ? "today" : "current";
 
   return (
     <Card recipe="calendarBodyHeaderBar" padding="xs">
@@ -22,7 +26,11 @@ export function CalendarBodyHeader({
           {format(date, "EEE")}
         </Typography>
         {!onlyDay && (
-          <Badge variant={dayBadgeVariant} size="calendarDay" shape="pill">
+          <Badge
+            variant={dayBadgeTone === "today" ? "brand" : "outline"}
+            shape="pill"
+            className={getCalendarDayBadgeClassName(dayBadgeTone)}
+          >
             {format(date, "d")}
           </Badge>
         )}

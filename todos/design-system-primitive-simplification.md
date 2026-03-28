@@ -131,7 +131,9 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 - **End state:** Hold `variant` under 20 and keep new text treatments in wrapper components rather than widening the shared enum.
 
 ### Badge.tsx
+- **Status:** Done (2026-03-28)
 - **Current:** `variant` at 24
+- **Landed:** `Badge` is now a semantic core with 10 public variants and 3 public sizes, while feature-specific badge surfaces like mention chips, alert counts, calendar day pills, roadmap markers, and project/header labels moved into UI-owned helper class builders instead of widening the primitive axis.
 - **End state:** `variant` < 12. Split status/priority/type badges into feature-owned components if they carry domain semantics.
 
 ---
@@ -149,5 +151,5 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 - [x] Every shadcn compound component has one wrapper. `Select`, `Popover`, and `Command` are done.
 - [x] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
 - [x] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
-- [ ] No variant axis above 20 options in shared primitives.
+- [ ] No variant axis above 20 options in shared primitives. `Badge` is done; `Card.recipe` is still the large remaining surface.
 - [ ] Raw Tailwind violations at 0.

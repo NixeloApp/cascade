@@ -23,6 +23,10 @@ import { getDotColorClass } from "@/components/Calendar/calendar-colors";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
+  type CalendarDayBadgeTone,
+  getCalendarDayBadgeClassName,
+} from "@/components/ui/badgeSurfaceClassNames";
+import {
   getCalendarControlButtonClassName,
   getCalendarMonthOverflowButtonClassName,
 } from "@/components/ui/buttonSurfaceClassNames";
@@ -80,12 +84,12 @@ function getDayCellRecipe(day: Date, visibleMonth: Date, today: Date) {
   return isSameMonth(day, visibleMonth) ? "calendarMonthDayCell" : "calendarMonthDayCellAdjacent";
 }
 
-function getDayBadgeVariant(day: Date, visibleMonth: Date, today: Date) {
+function getDayBadgeTone(day: Date, visibleMonth: Date, today: Date): CalendarDayBadgeTone {
   if (isSameDay(day, today)) {
-    return "calendarDayToday";
+    return "today";
   }
 
-  return isSameMonth(day, visibleMonth) ? "calendarDayCurrent" : "calendarDayMuted";
+  return isSameMonth(day, visibleMonth) ? "current" : "muted";
 }
 
 function CalendarMonthWeekdayHeader({ day }: { day: string }) {
@@ -224,7 +228,7 @@ function CalendarMonthDayCell({
   setDropTargetDate: (dayKey: string | null) => void;
 }) {
   const dayCellRecipe = getDayCellRecipe(day, date, today);
-  const dayBadgeVariant = getDayBadgeVariant(day, date, today);
+  const dayBadgeTone = getDayBadgeTone(day, date, today);
 
   return (
     <Card
@@ -262,7 +266,11 @@ function CalendarMonthDayCell({
         <span data-testid={TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET} hidden aria-hidden="true" />
       ) : null}
       <Flex align="start" justify="between" gap="xs">
-        <Badge variant={dayBadgeVariant} size="calendarDay" shape="pill">
+        <Badge
+          variant={dayBadgeTone === "today" ? "brand" : "outline"}
+          shape="pill"
+          className={getCalendarDayBadgeClassName(dayBadgeTone)}
+        >
           {format(day, "d")}
         </Badge>
         <Button

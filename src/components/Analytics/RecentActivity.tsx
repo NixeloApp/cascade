@@ -3,6 +3,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
+import { getIssueKeyBadgeClassName } from "../ui/badgeSurfaceClassNames";
 import { getCardRecipeClassName } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -70,7 +71,11 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
                         </>
                       ) : null}
                       {activity.issueKey ? (
-                        <Badge variant="issueKey" size="sm">
+                        <Badge
+                          variant="secondary"
+                          size="sm"
+                          className={getIssueKeyBadgeClassName()}
+                        >
                           {activity.issueKey}
                         </Badge>
                       ) : null}

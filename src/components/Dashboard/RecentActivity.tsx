@@ -1,7 +1,9 @@
 import { TrendingUp } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
+import { getIssueKeyBadgeClassName } from "../ui/badgeSurfaceClassNames";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { IconCircle } from "../ui/IconCircle";
@@ -73,7 +75,11 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                           </Typography>{" "}
                           {activity.action}
                         </Typography>
-                        <Badge variant="issueKey" size="sm" className="w-fit">
+                        <Badge
+                          variant="secondary"
+                          size="sm"
+                          className={cn(getIssueKeyBadgeClassName(), "w-fit")}
+                        >
                           {activity.issueKey}
                         </Badge>
                         <Metadata separator="|">

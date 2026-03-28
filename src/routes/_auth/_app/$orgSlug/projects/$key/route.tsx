@@ -3,6 +3,7 @@ import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-rout
 import { PageContent, PageControls, PageError, PageHeader, PageStack } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getProjectHeaderKeyBadgeClassName } from "@/components/ui/badgeSurfaceClassNames";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -246,7 +247,11 @@ export function ProjectLayout() {
             spacing="stack"
             actions={
               <>
-                <Badge variant="projectHeaderKey" shape="pill">
+                <Badge
+                  variant="secondary"
+                  shape="pill"
+                  className={getProjectHeaderKeyBadgeClassName()}
+                >
                   {project.key}
                 </Badge>
                 <Badge variant="neutral" size="sm">

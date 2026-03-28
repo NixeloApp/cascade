@@ -3,6 +3,7 @@ import { ROUTES } from "@/config/routes";
 import { ArrowRight } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getLandingHeroBadgeClassName } from "../ui/badgeSurfaceClassNames";
 import { getLandingPrimaryButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
@@ -32,7 +33,7 @@ export function HeroSection() {
                 justify="center"
                 style={{ animation: "var(--animation-fade-in)", animationFillMode: "backwards" }}
               >
-                <Badge variant="landingHero" shape="pill">
+                <Badge variant="outline" shape="pill" className={getLandingHeroBadgeClassName()}>
                   Docs, delivery, and time tracking in one operating system
                 </Badge>
               </Flex>

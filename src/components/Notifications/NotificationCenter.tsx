@@ -14,6 +14,7 @@ import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getAlertCountBadgeClassName } from "@/components/ui/badgeSurfaceClassNames";
 import {
   getNotificationFilterButtonClassName,
   getQuietRoundIconButtonClassName,
@@ -264,10 +265,13 @@ export function NotificationCenter() {
           <Icon icon={Bell} size="md" />
           {optimisticUnreadCount != null && optimisticUnreadCount > 0 && (
             <Badge
-              variant="alertCount"
+              variant="error"
               size="sm"
               shape="pill"
-              className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 animate-scale-in"
+              className={cn(
+                getAlertCountBadgeClassName(),
+                "absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 animate-scale-in",
+              )}
             >
               {optimisticUnreadCount > 99 ? "99+" : optimisticUnreadCount}
             </Badge>

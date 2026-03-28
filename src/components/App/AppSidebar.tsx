@@ -15,6 +15,7 @@ import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getSidebarSectionBadgeClassName } from "@/components/ui/badgeSurfaceClassNames";
 import {
   getFullOverlayDismissButtonClassName,
   getListRowButtonClassName,
@@ -781,7 +782,11 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   {!showCollapsed && (
                     <li className="list-none">
                       <div className="p-sidebar-nav mb-sidebar-section-label mt-sidebar-section-gap">
-                        <Badge variant="sidebarSection" shape="pill">
+                        <Badge
+                          variant="secondary"
+                          shape="pill"
+                          className={getSidebarSectionBadgeClassName()}
+                        >
                           Products
                         </Badge>
                       </div>

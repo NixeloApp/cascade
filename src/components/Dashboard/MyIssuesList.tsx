@@ -17,6 +17,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getDashboardTagBadgeClassName } from "../ui/badgeSurfaceClassNames";
 import { getListRowButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
@@ -172,7 +173,11 @@ export function MyIssuesList({
                       <Typography variant="inlineCode" color="tertiary">
                         {issue.key}
                       </Typography>
-                      <Badge variant="dashboardTag" size="emphasis">
+                      <Badge
+                        variant="secondary"
+                        size="emphasis"
+                        className={getDashboardTagBadgeClassName()}
+                      >
                         {issue.priority}
                       </Badge>
                     </Flex>

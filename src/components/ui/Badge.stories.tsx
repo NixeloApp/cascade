@@ -27,7 +27,7 @@ const meta: Meta<typeof Badge> = {
     },
     size: {
       control: "select",
-      options: ["sm", "md"],
+      options: ["sm", "md", "emphasis"],
       description: "The size of the badge",
     },
     shape: {
@@ -138,6 +138,13 @@ export const SizeMedium: Story = {
   },
 };
 
+export const SizeEmphasis: Story = {
+  args: {
+    size: "emphasis",
+    children: "Emphasis",
+  },
+};
+
 // Shape stories
 export const ShapeRounded: Story = {
   args: {
@@ -178,6 +185,7 @@ export const AllVariants: Story = {
         <div className="flex flex-wrap items-center gap-2">
           <Badge size="sm">Small</Badge>
           <Badge size="md">Medium</Badge>
+          <Badge size="emphasis">Emphasis</Badge>
         </div>
       </div>
 

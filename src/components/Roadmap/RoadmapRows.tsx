@@ -14,6 +14,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getRoadmapGroupBadgeClassName } from "../ui/badgeSurfaceClassNames";
 import {
   getRoadmapGroupButtonClassName,
   getRoadmapIssueLinkButtonClassName,
@@ -203,9 +204,10 @@ export function RoadmapGroupRow({
                 {getTimelineGroupLabel(group)}
               </Typography>
               <Badge
-                variant="roadmapGroup"
+                variant="secondary"
                 size="md"
                 shape="pill"
+                className={getRoadmapGroupBadgeClassName()}
                 {...getTimelineGroupBadgeTone(group)}
               >
                 {group.label}

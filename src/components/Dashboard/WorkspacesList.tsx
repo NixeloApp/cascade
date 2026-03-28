@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getDashboardTagBadgeClassName } from "../ui/badgeSurfaceClassNames";
 import { getListRowButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -108,7 +109,11 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                         <Typography variant="label" as="p" className="truncate">
                           {project.name}
                         </Typography>
-                        <Badge variant="dashboardTag" size="sm">
+                        <Badge
+                          variant="secondary"
+                          size="sm"
+                          className={getDashboardTagBadgeClassName()}
+                        >
                           {project.role}
                         </Badge>
                       </Flex>
