@@ -331,7 +331,16 @@ describe("OutreachWorkspace", () => {
     createContactMock.mockResolvedValue("contact_new");
     updateContactMock.mockResolvedValue(undefined);
     removeContactMock.mockResolvedValue(undefined);
-    importContactsMock.mockResolvedValue({ imported: 2, skipped: 0 });
+    importContactsMock.mockResolvedValue({
+      imported: 2,
+      sampleExistingEmails: [],
+      sampleInvalidEmails: [],
+      sampleSuppressedEmails: [],
+      skipped: 0,
+      skippedExisting: 0,
+      skippedInvalid: 0,
+      skippedSuppressed: 0,
+    });
     createSequenceMock.mockResolvedValue("sequence_new");
     updateSequenceMock.mockResolvedValue(undefined);
     activateSequenceMock.mockResolvedValue(undefined);
@@ -583,7 +592,67 @@ describe("OutreachWorkspace", () => {
         }),
       );
 
-      expect(mockShowSuccess).toHaveBeenCalledWith("Imported 2 contacts and skipped 0.");
+      expect(mockShowSuccess).toHaveBeenCalledWith("Imported 2 contacts.");
+    },
+    OUTREACH_FORM_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "previews duplicate and invalid rows while still importing the valid subset",
+    async () => {
+      const user = userEvent.setup();
+      importContactsMock.mockResolvedValue({
+        imported: 1,
+        sampleExistingEmails: [],
+        sampleInvalidEmails: [],
+        sampleSuppressedEmails: [],
+        skipped: 0,
+        skippedExisting: 0,
+        skippedInvalid: 0,
+        skippedSuppressed: 0,
+      });
+
+      render(<OutreachWorkspace />);
+
+      await user.click(screen.getByRole("button", { name: /import csv/i }));
+
+      const dialog = await screen.findByRole("dialog", { name: /import contacts/i });
+      await user.type(
+        within(dialog).getByRole("textbox"),
+        [
+          "email,first name",
+          "jamie@example.com,Jamie",
+          "jamie@example.com,Jamie Duplicate",
+          "bad-email,Bad",
+          ",Missing",
+        ].join("\n"),
+      );
+
+      expect(await within(dialog).findByText(/1 contact ready across 2 columns/i)).toBeVisible();
+      expect(
+        within(dialog).getByText(
+          /3 rows need attention before they can import\. duplicate email rows only keep the first occurrence\./i,
+        ),
+      ).toBeVisible();
+      expect(
+        within(dialog).getByText(
+          /row 3 duplicates jamie@example\.com, so only the first occurrence will be imported\./i,
+        ),
+      ).toBeVisible();
+      expect(
+        within(dialog).getByText(/row 4 has an invalid email address \(bad-email\)\./i),
+      ).toBeVisible();
+      expect(within(dialog).getByText(/row 5 is missing an email address\./i)).toBeVisible();
+
+      await user.click(within(dialog).getByRole("button", { name: /import contacts/i }));
+
+      await waitFor(() =>
+        expect(importContactsMock).toHaveBeenCalledWith({
+          contacts: [{ email: "jamie@example.com", firstName: "Jamie" }],
+        }),
+      );
+
+      expect(mockShowSuccess).toHaveBeenCalledWith("Imported 1 contact.");
     },
     OUTREACH_FORM_TEST_TIMEOUT_MS,
   );

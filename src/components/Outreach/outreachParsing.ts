@@ -8,9 +8,19 @@ export interface OutreachContactImportDraft {
   customFields?: Record<string, string>;
 }
 
+export type OutreachContactImportIssueKind = "duplicate_email" | "invalid_email" | "missing_email";
+
+export interface OutreachContactImportIssue {
+  email?: string;
+  kind: OutreachContactImportIssueKind;
+  message: string;
+  rowNumber: number;
+}
+
 export interface ParsedOutreachContactImport {
   contacts: OutreachContactImportDraft[];
   headers: string[];
+  issues: OutreachContactImportIssue[];
   skippedEmptyRows: number;
 }
 
@@ -42,6 +52,10 @@ function normalizeHeader(header: string): string {
 function sanitizeOptionalString(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+function isValidImportEmail(email: string): boolean {
+  return email.includes("@") && email.includes(".");
 }
 
 function splitDelimitedValues(value: string): string[] {
@@ -245,18 +259,14 @@ function assignKnownContactField(
 function finalizeContactDraft(
   draft: OutreachContactImportDraft,
   customFields: Record<string, string>,
-  rowIndex: number,
-) {
+): OutreachContactImportDraft {
   const email = sanitizeOptionalString(draft.email)?.toLowerCase();
-  if (!email) {
-    throw new Error(`Row ${rowIndex + 2} is missing an email address.`);
-  }
 
   return {
     ...draft,
     company: sanitizeOptionalString(draft.company),
     customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
-    email,
+    email: email ?? "",
     firstName: sanitizeOptionalString(draft.firstName),
     lastName: sanitizeOptionalString(draft.lastName),
     tags: draft.tags && draft.tags.length > 0 ? draft.tags : undefined,
@@ -266,7 +276,6 @@ function finalizeContactDraft(
 
 function parseContactRow(
   row: string[],
-  rowIndex: number,
   headers: string[],
   normalizedHeaders: string[],
 ): OutreachContactImportDraft | null {
@@ -292,7 +301,7 @@ function parseContactRow(
     }
   }
 
-  return finalizeContactDraft(draft, customFields, rowIndex);
+  return finalizeContactDraft(draft, customFields);
 }
 
 /** Parse outreach CSV imports into contact drafts with normalized built-in fields. */
@@ -305,24 +314,55 @@ export function parseOutreachContactImportCsv(text: string): ParsedOutreachConta
   const { headers, normalizedHeaders } = parseCsvHeaders(rows);
 
   const contacts: OutreachContactImportDraft[] = [];
+  const issues: OutreachContactImportIssue[] = [];
   let skippedEmptyRows = 0;
+  const seenEmails = new Set<string>();
 
   for (const [rowIndex, row] of rows.slice(1).entries()) {
-    const contact = parseContactRow(row, rowIndex, headers, normalizedHeaders);
+    const rowNumber = rowIndex + 2;
+    const contact = parseContactRow(row, headers, normalizedHeaders);
     if (!contact) {
       skippedEmptyRows += 1;
       continue;
     }
-    contacts.push(contact);
-  }
 
-  if (contacts.length === 0) {
-    throw new Error("No importable contacts were found in the CSV.");
+    if (!contact.email) {
+      issues.push({
+        kind: "missing_email",
+        message: `Row ${rowNumber} is missing an email address.`,
+        rowNumber,
+      });
+      continue;
+    }
+
+    if (!isValidImportEmail(contact.email)) {
+      issues.push({
+        email: contact.email,
+        kind: "invalid_email",
+        message: `Row ${rowNumber} has an invalid email address (${contact.email}).`,
+        rowNumber,
+      });
+      continue;
+    }
+
+    if (seenEmails.has(contact.email)) {
+      issues.push({
+        email: contact.email,
+        kind: "duplicate_email",
+        message: `Row ${rowNumber} duplicates ${contact.email}, so only the first occurrence will be imported.`,
+        rowNumber,
+      });
+      continue;
+    }
+
+    seenEmails.add(contact.email);
+    contacts.push(contact);
   }
 
   return {
     contacts,
     headers,
+    issues,
     skippedEmptyRows,
   };
 }

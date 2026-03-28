@@ -81,6 +81,9 @@ type SequenceOverview = NonNullable<
 type EnrollmentTimeline = NonNullable<
   FunctionReturnType<typeof outreachApi.analytics.getContactTimeline>
 >;
+type ContactImportPreview = ReturnType<typeof parseOutreachContactImportCsv>;
+type ImportPreviewState = { ok: true; value: ContactImportPreview } | { error: string; ok: false };
+type ContactImportBatchResult = FunctionReturnType<typeof outreachApi.contacts.importBatch>;
 
 interface ContactFormState {
   company: string;
@@ -202,6 +205,10 @@ function formatOutreachDateTime(value?: number): string {
   }
 
   return formatTimestamp(value);
+}
+
+function formatPluralizedCount(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 function getProviderLabel(provider: MailboxListItem["provider"]): string {
@@ -501,9 +508,14 @@ export function OutreachWorkspace() {
       return;
     }
 
+    if (importPreview.value.contacts.length === 0) {
+      showError("No importable contacts found. Fix the rows flagged in the preview first.");
+      return;
+    }
+
     try {
       const result = await importContacts({ contacts: importPreview.value.contacts });
-      showSuccess(`Imported ${result.imported} contacts and skipped ${result.skipped}.`);
+      showSuccess(formatContactImportResultMessage(result));
       setImportText("");
       setIsImportDialogOpen(false);
       setActiveTab("contacts");
@@ -2113,10 +2125,7 @@ function ImportContactsDialogContent({
   onImportTextChange,
   onOpenChange,
 }: {
-  importPreview:
-    | { ok: true; value: ReturnType<typeof parseOutreachContactImportCsv> }
-    | { error: string; ok: false }
-    | undefined;
+  importPreview: ImportPreviewState | undefined;
   importText: string;
   isOpen: boolean;
   onClose: () => void;
@@ -2137,7 +2146,12 @@ function ImportContactsDialogContent({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={onImportContacts} disabled={!importPreview || !importPreview.ok}>
+          <Button
+            onClick={onImportContacts}
+            disabled={
+              !importPreview || !importPreview.ok || importPreview.value.contacts.length === 0
+            }
+          >
             Import contacts
           </Button>
         </Flex>
@@ -2163,14 +2177,7 @@ function ImportContactsDialogContent({
   );
 }
 
-function ImportPreviewAlert({
-  importPreview,
-}: {
-  importPreview:
-    | { ok: true; value: ReturnType<typeof parseOutreachContactImportCsv> }
-    | { error: string; ok: false }
-    | undefined;
-}) {
+function ImportPreviewAlert({ importPreview }: { importPreview: ImportPreviewState | undefined }) {
   if (!importPreview) {
     return null;
   }
@@ -2184,12 +2191,58 @@ function ImportPreviewAlert({
     );
   }
 
+  const issuePreview = importPreview.value.issues.slice(0, 5);
+  const hasIssues = importPreview.value.issues.length > 0;
+  const hasImportableContacts = importPreview.value.contacts.length > 0;
+
   return (
-    <Alert variant="success">
-      <AlertTitle>Ready to import</AlertTitle>
+    <Alert variant={hasIssues ? "warning" : "success"}>
+      <AlertTitle>
+        {hasImportableContacts
+          ? hasIssues
+            ? "Import will skip some rows"
+            : "Ready to import"
+          : "No importable contacts yet"}
+      </AlertTitle>
       <AlertDescription>
-        {importPreview.value.contacts.length} contacts across {importPreview.value.headers.length}{" "}
-        columns. Empty rows skipped: {importPreview.value.skippedEmptyRows}.
+        <Stack gap="sm">
+          <Typography variant="p">
+            {formatPluralizedCount(importPreview.value.contacts.length, "contact")} ready across{" "}
+            {formatPluralizedCount(importPreview.value.headers.length, "column")}. Empty rows
+            skipped: {importPreview.value.skippedEmptyRows}.
+          </Typography>
+          {hasIssues ? (
+            <>
+              <Typography variant="p">
+                {formatPluralizedCount(importPreview.value.issues.length, "row")} need attention
+                before they can import. Duplicate email rows only keep the first occurrence.
+              </Typography>
+              <Stack gap="xs">
+                {issuePreview.map((issue) => (
+                  <Typography
+                    key={`${issue.kind}-${issue.rowNumber}-${issue.email ?? "missing-email"}`}
+                    variant="caption"
+                  >
+                    {issue.message}
+                  </Typography>
+                ))}
+                {importPreview.value.issues.length > issuePreview.length ? (
+                  <Typography variant="caption">
+                    {formatPluralizedCount(
+                      importPreview.value.issues.length - issuePreview.length,
+                      "additional row",
+                    )}{" "}
+                    omitted from this preview.
+                  </Typography>
+                ) : null}
+              </Stack>
+            </>
+          ) : null}
+          <Typography variant="caption">
+            Existing contacts and suppressed emails are rechecked during import before anything is
+            inserted.
+          </Typography>
+        </Stack>
       </AlertDescription>
     </Alert>
   );
@@ -2614,6 +2667,35 @@ function safeParseImportPreview(
       ok: false,
     };
   }
+}
+
+function formatContactImportResultMessage(result: ContactImportBatchResult): string {
+  const parts = [`Imported ${formatPluralizedCount(result.imported, "contact")}.`];
+  const skippedParts: string[] = [];
+
+  if (result.skippedExisting > 0) {
+    skippedParts.push(
+      `${formatPluralizedCount(result.skippedExisting, "contact")} already existed`,
+    );
+  }
+  if (result.skippedSuppressed > 0) {
+    skippedParts.push(
+      `${formatPluralizedCount(result.skippedSuppressed, "contact")} were suppressed`,
+    );
+  }
+  if (result.skippedInvalid > 0) {
+    skippedParts.push(
+      `${formatPluralizedCount(result.skippedInvalid, "contact")} had invalid email addresses`,
+    );
+  }
+
+  if (skippedParts.length > 0) {
+    parts.push(`Skipped ${skippedParts.join(", ")}.`);
+  } else if (result.skipped > 0) {
+    parts.push(`Skipped ${formatPluralizedCount(result.skipped, "contact")}.`);
+  }
+
+  return parts.join(" ");
 }
 
 function updateSequenceDraftStep(
