@@ -188,7 +188,7 @@ describe("outreach OAuth handlers", () => {
     const response = await handleGmailCallbackHandler(
       ctx,
       new Request(`${OUTREACH_GOOGLE_CALLBACK_URL}?code=auth_code&state=google-nonce`, {
-        headers: { Cookie: "outreach-oauth-state=google-nonce" },
+        headers: { Cookie: "outreach-oauth-state-google=google-nonce" },
       }),
     );
 
@@ -242,7 +242,7 @@ describe("outreach OAuth handlers", () => {
     const response = await handleMicrosoftCallbackHandler(
       ctx,
       new Request(`${OUTREACH_MICROSOFT_CALLBACK_URL}?code=auth_code&state=microsoft-nonce`, {
-        headers: { Cookie: "outreach-oauth-state=microsoft-nonce" },
+        headers: { Cookie: "outreach-oauth-state-microsoft=microsoft-nonce" },
       }),
     );
 
@@ -275,7 +275,7 @@ describe("outreach OAuth handlers", () => {
     const response = await handleMicrosoftCallbackHandler(
       ctx,
       new Request(`${OUTREACH_MICROSOFT_CALLBACK_URL}?code=auth_code&state=one-state`, {
-        headers: { Cookie: "outreach-oauth-state=other-state" },
+        headers: { Cookie: "outreach-oauth-state-microsoft=other-state" },
       }),
     );
 
@@ -296,7 +296,7 @@ describe("outreach OAuth handlers", () => {
     const response = await handleMicrosoftCallbackHandler(
       ctx,
       new Request(`${OUTREACH_MICROSOFT_CALLBACK_URL}?code=auth_code&state=microsoft-nonce`, {
-        headers: { Cookie: "outreach-oauth-state=microsoft-nonce" },
+        headers: { Cookie: "outreach-oauth-state-microsoft=microsoft-nonce" },
       }),
     );
 

@@ -61,7 +61,11 @@ class HttpError extends Error {
   }
 }
 
-const OAUTH_STATE_COOKIE_NAME = "outreach-oauth-state";
+const OAUTH_STATE_COOKIE_PREFIX = "outreach-oauth-state";
+
+function getOAuthStateCookieName(provider: OutreachOAuthProvider): string {
+  return `${OAUTH_STATE_COOKIE_PREFIX}-${provider}`;
+}
 const OAUTH_STATE_MAX_AGE_SECONDS = (10 * MINUTE) / SECOND;
 const MAX_OAUTH_PARAM_LENGTH = 2048;
 const MICROSOFT_GRAPH_API_BASE = "https://graph.microsoft.com/v1.0";
@@ -121,12 +125,14 @@ function getOAuthRedirectUri(config: OutreachOAuthConfig): string {
   return `${getConvexSiteUrl()}${config.redirectPath}`;
 }
 
-function buildOAuthStateCookie(state: string): string {
-  return `${OAUTH_STATE_COOKIE_NAME}=${encodeURIComponent(state)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${OAUTH_STATE_MAX_AGE_SECONDS}`;
+function buildOAuthStateCookie(provider: OutreachOAuthProvider, state: string): string {
+  const cookieName = getOAuthStateCookieName(provider);
+  return `${cookieName}=${encodeURIComponent(state)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${OAUTH_STATE_MAX_AGE_SECONDS}`;
 }
 
-function clearOAuthStateCookie(): string {
-  return `${OAUTH_STATE_COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+function clearOAuthStateCookie(provider: OutreachOAuthProvider): string {
+  const cookieName = getOAuthStateCookieName(provider);
+  return `${cookieName}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 }
 
 function safeDecode(value: string | undefined): string | undefined {
@@ -138,11 +144,15 @@ function safeDecode(value: string | undefined): string | undefined {
   }
 }
 
-function getStoredOAuthState(request: Request): string | undefined {
+function getStoredOAuthState(
+  request: Request,
+  provider: OutreachOAuthProvider,
+): string | undefined {
+  const cookieName = getOAuthStateCookieName(provider);
   const cookieHeader = request.headers.get("Cookie");
   const rawCookie = cookieHeader
     ?.split(";")
-    .find((candidate) => candidate.trim().startsWith(`${OAUTH_STATE_COOKIE_NAME}=`))
+    .find((candidate) => candidate.trim().startsWith(`${cookieName}=`))
     ?.split("=")
     .slice(1)
     .join("=")
@@ -223,7 +233,7 @@ function oauthErrorResponse(
     headers: {
       "Content-Type": "text/html",
       "Cache-Control": "no-store, no-cache, must-revalidate",
-      "Set-Cookie": clearOAuthStateCookie(),
+      "Set-Cookie": clearOAuthStateCookie(provider),
     },
   });
 }
@@ -406,7 +416,7 @@ async function initiateMailboxAuthHandler(
     status: 302,
     headers: {
       Location: authUrl.toString(),
-      "Set-Cookie": buildOAuthStateCookie(stateToken),
+      "Set-Cookie": buildOAuthStateCookie(provider, stateToken),
     },
   });
 }
@@ -420,7 +430,7 @@ async function handleMailboxCallbackHandler(
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
-  const storedState = getStoredOAuthState(request);
+  const storedState = getStoredOAuthState(request, provider);
 
   if (hasInvalidOAuthStateInput({ code, error, state, storedState })) {
     return oauthErrorResponse(provider, "Invalid OAuth state. Please try connecting again.");
@@ -495,7 +505,7 @@ async function handleMailboxCallbackHandler(
         "Content-Type": "text/html",
         "Cache-Control": "no-store, no-cache, must-revalidate",
         Pragma: "no-cache",
-        "Set-Cookie": clearOAuthStateCookie(),
+        "Set-Cookie": clearOAuthStateCookie(provider),
       },
     },
   );

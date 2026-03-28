@@ -422,11 +422,15 @@ export async function loadMailboxDeliverabilitySnapshots(
   const snapshots = new Map<Id<"outreachMailboxes">, MailboxDeliverabilitySnapshot>();
 
   for (const [organizationId, organizationMailboxes] of mailboxesByOrganization) {
-    const [sequences, recentEventBatch] = await Promise.all([
-      ctx.db
-        .query("outreachSequences")
-        .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-        .take(BOUNDED_LIST_LIMIT),
+    const [sequencesByMailbox, recentEventBatch] = await Promise.all([
+      Promise.all(
+        organizationMailboxes.map((mailbox) =>
+          ctx.db
+            .query("outreachSequences")
+            .withIndex("by_mailbox", (q) => q.eq("mailboxId", mailbox._id))
+            .take(BOUNDED_LIST_LIMIT),
+        ),
+      ),
       ctx.db
         .query("outreachEvents")
         .withIndex("by_organization_and_created_at", (q) =>
@@ -437,6 +441,8 @@ export async function loadMailboxDeliverabilitySnapshots(
         .order("desc")
         .take(OUTREACH_DELIVERABILITY_EVENT_LIMIT + 1),
     ]);
+
+    const sequences = sequencesByMailbox.flat();
 
     const organizationSnapshots = buildMailboxDeliverabilitySnapshots({
       mailboxes: organizationMailboxes,
