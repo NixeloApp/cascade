@@ -2,58 +2,67 @@
 
 > **Priority:** P1
 > **Status:** Open
-> **Last Updated:** 2026-03-26
+> **Last Updated:** 2026-03-27
 
 ## Why This Is Open
 
-- [ ] The old Tailwind/CVA hotspot pass cleaned the worst feature-local files, but the remaining styling debt has shifted into shared primitives and ratcheted leftovers.
-- [ ] The validator baselines show that the biggest complexity is no longer feature-local `cva()` sprawl. It is oversized shared variant surfaces and a still-large raw Tailwind allowance across many files.
-- [ ] If shared primitives keep accumulating one-off recipes/chromes/variants, we are just moving styling debt upward into the design system instead of removing it.
-- [ ] This is still important, but it is no longer ahead of E2E/screenshot consolidation in backlog order.
+- [ ] Shared primitives accumulate one-off recipes/chromes/variants instead of exposing clean, tight APIs.
+- [ ] Components accept `ReactNode` for props that are always strings, forcing callers to wrap text in `<span>` just to attach test IDs.
+- [ ] shadcn subcomponents leak into feature code inconsistently — Dialog/Sheet/AlertDialog are well-wrapped, but Select/Popover/Command expose raw primitives to 50+ feature files.
+- [ ] The oversized variant baselines (Card 199, Button 108, Typography 71, Badge 24) and raw Tailwind allowance (102 violations, 73 files) remain untouched.
 
-## Shared Primitive Surface Area
+## ReactNode Prop Cleanup
 
-- [ ] Simplify [Card.tsx](/home/mikhail/Desktop/cascade/src/components/ui/Card.tsx).
-  Current problem: the `recipe` axis is massively overloaded at `199` options and acts like a catch-all visual theme switchboard instead of a tight primitive.
-- [ ] Simplify [Button.tsx](/home/mikhail/Desktop/cascade/src/components/ui/Button.tsx).
-  Current problem:
-  - `chrome` (`39`)
-  - `chromeSize` (`37`)
-  - `variant` (`18`)
-  - `size` (`14`)
-  have grown into a broad matrix that is hard to reason about and easy to misuse.
-- [ ] Simplify [Typography.tsx](/home/mikhail/Desktop/cascade/src/components/ui/Typography.tsx).
-  Current problem:
-  - `variant` (`60`)
-  - `color` (`11`)
-  are too broad, which makes route/component authors depend on giant primitive enums instead of clearer semantic wrappers.
-- [ ] Review [Badge.tsx](/home/mikhail/Desktop/cascade/src/components/ui/Badge.tsx) after the first three.
-  It is smaller than the others, but `variant` is still at `24`, above the oversized-axis threshold and likely carrying presentation states that should live elsewhere.
+Text-only props should be `string`, not `ReactNode`. The component should own its own rendering.
 
-## Raw Tailwind Ratchet Follow-Through
+- [ ] **OverviewBand** — `metrics.value` and `metrics.detail` are ReactNode but 100% of callers pass strings/numbers. Change to `string | number`. This eliminates the `<span data-testid>` wrappers in TimeTrackingPage.
+- [ ] **PageHeader** — `description` and `eyebrow` are ReactNode but every caller passes a plain string. Change to `string`. This eliminates the `<span data-testid>` in AnalyticsDashboard.
+- [ ] **CardHeader** — `title` and `description` are ReactNode but ~95% of callers pass strings. Add a `badge` prop slot so EntityCard stops wrapping `title` in `<Flex>`. Change text props to `string`.
+- [ ] **SectionIntro** — `eyebrow`, `title`, `description` are ReactNode but 98% are strings. Change to `string`.
 
-- [ ] Burn down the remaining raw Tailwind baseline instead of treating it as "already handled."
-- [ ] Start with the highest remaining files still above the local residue floor:
-  - [calendar-body-month.tsx](/home/mikhail/Desktop/cascade/src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx) (`4`)
-  - [IssueCard.tsx](/home/mikhail/Desktop/cascade/src/components/IssueDetail/IssueCard.tsx) (`4`)
-  - [GlobalSearch.tsx](/home/mikhail/Desktop/cascade/src/components/GlobalSearch.tsx) (`3`)
-  - [ProductShowcase.tsx](/home/mikhail/Desktop/cascade/src/components/Landing/ProductShowcase.tsx) (`3`)
-  - [RoadmapView.tsx](/home/mikhail/Desktop/cascade/src/components/RoadmapView.tsx) (`3`)
-- [ ] After those, sweep the remaining `1-2` count files by pattern, not by random one-file cleanup.
+**Rule:** Reserve `ReactNode` for `icon`, `actions`, `aside`, `badge`, `trigger`, `children` — things where the caller genuinely owns rendering. For `title`, `description`, `label`, `value` — use `string` and let the component render via `<Typography>`.
 
-## Rules For This Pass
+## shadcn Subcomponent Encapsulation
 
-- [ ] Do not add new shared primitive variants just to avoid touching a local component.
-- [ ] Do not replace feature-local raw Tailwind debt with giant shared primitive enums unless the semantic API is genuinely reusable.
-- [ ] Prefer:
-  - smaller primitive surfaces
-  - clearer semantic wrappers
-  - fewer global recipe knobs
-  over:
-  - ever-growing `variant` / `recipe` / `chrome` option sets
+Follow the Dialog/Sheet/AlertDialog pattern: single wrapper component, all internals hidden.
+
+### Critical (36+ files affected)
+- [ ] **Select** — 36 files each import `Select`, `SelectTrigger`, `SelectContent`, `SelectItem`, `SelectValue` and reimplement their own wrapper. Create a `SelectField` component that takes `options`, `value`, `onChange` and handles all composition internally. Keep subcomponent exports for rare advanced layouts.
+
+### High (14 files affected)
+- [ ] **Popover** — 14 files manually compose `Popover` + `PopoverTrigger` + `PopoverContent`. Create common wrappers for the repeated patterns (reaction picker, inline edit popover, anchor popover).
+
+### Medium (8 files affected)
+- [ ] **Command** — 8 files import raw subcomponents. `CommandDialog` wrapper exists but most usage is raw. Create a `CommandMenu` wrapper that takes `items`, `onSelect`, `emptyMessage`.
+
+### Already good (no action needed)
+- Dialog, Sheet, AlertDialog — exemplary wrapping, 0 leakage
+- DropdownMenu, Tabs — intentional subcomponent exposure, used correctly
+- Tooltip — good convenience wrapper, light advanced usage
+- Table — utility components, no wrapping needed
+
+## Ban Raw HTML Elements in Production Code
+
+- [ ] Ban `<span>` in production `src/` files (not test files). Use `<Typography>` instead — it renders a `<span>` by default and accepts `data-testid`.
+- [ ] Exceptions: hidden markers (`hidden aria-hidden`), drop targets, and other structural DOM that isn't text content.
+- [ ] Add validator rule for this.
+
+## Oversized Variant Surfaces
+
+- [ ] Simplify Card.tsx — `recipe` axis at 199 options, acts as a catch-all theme switchboard.
+- [ ] Simplify Button.tsx — `chrome` (39), `chromeSize` (37), `variant` (18), `size` (14).
+- [ ] Simplify Typography.tsx — `variant` (60), `color` (11).
+- [ ] Review Badge.tsx — `variant` at 24.
+
+## Raw Tailwind Ratchet
+
+- [ ] Burn down the remaining 102 violations across 73 files.
+- [ ] Start with highest-count files: calendar-body-month (4), IssueCard (4), GlobalSearch (3), ProductShowcase (3), RoadmapView (3).
 
 ## Exit Criteria
 
-- [ ] `Card`, `Button`, and `Typography` no longer dominate the oversized-axis baseline the way they do now.
-- [ ] The remaining raw Tailwind baseline is materially smaller and concentrated only in justified edge cases.
-- [ ] Shared primitives read like stable building blocks instead of catch-all escape hatches for every visual surface.
+- [ ] Text-only props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
+- [ ] Select usage drops from 36 direct-import files to near zero via SelectField wrapper.
+- [ ] No raw `<span>` in production code outside documented exceptions.
+- [ ] Card, Button, Typography no longer dominate the oversized-axis baseline.
+- [ ] Raw Tailwind baseline is materially smaller.
