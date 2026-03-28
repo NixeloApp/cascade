@@ -142,9 +142,10 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 
 ## 5. Raw Tailwind Ratchet
 
-- **Current:** 92 violations across 67 files
+- **Current:** 89 violations across 66 files
+- **Landed (2026-03-28):** The `GlobalSearch` surface no longer owns raw padding/sizing class strings directly; its intro, empty-state, and icon-shell chrome now resolve through `src/components/ui/globalSearchSurfaceClassNames.ts`. The raw-tailwind baseline was also ratcheted down to match files that were already cleaned by earlier work (`SignInForm`, `SignUpForm`, `Dashboard`, `DocumentTree`, `MentionInput`, `ProjectSettings/GeneralSettings`, and `RoadmapView`).
 - **End state:** 0 violations
-- **Start with:** calendar-body-month (4), IssueCard (4), GlobalSearch (3), ProductShowcase (3), RoadmapView (3)
+- **Start with:** calendar-body-month (4), IssueCard (4), ProductShowcase (3)
 
 ---
 

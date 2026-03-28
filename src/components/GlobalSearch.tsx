@@ -36,6 +36,12 @@ import {
   Command as CommandMenu,
   type CommandSection,
 } from "./ui/Command";
+import {
+  getGlobalSearchEmptyStateBodyClassName,
+  getGlobalSearchIntroInsetClassName,
+  getGlobalSearchIntroPanelClassName,
+  getGlobalSearchRowIconShellClassName,
+} from "./ui/globalSearchSurfaceClassNames";
 import { KeyboardShortcut, ShortcutHint } from "./ui/KeyboardShortcut";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Tabs, TabsList, TabsTrigger } from "./ui/Tabs";
@@ -60,11 +66,13 @@ type SearchResult =
 function SearchRowIconShell({
   children,
   className,
+  compact = false,
   padding = "none",
   tone = "default",
 }: {
   children: ReactNode;
   className?: string;
+  compact?: boolean;
   padding?: ComponentProps<typeof Card>["padding"];
   tone?: "default" | "muted";
 }) {
@@ -72,11 +80,7 @@ function SearchRowIconShell({
     <Card
       recipe="controlStrip"
       padding={padding}
-      className={cn(
-        "flex size-9 shrink-0 items-center justify-center",
-        tone === "muted" ? "text-ui-text-tertiary" : undefined,
-        className,
-      )}
+      className={cn(getGlobalSearchRowIconShellClassName({ compact, tone }), className)}
     >
       {children}
     </Card>
@@ -111,19 +115,21 @@ function createSearchListRow({
       <Flex align="start" gap="md" className="w-full">
         {icon}
         <FlexItem flex="1" className="min-w-0">
-          {meta ? (
-            <Flex align="center" gap="sm" wrap>
-              {meta}
-            </Flex>
-          ) : null}
-          <Typography variant="label" as="p" className={cn(meta ? "mt-1.5 truncate" : "truncate")}>
-            {title}
-          </Typography>
-          {description ? (
-            <Typography variant={meta ? "meta" : "caption"} className="mt-1 line-clamp-2">
-              {description}
+          <Stack gap={meta ? "xs" : "none"} className="min-w-0">
+            {meta ? (
+              <Flex align="center" gap="sm" wrap>
+                {meta}
+              </Flex>
+            ) : null}
+            <Typography variant="label" as="p" className="truncate">
+              {title}
             </Typography>
-          ) : null}
+            {description ? (
+              <Typography variant={meta ? "meta" : "caption"} className="line-clamp-2">
+                {description}
+              </Typography>
+            ) : null}
+          </Stack>
         </FlexItem>
         {trailing ? (
           <Flex align={trailingAlign} className="self-stretch shrink-0">
@@ -163,8 +169,10 @@ function SearchResultGlyph({ type }: { type: SearchResult["type"] }) {
 
 function SearchIntroPanel() {
   return (
-    <div className="px-2 pt-2">
-      <div className={cn(getCardRecipeClassName("commandIntro"), "p-3")}>
+    <div className={getGlobalSearchIntroInsetClassName()}>
+      <div
+        className={cn(getCardRecipeClassName("commandIntro"), getGlobalSearchIntroPanelClassName())}
+      >
         <Flex direction="column" gap="md">
           <div>
             <Badge variant="brand" shape="pill">
@@ -224,7 +232,7 @@ function SearchEmptyState({
       data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
       className="text-ui-text-secondary"
     >
-      <div className="p-4">
+      <div className={getGlobalSearchEmptyStateBodyClassName()}>
         <Flex direction="column" align="center" gap="md">
           <SearchRowIconShell padding="xs" tone="muted">
             <Icon icon={Search} size="xl" />
@@ -687,7 +695,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         className={getFramedSearchTriggerButtonClassName()}
       >
         <Flex align="center" gap="sm" className="min-w-0">
-          <SearchRowIconShell className="border-ui-border/60 sm:size-7" tone="muted">
+          <SearchRowIconShell className="border-ui-border/60" compact tone="muted">
             <Icon icon={Search} size="sm" />
           </SearchRowIconShell>
           <Typography variant="small" color="secondary" className="hidden truncate sm:block">
