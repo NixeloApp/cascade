@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internalQuery } from "../_generated/server";
-import { BOUNDED_LIST_LIMIT } from "./boundedQueries";
+import { BOUNDED_LIST_LIMIT, safeCollect } from "./boundedQueries";
 import { notDeleted } from "./softDeleteHelpers";
 
 type ProjectNotificationEvent =
@@ -29,11 +29,14 @@ export async function listProjectNotificationUserIds(
     return [];
   }
 
-  const members = await ctx.db
-    .query("projectMembers")
-    .withIndex("by_project", (q) => q.eq("projectId", projectId))
-    .filter(notDeleted)
-    .take(BOUNDED_LIST_LIMIT);
+  const members = await safeCollect(
+    ctx.db
+      .query("projectMembers")
+      .withIndex("by_project", (q) => q.eq("projectId", projectId))
+      .filter(notDeleted),
+    BOUNDED_LIST_LIMIT,
+    "listProjectNotificationUserIds",
+  );
 
   const userIds = new Set<Id<"users">>([project.createdBy]);
   for (const member of members) {

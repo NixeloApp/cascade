@@ -34,18 +34,25 @@ export async function updateMailboxRuntimeTokens(
     accessToken: string;
     expiresAt: number;
     mailboxId: Id<"outreachMailboxes">;
+    refreshToken?: string;
   },
 ) {
   const encryptedTokens = await encryptMailboxTokensForStorage({
     accessToken: args.accessToken,
-    refreshToken: undefined,
+    refreshToken: args.refreshToken,
   });
 
-  await ctx.db.patch(args.mailboxId, {
+  const patch: Record<string, unknown> = {
     accessToken: encryptedTokens.accessToken,
     expiresAt: args.expiresAt,
     updatedAt: Date.now(),
-  });
+  };
+
+  if (encryptedTokens.refreshToken) {
+    patch.refreshToken = encryptedTokens.refreshToken;
+  }
+
+  await ctx.db.patch(args.mailboxId, patch);
 }
 
 /** Advance the mailbox health-check watermark after a successful poll. */

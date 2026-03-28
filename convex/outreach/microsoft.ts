@@ -32,7 +32,11 @@ async function refreshAccessToken(
   refreshToken: string,
   clientId: string,
   clientSecret: string,
-): Promise<{ accessToken: string; expiresAt: number } | null> {
+): Promise<{
+  accessToken: string;
+  expiresAt: number;
+  refreshToken?: string;
+} | null> {
   try {
     const response = await fetchWithTimeout(
       MICROSOFT_TOKEN_URL,
@@ -51,10 +55,15 @@ async function refreshAccessToken(
 
     if (!response.ok) return null;
 
-    const data = (await response.json()) as { access_token: string; expires_in: number };
+    const data = (await response.json()) as {
+      access_token: string;
+      expires_in: number;
+      refresh_token?: string;
+    };
     return {
       accessToken: data.access_token,
       expiresAt: Date.now() + data.expires_in * 1000,
+      refreshToken: data.refresh_token,
     };
   } catch (error) {
     logger.warn("Microsoft OAuth token refresh failed", {
@@ -176,6 +185,7 @@ export const sendViaMicrosoftAction = internalAction({
         mailboxId: args.mailboxId,
         accessToken: refreshed.accessToken,
         expiresAt: refreshed.expiresAt,
+        refreshToken: refreshed.refreshToken,
       });
 
       accessToken = refreshed.accessToken;
@@ -204,6 +214,7 @@ export const updateMailboxTokens = internalMutation({
     mailboxId: v.id("outreachMailboxes"),
     accessToken: v.string(),
     expiresAt: v.number(),
+    refreshToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => await updateMailboxRuntimeTokens(ctx, args),
 });
