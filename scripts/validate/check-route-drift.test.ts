@@ -3,6 +3,7 @@ import {
   analyzeRouteDrift,
   extractFileRouteDefinitions,
   extractRouteConfigEntries,
+  findRouteTestPlacementIssues,
   normalizePublicRoutePath,
   run,
 } from "./check-route-drift.js";
@@ -80,6 +81,21 @@ describe("check-route-drift", () => {
       {
         path: "/$orgSlug/reports",
         files: ["src/routes/reports.tsx"],
+      },
+    ]);
+  });
+
+  it("flags route tests that live directly inside src/routes", () => {
+    expect(
+      findRouteTestPlacementIssues([
+        "src/routes/__tests__/signup.test.tsx",
+        "src/routes/_auth/_app/$orgSlug/__tests__/calendar.test.tsx",
+        "src/routes/-invite.$token.test.tsx",
+      ]),
+    ).toEqual([
+      {
+        filePath: "src/routes/-invite.$token.test.tsx",
+        message: "Route tests must live in an adjacent __tests__/ directory.",
       },
     ]);
   });

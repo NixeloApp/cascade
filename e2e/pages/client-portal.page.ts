@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 import { isLocatorVisible } from "../utils/locator-state";
 import { waitForScreenshotReady } from "../utils/wait-helpers";
 
-export class PortalPage {
+export class ClientPortalPage {
   readonly page: Page;
   readonly heading: Locator;
   readonly portalTokenReceived: Locator;

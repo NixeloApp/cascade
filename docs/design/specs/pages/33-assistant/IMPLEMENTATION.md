@@ -38,7 +38,7 @@
 
 | File | Coverage |
 |------|----------|
-| `src/routes/_auth/_app/$orgSlug/-assistant.test.tsx` | overview rendering, no-activity overview state, conversations tab, empty conversations, loading override |
+| `src/routes/_auth/_app/$orgSlug/__tests__/assistant.test.tsx` | overview rendering, no-activity overview state, conversations tab, empty conversations, loading override |
 
 ## Notes
 

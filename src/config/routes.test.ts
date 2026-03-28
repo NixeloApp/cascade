@@ -45,10 +45,10 @@ describe("ROUTES configuration", () => {
   });
 
   describe("parameterized routes", () => {
-    it("should build invite route with token", () => {
-      expect(ROUTES.invite.path).toBe("/invite/$token");
-      expect(ROUTES.invite.build("abc123")).toBe("/invite/abc123");
-      expect(ROUTES.invite.build("special-token-xyz")).toBe("/invite/special-token-xyz");
+    it("should build join route with token", () => {
+      expect(ROUTES.join.path).toBe("/join/$token");
+      expect(ROUTES.join.build("abc123")).toBe("/join/abc123");
+      expect(ROUTES.join.build("special-token-xyz")).toBe("/join/special-token-xyz");
     });
 
     it("should build verify-email route with email query", () => {
@@ -64,11 +64,11 @@ describe("ROUTES configuration", () => {
       );
     });
 
-    it("should build portal routes with token and projectId", () => {
-      expect(ROUTES.portal.entry.path).toBe("/portal/$token");
-      expect(ROUTES.portal.entry.build("abc123")).toBe("/portal/abc123");
-      expect(ROUTES.portal.project.path).toBe("/portal/$token/projects/$projectId");
-      expect(ROUTES.portal.project.build("abc123", "project-42")).toBe(
+    it("should build client portal routes with token and projectId", () => {
+      expect(ROUTES.clientPortal.entry.path).toBe("/portal/$token");
+      expect(ROUTES.clientPortal.entry.build("abc123")).toBe("/portal/abc123");
+      expect(ROUTES.clientPortal.project.path).toBe("/portal/$token/projects/$projectId");
+      expect(ROUTES.clientPortal.project.build("abc123", "project-42")).toBe(
         "/portal/abc123/projects/project-42",
       );
     });
@@ -278,9 +278,9 @@ describe("ROUTES configuration", () => {
     it("path patterns should use $ prefix for parameters", () => {
       // All paths with parameters should use $paramName format
       expect(ROUTES.dashboard.path).toMatch(/\$orgSlug/);
-      expect(ROUTES.invite.path).toMatch(/\$token/);
-      expect(ROUTES.portal.entry.path).toMatch(/\$token/);
-      expect(ROUTES.portal.project.path).toMatch(/\$projectId/);
+      expect(ROUTES.join.path).toMatch(/\$token/);
+      expect(ROUTES.clientPortal.entry.path).toMatch(/\$token/);
+      expect(ROUTES.clientPortal.project.path).toMatch(/\$projectId/);
       expect(ROUTES.projects.board.path).toMatch(/\$key/);
       expect(ROUTES.workspaces.detail.path).toMatch(/\$workspaceSlug/);
       expect(ROUTES.workspaces.teams.detail.path).toMatch(/\$teamSlug/);
@@ -292,7 +292,7 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.dashboard.build("test")).toMatch(/^\//);
       expect(ROUTES.verifyEmail.build("test@example.com")).toMatch(/^\//);
       expect(ROUTES.unsubscribe.build("token")).toMatch(/^\//);
-      expect(ROUTES.portal.entry.build("token")).toMatch(/^\//);
+      expect(ROUTES.clientPortal.entry.build("token")).toMatch(/^\//);
       expect(ROUTES.projects.board.build("org", "key")).toMatch(/^\//);
       expect(ROUTES.workspaces.teams.detail.build("org", "ws", "team")).toMatch(/^\//);
     });

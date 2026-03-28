@@ -1,6 +1,6 @@
 # Invite Page - Current State
 
-> **Route**: `/invite/:token`
+> **Route**: `/join/:token`
 > **Status**: IMPLEMENTED and reviewed across pending plus terminal invite states
 > **Last Updated**: 2026-03-26
 > **Spec Contract**: This file is intentionally hyper-comprehensive. ASCII diagrams, explicit structure walkthroughs, and high-detail notes are deliberate and should not be reduced to a short summary.
@@ -21,7 +21,7 @@
 
 ## Current Read
 
-- The invite route handles:
+- The join route handles:
   - loading
   - invalid token
   - expired invite
@@ -63,7 +63,7 @@ No significant route-specific visual gaps remain on the current branch. Future w
 
 ## Source Files
 
-- `src/routes/invite.$token.tsx`
+- `src/routes/join.$token.tsx`
 - `src/components/Auth/SignInForm.tsx`
 - `convex/invites.ts`
 

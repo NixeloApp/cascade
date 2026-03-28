@@ -5,12 +5,12 @@ import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { waitForScreenshotReady } from "../utils/wait-helpers";
 
-type InviteRouteState = "loading" | "invalid" | "expired" | "revoked" | "accepted" | "pending";
+type JoinRouteState = "loading" | "invalid" | "expired" | "revoked" | "accepted" | "pending";
 
 /**
- * Page object for the public invite route: /invite/$token
+ * Page object for the public join route: /join/$token
  */
-export class InvitePage {
+export class JoinPage {
   readonly page: Page;
   readonly stateScreen: Locator;
   readonly loadingState: Locator;
@@ -24,8 +24,8 @@ export class InvitePage {
 
   constructor(page: Page) {
     this.page = page;
-    this.stateScreen = page.getByTestId(TEST_IDS.INVITE.STATE_SCREEN);
-    this.loadingState = page.getByTestId(TEST_IDS.INVITE.LOADING);
+    this.stateScreen = page.getByTestId(TEST_IDS.JOIN.STATE_SCREEN);
+    this.loadingState = page.getByTestId(TEST_IDS.JOIN.LOADING);
     this.invalidHeading = page.getByRole("heading", { name: /invalid invitation/i });
     this.expiredHeading = page.getByRole("heading", { name: /invitation expired/i });
     this.revokedHeading = page.getByRole("heading", { name: /invitation revoked/i });
@@ -40,7 +40,7 @@ export class InvitePage {
   }
 
   async goto(token: string, waitUntil: "commit" | "domcontentloaded" | "load" = "load") {
-    await this.page.goto(ROUTES.invite.build(token), { waitUntil });
+    await this.page.goto(ROUTES.join.build(token), { waitUntil });
   }
 
   async expectInvalidInvitation() {
@@ -56,7 +56,7 @@ export class InvitePage {
   }
 
   async expectLoadingOrInvalid() {
-    await expect.poll(async () => this.getInviteRouteState()).not.toBe("pending");
+    await expect.poll(async () => this.getJoinRouteState()).not.toBe("pending");
   }
 
   async expectInvalidInvitationBranding() {
@@ -112,7 +112,7 @@ export class InvitePage {
     await waitForScreenshotReady(this.page);
   }
 
-  private async getInviteRouteState(): Promise<InviteRouteState> {
+  private async getJoinRouteState(): Promise<JoinRouteState> {
     if (await isLocatorVisible(this.invalidHeading)) {
       return "invalid";
     }

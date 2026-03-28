@@ -159,6 +159,19 @@ export function analyzeRouteDrift({
   };
 }
 
+export function findRouteTestPlacementIssues(routeFiles) {
+  return routeFiles
+    .map((filePath) => filePath.replaceAll("\\", "/"))
+    .filter((filePath) => filePath.startsWith("src/routes/"))
+    .filter((filePath) => /\.test\.tsx?$/.test(filePath))
+    .filter((filePath) => !filePath.includes("/__tests__/"))
+    .sort()
+    .map((filePath) => ({
+      filePath,
+      message: "Route tests must live in an adjacent __tests__/ directory.",
+    }));
+}
+
 function loadRouteDefinitions() {
   const files = walkDir(ROUTES_DIR, {
     extensions: new Set([".ts", ".tsx"]),
@@ -173,13 +186,22 @@ function loadRouteDefinitions() {
   );
 }
 
+function loadRouteFiles() {
+  return walkDir(ROUTES_DIR, {
+    extensions: new Set([".ts", ".tsx"]),
+    skip: new Set(["node_modules", "dist", ".next", ".git"]),
+  }).map((filePath) => relPath(filePath));
+}
+
 export function run() {
   const routeConfigEntries = extractRouteConfigEntries(fs.readFileSync(ROUTES_CONFIG_PATH, "utf8"));
+  const routeFiles = loadRouteFiles();
   const routeDefinitions = loadRouteDefinitions();
   const { missingConfigPaths, unexpectedPublicPaths } = analyzeRouteDrift({
     routeConfigEntries,
     routeDefinitions,
   });
+  const routeTestPlacementIssues = findRouteTestPlacementIssues(routeFiles);
 
   const messages = [];
 
@@ -197,14 +219,22 @@ export function run() {
     }
   }
 
-  const errorCount = missingConfigPaths.length + unexpectedPublicPaths.length;
+  if (routeTestPlacementIssues.length > 0) {
+    messages.push(`  ${c.red}ERROR${c.reset} Route tests outside __tests__ directories:`);
+    for (const issue of routeTestPlacementIssues) {
+      messages.push(`    ${issue.filePath} - ${issue.message}`);
+    }
+  }
+
+  const errorCount =
+    missingConfigPaths.length + unexpectedPublicPaths.length + routeTestPlacementIssues.length;
 
   return createValidatorResult({
     errors: errorCount,
     detail:
       errorCount > 0
         ? `${errorCount} route drift finding${errorCount === 1 ? "" : "s"}`
-        : "shared ROUTES and file routes aligned",
+        : "shared ROUTES, file routes, and route test placement aligned",
     messages,
   });
 }

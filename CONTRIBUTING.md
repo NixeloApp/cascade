@@ -105,6 +105,7 @@ nixelo/
 - Keep components under 200 lines
 - Extract reusable logic to hooks
 - Use `@/` import alias for `src/`
+- Route modules belong directly in `src/routes/`. Route tests belong in adjacent `__tests__/` directories, not as dash-prefixed files inside the routed tree.
 
 ## Backend Guidelines
 

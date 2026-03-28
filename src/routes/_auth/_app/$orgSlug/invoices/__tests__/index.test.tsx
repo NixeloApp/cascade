@@ -8,7 +8,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
-import { getInvoiceEmptyStateConfig, InvoicesListPage } from "./index";
+import { getInvoiceEmptyStateConfig, InvoicesListPage } from "../index";
 
 type InvoiceListItem = Doc<"invoices"> & {
   client: { company?: string; name: string } | null;

@@ -10,7 +10,7 @@ import {
   DocumentsListPage,
   filterDocumentsForWorkspace,
   getDocumentsWorkspaceOverview,
-} from "./index";
+} from "../index";
 
 const mockNavigate = vi.fn();
 const mockShowError = vi.fn();

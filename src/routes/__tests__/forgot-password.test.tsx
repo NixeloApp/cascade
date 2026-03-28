@@ -51,7 +51,7 @@ vi.mock("@/components/ui/Typography", () => ({
   Typography: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }));
 
-import { ForgotPasswordRoute } from "./forgot-password";
+import { ForgotPasswordRoute } from "../forgot-password";
 
 describe("forgot password route", () => {
   beforeEach(() => {

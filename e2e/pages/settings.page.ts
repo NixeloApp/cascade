@@ -215,12 +215,12 @@ export class SettingsPage extends BasePage {
 
     // Invite user form (it's an inline Card, not a dialog)
     this.inviteUserModal = page.getByRole("heading", { name: /send invitation/i });
-    this.inviteEmailInput = page.getByTestId(TEST_IDS.INVITE.EMAIL_INPUT);
+    this.inviteEmailInput = page.getByTestId(TEST_IDS.INVITES.EMAIL_INPUT);
     this.inviteUserForm = this.inviteEmailInput.locator("xpath=ancestor::form");
-    this.inviteRoleSelect = page.getByTestId(TEST_IDS.INVITE.ROLE_SELECT);
-    this.sendInviteButton = page.getByTestId(TEST_IDS.INVITE.SEND_BUTTON);
+    this.inviteRoleSelect = page.getByTestId(TEST_IDS.INVITES.ROLE_SELECT);
+    this.sendInviteButton = page.getByTestId(TEST_IDS.INVITES.SEND_BUTTON);
     this.cancelInviteButton = this.inviteUserForm.getByRole("button", { name: /^cancel$/i });
-    this.inviteTable = page.getByTestId(TEST_IDS.INVITE.TABLE);
+    this.inviteTable = page.getByTestId(TEST_IDS.INVITES.TABLE);
 
     // Admin - Organization Settings
     this.organizationSettingsHeading = page.getByRole("heading", {
@@ -610,7 +610,7 @@ export class SettingsPage extends BasePage {
   }
 
   getInviteRow(email: string) {
-    return this.inviteTable.getByTestId(TEST_IDS.INVITE.ROW).filter({ hasText: email });
+    return this.inviteTable.getByTestId(TEST_IDS.INVITES.ROW).filter({ hasText: email });
   }
 
   async expectInviteVisible(email: string) {

@@ -689,10 +689,10 @@ export const TEST_IDS = {
   },
 
   // ============================================================
-  // Invites (User Management)
+  // User Invites (Admin Settings)
   // ============================================================
 
-  INVITE: {
+  INVITES: {
     /** @see src/components/Admin/UserManagement.tsx - Email input in invite form */
     EMAIL_INPUT: "invite-email-input",
     /** @see src/components/Admin/UserManagement.tsx - Role select in invite form */
@@ -703,10 +703,17 @@ export const TEST_IDS = {
     TABLE: "invite-table",
     /** @see src/components/Admin/UserManagement.tsx - Invite row in table */
     ROW: "invite-row",
-    /** @see src/routes/invite.$token.tsx - Public invite state screen wrapper */
-    STATE_SCREEN: "invite-state-screen",
-    /** @see src/routes/invite.$token.tsx - Loading state */
-    LOADING: "invite-loading",
+  },
+
+  // ============================================================
+  // Public Join Flow
+  // ============================================================
+
+  JOIN: {
+    /** @see src/routes/join.$token.tsx - Public join state screen wrapper */
+    STATE_SCREEN: "join-state-screen",
+    /** @see src/routes/join.$token.tsx - Loading state */
+    LOADING: "join-loading",
   },
 
   // ============================================================

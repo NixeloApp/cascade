@@ -37,7 +37,7 @@ vi.mock("@/components/Auth", () => ({
   SignUpForm: mockSignUpForm,
 }));
 
-import { SignUpRoute } from "./signup";
+import { SignUpRoute } from "../signup";
 
 describe("signup route", () => {
   beforeEach(() => {

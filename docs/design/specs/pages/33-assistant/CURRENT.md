@@ -103,7 +103,7 @@ AppSidebar / Org shell
 | File | Purpose |
 |------|---------|
 | `src/routes/_auth/_app/$orgSlug/assistant.tsx` | Route UI, loading shell, snapshot copy, overview/conversations tabs |
-| `src/routes/_auth/_app/$orgSlug/-assistant.test.tsx` | Route behavior coverage |
+| `src/routes/_auth/_app/$orgSlug/__tests__/assistant.test.tsx` | Route behavior coverage |
 | `src/lib/test-ids.ts` | Stable assistant route hooks |
 | `e2e/pages/assistant.page.ts` | Assistant page object |
 | `e2e/screenshot-lib/interactive-captures.ts` | Assistant screenshot states |

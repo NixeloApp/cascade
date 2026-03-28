@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSeededDocumentCreation } from "@/hooks/useSeededDocumentCreation";
 import { showError, showSuccess } from "@/lib/toast";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
-import { DocumentTemplatesPage } from "./templates";
+import { DocumentTemplatesPage } from "../templates";
 
 const mockDocumentTemplatesManager = vi.fn();
 

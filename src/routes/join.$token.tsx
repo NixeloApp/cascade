@@ -1,7 +1,7 @@
 /**
- * Invite Token Page
+ * Join Link Page
  *
- * Landing page for organization/workspace invite links.
+ * Landing page for organization/workspace join links.
  * Validates invite token and allows users to accept invitations.
  * Handles both authenticated and unauthenticated user flows.
  */
@@ -12,8 +12,10 @@ import { Authenticated, Unauthenticated } from "convex/react";
 import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
 import { AuthRedirect, SignInForm } from "@/components/Auth";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardSection } from "@/components/ui/CardSection";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
@@ -25,25 +27,25 @@ import { AlertCircle, CheckCircle, Clock, Loader2 } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
-type InvitePreviewState = "accepted" | "expired" | "revoked";
+type JoinPreviewState = "accepted" | "expired" | "revoked";
 
-interface InviteSearch {
-  previewState?: InvitePreviewState;
+interface JoinSearch {
+  previewState?: JoinPreviewState;
 }
 
-interface InviteTerminalInvite {
+interface JoinTerminalInvite {
   inviterName: string;
   isExpired: boolean;
   status: string;
 }
 
 const SCREENSHOT_PREVIEW_TOKEN = "screenshot-test-token";
-const INVITE_PREVIEW_INVITER_NAME = "Emily Chen";
+const JOIN_PREVIEW_INVITER_NAME = "Emily Chen";
 
-export const Route = createFileRoute("/invite/$token")({
-  component: InviteRoute,
-  ssr: false, // No SSR needed for invite page
-  validateSearch: (search: Record<string, unknown>): InviteSearch => ({
+export const Route = createFileRoute("/join/$token")({
+  component: JoinRoute,
+  ssr: false,
+  validateSearch: (search: Record<string, unknown>): JoinSearch => ({
     previewState:
       search.previewState === "accepted" ||
       search.previewState === "expired" ||
@@ -53,7 +55,7 @@ export const Route = createFileRoute("/invite/$token")({
   }),
 });
 
-interface InviteStateScreenProps {
+interface JoinStateScreenProps {
   actionLabel: string;
   body: ReactNode;
   icon: ReactNode;
@@ -62,25 +64,25 @@ interface InviteStateScreenProps {
   title: string;
 }
 
-function InviteBrandHeader() {
+function JoinBrandHeader() {
   return (
     <header className="p-6 flex items-center justify-center">
       <Flex align="center" gap="sm">
-        <Flex align="center" justify="center" className="size-8 rounded-lg bg-brand-main">
+        <IconCircle size="sm" variant="brand">
           <Typography as="span" variant="label" className="text-ui-bg">
             N
           </Typography>
-        </Flex>
+        </IconCircle>
         <Typography variant="large">Nixelo</Typography>
       </Flex>
     </header>
   );
 }
 
-function InviteStandaloneShell({ children }: { children: ReactNode }) {
+function JoinStandaloneShell({ children }: { children: ReactNode }) {
   return (
     <Flex direction="column" className="min-h-screen bg-ui-bg-secondary">
-      <InviteBrandHeader />
+      <JoinBrandHeader />
       <FlexItem as="main" flex="1" className="flex items-center justify-center p-6 pt-0">
         <div className="max-w-md w-full">{children}</div>
       </FlexItem>
@@ -88,7 +90,7 @@ function InviteStandaloneShell({ children }: { children: ReactNode }) {
   );
 }
 
-function InviteSurfaceCard({
+function JoinSurfaceCard({
   children,
   ...props
 }: { children: ReactNode } & Omit<ComponentProps<typeof Card>, "children">) {
@@ -99,17 +101,17 @@ function InviteSurfaceCard({
   );
 }
 
-function InviteStateScreen({
+function JoinStateScreen({
   actionLabel,
   body,
   icon,
   iconVariant,
   onAction,
   title,
-}: InviteStateScreenProps) {
+}: JoinStateScreenProps) {
   return (
-    <InviteStandaloneShell>
-      <InviteSurfaceCard data-testid={TEST_IDS.INVITE.STATE_SCREEN}>
+    <JoinStandaloneShell>
+      <JoinSurfaceCard data-testid={TEST_IDS.JOIN.STATE_SCREEN}>
         <Stack align="center" gap="md" className="text-center">
           <IconCircle size="xl" variant={iconVariant}>
             {icon}
@@ -124,24 +126,21 @@ function InviteStateScreen({
             {actionLabel}
           </Button>
         </Stack>
-      </InviteSurfaceCard>
-    </InviteStandaloneShell>
+      </JoinSurfaceCard>
+    </JoinStandaloneShell>
   );
 }
 
-function renderInvitePreviewState(
-  previewState: InvitePreviewState | undefined,
-  onAction: () => void,
-) {
+function renderJoinPreviewState(previewState: JoinPreviewState | undefined, onAction: () => void) {
   if (previewState === "expired") {
     return (
-      <InviteStateScreen
+      <JoinStateScreen
         actionLabel="Go to Home"
         body={
           <>
             This invitation has expired. Please contact{" "}
             <Typography as="strong" variant="strong">
-              {INVITE_PREVIEW_INVITER_NAME}
+              {JOIN_PREVIEW_INVITER_NAME}
             </Typography>{" "}
             to send a new invitation.
           </>
@@ -156,7 +155,7 @@ function renderInvitePreviewState(
 
   if (previewState === "accepted") {
     return (
-      <InviteStateScreen
+      <JoinStateScreen
         actionLabel="Go to Dashboard"
         body="This invitation has already been accepted. You can sign in to access your account."
         icon={<Icon icon={CheckCircle} size="xl" tone="success" />}
@@ -169,7 +168,7 @@ function renderInvitePreviewState(
 
   if (previewState === "revoked") {
     return (
-      <InviteStateScreen
+      <JoinStateScreen
         actionLabel="Go to Home"
         body="This invitation has been revoked. Please contact the team administrator if you believe this is a mistake."
         icon={<Icon icon={AlertCircle} size="xl" tone="error" />}
@@ -183,10 +182,10 @@ function renderInvitePreviewState(
   return null;
 }
 
-function renderInviteTerminalState(invite: InviteTerminalInvite | null, onAction: () => void) {
+function renderJoinTerminalState(invite: JoinTerminalInvite | null, onAction: () => void) {
   if (invite === null) {
     return (
-      <InviteStateScreen
+      <JoinStateScreen
         actionLabel="Go to Home"
         body="This invitation link is invalid or has been removed. Please contact the person who invited you for a new link."
         icon={<Icon icon={AlertCircle} size="xl" tone="error" />}
@@ -199,7 +198,7 @@ function renderInviteTerminalState(invite: InviteTerminalInvite | null, onAction
 
   if (invite.isExpired) {
     return (
-      <InviteStateScreen
+      <JoinStateScreen
         actionLabel="Go to Home"
         body={
           <>
@@ -220,7 +219,7 @@ function renderInviteTerminalState(invite: InviteTerminalInvite | null, onAction
 
   if (invite.status === "accepted") {
     return (
-      <InviteStateScreen
+      <JoinStateScreen
         actionLabel="Go to Dashboard"
         body="This invitation has already been accepted. You can sign in to access your account."
         icon={<Icon icon={CheckCircle} size="xl" tone="success" />}
@@ -233,7 +232,7 @@ function renderInviteTerminalState(invite: InviteTerminalInvite | null, onAction
 
   if (invite.status === "revoked") {
     return (
-      <InviteStateScreen
+      <JoinStateScreen
         actionLabel="Go to Home"
         body="This invitation has been revoked. Please contact the team administrator if you believe this is a mistake."
         icon={<Icon icon={AlertCircle} size="xl" tone="error" />}
@@ -247,7 +246,7 @@ function renderInviteTerminalState(invite: InviteTerminalInvite | null, onAction
   return null;
 }
 
-export function InviteRoute() {
+export function JoinRoute() {
   const { token } = Route.useParams();
   const search = Route.useSearch();
   const navigate = useNavigate();
@@ -293,23 +292,23 @@ export function InviteRoute() {
   // Loading state
   if (invite === undefined) {
     return (
-      <InviteStandaloneShell>
-        <InviteSurfaceCard data-testid={TEST_IDS.INVITE.LOADING}>
+      <JoinStandaloneShell>
+        <JoinSurfaceCard data-testid={TEST_IDS.JOIN.LOADING}>
           <Stack align="center" gap="lg" className="text-center">
             <Icon icon={Loader2} size="xl" tone="brand" animation="spin" />
             <Typography className="text-ui-text-secondary">Loading invitation...</Typography>
           </Stack>
-        </InviteSurfaceCard>
-      </InviteStandaloneShell>
+        </JoinSurfaceCard>
+      </JoinStandaloneShell>
     );
   }
 
-  const previewScreen = renderInvitePreviewState(invitePreviewState, goToHome);
+  const previewScreen = renderJoinPreviewState(invitePreviewState, goToHome);
   if (previewScreen) {
     return previewScreen;
   }
 
-  const terminalScreen = renderInviteTerminalState(invite, goToHome);
+  const terminalScreen = renderJoinTerminalState(invite, goToHome);
   if (terminalScreen) {
     return terminalScreen;
   }
@@ -323,8 +322,8 @@ export function InviteRoute() {
 
   // Valid pending invite - show different UI based on auth state
   return (
-    <InviteStandaloneShell>
-      <InviteSurfaceCard>
+    <JoinStandaloneShell>
+      <JoinSurfaceCard>
         <Stack gap="sm" className="text-center mb-6">
           <Typography variant="h3">You're Invited!</Typography>
           <Typography variant="p" color="secondary">
@@ -344,7 +343,7 @@ export function InviteRoute() {
           </Typography>
         </Stack>
 
-        <Stack gap="sm" className="rounded-2xl bg-ui-bg-secondary p-4 mb-6">
+        <CardSection size="md" className="mb-6">
           <Flex justify="between" align="center" className="text-sm">
             <Typography variant="muted">Invited email</Typography>
             <Typography variant="small">{invite.email}</Typography>
@@ -370,18 +369,15 @@ export function InviteRoute() {
               </Typography>
             </Flex>
           )}
-        </Stack>
+        </CardSection>
 
         {invite.status === "pending" && (
           <Authenticated>
             <div className="space-y-4">
               {acceptError && (
-                <Typography
-                  variant="small"
-                  className="p-3 rounded-lg bg-status-error-bg text-status-error-text"
-                >
-                  {acceptError}
-                </Typography>
+                <Alert variant="error">
+                  <Typography variant="small">{acceptError}</Typography>
+                </Alert>
               )}
               <Button
                 variant="primary"
@@ -420,7 +416,7 @@ export function InviteRoute() {
             </div>
           </Unauthenticated>
         )}
-      </InviteSurfaceCard>
-    </InviteStandaloneShell>
+      </JoinSurfaceCard>
+    </JoinStandaloneShell>
   );
 }

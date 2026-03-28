@@ -182,13 +182,13 @@ In the **User Management** interface, you can:
 
 **Invite Acceptance Flow:**
 
-1. User clicks invite link → navigates to `/invite/:token`
+1. User clicks invite link → navigates to `/join/:token`
 2. Page displays invite details (inviter, role, organization)
 3. User signs up or signs in (if already has account)
 4. After authentication, invite is automatically accepted
 5. User is redirected to the organization dashboard via `PostAuthRedirect`
 
-**Route:** `src/routes/invite.$token.tsx`
+**Route:** `src/routes/join.$token.tsx`
 
 **Components used:**
 
@@ -272,7 +272,7 @@ await useMutation(api.invites.acceptInvite, {
 
 ## Email Integration (TODO)
 
-The `/invite/:token` page is implemented. To enable automatic invitation emails:
+The `/join/:token` page is implemented. To enable automatic invitation emails:
 
 1. Configure Resend (already in dependencies):
 
@@ -285,7 +285,7 @@ The `/invite/:token` page is implemented. To enable automatic invitation emails:
 
 3. Update `sendInvite` mutation in `convex/invites.ts` to send email:
    ```typescript
-   const inviteLink = `${process.env.SITE_URL}/invite/${token}`;
+   const inviteLink = `${process.env.SITE_URL}/join/${token}`;
    await sendInviteEmail(args.email, inviteLink, invite.role);
    ```
 

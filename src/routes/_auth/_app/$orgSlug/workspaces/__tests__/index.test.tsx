@@ -8,7 +8,7 @@ import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
-import { WorkspacesList } from "./index";
+import { WorkspacesList } from "../index";
 
 const mockNavigate = vi.fn();
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);

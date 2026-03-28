@@ -14,7 +14,7 @@ import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { SECOND } from "@/lib/time";
 import { render, screen, waitFor } from "@/test/custom-render";
-import { NotificationsPage } from "./notifications";
+import { NotificationsPage } from "../notifications";
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => () => ({}),

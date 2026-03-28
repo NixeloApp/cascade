@@ -9,7 +9,7 @@ import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, within } from "@/test/custom-render";
-import { MyIssuesBoardPage } from "./my-issues";
+import { MyIssuesBoardPage } from "../my-issues";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: ReactNode }) => <a href="/">{children}</a>,

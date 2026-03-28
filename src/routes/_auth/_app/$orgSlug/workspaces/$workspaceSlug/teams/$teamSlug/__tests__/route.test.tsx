@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { render, screen } from "@/test/custom-render";
-import { TeamLayout } from "./route";
+import { TeamLayout } from "../route";
 
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 const mockUseOrganization = vi.mocked(useOrganization);

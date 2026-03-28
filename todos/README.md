@@ -1,12 +1,12 @@
 # Nixelo Todo Index
 
-> **Last Updated:** 2026-03-27
+> **Last Updated:** 2026-03-28
 
 ## Quick Wins
 
 - [ ] [e2e-test-id-cleanup.md](./e2e-test-id-cleanup.md) — Recording card title targeting and sprint test ID halfway pattern. Two small fixes.
 - [ ] [offline-pwa.md](./offline-pwa.md) — Move serviceWorker banners from raw DOM to React. Fix AdminTab/DocumentSidebar getElementById. Push/worker verification.
-- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — Route/API naming ambiguity, kill `-*.test.tsx` convention, file-route readability.
+- [x] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — Route/API naming ambiguity, kill `-*.test.tsx` convention, file-route readability.
 
 ## Core (Components & Validators)
 

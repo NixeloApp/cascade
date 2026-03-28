@@ -89,7 +89,7 @@ reviewable states rather than hidden assumptions.
 | File | Purpose |
 |------|---------|
 | `src/routes/_auth/_app/$orgSlug/my-issues.tsx` | Route composition, filters, grouping, and empty-state handling |
-| `src/routes/_auth/_app/$orgSlug/-my-issues.test.tsx` | Route-level coverage for empty, filtered-empty, grouping, and loading states |
+| `src/routes/_auth/_app/$orgSlug/__tests__/my-issues.test.tsx` | Route-level coverage for empty, filtered-empty, grouping, and loading states |
 | `e2e/pages/my-issues.page.ts` | My-issues page object for screenshot interactions |
 | `e2e/screenshot-lib/interactive-captures.ts` | Filter-active, filtered-empty, and loading captures |
 | `convex/dashboard.ts` | Paginated assigned-issues query plus server-backed group counts |

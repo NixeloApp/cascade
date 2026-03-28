@@ -124,7 +124,7 @@ Validation expectations:
 | `/signup` | 🟢 SPEC'D | `03-signup/` | Same pattern as signin |
 | `/forgot-password` | 🟢 SPEC'D | `04-forgot-password/` | Minimal, same pattern as signin |
 | `/verify-email` | 🟢 SPEC'D | `14-verify-email/` | Check your inbox page, resend countdown |
-| `/invite/:code` | 🟢 SPEC'D | `15-invite/` | Auth-dependent invite acceptance |
+| `/join/:code` | 🟢 SPEC'D | `15-invite/` | Auth-dependent invite acceptance |
 | `/unsubscribe` | 🟢 SPEC'D | `16-unsubscribe/` | One-click unsubscribe, minimal |
 
 ### App Pages - Workspace Level

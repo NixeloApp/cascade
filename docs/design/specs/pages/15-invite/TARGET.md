@@ -1,6 +1,6 @@
 # Invite Page - Target State
 
-> **Route**: `/invite/:token`
+> **Route**: `/join/:token`
 > **Reference**: Linear, Notion invite flows
 > **Goal**: Clean, professional, no card wrapper
 

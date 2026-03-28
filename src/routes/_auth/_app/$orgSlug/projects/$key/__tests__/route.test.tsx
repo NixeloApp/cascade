@@ -5,7 +5,7 @@ import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useProjectByKey } from "@/hooks/useProjectByKey";
 import { render, screen } from "@/test/custom-render";
-import { ProjectLayout } from "./route";
+import { ProjectLayout } from "../route";
 
 const { mockNavigate, mockUseLocation } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),

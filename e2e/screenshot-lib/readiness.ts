@@ -12,18 +12,18 @@ import { AnalyticsPage } from "../pages/analytics.page";
 import { AuthPage } from "../pages/auth.page";
 import { BacklogPage } from "../pages/backlog.page";
 import { CalendarPage } from "../pages/calendar.page";
+import { ClientPortalPage } from "../pages/client-portal.page";
 import { DashboardPage } from "../pages/dashboard.page";
 import { DocumentsPage } from "../pages/documents.page";
 import { InboxPage } from "../pages/inbox.page";
-import { InvitePage } from "../pages/invite.page";
 import { IssueDetailPage } from "../pages/issue-detail.page";
 import { IssuesPage } from "../pages/issues.page";
+import { JoinPage } from "../pages/join.page";
 import { LandingPage } from "../pages/landing.page";
 import { MeetingsPage } from "../pages/meetings.page";
 import { MyIssuesPage } from "../pages/my-issues.page";
 import { NotificationsPage } from "../pages/notifications.page";
 import { OutreachPage } from "../pages/outreach.page";
-import { PortalPage } from "../pages/portal.page";
 import { ProjectsPage } from "../pages/projects.page";
 import { RoadmapPage } from "../pages/roadmap.page";
 import { SettingsPage } from "../pages/settings.page";
@@ -97,7 +97,7 @@ export async function waitForPublicPageReady(page: Page, name: string): Promise<
     name === "invite-revoked" ||
     name === "invite-accepted"
   ) {
-    await new InvitePage(page).waitForCaptureReady(name);
+    await new JoinPage(page).waitForCaptureReady(name);
     return;
   }
 
@@ -107,7 +107,7 @@ export async function waitForPublicPageReady(page: Page, name: string): Promise<
   }
 
   if (name === "portal" || name === "portal-project") {
-    await new PortalPage(page).waitForCaptureReady(name);
+    await new ClientPortalPage(page).waitForCaptureReady(name);
   }
 }
 

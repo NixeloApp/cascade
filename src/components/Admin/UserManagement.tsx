@@ -123,7 +123,7 @@ function InviteFormDialog({
             form="invite-form"
             isLoading={isSubmitting}
             disabled={!email.trim()}
-            data-testid={TEST_IDS.INVITE.SEND_BUTTON}
+            data-testid={TEST_IDS.INVITES.SEND_BUTTON}
           >
             Send Invitation
           </Button>
@@ -142,7 +142,7 @@ function InviteFormDialog({
               placeholder="user@example.com"
               required
               autoFocus
-              data-testid={TEST_IDS.INVITE.EMAIL_INPUT}
+              data-testid={TEST_IDS.INVITES.EMAIL_INPUT}
             />
           </Stack>
 
@@ -152,7 +152,7 @@ function InviteFormDialog({
               value={role}
               onValueChange={(value) => onRoleChange(value as "user" | "superAdmin")}
             >
-              <SelectTrigger data-testid={TEST_IDS.INVITE.ROLE_SELECT}>
+              <SelectTrigger data-testid={TEST_IDS.INVITES.ROLE_SELECT}>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
@@ -243,7 +243,7 @@ function InvitationsPanel({
             }}
           />
         ) : (
-          <Table aria-label="User invitations" data-testid={TEST_IDS.INVITE.TABLE}>
+          <Table aria-label="User invitations" data-testid={TEST_IDS.INVITES.TABLE}>
             <TableHeader>
               <TableRow>
                 <TableHead className="whitespace-nowrap">Email</TableHead>
@@ -257,7 +257,7 @@ function InvitationsPanel({
             </TableHeader>
             <TableBody>
               {invites.map((invite) => (
-                <TableRow key={invite._id} data-testid={TEST_IDS.INVITE.ROW}>
+                <TableRow key={invite._id} data-testid={TEST_IDS.INVITES.ROW}>
                   <TableCell className="whitespace-nowrap">
                     <Typography variant="small">{invite.email}</Typography>
                   </TableCell>

@@ -46,9 +46,9 @@ vi.mock("@/lib/toast", () => ({
   showSuccess: vi.fn(),
 }));
 
-import { InviteRoute } from "./invite.$token";
+import { JoinRoute } from "../join.$token";
 
-describe("invite route", () => {
+describe("join route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseParams.mockReturnValue({ token: "invite-test-token" });
@@ -59,7 +59,7 @@ describe("invite route", () => {
   it("renders the branded loading state while the invite query is unresolved", () => {
     mockUsePublicQuery.mockReturnValue(undefined);
 
-    render(<InviteRoute />);
+    render(<JoinRoute />);
 
     expect(screen.getByText("Nixelo")).toBeInTheDocument();
     expect(screen.getByText("Loading invitation...")).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe("invite route", () => {
   it("renders the invalid invitation branch inside the invite shell", () => {
     mockUsePublicQuery.mockReturnValue(null);
 
-    render(<InviteRoute />);
+    render(<JoinRoute />);
 
     expect(screen.getByText("Nixelo")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Invalid Invitation" })).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe("invite route", () => {
     mockUseSearch.mockReturnValue({ previewState: "expired" });
     mockUsePublicQuery.mockReturnValue(null);
 
-    render(<InviteRoute />);
+    render(<JoinRoute />);
 
     expect(screen.getByRole("heading", { name: "Invitation Expired" })).toBeInTheDocument();
     expect(screen.getByText("Emily Chen")).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe("invite route", () => {
     mockUseSearch.mockReturnValue({ previewState: "revoked" });
     mockUsePublicQuery.mockReturnValue(null);
 
-    render(<InviteRoute />);
+    render(<JoinRoute />);
 
     expect(screen.getByRole("heading", { name: "Invitation Revoked" })).toBeInTheDocument();
     expect(screen.getByText(/team administrator/i)).toBeInTheDocument();
@@ -103,7 +103,7 @@ describe("invite route", () => {
     mockUseSearch.mockReturnValue({ previewState: "accepted" });
     mockUsePublicQuery.mockReturnValue(null);
 
-    render(<InviteRoute />);
+    render(<JoinRoute />);
 
     expect(screen.getByRole("heading", { name: "Already Accepted" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Go to Dashboard" })).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe("invite route", () => {
       status: "pending",
     });
 
-    render(<InviteRoute />);
+    render(<JoinRoute />);
 
     expect(screen.getByRole("heading", { name: "You're Invited!" })).toBeInTheDocument();
     expect(screen.getAllByText("Demo Project")).not.toHaveLength(0);

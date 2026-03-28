@@ -30,11 +30,11 @@ export const ROUTES = {
     build: (token?: string) =>
       token ? `/unsubscribe?token=${encodeURIComponent(token)}` : "/unsubscribe",
   },
-  invite: {
-    path: "/invite/$token" as const,
-    build: (token: string) => `/invite/${token}`,
+  join: {
+    path: "/join/$token" as const,
+    build: (token: string) => `/join/${token}`,
   },
-  portal: {
+  clientPortal: {
     entry: {
       path: "/portal/$token" as const,
       build: (token: string) => `/portal/${token}`,

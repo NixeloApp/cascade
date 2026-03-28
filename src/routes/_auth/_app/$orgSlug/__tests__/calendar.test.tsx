@@ -8,7 +8,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
-import { OrganizationCalendarPage } from "./calendar";
+import { OrganizationCalendarPage } from "../calendar";
 
 const mockNavigate = vi.fn();
 const mockUseSearch =

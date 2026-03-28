@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
-import { AssistantPage } from "./assistant";
+import { AssistantPage } from "../assistant";
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => () => ({}),

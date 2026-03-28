@@ -18,7 +18,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
-import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as BoardSlugRouteImport } from './routes/board.$slug'
 import { Route as AuthOnboardingRouteImport } from './routes/_auth/onboarding'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/_app/route'
@@ -123,9 +123,9 @@ const PortalTokenRoute = PortalTokenRouteImport.update({
   path: '/portal/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InviteTokenRoute = InviteTokenRouteImport.update({
-  id: '/invite/$token',
-  path: '/invite/$token',
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BoardSlugRoute = BoardSlugRouteImport.update({
@@ -481,7 +481,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/board/$slug': typeof BoardSlugRoute
-  '/invite/$token': typeof InviteTokenRoute
+  '/join/$token': typeof JoinTokenRoute
   '/portal/$token': typeof PortalTokenRouteWithChildren
   '/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
   '/app': typeof AuthAppAppRoute
@@ -550,7 +550,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/board/$slug': typeof BoardSlugRoute
-  '/invite/$token': typeof InviteTokenRoute
+  '/join/$token': typeof JoinTokenRoute
   '/portal/$token': typeof PortalTokenRouteWithChildren
   '/app': typeof AuthAppAppRoute
   '/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
@@ -618,7 +618,7 @@ export interface FileRoutesById {
   '/_auth/_app': typeof AuthAppRouteRouteWithChildren
   '/_auth/onboarding': typeof AuthOnboardingRoute
   '/board/$slug': typeof BoardSlugRoute
-  '/invite/$token': typeof InviteTokenRoute
+  '/join/$token': typeof JoinTokenRoute
   '/portal/$token': typeof PortalTokenRouteWithChildren
   '/_auth/_app/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
   '/_auth/_app/app': typeof AuthAppAppRoute
@@ -689,7 +689,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/onboarding'
     | '/board/$slug'
-    | '/invite/$token'
+    | '/join/$token'
     | '/portal/$token'
     | '/$orgSlug'
     | '/app'
@@ -758,7 +758,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/onboarding'
     | '/board/$slug'
-    | '/invite/$token'
+    | '/join/$token'
     | '/portal/$token'
     | '/app'
     | '/$orgSlug/add-ons'
@@ -825,7 +825,7 @@ export interface FileRouteTypes {
     | '/_auth/_app'
     | '/_auth/onboarding'
     | '/board/$slug'
-    | '/invite/$token'
+    | '/join/$token'
     | '/portal/$token'
     | '/_auth/_app/$orgSlug'
     | '/_auth/_app/app'
@@ -895,7 +895,7 @@ export interface RootRouteChildren {
   Verify2faRoute: typeof Verify2faRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   BoardSlugRoute: typeof BoardSlugRoute
-  InviteTokenRoute: typeof InviteTokenRoute
+  JoinTokenRoute: typeof JoinTokenRoute
   PortalTokenRoute: typeof PortalTokenRouteWithChildren
 }
 
@@ -964,11 +964,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/invite/$token': {
-      id: '/invite/$token'
-      path: '/invite/$token'
-      fullPath: '/invite/$token'
-      preLoaderRoute: typeof InviteTokenRouteImport
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/board/$slug': {
@@ -1613,7 +1613,7 @@ const rootRouteChildren: RootRouteChildren = {
   Verify2faRoute: Verify2faRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   BoardSlugRoute: BoardSlugRoute,
-  InviteTokenRoute: InviteTokenRoute,
+  JoinTokenRoute: JoinTokenRoute,
   PortalTokenRoute: PortalTokenRouteWithChildren,
 }
 export const routeTree = rootRouteImport

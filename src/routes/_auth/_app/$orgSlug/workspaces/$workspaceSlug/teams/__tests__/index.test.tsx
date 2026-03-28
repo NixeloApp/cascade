@@ -6,8 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
-import { useWorkspaceLayout } from "../route";
-import { TeamsList } from "./index";
+import { useWorkspaceLayout } from "../../route";
+import { TeamsList } from "../index";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
@@ -41,7 +41,7 @@ vi.mock("@/hooks/useOrgContext", () => ({
   useOrganization: vi.fn(),
 }));
 
-vi.mock("../route", () => ({
+vi.mock("../../route", () => ({
   useWorkspaceLayout: vi.fn(),
 }));
 
