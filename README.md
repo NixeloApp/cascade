@@ -119,7 +119,7 @@ Open http://localhost:5555
 | Backend | [Convex](https://convex.dev) (real-time serverless) |
 | Editor | Plate.js (Slate-based) |
 | Auth | Convex Auth (Email, Google) |
-| Linter | Biome + 53 custom validators |
+| Linter | Biome + 61 custom validators |
 | Testing | Vitest (unit), Playwright (E2E) |
 
 ## Project Structure
@@ -134,7 +134,7 @@ nixelo/
 │   └── config/routes.ts  # Route definitions
 ├── convex/               # Backend (schema, mutations, queries, crons)
 ├── e2e/                  # Playwright E2E tests + page objects
-├── scripts/validate/     # 53 custom validators
+├── scripts/validate/     # 61 custom validators
 ├── docs/                 # ai/, architecture/, convex/, design/, guides/, research/
 └── todos/                # Task tracking
 ```
@@ -147,7 +147,7 @@ pnpm run static       # Typecheck + lint + validate + screenshot manifest checks
 pnpm run fixme        # Auto-fix lint/format + typecheck
 pnpm run biome        # Lint with auto-fix
 pnpm run typecheck    # TypeScript check
-pnpm run validate     # 53 custom validators
+pnpm run validate     # 61 custom validators
 pnpm test             # Unit tests (Vitest)
 pnpm e2e:ui           # E2E tests (Playwright, interactive)
 pnpm screenshots      # Capture visual baselines
