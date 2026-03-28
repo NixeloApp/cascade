@@ -15,6 +15,7 @@ vi.mock("@convex/_generated/api", () => ({
   api: {
     outreach: {
       analytics: {
+        getContactPerformance: "outreach.analytics.getContactPerformance",
         getContactTimeline: "outreach.analytics.getContactTimeline",
         getMailboxHealth: "outreach.analytics.getMailboxHealth",
         getOrganizationOverview: "outreach.analytics.getOrganizationOverview",
@@ -253,6 +254,57 @@ const timeline = {
   ],
 };
 
+const contactPerformance = {
+  coverage: {
+    contactLimit: 250,
+    enrollmentLimit: 750,
+    isPartial: false,
+    recentEventLimit: 500,
+  },
+  rows: [
+    {
+      bounced: 0,
+      clicked: 1,
+      company: "Acme",
+      contactId: "contact_1",
+      email: "alex@example.com",
+      lastActivityAt: 1_700_000_100_000,
+      lastActivityType: "clicked" as const,
+      latestEnrollmentId: "enrollment_1",
+      latestSequenceId: "sequence_1",
+      latestSequenceName: "Founder follow-up",
+      latestStatus: "active" as const,
+      liveEnrollmentCount: 1,
+      name: "Alex Stone",
+      openRate: 30,
+      opened: 3,
+      replied: 1,
+      replyRate: 10,
+      sent: 10,
+      totalEnrollmentCount: 1,
+      unsubscribed: 0,
+    },
+  ],
+};
+
+type TestContact = typeof contact;
+type TestEnrollment = Omit<typeof enrollment, "status"> & {
+  status: "active" | "completed" | "paused" | "replied" | "bounced" | "unsubscribed";
+};
+type TestEvent = Omit<(typeof timeline.events)[number], "metadata" | "type"> & {
+  metadata: { linkUrl?: string; replyContent?: string };
+  type: "sent" | "opened" | "clicked" | "replied" | "bounced" | "unsubscribed";
+};
+type TestSequence = typeof sequence;
+type TestSequenceFunnel = typeof sequenceFunnel;
+type TestSequenceStats = typeof sequenceStats;
+type TestTimeline = {
+  enrollment: TestEnrollment;
+  events: TestEvent[];
+};
+
+const typedTimeline: TestTimeline = timeline;
+
 function buildMutationHookResult(mockProcedure: Mock<MutationProcedure>) {
   return {
     mutate: createMutationMock(mockProcedure),
@@ -266,6 +318,7 @@ function getDefaultQueryResult(query: unknown, args: unknown) {
     [outreachApi.contacts.list, [contact]],
     [outreachApi.sequences.list, [sequence]],
     [outreachApi.mailboxes.list, [mailbox]],
+    [outreachApi.analytics.getContactPerformance, contactPerformance],
     [outreachApi.analytics.getMailboxHealth, [mailboxHealth]],
     [outreachApi.analytics.getOrganizationOverview, organizationOverview],
     [outreachApi.enrollments.listBySequence, args === "skip" ? undefined : [enrollment]],
@@ -314,6 +367,17 @@ function mockMailboxConnectionQueryState() {
     if (query === outreachApi.analytics.getMailboxHealth) {
       return [];
     }
+    if (query === outreachApi.analytics.getContactPerformance) {
+      return {
+        coverage: {
+          contactLimit: 250,
+          enrollmentLimit: 750,
+          isPartial: false,
+          recentEventLimit: 500,
+        },
+        rows: [],
+      };
+    }
     if (query === outreachApi.analytics.getOrganizationOverview) {
       return getEmptyWorkspaceOverview();
     }
@@ -323,6 +387,117 @@ function mockMailboxConnectionQueryState() {
 
     return undefined;
   });
+}
+
+function getAnalyticsDrilldownQueryResult(
+  fixture: {
+    secondContact: TestContact;
+    secondEnrollment: TestEnrollment;
+    secondSequence: TestSequence;
+    secondSequenceFunnel: TestSequenceFunnel;
+    secondSequenceStats: TestSequenceStats;
+    secondTimeline: TestTimeline;
+  },
+  query: unknown,
+  args: unknown,
+) {
+  const baseResults = new Map<unknown, unknown>([
+    [outreachApi.contacts.list, [contact, fixture.secondContact]],
+    [outreachApi.sequences.list, [sequence, fixture.secondSequence]],
+    [outreachApi.mailboxes.list, [mailbox]],
+    [outreachApi.analytics.getMailboxHealth, [mailboxHealth]],
+    [outreachApi.analytics.getOrganizationOverview, organizationOverview],
+    [
+      outreachApi.analytics.getContactPerformance,
+      {
+        coverage: {
+          contactLimit: 250,
+          enrollmentLimit: 750,
+          isPartial: true,
+          recentEventLimit: 500,
+        },
+        rows: [
+          {
+            ...contactPerformance.rows[0],
+            contactId: "contact_2",
+            company: "Orbit",
+            email: "taylor@example.com",
+            latestEnrollmentId: "enrollment_2",
+            latestSequenceId: "sequence_2",
+            latestSequenceName: "Expansion follow-up",
+            latestStatus: "replied" as const,
+            name: "Taylor North",
+            replied: 1,
+            replyRate: 25,
+            sent: 4,
+          },
+        ],
+      },
+    ],
+    [api.users.getCurrent, { _id: TEST_USER_ID, email: "alex@example.com" }],
+  ]);
+
+  if (query === outreachApi.enrollments.listBySequence) {
+    return getSequenceScopedQueryResult(
+      args,
+      [enrollment],
+      [fixture.secondEnrollment],
+      "sequence_2",
+      "sequenceId",
+    );
+  }
+  if (query === outreachApi.analytics.getSequenceStats) {
+    return getSequenceScopedQueryResult(
+      args,
+      sequenceStats,
+      fixture.secondSequenceStats,
+      "sequence_2",
+      "sequenceId",
+    );
+  }
+  if (query === outreachApi.analytics.getSequenceFunnel) {
+    return getSequenceScopedQueryResult(
+      args,
+      sequenceFunnel,
+      fixture.secondSequenceFunnel,
+      "sequence_2",
+      "sequenceId",
+    );
+  }
+  if (query === outreachApi.analytics.getContactTimeline) {
+    return getSequenceScopedQueryResult(
+      args,
+      typedTimeline,
+      fixture.secondTimeline,
+      "enrollment_2",
+      "enrollmentId",
+    );
+  }
+
+  const result = baseResults.get(query);
+  if (result === undefined && !baseResults.has(query)) {
+    throw new Error(`Unexpected query hook: ${String(query)}`);
+  }
+  return result;
+}
+
+function getSequenceScopedQueryResult<T>(
+  args: unknown,
+  defaultValue: T,
+  alternateValue: T,
+  alternateId: string,
+  key: "enrollmentId" | "sequenceId",
+): T | undefined {
+  if (args === "skip") {
+    return undefined;
+  }
+
+  if (typeof args === "object" && args !== null && key in args) {
+    const queryArgs = args as Record<"enrollmentId" | "sequenceId", unknown>;
+    return queryArgs[key] === alternateId ? alternateValue : defaultValue;
+  }
+
+  return defaultValue;
 }
 
 describe("OutreachWorkspace", () => {
@@ -653,6 +828,106 @@ describe("OutreachWorkspace", () => {
       );
 
       expect(mockShowSuccess).toHaveBeenCalledWith("Imported 1 contact.");
+    },
+    OUTREACH_FORM_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "renders the new analytics surfaces and lets contact engagement jump into drilldowns",
+    async () => {
+      const user = userEvent.setup();
+
+      const secondContact = {
+        ...contact,
+        _id: "contact_2",
+        company: "Orbit",
+        email: "taylor@example.com",
+        firstName: "Taylor",
+        lastName: "North",
+      };
+      const secondSequence = {
+        ...sequence,
+        _id: "sequence_2",
+        name: "Expansion follow-up",
+        stats: { bounced: 0, enrolled: 1, opened: 1, replied: 1, sent: 4, unsubscribed: 0 },
+      };
+      const secondEnrollment = {
+        ...enrollment,
+        _id: "enrollment_2",
+        contactId: "contact_2",
+        sequenceId: "sequence_2",
+        status: "replied" as const,
+      };
+      const secondSequenceStats = {
+        ...sequenceStats,
+        name: "Expansion follow-up",
+        rates: {
+          bounceRate: 0,
+          openRate: 25,
+          replyRate: 25,
+          unsubscribeRate: 0,
+        },
+        stats: { bounced: 0, enrolled: 1, opened: 1, replied: 1, sent: 4, unsubscribed: 0 },
+      };
+      const secondSequenceFunnel = [
+        {
+          bounced: 0,
+          clicked: 0,
+          delayDays: 0,
+          opened: 1,
+          replied: 1,
+          sent: 4,
+          step: 0,
+          subject: "Budget follow-up",
+          unsubscribed: 0,
+        },
+      ];
+      const secondTimeline = {
+        enrollment: secondEnrollment,
+        events: [
+          {
+            ...timeline.events[0],
+            _id: "event_2",
+            contactId: "contact_2",
+            enrollmentId: "enrollment_2",
+            metadata: { replyContent: "Let's talk next week" },
+            sequenceId: "sequence_2",
+            type: "replied" as const,
+          },
+        ],
+      };
+
+      mockUseAuthenticatedQuery.mockImplementation((query, args) =>
+        getAnalyticsDrilldownQueryResult(
+          {
+            secondContact,
+            secondEnrollment,
+            secondSequence,
+            secondSequenceFunnel,
+            secondSequenceStats,
+            secondTimeline,
+          },
+          query,
+          args,
+        ),
+      );
+
+      render(<OutreachWorkspace />);
+
+      await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_ANALYTICS));
+
+      expect(
+        await screen.findByTestId(TEST_IDS.OUTREACH.ANALYTICS_SEQUENCE_LEADERBOARD),
+      ).toBeInTheDocument();
+      const contactCard = await screen.findByTestId(TEST_IDS.OUTREACH.ANALYTICS_CONTACT_ENGAGEMENT);
+      expect(within(contactCard).getByText(/analytics window is capped/i)).toBeVisible();
+      expect(within(contactCard).getByText("Taylor North")).toBeVisible();
+
+      await user.click(within(contactCard).getByRole("button", { name: "Inspect" }));
+
+      expect(await screen.findByText("Budget follow-up")).toBeVisible();
+      expect(await screen.findByText("taylor@example.com")).toBeVisible();
+      expect(await screen.findByText(/let's talk next week/i)).toBeVisible();
     },
     OUTREACH_FORM_TEST_TIMEOUT_MS,
   );

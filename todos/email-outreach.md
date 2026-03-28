@@ -7,7 +7,7 @@
 ## Remaining Work
 
 - [x] Contact import dedup UX and richer validation feedback for larger CSV uploads.
-- [ ] Better per-contact and per-sequence analytics views beyond the current operational dashboard.
+- [x] Better per-contact and per-sequence analytics views beyond the current operational dashboard.
 - [ ] Outlook / Microsoft 365 mailbox connection and send path, if multi-provider outreach stays in scope.
 - [ ] Deliverability monitoring and mailbox warmup strategy if outbound volume increases.
 

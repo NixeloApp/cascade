@@ -1010,6 +1010,10 @@ export const TEST_IDS = {
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ANALYTICS_SECTION: "outreach-analytics-section",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ANALYTICS_SEQUENCE_LEADERBOARD: "outreach-analytics-sequence-leaderboard",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ANALYTICS_CONTACT_ENGAGEMENT: "outreach-analytics-contact-engagement",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
     CONTACT_DIALOG: "outreach-contact-dialog",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     IMPORT_DIALOG: "outreach-import-dialog",

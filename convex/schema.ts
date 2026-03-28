@@ -1959,6 +1959,7 @@ const applicationTables = {
     .index("by_sequence", ["sequenceId"])
     .index("by_type", ["type"])
     .index("by_organization_type", ["organizationId", "type"])
+    .index("by_organization_and_created_at", ["organizationId", "createdAt"])
     .index("by_created_at", ["createdAt"]),
 
   // Click tracking URL mapping — linkId → original URL

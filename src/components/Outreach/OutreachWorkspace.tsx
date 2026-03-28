@@ -78,6 +78,10 @@ type MailboxHealthListItem = FunctionReturnType<
 type SequenceOverview = NonNullable<
   FunctionReturnType<typeof outreachApi.analytics.getOrganizationOverview>
 >;
+type ContactPerformanceSummary = FunctionReturnType<
+  typeof outreachApi.analytics.getContactPerformance
+>;
+type ContactPerformanceRow = ContactPerformanceSummary["rows"][number];
 type EnrollmentTimeline = NonNullable<
   FunctionReturnType<typeof outreachApi.analytics.getContactTimeline>
 >;
@@ -224,7 +228,10 @@ function getStatusBadgeVariant(
       return "success";
     case "paused":
       return "warning";
+    case "opened":
+    case "clicked":
     case "replied":
+    case "sent":
       return "info";
     case "bounced":
     case "unsubscribed":
@@ -310,6 +317,7 @@ export function OutreachWorkspace() {
     outreachApi.analytics.getOrganizationOverview,
     {},
   );
+  const contactPerformance = useAuthenticatedQuery(outreachApi.analytics.getContactPerformance, {});
   const enrollments = useAuthenticatedQuery(
     outreachApi.enrollments.listBySequence,
     selectedSequenceId ? { sequenceId: selectedSequenceId } : "skip",
@@ -359,7 +367,8 @@ export function OutreachWorkspace() {
     sequences === undefined ||
     mailboxes === undefined ||
     mailboxHealth === undefined ||
-    organizationOverview === undefined
+    organizationOverview === undefined ||
+    contactPerformance === undefined
   ) {
     return (
       <PageLayout>
@@ -701,7 +710,9 @@ export function OutreachWorkspace() {
 
           <AnalyticsTabContent
             contactTimeline={contactTimeline}
+            contactPerformance={contactPerformance}
             contacts={contacts}
+            mailboxes={mailboxes}
             selectedEnrollmentId={selectedEnrollmentId}
             selectedSequence={selectedSequence}
             selectedSequenceEnrollments={selectedSequenceEnrollments}
@@ -1770,7 +1781,9 @@ function MailboxCard({
 
 function AnalyticsTabContent({
   contactTimeline,
+  contactPerformance,
   contacts,
+  mailboxes,
   selectedEnrollmentId,
   selectedSequence,
   selectedSequenceEnrollments,
@@ -1784,7 +1797,9 @@ function AnalyticsTabContent({
   onSelectSequence,
 }: {
   contactTimeline: FunctionReturnType<typeof outreachApi.analytics.getContactTimeline> | undefined;
+  contactPerformance: ContactPerformanceSummary;
   contacts: ContactListItem[];
+  mailboxes: MailboxListItem[];
   selectedEnrollmentId?: Id<"outreachEnrollments">;
   selectedSequence?: SequenceListItem;
   selectedSequenceEnrollments: EnrollmentListItem[];
@@ -1799,25 +1814,46 @@ function AnalyticsTabContent({
 }) {
   return (
     <TabsContent value="analytics" data-testid={TEST_IDS.OUTREACH.ANALYTICS_SECTION}>
-      <Grid cols={1} colsLg={12} gap="lg">
-        <SequenceAnalyticsCard
-          selectedSequence={selectedSequence}
-          selectedSequenceId={selectedSequenceId}
-          sequenceFunnel={sequenceFunnel}
-          sequenceStats={sequenceStats}
-          sequences={sequences}
-          onSelectSequence={onSelectSequence}
-        />
-        <RecipientTimelineCard
-          contactTimeline={contactTimeline}
-          contacts={contacts}
-          selectedEnrollmentId={selectedEnrollmentId}
-          selectedSequenceEnrollments={selectedSequenceEnrollments ?? []}
-          selectedTimelineContact={selectedTimelineContact}
-          selectedTimelineEnrollment={selectedTimelineEnrollment}
-          onSelectEnrollment={onSelectEnrollment}
-        />
-      </Grid>
+      <Stack gap="lg">
+        <Grid cols={1} colsLg={12} gap="lg">
+          <SequenceAnalyticsCard
+            selectedSequence={selectedSequence}
+            selectedSequenceId={selectedSequenceId}
+            sequenceFunnel={sequenceFunnel}
+            sequenceStats={sequenceStats}
+            sequences={sequences}
+            onSelectSequence={onSelectSequence}
+          />
+          <RecipientTimelineCard
+            contactTimeline={contactTimeline}
+            contacts={contacts}
+            selectedEnrollmentId={selectedEnrollmentId}
+            selectedSequenceEnrollments={selectedSequenceEnrollments ?? []}
+            selectedTimelineContact={selectedTimelineContact}
+            selectedTimelineEnrollment={selectedTimelineEnrollment}
+            onSelectEnrollment={onSelectEnrollment}
+          />
+        </Grid>
+        <Grid cols={1} colsLg={12} gap="lg">
+          <SequenceLeaderboardCard
+            mailboxes={mailboxes}
+            selectedSequenceId={selectedSequenceId}
+            sequences={sequences}
+            onSelectSequence={onSelectSequence}
+          />
+          <ContactEngagementCard
+            contactPerformance={contactPerformance}
+            onInspectContact={(row) => {
+              if (row.latestSequenceId) {
+                onSelectSequence(row.latestSequenceId);
+              }
+              if (row.latestEnrollmentId) {
+                onSelectEnrollment(row.latestEnrollmentId);
+              }
+            }}
+          />
+        </Grid>
+      </Stack>
     </TabsContent>
   );
 }
@@ -2027,6 +2063,208 @@ function RecipientTimelineCard({
               </Stack>
             )}
           </>
+        )}
+      </Stack>
+    </Card>
+  );
+}
+
+function SequenceLeaderboardCard({
+  mailboxes,
+  selectedSequenceId,
+  sequences,
+  onSelectSequence,
+}: {
+  mailboxes: MailboxListItem[];
+  selectedSequenceId?: Id<"outreachSequences">;
+  sequences: SequenceListItem[];
+  onSelectSequence: (sequenceId: Id<"outreachSequences">) => void;
+}) {
+  const sequenceRows = getSequenceLeaderboardRows(sequences, mailboxes);
+
+  return (
+    <Card
+      padding="md"
+      variant="soft"
+      className="lg:col-span-7"
+      data-testid={TEST_IDS.OUTREACH.ANALYTICS_SEQUENCE_LEADERBOARD}
+    >
+      <Stack gap="md">
+        <SectionTitle
+          title="Sequence leaderboard"
+          description="Compare every sequence by delivery volume and engagement rates, then jump straight into the detailed funnel."
+        />
+
+        {sequenceRows.length === 0 ? (
+          <EmptyState
+            icon={Rocket}
+            title="No sequence analytics yet"
+            description="Create a sequence and start enrolling contacts to compare campaign performance here."
+            size="compact"
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Sequence</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Recipients</TableHead>
+                <TableHead>Sent</TableHead>
+                <TableHead>Open</TableHead>
+                <TableHead>Reply</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sequenceRows.map((row) => (
+                <TableRow key={row.sequenceId}>
+                  <TableCell>
+                    <Stack gap="xs">
+                      <Typography variant="label" as="span">
+                        {row.name}
+                      </Typography>
+                      <Typography variant="meta" as="span">
+                        {row.mailboxLabel}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>
+                  </TableCell>
+                  <TableCell>{formatCount(row.enrolled)}</TableCell>
+                  <TableCell>{formatCount(row.sent)}</TableCell>
+                  <TableCell>{formatPercent(row.openRate)}</TableCell>
+                  <TableCell>{formatPercent(row.replyRate)}</TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant={
+                        row.sequenceId === selectedSequenceId ? "secondary" : "ghostTertiary"
+                      }
+                      onClick={() => onSelectSequence(row.sequenceId)}
+                    >
+                      {row.sequenceId === selectedSequenceId ? "Viewing" : "Inspect"}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Stack>
+    </Card>
+  );
+}
+
+function ContactEngagementCard({
+  contactPerformance,
+  onInspectContact,
+}: {
+  contactPerformance: ContactPerformanceSummary;
+  onInspectContact: (row: ContactPerformanceRow) => void;
+}) {
+  return (
+    <Card
+      padding="md"
+      variant="soft"
+      className="lg:col-span-5"
+      data-testid={TEST_IDS.OUTREACH.ANALYTICS_CONTACT_ENGAGEMENT}
+    >
+      <Stack gap="md">
+        <SectionTitle
+          title="Contact engagement"
+          description="Spot the most engaged recipients and jump directly into the enrollment behind their latest activity."
+        />
+        {contactPerformance.coverage.isPartial ? (
+          <Alert variant="warning">
+            <AlertTitle>Analytics window is capped</AlertTitle>
+            <AlertDescription>
+              Contact analytics currently cover up to {contactPerformance.coverage.contactLimit}{" "}
+              contacts, {contactPerformance.coverage.enrollmentLimit} enrollments, and the most
+              recent {contactPerformance.coverage.recentEventLimit} tracked events.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {contactPerformance.rows.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="No contact engagement yet"
+            description="Tracked contact activity appears here after a sequence sends or a recipient interacts."
+            size="compact"
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Contact</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Sent</TableHead>
+                <TableHead>Open</TableHead>
+                <TableHead>Reply</TableHead>
+                <TableHead>Last activity</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contactPerformance.rows.map((row) => (
+                <TableRow key={row.contactId}>
+                  <TableCell>
+                    <Stack gap="xs">
+                      <Typography variant="label" as="span">
+                        {row.name}
+                      </Typography>
+                      <Typography variant="meta" as="span">
+                        {[row.email, row.company].filter(Boolean).join(" • ")}
+                      </Typography>
+                      {row.latestSequenceName ? (
+                        <Typography variant="meta" as="span">
+                          Latest sequence: {row.latestSequenceName}
+                        </Typography>
+                      ) : null}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Stack gap="xs">
+                      <Badge variant={getStatusBadgeVariant(row.latestStatus)}>
+                        {row.latestStatus}
+                      </Badge>
+                      <Typography variant="meta" as="span">
+                        {formatPluralizedCount(row.liveEnrollmentCount, "live enrollment")}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>{formatCount(row.sent)}</TableCell>
+                  <TableCell>{formatPercent(row.openRate)}</TableCell>
+                  <TableCell>{formatPercent(row.replyRate)}</TableCell>
+                  <TableCell>
+                    <Stack gap="xs">
+                      {row.lastActivityType ? (
+                        <Badge variant={getStatusBadgeVariant(row.lastActivityType)}>
+                          {row.lastActivityType}
+                        </Badge>
+                      ) : null}
+                      <Typography variant="meta" as="span">
+                        {row.lastActivityAt
+                          ? formatOutreachDateTime(row.lastActivityAt)
+                          : "No tracked events yet"}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="ghostTertiary"
+                      onClick={() => onInspectContact(row)}
+                      disabled={!row.latestSequenceId && !row.latestEnrollmentId}
+                    >
+                      Inspect
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </Stack>
     </Card>
@@ -2485,6 +2723,60 @@ function getTimelineEnrollmentLabel(
     contact?.email ||
     enrollmentId
   );
+}
+
+function getSequenceLeaderboardRows(
+  sequences: SequenceListItem[],
+  mailboxes: MailboxListItem[],
+): Array<{
+  enrolled: number;
+  mailboxLabel: string;
+  name: string;
+  openRate: number;
+  replyRate: number;
+  sent: number;
+  sequenceId: Id<"outreachSequences">;
+  status: SequenceListItem["status"];
+}> {
+  const mailboxEmailById = new Map(mailboxes.map((mailbox) => [mailbox._id, mailbox.email]));
+
+  return sequences
+    .map((sequence) => {
+      const stats = sequence.stats ?? {
+        bounced: 0,
+        enrolled: 0,
+        opened: 0,
+        replied: 0,
+        sent: 0,
+        unsubscribed: 0,
+      };
+      const sent = stats.sent;
+      const openRate = sent > 0 ? Math.round((stats.opened / sent) * 1000) / 10 : 0;
+      const replyRate = sent > 0 ? Math.round((stats.replied / sent) * 1000) / 10 : 0;
+
+      return {
+        enrolled: stats.enrolled,
+        mailboxLabel: mailboxEmailById.get(sequence.mailboxId) ?? "Mailbox disconnected",
+        name: sequence.name,
+        openRate,
+        replyRate,
+        sent,
+        sequenceId: sequence._id,
+        status: sequence.status,
+      };
+    })
+    .sort((left, right) => {
+      if (right.replyRate !== left.replyRate) {
+        return right.replyRate - left.replyRate;
+      }
+      if (right.openRate !== left.openRate) {
+        return right.openRate - left.openRate;
+      }
+      if (right.sent !== left.sent) {
+        return right.sent - left.sent;
+      }
+      return left.name.localeCompare(right.name);
+    });
 }
 
 function renderEventMetadata(
