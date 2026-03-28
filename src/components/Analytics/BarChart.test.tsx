@@ -10,7 +10,7 @@ describe("BarChart", () => {
           { label: "Bug", value: 5 },
           { label: "Feature", value: 10 },
         ]}
-        color="bg-brand"
+        tone="brand"
       />,
     );
 
@@ -21,7 +21,7 @@ describe("BarChart", () => {
   });
 
   it("handles empty data", () => {
-    const { container } = render(<BarChart data={[]} color="bg-brand" />);
+    const { container } = render(<BarChart data={[]} tone="brand" />);
     // With no data items, no bars should render
     expect(container.querySelectorAll("[title]")).toHaveLength(0);
   });
@@ -33,11 +33,25 @@ describe("BarChart", () => {
           { label: "A", value: 0 },
           { label: "B", value: 0 },
         ]}
-        color="bg-brand"
+        tone="brand"
       />,
     );
 
     expect(screen.getByText("A")).toBeInTheDocument();
     expect(screen.getByText("B")).toBeInTheDocument();
+  });
+
+  it("applies the semantic tone to the rendered fill", () => {
+    const { container } = render(
+      <BarChart
+        data={[
+          { label: "Critical", value: 3 },
+          { label: "Low", value: 1 },
+        ]}
+        tone="warning"
+      />,
+    );
+
+    expect(container.querySelector(".bg-status-warning")).toBeInTheDocument();
   });
 });

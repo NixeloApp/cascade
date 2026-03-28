@@ -315,7 +315,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
                 : undefined
             }
           >
-            <BarChart data={statusChartData} color="bg-status-info" />
+            <BarChart data={statusChartData} tone="info" />
           </ChartCard>
 
           <ChartCard
@@ -332,7 +332,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
                 : undefined
             }
           >
-            <BarChart data={typeChartData} color="bg-status-success" />
+            <BarChart data={typeChartData} tone="success" />
           </ChartCard>
 
           <ChartCard
@@ -348,7 +348,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
                 : undefined
             }
           >
-            <BarChart data={priorityChartData} color="bg-status-warning" />
+            <BarChart data={priorityChartData} tone="warning" />
           </ChartCard>
 
           <ChartCard
@@ -364,7 +364,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
                 : undefined
             }
           >
-            <BarChart data={velocityChartData} color="bg-accent" />
+            <BarChart data={velocityChartData} tone="accent" />
           </ChartCard>
         </Grid>
 
@@ -381,7 +381,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
               : undefined
           }
         >
-          <BarChart data={assigneeChartData} color="bg-brand" />
+          <BarChart data={assigneeChartData} tone="brand" />
         </ChartCard>
 
         <RecentActivity activities={recentActivity} />

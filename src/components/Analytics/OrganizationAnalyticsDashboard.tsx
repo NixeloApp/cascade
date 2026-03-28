@@ -262,7 +262,7 @@ export function OrganizationAnalyticsDashboard({
                   }
             }
           >
-            <BarChart data={typeChartData} color="bg-brand" />
+            <BarChart data={typeChartData} tone="brand" />
           </ChartCard>
           <ChartCard
             title="Issues by Priority"
@@ -276,7 +276,7 @@ export function OrganizationAnalyticsDashboard({
                   }
             }
           >
-            <BarChart data={priorityChartData} color="bg-status-warning" />
+            <BarChart data={priorityChartData} tone="warning" />
           </ChartCard>
         </Grid>
 
@@ -292,7 +292,7 @@ export function OrganizationAnalyticsDashboard({
                 }
           }
         >
-          <BarChart data={projectChartData} color="bg-accent" />
+          <BarChart data={projectChartData} tone="accent" />
         </ChartCard>
 
         {trend ? (

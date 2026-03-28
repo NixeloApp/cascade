@@ -1,21 +1,23 @@
-/**
- * Bar Chart
- *
- * Horizontal bar chart visualization for analytics data.
- * Displays labeled bars with proportional widths and values.
- * Supports custom colors and responsive sizing.
- */
-
-import { cn } from "@/lib/utils";
+import {
+  type BarChartTone,
+  getBarChartFillClassName,
+  getBarChartTrackClassName,
+} from "../ui/barChartSurfaceClassNames";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
-export function BarChart({
-  data,
-  color,
-}: {
-  data: Array<{ label: string; value: number }>;
-  color: string;
-}) {
+
+interface BarChartDatum {
+  label: string;
+  value: number;
+}
+
+interface BarChartProps {
+  data: BarChartDatum[];
+  tone: BarChartTone;
+}
+
+/** Horizontal analytics bar chart with wrapper-owned fill and track surfaces. */
+export function BarChart({ data, tone }: BarChartProps) {
   const maxValue = Math.max(...data.map((d) => d.value), 1);
 
   return (
@@ -25,11 +27,11 @@ export function BarChart({
           <Typography variant="small" className="w-24 text-ui-text truncate" title={item.label}>
             {item.label}
           </Typography>
-          <FlexItem flex="1" className="bg-ui-bg-tertiary rounded-full h-6 relative">
+          <FlexItem flex="1" className={getBarChartTrackClassName()}>
             <Flex
               align="center"
               justify="end"
-              className={cn(color, "h-6 rounded-full transition-all duration-slow pr-2")}
+              className={getBarChartFillClassName(tone)}
               style={{
                 width: `${(item.value / maxValue) * 100}%`,
                 minWidth: item.value > 0 ? "2rem" : "0",
