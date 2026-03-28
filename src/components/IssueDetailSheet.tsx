@@ -17,6 +17,7 @@ import { IssueDetailLayout, useIssueDetail } from "./IssueDetail";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Icon } from "./ui/Icon";
+import { Inline } from "./ui/Inline";
 import { Sheet } from "./ui/Sheet";
 import { Skeleton, SkeletonText } from "./ui/Skeleton";
 import { Tooltip } from "./ui/Tooltip";
@@ -52,7 +53,7 @@ export function IssueDetailSheet({
         className="w-full sm:max-w-xl lg:max-w-2xl"
       >
         <Stack as="output" aria-live="polite" aria-busy="true" gap="lg">
-          <span className="sr-only">Loading...</span>
+          <Inline className="sr-only">Loading...</Inline>
           <Skeleton className="h-8 w-3/4" />
           <SkeletonText lines={2} />
         </Stack>

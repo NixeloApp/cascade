@@ -706,7 +706,7 @@ function EditorCanvas({
                     <Badge variant="outline" shape="pill" className="w-fit">
                       <Flex as="span" align="center" gap="xs">
                         <Icon icon={section.icon} size="sm" />
-                        <span>{section.title}</span>
+                        {section.title}
                       </Flex>
                     </Badge>
                     <Typography variant="small" color="secondary">

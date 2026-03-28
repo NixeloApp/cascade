@@ -19,6 +19,7 @@ import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon as AppIcon, type IconSize } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
+import { Inline } from "@/components/ui/Inline";
 import { Input } from "@/components/ui/Input";
 import { NavItem as NavItemBase } from "@/components/ui/NavItem";
 import { Separator } from "@/components/ui/Separator";
@@ -172,7 +173,7 @@ function NavSubItem({
               iconClassName="shrink-0"
             />
           )}
-          <span className="truncate">{label}</span>
+          <Inline className="truncate">{label}</Inline>
         </Link>
       </NavItemBase>
     </Tooltip>
@@ -1120,14 +1121,14 @@ function CollapsibleSection({
                 recipe={isActive ? "sidebarSectionIconActive" : "sidebarSectionIcon"}
                 iconClassName="size-4.5"
               />
-              <span className="truncate">{label}</span>
+              <Inline className="truncate">{label}</Inline>
             </Flex>
           </Link>
         ) : (
           <FlexItem grow>
             <Flex align="center" gap="sm" className="min-w-0">
               <SidebarIconShell icon={Icon} recipe="sidebarSectionIcon" iconClassName="size-4.5" />
-              <span className="truncate">{label}</span>
+              <Inline className="truncate">{label}</Inline>
             </Flex>
           </FlexItem>
         )}

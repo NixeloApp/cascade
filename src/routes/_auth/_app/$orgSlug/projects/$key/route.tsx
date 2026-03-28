@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Inline } from "@/components/ui/Inline";
 import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -167,7 +168,7 @@ function ProjectSectionNav({
                   className="gap-1"
                   aria-label="More project sections"
                 >
-                  <span>More</span>
+                  <Inline>More</Inline>
                   <Icon icon={ChevronDown} size="xs" tone="tertiary" />
                 </Button>
               </RouteNavItem>

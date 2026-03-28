@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/form/Textarea";
 import { Grid } from "@/components/ui/Grid";
 import { Progress } from "@/components/ui/Progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
+import { ResponsiveText } from "@/components/ui/ResponsiveText";
 import { Select } from "@/components/ui/Select";
 import { SkeletonProjectCard } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
@@ -461,8 +462,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             variant="primary"
             data-testid={TEST_IDS.SPRINT.CREATE_BUTTON}
           >
-            <span className="hidden sm:inline">Create Sprint</span>
-            <span className="sm:hidden">+ Sprint</span>
+            <ResponsiveText short="+ Sprint" long="Create Sprint" />
           </Button>
         )}
       </Flex>

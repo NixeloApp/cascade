@@ -55,8 +55,7 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
               aria-label={`${reaction.emoji} reaction, ${reaction.userIds.length} vote${reaction.userIds.length === 1 ? "" : "s"}`}
               aria-pressed={hasReacted}
             >
-              <span>{reaction.emoji}</span>
-              <span>{reaction.userIds.length}</span>
+              {`${reaction.emoji} ${reaction.userIds.length}`}
             </Button>
           </Tooltip>
         );

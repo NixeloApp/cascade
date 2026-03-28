@@ -69,8 +69,7 @@ export function BoardToolbar({
       <Flex align="center" justify="between" gap="xs" gapSm="sm">
         <div className="hidden sm:block">
           <Typography variant="boardSurfaceTitle">
-            <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
-            <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
+            {sprintId ? "Sprint Board" : "Kanban Board"}
           </Typography>
           <Typography variant="caption" className="mt-1 hidden sm:block">
             Move work between stages, keep limits visible, and start new items from the right
@@ -159,7 +158,7 @@ export function BoardToolbar({
               aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
               className={cn("hidden sm:inline-block", selectionMode && "shadow-soft")}
             >
-              <span>{selectionMode ? "Exit Selection" : "Select Multiple"}</span>
+              {selectionMode ? "Exit Selection" : "Select Multiple"}
             </Button>
           </Flex>
         )}

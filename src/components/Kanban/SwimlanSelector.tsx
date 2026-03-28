@@ -21,6 +21,7 @@ import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import { getSwimlanGroupByLabel, getSwimlanGroupByOptions } from "@/lib/swimlane-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Icon } from "../ui/Icon";
+import { Inline } from "../ui/Inline";
 
 interface SwimlanSelectorProps {
   value: SwimlanGroupBy;
@@ -42,7 +43,9 @@ export function SwimlanSelector({ value, onChange }: SwimlanSelectorProps) {
           leftIcon={<Icon icon={Rows3} size="sm" />}
           rightIcon={<Icon icon={ChevronDown} size="xs" tone="tertiary" />}
         >
-          <span className="hidden sm:inline">{value === "none" ? "Swimlanes" : currentLabel}</span>
+          <Inline className="hidden sm:inline">
+            {value === "none" ? "Swimlanes" : currentLabel}
+          </Inline>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" minWidth="sm">

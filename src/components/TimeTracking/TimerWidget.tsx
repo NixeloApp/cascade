@@ -10,6 +10,7 @@ import { Card } from "../ui/Card";
 import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Inline } from "../ui/Inline";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
@@ -113,7 +114,7 @@ export function TimerWidget() {
         leftIcon={<Icon icon={Play} size="sm" fill="currentColor" />}
         aria-label="Start timer"
       >
-        <span className="hidden sm:inline">Start Timer</span>
+        <Inline className="hidden sm:inline">Start Timer</Inline>
       </Button>
 
       <TimeEntryModal

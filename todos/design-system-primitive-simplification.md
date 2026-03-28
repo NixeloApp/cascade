@@ -108,9 +108,8 @@ Components own text rendering. Callers pass strings.
 
 No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production files.
 
-- [ ] Add validator rule banning raw inline/block text elements in production code (exclude test files)
-- [ ] Exceptions whitelist: `hidden aria-hidden` markers, drop targets, structural DOM inside ui/ primitives
-- [ ] Use `<Typography>` for all text. It renders `<span>` by default and accepts all HTML attributes including `data-testid`.
+- **Status:** Done (2026-03-28)
+- **Landed:** The standards validator now bans raw `<span>` in production code outside `ui/`, tests, and the markdown renderer exception; repeated responsive and screen-reader patterns were migrated onto `ResponsiveText` and a new neutral `Inline` primitive in `src/components/ui/Inline.tsx`; the remaining production violations were removed across shared shells, navigation, meeting surfaces, and editor controls.
 
 ---
 
@@ -146,6 +145,6 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 
 - [x] Every shadcn compound component has one wrapper. `Select`, `Popover`, and `Command` are done.
 - [x] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
-- [ ] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
+- [x] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
 - [ ] No variant axis above 20 options in shared primitives.
 - [ ] Raw Tailwind violations at 0.

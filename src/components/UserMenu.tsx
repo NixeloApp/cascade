@@ -60,7 +60,7 @@ export function UserMenu() {
           <DropdownMenuGroup>
             <DropdownMenuItem asChild icon={<Icon icon={Settings} size="sm" />}>
               <Link to={ROUTES.settings.profile.path} params={{ orgSlug }} className="w-full">
-                <span>Settings</span>
+                Settings
               </Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -71,7 +71,7 @@ export function UserMenu() {
           variant="danger"
           icon={<Icon icon={LogOut} size="sm" />}
         >
-          <span>Sign out</span>
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

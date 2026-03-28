@@ -32,6 +32,7 @@ import { Checkbox, Input as FormInput } from "./ui/form";
 import { Icon } from "./ui/Icon";
 import { IconButton } from "./ui/IconButton";
 import { Input } from "./ui/Input";
+import { ResponsiveText } from "./ui/ResponsiveText";
 import { Separator } from "./ui/Separator";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
@@ -124,8 +125,7 @@ function FilterDropdown<T>({
           rightIcon={<Icon icon={ChevronDown} size="sm" />}
           data-testid={triggerTestId}
         >
-          <span className="sm:hidden">{shortLabel ?? label}</span>
-          <span className="hidden sm:inline">{label}</span>
+          <ResponsiveText short={shortLabel ?? label} long={label} />
           {isActive && ` (${activeCount})`}
         </Button>
       </DropdownMenuTrigger>
@@ -188,8 +188,7 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
           chromeSize="filterPill"
           rightIcon={<Icon icon={ChevronDown} size="sm" />}
         >
-          <span className="sm:hidden">{shortLabel ?? label}</span>
-          <span className="hidden sm:inline">{label}</span>
+          <ResponsiveText short={shortLabel ?? label} long={label} />
           {isActive && " (1)"}
         </Button>
       </DropdownMenuTrigger>
@@ -249,8 +248,7 @@ function SavedFiltersDropdown({
           chromeSize="filterPill"
           rightIcon={<Icon icon={ChevronDown} size="sm" />}
         >
-          <span className="sm:hidden">Saved</span>
-          <span className="hidden sm:inline">Saved Filters</span> ({savedFilters.length})
+          <ResponsiveText short="Saved" long="Saved Filters" /> ({savedFilters.length})
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" minWidth="md" className="max-h-dropdown overflow-y-auto">

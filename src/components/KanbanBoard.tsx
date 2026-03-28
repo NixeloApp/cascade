@@ -40,6 +40,7 @@ import { KanbanColumn } from "./Kanban/KanbanColumn";
 import { SwimlanRow } from "./Kanban/SwimlanRow";
 import { Badge } from "./ui/Badge";
 import { Card, getCardRecipeClassName } from "./ui/Card";
+import { Inline } from "./ui/Inline";
 import { SkeletonKanbanCard, SkeletonText } from "./ui/Skeleton";
 import { Stack } from "./ui/Stack";
 
@@ -119,7 +120,7 @@ function MobileBoardColumnSelector({
           const displayCount = Math.max(totalCount, loadedCount);
           return (
             <SegmentedControlItem key={state.id} value={state.id} width="fill">
-              <span className="truncate">{state.name}</span>
+              <Inline className="truncate">{state.name}</Inline>
               <Badge variant="neutral" size="sm" shape="pill">
                 {displayCount}
               </Badge>

@@ -33,6 +33,7 @@ import { Card, getCardRecipeClassName } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
+import { Inline } from "./ui/Inline";
 import { SkeletonList } from "./ui/Skeleton";
 import { Typography } from "./ui/Typography";
 
@@ -224,9 +225,9 @@ export function ActivityFeed({
                     <Typography as="strong" variant="strong">
                       {activity.userName}
                     </Typography>{" "}
-                    <span className={getActionColorClass(activity.action)}>
+                    <Inline className={getActionColorClass(activity.action)}>
                       {formatActivityMessage(activity)}
-                    </span>
+                    </Inline>
                     {activity.issueKey && (
                       <Link
                         to={ROUTES.issues.detail.path}

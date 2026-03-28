@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Inline } from "../ui/Inline";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { ProductShowcase } from "./ProductShowcase";
@@ -44,9 +45,9 @@ export function HeroSection() {
                 }}
               >
                 Replace scattered project tools{" "}
-                <span className="bg-linear-to-r from-landing-accent via-landing-accent-teal to-status-success-text bg-clip-text text-transparent">
+                <Inline className="bg-linear-to-r from-landing-accent via-landing-accent-teal to-status-success-text bg-clip-text text-transparent">
                   with one sharper workspace.
-                </span>
+                </Inline>
               </Typography>
 
               <Typography

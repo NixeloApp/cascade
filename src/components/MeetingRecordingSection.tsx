@@ -100,7 +100,7 @@ function StatusBadge({ status }: { status: string }) {
     <Badge size="sm" variant={config.variant}>
       <Flex as="span" align="center" gap="xs">
         {config.icon}
-        <span>{config.label}</span>
+        {config.label}
       </Flex>
     </Badge>
   );

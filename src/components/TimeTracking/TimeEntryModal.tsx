@@ -105,7 +105,7 @@ function TagsInput({
           {tags.map((tag) => (
             <Badge key={tag} variant="brand" shape="pill">
               <Flex as="span" inline align="center" gap="xs">
-                <span>{tag}</span>
+                {tag}
                 <IconButton
                   variant="brand"
                   size="xs"

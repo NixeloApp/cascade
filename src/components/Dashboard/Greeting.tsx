@@ -1,5 +1,6 @@
 import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
+import { Inline } from "../ui/Inline";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -30,7 +31,7 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
         </Typography>
       </Flex>
       <Typography variant="h2" className="max-w-3xl text-balance">
-        {greeting}, <span className="text-brand">{firstName}</span>.
+        {greeting}, <Inline className="text-brand">{firstName}</Inline>.
       </Typography>
       <Typography variant="small" color="secondary" className="max-w-2xl text-balance">
         {completedCount > 0 ? (

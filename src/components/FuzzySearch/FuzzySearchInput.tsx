@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
+import { Inline } from "@/components/ui/Inline";
 import { Input } from "@/components/ui/Input";
 import { InlineSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
@@ -285,20 +286,20 @@ export function HighlightedText({
   let characterOffset = 0;
 
   return (
-    <span className={className}>
+    <Inline className={className}>
       {parts.map((part) => {
         const partOffset = characterOffset;
         characterOffset += part.text.length;
 
         return (
-          <span
+          <Inline
             key={`${partOffset}-${part.text}`}
             className={part.highlight ? highlightClassName : ""}
           >
             {part.text}
-          </span>
+          </Inline>
         );
       })}
-    </span>
+    </Inline>
   );
 }

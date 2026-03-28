@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
+import { Inline } from "@/components/ui/Inline";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { List } from "@/components/ui/List";
@@ -529,8 +530,8 @@ function RecordingListItem({
             <Stack gap="xs">
               <Typography variant="label">{recording.title}</Typography>
               <Typography variant="caption" color="secondary">
-                {formatMeetingPlatform(recording.meetingPlatform)} <span aria-hidden="true">•</span>{" "}
-                {formatRelativeTime(recording.createdAt)}
+                {formatMeetingPlatform(recording.meetingPlatform)}{" "}
+                <Inline aria-hidden="true">•</Inline> {formatRelativeTime(recording.createdAt)}
               </Typography>
               {"matchExcerpt" in recording && recording.matchExcerpt && (
                 <Typography variant="caption" color="secondary">
@@ -601,8 +602,9 @@ function MemoryItemMeta({
 }) {
   return (
     <Typography variant="caption" color="secondary">
-      {recordingTitle} <span aria-hidden="true">•</span> {formatMeetingPlatform(meetingPlatform)}{" "}
-      <span aria-hidden="true">•</span> {formatRelativeTime(createdAt)}
+      {recordingTitle} <Inline aria-hidden="true">•</Inline>{" "}
+      {formatMeetingPlatform(meetingPlatform)} <Inline aria-hidden="true">•</Inline>{" "}
+      {formatRelativeTime(createdAt)}
     </Typography>
   );
 }
@@ -656,9 +658,9 @@ function MeetingMemorySection({
       gap="sm"
       data-testid={TEST_IDS.MEETINGS.MEMORY_SECTION}
     >
-      <span className="sr-only" data-testid={TEST_IDS.MEETINGS.MEMORY_DESCRIPTION}>
+      <Inline className="sr-only" data-testid={TEST_IDS.MEETINGS.MEMORY_DESCRIPTION}>
         {description}
-      </span>
+      </Inline>
       {projectLenses.length > 0 && (
         <Flex gap="xs" wrap>
           <Button

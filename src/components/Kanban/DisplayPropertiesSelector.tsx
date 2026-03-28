@@ -30,6 +30,7 @@ import {
 import { ChevronDown, SlidersHorizontal } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Icon } from "../ui/Icon";
+import { Inline } from "../ui/Inline";
 
 interface DisplayPropertiesSelectorProps {
   value: CardDisplayOptions;
@@ -60,9 +61,9 @@ export function DisplayPropertiesSelector({ value, onChange }: DisplayProperties
           leftIcon={<Icon icon={SlidersHorizontal} size="sm" />}
           rightIcon={<Icon icon={ChevronDown} size="xs" tone="tertiary" />}
         >
-          <span className="hidden sm:inline">
+          <Inline className="hidden sm:inline">
             {hasHidden ? `Properties (${visibleCount})` : "Properties"}
-          </span>
+          </Inline>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" minWidth="sm">

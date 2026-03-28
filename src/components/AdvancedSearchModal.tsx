@@ -148,7 +148,7 @@ export function AdvancedSearchModal({
             renderLabel={(type) => (
               <Flex align="center" gap="xs" as="span">
                 <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
-                <span>{type}</span>
+                {type}
               </Flex>
             )}
           />

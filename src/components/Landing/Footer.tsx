@@ -8,6 +8,7 @@ import { Dot } from "../ui/Dot";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { IconCircle } from "../ui/IconCircle";
+import { Inline } from "../ui/Inline";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { NixeloLogo } from "./Icons";
@@ -119,7 +120,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span className="sr-only">Follow us on Facebook</span>
+                  <Inline className="sr-only">Follow us on Facebook</Inline>
                   <svg
                     className="size-5"
                     fill="currentColor"
@@ -136,7 +137,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span className="sr-only">Follow us on TikTok</span>
+                  <Inline className="sr-only">Follow us on TikTok</Inline>
                   <svg
                     className="size-5"
                     fill="currentColor"
@@ -149,7 +150,7 @@ export function Footer() {
               </Button>
               <Button asChild variant="unstyled" chrome="footerSocial" chromeSize="footerSocial">
                 <a href="https://www.patreon.com/nixelo" target="_blank" rel="noopener noreferrer">
-                  <span className="sr-only">Support us on Patreon</span>
+                  <Inline className="sr-only">Support us on Patreon</Inline>
                   <svg
                     className="size-5"
                     fill="currentColor"

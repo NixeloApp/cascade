@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
+import { Inline } from "@/components/ui/Inline";
 import { Input } from "@/components/ui/Input";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
@@ -93,7 +94,7 @@ export function InlinePrioritySelect({ value, onChange, disabled }: PrioritySele
       renderOption={(option) => (
         <Flex align="center" gap="sm">
           <Icon icon={option.icon} size="sm" className={option.toneClassName} />
-          <span className="capitalize">{option.label}</span>
+          <Inline className="capitalize">{option.label}</Inline>
         </Flex>
       )}
       disabled={disabled}
@@ -218,7 +219,7 @@ export function InlineAssigneeSelect({ value, members, onChange, disabled }: Ass
             <IconCircle variant="muted" className="size-5">
               <User className="size-3 text-ui-text-secondary" />
             </IconCircle>
-            <span>Unassigned</span>
+            <Inline>Unassigned</Inline>
           </Flex>
         ) : (
           <AssigneeOption

@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Inline } from "@/components/ui/Inline";
+import { ResponsiveText } from "@/components/ui/ResponsiveText";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -81,7 +83,7 @@ export function NavHeader() {
                   >
                     <Sun className="h-icon-theme-toggle w-icon-theme-toggle rotate-0 scale-100 transition-all duration-default" />
                     <Moon className="absolute h-icon-theme-toggle w-icon-theme-toggle rotate-90 scale-0 transition-all duration-default" />
-                    <span className="sr-only">Toggle theme</span>
+                    <Inline className="sr-only">Toggle theme</Inline>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -163,8 +165,7 @@ export function NavHeader() {
                   className="hidden sm:inline-flex"
                 >
                   <Link to={ROUTES.signup.path}>
-                    <span className="hidden md:inline">Get Started</span>
-                    <span className="md:hidden">Start</span>
+                    <ResponsiveText short="Start" long="Get Started" breakpoint="md" />
                   </Link>
                 </Button>
               </Unauthenticated>

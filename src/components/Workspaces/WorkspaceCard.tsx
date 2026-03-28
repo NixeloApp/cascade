@@ -15,6 +15,7 @@ import { CardSection } from "../ui/CardSection";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { IconCircle } from "../ui/IconCircle";
+import { Inline } from "../ui/Inline";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -34,7 +35,7 @@ function WorkspaceIcon({ icon }: { icon: string | undefined }) {
       variant="soft"
       className="border border-ui-border/60 text-2xl shadow-soft"
     >
-      <span aria-hidden="true">{icon}</span>
+      <Inline aria-hidden="true">{icon}</Inline>
     </IconCircle>
   );
 }

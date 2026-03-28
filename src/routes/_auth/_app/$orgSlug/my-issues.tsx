@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CardSection } from "@/components/ui/CardSection";
 import { Flex } from "@/components/ui/Flex";
+import { Inline } from "@/components/ui/Inline";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
@@ -194,7 +195,7 @@ function MobileMyIssuesColumnSelector({
     >
       {columns.map((column) => (
         <SegmentedControlItem key={column.key} value={column.key} width="fill" iconSpacing>
-          <span className="truncate">{column.label}</span>
+          <Inline className="truncate">{column.label}</Inline>
           <Badge variant="neutral" size="sm" shape="pill">
             {column.totalCount}
           </Badge>

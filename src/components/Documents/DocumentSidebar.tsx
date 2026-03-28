@@ -18,6 +18,7 @@ import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
+import { Inline } from "@/components/ui/Inline";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { getDocumentHeadingAnchorElement } from "@/lib/documents/headingAnchors";
@@ -206,7 +207,7 @@ function TableOfContents({
           title={heading.text}
         >
           <Icon icon={Hash} size="xs" tone="tertiary" className="shrink-0" />
-          <span className="truncate">{heading.text}</span>
+          <Inline className="truncate">{heading.text}</Inline>
         </Button>
       ))}
     </Stack>

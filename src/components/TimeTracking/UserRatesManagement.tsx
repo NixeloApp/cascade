@@ -118,11 +118,9 @@ export function UserRatesManagement() {
                       </Badge>
                     </Flex>
                     <Typography variant="caption" color="secondary">
-                      {rate.projectId ? (
-                        <span>Project-specific rate</span>
-                      ) : (
-                        <span>Default rate (applies to all projects)</span>
-                      )}
+                      {rate.projectId
+                        ? "Project-specific rate"
+                        : "Default rate (applies to all projects)"}
                     </Typography>
                     {rate.notes && (
                       <Typography variant="caption" color="tertiary">

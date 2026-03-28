@@ -30,6 +30,7 @@ import {
   type SettingsTabValue,
 } from "./Settings/settingsTabs";
 import { TwoFactorSettings } from "./Settings/TwoFactorSettings";
+import { ResponsiveText } from "./ui/ResponsiveText";
 import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 
@@ -113,8 +114,11 @@ export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps
                 width="responsive"
                 data-testid={SETTINGS_TAB_TESTIDS[tab.value]}
               >
-                <span className="lg:hidden">{tab.shortLabel ?? tab.label}</span>
-                <span className="hidden lg:inline">{tab.label}</span>
+                <ResponsiveText
+                  short={tab.shortLabel ?? tab.label}
+                  long={tab.label}
+                  breakpoint="lg"
+                />
               </TabsTrigger>
             ))}
           </TabsList>

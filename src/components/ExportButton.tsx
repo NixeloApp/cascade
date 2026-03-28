@@ -46,7 +46,7 @@ export function ExportButton({ projectId, sprintId, status }: ExportButtonProps)
           data-testid={TEST_IDS.PROJECT.IMPORT_EXPORT_TRIGGER}
           leftIcon={<ArrowLeftRight className="size-4" />}
         >
-          <span>Import / Export</span>
+          Import / Export
         </Button>
       </div>
 

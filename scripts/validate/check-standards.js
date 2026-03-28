@@ -32,6 +32,7 @@ const ALLOW_RAW_LINKS_PATTERNS = [
 // Files where <strong>/<em> for inline emphasis is allowed
 // Only CommentRenderer needs this (renders user-authored markdown)
 const ALLOW_INLINE_STRONG_FILES = ["/CommentRenderer.tsx"];
+const ALLOW_RAW_SPAN_FILES = ["/CommentRenderer.tsx"];
 
 // Raw Tailwind color pattern
 const RAW_TW_COLORS =
@@ -141,220 +142,221 @@ function isRouteFile(rel) {
 // Main
 // ============================================================================
 
+function collectStandardsViolations(filePath, content) {
+  const rel = path.isAbsolute(filePath) ? relPath(filePath) : filePath;
+  if (IGNORE_DIRS.some((d) => rel.startsWith(d))) {
+    return [];
+  }
+
+  const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
+  const errors = [];
+
+  function reportError(node, message) {
+    const pos = node.getSourceFile().getLineAndCharacterOfPosition(node.getStart());
+    errors.push({
+      column: pos.character + 1,
+      filePath: rel,
+      line: pos.line + 1,
+      message,
+    });
+  }
+
+  function visit(node, ancestors = []) {
+    if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+      const tagName = node.tagName.getText();
+      const classNameAttr = node.attributes.properties.find(
+        (property) => ts.isJsxAttribute(property) && property.name.getText() === "className",
+      );
+
+      // ── Typography tags ──
+      if (["p", "h1", "h2", "h3", "h4", "h5", "h6"].includes(tagName)) {
+        reportError(node, `Use <Typography> instead of raw <${tagName}>.`);
+      }
+
+      // ── Inline styling tags ──
+      if (["strong", "b", "em", "i"].includes(tagName)) {
+        if (!matchesPattern(rel, ALLOW_INLINE_STRONG_FILES)) {
+          const suggestion =
+            tagName === "em" || tagName === "i"
+              ? `<Typography as="em">`
+              : `<Typography variant="label"> or <Typography as="strong">`;
+          reportError(node, `Use ${suggestion} instead of raw <${tagName}>.`);
+        }
+      }
+
+      // ── Raw span ──
+      if (tagName === "span" && !isTestFile(rel) && !matchesPattern(rel, ALLOW_RAW_SPAN_FILES)) {
+        reportError(
+          node,
+          "Use <Inline>, <ResponsiveText>, or another ui/ primitive instead of raw <span>.",
+        );
+      }
+
+      // ── Raw button ──
+      if (tagName === "button" && !isTestFile(rel)) {
+        reportError(node, `Use <Button> instead of raw <button>.`);
+      }
+
+      // ── Raw select ──
+      if (tagName === "select" && !isTestFile(rel)) {
+        reportError(node, `Use <Select> from ui/ instead of raw <select>.`);
+      }
+
+      // ── Raw input ──
+      if (tagName === "input") {
+        const typeValue = getAttributeValue(node, "type");
+        const isFileInput = typeValue === "file";
+        if (!isFileInput && !isTestFile(rel) && !isUiFile(rel)) {
+          reportError(node, `Use <Input> from ui/ instead of raw <input>.`);
+        }
+      }
+
+      // ── Raw textarea ──
+      if (tagName === "textarea" && !isTestFile(rel) && !isUiFile(rel)) {
+        reportError(node, `Use <Textarea> from ui/ instead of raw <textarea>.`);
+      }
+
+      // ── Raw anchor ──
+      if (tagName === "a") {
+        const isInsideButtonAsChild = ancestors.some((ancestor) => {
+          if (ts.isJsxElement(ancestor)) {
+            const opening = ancestor.openingElement;
+            if (opening.tagName.getText() !== "Button") return false;
+            return opening.attributes.properties.some(
+              (p) => ts.isJsxAttribute(p) && p.name.getText() === "asChild",
+            );
+          }
+          return false;
+        });
+
+        if (!isInsideButtonAsChild && !matchesPattern(rel, ALLOW_RAW_LINKS_PATTERNS)) {
+          reportError(node, `Use <Link> for internal routes or <Button asChild> for styled links.`);
+        }
+      }
+
+      // ── Flex on div/span ──
+      if (tagName === "div" || tagName === "span") {
+        const classes = getClassNameText(node).split(/\s+/);
+        if (classes.includes("flex") || classes.includes("inline-flex")) {
+          reportError(node, `Use <Flex> instead of <${tagName} className="flex">.`);
+        }
+      }
+
+      // ── Font styles on raw elements ──
+      if (RAW_ELEMENTS.has(tagName)) {
+        const classes = getClassNameText(node).split(/\s+/);
+        for (const cls of classes) {
+          if (FONT_STYLE_PATTERN.test(cls)) {
+            reportError(node, `Font style '${cls}' on raw <${tagName}>. Use Typography or Badge.`);
+            break;
+          }
+        }
+      }
+
+      // ── Flex item classes on raw elements ──
+      if (RAW_ELEMENTS.has(tagName)) {
+        const classes = getClassNameText(node).split(/\s+/);
+        for (const cls of classes) {
+          if (FLEX_ITEM_PATTERN.test(cls)) {
+            reportError(node, `Flex item '${cls}' on raw <${tagName}>. Use <FlexItem>.`);
+            break;
+          }
+        }
+      }
+
+      // ── Grid on raw elements ──
+      if (RAW_ELEMENTS.has(tagName)) {
+        const classes = getClassNameText(node).split(/\s+/);
+        if (classes.includes("grid")) {
+          reportError(node, `Use <Grid> instead of <${tagName} className="grid">.`);
+        }
+      }
+
+      // ── Page-level layout misuse ──
+      if (tagName === "PageLayout" && isRouteFile(rel) && classNameAttr) {
+        const classNameText = getStaticClassNameTextFromAttribute(classNameAttr);
+        const classes = classNameText.split(/\s+/).filter(Boolean);
+        if (
+          classes.some((cls) => cls === "mx-auto" || cls.startsWith("max-w-") || cls === "w-full")
+        ) {
+          reportError(
+            node,
+            "PageLayout owns outer width and centering. Use the maxWidth prop instead of className shell overrides.",
+          );
+        }
+      }
+    }
+
+    // ── className attribute checks ──
+    if (ts.isJsxAttribute(node) && node.name.getText() === "className") {
+      // String concatenation
+      if (node.initializer && ts.isJsxExpression(node.initializer)) {
+        const expr = node.initializer.expression;
+        if (expr && (ts.isTemplateExpression(expr) || ts.isBinaryExpression(expr))) {
+          reportError(node, "Use cn() instead of manual className concatenation.");
+        }
+      }
+
+      const classText =
+        node.initializer && ts.isStringLiteral(node.initializer)
+          ? node.initializer.text
+          : node.initializer &&
+              ts.isJsxExpression(node.initializer) &&
+              node.initializer.expression &&
+              ts.isStringLiteral(node.initializer.expression)
+            ? node.initializer.expression.text
+            : "";
+      const classes = classText.split(/\s+/);
+
+      // Redundant dark: on semantic tokens
+      const REDUNDANT_DARK_SEMANTIC =
+        /(bg|text|border|ring)-(ui-bg|ui-text|ui-border|brand|accent|status|palette|priority|issue-type|landing)/;
+      if (classes.some((cls) => cls.startsWith("dark:") && REDUNDANT_DARK_SEMANTIC.test(cls))) {
+        reportError(
+          node,
+          "Redundant dark: on semantic token. Semantic tokens handle dark mode automatically.",
+        );
+      }
+
+      // Raw Tailwind colors
+      for (const cls of classes) {
+        const bare = cls.replace(/^[a-z-]+:/g, "");
+        if (RAW_TW_COLORS.test(bare)) {
+          reportError(node, `Raw Tailwind color '${cls}'. Use semantic tokens.`);
+        }
+      }
+
+      // Non-canonical shorthands
+      for (const cls of classes) {
+        if (TAILWIND_SHORTHAND_MAP[cls]) {
+          reportError(node, `Use '${TAILWIND_SHORTHAND_MAP[cls]}' instead of '${cls}'.`);
+        }
+      }
+    }
+
+    // Track ancestors for Button asChild check
+    const updatedAncestors =
+      ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) ? [...ancestors, node] : ancestors;
+    ts.forEachChild(node, (child) => visit(child, updatedAncestors));
+  }
+
+  visit(sourceFile, []);
+
+  return errors;
+}
+
+export const _private = {
+  collectStandardsViolations,
+};
+
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
 
-  let errorCount = 0;
   const errors = [];
 
-  function reportError(filePath, node, message) {
-    const pos = node.getSourceFile().getLineAndCharacterOfPosition(node.getStart());
-    const rel = relPath(filePath);
-    errors.push(
-      `  ${c.red}ERROR${c.reset} ${rel}:${pos.line + 1}:${pos.character + 1} - ${message}`,
-    );
-    errorCount++;
-  }
-
   function checkFile(filePath) {
-    const rel = relPath(filePath);
-    if (IGNORE_DIRS.some((d) => rel.startsWith(d))) return;
-
     const content = fs.readFileSync(filePath, "utf-8");
-    const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
-
-    function visit(node, ancestors = []) {
-      if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
-        const tagName = node.tagName.getText();
-        const classNameAttr = node.attributes.properties.find(
-          (property) => ts.isJsxAttribute(property) && property.name.getText() === "className",
-        );
-
-        // ── Typography tags ──
-        if (["p", "h1", "h2", "h3", "h4", "h5", "h6"].includes(tagName)) {
-          reportError(filePath, node, `Use <Typography> instead of raw <${tagName}>.`);
-        }
-
-        // ── Inline styling tags ──
-        if (["strong", "b", "em", "i"].includes(tagName)) {
-          if (!matchesPattern(rel, ALLOW_INLINE_STRONG_FILES)) {
-            const suggestion =
-              tagName === "em" || tagName === "i"
-                ? `<Typography as="em">`
-                : `<Typography variant="label"> or <Typography as="strong">`;
-            reportError(filePath, node, `Use ${suggestion} instead of raw <${tagName}>.`);
-          }
-        }
-
-        // ── Raw button ──
-        if (tagName === "button" && !isTestFile(rel)) {
-          reportError(filePath, node, `Use <Button> instead of raw <button>.`);
-        }
-
-        // ── Raw select ──
-        if (tagName === "select" && !isTestFile(rel)) {
-          reportError(filePath, node, `Use <Select> from ui/ instead of raw <select>.`);
-        }
-
-        // ── Raw input ──
-        if (tagName === "input") {
-          const typeValue = getAttributeValue(node, "type");
-          const isFileInput = typeValue === "file";
-          if (!isFileInput && !isTestFile(rel) && !isUiFile(rel)) {
-            reportError(filePath, node, `Use <Input> from ui/ instead of raw <input>.`);
-          }
-        }
-
-        // ── Raw textarea ──
-        if (tagName === "textarea" && !isTestFile(rel) && !isUiFile(rel)) {
-          reportError(filePath, node, `Use <Textarea> from ui/ instead of raw <textarea>.`);
-        }
-
-        // ── Raw anchor ──
-        if (tagName === "a") {
-          const isInsideButtonAsChild = ancestors.some((ancestor) => {
-            if (ts.isJsxElement(ancestor)) {
-              const opening = ancestor.openingElement;
-              if (opening.tagName.getText() !== "Button") return false;
-              return opening.attributes.properties.some(
-                (p) => ts.isJsxAttribute(p) && p.name.getText() === "asChild",
-              );
-            }
-            return false;
-          });
-
-          if (!isInsideButtonAsChild && !matchesPattern(rel, ALLOW_RAW_LINKS_PATTERNS)) {
-            reportError(
-              filePath,
-              node,
-              `Use <Link> for internal routes or <Button asChild> for styled links.`,
-            );
-          }
-        }
-
-        // ── Flex on div/span ──
-        if (tagName === "div" || tagName === "span") {
-          const classes = getClassNameText(node).split(/\s+/);
-          if (classes.includes("flex") || classes.includes("inline-flex")) {
-            reportError(filePath, node, `Use <Flex> instead of <${tagName} className="flex">.`);
-          }
-        }
-
-        // ── Font styles on raw elements ──
-        if (RAW_ELEMENTS.has(tagName)) {
-          const classes = getClassNameText(node).split(/\s+/);
-          for (const cls of classes) {
-            if (FONT_STYLE_PATTERN.test(cls)) {
-              reportError(
-                filePath,
-                node,
-                `Font style '${cls}' on raw <${tagName}>. Use Typography or Badge.`,
-              );
-              break;
-            }
-          }
-        }
-
-        // ── Flex item classes on raw elements ──
-        if (RAW_ELEMENTS.has(tagName)) {
-          const classes = getClassNameText(node).split(/\s+/);
-          for (const cls of classes) {
-            if (FLEX_ITEM_PATTERN.test(cls)) {
-              reportError(
-                filePath,
-                node,
-                `Flex item '${cls}' on raw <${tagName}>. Use <FlexItem>.`,
-              );
-              break;
-            }
-          }
-        }
-
-        // ── Grid on raw elements ──
-        if (RAW_ELEMENTS.has(tagName)) {
-          const classes = getClassNameText(node).split(/\s+/);
-          if (classes.includes("grid")) {
-            reportError(filePath, node, `Use <Grid> instead of <${tagName} className="grid">.`);
-          }
-        }
-
-        // ── Page-level layout misuse ──
-        if (tagName === "PageLayout" && isRouteFile(rel) && classNameAttr) {
-          const classNameText = getStaticClassNameTextFromAttribute(classNameAttr);
-          const classes = classNameText.split(/\s+/).filter(Boolean);
-          if (
-            classes.some((cls) => cls === "mx-auto" || cls.startsWith("max-w-") || cls === "w-full")
-          ) {
-            reportError(
-              filePath,
-              node,
-              "PageLayout owns outer width and centering. Use the maxWidth prop instead of className shell overrides.",
-            );
-          }
-        }
-      }
-
-      // ── className attribute checks ──
-      if (ts.isJsxAttribute(node) && node.name.getText() === "className") {
-        // String concatenation
-        if (node.initializer && ts.isJsxExpression(node.initializer)) {
-          const expr = node.initializer.expression;
-          if (expr && (ts.isTemplateExpression(expr) || ts.isBinaryExpression(expr))) {
-            reportError(filePath, node, "Use cn() instead of manual className concatenation.");
-          }
-        }
-
-        const classText =
-          node.initializer && ts.isStringLiteral(node.initializer)
-            ? node.initializer.text
-            : node.initializer &&
-                ts.isJsxExpression(node.initializer) &&
-                node.initializer.expression &&
-                ts.isStringLiteral(node.initializer.expression)
-              ? node.initializer.expression.text
-              : "";
-        const classes = classText.split(/\s+/);
-
-        // Redundant dark: on semantic tokens
-        const REDUNDANT_DARK_SEMANTIC =
-          /(bg|text|border|ring)-(ui-bg|ui-text|ui-border|brand|accent|status|palette|priority|issue-type|landing)/;
-        if (classes.some((cls) => cls.startsWith("dark:") && REDUNDANT_DARK_SEMANTIC.test(cls))) {
-          reportError(
-            filePath,
-            node,
-            "Redundant dark: on semantic token. Semantic tokens handle dark mode automatically.",
-          );
-        }
-
-        // Raw Tailwind colors
-        for (const cls of classes) {
-          const bare = cls.replace(/^[a-z-]+:/g, "");
-          if (RAW_TW_COLORS.test(bare)) {
-            reportError(filePath, node, `Raw Tailwind color '${cls}'. Use semantic tokens.`);
-          }
-        }
-
-        // Non-canonical shorthands
-        for (const cls of classes) {
-          if (TAILWIND_SHORTHAND_MAP[cls]) {
-            reportError(
-              filePath,
-              node,
-              `Use '${TAILWIND_SHORTHAND_MAP[cls]}' instead of '${cls}'.`,
-            );
-          }
-        }
-      }
-
-      // Track ancestors for Button asChild check
-      const updatedAncestors =
-        ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)
-          ? [...ancestors, node]
-          : ancestors;
-      ts.forEachChild(node, (child) => visit(child, updatedAncestors));
-    }
-
-    visit(sourceFile, []);
+    errors.push(...collectStandardsViolations(filePath, content));
   }
 
   const files = walkDir(SRC_DIR, { extensions: new Set([".tsx"]) });
@@ -362,10 +364,15 @@ export function run() {
     checkFile(f);
   }
 
+  const messages = errors.map(
+    ({ column, filePath, line, message }) =>
+      `  ${c.red}ERROR${c.reset} ${filePath}:${line}:${column} - ${message}`,
+  );
+
   return {
-    passed: errorCount === 0,
-    errors: errorCount,
-    detail: errorCount > 0 ? `${errorCount} violation(s)` : null,
-    messages: errors,
+    passed: errors.length === 0,
+    errors: errors.length,
+    detail: errors.length > 0 ? `${errors.length} violation(s)` : null,
+    messages,
   };
 }

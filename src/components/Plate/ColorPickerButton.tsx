@@ -9,8 +9,10 @@ import { useEditorRef } from "platejs/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ColorSwatchButton } from "@/components/ui/ColorSwatchButton";
+import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
+import { Inline } from "@/components/ui/Inline";
 import { Popover } from "@/components/ui/Popover";
 import { ChevronDown, Highlighter, type LucideIcon, Type } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -60,22 +62,17 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
           title={tooltip}
           data-testid={type === "fontColor" ? TEST_IDS.EDITOR.FONT_COLOR_TRIGGER : undefined}
         >
-          <span style={{ position: "relative", display: "inline-flex" }}>
+          <Flex as="span" inline className="relative">
             <Icon icon={TriggerIcon} size="sm" />
-            <span
+            <Inline
               aria-hidden="true"
+              className="absolute inset-x-0 -bottom-0.5 h-0.5"
               style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: -2,
-                height: 2,
-                borderRadius: 9999,
                 backgroundColor:
                   currentColor || (type === "fontColor" ? "currentColor" : "transparent"),
               }}
             />
-          </span>
+          </Flex>
           <Icon icon={ChevronDown} size="xs" opacity={0.5} />
         </Button>
       }
