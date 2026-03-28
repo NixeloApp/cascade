@@ -52,6 +52,7 @@ Every shadcn compound component gets one wrapper. Subcomponent exports are delet
 - **Landed:** Wrapper-only `Popover` API with trigger tooltip support, anchored overlays, wrapper-owned header/body/footer chrome slots, migrated production call sites, refreshed Storybook, and shared test mocking for the new contract.
 
 ### CommandMenu (replaces 7 Command subcomponent exports)
+- **Status:** Done (2026-03-28)
 - **Files to update:** 8
 - **API:**
   ```tsx
@@ -65,6 +66,7 @@ Every shadcn compound component gets one wrapper. Subcomponent exports are delet
 - **Supports:** grouped items, custom item rendering via `renderItem`, loading state, keyboard navigation
 - **Delete:** `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandSeparator`, `CommandShortcut` exports (keep `CommandDialog` as it's already a good wrapper)
 - **End state:** 0 feature files importing Command subcomponents
+- **Landed:** Wrapper-only `Command` API with built-in search/header/footer slots, structured group/content sections, wrapper-owned empty/loading states, migrated production consumers, direct wrapper tests, and shared test mocking for the new contract.
 
 ### Already done (reference pattern)
 - **Dialog** — single `Dialog` component, 0 leakage, enforces `title`/`description`
@@ -138,7 +140,7 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 
 ## Exit Criteria
 
-- [ ] Every shadcn compound component has one wrapper. `Select` and `Popover` are done; `Command` remains.
+- [x] Every shadcn compound component has one wrapper. `Select`, `Popover`, and `Command` are done.
 - [ ] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
 - [ ] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
 - [ ] No variant axis above 20 options in shared primitives.

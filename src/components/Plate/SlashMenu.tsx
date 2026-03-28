@@ -9,13 +9,7 @@ import type { PlateEditor } from "platejs/react";
 import { useEditorRef, useEditorSelection } from "platejs/react";
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/Command";
+import { Command } from "@/components/ui/Command";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Popover } from "@/components/ui/Popover";
@@ -433,17 +427,19 @@ export function SlashMenu() {
         sideOffset={4}
       >
         {() => (
-          <Command>
-            <CommandList viewport="slashMenu">
-              <CommandEmpty tone="muted">No results found</CommandEmpty>
-              <CommandGroup heading="Basic blocks" recipe="slashMenu">
-                {filteredItems.map((item) => (
-                  <CommandItem
-                    key={item.id}
-                    value={item.id}
-                    onSelect={() => handleSelect(item)}
-                    recipe="slashMenu"
-                  >
+          <Command
+            emptyMessage="No results found"
+            emptyTone="muted"
+            sections={[
+              {
+                id: "basic-blocks",
+                heading: "Basic blocks",
+                recipe: "slashMenu",
+                items: filteredItems.map((item) => ({
+                  value: item.id,
+                  onSelect: () => handleSelect(item),
+                  recipe: "slashMenu",
+                  render: (
                     <Flex align="center" gap="sm">
                       <Icon icon={item.icon} size="sm" />
                       <Flex direction="column" gap="xs">
@@ -451,11 +447,12 @@ export function SlashMenu() {
                         <Typography variant="muted">{item.description}</Typography>
                       </Flex>
                     </Flex>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+                  ),
+                })),
+              },
+            ]}
+            viewport="slashMenu"
+          />
         )}
       </Popover>
     </>

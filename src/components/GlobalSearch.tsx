@@ -27,11 +27,9 @@ import { Button } from "./ui/Button";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import {
   CommandDialog,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+  type CommandItemConfig,
   Command as CommandMenu,
+  type CommandSection,
 } from "./ui/Command";
 import { KeyboardShortcut, ShortcutHint } from "./ui/KeyboardShortcut";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
@@ -80,7 +78,7 @@ function SearchRowIconShell({
   );
 }
 
-function SearchListRow({
+function createSearchListRow({
   description,
   icon,
   meta,
@@ -100,14 +98,11 @@ function SearchListRow({
   trailing?: ReactNode;
   value: string;
   testId?: string;
-}) {
-  return (
-    <CommandItem
-      value={value}
-      onSelect={onSelect}
-      className="cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
-      data-testid={testId}
-    >
+}): CommandItemConfig {
+  return {
+    className: "cursor-pointer data-[selected=true]:bg-ui-bg-secondary",
+    onSelect: () => onSelect(),
+    render: (
       <Flex align="start" gap="md" className="w-full">
         {icon}
         <FlexItem flex="1" className="min-w-0">
@@ -131,8 +126,10 @@ function SearchListRow({
           </Flex>
         ) : null}
       </Flex>
-    </CommandItem>
-  );
+    ),
+    testId,
+    value,
+  };
 }
 
 function SearchResultGlyph({ type }: { type: SearchResult["type"] }) {
@@ -372,75 +369,83 @@ function getHasMore(
   return documentHasMore;
 }
 
-function CommandActionItem({ command, onClose }: { command: CommandAction; onClose: () => void }) {
-  return (
-    <SearchListRow
-      value={command.id}
-      onSelect={() => {
-        command.action();
-        onClose();
-      }}
-      icon={
-        <SearchRowIconShell tone="muted">
-          {command.icon ? (
-            <Icon icon={command.icon} size="md" />
-          ) : (
-            <Icon icon={Command} size="sm" />
-          )}
-        </SearchRowIconShell>
-      }
-      title={command.label}
-      trailingAlign="start"
-      meta={
-        command.group ? (
-          <Badge variant="outline" shape="pill">
-            {command.group}
-          </Badge>
-        ) : undefined
-      }
-      description={command.description}
-      trailing={<Icon icon={ArrowRight} size="sm" tone="tertiary" />}
-    />
-  );
+function buildCommandActionItem(command: CommandAction, onClose: () => void): CommandItemConfig {
+  return createSearchListRow({
+    value: command.id,
+    onSelect: () => {
+      command.action();
+      onClose();
+    },
+    icon: (
+      <SearchRowIconShell tone="muted">
+        {command.icon ? <Icon icon={command.icon} size="md" /> : <Icon icon={Command} size="sm" />}
+      </SearchRowIconShell>
+    ),
+    title: command.label,
+    trailingAlign: "start",
+    meta: command.group ? (
+      <Badge variant="outline" shape="pill">
+        {command.group}
+      </Badge>
+    ) : undefined,
+    description: command.description,
+    trailing: <Icon icon={ArrowRight} size="sm" tone="tertiary" />,
+  });
 }
 
-function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: () => void }) {
-  const { orgSlug } = useOrganization();
+function buildSearchResultItem({
+  onClose,
+  orgSlug,
+  result,
+}: {
+  onClose: () => void;
+  orgSlug: string;
+  result: SearchResult;
+}): CommandItemConfig {
   const href =
     result.type === "issue"
       ? ROUTES.issues.detail.build(orgSlug, result.key)
       : ROUTES.documents.detail.build(orgSlug, result._id);
 
-  return (
-    <SearchListRow
-      value={result._id}
-      onSelect={() => {
-        window.location.href = href;
-        onClose();
-      }}
-      testId={TEST_IDS.SEARCH.RESULT_ITEM}
-      icon={
-        <SearchRowIconShell>
-          <SearchResultGlyph type={result.type} />
-        </SearchRowIconShell>
-      }
-      meta={
-        <>
-          {result.type === "issue" ? (
-            <Typography variant="inlineCode">{result.key}</Typography>
-          ) : null}
-          <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
-            {result.type}
-          </Badge>
-        </>
-      }
-      title={result.title}
-      description={result.description || "No description"}
-    />
-  );
+  return createSearchListRow({
+    value: result._id,
+    onSelect: () => {
+      window.location.href = href;
+      onClose();
+    },
+    testId: TEST_IDS.SEARCH.RESULT_ITEM,
+    icon: (
+      <SearchRowIconShell>
+        <SearchResultGlyph type={result.type} />
+      </SearchRowIconShell>
+    ),
+    meta: (
+      <>
+        {result.type === "issue" ? (
+          <Typography variant="inlineCode">{result.key}</Typography>
+        ) : null}
+        <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
+          {result.type}
+        </Badge>
+      </>
+    ),
+    title: result.title,
+    description: result.description || "No description",
+  });
 }
 
-function SearchListContent({
+function buildCommandSections(
+  commandGroups: Record<string, CommandAction[]>,
+  onClose: () => void,
+): CommandSection[] {
+  return Object.entries(commandGroups).map(([group, commands]) => ({
+    id: `commands-${group}`,
+    heading: group,
+    items: commands.map((command) => buildCommandActionItem(command, onClose)),
+  }));
+}
+
+function buildSearchSections({
   query,
   hasShortcuts,
   commandGroups,
@@ -451,6 +456,7 @@ function SearchListContent({
   onClose,
   onLoadMore,
   onOpenAdvancedSearch,
+  orgSlug,
 }: {
   query: string;
   hasShortcuts: boolean;
@@ -462,106 +468,112 @@ function SearchListContent({
   onClose: () => void;
   onLoadMore: () => void;
   onOpenAdvancedSearch: () => void;
-}) {
-  const commandGroupEntries = Object.entries(commandGroups);
+  orgSlug: string;
+}): CommandSection[] {
+  const commandSections = buildCommandSections(commandGroups, onClose);
 
   if (query.length === 0) {
-    return (
-      <>
-        <SearchIntroPanel />
-
-        {commandGroupEntries.map(([group, commands]) => (
-          <CommandGroup key={group} heading={group}>
-            {commands.map((command) => (
-              <CommandActionItem key={command.id} command={command} onClose={onClose} />
-            ))}
-          </CommandGroup>
-        ))}
-
-        <SearchInfoPanel>
-          <Typography variant="small">
-            Search across issues and docs, or jump straight into common actions.
-          </Typography>
-        </SearchInfoPanel>
-      </>
-    );
+    return [
+      { type: "content", id: "intro", content: <SearchIntroPanel /> },
+      ...commandSections,
+      {
+        type: "content",
+        id: "intro-info",
+        content: (
+          <SearchInfoPanel>
+            <Typography variant="small">
+              Search across issues and docs, or jump straight into common actions.
+            </Typography>
+          </SearchInfoPanel>
+        ),
+      },
+    ];
   }
 
   if (query.length < 2) {
-    return (
-      <>
-        {commandGroupEntries.map(([group, commands]) => (
-          <CommandGroup key={group} heading={group}>
-            {commands.map((command) => (
-              <CommandActionItem key={command.id} command={command} onClose={onClose} />
-            ))}
-          </CommandGroup>
-        ))}
-        <SearchInfoPanel>
-          <Typography
-            variant="small"
-            color="secondary"
-            data-testid={TEST_IDS.SEARCH.MIN_QUERY_MESSAGE}
-          >
-            {hasShortcuts
-              ? "Add at least 2 non-shortcut characters to search issues and docs"
-              : "Type at least 2 characters to search issues and docs"}
-          </Typography>
-        </SearchInfoPanel>
-      </>
-    );
+    return [
+      ...commandSections,
+      {
+        type: "content",
+        id: "min-query-info",
+        content: (
+          <SearchInfoPanel>
+            <Typography
+              variant="small"
+              color="secondary"
+              data-testid={TEST_IDS.SEARCH.MIN_QUERY_MESSAGE}
+            >
+              {hasShortcuts
+                ? "Add at least 2 non-shortcut characters to search issues and docs"
+                : "Type at least 2 characters to search issues and docs"}
+            </Typography>
+          </SearchInfoPanel>
+        ),
+      },
+    ];
   }
 
   if (isLoading) {
-    return (
-      <Flex
-        direction="column"
-        align="center"
-        className="text-ui-text-secondary"
-        data-testid={TEST_IDS.SEARCH.LOADING_STATE}
-      >
-        <SearchInfoPanel>
-          <LoadingSpinner size="md" variant="brand" message="Searching..." />
-        </SearchInfoPanel>
-      </Flex>
-    );
+    return [
+      {
+        type: "content",
+        id: "loading",
+        content: (
+          <Flex
+            direction="column"
+            align="center"
+            className="text-ui-text-secondary"
+            data-testid={TEST_IDS.SEARCH.LOADING_STATE}
+          >
+            <SearchInfoPanel>
+              <LoadingSpinner size="md" variant="brand" message="Searching..." />
+            </SearchInfoPanel>
+          </Flex>
+        ),
+      },
+    ];
   }
 
-  const hasCommandMatches = commandGroupEntries.length > 0;
+  const hasCommandMatches = commandSections.length > 0;
   const hasSearchMatches = filteredResults.length > 0;
 
-  return (
-    <>
-      {commandGroupEntries.map(([group, commands]) => (
-        <CommandGroup key={group} heading={group}>
-          {commands.map((command) => (
-            <CommandActionItem key={command.id} command={command} onClose={onClose} />
-          ))}
-        </CommandGroup>
-      ))}
-
-      {!hasSearchMatches ? (
-        <SearchEmptyState
-          hasCommandMatches={hasCommandMatches}
-          onOpenAdvancedSearch={onOpenAdvancedSearch}
-        />
-      ) : (
-        <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP} heading="Results">
-          {filteredResults.map((result) => (
-            <SearchResultItem key={result._id} result={result} onClose={onClose} />
-          ))}
-        </CommandGroup>
-      )}
-
-      {hasMore ? (
-        <SearchInfoPanel>
-          <Button variant="brandSubtle" size="sm" onClick={onLoadMore} className="w-full">
-            Load More ({totalCount - filteredResults.length} remaining)
-          </Button>
-        </SearchInfoPanel>
-      ) : null}
-    </>
-  );
+  return [
+    ...commandSections,
+    !hasSearchMatches
+      ? {
+          type: "content" as const,
+          id: "no-results",
+          content: (
+            <SearchEmptyState
+              hasCommandMatches={hasCommandMatches}
+              onOpenAdvancedSearch={onOpenAdvancedSearch}
+            />
+          ),
+        }
+      : {
+          id: "results",
+          heading: "Results",
+          items: filteredResults.map((result) =>
+            buildSearchResultItem({ result, onClose, orgSlug }),
+          ),
+          testId: TEST_IDS.SEARCH.RESULTS_GROUP,
+        },
+    ...(hasMore
+      ? [
+          {
+            type: "content" as const,
+            id: "load-more",
+            content: (
+              <SearchInfoPanel>
+                <Button variant="brandSubtle" size="sm" onClick={onLoadMore} className="w-full">
+                  Load More ({totalCount - filteredResults.length} remaining)
+                </Button>
+              </SearchInfoPanel>
+            ),
+          },
+        ]
+      : []),
+  ];
 }
 
 /** Unified omnibox for searching issues/documents and executing app actions. */
@@ -635,6 +647,19 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
   ) => {
     event.preventDefault();
   };
+  const searchSections = buildSearchSections({
+    query: effectiveQuery,
+    hasShortcuts: parsedSearch.hasShortcuts,
+    commandGroups,
+    isLoading,
+    filteredResults,
+    hasMore,
+    totalCount,
+    onClose: () => setIsOpen(false),
+    onLoadMore: handleLoadMore,
+    onOpenAdvancedSearch: handleOpenAdvancedSearch,
+    orgSlug,
+  });
 
   return (
     <>
@@ -666,82 +691,68 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         title="Search and commands"
         description="Find issues and documents, navigate the app, or run quick actions."
       >
-        <CommandMenu data-testid={TEST_IDS.SEARCH.MODAL} shouldFilter={false}>
-          {/* Fixed header: search input */}
-          <CommandInput
-            placeholder="Search issues, docs, and commands..."
-            value={query}
-            onValueChange={setQuery}
-            className="shrink-0 text-ui-text"
-            data-testid={TEST_IDS.SEARCH.INPUT}
-            aria-label="Search and commands"
-          />
-
-          {/* Fixed header: filter tabs (when searching) */}
-          {effectiveQuery.length >= 2 ? (
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
-              className="shrink-0"
-            >
-              <Card
-                variant="ghost"
-                padding="none"
-                radius="none"
-                className="border-b border-ui-border/50 bg-ui-bg-soft/30"
-              >
-                <TabsList variant="underline" className="gap-5 px-3">
-                  <TabsTrigger
-                    value="all"
-                    variant="underline"
-                    size="underlineCompact"
-                    data-testid={TEST_IDS.SEARCH.TAB_ALL}
-                  >
-                    All ({issueTotal + documentTotal})
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="issues"
-                    variant="underline"
-                    size="underlineCompact"
-                    data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
-                  >
-                    Issues ({issueTotal})
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="documents"
-                    variant="underline"
-                    size="underlineCompact"
-                    data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
-                  >
-                    Documents ({documentTotal})
-                  </TabsTrigger>
-                </TabsList>
-              </Card>
-            </Tabs>
-          ) : null}
-
-          {/* Scrollable body: search results and commands */}
-          <CommandList>
-            <SearchListContent
-              query={effectiveQuery}
-              hasShortcuts={parsedSearch.hasShortcuts}
-              commandGroups={commandGroups}
-              isLoading={isLoading}
-              filteredResults={filteredResults}
-              hasMore={hasMore}
-              totalCount={totalCount}
-              onClose={() => setIsOpen(false)}
-              onLoadMore={handleLoadMore}
+        <CommandMenu
+          data-testid={TEST_IDS.SEARCH.MODAL}
+          footer={
+            <SearchFooter
               onOpenAdvancedSearch={handleOpenAdvancedSearch}
+              onSearchWithFilters={() => setQuery("@")}
             />
-          </CommandList>
-
-          {/* Fixed footer: actions, hints, and shortcuts */}
-          <SearchFooter
-            onOpenAdvancedSearch={handleOpenAdvancedSearch}
-            onSearchWithFilters={() => setQuery("@")}
-          />
-        </CommandMenu>
+          }
+          header={
+            effectiveQuery.length >= 2 ? (
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
+                className="shrink-0"
+              >
+                <Card
+                  variant="ghost"
+                  padding="none"
+                  radius="none"
+                  className="border-b border-ui-border/50 bg-ui-bg-soft/30"
+                >
+                  <TabsList variant="underline" className="gap-5 px-3">
+                    <TabsTrigger
+                      value="all"
+                      variant="underline"
+                      size="underlineCompact"
+                      data-testid={TEST_IDS.SEARCH.TAB_ALL}
+                    >
+                      All ({issueTotal + documentTotal})
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="issues"
+                      variant="underline"
+                      size="underlineCompact"
+                      data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
+                    >
+                      Issues ({issueTotal})
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="documents"
+                      variant="underline"
+                      size="underlineCompact"
+                      data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
+                    >
+                      Documents ({documentTotal})
+                    </TabsTrigger>
+                  </TabsList>
+                </Card>
+              </Tabs>
+            ) : null
+          }
+          search={{
+            placeholder: "Search issues, docs, and commands...",
+            value: query,
+            onValueChange: setQuery,
+            className: "shrink-0 text-ui-text",
+            testId: TEST_IDS.SEARCH.INPUT,
+            ariaLabel: "Search and commands",
+          }}
+          sections={searchSections}
+          shouldFilter={false}
+        />
       </CommandDialog>
 
       {isAdvancedOpen ? (

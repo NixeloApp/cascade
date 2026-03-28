@@ -1,5 +1,4 @@
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@/test/custom-render";
 import { SlashMenu } from "./SlashMenu";
@@ -14,28 +13,7 @@ vi.mock("platejs/react", () => ({
   useEditorSelection: mockUseEditorSelection,
 }));
 
-vi.mock("@/components/ui/Command", () => ({
-  Command: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CommandList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CommandEmpty: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CommandGroup: ({ children, heading }: { children: ReactNode; heading?: string }) => (
-    <section>
-      {heading ? <div>{heading}</div> : null}
-      {children}
-    </section>
-  ),
-  CommandItem: ({
-    children,
-    onSelect,
-  }: {
-    children: ReactNode;
-    onSelect?: (value: string) => void;
-  }) => (
-    <button type="button" onClick={() => onSelect?.("")}>
-      {children}
-    </button>
-  ),
-}));
+vi.mock("@/components/ui/Command", async () => await import("@/test/__tests__/commandMock"));
 
 function setDomSelection({
   text,

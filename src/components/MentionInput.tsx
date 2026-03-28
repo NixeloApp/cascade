@@ -15,7 +15,7 @@ import { CommentRenderer } from "./CommentRenderer";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
-import { Command, CommandItem, CommandList } from "./ui/Command";
+import { Command } from "./ui/Command";
 import { Flex } from "./ui/Flex";
 import { IconButton } from "./ui/IconButton";
 import { Popover } from "./ui/Popover";
@@ -223,7 +223,9 @@ export function MentionInput({
             tooltip={{ content: "Insert emoji" }}
             trigger={
               <IconButton size="sm" aria-label="Insert emoji" disabled={isPreviewMode}>
-                <span aria-hidden="true">😊</span>
+                <Typography as="span" aria-hidden="true">
+                  😊
+                </Typography>
               </IconButton>
             }
           >
@@ -273,28 +275,34 @@ export function MentionInput({
 
       {/* Mention Suggestions Dropdown */}
       {showSuggestions && filteredMembers.length > 0 && !isPreviewMode && (
-        <Command recipe="suggestionMenu" className="absolute bottom-full left-0 z-50 mb-2 w-64">
-          <CommandList className="max-h-48">
-            {filteredMembers.map((member, index) => (
-              <CommandItem
-                key={member._id}
-                value={member.userName || ""}
-                onSelect={() => insertMention(member.userName || "Unknown", member.userId)}
-                data-selected={index === selectedIndex ? "true" : undefined}
-              >
-                <Avatar name={member.userName} size="md" />
-                <div className="min-w-0">
-                  <Typography variant="label" className="truncate">
-                    {member.userName}
-                  </Typography>
-                  <Typography variant="caption" className="capitalize">
-                    User
-                  </Typography>
-                </div>
-              </CommandItem>
-            ))}
-          </CommandList>
-        </Command>
+        <Command
+          recipe="suggestionMenu"
+          className="absolute bottom-full left-0 z-50 mb-2 w-64"
+          listClassName="max-h-48"
+          sections={[
+            {
+              id: "mention-suggestions",
+              items: filteredMembers.map((member, index) => ({
+                value: member.userName || "",
+                onSelect: () => insertMention(member.userName || "Unknown", member.userId),
+                selected: index === selectedIndex,
+                render: (
+                  <>
+                    <Avatar name={member.userName} size="md" />
+                    <Stack gap="xs" className="min-w-0">
+                      <Typography variant="label" className="truncate">
+                        {member.userName}
+                      </Typography>
+                      <Typography variant="caption" className="capitalize">
+                        User
+                      </Typography>
+                    </Stack>
+                  </>
+                ),
+              })),
+            },
+          ]}
+        />
       )}
 
       {/* Helper text */}
