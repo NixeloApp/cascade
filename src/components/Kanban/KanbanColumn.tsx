@@ -16,6 +16,20 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
+import {
+  getKanbanCollapsedBodyClassName,
+  getKanbanCollapsedSectionClassName,
+  getKanbanCollapsedShellClassName,
+  getKanbanCollapsedTitleClassName,
+  getKanbanColumnActionsClassName,
+  getKanbanColumnCountBadgeClassName,
+  getKanbanColumnTitleClassName,
+  getKanbanColumnTitleRowClassName,
+  getKanbanExpandedSectionClassName,
+  getKanbanExpandedShellClassName,
+  getKanbanIssueItemAnimationClassName,
+  getKanbanLoadMoreButtonClassName,
+} from "@/components/ui/kanbanColumnSurfaceClassNames";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { LargeText, Typography } from "@/components/ui/Typography";
@@ -111,7 +125,7 @@ function KanbanIssueItem({
   };
 
   return (
-    <div className="animate-scale-in" style={style}>
+    <div className={getKanbanIssueItemAnimationClassName()} style={style}>
       <IssueCard
         issue={issue}
         onClick={onClick}
@@ -154,7 +168,7 @@ function CollapsedColumn({
       ref={columnRef}
       aria-label={`${state.name} column (collapsed)`}
       data-testid={TEST_IDS.BOARD.COLUMN}
-      className="w-11 shrink-0 snap-start animate-slide-up"
+      className={getKanbanCollapsedSectionClassName()}
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
       }}
@@ -163,10 +177,15 @@ function CollapsedColumn({
         recipe="kanbanColumnCollapsedShell"
         className={cn(
           getWorkflowCategoryColor(state.category),
-          isDraggedOver && "bg-brand/5 ring-2 ring-brand/30",
+          getKanbanCollapsedShellClassName(isDraggedOver),
         )}
       >
-        <Flex direction="column" align="center" gap="sm" className="h-full">
+        <Flex
+          direction="column"
+          align="center"
+          gap="sm"
+          className={getKanbanCollapsedBodyClassName()}
+        >
           <Tooltip content={`Expand ${state.name}`}>
             <IconButton
               onClick={onToggleCollapse}
@@ -181,7 +200,7 @@ function CollapsedColumn({
             <LargeText
               as="p"
               color="secondary"
-              className="text-sm"
+              className={getKanbanCollapsedTitleClassName()}
               style={{ transform: "rotate(180deg)" }}
             >
               {state.name}
@@ -232,15 +251,15 @@ function ColumnHeader({
       className={getCardRecipeClassName("kanbanColumnHeader")}
     >
       <Flex align="center" justify="between" gap="xs">
-        <Flex align="center" gap="xs" className="min-w-0">
-          <Typography variant="caption" className="truncate">
+        <Flex align="center" gap="xs" className={getKanbanColumnTitleRowClassName()}>
+          <Typography variant="caption" className={getKanbanColumnTitleClassName()}>
             {state.name}
           </Typography>
           <Badge
             data-testid={TEST_IDS.BOARD.COLUMN_COUNT}
             variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
             shape="pill"
-            className="shrink-0"
+            className={getKanbanColumnCountBadgeClassName()}
           >
             {hiddenCount > 0 ? `${stateIssues.length}/${totalCount}` : stateIssues.length}
             {state.wipLimit ? `/${state.wipLimit}` : ""}
@@ -253,7 +272,7 @@ function ColumnHeader({
             </Tooltip>
           )}
         </Flex>
-        <Flex align="center" gap="xs" className="shrink-0">
+        <Flex align="center" gap="xs" className={getKanbanColumnActionsClassName()}>
           {onToggleCollapse && (
             <Tooltip content={`Collapse ${state.name}`}>
               <IconButton
@@ -476,7 +495,7 @@ const KanbanColumnComponent = function KanbanColumn({
       ref={columnRef}
       aria-label={`${state.name} column`}
       data-testid={TEST_IDS.BOARD.COLUMN}
-      className="shrink-0 snap-start animate-slide-up"
+      className={getKanbanExpandedSectionClassName()}
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
       }}
@@ -484,11 +503,8 @@ const KanbanColumnComponent = function KanbanColumn({
       <Card
         recipe="kanbanColumnShell"
         className={cn(
-          "h-full",
           getWorkflowCategoryColor(state.category),
-          isDraggedOver && "bg-brand/5 ring-2 ring-brand/30",
-          isOverWipLimit && "border-status-error/50 bg-status-error/5",
-          isAtWipLimit && !isOverWipLimit && "border-status-warning/50",
+          getKanbanExpandedShellClassName(isDraggedOver, isOverWipLimit, isAtWipLimit),
         )}
       >
         <ColumnHeader
@@ -532,7 +548,7 @@ const KanbanColumnComponent = function KanbanColumn({
                   onClick={handleLoadMore}
                   isLoading={isLoadingMore}
                   remainingCount={hiddenCount}
-                  className="w-full"
+                  className={getKanbanLoadMoreButtonClassName()}
                 />
               )}
 
