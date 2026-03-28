@@ -277,6 +277,7 @@ CRITICAL: Command produced no output. This is NOT success.
 - Using `any` to bypass type checking
 - Suppressing lint rules without fixing underlying issue
 - Assuming empty output means success
+- Dismissing failures as "pre-existing" — if a test fails, fix it. There is no distinction between "your bug" and "someone else's bug." All failures are your problem.
 
 ### Required Approach
 
