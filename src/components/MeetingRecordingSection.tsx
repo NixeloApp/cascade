@@ -428,7 +428,7 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
           <CollapsibleContent>
             <Card variant="soft" padding="md">
               <ScrollArea size="contentLg">
-                <Typography as="pre" variant="monoBlock">
+                <Typography as="pre" variant="mono" className="whitespace-pre-wrap">
                   {transcript.fullText}
                 </Typography>
               </ScrollArea>

@@ -20,7 +20,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
 import { AlertCircle, CheckCircle, Clock, Loader2 } from "@/lib/icons";
@@ -73,7 +73,7 @@ function JoinBrandHeader() {
             N
           </Typography>
         </IconCircle>
-        <Typography variant="large">Nixelo</Typography>
+        <LargeText>Nixelo</LargeText>
       </Flex>
     </header>
   );

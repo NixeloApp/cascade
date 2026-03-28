@@ -65,7 +65,7 @@ export function WorkspaceLayout() {
         {isNestedTeamRoute ? (
           <PageControls tone="strip" padding="sm" gap="sm" spacing="stack">
             <Flex align="center" gap="xs" wrap className="min-w-0">
-              <Typography variant="pageHeaderEyebrow">Workspace sections</Typography>
+              <Typography variant="eyebrowWide">Workspace sections</Typography>
               <Typography variant="label" className="min-w-0 truncate">
                 {workspace.name}
               </Typography>

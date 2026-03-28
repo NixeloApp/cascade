@@ -16,7 +16,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { KeyboardShortcut } from "@/components/ui/KeyboardShortcut";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { LeadText, Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { ArrowLeft, Bell, Building2, Clock, FileText, Kanban } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -109,7 +109,7 @@ export function MemberOnboarding({
             <Typography variant="h1" data-testid={TEST_IDS.ONBOARDING.NAME_PROJECT_HEADING}>
               Name Your Project
             </Typography>
-            <Typography variant="lead">Create a project for your team to collaborate</Typography>
+            <LeadText>Create a project for your team to collaborate</LeadText>
           </Stack>
         </Stack>
 
@@ -171,7 +171,7 @@ export function MemberOnboarding({
         <Typography variant="h2" data-testid={TEST_IDS.ONBOARDING.ALL_SET_HEADING}>
           You're ready
         </Typography>
-        <Typography variant="lead">Here's what you can do in Nixelo</Typography>
+        <LeadText>Here's what you can do in Nixelo</LeadText>
       </Stack>
 
       {/* What you can do */}

@@ -67,13 +67,17 @@ export function WorkspaceCard({ orgSlug, workspace }: WorkspaceCardProps) {
           <Grid cols={2} gap="sm">
             <CardSection>
               <Stack gap="xs">
-                <Typography variant="metricLabel">Teams</Typography>
+                <Typography variant="eyebrowWide" color="secondary">
+                  Teams
+                </Typography>
                 <Typography variant="h5">{workspace.teamCount}</Typography>
               </Stack>
             </CardSection>
             <CardSection>
               <Stack gap="xs">
-                <Typography variant="metricLabel">Projects</Typography>
+                <Typography variant="eyebrowWide" color="secondary">
+                  Projects
+                </Typography>
                 <Typography variant="h5">{workspace.projectCount}</Typography>
               </Stack>
             </CardSection>

@@ -25,7 +25,7 @@ import { NavItem as NavItemBase } from "@/components/ui/NavItem";
 import { Separator } from "@/components/ui/Separator";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip, TooltipProvider } from "@/components/ui/Tooltip";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -656,7 +656,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                             )}
                           >
                             <Flex align="center" justify="center" className="h-full">
-                              <Typography variant="sidebarOrgInitial">
+                              <Typography as="span" variant="label" className="text-current">
                                 {organizationName.charAt(0).toUpperCase()}
                               </Typography>
                             </Flex>
@@ -665,9 +665,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                             <Typography variant="eyebrow" color="tertiary">
                               Workspace
                             </Typography>
-                            <Typography variant="large" className="max-w-36 truncate">
-                              {organizationName}
-                            </Typography>
+                            <LargeText className="truncate">{organizationName}</LargeText>
                           </div>
                         </Flex>
                       </div>

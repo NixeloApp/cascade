@@ -68,7 +68,7 @@ export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormPro
 
   return (
     <Stack gap="lg">
-      <Typography variant="authBody">
+      <Typography variant="small" color="secondary">
         Enter your email and we'll send you a code to reset your password.
       </Typography>
       <form ref={formRef} onSubmit={handleSubmit}>

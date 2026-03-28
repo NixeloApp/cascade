@@ -35,7 +35,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
 
         {/* Heading + Subtitle */}
         <Stack gap="sm">
-          <Typography variant="pageHeaderEyebrow">Secure account access</Typography>
+          <Typography variant="eyebrowWide">Secure account access</Typography>
           <Typography variant="h2">{title}</Typography>
           {subtitle ? (
             <Typography variant="muted" color="secondary">

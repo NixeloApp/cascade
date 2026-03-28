@@ -26,7 +26,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { Typography } from "@/components/ui/Typography";
+import { DocumentTitleText, Typography } from "@/components/ui/Typography";
 import {
   Archive,
   Download,
@@ -357,27 +357,20 @@ export function DocumentHeader({
     }
   };
 
-  const titleComponent = (
-    <Typography
-      as="h2"
+  const titleComponent = document.isOwner ? (
+    <Card
+      variant="ghost"
+      hoverable
+      radius="md"
+      padding="none"
       data-testid={TEST_IDS.DOCUMENT.TITLE}
-      role={document.isOwner ? "button" : undefined}
-      tabIndex={document.isOwner ? 0 : undefined}
-      variant={document.isOwner ? "documentTitleInteractive" : "documentTitle"}
-      onClick={document.isOwner ? handleTitleEdit : undefined}
-      onKeyDown={
-        document.isOwner
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleTitleEdit();
-              }
-            }
-          : undefined
-      }
+      onClick={handleTitleEdit}
+      className="inline-flex self-start border-transparent px-2 py-1 shadow-none"
     >
-      {document.title}
-    </Typography>
+      <DocumentTitleText as="span">{document.title}</DocumentTitleText>
+    </Card>
+  ) : (
+    <DocumentTitleText data-testid={TEST_IDS.DOCUMENT.TITLE}>{document.title}</DocumentTitleText>
   );
 
   return (

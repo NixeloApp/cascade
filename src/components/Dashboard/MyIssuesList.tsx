@@ -176,7 +176,7 @@ export function MyIssuesList({
                         {issue.priority}
                       </Badge>
                     </Flex>
-                    <Typography variant="cardTitle">{issue.title}</Typography>
+                    <Typography variant="h5">{issue.title}</Typography>
                     <Metadata size="xs" gap="xs">
                       <MetadataItem>{issue.projectName}</MetadataItem>
                       <MetadataItem>{issue.status}</MetadataItem>

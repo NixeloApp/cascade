@@ -677,7 +677,9 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           <SearchRowIconShell className="border-ui-border/60 sm:size-7" tone="muted">
             <Icon icon={Search} size="sm" />
           </SearchRowIconShell>
-          <Typography variant="searchTriggerLabel">Search, jump, or create...</Typography>
+          <Typography variant="small" color="secondary" className="hidden truncate sm:block">
+            Search, jump, or create...
+          </Typography>
         </Flex>
         <FlexItem shrink={false} className="hidden sm:block">
           <KeyboardShortcut shortcut="⌘+K" />

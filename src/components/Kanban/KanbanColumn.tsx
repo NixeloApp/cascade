@@ -18,7 +18,7 @@ import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, Typography } from "@/components/ui/Typography";
 import type { CardDisplayOptions } from "@/lib/card-display-utils";
 import { ANIMATION } from "@/lib/constants";
 import type { UserSummary } from "@/lib/entitySummaries";
@@ -178,9 +178,14 @@ function CollapsedColumn({
             </IconButton>
           </Tooltip>
           <Flex flex="1" align="center" justify="center" style={{ writingMode: "vertical-lr" }}>
-            <Typography variant="boardColumnTitle" style={{ transform: "rotate(180deg)" }}>
+            <LargeText
+              as="p"
+              color="secondary"
+              className="text-sm"
+              style={{ transform: "rotate(180deg)" }}
+            >
               {state.name}
-            </Typography>
+            </LargeText>
           </Flex>
           <Badge
             variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
@@ -228,7 +233,9 @@ function ColumnHeader({
     >
       <Flex align="center" justify="between" gap="xs">
         <Flex align="center" gap="xs" className="min-w-0">
-          <Typography variant="boardColumnTitleCompact">{state.name}</Typography>
+          <Typography variant="caption" className="truncate">
+            {state.name}
+          </Typography>
           <Badge
             data-testid={TEST_IDS.BOARD.COLUMN_COUNT}
             variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
@@ -469,7 +476,7 @@ const KanbanColumnComponent = function KanbanColumn({
       ref={columnRef}
       aria-label={`${state.name} column`}
       data-testid={TEST_IDS.BOARD.COLUMN}
-      className="w-72 shrink-0 snap-start animate-slide-up lg:w-80"
+      className="shrink-0 snap-start animate-slide-up"
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
       }}

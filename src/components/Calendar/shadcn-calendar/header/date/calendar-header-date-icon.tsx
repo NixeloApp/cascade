@@ -13,12 +13,19 @@ export function CalendarHeaderDateIcon(): React.ReactElement {
       <Flex direction="column" align="start" className="h-full w-full">
         <div className={getCardRecipeClassName("calendarHeaderDateIconMonth")}>
           <Flex align="center" justify="center" className="h-full w-full">
-            <Typography variant="calendarHeaderMonth">{format(date, "MMM")}</Typography>
+            <Typography variant="eyebrow" as="span" className="text-center text-brand-foreground">
+              {format(date, "MMM")}
+            </Typography>
           </Flex>
         </div>
         <div className={getCardRecipeClassName("calendarHeaderDateIconDay")}>
           <Flex align="center" justify="center" className="h-full w-full">
-            <Typography variant="calendarHeaderDay">{format(date, "dd")}</Typography>
+            <Typography as="span" variant="h5" className="sm:hidden">
+              {format(date, "dd")}
+            </Typography>
+            <Typography as="span" variant="h4" className="hidden sm:inline">
+              {format(date, "dd")}
+            </Typography>
           </Flex>
         </div>
       </Flex>

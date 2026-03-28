@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/Table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, MetricText, Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -335,7 +335,7 @@ function MetricTile({
     <Card padding="md" variant="soft" className="h-full">
       <Stack gap="xs">
         <Typography variant="eyebrowWide">{title}</Typography>
-        <Typography variant="dashboardStatValueStrong">{value}</Typography>
+        <MetricText>{value}</MetricText>
         <Typography variant="caption">{description}</Typography>
       </Stack>
     </Card>
@@ -354,7 +354,7 @@ function SectionTitle({
   return (
     <Flex justify="between" align="start" direction="column" directionSm="row" gap="sm">
       <Stack gap="xs">
-        <Typography variant="cardTitle" as="h3">
+        <Typography variant="h5" as="h3">
           {title}
         </Typography>
         <Typography variant="caption">{description}</Typography>
@@ -1845,9 +1845,7 @@ function MailboxCardHeader({
   return (
     <Flex justify="between" align="start" gap="sm">
       <Stack gap="xs">
-        <Typography variant="large" as="span">
-          {mailbox.displayName || mailbox.email}
-        </Typography>
+        <LargeText as="span">{mailbox.displayName || mailbox.email}</LargeText>
         <Typography variant="caption" as="span">
           {mailbox.email} • {getProviderLabel(mailbox.provider)}
         </Typography>

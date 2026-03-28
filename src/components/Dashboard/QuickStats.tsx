@@ -7,6 +7,7 @@
  */
 
 import { useId } from "react";
+import { cn } from "@/lib/utils";
 import { Card, type CardProps } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -35,7 +36,7 @@ interface StatCardProps {
   titleClassName?: string;
   progressIndicatorClassName?: string;
   progressValue?: number;
-  valueVariant?: "dashboardStatValue" | "dashboardStatValueStrong";
+  emphasizedValue?: boolean;
 }
 interface StatCardConfig {
   title: string;
@@ -45,7 +46,7 @@ interface StatCardConfig {
   valueClassName?: string;
   titleClassName?: string;
   progressIndicatorClassName?: string;
-  valueVariant?: "dashboardStatValue" | "dashboardStatValueStrong";
+  emphasizedValue?: boolean;
 }
 
 const STAT_CARD_CONFIGS: readonly StatCardConfig[] = [
@@ -71,7 +72,7 @@ const STAT_CARD_CONFIGS: readonly StatCardConfig[] = [
     recipe: "metricTileWarning",
     valueClassName: "text-status-warning",
     titleClassName: "text-status-warning",
-    valueVariant: "dashboardStatValueStrong",
+    emphasizedValue: true,
   },
   {
     title: "Contribution",
@@ -94,7 +95,7 @@ function StatCard({
   valueClassName,
   progressIndicatorClassName,
   progressValue,
-  valueVariant = "dashboardStatValue",
+  emphasizedValue = false,
 }: StatCardProps) {
   const progressId = useId();
 
@@ -105,7 +106,15 @@ function StatCard({
           {title}
         </Typography>
         <Flex align="baseline" gap="sm" wrap>
-          <Typography variant={valueVariant} className={valueClassName}>
+          <Typography
+            variant="p"
+            className={cn(
+              emphasizedValue
+                ? "text-3xl font-extrabold tracking-tight text-ui-text"
+                : "text-display-sm font-semibold tracking-tight text-ui-text",
+              valueClassName,
+            )}
+          >
             {value || 0}
           </Typography>
           <Typography variant="small" color="secondary">
@@ -174,7 +183,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
             recipe={accentClasses.recipe}
             titleClassName={accentClasses.titleClassName}
             valueClassName={accentClasses.valueClassName}
-            valueVariant={config.valueVariant}
+            emphasizedValue={config.emphasizedValue}
             progressIndicatorClassName={config.progressIndicatorClassName}
             progressValue={
               config.statKey === "completedThisWeek" ? completionPercentage : undefined

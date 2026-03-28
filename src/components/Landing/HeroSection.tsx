@@ -8,7 +8,7 @@ import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Inline } from "../ui/Inline";
 import { Stack } from "../ui/Stack";
-import { Typography } from "../ui/Typography";
+import { LeadText, Typography } from "../ui/Typography";
 import { ProductShowcase } from "./ProductShowcase";
 
 const heroSignals = [
@@ -50,8 +50,7 @@ export function HeroSection() {
                 </Inline>
               </Typography>
 
-              <Typography
-                variant="lead"
+              <LeadText
                 style={{
                   animation: "var(--animation-slide-up)",
                   animationDelay: "0.2s",
@@ -60,7 +59,7 @@ export function HeroSection() {
               >
                 Nixelo keeps specs, tasks, client updates, and AI assistance in the same flow so
                 teams can search faster, act faster, and stop duplicating context.
-              </Typography>
+              </LeadText>
             </Stack>
           </Container>
 

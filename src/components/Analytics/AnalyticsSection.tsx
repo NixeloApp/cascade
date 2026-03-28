@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Card, type CardProps } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
 
 interface AnalyticsSectionProps extends Omit<CardProps, "children" | "recipe" | "title"> {
@@ -34,7 +34,7 @@ export function AnalyticsSection({
         <Flex justify="between" align="start" gap="md" wrap>
           <FlexItem flex="1">
             <Stack gap="xs">
-              {typeof title === "string" ? <Typography variant="large">{title}</Typography> : title}
+              {typeof title === "string" ? <LargeText>{title}</LargeText> : title}
               {description ? (
                 <Typography variant="small" color="secondary">
                   {description}

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { Typography } from "@/components/ui/Typography";
+import { LeadText, Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -174,9 +174,7 @@ function OnboardingPage() {
                 >
                   Welcome to Nixelo
                 </Typography>
-                <Typography variant="lead" className="text-ui-text-secondary">
-                  How would you like to use your new workspace?
-                </Typography>
+                <LeadText>How would you like to use your new workspace?</LeadText>
               </div>
 
               <RoleSelector onSelect={handleRoleSelect} />

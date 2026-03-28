@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/Breadcrumb";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { PageTitleText, Typography } from "@/components/ui/Typography";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 
@@ -73,12 +73,17 @@ export function PageHeader({
           directionSm="row"
         >
           <Stack gap="xs" className="min-w-0">
-            {eyebrow ? <Typography variant="pageHeaderEyebrow">{eyebrow}</Typography> : null}
-            <Typography variant="pageHeaderTitle" as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
+            {eyebrow ? <Typography variant="eyebrowWide">{eyebrow}</Typography> : null}
+            <PageTitleText as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
               {title}
-            </Typography>
+            </PageTitleText>
             {description ? (
-              <Typography variant="pageHeaderDescription" data-testid={descriptionTestId}>
+              <Typography
+                variant="small"
+                color="tertiary"
+                className="max-w-3xl leading-5"
+                data-testid={descriptionTestId}
+              >
                 {description}
               </Typography>
             ) : null}

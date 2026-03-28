@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { TimeEntryModal } from "./TimeTracking/TimeEntryModal";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
-import { Typography } from "./ui/Typography";
+import { LargeText, Typography } from "./ui/Typography";
 
 interface TimeTrackerProps {
   issueId: Id<"issues">;
@@ -103,9 +103,7 @@ function TimeEntriesList({
             <div key={entry._id}>
               <Flex align="start" justify="between">
                 <Stack gap="xs">
-                  <Typography variant="large" as="div">
-                    {hours}h
-                  </Typography>
+                  <LargeText as="div">{hours}h</LargeText>
                   {entry.description && (
                     <Typography variant="caption">{entry.description}</Typography>
                   )}

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Typography } from "./Typography";
+import { TYPOGRAPHY_VARIANTS, Typography } from "./Typography";
 
 const meta: Meta<typeof Typography> = {
   title: "UI/Typography",
@@ -11,20 +11,7 @@ const meta: Meta<typeof Typography> = {
   argTypes: {
     variant: {
       control: "select",
-      options: [
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "p",
-        "blockquote",
-        "list",
-        "inlineCode",
-        "lead",
-        "large",
-        "small",
-        "muted",
-      ],
+      options: TYPOGRAPHY_VARIANTS,
       description: "The typography variant to render",
     },
     color: {
@@ -96,20 +83,6 @@ export const Paragraph: Story = {
   },
 };
 
-export const Lead: Story = {
-  args: {
-    variant: "lead",
-    children: "This is lead text, typically used for introductory paragraphs or emphasis.",
-  },
-};
-
-export const Large: Story = {
-  args: {
-    variant: "large",
-    children: "This is large text with semibold weight.",
-  },
-};
-
 export const Small: Story = {
   args: {
     variant: "small",
@@ -121,6 +94,20 @@ export const Muted: Story = {
   args: {
     variant: "muted",
     children: "This is muted text with reduced emphasis.",
+  },
+};
+
+export const Eyebrow: Story = {
+  args: {
+    variant: "eyebrow",
+    children: "Section label",
+  },
+};
+
+export const Mono: Story = {
+  args: {
+    variant: "mono",
+    children: "DEMO-142",
   },
 };
 
@@ -248,14 +235,16 @@ export const TypographyScale: Story = {
       <Typography variant="h2">Heading 2 - The Quick Brown Fox</Typography>
       <Typography variant="h3">Heading 3 - The Quick Brown Fox</Typography>
       <Typography variant="h4">Heading 4 - The Quick Brown Fox</Typography>
-      <Typography variant="lead">
-        Lead text - A larger, slightly muted paragraph used for introductions.
+      <Typography variant="p" className="text-xl text-ui-text-secondary">
+        Intro text - A larger, slightly muted paragraph used for introductions.
       </Typography>
       <Typography variant="p">
         Paragraph - Regular body text with comfortable line height for extended reading. This is the
         default variant and works well for most content.
       </Typography>
-      <Typography variant="large">Large text - Emphasized text that stands out.</Typography>
+      <Typography variant="label" className="text-lg font-semibold">
+        Emphasized text that stands out.
+      </Typography>
       <Typography variant="small">Small text - Reduced size for captions and metadata.</Typography>
       <Typography variant="muted">
         Muted text - De-emphasized content for secondary information.
@@ -316,8 +305,12 @@ export const AllSizes: Story = {
       <Typography variant="caption">Caption (xs) - 12px</Typography>
       <Typography variant="small">Small (sm) - 14px</Typography>
       <Typography variant="p">Paragraph (base) - 16px</Typography>
-      <Typography variant="large">Large - 18px</Typography>
-      <Typography variant="lead">Lead (xl) - 20px</Typography>
+      <Typography variant="label" className="text-lg font-semibold">
+        Label with local emphasis - 18px
+      </Typography>
+      <Typography variant="p" className="text-xl text-ui-text-secondary">
+        Intro copy via local className - 20px
+      </Typography>
     </div>
   ),
   parameters: {
@@ -398,7 +391,7 @@ export const ArticleExample: Story = {
   render: () => (
     <article className="flex max-w-2xl flex-col gap-4">
       <Typography variant="h1">Getting Started with Nixelo</Typography>
-      <Typography variant="lead">
+      <Typography variant="p" className="text-xl text-ui-text-secondary">
         A comprehensive guide to setting up your first project and understanding the core concepts.
       </Typography>
       <Typography variant="h2">Installation</Typography>

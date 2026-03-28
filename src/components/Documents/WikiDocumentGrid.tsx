@@ -39,7 +39,9 @@ function WikiDocumentCard({ doc, orgSlug }: WikiDocumentCardProps) {
               <IconCircle size="md" tone="secondary" variant="muted" className="size-10">
                 <Icon icon={FileText} size="md" />
               </IconCircle>
-              <Typography variant="wikiCardTitle">{doc.title || "Untitled"}</Typography>
+              <Typography variant="h3" className="line-clamp-1">
+                {doc.title || "Untitled"}
+              </Typography>
             </Flex>
             <Flex
               align="center"

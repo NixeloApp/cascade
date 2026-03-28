@@ -13,7 +13,7 @@ import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
-import { Typography } from "../ui/Typography";
+import { LeadText, Typography } from "../ui/Typography";
 
 interface InvitedWelcomeProps {
   inviterName: string;
@@ -48,12 +48,12 @@ export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelc
       {/* Welcome Message */}
       <Stack gap="sm" align="center">
         <Typography variant="h1">Welcome to Nixelo!</Typography>
-        <Typography color="secondary" variant="lead">
+        <LeadText>
           <Typography as="span" variant="label">
             {inviterName}
           </Typography>{" "}
           invited you to collaborate
-        </Typography>
+        </LeadText>
       </Stack>
 
       {/* Brief Description - Mintlify-inspired card */}

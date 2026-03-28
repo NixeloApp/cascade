@@ -80,7 +80,7 @@ export function Footer() {
           <Grid cols={1} colsSm={2} colsLg={4} gap="lg">
             {FOOTER_COLUMNS.map((column) => (
               <Stack key={column.title} gap="lg">
-                <Typography as="h4" variant="cardTitle">
+                <Typography variant="h5" as="h4">
                   {column.title}
                 </Typography>
                 <Stack as="ul" gap="sm" className="list-none">

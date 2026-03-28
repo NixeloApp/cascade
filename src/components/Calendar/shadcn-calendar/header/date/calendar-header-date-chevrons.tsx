@@ -58,9 +58,11 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
         <ChevronLeft className="min-size-5 min-" />
       </Button>
       <time dateTime={format(date, "yyyy-MM-dd")} className="min-w-16 text-center sm:min-w-35">
-        <Typography as="span" variant="calendarHeaderDate">
-          <span className="sm:hidden">{format(date, "MMM d")}</span>
-          <span className="hidden sm:inline">{format(date, "MMMM d, yyyy")}</span>
+        <Typography as="span" variant="label" className="sm:hidden">
+          {format(date, "MMM d")}
+        </Typography>
+        <Typography as="span" variant="h5" className="hidden sm:inline">
+          {format(date, "MMMM d, yyyy")}
         </Typography>
       </time>
       <Button

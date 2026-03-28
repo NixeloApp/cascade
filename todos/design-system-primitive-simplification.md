@@ -124,8 +124,9 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 - **End state:** `variant` < 10, `size` < 6. Collapse `chrome`/`chromeSize` into the variant system or move to feature-owned wrappers.
 
 ### Typography.tsx
-- **Current:** `variant` (60), `color` (11)
-- **End state:** `variant` < 20. Group related variants into semantic categories (headings, body, labels, captions). Remove dead variants.
+- **Current:** `variant` (18), `color` (11)
+- **Status:** Done. Shared wrappers now own the remaining responsive title scales (`PageTitleText`, `SectionTitleText`, `DocumentTitleText`) instead of pushing feature-specific text sizing back into the base variant axis.
+- **End state:** Hold `variant` under 20 and keep new text treatments in wrapper components rather than widening the shared enum.
 
 ### Badge.tsx
 - **Current:** `variant` at 24
@@ -135,7 +136,7 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 
 ## 5. Raw Tailwind Ratchet
 
-- **Current:** 102 violations across 73 files
+- **Current:** 92 violations across 67 files
 - **End state:** 0 violations
 - **Start with:** calendar-body-month (4), IssueCard (4), GlobalSearch (3), ProductShowcase (3), RoadmapView (3)
 

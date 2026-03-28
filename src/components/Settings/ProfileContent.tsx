@@ -78,7 +78,7 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
             <Typography variant="h2" color="brand">
               {stats[item.key]}
             </Typography>
-            <Typography variant="metricLabelWide">{item.label}</Typography>
+            <Typography variant="eyebrowWide">{item.label}</Typography>
           </Stack>
         </Card>
       ))}
@@ -93,7 +93,11 @@ export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: num
   const rows = [
     {
       label: "User ID",
-      value: <Typography variant="monoWrapConstrained">{user._id}</Typography>,
+      value: (
+        <Typography variant="mono" className="block max-w-full break-all sm:max-w-40">
+          {user._id}
+        </Typography>
+      ),
     },
     {
       label: "Member Since",
@@ -234,7 +238,9 @@ export function ProfileHeader({
           <Stack gap="md">
             <Stack gap="xs">
               <Typography variant="h3">{user.name || "Anonymous User"}</Typography>
-              <Typography variant="profileEmail">{user.email}</Typography>
+              <Typography variant="caption" className="max-w-lg">
+                {user.email}
+              </Typography>
             </Stack>
             {isOwnProfile ? (
               <Flex gap="sm" wrap>

@@ -2,7 +2,7 @@ import type { LucideIcon } from "@/lib/icons";
 import { ArrowRight, Bot, Clock, FileText, KanbanSquare, Sparkles } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge, type BadgeProps } from "../ui/Badge";
-import { Card, getCardRecipeClassName } from "../ui/Card";
+import { Card, CardTitle, getCardRecipeClassName } from "../ui/Card";
 import { CardSection } from "../ui/CardSection";
 import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
@@ -10,7 +10,7 @@ import { Grid, GridItem } from "../ui/Grid";
 import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
 import { Stack } from "../ui/Stack";
-import { Typography } from "../ui/Typography";
+import { MetricText, MonoText, SectionTitleText, Typography } from "../ui/Typography";
 
 type BoardCardPreview = {
   detail: string;
@@ -122,7 +122,7 @@ export function ProductShowcase() {
                 <Flex align="center" gap="sm">
                   <Dot size="md" halo />
                   <div className="min-w-0">
-                    <Typography variant="pageHeaderEyebrow" className="block">
+                    <Typography variant="eyebrowWide" className="block">
                       Workspace cockpit
                     </Typography>
                     <Typography variant="label" className="block truncate">
@@ -229,9 +229,17 @@ function ShowcaseHeading({
 }) {
   return (
     <Stack gap="xs" className="min-w-0">
-      <Typography variant="pageHeaderEyebrow">{eyebrow}</Typography>
-      <Typography variant={description ? "landingShowcaseTitle" : "cardTitle"}>{title}</Typography>
-      {description && <Typography variant="pageHeaderDescription">{description}</Typography>}
+      <Typography variant="eyebrowWide">{eyebrow}</Typography>
+      {description ? (
+        <SectionTitleText as="h3">{title}</SectionTitleText>
+      ) : (
+        <CardTitle>{title}</CardTitle>
+      )}
+      {description ? (
+        <Typography variant="small" color="tertiary" className="max-w-3xl leading-5">
+          {description}
+        </Typography>
+      ) : null}
     </Stack>
   );
 }
@@ -249,7 +257,9 @@ function BoardPreviewColumn({
     <Card recipe="showcasePanelQuiet" variant="section" padding="sm" className="h-full">
       <Stack gap="md">
         <Flex align="center" justify="between">
-          <Typography variant="boardColumnTitle">{title}</Typography>
+          <Typography variant="label" color="secondary" as="p">
+            {title}
+          </Typography>
           <Dot size="sm" color={accent} />
         </Flex>
 
@@ -268,7 +278,7 @@ function BoardPreviewCard({ detail, issueKey, priorityTone, title }: BoardCardPr
     <div className={getCardRecipeClassName("issueCard")}>
       <Stack gap="xs" className="min-w-0">
         <Flex align="center" justify="between" gap="sm">
-          <Typography variant="issueKeyMono">{issueKey}</Typography>
+          <MonoText size="sm">{issueKey}</MonoText>
           <Badge variant="outline" shape="pill" size="sm" priorityTone={priorityTone}>
             {getPriorityLabel(priorityTone)}
           </Badge>
@@ -358,9 +368,9 @@ function WorkspaceSignalRow({
           </Stack>
         </Flex>
 
-        <Typography as="span" variant="landingMetricValue">
+        <MetricText as="span" heavy="bold" responsive>
           {value}
-        </Typography>
+        </MetricText>
       </Flex>
     </CardSection>
   );

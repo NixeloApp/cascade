@@ -28,82 +28,54 @@ import { cn } from "@/lib/utils";
  * Use `as` prop to override the HTML element when needed.
  * Use `color` prop to override the variant's default color.
  */
+export const TYPOGRAPHY_VARIANTS = [
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "p",
+  "small",
+  "muted",
+  "meta",
+  "caption",
+  "label",
+  "strong",
+  "eyebrow",
+  "eyebrowWide",
+  "mono",
+  "blockquote",
+  "list",
+  "inlineCode",
+] as const;
+
+type TypographyVariant = (typeof TYPOGRAPHY_VARIANTS)[number];
+
+const typographyVariantClasses = {
+  h1: "scroll-m-20 text-4xl font-extrabold tracking-tight text-ui-text lg:text-5xl",
+  h2: "scroll-m-20 text-3xl font-semibold tracking-tight text-ui-text first:mt-0",
+  h3: "scroll-m-20 text-2xl font-semibold tracking-tight text-ui-text",
+  h4: "scroll-m-20 text-xl font-semibold tracking-tight text-ui-text",
+  h5: "scroll-m-20 text-base font-semibold tracking-tight text-ui-text",
+  p: "text-base leading-7 text-ui-text [&:not(:first-child)]:mt-4",
+  small: "text-sm text-ui-text",
+  muted: "text-sm text-ui-text-tertiary",
+  meta: "text-xs text-ui-text-tertiary",
+  caption: "text-xs text-ui-text-secondary",
+  label: "text-sm font-medium text-ui-text",
+  strong: "font-semibold",
+  eyebrow: "text-xs font-semibold uppercase tracking-wider text-ui-text-secondary",
+  eyebrowWide: "text-xs font-semibold uppercase tracking-widest text-ui-text-tertiary",
+  mono: "text-xs font-mono tracking-tight text-ui-text-secondary",
+  blockquote: "mt-6 border-l-2 border-ui-border-secondary pl-6 italic text-ui-text",
+  list: "my-6 ml-6 list-disc text-ui-text [&>li]:mt-2",
+  inlineCode:
+    "relative rounded bg-ui-bg-tertiary px-1.5 py-0.5 font-mono text-sm font-semibold text-ui-text",
+} satisfies Record<TypographyVariant, string>;
+
 const typographyVariants = cva("", {
   variants: {
-    variant: {
-      // Headings
-      h1: "scroll-m-20 text-4xl font-extrabold tracking-tight text-ui-text lg:text-5xl",
-      h2: "scroll-m-20 text-3xl font-semibold tracking-tight text-ui-text first:mt-0",
-      h3: "scroll-m-20 text-2xl font-semibold tracking-tight text-ui-text",
-      h4: "scroll-m-20 text-xl font-semibold tracking-tight text-ui-text",
-      h5: "scroll-m-20 text-base font-semibold tracking-tight text-ui-text",
-
-      // Body text
-      p: "text-base leading-7 text-ui-text [&:not(:first-child)]:mt-4",
-      lead: "text-xl text-ui-text-secondary",
-      large: "text-lg font-semibold text-ui-text",
-      small: "text-sm text-ui-text",
-      muted: "text-sm text-ui-text-tertiary",
-
-      // Semantic variants for common patterns
-      meta: "text-xs text-ui-text-tertiary", // timestamps, counts, metadata
-      caption: "text-xs text-ui-text-secondary", // descriptions, helper text
-      label: "text-sm font-medium text-ui-text", // form labels
-      strong: "font-semibold", // inline emphasis, inherits parent size
-      listTitle: "text-sm font-medium tracking-tight text-ui-text",
-      cardTitle: "text-base font-semibold tracking-tight text-ui-text",
-      sidebarOrgInitial: "text-sm font-semibold text-current",
-      eyebrow: "text-xs font-semibold uppercase tracking-wider text-ui-text-secondary", // section labels, overlines
-      eyebrowWide: "text-xs font-semibold uppercase tracking-widest text-ui-text-tertiary",
-      pageHeaderEyebrow:
-        "text-xs font-semibold uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]",
-      authTitle: "text-xl font-semibold tracking-tight text-ui-text",
-      authBody: "text-sm text-ui-text-secondary",
-      dashboardStatValue: "text-display-sm font-semibold tracking-tight text-ui-text",
-      dashboardStatValueStrong: "text-3xl font-extrabold tracking-tight text-ui-text",
-      errorCodeDisplay: "text-8xl font-bold tracking-tightest text-ui-text",
-      authStatusTitle: "text-xl font-medium text-ui-text",
-      landingSectionTitle: "text-4xl font-semibold tracking-tight text-ui-text md:text-5xl",
-      landingShowcaseTitle: "text-2xl font-semibold tracking-tight text-ui-text sm:text-3xl",
-      landingMetricValue: "text-3xl font-bold tracking-tight text-ui-text sm:text-4xl",
-      landingPriceValue: "text-3xl font-bold tracking-tight text-ui-text",
-      boardSurfaceTitle: "text-xs font-semibold tracking-tight text-ui-text sm:text-lg",
-      boardColumnTitle: "text-sm font-medium tracking-tight text-ui-text-secondary",
-      boardColumnTitleCompact:
-        "truncate text-xs font-medium tracking-tight text-ui-text-secondary sm:text-sm",
-      fieldSectionLabel: "text-sm font-medium uppercase tracking-wide text-ui-text",
-      searchTriggerLabel: "hidden truncate text-xs text-ui-text-secondary sm:block sm:text-sm",
-      issueKeyMono: "text-sm font-mono tracking-tight text-ui-text-secondary",
-      monoBlock: "text-xs font-mono tracking-tight text-ui-text-secondary whitespace-pre-wrap",
-      monoWrap: "text-xs font-mono tracking-tight text-ui-text-secondary break-all",
-      monoWrapConstrained:
-        "block max-w-full break-all text-xs font-mono tracking-tight text-ui-text-secondary sm:max-w-40",
-      metricLabelWide: "text-xs uppercase tracking-widest text-ui-text-secondary",
-      mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
-      profileEmail: "max-w-lg text-xs text-ui-text-secondary",
-      calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
-      calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
-      calendarHeaderMonth: "text-center text-xs font-semibold text-brand-foreground uppercase",
-      calendarHeaderDay: "text-sm font-bold text-ui-text sm:text-lg",
-      calendarTimeLabel: "text-xs text-ui-text-secondary",
-      calendarEventTitle: "truncate font-bold",
-      calendarEventTitleMonth: "w-full truncate text-xs leading-tight font-bold",
-      calendarEventTime: "text-sm",
-      documentTitle: "-ml-2 px-2 py-1 text-2xl leading-tight sm:text-3xl lg:text-4xl",
-      documentTitleInteractive:
-        "-ml-2 cursor-pointer rounded px-2 py-1 text-2xl leading-tight transition-default hover:bg-ui-bg-hover sm:text-3xl lg:text-4xl",
-      pageHeaderTitle: "text-xl leading-tight text-ui-text sm:text-2xl lg:text-3xl",
-      pageHeaderDescription: "max-w-3xl text-xs leading-5 text-ui-text-tertiary sm:text-sm",
-      projectHeaderTitle: "truncate text-sm font-semibold tracking-tight text-ui-text sm:text-2xl",
-      wikiCardTitle: "line-clamp-1 text-2xl font-semibold tracking-tight text-ui-text",
-      metricLabel: "text-xs font-medium uppercase tracking-wide text-ui-text-secondary",
-
-      // Special
-      blockquote: "mt-6 border-l-2 border-ui-border-secondary pl-6 italic text-ui-text",
-      list: "my-6 ml-6 list-disc text-ui-text [&>li]:mt-2",
-      inlineCode:
-        "relative rounded bg-ui-bg-tertiary px-1.5 py-0.5 font-mono text-sm font-semibold text-ui-text",
-    },
+    variant: typographyVariantClasses,
     color: {
       auto: "", // Use variant's default color
       default: "text-ui-text",
@@ -135,6 +107,8 @@ export interface TypographyProps
   dateTime?: string;
 }
 
+type TextWrapperProps = Omit<TypographyProps, "variant">;
+
 export const Typography = React.forwardRef<HTMLElement, TypographyProps>(
   ({ className, variant, color, as, ...props }, ref) => {
     const Component = as || mapVariantToTag(variant);
@@ -150,66 +124,132 @@ export const Typography = React.forwardRef<HTMLElement, TypographyProps>(
 );
 Typography.displayName = "Typography";
 
+export const LeadText = React.forwardRef<HTMLElement, TextWrapperProps>(
+  ({ className, color = "secondary", ...props }, ref) => (
+    <Typography
+      ref={ref}
+      variant="p"
+      color={color}
+      className={cn("text-xl", className)}
+      {...props}
+    />
+  ),
+);
+LeadText.displayName = "LeadText";
+
+export const LargeText = React.forwardRef<HTMLElement, TextWrapperProps>(
+  ({ className, ...props }, ref) => (
+    <Typography
+      ref={ref}
+      variant="label"
+      className={cn("text-lg font-semibold", className)}
+      {...props}
+    />
+  ),
+);
+LargeText.displayName = "LargeText";
+
+export const PageTitleText = React.forwardRef<HTMLElement, TextWrapperProps>(
+  ({ className, ...props }, ref) => (
+    <Typography
+      ref={ref}
+      variant="h2"
+      className={cn("text-xl leading-tight sm:text-2xl lg:text-3xl", className)}
+      {...props}
+    />
+  ),
+);
+PageTitleText.displayName = "PageTitleText";
+
+export const SectionTitleText = React.forwardRef<HTMLElement, TextWrapperProps>(
+  ({ className, ...props }, ref) => (
+    <Typography
+      ref={ref}
+      variant="h3"
+      className={cn("text-2xl sm:text-3xl", className)}
+      {...props}
+    />
+  ),
+);
+SectionTitleText.displayName = "SectionTitleText";
+
+export const DocumentTitleText = React.forwardRef<HTMLElement, TextWrapperProps>(
+  ({ className, ...props }, ref) => (
+    <Typography
+      ref={ref}
+      variant="h2"
+      className={cn("text-2xl leading-tight sm:text-3xl lg:text-4xl", className)}
+      {...props}
+    />
+  ),
+);
+DocumentTitleText.displayName = "DocumentTitleText";
+
+export const MetricText = React.forwardRef<
+  HTMLElement,
+  TextWrapperProps & { responsive?: boolean; heavy?: "bold" | "extrabold" }
+>(({ className, responsive = false, heavy = "extrabold", ...props }, ref) => (
+  <Typography
+    ref={ref}
+    variant="p"
+    className={cn(
+      "tracking-tight text-ui-text",
+      heavy === "bold" ? "font-bold" : "font-extrabold",
+      responsive ? "text-3xl sm:text-4xl" : "text-3xl",
+      className,
+    )}
+    {...props}
+  />
+));
+MetricText.displayName = "MetricText";
+
+export const ErrorCodeText = React.forwardRef<HTMLElement, TextWrapperProps>(
+  ({ className, ...props }, ref) => (
+    <Typography
+      ref={ref}
+      variant="h1"
+      className={cn("text-8xl font-bold tracking-tightest", className)}
+      {...props}
+    />
+  ),
+);
+ErrorCodeText.displayName = "ErrorCodeText";
+
+export const MonoText = React.forwardRef<HTMLElement, TextWrapperProps & { size?: "xs" | "sm" }>(
+  ({ className, size = "xs", ...props }, ref) => (
+    <Typography
+      ref={ref}
+      variant="mono"
+      className={cn(size === "sm" && "text-sm", className)}
+      {...props}
+    />
+  ),
+);
+MonoText.displayName = "MonoText";
+
 function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType {
   switch (variant) {
     case "h1":
-    case "errorCodeDisplay":
       return "h1";
     case "h2":
-    case "authTitle":
-    case "boardSurfaceTitle":
-    case "landingSectionTitle":
       return "h2";
     case "h3":
-    case "wikiCardTitle":
-    case "landingShowcaseTitle":
       return "h3";
     case "h4":
       return "h4";
     case "h5":
       return "h5";
-    case "p":
-    case "lead":
-    case "large":
     case "small":
     case "muted":
     case "meta":
     case "caption":
     case "label":
-    case "listTitle":
-    case "cardTitle":
     case "eyebrow":
     case "eyebrowWide":
-    case "pageHeaderEyebrow":
-    case "authBody":
-    case "authStatusTitle":
-    case "dashboardStatValue":
-    case "dashboardStatValueStrong":
-    case "landingMetricValue":
-    case "landingPriceValue":
-    case "boardColumnTitle":
-    case "boardColumnTitleCompact":
-    case "projectHeaderTitle":
-    case "metricLabel":
-    case "fieldSectionLabel":
-    case "searchTriggerLabel":
-    case "issueKeyMono":
-    case "monoBlock":
-    case "monoWrap":
-    case "monoWrapConstrained":
-    case "metricLabelWide":
-    case "profileEmail":
+    case "p":
       return "p";
     case "mono":
-    case "calendarHeaderDate":
-    case "calendarHeaderTitle":
-    case "calendarHeaderMonth":
-    case "calendarHeaderDay":
-    case "calendarTimeLabel":
-    case "calendarEventTitle":
-    case "calendarEventTitleMonth":
-    case "calendarEventTime":
-    case "sidebarOrgInitial":
+    case "strong":
       return "span";
     case "blockquote":
       return "blockquote";

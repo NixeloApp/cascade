@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
-import { Typography } from "../ui/Typography";
+import { LeadText, Typography } from "../ui/Typography";
 import { FeatureHighlights } from "./FeatureHighlights";
 
 interface LeadOnboardingProps {
@@ -214,7 +214,7 @@ function LeadFeaturesStep({ onContinue }: { onContinue: () => void }) {
         <Typography variant="h1" data-testid={TEST_IDS.ONBOARDING.TEAM_LEAD_HEADING}>
           Perfect for Team Leads
         </Typography>
-        <Typography variant="lead">Here's what you can do with Nixelo</Typography>
+        <LeadText>Here's what you can do with Nixelo</LeadText>
       </Stack>
 
       <FeatureHighlights />
@@ -279,7 +279,7 @@ function LeadProjectSetupStep({
         </Card>
         <Stack gap="sm">
           <Typography variant="h1">Name Your Project</Typography>
-          <Typography variant="lead">This is where your team will collaborate</Typography>
+          <LeadText>This is where your team will collaborate</LeadText>
         </Stack>
       </Stack>
 
@@ -333,7 +333,7 @@ function LeadProjectChoiceStep({
     <>
       <Stack gap="sm" className="text-center">
         <Typography variant="h1">Start Your First Project</Typography>
-        <Typography variant="lead">How would you like to get started?</Typography>
+        <LeadText>How would you like to get started?</LeadText>
       </Stack>
 
       <Grid cols={1} colsSm={2} gap="lg">

@@ -900,7 +900,7 @@ function TranscriptSegmentList({
   if (!hasTranscriptSegments(transcript.segments)) {
     return (
       <Card variant="soft" padding="md">
-        <Typography as="pre" variant="monoBlock">
+        <Typography as="pre" variant="mono" className="whitespace-pre-wrap">
           {transcript.fullText}
         </Typography>
       </Card>
@@ -1066,7 +1066,7 @@ function TranscriptSegmentList({
             Raw Transcript
           </Typography>
           <ScrollArea size="contentSm">
-            <Typography as="pre" variant="monoBlock">
+            <Typography as="pre" variant="mono" className="whitespace-pre-wrap">
               {transcript.fullText}
             </Typography>
           </ScrollArea>

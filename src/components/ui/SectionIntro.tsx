@@ -27,8 +27,8 @@ export function SectionIntro({
   title,
   description,
   align = "start",
-  titleVariant = "landingSectionTitle",
-  descriptionVariant = "lead",
+  titleVariant = "h2",
+  descriptionVariant = "p",
   titleColor,
   descriptionColor,
   className,
@@ -52,14 +52,22 @@ export function SectionIntro({
       ) : null}
 
       <Stack gap="sm" align={stackAlign}>
-        <Typography variant={titleVariant} color={titleColor} className={titleClassName}>
+        <Typography
+          variant={titleVariant}
+          color={titleColor}
+          className={cn("text-4xl md:text-5xl", titleClassName)}
+        >
           {title}
         </Typography>
         {description ? (
           <Typography
             variant={descriptionVariant}
             color={descriptionColor}
-            className={cn(align === "center" && "max-w-3xl", descriptionClassName)}
+            className={cn(
+              "text-xl text-ui-text-secondary",
+              align === "center" && "max-w-3xl",
+              descriptionClassName,
+            )}
           >
             {description}
           </Typography>

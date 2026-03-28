@@ -72,7 +72,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
             >
               <Dot size="md" halo />
               <div className="min-w-0">
-                <Typography variant="pageHeaderEyebrow" className="block">
+                <Typography variant="eyebrowWide" className="block">
                   Workspace cockpit
                 </Typography>
                 <Typography variant="label" className="block max-w-48 truncate">

@@ -165,15 +165,16 @@ export function CalendarEvent({
             className={cn(getCardRecipeClassName(eventLayoutRecipe), colors.text)}
             layout="position"
           >
-            <Typography variant={month ? "calendarEventTitleMonth" : "calendarEventTitle"}>
+            <Typography
+              variant={month ? "caption" : "small"}
+              className={month ? "w-full truncate leading-tight font-bold" : "truncate font-bold"}
+            >
               {event.title}
             </Typography>
             {!month && (
-              <Typography variant="calendarEventTime">
+              <Typography variant="small">
                 <time dateTime={event.start.toISOString()}>{format(event.start, "h:mm a")}</time>
-                <span className="mx-1" aria-hidden="true">
-                  -
-                </span>
+                {" - "}
                 <time dateTime={event.end.toISOString()}>{format(event.end, "h:mm a")}</time>
               </Typography>
             )}
