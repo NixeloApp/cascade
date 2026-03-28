@@ -1958,6 +1958,7 @@ const applicationTables = {
   })
     .index("by_enrollment", ["enrollmentId"])
     .index("by_sequence", ["sequenceId"])
+    .index("by_sequence_and_created_at", ["sequenceId", "createdAt"])
     .index("by_type", ["type"])
     .index("by_organization_type", ["organizationId", "type"])
     .index("by_organization_and_created_at", ["organizationId", "createdAt"])

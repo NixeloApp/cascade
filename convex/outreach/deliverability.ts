@@ -405,55 +405,74 @@ export function buildMailboxDeliverabilitySnapshots({
   );
 }
 
+/** Load events for a single mailbox's sequences within the lookback window. */
+async function loadMailboxEvents(
+  ctx: DeliverabilityReadCtx,
+  sequences: Doc<"outreachSequences">[],
+  lookbackStart: number,
+): Promise<{ events: Doc<"outreachEvents">[]; truncated: boolean }> {
+  const eventsBySequence = await Promise.all(
+    sequences.map((seq) =>
+      ctx.db
+        .query("outreachEvents")
+        .withIndex("by_sequence_and_created_at", (q) =>
+          q.eq("sequenceId", seq._id).gte("createdAt", lookbackStart),
+        )
+        .order("desc")
+        .take(OUTREACH_DELIVERABILITY_EVENT_LIMIT + 1),
+    ),
+  );
+
+  const allEvents = eventsBySequence.flat();
+  allEvents.sort((a, b) => b.createdAt - a.createdAt);
+
+  const truncated = allEvents.length > OUTREACH_DELIVERABILITY_EVENT_LIMIT;
+  return {
+    events: allEvents.slice(0, OUTREACH_DELIVERABILITY_EVENT_LIMIT),
+    truncated,
+  };
+}
+
 /** Load recent sequence and event context and evaluate deliverability for the provided mailboxes. */
 export async function loadMailboxDeliverabilitySnapshots(
   ctx: DeliverabilityReadCtx,
   mailboxes: Doc<"outreachMailboxes">[],
   now: number = Date.now(),
 ): Promise<Map<Id<"outreachMailboxes">, MailboxDeliverabilitySnapshot>> {
-  const mailboxesByOrganization = new Map<Id<"organizations">, Array<Doc<"outreachMailboxes">>>();
-
-  for (const mailbox of mailboxes) {
-    const current = mailboxesByOrganization.get(mailbox.organizationId) ?? [];
-    current.push(mailbox);
-    mailboxesByOrganization.set(mailbox.organizationId, current);
-  }
-
+  const lookbackStart = now - OUTREACH_DELIVERABILITY_LOOKBACK_MS;
   const snapshots = new Map<Id<"outreachMailboxes">, MailboxDeliverabilitySnapshot>();
 
-  for (const [organizationId, organizationMailboxes] of mailboxesByOrganization) {
-    const [sequencesByMailbox, recentEventBatch] = await Promise.all([
-      Promise.all(
-        organizationMailboxes.map((mailbox) =>
-          ctx.db
-            .query("outreachSequences")
-            .withIndex("by_mailbox", (q) => q.eq("mailboxId", mailbox._id))
-            .take(BOUNDED_LIST_LIMIT),
-        ),
-      ),
+  // Fetch sequences for all mailboxes in parallel
+  const sequencesByMailbox = await Promise.all(
+    mailboxes.map((mailbox) =>
       ctx.db
-        .query("outreachEvents")
-        .withIndex("by_organization_and_created_at", (q) =>
-          q
-            .eq("organizationId", organizationId)
-            .gte("createdAt", now - OUTREACH_DELIVERABILITY_LOOKBACK_MS),
-        )
-        .order("desc")
-        .take(OUTREACH_DELIVERABILITY_EVENT_LIMIT + 1),
-    ]);
+        .query("outreachSequences")
+        .withIndex("by_mailbox", (q) => q.eq("mailboxId", mailbox._id))
+        .take(BOUNDED_LIST_LIMIT),
+    ),
+  );
 
-    const sequences = sequencesByMailbox.flat();
+  // Fetch events per mailbox in parallel (scoped to that mailbox's sequences)
+  const eventResultsByMailbox = await Promise.all(
+    sequencesByMailbox.map((sequences) => loadMailboxEvents(ctx, sequences, lookbackStart)),
+  );
 
-    const organizationSnapshots = buildMailboxDeliverabilitySnapshots({
-      mailboxes: organizationMailboxes,
-      recentEvents: recentEventBatch.slice(0, OUTREACH_DELIVERABILITY_EVENT_LIMIT),
-      recentEventWindowTruncated: recentEventBatch.length > OUTREACH_DELIVERABILITY_EVENT_LIMIT,
+  for (let i = 0; i < mailboxes.length; i++) {
+    const mailbox = mailboxes[i];
+    const sequences = sequencesByMailbox[i];
+    const { events, truncated } = eventResultsByMailbox[i];
+
+    const mailboxSnapshots = buildMailboxDeliverabilitySnapshots({
+      mailboxes: [mailbox],
+      recentEvents: events,
+      recentEventWindowTruncated: truncated,
       sequences,
       now,
     });
 
-    for (const [mailboxId, snapshot] of organizationSnapshots) {
-      snapshots.set(mailboxId, snapshot);
+    const snapshot = mailboxSnapshots.get(mailbox._id);
+    if (snapshot) {
+      snapshots.set(mailbox._id, snapshot);
     }
   }
 
