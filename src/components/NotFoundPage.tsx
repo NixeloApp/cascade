@@ -38,8 +38,12 @@ export function NotFoundPage() {
 
           {/* Message with secondary text styling */}
           <Stack gap="sm" align="center">
-            <Typography variant="large" color="secondary">
-              <span data-testid={TEST_IDS.PAGE.NOT_FOUND_HEADING}>Page not found</span>
+            <Typography
+              variant="large"
+              color="secondary"
+              data-testid={TEST_IDS.PAGE.NOT_FOUND_HEADING}
+            >
+              Page not found
             </Typography>
             <Typography color="tertiary">
               The page you are looking for does not exist or has been moved.

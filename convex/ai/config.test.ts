@@ -1,68 +1,114 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CLAUDE_MODELS, DEFAULT_MODELS, getAIConfig, isAIConfigured } from "./config";
+import { getActiveProvider, getFastModel, getModel, isAIConfigured } from "./config";
 
-// Mock the env functions
-vi.mock("../lib/env", () => ({
-  getAnthropicApiKey: vi.fn(),
-  getAnthropicModel: vi.fn(),
-  isAnthropicConfigured: vi.fn(),
+vi.mock("../lib/env");
+vi.mock("../lib/errors", () => ({
+  validation: vi.fn((_field: string, msg: string) => new Error(msg)),
 }));
 
-import { getAnthropicApiKey, getAnthropicModel, isAnthropicConfigured } from "../lib/env";
+vi.mock("@ai-sdk/anthropic", () => ({
+  createAnthropic: vi.fn(() => (model: string) => ({ modelId: model, provider: "anthropic" })),
+}));
+
+vi.mock("@ai-sdk/openai", () => ({
+  createOpenAI: vi.fn(() => (model: string) => ({ modelId: model, provider: "openai" })),
+}));
+
+import {
+  getAnthropicApiKey,
+  getAnthropicBaseUrl,
+  getOpenAIApiKey,
+  getOpenAIBaseUrl,
+  isAnthropicConfigured,
+  isOpenAIConfigured,
+} from "../lib/env";
+
+function setupAnthropicMocks() {
+  vi.mocked(isAnthropicConfigured).mockReturnValue(true);
+  vi.mocked(getAnthropicApiKey).mockReturnValue("test-anthropic-key");
+  vi.mocked(getAnthropicBaseUrl).mockReturnValue(undefined);
+}
+
+function setupOpenAIMocks() {
+  vi.mocked(isOpenAIConfigured).mockReturnValue(true);
+  vi.mocked(getOpenAIApiKey).mockReturnValue("test-openai-key");
+  vi.mocked(getOpenAIBaseUrl).mockReturnValue(undefined);
+}
 
 describe("AI Config", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  describe("Constants", () => {
-    it("should define Claude models", () => {
-      expect(CLAUDE_MODELS.opus).toBe("claude-opus-4-5");
-      expect(CLAUDE_MODELS.haiku).toBe("claude-haiku-4-5");
-    });
-
-    it("should define default models for each use case", () => {
-      expect(DEFAULT_MODELS.chat).toBe(CLAUDE_MODELS.opus);
-      expect(DEFAULT_MODELS.suggestions).toBe(CLAUDE_MODELS.haiku);
-      expect(DEFAULT_MODELS.summary).toBe(CLAUDE_MODELS.opus);
-    });
-  });
-
-  describe("getAIConfig", () => {
-    it("should return config when API key is set", () => {
-      vi.mocked(isAnthropicConfigured).mockReturnValue(true);
-      vi.mocked(getAnthropicApiKey).mockReturnValue("test-api-key");
-      vi.mocked(getAnthropicModel).mockReturnValue("claude-haiku-4-5");
-
-      const config = getAIConfig();
-
-      expect(config).toEqual({
-        provider: "anthropic",
-        apiKey: "test-api-key",
-        model: "claude-haiku-4-5",
-        temperature: 0.7,
-        maxTokens: 4096,
-      });
-    });
-
-    it("should throw validation error when no provider is configured", () => {
-      vi.mocked(isAnthropicConfigured).mockReturnValue(false);
-
-      expect(() => getAIConfig()).toThrow("No AI provider configured");
-    });
+    vi.mocked(isAnthropicConfigured).mockReturnValue(false);
+    vi.mocked(isOpenAIConfigured).mockReturnValue(false);
   });
 
   describe("isAIConfigured", () => {
-    it("should return true when Anthropic is configured", () => {
-      vi.mocked(isAnthropicConfigured).mockReturnValue(true);
-
+    it("returns true when Anthropic is configured", () => {
+      setupAnthropicMocks();
       expect(isAIConfigured()).toBe(true);
     });
 
-    it("should return false when Anthropic is not configured", () => {
-      vi.mocked(isAnthropicConfigured).mockReturnValue(false);
+    it("returns true when OpenAI is configured", () => {
+      setupOpenAIMocks();
+      expect(isAIConfigured()).toBe(true);
+    });
 
+    it("returns false when neither is configured", () => {
       expect(isAIConfigured()).toBe(false);
+    });
+  });
+
+  describe("getActiveProvider", () => {
+    it("returns anthropic when configured", () => {
+      setupAnthropicMocks();
+      expect(getActiveProvider()).toBe("anthropic");
+    });
+
+    it("returns openai when configured", () => {
+      setupOpenAIMocks();
+      expect(getActiveProvider()).toBe("openai");
+    });
+
+    it("prefers anthropic when both configured", () => {
+      setupAnthropicMocks();
+      setupOpenAIMocks();
+      expect(getActiveProvider()).toBe("anthropic");
+    });
+
+    it("throws when neither configured", () => {
+      expect(() => getActiveProvider()).toThrow();
+    });
+  });
+
+  describe("getModel", () => {
+    it("returns claude-opus-4-5 when Anthropic is configured", () => {
+      setupAnthropicMocks();
+      const model = getModel();
+      expect(model).toHaveProperty("modelId", "claude-opus-4-5");
+    });
+
+    it("returns gpt-4o when OpenAI is configured", () => {
+      setupOpenAIMocks();
+      const model = getModel();
+      expect(model).toHaveProperty("modelId", "gpt-4o");
+    });
+
+    it("throws when no provider configured", () => {
+      expect(() => getModel()).toThrow();
+    });
+  });
+
+  describe("getFastModel", () => {
+    it("returns claude-haiku-4-5 when Anthropic is configured", () => {
+      setupAnthropicMocks();
+      const model = getFastModel();
+      expect(model).toHaveProperty("modelId", "claude-haiku-4-5");
+    });
+
+    it("returns gpt-4o-mini when OpenAI is configured", () => {
+      setupOpenAIMocks();
+      const model = getFastModel();
+      expect(model).toHaveProperty("modelId", "gpt-4o-mini");
     });
   });
 });

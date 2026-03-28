@@ -81,17 +81,66 @@
 **What's working today:**
 - Playwright-based Chromium bot joins Google Meet via URL
 - Audio captured via Web Audio API + MediaRecorder (browser-side mixing)
-- 4 transcription providers with free-tier rotation (~22 hrs/month free)
+- 6 transcription providers in 3-tier fallback (~24 hrs/month recurring + ~885 hrs one-time credits)
 - Claude-powered structured summarization
 - Full status lifecycle in Convex with real-time UI updates
 - 10 test files covering security, SSRF, race conditions, perf
 
 **What's not working today:**
+- No video capture (audio only — Playwright bot doesn't record video)
+- No audio/video storage (temp files deleted on restart, no persistent storage)
 - No speaker identification in transcripts (who said what)
 - Zoom/Teams bot execution (schema only)
 - Jobs are in-memory (lost on bot service restart)
 - Sequential processing only (transcribe then summarize, not parallel)
 - No desktop/system-level audio capture
+
+## Requirements: Audio + Video Storage
+
+Competitors keep both audio and video recordings. We need the same.
+
+### What needs to happen
+
+1. **Video capture** — current Playwright bot only captures audio. Two paths:
+   - Extend our bot with screen recording (records the browser tab — limited quality)
+   - **Adopt Vexa/Attendee** which capture audio + video natively across Meet/Zoom/Teams (recommended)
+
+2. **Persistent storage** — audio/video must survive bot restarts and be playable in the UI
+
+3. **Object storage** — Cloudflare R2 is the recommended option (cheapest, no egress fees for playback)
+
+### Storage sizing
+
+| Data | Size per 1hr meeting | 100 meetings | 1,000 meetings |
+|------|---------------------|-------------|----------------|
+| Audio (WebM/Opus) | ~50 MB | ~5 GB | ~50 GB |
+| Video (720p) | ~500 MB - 1 GB | ~50-100 GB | ~500 GB - 1 TB |
+| Video (1080p) | ~1-2 GB | ~100-200 GB | ~1-2 TB |
+| Transcript + summary | ~500 KB | ~50 MB | ~500 MB |
+
+### Storage options
+
+| Option | Cost/GB/mo | Egress | Notes |
+|--------|-----------|--------|-------|
+| **Cloudflare R2** | $0.015 | Free | Recommended. 100 meetings 720p = ~$1.50/mo |
+| Hetzner (if we get the box) | Included (1.9 TB) | Cheap | Free with WhisperX box. ~38,000 hrs of audio or ~3,800 hrs of 720p video |
+| Convex `_storage` | Convex billing | Included | Simplest to wire up, schema field already exists. Cost depends on plan |
+| AWS S3 | $0.023 | $0.09/GB | More expensive, egress fees add up for playback |
+
+### Current state
+
+- Audio saved to `/tmp/meeting-*.webm` on bot service — **not persisted, not uploaded anywhere**
+- `meetingRecordings.recordingFileId` exists in schema pointing to Convex `_storage` — **field exists but unused**
+- No video capture at all
+- Cleanup function only closes browser, doesn't delete temp audio files (they pile up in /tmp)
+
+### Recommendation
+
+**Short term:** Add Cloudflare R2 for audio storage. Wire up upload after transcription, store URL in `meetingRecordings.recordingUrl`. Delete temp file after upload. Cheap and simple.
+
+**Medium term:** Adopt Vexa/Attendee for video capture. Store video in R2 alongside audio. Add video playback to meeting UI.
+
+**Long term:** If we get the Hetzner box for WhisperX, move storage there (1.9 TB included). R2 as CDN/backup.
 
 ## Component Details
 

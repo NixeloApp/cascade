@@ -4,7 +4,6 @@
  * This file replaces the shadowed convex/ai.ts to resolve naming collisions.
  */
 
-import { anthropic } from "@ai-sdk/anthropic";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { generateText } from "ai";
 import { v } from "convex/values";
@@ -16,9 +15,7 @@ import { notFound, unauthenticated } from "../lib/errors";
 import { logger } from "../lib/logger";
 import { getPlainTextFromDescription } from "../lib/richText";
 import { rateLimit } from "../rateLimits";
-
-// Claude model (using alias - auto-points to latest snapshot)
-const CLAUDE_OPUS = "claude-opus-4-5";
+import { getActiveProvider, getModel, isAIConfigured } from "./config";
 
 /**
  * Generate embedding for text using Voyage AI (Anthropic recommended)
@@ -136,8 +133,11 @@ Be concise, helpful, and professional.`;
     const startTime = Date.now();
 
     try {
+      const model = getModel();
+      const provider = getActiveProvider();
+      const modelId = model.modelId;
       const response = await generateText({
-        model: anthropic(CLAUDE_OPUS),
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: args.message },
@@ -153,15 +153,15 @@ Be concise, helpful, and professional.`;
         chatId,
         role: "assistant",
         content: response.text,
-        modelUsed: CLAUDE_OPUS,
+        modelUsed: modelId,
         tokensUsed: usage.totalTokens,
       });
 
       // Track usage
       await ctx.runMutation(api.ai.mutations.trackUsage, {
         projectId: args.projectId,
-        provider: "anthropic",
-        model: CLAUDE_OPUS,
+        provider,
+        model: modelId,
         operation: "chat",
         promptTokens: usage.promptTokens,
         completionTokens: usage.completionTokens,
@@ -188,11 +188,13 @@ Be concise, helpful, and professional.`;
         content: `AI generation failed: ${errorMessage}`,
       });
 
-      // Track failed usage
+      // Track failed usage — provider/model may not exist if config itself threw
+      const failedProvider = isAIConfigured() ? getActiveProvider() : "anthropic";
+      const failedModel = "unknown";
       await ctx.runMutation(api.ai.mutations.trackUsage, {
         projectId: args.projectId,
-        provider: "anthropic",
-        model: CLAUDE_OPUS,
+        provider: failedProvider,
+        model: failedModel,
         operation: "chat",
         promptTokens: 0,
         completionTokens: 0,

@@ -11,7 +11,7 @@ import { api } from "../_generated/api";
 import { type ActionCtx, action } from "../_generated/server";
 import { unauthenticated } from "../lib/errors";
 import { logger } from "../lib/logger";
-import { getAIConfig } from "./config";
+import { getActiveProvider } from "./config";
 import { type AIMessage, callAI } from "./providers";
 
 /**
@@ -62,8 +62,8 @@ export const sendChatMessage = action({
     ];
 
     // Call AI provider
-    const config = getAIConfig();
-    const response = await callAI(config, aiMessages);
+    const provider = getActiveProvider();
+    const response = await callAI(aiMessages);
 
     const responseTime = Date.now() - startTime;
 
@@ -79,7 +79,7 @@ export const sendChatMessage = action({
       chatId: args.chatId,
       role: "assistant",
       content: response.content,
-      modelUsed: config.model,
+      modelUsed: response.modelId,
       tokensUsed: response.usage?.totalTokens,
       responseTime,
     });
@@ -87,8 +87,8 @@ export const sendChatMessage = action({
     // Track usage
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
-      provider: config.provider,
-      model: config.model,
+      provider: provider,
+      model: response.modelId,
       operation: "chat",
       promptTokens: response.usage?.promptTokens || 0,
       completionTokens: response.usage?.completionTokens || 0,
@@ -160,8 +160,8 @@ Format your response as JSON with keys: description, priority, priorityReason, l
       { role: "user", content: prompt },
     ];
 
-    const config = getAIConfig();
-    const response = await callAI(config, aiMessages);
+    const provider = getActiveProvider();
+    const response = await callAI(aiMessages);
 
     const responseTime = Date.now() - startTime;
 
@@ -182,8 +182,8 @@ Format your response as JSON with keys: description, priority, priorityReason, l
     // Track usage
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
-      provider: config.provider,
-      model: config.model,
+      provider: provider,
+      model: response.modelId,
       operation: "suggestion",
       promptTokens: response.usage?.promptTokens || 0,
       completionTokens: response.usage?.completionTokens || 0,
@@ -263,8 +263,8 @@ Format as JSON with keys: healthScore (0-100), risks (array), recommendations (a
       { role: "user", content: prompt },
     ];
 
-    const config = getAIConfig();
-    const response = await callAI(config, aiMessages);
+    const provider = getActiveProvider();
+    const response = await callAI(aiMessages);
 
     const responseTime = Date.now() - startTime;
 
@@ -290,7 +290,7 @@ Format as JSON with keys: healthScore (0-100), risks (array), recommendations (a
           projectId: args.projectId,
           suggestionType: "risk_detection",
           suggestion: risk,
-          modelUsed: config.model,
+          modelUsed: response.modelId,
         });
       }
     }
@@ -298,8 +298,8 @@ Format as JSON with keys: healthScore (0-100), risks (array), recommendations (a
     // Track usage
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
-      provider: config.provider,
-      model: config.model,
+      provider: provider,
+      model: response.modelId,
       operation: "analysis",
       promptTokens: response.usage?.promptTokens || 0,
       completionTokens: response.usage?.completionTokens || 0,
@@ -359,16 +359,16 @@ Team: ${projectData.members.map((m: { name?: string }) => m.name).join(", ")}`;
       { role: "user", content: `Context:\n${context}\n\nQuestion: ${args.question}` },
     ];
 
-    const config = getAIConfig();
-    const response = await callAI(config, aiMessages);
+    const provider = getActiveProvider();
+    const response = await callAI(aiMessages);
 
     const responseTime = Date.now() - startTime;
 
     // Track usage
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
-      provider: config.provider,
-      model: config.model,
+      provider: provider,
+      model: response.modelId,
       operation: "chat",
       promptTokens: response.usage?.promptTokens || 0,
       completionTokens: response.usage?.completionTokens || 0,

@@ -6,14 +6,15 @@ import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "../testUtils";
 
-// Mock the 'ai' module
-vi.mock("ai", () => ({
-  generateText: vi.fn(),
-  anthropic: vi.fn(),
-}));
+const mockGenerateText = vi.fn();
+vi.mock("ai", () => ({ generateText: mockGenerateText }));
 
-// Import the mocked function to set up return values
-import { generateText } from "ai";
+vi.mock("./config", () => ({
+  getModel: vi.fn(() => ({ modelId: "test-model", provider: "test" })),
+  getActiveProvider: vi.fn(() => "anthropic"),
+  getModelId: vi.fn(() => "test-model"),
+  isAIConfigured: vi.fn(() => true),
+}));
 
 function expectDefined<T>(value: T | undefined, label: string): T {
   expect(value, `${label} should be defined`).not.toBeUndefined();
@@ -26,8 +27,7 @@ function expectDefined<T>(value: T | undefined, label: string): T {
 describe("AI Chat", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // Reset mocks
-    vi.mocked(generateText).mockReset();
+    mockGenerateText.mockReset();
   });
 
   afterEach(() => {
@@ -36,44 +36,37 @@ describe("AI Chat", () => {
 
   it("should successfully send a message and store the response", async () => {
     const t = convexTest(schema, modules);
-    register(t); // Register rate limiter
+    register(t);
 
     const { asUser, userId, organizationId } = await createTestContext(t);
-
-    // Create a project
     const projectId = await createProjectInOrganization(t, userId, organizationId);
 
-    // Mock the AI response
-    vi.mocked(generateText).mockResolvedValue({
+    mockGenerateText.mockResolvedValue({
       text: "I am a helpful AI assistant.",
       usage: {
-        promptTokens: 10,
-        completionTokens: 20,
+        inputTokens: 10,
+        outputTokens: 20,
         totalTokens: 30,
       },
-    } as any);
+    });
 
-    // Call the chat action
     const result = await asUser.action(api.ai.chat.chat, {
       projectId,
       message: "Hello AI",
     });
 
-    // Verify the result
     expect(result.message).toBe("I am a helpful AI assistant.");
     expect(typeof result.chatId).toBe("string");
     expect(result.chatId.length).toBeGreaterThan(0);
 
-    // Verify that the chat was created in the DB
     const chats = await t.run(async (ctx) => {
       return await ctx.db.query("aiChats").collect();
     });
     expect(chats).toHaveLength(1);
-    expect(chats[0].title).toBe("Hello AI"); // First 100 chars
+    expect(chats[0].title).toBe("Hello AI");
     expect(chats[0].userId).toBe(userId);
     expect(chats[0].projectId).toBe(projectId);
 
-    // Verify that messages were stored (user + assistant)
     const messages = await t.run(async (ctx) => {
       return await ctx.db.query("aiMessages").collect();
     });
@@ -83,18 +76,15 @@ describe("AI Chat", () => {
       messages.find((m) => m.role === "user"),
       "user message",
     );
-    expect(userMessage.role).toBe("user");
     expect(userMessage.content).toBe("Hello AI");
 
     const aiMessage = expectDefined(
       messages.find((m) => m.role === "assistant"),
       "assistant message",
     );
-    expect(aiMessage.role).toBe("assistant");
     expect(aiMessage.content).toBe("I am a helpful AI assistant.");
     expect(aiMessage.tokensUsed).toBe(30);
 
-    // Verify usage tracking
     const usage = await t.run(async (ctx) => {
       return await ctx.db.query("aiUsage").collect();
     });
@@ -113,11 +103,8 @@ describe("AI Chat", () => {
     const { asUser, userId, organizationId } = await createTestContext(t);
     const projectId = await createProjectInOrganization(t, userId, organizationId);
 
-    // Mock AI failure
-    const error = new Error("API Limit Exceeded");
-    vi.mocked(generateText).mockRejectedValue(error);
+    mockGenerateText.mockRejectedValue(new Error("API Limit Exceeded"));
 
-    // Expect the action to throw
     await expect(
       asUser.action(api.ai.chat.chat, {
         projectId,
@@ -125,37 +112,28 @@ describe("AI Chat", () => {
       }),
     ).rejects.toThrow("API Limit Exceeded");
 
-    // Verify side effects
-    // 1. Chat should be created
     const chats = await t.run(async (ctx) => {
       return await ctx.db.query("aiChats").collect();
     });
     expect(chats).toHaveLength(1);
 
-    // 2. User message should be stored
-    // 3. System error message should be stored
     const messages = await t.run(async (ctx) => {
       return await ctx.db.query("aiMessages").collect();
     });
-
-    // Should have 2 messages: user message and system error message
     expect(messages).toHaveLength(2);
 
     const userMessage = expectDefined(
       messages.find((m) => m.role === "user"),
       "user message",
     );
-    expect(userMessage.role).toBe("user");
     expect(userMessage.content).toBe("Hello AI");
 
     const systemMessage = expectDefined(
       messages.find((m) => m.role === "system"),
       "system message",
     );
-    expect(systemMessage.role).toBe("system");
     expect(systemMessage.content).toContain("AI generation failed: API Limit Exceeded");
 
-    // 4. Usage should be tracked as failure
     const usage = await t.run(async (ctx) => {
       return await ctx.db.query("aiUsage").collect();
     });
