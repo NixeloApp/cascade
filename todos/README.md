@@ -5,7 +5,7 @@
 ## Quick Wins
 
 - [x] [e2e-test-id-cleanup.md](./e2e-test-id-cleanup.md) — Recording card title targeting and sprint test ID halfway pattern. Two small fixes.
-- [ ] [offline-pwa.md](./offline-pwa.md) — Move serviceWorker banners from raw DOM to React. Fix AdminTab/DocumentSidebar getElementById. Push/worker verification.
+- [x] [offline-pwa.md](./offline-pwa.md) — React-managed PWA banners, DOM cleanup, and push/worker verification coverage.
 - [x] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — Route/API naming ambiguity, kill `-*.test.tsx` convention, file-route readability.
 
 ## Core (Components & Validators)

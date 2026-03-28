@@ -85,7 +85,7 @@ Tired of paying $10+/user/month for Jira and Confluence? Nixelo gives you:
 
 - Responsive design (mobile, tablet, desktop)
 - Progressive Web App (installable)
-- Offline support — queued mutations replay on reconnect with exponential backoff
+- Offline support — cached shell plus queued settings, notification, status, and comment mutations replay on reconnect
 - Dark mode
 
 ## Quick Start

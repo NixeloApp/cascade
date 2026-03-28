@@ -78,6 +78,16 @@ async function getPreviewRuntimeState(page: Page) {
   });
 }
 
+async function clearServiceWorkersAndCaches(page: Page) {
+  await page.evaluate(async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+  });
+}
+
 async function getInstallabilityState(page: Page) {
   const client = await page.context().newCDPSession(page);
   const installability = (await client.send("Page.getInstallabilityErrors")) as {
@@ -158,6 +168,49 @@ test.describe("PWA Preview Runtime", () => {
     expect(runtimeState.cacheEntries).toContain("/icon-512.png");
     expect(runtimeState.cacheEntries).toContain("/apple-touch-icon.png");
     expect(runtimeState.cacheEntries).toContain("/badge-72.png");
+  });
+
+  test("re-registers the app-owned worker and repopulates shell assets after a full cache clear", async ({
+    page,
+    baseURL,
+  }) => {
+    await page.goto(baseURL ?? "/");
+    await waitForRegisteredWorker(page);
+
+    await page.reload({ waitUntil: "load" });
+    await waitForControllingWorker(page);
+
+    await clearServiceWorkersAndCaches(page);
+    await page.reload({ waitUntil: "load" });
+    await waitForRegisteredWorker(page);
+
+    await page.reload({ waitUntil: "load" });
+    await waitForControllingWorker(page);
+
+    await page.waitForFunction(async () => {
+      const cacheNames = await caches.keys();
+      const cacheEntries = await Promise.all(
+        cacheNames.map(async (cacheName) => {
+          const requests = await (await caches.open(cacheName)).keys();
+          return requests.map((request) => new URL(request.url).pathname);
+        }),
+      );
+
+      const paths = cacheEntries.flat();
+      return (
+        paths.includes("/") &&
+        paths.includes("/offline.html") &&
+        paths.includes("/manifest.webmanifest")
+      );
+    });
+
+    const state = await getServiceWorkerState(page);
+    const runtimeState = await getPreviewRuntimeState(page);
+
+    expect(state.controllerScriptUrl?.endsWith("/service-worker.js")).toBe(true);
+    expect(runtimeState.cacheEntries).toContain("/");
+    expect(runtimeState.cacheEntries).toContain("/offline.html");
+    expect(runtimeState.cacheEntries).toContain("/manifest.webmanifest");
   });
 
   test("meets Chromium installability checks in preview", async ({ page, baseURL }) => {

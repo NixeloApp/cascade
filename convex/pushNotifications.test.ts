@@ -57,6 +57,74 @@ describe("Push Notifications", () => {
       expect(subscription?.auth).toBe("updated-auth");
     });
 
+    it("should transfer endpoint ownership to the current user when the same browser is reused", async () => {
+      const t = convexTest(schema, modules);
+      const user1Id = await createTestUser(t, { name: "User 1", email: "user1@test.com" });
+      const user2Id = await createTestUser(t, { name: "User 2", email: "user2@test.com" });
+
+      const asUser1 = asAuthenticatedUser(t, user1Id);
+      const asUser2 = asAuthenticatedUser(t, user2Id);
+
+      const { id } = await asUser1.mutation(api.pushNotifications.subscribe, validSubscription);
+
+      const result = await asUser2.mutation(api.pushNotifications.subscribe, validSubscription);
+
+      expect(result.id).toBe(id);
+
+      const subscription = await t.run(async (ctx) => ctx.db.get(id));
+      expect(subscription?.userId).toBe(user2Id);
+    });
+
+    it("should remove the previous endpoint owned by the same user when the browser rotates subscriptions", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const previousEndpoint = "https://fcm.googleapis.com/fcm/send/previous-token";
+      const original = await asUser.mutation(api.pushNotifications.subscribe, {
+        ...validSubscription,
+        endpoint: previousEndpoint,
+      });
+
+      const result = await asUser.mutation(api.pushNotifications.subscribe, {
+        ...validSubscription,
+        previousEndpoint,
+      });
+
+      expect(result.id).not.toBe(original.id);
+
+      const originalSubscription = await t.run(async (ctx) => ctx.db.get(original.id));
+      expect(originalSubscription).toBeNull();
+
+      const subscriptions = await asUser.query(api.pushNotifications.listSubscriptions, {});
+      expect(subscriptions).toHaveLength(1);
+      expect(subscriptions[0].endpoint).toBe(validSubscription.endpoint);
+    });
+
+    it("should not remove another user's previous endpoint during rotation cleanup", async () => {
+      const t = convexTest(schema, modules);
+      const user1Id = await createTestUser(t, { name: "User 1", email: "user1@test.com" });
+      const user2Id = await createTestUser(t, { name: "User 2", email: "user2@test.com" });
+
+      const asUser1 = asAuthenticatedUser(t, user1Id);
+      const asUser2 = asAuthenticatedUser(t, user2Id);
+
+      const user1Previous = await asUser1.mutation(api.pushNotifications.subscribe, {
+        ...validSubscription,
+        endpoint: "https://fcm.googleapis.com/fcm/send/user1-previous-token",
+      });
+
+      await asUser2.mutation(api.pushNotifications.subscribe, {
+        ...validSubscription,
+        endpoint: "https://fcm.googleapis.com/fcm/send/user2-current-token",
+        previousEndpoint: "https://fcm.googleapis.com/fcm/send/user1-previous-token",
+      });
+
+      const user1Subscription = await t.run(async (ctx) => ctx.db.get(user1Previous.id));
+      expect(user1Subscription).not.toBeNull();
+      expect(user1Subscription?.userId).toBe(user1Id);
+    });
+
     it("should reject invalid endpoint URL", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
@@ -68,6 +136,19 @@ describe("Push Notifications", () => {
           endpoint: "not-a-valid-url",
         }),
       ).rejects.toThrow(/endpoint/i);
+    });
+
+    it("should reject an invalid previous endpoint URL", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      await expect(
+        asUser.mutation(api.pushNotifications.subscribe, {
+          ...validSubscription,
+          previousEndpoint: "not-a-valid-url",
+        }),
+      ).rejects.toThrow(/previousendpoint/i);
     });
 
     it("should enable push in preferences when subscribing", async () => {

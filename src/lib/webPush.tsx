@@ -55,6 +55,20 @@ interface WebPushProviderProps {
 
 const WebPushContext = createContext<WebPushContextValue | null>(null);
 
+const PUSH_ENDPOINT_STORAGE_KEY = "nixelo-push-endpoint";
+
+interface SubscribeMutationArgs {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  expirationTime?: number;
+  previousEndpoint?: string;
+  userAgent: string;
+}
+
+type SubscribeMutation = (args: SubscribeMutationArgs) => Promise<unknown>;
+type UnsubscribeMutation = (args: { endpoint: string }) => Promise<unknown>;
+
 // ============================================================================
 // Utilities
 // ============================================================================
@@ -67,13 +81,8 @@ const WebPushContext = createContext<WebPushContextValue | null>(null);
 async function recoverLostSubscription(
   pushManager: PushManager,
   vapidPublicKey: string,
-  subscribeMutation: (args: {
-    endpoint: string;
-    p256dh: string;
-    auth: string;
-    expirationTime?: number;
-    userAgent: string;
-  }) => Promise<unknown>,
+  subscribeMutation: SubscribeMutation,
+  previousEndpoint?: string,
 ): Promise<PushSubscription | null> {
   if (getBrowserNotificationPermission() !== "granted") return null;
 
@@ -98,6 +107,8 @@ async function recoverLostSubscription(
     p256dh: btoa(String.fromCharCode(...new Uint8Array(p256dh))),
     auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
     expirationTime: recovered.expirationTime ?? undefined,
+    previousEndpoint:
+      previousEndpoint && previousEndpoint !== recovered.endpoint ? previousEndpoint : undefined,
     userAgent: navigator.userAgent,
   });
   console.info("[push] Subscription recovered successfully");
@@ -157,6 +168,193 @@ function getBrowserNotificationPermission(): NotificationPermission {
   return getNotificationPermissionOverride() ?? Notification.permission;
 }
 
+function readStoredPushEndpoint(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage.getItem(PUSH_ENDPOINT_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredPushEndpoint(endpoint: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(PUSH_ENDPOINT_STORAGE_KEY, endpoint);
+  } catch {
+    // Best-effort only. The server mutation is the source of truth.
+  }
+}
+
+function clearStoredPushEndpoint() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(PUSH_ENDPOINT_STORAGE_KEY);
+  } catch {
+    // Best-effort only. Failure here should not block user actions.
+  }
+}
+
+function getSubscriptionMutationArgs(
+  subscription: PushSubscription,
+  previousEndpoint?: string,
+): SubscribeMutationArgs | null {
+  const p256dh = subscription.getKey("p256dh");
+  const auth = subscription.getKey("auth");
+
+  if (!p256dh || !auth) {
+    return null;
+  }
+
+  return {
+    endpoint: subscription.endpoint,
+    p256dh: btoa(String.fromCharCode(...new Uint8Array(p256dh))),
+    auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
+    expirationTime: subscription.expirationTime ?? undefined,
+    previousEndpoint:
+      previousEndpoint && previousEndpoint !== subscription.endpoint ? previousEndpoint : undefined,
+    userAgent: navigator.userAgent,
+  };
+}
+
+async function syncSubscriptionRecord(
+  subscription: PushSubscription,
+  subscribeMutation: SubscribeMutation,
+  previousEndpoint?: string,
+) {
+  const mutationArgs = getSubscriptionMutationArgs(subscription, previousEndpoint);
+  if (!mutationArgs) {
+    throw new Error("Failed to get push subscription keys");
+  }
+
+  await subscribeMutation(mutationArgs);
+}
+
+async function cleanupStoredSubscription(
+  previousEndpoint: string | null,
+  unsubscribeMutation: UnsubscribeMutation,
+) {
+  if (!previousEndpoint) {
+    clearStoredPushEndpoint();
+    return;
+  }
+
+  await unsubscribeMutation({ endpoint: previousEndpoint });
+  clearStoredPushEndpoint();
+}
+
+async function syncCurrentBrowserSubscription(args: {
+  previousEndpoint: string | null;
+  serverHasSubscription: boolean | undefined;
+  subscribeMutation: SubscribeMutation;
+  subscription: PushSubscription;
+}) {
+  const { previousEndpoint, serverHasSubscription, subscribeMutation, subscription } = args;
+
+  if (
+    previousEndpoint !== subscription.endpoint ||
+    previousEndpoint === null ||
+    !serverHasSubscription
+  ) {
+    await syncSubscriptionRecord(subscription, subscribeMutation, previousEndpoint ?? undefined);
+  }
+
+  writeStoredPushEndpoint(subscription.endpoint);
+}
+
+async function recoverOrCleanupBrowserSubscription(args: {
+  previousEndpoint: string | null;
+  pushManager: PushManager;
+  subscribeMutation: SubscribeMutation;
+  unsubscribeMutation: UnsubscribeMutation;
+  vapidPublicKey?: string;
+}) {
+  const { previousEndpoint, pushManager, subscribeMutation, unsubscribeMutation, vapidPublicKey } =
+    args;
+
+  if (previousEndpoint && vapidPublicKey) {
+    const recovered = await recoverLostSubscription(
+      pushManager,
+      vapidPublicKey,
+      subscribeMutation,
+      previousEndpoint,
+    );
+    if (recovered) {
+      writeStoredPushEndpoint(recovered.endpoint);
+      return recovered;
+    }
+  }
+
+  if (previousEndpoint) {
+    await cleanupStoredSubscription(previousEndpoint, unsubscribeMutation);
+  }
+
+  return null;
+}
+
+async function initializeBrowserPushState(args: {
+  isCancelled: () => boolean;
+  serverHasSubscription: boolean | undefined;
+  setCurrentSubscription: (subscription: PushSubscription | null) => void;
+  setPushManager: (pushManager: PushManager) => void;
+  subscribeMutation: SubscribeMutation;
+  unsubscribeMutation: UnsubscribeMutation;
+  vapidPublicKey?: string;
+}) {
+  const {
+    isCancelled,
+    serverHasSubscription,
+    setCurrentSubscription,
+    setPushManager,
+    subscribeMutation,
+    unsubscribeMutation,
+    vapidPublicKey,
+  } = args;
+
+  const registration = await navigator.serviceWorker.ready;
+  if (!("pushManager" in registration) || isCancelled()) {
+    return;
+  }
+
+  setPushManager(registration.pushManager);
+  const previousEndpoint = readStoredPushEndpoint();
+  const subscription = await registration.pushManager.getSubscription();
+  if (isCancelled()) {
+    return;
+  }
+
+  setCurrentSubscription(subscription);
+  if (subscription) {
+    await syncCurrentBrowserSubscription({
+      previousEndpoint,
+      serverHasSubscription,
+      subscribeMutation,
+      subscription,
+    });
+    return;
+  }
+
+  const recovered = await recoverOrCleanupBrowserSubscription({
+    previousEndpoint,
+    pushManager: registration.pushManager,
+    subscribeMutation,
+    unsubscribeMutation,
+    vapidPublicKey,
+  });
+  if (!isCancelled() && recovered) {
+    setCurrentSubscription(recovered);
+  }
+}
+
 // ============================================================================
 // Provider
 // ============================================================================
@@ -186,31 +384,30 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
   useEffect(() => {
     if (!isSupported) return;
 
+    let isCancelled = false;
+
     const initServiceWorker = async () => {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        if (!("pushManager" in registration)) return;
-
-        setPushManager(registration.pushManager);
-        const subscription = await registration.pushManager.getSubscription();
-        setCurrentSubscription(subscription);
-
-        // Recovery: server thinks we have a subscription but browser lost it
-        if (!subscription && serverHasSubscription && vapidPublicKey) {
-          const recovered = await recoverLostSubscription(
-            registration.pushManager,
-            vapidPublicKey,
-            subscribeMutation,
-          );
-          if (recovered) setCurrentSubscription(recovered);
-        }
+        await initializeBrowserPushState({
+          isCancelled: () => isCancelled,
+          serverHasSubscription,
+          setCurrentSubscription,
+          setPushManager,
+          subscribeMutation,
+          unsubscribeMutation,
+          vapidPublicKey,
+        });
       } catch (error) {
         console.info("[push] Failed to initialize push manager:", error);
       }
     };
 
     initServiceWorker();
-  }, [isSupported, serverHasSubscription, vapidPublicKey, subscribeMutation]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isSupported, serverHasSubscription, subscribeMutation, unsubscribeMutation, vapidPublicKey]);
 
   // Subscribe to push notifications
   const subscribe = async () => {
@@ -239,27 +436,12 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
       });
 
       setCurrentSubscription(subscription);
-
-      // Extract keys from subscription
-      const p256dh = subscription.getKey("p256dh");
-      const auth = subscription.getKey("auth");
-
-      if (!p256dh || !auth) {
-        throw new Error("Failed to get push subscription keys");
-      }
-
-      // Convert ArrayBuffer to base64 string
-      const p256dhBase64 = btoa(String.fromCharCode(...new Uint8Array(p256dh)));
-      const authBase64 = btoa(String.fromCharCode(...new Uint8Array(auth)));
-
-      // Save subscription to server
-      await subscribeMutation({
-        endpoint: subscription.endpoint,
-        p256dh: p256dhBase64,
-        auth: authBase64,
-        expirationTime: subscription.expirationTime ?? undefined,
-        userAgent: navigator.userAgent,
-      });
+      await syncSubscriptionRecord(
+        subscription,
+        subscribeMutation,
+        readStoredPushEndpoint() ?? currentSubscription?.endpoint,
+      );
+      writeStoredPushEndpoint(subscription.endpoint);
 
       showSuccess("Push notifications enabled");
     } catch (error) {
@@ -275,15 +457,16 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
 
     setIsLoading(true);
     try {
+      const endpoint = currentSubscription.endpoint;
+
       // Unsubscribe from push manager
       await currentSubscription.unsubscribe();
+      setCurrentSubscription(null);
 
       // Remove from server
-      await unsubscribeMutation({
-        endpoint: currentSubscription.endpoint,
-      });
+      await unsubscribeMutation({ endpoint });
 
-      setCurrentSubscription(null);
+      clearStoredPushEndpoint();
       showSuccess("Push notifications disabled");
     } catch (error) {
       showError(error, "Failed to disable push notifications");
