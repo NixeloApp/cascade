@@ -9,6 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { getFramedCompactPillButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid, GridItem } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
@@ -321,12 +322,12 @@ function LoadedProfileContent({
           ) : null}
           <MediaPreviewAction placement="coverCorner">
             <Button
-              chrome="framed"
-              chromeSize="compactPill"
-              size="sm"
+              variant="unstyled"
+              size="content"
               onClick={onCoverImageClick}
               data-testid={TEST_IDS.SETTINGS.PROFILE_COVER_UPLOAD_TRIGGER}
               leftIcon={<Icon icon={ImageIcon} size="sm" />}
+              className={getFramedCompactPillButtonClassName()}
             >
               {coverImageUrl ? "Change" : "Add"} cover
             </Button>

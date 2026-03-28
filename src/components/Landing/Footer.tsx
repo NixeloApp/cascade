@@ -2,6 +2,10 @@ import { ROUTES } from "@/config/routes";
 import { ShieldCheck } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import {
+  getFooterLinkButtonClassName,
+  getFooterSocialButtonClassName,
+} from "../ui/buttonSurfaceClassNames";
 import { Card } from "../ui/Card";
 import { Container } from "../ui/Container";
 import { Dot } from "../ui/Dot";
@@ -89,8 +93,8 @@ export function Footer() {
                       <Button
                         asChild
                         variant="unstyled"
-                        chrome="footerLink"
-                        chromeSize="footerLink"
+                        size="content"
+                        className={getFooterLinkButtonClassName()}
                       >
                         <a href={link.href}>{link.label}</a>
                       </Button>
@@ -114,7 +118,12 @@ export function Footer() {
             </Typography>
 
             <Flex align="center" gap="xl">
-              <Button asChild variant="unstyled" chrome="footerSocial" chromeSize="footerSocial">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className={getFooterSocialButtonClassName()}
+              >
                 <a
                   href="https://www.facebook.com/nixeloapp/"
                   target="_blank"
@@ -131,7 +140,12 @@ export function Footer() {
                   </svg>
                 </a>
               </Button>
-              <Button asChild variant="unstyled" chrome="footerSocial" chromeSize="footerSocial">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className={getFooterSocialButtonClassName()}
+              >
                 <a
                   href="https://www.tiktok.com/@nixeloapp"
                   target="_blank"
@@ -148,7 +162,12 @@ export function Footer() {
                   </svg>
                 </a>
               </Button>
-              <Button asChild variant="unstyled" chrome="footerSocial" chromeSize="footerSocial">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className={getFooterSocialButtonClassName()}
+              >
                 <a href="https://www.patreon.com/nixelo" target="_blank" rel="noopener noreferrer">
                   <Inline className="sr-only">Support us on Patreon</Inline>
                   <svg

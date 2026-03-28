@@ -13,6 +13,7 @@ import {
 } from "platejs/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { getToolbarButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Icon } from "@/components/ui/Icon";
 import { Popover } from "@/components/ui/Popover";
 import { Separator } from "@/components/ui/Separator";
@@ -43,11 +44,11 @@ function MarkButton({ nodeType, icon, tooltip }: MarkButtonProps) {
   return (
     <Button
       variant="unstyled"
-      chrome={state.pressed ? "toolbarActive" : "toolbar"}
-      chromeSize="toolbarIcon"
+      size="content"
       onMouseDown={props.onMouseDown}
       aria-label={tooltip}
       title={tooltip}
+      className={getToolbarButtonClassName(state.pressed)}
     >
       <Icon icon={icon} size="sm" />
     </Button>
@@ -200,11 +201,11 @@ export function FloatingToolbar() {
 
           <Button
             variant="unstyled"
-            chrome="toolbar"
-            chromeSize="toolbarIcon"
+            size="content"
             onClick={handleLink}
             aria-label="Insert Link"
             title="Insert Link (Ctrl+K)"
+            className={getToolbarButtonClassName(false)}
           >
             <Icon icon={Link} size="sm" />
           </Button>

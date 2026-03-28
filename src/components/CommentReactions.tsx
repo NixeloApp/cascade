@@ -14,6 +14,7 @@ import { Smile } from "@/lib/icons";
 import { showError } from "@/lib/toast";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
 import { Button } from "./ui/Button";
+import { getReactionPillButtonClassName } from "./ui/buttonSurfaceClassNames";
 import { Flex } from "./ui/Flex";
 import { IconButton } from "./ui/IconButton";
 import { Popover } from "./ui/Popover";
@@ -49,11 +50,11 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
           <Tooltip key={reaction.emoji} content={hasReacted ? "Remove reaction" : "Add reaction"}>
             <Button
               variant="unstyled"
-              chrome={hasReacted ? "reactionActive" : "reaction"}
-              chromeSize="reactionPill"
+              size="content"
               onClick={() => handleToggle(reaction.emoji)}
               aria-label={`${reaction.emoji} reaction, ${reaction.userIds.length} vote${reaction.userIds.length === 1 ? "" : "s"}`}
               aria-pressed={hasReacted}
+              className={getReactionPillButtonClassName(Boolean(hasReacted))}
             >
               {`${reaction.emoji} ${reaction.userIds.length}`}
             </Button>
@@ -80,9 +81,10 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
               <Tooltip key={emoji} content={emoji}>
                 <Button
                   variant="ghost"
-                  size="iconSm"
+                  size="icon"
                   onClick={() => handleToggle(emoji)}
                   aria-label={`React with ${emoji}`}
+                  className="size-8"
                 >
                   {emoji}
                 </Button>

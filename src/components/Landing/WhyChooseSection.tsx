@@ -146,7 +146,7 @@ function StoryCard({ audience, body, evidence, icon, iconTone, stat, statLabel, 
           ))}
         </Stack>
 
-        <Button asChild variant="link" size="none">
+        <Button asChild variant="link" size="content">
           <a href="#product-showcase">
             See the connected workflow
             <Icon icon={ArrowRight} size="sm" />

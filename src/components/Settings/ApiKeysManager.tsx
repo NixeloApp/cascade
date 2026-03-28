@@ -95,7 +95,7 @@ export function ApiKeysManager() {
           <AlertTitle>API Documentation</AlertTitle>
           <AlertDescription>
             Check out the{" "}
-            <Button asChild variant="link" size="none">
+            <Button asChild variant="link" size="content">
               <a href="/docs/API.md" target="_blank" rel="noopener noreferrer">
                 API Documentation
               </a>

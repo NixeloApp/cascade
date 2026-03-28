@@ -8,6 +8,7 @@ import { EDITOR_HIGHLIGHT_COLOR_OPTIONS, EDITOR_TEXT_COLOR_OPTIONS } from "@conv
 import { useEditorRef } from "platejs/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { getToolbarButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { ColorSwatchButton } from "@/components/ui/ColorSwatchButton";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -56,11 +57,11 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
       trigger={
         <Button
           variant="unstyled"
-          chrome={currentColor ? "toolbarActive" : "toolbar"}
-          chromeSize="toolbarControl"
+          size="content"
           aria-label={tooltip}
           title={tooltip}
           data-testid={type === "fontColor" ? TEST_IDS.EDITOR.FONT_COLOR_TRIGGER : undefined}
+          className={getToolbarButtonClassName(Boolean(currentColor), "control")}
         >
           <Flex as="span" inline className="relative">
             <Icon icon={TriggerIcon} size="sm" />

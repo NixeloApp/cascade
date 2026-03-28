@@ -24,6 +24,11 @@ import { cn } from "@/lib/utils";
 import type { CommandAction } from "./CommandPalette";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import {
+  getBrandSubtleActionButtonClassName,
+  getFramedCompactPillButtonClassName,
+  getFramedSearchTriggerButtonClassName,
+} from "./ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import {
   CommandDialog,
@@ -254,18 +259,20 @@ function SearchFooter({
         <Flex align="center" justify="between">
           <Flex align="center" gap="sm" wrap>
             <Button
-              chrome="framed"
-              chromeSize="compactPill"
+              variant="unstyled"
+              size="content"
               onClick={onOpenAdvancedSearch}
               leftIcon={<Icon icon={Filter} size="sm" />}
+              className={getFramedCompactPillButtonClassName()}
             >
               Advanced Search
             </Button>
             <Button
-              chrome="framed"
-              chromeSize="compactPill"
+              variant="unstyled"
+              size="content"
               onClick={onSearchWithFilters}
               leftIcon={<Icon icon={Plus} size="sm" />}
+              className={getFramedCompactPillButtonClassName()}
             >
               Search with filters
             </Button>
@@ -565,7 +572,12 @@ function buildSearchSections({
             id: "load-more",
             content: (
               <SearchInfoPanel>
-                <Button variant="brandSubtle" size="sm" onClick={onLoadMore} className="w-full">
+                <Button
+                  variant="unstyled"
+                  size="sm"
+                  onClick={onLoadMore}
+                  className={getBrandSubtleActionButtonClassName()}
+                >
                   Load More ({totalCount - filteredResults.length} remaining)
                 </Button>
               </SearchInfoPanel>
@@ -664,14 +676,15 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
   return (
     <>
       <Button
-        chrome="framed"
-        chromeSize="searchTrigger"
+        variant="unstyled"
+        size="content"
         onClick={() => {
           setShouldOpenAdvancedSearch(false); // Reset handoff flag to prevent stale state
           setIsOpen(true);
         }}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
+        className={getFramedSearchTriggerButtonClassName()}
       >
         <Flex align="center" gap="sm" className="min-w-0">
           <SearchRowIconShell className="border-ui-border/60 sm:size-7" tone="muted">

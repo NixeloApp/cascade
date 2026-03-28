@@ -39,7 +39,7 @@ export function AttachmentRow({
           href ? (
             <Button
               variant="link"
-              size="none"
+              size="content"
               className="max-w-full justify-start truncate text-ui-text"
               asChild
             >

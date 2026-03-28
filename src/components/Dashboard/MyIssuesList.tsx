@@ -17,6 +17,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getListRowButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
@@ -161,11 +162,10 @@ export function MyIssuesList({
                 <Button
                   key={issue._id}
                   variant="unstyled"
-                  chrome="listRow"
-                  chromeSize="listRow"
+                  size="content"
                   onClick={() => navigateToWorkspace(issue.projectKey)}
                   {...itemProps}
-                  className={cn(itemProps.className)}
+                  className={cn(getListRowButtonClassName(), itemProps.className)}
                 >
                   <Stack gap="xs">
                     <Flex gap="sm" align="center" wrap>

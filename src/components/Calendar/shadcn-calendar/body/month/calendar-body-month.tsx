@@ -22,6 +22,10 @@ import { useState } from "react";
 import { getDotColorClass } from "@/components/Calendar/calendar-colors";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getCalendarControlButtonClassName,
+  getCalendarMonthOverflowButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
@@ -164,7 +168,12 @@ function CalendarMonthDesktopEventList({
           </div>
         ))}
         {dayEvents.length > 3 && (
-          <Button asChild chrome="calendarMonthOverflow" chromeSize="calendarMonthOverflow">
+          <Button
+            asChild
+            variant="unstyled"
+            size="content"
+            className={getCalendarMonthOverflowButtonClassName()}
+          >
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -258,12 +267,13 @@ function CalendarMonthDayCell({
         </Badge>
         <Button
           type="button"
-          chrome="calendarHeaderControl"
-          chromeSize="calendarHeaderIcon"
+          variant="unstyled"
+          size="content"
           reveal="responsive"
           aria-label={`Add event for ${format(day, "MMMM d, yyyy")}`}
           data-testid={TEST_IDS.CALENDAR.QUICK_ADD_DAY}
           title={`Add event for ${format(day, "MMMM d, yyyy")}`}
+          className={getCalendarControlButtonClassName("icon")}
           onClick={(e) => {
             e.stopPropagation();
             onAddEvent(day);

@@ -22,6 +22,10 @@ import { CreateIssueModal } from "./IssueDetail";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import {
+  getCalendarIssueButtonClassName,
+  getMobileTouchTargetButtonClassName,
+} from "./ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { Dot } from "./ui/Dot";
 import { Icon } from "./ui/Icon";
@@ -250,11 +254,10 @@ export function IssuesCalendarView({
               >
                 <Button
                   variant="unstyled"
-                  chrome="calendarIssue"
-                  chromeSize="calendarIssue"
+                  size="content"
                   onClick={() => setSelectedIssue(issue._id)}
                   className={cn(
-                    "w-full",
+                    getCalendarIssueButtonClassName(),
                     canEdit && "cursor-grab",
                     draggedIssue === issue._id && "opacity-50",
                   )}
@@ -336,7 +339,12 @@ export function IssuesCalendarView({
               </IconButton>
             </Tooltip>
 
-            <Button variant="secondary" size="touchSm" onClick={() => setCurrentDate(new Date())}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setCurrentDate(new Date())}
+              className={getMobileTouchTargetButtonClassName()}
+            >
               Today
             </Button>
           </Flex>

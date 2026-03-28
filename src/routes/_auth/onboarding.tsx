@@ -141,7 +141,7 @@ function OnboardingPage() {
         </Flex>
         {step !== "invited" && (
           <Button
-            variant="ghostTertiary"
+            variant="ghost"
             size="sm"
             onClick={handleSkip}
             data-testid={TEST_IDS.ONBOARDING.SKIP_BUTTON}

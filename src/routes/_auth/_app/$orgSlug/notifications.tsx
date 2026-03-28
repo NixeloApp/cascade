@@ -24,6 +24,7 @@ import {
 import { NotificationItem, type NotificationWithActor } from "@/components/Notifications";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getNotificationFilterButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
@@ -471,9 +472,9 @@ export function NotificationsPage() {
                         <Button
                           key={key}
                           variant="unstyled"
-                          chrome={filter === key ? "filterActive" : "filter"}
-                          chromeSize="compactPillSm"
+                          size="content"
                           onClick={() => setFilter(key)}
+                          className={getNotificationFilterButtonClassName(filter === key)}
                         >
                           {label}
                         </Button>

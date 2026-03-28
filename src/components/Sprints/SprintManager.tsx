@@ -14,6 +14,7 @@ import { SprintBurnChart } from "@/components/Analytics/SprintBurnChart";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getSprintPresetButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -500,10 +501,9 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                   <Button
                     key={preset.id}
                     variant="unstyled"
-                    chrome={selectedPreset === preset.id ? "sprintPresetSelected" : "sprintPreset"}
-                    chromeSize="sprintPreset"
+                    size="content"
                     onClick={() => setSelectedPreset(preset.id)}
-                    className="items-start justify-start text-left flex-col"
+                    className={getSprintPresetButtonClassName(selectedPreset === preset.id)}
                   >
                     <Typography variant="label" className="block">
                       {preset.label}
@@ -790,11 +790,10 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                     <Button
                       key={preset.id}
                       variant="unstyled"
-                      chrome={startPreset === preset.id ? "sprintPresetSelected" : "sprintPreset"}
-                      chromeSize="sprintPreset"
+                      size="content"
                       onClick={() => setStartPreset(preset.id)}
                       data-testid={TEST_IDS.SPRINT.START_PRESET(preset.id)}
-                      className="items-start justify-start text-left flex-col"
+                      className={getSprintPresetButtonClassName(startPreset === preset.id)}
                     >
                       <Typography variant="label" className="block">
                         {preset.label}

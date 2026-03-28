@@ -15,6 +15,7 @@ import { PageContent } from "@/components/layout";
 import { Avatar, type AvatarProps } from "@/components/ui/Avatar";
 import { Badge, type BadgeProps } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getMobileTouchWideButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { CardSection } from "@/components/ui/CardSection";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -1110,7 +1111,7 @@ function LinkedIssueDetails({ issueId }: { issueId: Id<"issues"> }) {
           {issue.title}
         </Typography>
         {organization && (
-          <Button asChild variant="link" size="none">
+          <Button asChild variant="link" size="content">
             <Link
               to={ROUTES.issues.detail.path}
               params={{ orgSlug: organization.orgSlug, key: issue.key }}
@@ -1460,13 +1461,14 @@ function FocusedMeetingDetailTab({
       <Button
         type="button"
         variant={isActive ? "secondary" : "ghost"}
-        size="touchWide"
+        size="md"
         role="tab"
         id={`meeting-detail-tab-${value}`}
         aria-controls={`meeting-detail-panel-${value}`}
         aria-selected={isActive}
         data-state={isActive ? "active" : "inactive"}
         onClick={() => onSelect(value)}
+        className={getMobileTouchWideButtonClassName()}
       >
         {label}
       </Button>

@@ -13,6 +13,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Archive } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
+import { getQuietCompactPillButtonClassName } from "./ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex, FlexItem } from "./ui/Flex";
@@ -234,7 +235,12 @@ export function BulkOperationsBar({
               <Typography variant="label">
                 {count} issue{count !== 1 ? "s" : ""} selected
               </Typography>
-              <Button chrome="quiet" chromeSize="compactPill" onClick={onClearSelection}>
+              <Button
+                variant="unstyled"
+                size="content"
+                onClick={onClearSelection}
+                className={getQuietCompactPillButtonClassName()}
+              >
                 Clear
               </Button>
             </Flex>
@@ -371,7 +377,12 @@ export function BulkOperationsBar({
                         onChange={(e) => handleUpdateStartDate(e.target.value)}
                       />
                     </FlexItem>
-                    <Button chrome="quiet" chromeSize="compactPill" onClick={handleClearStartDate}>
+                    <Button
+                      variant="unstyled"
+                      size="content"
+                      onClick={handleClearStartDate}
+                      className={getQuietCompactPillButtonClassName()}
+                    >
                       Clear
                     </Button>
                   </Flex>
@@ -389,7 +400,12 @@ export function BulkOperationsBar({
                         onChange={(e) => handleUpdateDueDate(e.target.value)}
                       />
                     </FlexItem>
-                    <Button chrome="quiet" chromeSize="compactPill" onClick={handleClearDueDate}>
+                    <Button
+                      variant="unstyled"
+                      size="content"
+                      onClick={handleClearDueDate}
+                      className={getQuietCompactPillButtonClassName()}
+                    >
                       Clear
                     </Button>
                   </Flex>

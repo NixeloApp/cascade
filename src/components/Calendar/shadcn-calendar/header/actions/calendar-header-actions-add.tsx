@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/Button";
+import { getCalendarAddButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
+import { Inline } from "@/components/ui/Inline";
 import { Plus } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { useCalendarContext } from "../../calendar-context";
@@ -8,14 +10,15 @@ export function CalendarHeaderActionsAdd(): React.ReactElement {
   const { onAddEvent } = useCalendarContext();
   return (
     <Button
-      chrome="calendarHeaderAdd"
-      chromeSize="calendarHeaderAdd"
+      variant="unstyled"
+      size="content"
       onClick={() => onAddEvent()}
       aria-label="Add event"
       leftIcon={<Plus />}
       data-testid={TEST_IDS.CALENDAR.CREATE_EVENT_BUTTON}
+      className={getCalendarAddButtonClassName()}
     >
-      <span className="hidden sm:inline">Add Event</span>
+      <Inline className="hidden sm:inline">Add Event</Inline>
     </Button>
   );
 }

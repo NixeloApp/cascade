@@ -14,6 +14,11 @@ import { Plus, StickyNote, Trash2, X } from "@/lib/icons";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import {
+  getQuietCompactPillButtonClassName,
+  getQuietRoundIconButtonClassName,
+  getSelectableRoundIconButtonClassName,
+} from "../ui/buttonSurfaceClassNames";
 import { Card } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
@@ -60,11 +65,11 @@ function StickyCard({ id, content, color, onUpdate, onDelete }: StickyCardProps)
       <Stack gap="xs">
         <Flex justify="end">
           <Button
-            chrome="quiet"
-            chromeSize="icon"
-            size="sm"
+            variant="unstyled"
+            size="icon"
             aria-label="Delete note"
             onClick={() => onDelete(id)}
+            className={getQuietRoundIconButtonClassName()}
           >
             <Icon icon={Trash2} size="xs" />
           </Button>
@@ -84,7 +89,7 @@ function StickyCard({ id, content, color, onUpdate, onDelete }: StickyCardProps)
           />
         ) : (
           <Button
-            chrome="quiet"
+            variant="ghost"
             className="justify-start text-left"
             onClick={() => {
               setIsEditing(true);
@@ -152,10 +157,11 @@ export function Stickies() {
         actions={
           !isAdding ? (
             <Button
-              chrome="quiet"
-              chromeSize="icon"
+              variant="unstyled"
+              size="icon"
               onClick={() => setIsAdding(true)}
               aria-label="Add note"
+              className={getQuietRoundIconButtonClassName()}
             >
               <Icon icon={Plus} size="sm" />
             </Button>
@@ -186,12 +192,11 @@ export function Stickies() {
                 {STICKY_COLORS.map((c) => (
                   <Button
                     key={c.name}
-                    chrome="quiet"
-                    chromeSize="icon"
-                    size="sm"
+                    variant="unstyled"
+                    size="icon"
                     onClick={() => setSelectedColor(c.name)}
                     aria-label={`${c.name} color`}
-                    className={cn(selectedColor === c.name && "ring-2 ring-brand ring-offset-1")}
+                    className={getSelectableRoundIconButtonClassName(selectedColor === c.name)}
                   >
                     <div className={cn("size-3", c.classes)} />
                   </Button>
@@ -200,11 +205,12 @@ export function Stickies() {
               <Flex gap="xs">
                 <Button
                   size="sm"
-                  chrome="quiet"
+                  variant="unstyled"
                   onClick={() => {
                     setIsAdding(false);
                     setNewContent("");
                   }}
+                  className={getQuietCompactPillButtonClassName()}
                 >
                   <Icon icon={X} size="xs" inline />
                   Cancel

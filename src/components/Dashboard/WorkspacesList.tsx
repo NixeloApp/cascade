@@ -13,9 +13,11 @@ import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Folder } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getListRowButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { SkeletonProjectCard } from "../ui/Skeleton";
@@ -93,11 +95,10 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                 <Button
                   key={project._id}
                   variant="unstyled"
-                  chrome="listRow"
-                  chromeSize="listRow"
+                  size="content"
                   onClick={() => navigateToWorkspace(project.key)}
                   {...itemProps}
-                  className={itemProps.className}
+                  className={cn(getListRowButtonClassName(), itemProps.className)}
                 >
                   <Flex align="center" gap="sm">
                     {/* Project avatar/icon */}

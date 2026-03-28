@@ -11,6 +11,10 @@ import { useState } from "react";
 import { PresenceIndicator } from "@/components/PresenceIndicator";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getDocumentHeaderActionButtonClassName,
+  getDocumentHeaderToggleButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import {
   DropdownMenu,
@@ -160,9 +164,9 @@ function OwnerDocumentActions({
     <Flex wrap align="center" gap="xs">
       <Button
         variant="unstyled"
-        chrome={document.isPublic ? "documentHeaderPublicActive" : "documentHeaderNeutral"}
-        chromeSize="documentHeaderToggle"
+        size="content"
         onClick={() => void onTogglePublic()}
+        className={getDocumentHeaderToggleButtonClassName(document.isPublic)}
       >
         {document.isPublic ? "Public" : "Private"}
       </Button>
@@ -252,11 +256,11 @@ function DocumentHeaderActions({
       <Tooltip content="View version history">
         <Button
           variant="unstyled"
-          chrome="documentHeaderNeutral"
-          chromeSize="documentHeaderAction"
+          size="content"
           onClick={onShowVersionHistory}
           leftIcon={<Icon icon={History} size="sm" aria-hidden="true" />}
           aria-label="Version history"
+          className={getDocumentHeaderActionButtonClassName("neutral")}
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
             History
@@ -272,12 +276,12 @@ function DocumentHeaderActions({
       <Tooltip content="Import from Markdown file">
         <Button
           variant="unstyled"
-          chrome="documentHeaderAccent"
-          chromeSize="documentHeaderAction"
+          size="content"
           onClick={() => void onImportMarkdown()}
           disabled={!editorReady}
           leftIcon={<Icon icon={Upload} size="sm" aria-hidden="true" />}
           aria-label="Import from Markdown"
+          className={getDocumentHeaderActionButtonClassName("accent")}
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
             Import
@@ -288,12 +292,12 @@ function DocumentHeaderActions({
       <Tooltip content="Export as Markdown file">
         <Button
           variant="unstyled"
-          chrome="documentHeaderAccent"
-          chromeSize="documentHeaderAction"
+          size="content"
           onClick={() => void onExportMarkdown()}
           disabled={!editorReady}
           leftIcon={<Icon icon={Download} size="sm" aria-hidden="true" />}
           aria-label="Export as Markdown"
+          className={getDocumentHeaderActionButtonClassName("accent")}
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
             Export

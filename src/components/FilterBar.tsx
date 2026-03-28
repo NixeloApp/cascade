@@ -18,6 +18,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
+import { getFilterTriggerButtonClassName } from "./ui/buttonSurfaceClassNames";
 import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import {
@@ -120,10 +121,11 @@ function FilterDropdown<T>({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          chrome={isActive ? "filterActive" : "filter"}
-          chromeSize="filterPill"
+          variant="unstyled"
+          size="content"
           rightIcon={<Icon icon={ChevronDown} size="sm" />}
           data-testid={triggerTestId}
+          className={getFilterTriggerButtonClassName(isActive)}
         >
           <ResponsiveText short={shortLabel ?? label} long={label} />
           {isActive && ` (${activeCount})`}
@@ -184,9 +186,10 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          chrome={isActive ? "filterActive" : "filter"}
-          chromeSize="filterPill"
+          variant="unstyled"
+          size="content"
           rightIcon={<Icon icon={ChevronDown} size="sm" />}
+          className={getFilterTriggerButtonClassName(isActive)}
         >
           <ResponsiveText short={shortLabel ?? label} long={label} />
           {isActive && " (1)"}
@@ -244,9 +247,10 @@ function SavedFiltersDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          chrome="filter"
-          chromeSize="filterPill"
+          variant="unstyled"
+          size="content"
           rightIcon={<Icon icon={ChevronDown} size="sm" />}
+          className={getFilterTriggerButtonClassName(false)}
         >
           <ResponsiveText short="Saved" long="Saved Filters" /> ({savedFilters.length})
         </Button>
@@ -556,10 +560,11 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
         {/* Clear Filters */}
         {hasActiveFilters && (
           <Button
-            chrome="filter"
-            chromeSize="filterPill"
+            variant="unstyled"
+            size="content"
             onClick={handleClearFilters}
             leftIcon={<Icon icon={X} size="sm" />}
+            className={getFilterTriggerButtonClassName(false)}
           >
             Clear ({activeFilterCount})
           </Button>
@@ -567,7 +572,12 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
         {/* Save Filter */}
         {hasActiveFilters && (
-          <Button chrome="filter" chromeSize="filterPill" onClick={() => setShowSaveDialog(true)}>
+          <Button
+            variant="unstyled"
+            size="content"
+            onClick={() => setShowSaveDialog(true)}
+            className={getFilterTriggerButtonClassName(false)}
+          >
             Save Filter
           </Button>
         )}

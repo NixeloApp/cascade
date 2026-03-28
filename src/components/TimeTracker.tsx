@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { TimeEntryModal } from "./TimeTracking/TimeEntryModal";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { getSectionToggleButtonClassName } from "./ui/buttonSurfaceClassNames";
 import { LargeText, Typography } from "./ui/Typography";
 
 interface TimeTrackerProps {
@@ -234,7 +235,7 @@ export function TimeTracker({
           variant="ghost"
           size="sm"
           onClick={() => setShowEntries(!showEntries)}
-          chromeSize="sectionToggle"
+          className={getSectionToggleButtonClassName()}
           rightIcon={
             <Icon
               icon={ChevronDown}

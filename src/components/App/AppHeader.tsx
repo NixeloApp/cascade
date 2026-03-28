@@ -17,6 +17,10 @@ import { TimerWidget as NavTimerWidget } from "@/components/TimeTracking/TimerWi
 import { UserMenu } from "@/components/UserMenu";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getFramedRoundIconButtonClassName,
+  getQuietRoundIconButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Dot";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -54,10 +58,10 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
           {/* Left section: Mobile menu + branding chip */}
           <Flex align="center" gap="sm" className="shrink-0">
             <Button
-              chrome="framed"
-              chromeSize="icon"
+              variant="unstyled"
+              size="icon"
               onClick={toggleMobile}
-              className="lg:hidden"
+              className={cn(getFramedRoundIconButtonClassName(), "lg:hidden")}
               aria-label="Toggle sidebar menu"
               aria-expanded={isMobileOpen}
             >
@@ -96,10 +100,10 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
               {onShowShortcutsHelp && (
                 <Tooltip content="Keyboard shortcuts">
                   <Button
-                    chrome="quiet"
-                    chromeSize="icon"
+                    variant="unstyled"
+                    size="icon"
                     onClick={onShowShortcutsHelp}
-                    className="hidden sm:inline-flex"
+                    className={cn(getQuietRoundIconButtonClassName(), "hidden sm:inline-flex")}
                     aria-label="Keyboard shortcuts"
                     data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
                   >

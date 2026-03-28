@@ -120,7 +120,9 @@ No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production fil
 - **End state:** < 20 recipes. Move one-off visual treatments to feature components or CVA variants owned by the feature, not the primitive.
 
 ### Button.tsx
+- **Status:** Done (2026-03-28)
 - **Current:** `chrome` (39), `chromeSize` (37), `variant` (18), `size` (14)
+- **Landed:** `Button` is now a shared semantic core with 9 variants and 5 sizes, `chrome` / `chromeSize` are deleted, production feature-owned button surfaces now carry their own styling, and the validator baselines no longer treat `Button` as an oversized primitive.
 - **End state:** `variant` < 10, `size` < 6. Collapse `chrome`/`chromeSize` into the variant system or move to feature-owned wrappers.
 
 ### Typography.tsx

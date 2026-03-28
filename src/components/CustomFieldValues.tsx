@@ -207,7 +207,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
 
       case "url":
         return (
-          <Button asChild variant="link" size="none">
+          <Button asChild variant="link" size="content">
             <a href={value} target="_blank" rel="noopener noreferrer">
               {value}
             </a>

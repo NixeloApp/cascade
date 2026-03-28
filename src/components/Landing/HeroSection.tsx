@@ -3,6 +3,7 @@ import { ROUTES } from "@/config/routes";
 import { ArrowRight } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getLandingPrimaryButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
@@ -76,7 +77,12 @@ export function HeroSection() {
                 animationFillMode: "backwards",
               }}
             >
-              <Button asChild variant="landingPrimary" size="none">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className={getLandingPrimaryButtonClassName()}
+              >
                 <Link to={ROUTES.signup.path}>Get Started Free</Link>
               </Button>
               <Button asChild variant="secondary" size="lg">

@@ -14,6 +14,10 @@ import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getNotificationFilterButtonClassName,
+  getQuietRoundIconButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -34,6 +38,7 @@ import { Bell, ExternalLink, Inbox } from "@/lib/icons";
 import { getOptimisticUnreadCount } from "@/lib/notifications";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
 
 /** Notification filter categories */
@@ -188,7 +193,7 @@ export function NotificationCenter() {
       contentTestId={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       footer={
         orgContext?.orgSlug ? (
-          <Button asChild variant="link" size="none" className="w-full justify-center gap-2">
+          <Button asChild variant="link" size="content" className="w-full justify-center gap-2">
             <Link
               to={ROUTES.notifications.path}
               params={{ orgSlug: orgContext.orgSlug }}
@@ -210,7 +215,7 @@ export function NotificationCenter() {
             {optimisticUnreadCount != null && optimisticUnreadCount > 0 && (
               <Button
                 variant="link"
-                size="none"
+                size="content"
                 onClick={handleMarkAllAsRead}
                 isLoading={isLoading}
               >
@@ -231,10 +236,10 @@ export function NotificationCenter() {
             ).map(({ key, label }) => (
               <Button
                 key={key}
-                chrome={filter === key ? "active" : "quiet"}
-                chromeSize="compactPillSm"
+                variant="unstyled"
+                size="content"
                 onClick={() => setFilter(key)}
-                className="shrink-0"
+                className={cn("shrink-0", getNotificationFilterButtonClassName(filter === key))}
               >
                 {label}
               </Button>
@@ -250,9 +255,9 @@ export function NotificationCenter() {
       tooltip={{ content: "Notifications" }}
       trigger={
         <Button
-          chrome="quiet"
-          chromeSize="icon"
-          className="relative"
+          variant="unstyled"
+          size="icon"
+          className={cn("relative", getQuietRoundIconButtonClassName())}
           aria-label={dynamicLabel}
           data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
         >

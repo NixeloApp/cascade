@@ -20,6 +20,10 @@ import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getAiPrimaryActionButtonClassName,
+  getCalendarControlButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { ColorPicker } from "@/components/ui/ColorPicker";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
@@ -209,7 +213,8 @@ function CreateIssueAiAction({
         type="button"
         onClick={onGenerateSuggestions}
         isLoading={isGeneratingAI}
-        variant="accentGradient"
+        variant="unstyled"
+        className={getAiPrimaryActionButtonClassName()}
         leftIcon={<Icon icon={Sparkles} size="sm" />}
       >
         Get AI Suggestions
@@ -324,7 +329,13 @@ function CreateIssueLabelsSection({
           onOpenChange={onCreateOpenChange}
           padding="none"
           trigger={
-            <Button type="button" variant="outline" size="xs" aria-label="Create new label">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-label="Create new label"
+              className={getCalendarControlButtonClassName("pill")}
+            >
               <Icon icon={Plus} size="sm" />
               New
             </Button>

@@ -160,7 +160,7 @@ export function PumbleIntegration() {
         <Button
           asChild
           variant="link"
-          size="none"
+          size="content"
           rightIcon={<Icon icon={ArrowUpRight} size="sm" />}
         >
           <a

@@ -27,9 +27,7 @@ export function ColorSwatchButton({
     <Button
       type="button"
       variant="unstyled"
-      chrome="colorSwatch"
-      chromeSize="colorSwatch"
-      className={cn(className)}
+      size="content"
       style={{
         backgroundColor: color || "transparent",
         borderColor: color || undefined,
@@ -39,6 +37,10 @@ export function ColorSwatchButton({
           : undefined,
         ...style,
       }}
+      className={cn(
+        "h-6 w-6 min-w-0 rounded border border-ui-border-secondary bg-transparent p-0 text-ui-text shadow-none hover:scale-110 hover:shadow-sm",
+        className,
+      )}
       {...props}
     >
       {selected ? (

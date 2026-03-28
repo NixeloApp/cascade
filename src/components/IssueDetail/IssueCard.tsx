@@ -20,6 +20,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { memo, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getIssueCardOverlayButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Flex } from "@/components/ui/Flex";
@@ -552,10 +553,12 @@ export const IssueCard = memo(function IssueCard({
     >
       {/* Primary Action Overlay Button */}
       <Button
-        variant="overlay"
+        variant="unstyled"
+        size="content"
         onClick={handleClick}
         aria-label={getIssueAccessibleLabel(issue)}
         data-testid={TEST_IDS.ISSUE.CARD_TRIGGER(issue.key)}
+        className={getIssueCardOverlayButtonClassName()}
       />
 
       {/* Content Wrapper - pointer-events-none allows clicks to pass through to overlay */}

@@ -56,8 +56,6 @@ const RAW_TW_ESCAPE_HATCHES = [
   // Direct props on components
   'recipe="',
   "recipe='",
-  'chrome="',
-  "chrome='",
   'variant="',
   "variant='",
   // Programmatic variant calls
@@ -66,7 +64,6 @@ const RAW_TW_ESCAPE_HATCHES = [
   "getCardRecipeClassName(",
   "getCardVariantClassName(",
   "buttonVariants(",
-  "buttonChromeVariants(",
   "tabsTriggerVariants(",
   "tabsListVariants(",
 ];

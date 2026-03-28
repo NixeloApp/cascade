@@ -212,7 +212,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                 <Icon icon={LinkIcon} size="md" tone="tertiary" className="shrink-0" />
                 <Stack gap="xs" align="start">
                   <Typography variant="caption">Meeting Link</Typography>
-                  <Button asChild variant="link" size="none">
+                  <Button asChild variant="link" size="content">
                     <a href={event.meetingUrl} target="_blank" rel="noopener noreferrer">
                       Join Meeting
                     </a>

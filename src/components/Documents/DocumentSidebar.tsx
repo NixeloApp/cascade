@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getSectionToggleButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -83,7 +84,7 @@ function SidebarSection({
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        chromeSize="sectionToggle"
+        className={getSectionToggleButtonClassName()}
       >
         <Flex align="center" gap="sm">
           <Icon icon={SectionIcon} size="sm" />

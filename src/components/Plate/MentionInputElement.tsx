@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getListRowButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
@@ -157,10 +158,10 @@ export function MentionInputElement({
               <Button
                 key={item.id}
                 variant="unstyled"
-                chrome={index === selectedIndex ? "listRowActive" : "listRow"}
-                chromeSize="listRow"
+                size="content"
                 onClick={() => onSelectItem(item)}
                 onMouseEnter={() => setSelectedIndex(index)}
+                className={getListRowButtonClassName(index === selectedIndex)}
               >
                 <Flex align="center" gap="sm">
                   <Avatar name={item.text} src={item.image} size="sm" />

@@ -15,6 +15,10 @@ import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getFullOverlayDismissButtonClassName,
+  getListRowButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon as AppIcon, type IconSize } from "@/components/ui/Icon";
@@ -237,9 +241,9 @@ function WorkspacesSectionContent({
           <Button
             variant="ghost"
             size="sm"
-            chromeSize="listRow"
             onClick={onCreateProject}
             leftIcon={<AppIcon icon={Plus} size="sm" />}
+            className={getListRowButtonClassName()}
           >
             New Project
           </Button>
@@ -617,9 +621,8 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
       {isMobileOpen && (
         <Button
           variant="unstyled"
-          chrome="backdrop"
-          chromeSize="backdrop"
-          className="z-40 lg:hidden cursor-default"
+          size="content"
+          className={getFullOverlayDismissButtonClassName()}
           onClick={closeMobile}
           onKeyDown={(e) => e.key === "Escape" && closeMobile()}
           aria-label="Close sidebar"

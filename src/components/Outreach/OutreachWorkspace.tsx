@@ -1269,12 +1269,12 @@ function SequencesSidebar({
                 key={sequence._id}
                 onClick={() => onSelectSequence(sequence._id)}
                 variant="unstyled"
-                size="card"
+                size="content"
                 className={cn(
                   getCardRecipeClassName(
                     selectedSequenceId === sequence._id ? "selectionRowSelected" : "selectionRow",
                   ),
-                  "p-4",
+                  "group relative w-full overflow-hidden p-4 text-left",
                 )}
               >
                 <Stack gap="xs">
@@ -1574,8 +1574,9 @@ function SequenceEnrollmentsCard({
                       <Button
                         type="button"
                         variant="ghost"
-                        size="contentStart"
+                        size="content"
                         onClick={() => onSelectEnrollment(enrollment._id)}
+                        className="text-left"
                       >
                         <Stack gap="xs">
                           <Typography variant="label" as="span">
@@ -2321,9 +2322,7 @@ function SequenceLeaderboardCard({
                   <TableCell>
                     <Button
                       size="sm"
-                      variant={
-                        row.sequenceId === selectedSequenceId ? "secondary" : "ghostTertiary"
-                      }
+                      variant={row.sequenceId === selectedSequenceId ? "secondary" : "ghost"}
                       onClick={() => onSelectSequence(row.sequenceId)}
                     >
                       {row.sequenceId === selectedSequenceId ? "Viewing" : "Inspect"}
@@ -2437,7 +2436,7 @@ function ContactEngagementCard({
                   <TableCell>
                     <Button
                       size="sm"
-                      variant="ghostTertiary"
+                      variant="ghost"
                       onClick={() => onInspectContact(row)}
                       disabled={!row.latestSequenceId && !row.latestEnrollmentId}
                     >

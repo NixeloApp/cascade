@@ -413,7 +413,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           No labels in this group.{" "}
                           <Button
                             variant="link"
-                            size="none"
+                            size="content"
                             onClick={() => handleCreateLabel(group._id)}
                           >
                             Add one

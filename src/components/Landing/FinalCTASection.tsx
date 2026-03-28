@@ -156,7 +156,7 @@ export function FinalCTASection() {
                       <Button asChild variant="secondary" size="lg" className="w-full">
                         <a href="#pricing">Review rollout stages</a>
                       </Button>
-                      <Button asChild variant="link" size="none">
+                      <Button asChild variant="link" size="content">
                         <a href="#product-showcase">
                           See the workflow tour
                           <Icon icon={ArrowRight} size="sm" />

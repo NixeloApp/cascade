@@ -6,6 +6,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { AlertTriangle, Calendar, Check, Lightbulb, Sparkles, Target, X } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getAiPrimaryActionButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { Card } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -61,10 +62,11 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
       >
         <Stack gap="md">
           <Button
-            variant="accentGradient"
-            size="touchWide"
+            variant="unstyled"
+            size="md"
             onClick={handleGenerateInsights}
             disabled={isGenerating}
+            className={getAiPrimaryActionButtonClassName()}
           >
             <Flex align="center" justify="center" gap="sm">
               {isGenerating ? (

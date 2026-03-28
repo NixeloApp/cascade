@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { getListRowButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -17,6 +18,7 @@ import { InlineSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { type FuzzySearchResult, highlightMatches } from "@/hooks/useFuzzySearch";
 import { X } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 
 interface FuzzySearchInputProps<T> {
   /**
@@ -239,8 +241,7 @@ export function FuzzySearchInput<T>({
               <Button
                 key={getKey(result.item)}
                 variant="unstyled"
-                chrome={index === selectedIndex ? "listRowActive" : "listRow"}
-                chromeSize="listRow"
+                size="content"
                 role="option"
                 aria-selected={index === selectedIndex}
                 onClick={() => {
@@ -249,7 +250,10 @@ export function FuzzySearchInput<T>({
                   onSearch("");
                 }}
                 onMouseEnter={() => setSelectedIndex(index)}
-                className="transition-fast"
+                className={cn(
+                  getListRowButtonClassName(index === selectedIndex),
+                  "transition-fast",
+                )}
               >
                 <FlexItem flex="1">{renderItem(result)}</FlexItem>
                 {showScore && result.score !== undefined && result.score > 0 && (

@@ -1,6 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { Button } from "@/components/ui/Button";
+import {
+  getLandingBrandButtonClassName,
+  getLandingNavButtonClassName,
+  getLandingPrimaryButtonClassName,
+  getLandingThemeButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import {
@@ -45,8 +51,8 @@ export function NavHeader() {
             <Button
               asChild
               variant="unstyled"
-              chrome="landingBrandLink"
-              chromeSize="landingBrandLink"
+              size="content"
+              className={getLandingBrandButtonClassName()}
             >
               <Link to={ROUTES.home.path}>
                 <NixeloLogo />
@@ -65,8 +71,8 @@ export function NavHeader() {
                   key={item.label}
                   asChild
                   variant="unstyled"
-                  chrome="landingNavLink"
-                  chromeSize="landingNavPill"
+                  size="content"
+                  className={getLandingNavButtonClassName()}
                 >
                   <a href={item.href}>{item.label}</a>
                 </Button>
@@ -78,8 +84,8 @@ export function NavHeader() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="unstyled"
-                    chrome="landingThemeToggle"
-                    chromeSize="landingThemeToggle"
+                    size="icon"
+                    className={getLandingThemeButtonClassName()}
                   >
                     <Sun className="h-icon-theme-toggle w-icon-theme-toggle rotate-0 scale-100 transition-all duration-default" />
                     <Moon className="absolute h-icon-theme-toggle w-icon-theme-toggle rotate-90 scale-0 transition-all duration-default" />
@@ -112,9 +118,8 @@ export function NavHeader() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="unstyled"
-                    chrome="landingNavLink"
-                    chromeSize="landingNavPill"
-                    className="lg:hidden"
+                    size="content"
+                    className={cn(getLandingNavButtonClassName(), "lg:hidden")}
                   >
                     <Icon icon={Menu} size="sm" />
                     Menu
@@ -152,17 +157,16 @@ export function NavHeader() {
                 <Button
                   asChild
                   variant="unstyled"
-                  chrome="landingNavLink"
-                  chromeSize="landingNavPill"
-                  className="hidden lg:inline-flex"
+                  size="content"
+                  className={cn(getLandingNavButtonClassName(), "hidden lg:inline-flex")}
                 >
                   <Link to={ROUTES.signin.path}>Sign in</Link>
                 </Button>
                 <Button
                   asChild
-                  variant="landingPrimary"
-                  size="none"
-                  className="hidden sm:inline-flex"
+                  variant="unstyled"
+                  size="content"
+                  className={cn(getLandingPrimaryButtonClassName(), "hidden sm:inline-flex")}
                 >
                   <Link to={ROUTES.signup.path}>
                     <ResponsiveText short="Start" long="Get Started" breakpoint="md" />
@@ -172,9 +176,9 @@ export function NavHeader() {
               <Authenticated>
                 <Button
                   asChild
-                  variant="landingPrimary"
-                  size="none"
-                  className="hidden sm:inline-flex"
+                  variant="unstyled"
+                  size="content"
+                  className={cn(getLandingPrimaryButtonClassName(), "hidden sm:inline-flex")}
                 >
                   <Link to={ROUTES.app.path}>Go to App</Link>
                 </Button>

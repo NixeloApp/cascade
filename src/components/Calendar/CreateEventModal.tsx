@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Checkbox } from "../ui/Checkbox";
+import { ColorSwatchButton } from "../ui/ColorSwatchButton";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
@@ -242,10 +243,8 @@ export function CreateEventModal({
                           (selectedColor ?? EVENT_TYPE_DEFAULT_COLOR[eventType as string]) ===
                           color;
                         return (
-                          <Button
+                          <ColorSwatchButton
                             key={color}
-                            chrome="colorSwatch"
-                            chromeSize="colorSwatch"
                             onClick={() => setSelectedColor(color)}
                             className={cn(
                               COLOR_PICKER_CLASSES[color].bg,
