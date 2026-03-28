@@ -6,7 +6,9 @@ function run(command, args) {
 
 run("npx", ["convex", "codegen"]);
 
-const generatedStatus = execSync("git status --porcelain convex/_generated/", {
+// Only check for unstaged changes (working tree dirty). Staged changes are
+// expected during pre-commit — the files being committed may include generated output.
+const generatedStatus = execSync("git diff --name-only convex/_generated/", {
   encoding: "utf8",
 }).trim();
 
