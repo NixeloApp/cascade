@@ -10,6 +10,7 @@
 - [ ] Only land a remaining raw-styling slice if it also fixes a real UX inconsistency, deletes duplicated code across multiple call sites, or simplifies a shared API.
 - [ ] Delete any remaining slice that cannot clear that bar instead of preserving it as “debt” forever.
 - [ ] Re-evaluate whether the current `58 violations across 52 files` baseline represents real duplication/product problems or just validator residue.
+- [ ] Burn the baseline to `0` by deleting fake abstractions, inlining single-use helper laundering, promoting real shared APIs, or fixing the actual UI inconsistency.
 - [ ] If the backlog still matters after re-triage, start with the smallest unresolved surfaces that actually improve shipped UI: `src/components/IssueDetailSheet.tsx`, `src/components/Onboarding/OnboardingChecklist.tsx`, and `src/components/Plate/SlashMenu.tsx`.
 
 - [ ] Raw Tailwind violations at 0.
