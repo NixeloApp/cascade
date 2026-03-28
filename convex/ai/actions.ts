@@ -79,7 +79,7 @@ export const sendChatMessage = action({
       chatId: args.chatId,
       role: "assistant",
       content: response.content,
-      modelUsed: response.provider,
+      modelUsed: response.modelId,
       tokensUsed: response.usage?.totalTokens,
       responseTime,
     });
@@ -88,7 +88,7 @@ export const sendChatMessage = action({
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
       provider: provider,
-      model: response.provider,
+      model: response.modelId,
       operation: "chat",
       promptTokens: response.usage?.promptTokens || 0,
       completionTokens: response.usage?.completionTokens || 0,
@@ -183,7 +183,7 @@ Format your response as JSON with keys: description, priority, priorityReason, l
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
       provider: provider,
-      model: response.provider,
+      model: response.modelId,
       operation: "suggestion",
       promptTokens: response.usage?.promptTokens || 0,
       completionTokens: response.usage?.completionTokens || 0,
@@ -290,7 +290,7 @@ Format as JSON with keys: healthScore (0-100), risks (array), recommendations (a
           projectId: args.projectId,
           suggestionType: "risk_detection",
           suggestion: risk,
-          modelUsed: response.provider,
+          modelUsed: response.modelId,
         });
       }
     }
@@ -299,7 +299,7 @@ Format as JSON with keys: healthScore (0-100), risks (array), recommendations (a
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
       provider: provider,
-      model: response.provider,
+      model: response.modelId,
       operation: "analysis",
       promptTokens: response.usage?.promptTokens || 0,
       completionTokens: response.usage?.completionTokens || 0,
@@ -368,7 +368,7 @@ Team: ${projectData.members.map((m: { name?: string }) => m.name).join(", ")}`;
     await ctx.runMutation(api.ai.mutations.trackUsage, {
       projectId: args.projectId,
       provider: provider,
-      model: response.provider,
+      model: response.modelId,
       operation: "chat",
       promptTokens: response.usage?.promptTokens || 0,
       completionTokens: response.usage?.completionTokens || 0,

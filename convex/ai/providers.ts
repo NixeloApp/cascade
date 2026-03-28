@@ -17,6 +17,7 @@ export interface AIMessage {
 export interface AIResponse {
   content: string;
   provider: string;
+  modelId: string;
   usage?: {
     promptTokens: number;
     completionTokens: number;
@@ -38,6 +39,7 @@ export async function callAI(messages: AIMessage[]): Promise<AIResponse> {
   return {
     content: result.text,
     provider: model.provider,
+    modelId: model.modelId,
     usage: result.usage
       ? {
           promptTokens: result.usage.inputTokens ?? 0,

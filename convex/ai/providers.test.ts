@@ -25,6 +25,7 @@ describe("callAI", () => {
 
     expect(result.content).toBe("Hello from AI");
     expect(result.provider).toBe("test");
+    expect(result.modelId).toBe("test-model");
     expect(result.usage).toEqual({
       promptTokens: 10,
       completionTokens: 5,
