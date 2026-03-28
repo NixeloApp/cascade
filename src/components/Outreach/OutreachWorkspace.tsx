@@ -75,6 +75,7 @@ type SequenceStepListItem = SequenceListItem["steps"][number];
 type MailboxHealthListItem = FunctionReturnType<
   typeof outreachApi.analytics.getMailboxHealth
 >[number];
+type MailboxLimitUpdateResult = FunctionReturnType<typeof outreachApi.mailboxes.updateLimit>;
 type SequenceOverview = NonNullable<
   FunctionReturnType<typeof outreachApi.analytics.getOrganizationOverview>
 >;
@@ -251,6 +252,30 @@ function formatPluralizedCount(count: number, singular: string, plural = `${sing
 
 function getProviderLabel(provider: MailboxListItem["provider"]): string {
   return provider === "google" ? "Gmail" : "Microsoft 365";
+}
+
+function getDeliverabilityLabel(status: MailboxHealthListItem["deliverabilityStatus"]): string {
+  switch (status) {
+    case "healthy":
+      return "Healthy";
+    case "watch":
+      return "Watch";
+    case "at_risk":
+      return "At Risk";
+  }
+}
+
+function getDeliverabilityBadgeVariant(
+  status: MailboxHealthListItem["deliverabilityStatus"],
+): "success" | "warning" | "error" {
+  switch (status) {
+    case "healthy":
+      return "success";
+    case "watch":
+      return "warning";
+    case "at_risk":
+      return "error";
+  }
 }
 
 function MailboxConnectButtons({
@@ -605,11 +630,19 @@ export function OutreachWorkspace() {
     }
 
     try {
-      await updateMailboxLimit({
+      const result = (await updateMailboxLimit({
         mailboxId,
         dailySendLimit: parsedValue,
-      });
-      showSuccess("Mailbox daily limit updated");
+      })) as MailboxLimitUpdateResult;
+      const statusLabel = getDeliverabilityLabel(result.deliverabilityStatus).toLowerCase();
+
+      if (result.hasCapacityOverride) {
+        showSuccess(
+          `Mailbox ceiling saved. Deliverability is currently keeping effective volume at ${result.effectiveDailyLimit}/day (${statusLabel}, ${result.warmupStageLabel}).`,
+        );
+      } else {
+        showSuccess(`Mailbox daily limit updated to ${result.configuredDailyLimit}/day`);
+      }
     } catch (error) {
       showError(error, "Failed to update mailbox limit");
     }
@@ -1778,51 +1811,17 @@ function MailboxCard({
   return (
     <Card padding="md" variant="soft" data-testid={TEST_IDS.OUTREACH.MAILBOX_CARD}>
       <Stack gap="md">
-        <Flex justify="between" align="start" gap="sm">
-          <Stack gap="xs">
-            <Typography variant="large" as="span">
-              {mailbox.displayName || mailbox.email}
-            </Typography>
-            <Typography variant="caption" as="span">
-              {mailbox.email} • {getProviderLabel(mailbox.provider)}
-            </Typography>
-          </Stack>
-          <Badge variant={mailbox.isActive ? "success" : "warning"}>
-            {mailbox.isActive ? "Connected" : "Disconnected"}
-          </Badge>
-        </Flex>
-
-        <Grid cols={1} colsMd={2} gap="md">
-          <MetricTile
-            title="Daily Capacity"
-            value={`${health?.todaySent ?? 0}/${health?.dailyLimit ?? mailbox.dailySendLimit}`}
-            description={`${health?.remaining ?? 0} sends left today`}
-          />
-          <MetricTile
-            title="Minute Window"
-            value={`${health?.minuteSent ?? 0}/${health?.minuteLimit ?? mailbox.minuteSendLimit}`}
-            description={`${health?.minuteRemaining ?? 0} sends left in the current minute`}
-          />
-        </Grid>
-
-        <Stack gap="sm">
-          <Typography variant="eyebrowWide" as="label" htmlFor={inputId}>
-            Daily send limit
-          </Typography>
-          <Flex gap="sm" direction="column" directionSm="row">
-            <Input
-              id={inputId}
-              type="number"
-              min={1}
-              max={100}
-              value={limitValue}
-              onChange={(event) => onLimitInputChange(mailbox._id, event.target.value)}
-            />
-            <Button variant="secondary" onClick={() => onSaveMailboxLimit(mailbox._id)}>
-              Save limit
-            </Button>
-          </Flex>
-        </Stack>
+        <MailboxCardHeader health={health} mailbox={mailbox} />
+        <MailboxCardMetrics health={health} mailbox={mailbox} />
+        <MailboxDeliverabilityAlert health={health} />
+        <MailboxLimitEditor
+          health={health}
+          inputId={inputId}
+          limitValue={limitValue}
+          mailbox={mailbox}
+          onLimitInputChange={onLimitInputChange}
+          onSaveMailboxLimit={onSaveMailboxLimit}
+        />
 
         <Flex justify="between" align="center" wrap gap="sm">
           <Typography variant="meta" as="span">
@@ -1839,6 +1838,147 @@ function MailboxCard({
         </Flex>
       </Stack>
     </Card>
+  );
+}
+
+function MailboxCardHeader({
+  health,
+  mailbox,
+}: {
+  health?: MailboxHealthListItem;
+  mailbox: MailboxListItem;
+}) {
+  return (
+    <Flex justify="between" align="start" gap="sm">
+      <Stack gap="xs">
+        <Typography variant="large" as="span">
+          {mailbox.displayName || mailbox.email}
+        </Typography>
+        <Typography variant="caption" as="span">
+          {mailbox.email} • {getProviderLabel(mailbox.provider)}
+        </Typography>
+      </Stack>
+      <Flex gap="xs" wrap justify="end">
+        <Badge variant={mailbox.isActive ? "success" : "warning"}>
+          {mailbox.isActive ? "Connected" : "Disconnected"}
+        </Badge>
+        {health ? (
+          <Badge variant={getDeliverabilityBadgeVariant(health.deliverabilityStatus)}>
+            {getDeliverabilityLabel(health.deliverabilityStatus)}
+          </Badge>
+        ) : null}
+      </Flex>
+    </Flex>
+  );
+}
+
+function MailboxCardMetrics({
+  health,
+  mailbox,
+}: {
+  health?: MailboxHealthListItem;
+  mailbox: MailboxListItem;
+}) {
+  return (
+    <Grid cols={1} colsMd={3} gap="md">
+      <MetricTile
+        title="Effective Daily Cap"
+        value={`${health?.todaySent ?? 0}/${health?.effectiveDailyLimit ?? mailbox.dailySendLimit}`}
+        description={`${health?.remaining ?? 0} sends left today after warmup and deliverability safeguards`}
+      />
+      <MetricTile
+        title="Minute Window"
+        value={`${health?.minuteSent ?? 0}/${health?.minuteLimit ?? mailbox.minuteSendLimit}`}
+        description={`${health?.minuteRemaining ?? 0} sends left in the current minute`}
+      />
+      <MetricTile
+        title="Warmup Stage"
+        value={health?.warmupStageLabel ?? "Days 1-3"}
+        description={`Mailbox age ${health?.warmupAgeDays ?? 1} day${health?.warmupAgeDays === 1 ? "" : "s"} • recommended ceiling ${health?.warmupRecommendedDailyLimit ?? mailbox.dailySendLimit}/day`}
+      />
+    </Grid>
+  );
+}
+
+function MailboxDeliverabilityAlert({ health }: { health?: MailboxHealthListItem }) {
+  if (!health) {
+    return null;
+  }
+
+  return (
+    <Alert variant={getMailboxAlertVariant(health.deliverabilityStatus)}>
+      <AlertTitle>{health.deliverabilitySummary}</AlertTitle>
+      <AlertDescription>
+        <Stack gap="xs">
+          <Typography variant="caption">
+            Recent {health.recentSent} sends • Bounce {formatPercent(health.recentBounceRate)} •
+            Reply {formatPercent(health.recentReplyRate)} • Unsubscribe{" "}
+            {formatPercent(health.recentUnsubscribeRate)}
+          </Typography>
+          {health.deliverabilityGuidance.map((item) => (
+            <Typography key={item} variant="caption">
+              {item}
+            </Typography>
+          ))}
+        </Stack>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function getMailboxAlertVariant(
+  status: MailboxHealthListItem["deliverabilityStatus"],
+): "error" | "info" | "warning" {
+  switch (status) {
+    case "at_risk":
+      return "error";
+    case "watch":
+      return "warning";
+    case "healthy":
+      return "info";
+  }
+}
+
+function MailboxLimitEditor({
+  health,
+  inputId,
+  limitValue,
+  mailbox,
+  onLimitInputChange,
+  onSaveMailboxLimit,
+}: {
+  health?: MailboxHealthListItem;
+  inputId: string;
+  limitValue: string;
+  mailbox: MailboxListItem;
+  onLimitInputChange: (mailboxId: Id<"outreachMailboxes">, value: string) => void;
+  onSaveMailboxLimit: (mailboxId: Id<"outreachMailboxes">) => void;
+}) {
+  return (
+    <Stack gap="sm">
+      <Typography variant="eyebrowWide" as="label" htmlFor={inputId}>
+        Configured daily ceiling
+      </Typography>
+      <Flex gap="sm" direction="column" directionSm="row">
+        <Input
+          id={inputId}
+          type="number"
+          min={1}
+          max={100}
+          value={limitValue}
+          onChange={(event) => onLimitInputChange(mailbox._id, event.target.value)}
+        />
+        <Button variant="secondary" onClick={() => onSaveMailboxLimit(mailbox._id)}>
+          Save ceiling
+        </Button>
+      </Flex>
+      {health?.hasCapacityOverride ? (
+        <Typography variant="caption">
+          Warmup and deliverability safeguards are currently capping actual send volume at{" "}
+          {health.effectiveDailyLimit}/day even if the configured ceiling is higher.
+        </Typography>
+      ) : null}
+    </Stack>
   );
 }
 

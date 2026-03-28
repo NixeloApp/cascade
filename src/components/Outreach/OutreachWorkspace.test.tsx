@@ -182,15 +182,31 @@ const enrollment = {
 
 const mailboxHealth = {
   dailyLimit: 40,
+  deliverabilityGuidance: [
+    "Only 2 recent sends recorded. Hold the current pace until you have a larger sample.",
+  ],
+  deliverabilityStatus: "watch" as const,
+  deliverabilitySummary:
+    "Deliverability is usable, but the mailbox needs steadier quality before increasing volume.",
   email: "alex@example.com",
+  effectiveDailyLimit: 25,
+  hasCapacityOverride: true,
   id: "mailbox_1",
   isActive: true,
   minuteLimit: 5,
   minuteRemaining: 4,
   minuteSent: 1,
   provider: "google" as const,
-  remaining: 38,
+  remaining: 23,
+  recentBounceRate: 0,
+  recentReplyRate: 0,
+  recentSent: 2,
+  recentUnsubscribeRate: 0,
   todaySent: 2,
+  warmupAgeDays: 6,
+  warmupRecommendedDailyLimit: 25,
+  warmupStageDescription: "Increase slowly once the mailbox has a few days of clean traffic.",
+  warmupStageLabel: "Days 4-7",
 };
 
 const sequenceStats = {
@@ -524,7 +540,13 @@ describe("OutreachWorkspace", () => {
     createEnrollmentsMock.mockResolvedValue({ enrolled: 1, skipped: 0 });
     cancelEnrollmentMock.mockResolvedValue(undefined);
     disconnectMailboxMock.mockResolvedValue(undefined);
-    updateMailboxLimitMock.mockResolvedValue(undefined);
+    updateMailboxLimitMock.mockResolvedValue({
+      configuredDailyLimit: 55,
+      deliverabilityStatus: "watch",
+      effectiveDailyLimit: 25,
+      hasCapacityOverride: true,
+      warmupStageLabel: "Days 4-7",
+    });
 
     const mutationHandlers = new Map<unknown, Mock<MutationProcedure>>([
       [outreachApi.contacts.create, createContactMock],
@@ -675,6 +697,28 @@ describe("OutreachWorkspace", () => {
     expect(await screen.findByTestId(TEST_IDS.OUTREACH.ANALYTICS_SECTION)).toBeInTheDocument();
   });
 
+  it("surfaces mailbox warmup guidance and effective cap messaging", async () => {
+    const user = userEvent.setup();
+
+    render(<OutreachWorkspace />);
+
+    await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_MAILBOXES));
+
+    const mailboxCard = await screen.findByTestId(TEST_IDS.OUTREACH.MAILBOX_CARD);
+    expect(within(mailboxCard).getByText("Watch")).toBeVisible();
+    expect(within(mailboxCard).getByText("Days 4-7")).toBeVisible();
+    expect(
+      within(mailboxCard).getByText(
+        /deliverability is usable, but the mailbox needs steadier quality/i,
+      ),
+    ).toBeVisible();
+    expect(
+      within(mailboxCard).getByText(
+        /actual send volume at 25\/day even if the configured ceiling is higher/i,
+      ),
+    ).toBeVisible();
+  });
+
   it(
     "renders stable outreach dialog and destructive-state hooks",
     async () => {
@@ -715,6 +759,28 @@ describe("OutreachWorkspace", () => {
     },
     OUTREACH_FORM_TEST_TIMEOUT_MS,
   );
+
+  it("explains when a saved configured ceiling is still capped by warmup safeguards", async () => {
+    const user = userEvent.setup();
+
+    render(<OutreachWorkspace />);
+
+    await user.click(screen.getByTestId(TEST_IDS.OUTREACH.TAB_MAILBOXES));
+    await user.clear(await screen.findByLabelText(/configured daily ceiling/i));
+    await user.type(screen.getByLabelText(/configured daily ceiling/i), "55");
+    await user.click(screen.getByRole("button", { name: /save ceiling/i }));
+
+    await waitFor(() =>
+      expect(updateMailboxLimitMock).toHaveBeenCalledWith({
+        dailySendLimit: 55,
+        mailboxId: "mailbox_1",
+      }),
+    );
+
+    expect(mockShowSuccess).toHaveBeenCalledWith(
+      "Mailbox ceiling saved. Deliverability is currently keeping effective volume at 25/day (watch, Days 4-7).",
+    );
+  });
 
   it(
     "creates a contact with parsed tags and custom fields",

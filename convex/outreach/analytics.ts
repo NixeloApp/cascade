@@ -7,6 +7,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { notFound } from "../lib/errors";
+import { loadMailboxDeliverabilitySnapshots } from "./deliverability";
 import { getMailboxRateLimitSnapshot } from "./mailboxRateLimits";
 
 const MAX_SEQUENCE_FUNNEL_EVENTS = 2000;
@@ -273,9 +274,12 @@ export const getMailboxHealth = authenticatedQuery({
       .query("outreachMailboxes")
       .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
       .take(BOUNDED_LIST_LIMIT);
+    const deliverabilitySnapshots = await loadMailboxDeliverabilitySnapshots(ctx, mailboxes);
 
     return mailboxes.map((m) => {
       const rateLimits = getMailboxRateLimitSnapshot(m);
+      const deliverability = deliverabilitySnapshots.get(m._id);
+      const effectiveDailyLimit = deliverability?.effectiveDailyLimit ?? m.dailySendLimit;
 
       return {
         id: m._id,
@@ -283,10 +287,28 @@ export const getMailboxHealth = authenticatedQuery({
         provider: m.provider,
         isActive: m.isActive,
         dailyLimit: m.dailySendLimit,
+        effectiveDailyLimit,
+        hasCapacityOverride: deliverability?.hasCapacityOverride ?? false,
+        deliverabilityStatus: deliverability?.deliverabilityStatus ?? "healthy",
+        deliverabilitySummary:
+          deliverability?.summary ??
+          "Recent bounce and unsubscribe activity look healthy for the current warmup stage.",
+        deliverabilityGuidance: deliverability?.guidance ?? [],
+        recentSent: deliverability?.metrics.sent ?? 0,
+        recentBounceRate: deliverability?.metrics.bounceRate ?? 0,
+        recentReplyRate: deliverability?.metrics.replyRate ?? 0,
+        recentUnsubscribeRate: deliverability?.metrics.unsubscribeRate ?? 0,
+        warmupAgeDays: deliverability?.warmupAgeDays ?? 1,
+        warmupStageLabel: deliverability?.warmupStage.label ?? "Days 1-3",
+        warmupStageDescription:
+          deliverability?.warmupStage.description ??
+          "Keep volume low while mailbox authentication, inbox placement, and first replies stabilize.",
+        warmupRecommendedDailyLimit:
+          deliverability?.warmupStage.recommendedDailyLimit ?? m.dailySendLimit,
         minuteLimit: rateLimits.minuteSendLimit,
         todaySent: rateLimits.todaySendCount,
         minuteSent: rateLimits.minuteSendCount,
-        remaining: Math.max(0, m.dailySendLimit - rateLimits.todaySendCount),
+        remaining: Math.max(0, effectiveDailyLimit - rateLimits.todaySendCount),
         minuteRemaining: Math.max(0, rateLimits.minuteSendLimit - rateLimits.minuteSendCount),
       };
     });

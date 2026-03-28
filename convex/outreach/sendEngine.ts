@@ -22,6 +22,7 @@ import { logger } from "../lib/logger";
 import { MINUTE } from "../lib/timeUtils";
 import { outreachMailboxProviders } from "../validators";
 import { isSuppressed, suppress } from "./contacts";
+import { loadMailboxDeliverabilitySnapshots } from "./deliverability";
 import { advanceEnrollment, stopEnrollment } from "./enrollments";
 import {
   buildComplianceFooter,
@@ -174,8 +175,11 @@ export const checkPreSend = internalMutation({
     if (!mailbox?.isActive) return fail;
 
     const rateLimits = getMailboxRateLimitSnapshot(mailbox);
+    const deliverabilitySnapshots = await loadMailboxDeliverabilitySnapshots(ctx, [mailbox]);
+    const effectiveDailyLimit =
+      deliverabilitySnapshots.get(mailbox._id)?.effectiveDailyLimit ?? mailbox.dailySendLimit;
 
-    if (rateLimits.todaySendCount >= mailbox.dailySendLimit) return fail;
+    if (rateLimits.todaySendCount >= effectiveDailyLimit) return fail;
     if (rateLimits.minuteSendCount >= rateLimits.minuteSendLimit) return fail;
 
     // Validate step exists

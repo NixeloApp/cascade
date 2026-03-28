@@ -142,6 +142,7 @@ import type * as otpVerification from "../otpVerification.js";
 import type * as outOfOffice from "../outOfOffice.js";
 import type * as outreach_analytics from "../outreach/analytics.js";
 import type * as outreach_contacts from "../outreach/contacts.js";
+import type * as outreach_deliverability from "../outreach/deliverability.js";
 import type * as outreach_enrollments from "../outreach/enrollments.js";
 import type * as outreach_gmail from "../outreach/gmail.js";
 import type * as outreach_helpers from "../outreach/helpers.js";
@@ -339,6 +340,7 @@ declare const fullApi: ApiFromModules<{
   outOfOffice: typeof outOfOffice;
   "outreach/analytics": typeof outreach_analytics;
   "outreach/contacts": typeof outreach_contacts;
+  "outreach/deliverability": typeof outreach_deliverability;
   "outreach/enrollments": typeof outreach_enrollments;
   "outreach/gmail": typeof outreach_gmail;
   "outreach/helpers": typeof outreach_helpers;

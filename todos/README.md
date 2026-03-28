@@ -15,7 +15,7 @@
 ## Features
 
 - [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Provider rollout, capture-platform direction, collaboration reality check.
-- [ ] [email-outreach.md](./email-outreach.md) — Reliability polish, analytics depth, provider expansion.
+- [x] [email-outreach.md](./email-outreach.md) — Reliability polish, analytics depth, provider expansion.
 - [ ] [cal-com-features.md](./cal-com-features.md) — Scheduling, branding, portal ideas needing product decisions.
 - [x] [plane-features.md](./plane-features.md) — External notification routing.
 - [x] [feature-docs-expansion.md](./feature-docs-expansion.md) — Current-state template, coverage audit, and high-value surface docs expanded.

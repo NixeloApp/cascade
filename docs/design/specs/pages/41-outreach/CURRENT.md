@@ -18,7 +18,7 @@ The outreach route is the organization-level outbound workspace. It lets a team:
 - enroll recipients into campaigns
 - inspect mailbox capacity and sequence analytics
 
-This is not a placeholder admin page. It is the shipped control surface for the Gmail-first
+This is not a placeholder admin page. It is the shipped control surface for the multi-provider
 outreach backend.
 
 ---
@@ -120,7 +120,8 @@ on the deterministic seeded workspace and its major tab states.
 ### 5. Mailboxes tab and destructive state
 
 - Gmail-first explainer alert.
-- Mailbox cards expose current capacity plus editable daily send limits.
+- Mailbox cards expose configured vs effective daily capacity, warmup stage guidance, recent
+  deliverability health, and editable operator ceilings.
 - Disconnect is a destructive action but still part of the main workspace, and the confirm state is
   now part of the reviewed screenshot matrix.
 
@@ -161,7 +162,7 @@ sequence and event data.
 |------|--------------|
 | Product completeness | Strong for a lightweight multi-provider MVP. The route is operational, not decorative. |
 | Screenshot coverage | Strong. The route now has canonical, tab-specific, dialog, and destructive-state captures. |
-| Cross-surface cohesion | Better than before because mailbox health, sequence runtime state, and analytics live in one place. |
+| Cross-surface cohesion | Better than before because mailbox health, warmup guidance, sequence runtime state, and analytics live in one place. |
 
 ---
 
@@ -169,9 +170,8 @@ sequence and event data.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | CSV import and validation still read as an operator tool, not a polished high-volume workflow | UX | MEDIUM |
-| 2 | Analytics are operationally useful but still shallow compared to dedicated campaign tools | product depth | MEDIUM |
-| 3 | Reply polling remains Gmail-only, so the Microsoft path should stay framed as connection + sending rather than full mailbox parity | scope clarity | LOW |
+| 1 | Analytics are operationally useful but still shallow compared to dedicated campaign tools | product depth | MEDIUM |
+| 2 | Reply polling remains Gmail-only, so the Microsoft path should stay framed as connection + sending rather than full mailbox parity | scope clarity | LOW |
 
 ---
 

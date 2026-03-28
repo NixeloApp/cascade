@@ -207,6 +207,24 @@ describe("outreach sendEngine", () => {
     expect(mailboxAfterReservation.minuteWindowStartedAt).toBe(Date.now());
   });
 
+  it("applies the warmup-recommended daily cap even when the configured ceiling is higher", async () => {
+    const { t, fixture } = await createSendFixture();
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(fixture.mailboxId, {
+        dailySendLimit: 80,
+        todaySendCount: 15,
+        todayResetAt: Date.now(),
+      });
+    });
+
+    const preSend = await t.mutation(internal.outreach.sendEngine.checkPreSend, {
+      enrollmentId: fixture.enrollmentId,
+    });
+
+    expect(preSend).toEqual({ canSend: false });
+  });
+
   it("renders templates, rewrites tracking links, injects compliance markup, and advances the enrollment on a successful send", async () => {
     const { t, fixture } = await createSendFixture({
       subject: "Hi {{firstName}} from {{company}}",
