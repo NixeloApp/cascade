@@ -7,13 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -120,31 +114,31 @@ function WorkspaceBacklogPage() {
           </Typography>
           <Flex gap="sm">
             <Select
+              ariaLabel="Filter by priority"
+              onChange={(value) => setPriorityFilter(value as PriorityFilter)}
+              options={[
+                { value: "all", label: "All priorities" },
+                { value: "highest", label: "Highest" },
+                { value: "high", label: "High" },
+                { value: "medium", label: "Medium" },
+                { value: "low", label: "Low" },
+                { value: "lowest", label: "Lowest" },
+              ]}
+              placeholder="All priorities"
               value={priorityFilter}
-              onValueChange={(v) => setPriorityFilter(v as PriorityFilter)}
-            >
-              <SelectTrigger width="sm" aria-label="Filter by priority">
-                <SelectValue placeholder="All priorities" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All priorities</SelectItem>
-                <SelectItem value="highest">Highest</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="lowest">Lowest</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortField)}>
-              <SelectTrigger width="sm" aria-label="Sort by">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="priority">Priority</SelectItem>
-                <SelectItem value="updated">Last updated</SelectItem>
-                <SelectItem value="created">Newest first</SelectItem>
-              </SelectContent>
-            </Select>
+              width="sm"
+            />
+            <Select
+              ariaLabel="Sort by"
+              onChange={(value) => setSortBy(value as SortField)}
+              options={[
+                { value: "priority", label: "Priority" },
+                { value: "updated", label: "Last updated" },
+                { value: "created", label: "Newest first" },
+              ]}
+              value={sortBy}
+              width="sm"
+            />
           </Flex>
         </Flex>
 

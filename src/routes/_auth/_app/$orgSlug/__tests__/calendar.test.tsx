@@ -1,6 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
-import { createContext, type ReactNode, useContext } from "react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -70,63 +70,7 @@ vi.mock("@/components/Calendar/CalendarView", () => ({
   ),
 }));
 
-const SelectContext = createContext<{
-  disabled?: boolean;
-  onValueChange?: (value: string) => void;
-  value?: string;
-}>({});
-
-vi.mock("@/components/ui/Select", () => ({
-  Select: ({
-    children,
-    disabled,
-    onValueChange,
-    value,
-  }: {
-    children: ReactNode;
-    disabled?: boolean;
-    onValueChange?: (value: string) => void;
-    value?: string;
-  }) => (
-    <SelectContext.Provider value={{ disabled, onValueChange, value }}>
-      <div>{children}</div>
-    </SelectContext.Provider>
-  ),
-  SelectTrigger: ({
-    children,
-    "aria-label": ariaLabel,
-    "data-testid": testId,
-  }: {
-    children: ReactNode;
-    "aria-label"?: string;
-    "data-testid"?: string;
-  }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button type="button" aria-label={ariaLabel} data-testid={testId} disabled={context.disabled}>
-        {children}
-      </button>
-    );
-  },
-  SelectValue: ({ placeholder }: { placeholder?: string }) => {
-    const context = useContext(SelectContext);
-    return <span>{context.value ?? placeholder}</span>;
-  },
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button
-        type="button"
-        role="option"
-        disabled={context.disabled}
-        onClick={() => context.onValueChange?.(value)}
-      >
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("@/components/ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 const mockUseMediaQuery = vi.mocked(useMediaQuery);
@@ -203,7 +147,7 @@ describe("OrganizationCalendarPage", () => {
 
     render(<OrganizationCalendarPage />);
 
-    await user.click(screen.getByRole("option", { name: "Product" }));
+    await user.click(screen.getByRole("button", { name: "Product" }));
 
     expect(mockNavigate).toHaveBeenCalledWith({
       search: {

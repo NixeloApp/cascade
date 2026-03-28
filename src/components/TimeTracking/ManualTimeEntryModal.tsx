@@ -30,7 +30,7 @@ import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { calculateManualEntryTimes, validateManualTimeEntry } from "./manualTimeEntryValidation";
@@ -379,24 +379,21 @@ export function ManualTimeEntryModal({
         <Stack gap="xs">
           <Label htmlFor="time-entry-project">Project</Label>
           <Select
-            value={projectId || "none"}
-            onValueChange={(value) => {
+            id="time-entry-project"
+            onChange={(value) => {
               setProjectId(value === "none" ? undefined : (value as Id<"projects">));
               setIssueId(undefined);
             }}
-          >
-            <SelectTrigger id="time-entry-project">
-              <SelectValue placeholder="Select project..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No project</SelectItem>
-              {projects?.page?.map((project: ProjectItem) => (
-                <SelectItem key={project._id} value={project._id}>
-                  {project.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            options={[
+              { value: "none", label: "No project" },
+              ...((projects?.page?.map((project: ProjectItem) => ({
+                value: project._id,
+                label: project.name,
+              })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
+            ]}
+            placeholder="Select project..."
+            value={projectId || "none"}
+          />
         </Stack>
 
         {/* Issue Selection */}
@@ -404,23 +401,20 @@ export function ManualTimeEntryModal({
           <Stack gap="xs">
             <Label htmlFor="time-entry-issue">Issue (optional)</Label>
             <Select
-              value={issueId || "none"}
-              onValueChange={(value) =>
+              id="time-entry-issue"
+              onChange={(value) =>
                 setIssueId(value === "none" ? undefined : (value as Id<"issues">))
               }
-            >
-              <SelectTrigger id="time-entry-issue">
-                <SelectValue placeholder="Select issue..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No issue</SelectItem>
-                {projectIssues.map((issue: IssueItem) => (
-                  <SelectItem key={issue._id} value={issue._id}>
-                    {issue.key} - {issue.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={[
+                { value: "none", label: "No issue" },
+                ...projectIssues.map((issue: IssueItem) => ({
+                  value: issue._id,
+                  label: `${issue.key} - ${issue.title}`,
+                })),
+              ]}
+              placeholder="Select issue..."
+              value={issueId || "none"}
+            />
           </Stack>
         )}
 
@@ -442,21 +436,18 @@ export function ManualTimeEntryModal({
             <Stack gap="xs">
               <Label htmlFor="time-entry-activity">Activity</Label>
               <Select
+                id="time-entry-activity"
+                onChange={(value) => field.handleChange(value === "none" ? "" : value)}
+                options={[
+                  { value: "none", label: "Select activity..." },
+                  ...ACTIVITY_TYPES.map((activityType) => ({
+                    value: activityType,
+                    label: activityType,
+                  })),
+                ]}
+                placeholder="Select activity..."
                 value={field.state.value || "none"}
-                onValueChange={(value) => field.handleChange(value === "none" ? "" : value)}
-              >
-                <SelectTrigger id="time-entry-activity">
-                  <SelectValue placeholder="Select activity..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Select activity...</SelectItem>
-                  {ACTIVITY_TYPES.map((activityType) => (
-                    <SelectItem key={activityType} value={activityType}>
-                      {activityType}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </Stack>
           )}
         </form.Field>

@@ -36,7 +36,6 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/Popover";
-import { SelectItem } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Typography } from "@/components/ui/Typography";
@@ -1105,67 +1104,93 @@ export function CreateIssueModal({
         <Grid cols={1} colsSm={2} gap="lg">
           <form.Field name="type">
             {(field) => (
-              <FormSelectRadix field={field} label="Type" placeholder="Select type">
-                {ISSUE_TYPES_WITH_SUBTASK.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    <Flex align="center" gap="sm">
-                      <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
-                      {getTypeLabel(type)}
-                    </Flex>
-                  </SelectItem>
-                ))}
-              </FormSelectRadix>
+              <FormSelectRadix
+                field={field}
+                label="Type"
+                options={ISSUE_TYPES_WITH_SUBTASK.map((type) => ({
+                  icon: ISSUE_TYPE_ICONS[type],
+                  label: getTypeLabel(type),
+                  value: type,
+                }))}
+                placeholder="Select type"
+                renderOption={(option) => (
+                  <Flex align="center" gap="sm">
+                    <Icon icon={option.icon} size="sm" />
+                    {option.label}
+                  </Flex>
+                )}
+              />
             )}
           </form.Field>
 
           <form.Field name="priority">
             {(field) => (
-              <FormSelectRadix field={field} label="Priority" placeholder="Select priority">
-                {ISSUE_PRIORITIES.map((priority) => (
-                  <SelectItem key={priority} value={priority}>
-                    <Flex align="center" gap="sm">
-                      <Icon
-                        icon={PRIORITY_ICONS[priority]}
-                        size="sm"
-                        className={getPriorityColor(priority)}
-                      />
-                      {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                    </Flex>
-                  </SelectItem>
-                ))}
-              </FormSelectRadix>
+              <FormSelectRadix
+                field={field}
+                label="Priority"
+                options={ISSUE_PRIORITIES.map((priority) => ({
+                  icon: PRIORITY_ICONS[priority],
+                  label: priority.charAt(0).toUpperCase() + priority.slice(1),
+                  toneClassName: getPriorityColor(priority),
+                  value: priority,
+                }))}
+                placeholder="Select priority"
+                renderOption={(option) => (
+                  <Flex align="center" gap="sm">
+                    <Icon icon={option.icon} size="sm" className={option.toneClassName} />
+                    {option.label}
+                  </Flex>
+                )}
+              />
             )}
           </form.Field>
         </Grid>
 
         <form.Field name="assigneeId">
           {(field) => (
-            <FormSelectRadix field={field} label="Assignee" placeholder="Select assignee">
-              <SelectItem value="unassigned">
+            <FormSelectRadix
+              field={field}
+              label="Assignee"
+              options={[
+                {
+                  image: undefined,
+                  label: "Unassigned",
+                  memberName: "Unassigned",
+                  outOfOffice: undefined,
+                  value: "unassigned",
+                },
+                ...(project?.members.map((member) => ({
+                  image: member.image,
+                  label: member.name,
+                  memberName: member.name,
+                  outOfOffice: member.outOfOffice,
+                  value: member._id,
+                })) ?? []),
+              ]}
+              placeholder="Select assignee"
+              renderOption={(option) => (
                 <Flex align="center" gap="sm">
-                  <Avatar name="Unassigned" size="xs" variant="neutral" />
-                  Unassigned
+                  <Avatar
+                    name={option.memberName}
+                    src={option.image}
+                    size="xs"
+                    variant={option.value === "unassigned" ? "neutral" : undefined}
+                    className={option.value === "unassigned" ? undefined : "size-5"}
+                  />
+                  <div className="min-w-0">
+                    <Flex align="center" gap="xs">
+                      <Typography variant="small">{option.memberName}</Typography>
+                      {option.outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
+                    </Flex>
+                    {option.outOfOffice ? (
+                      <Typography variant="caption" color="secondary">
+                        {formatOutOfOfficeUntil(option.outOfOffice)}
+                      </Typography>
+                    ) : null}
+                  </div>
                 </Flex>
-              </SelectItem>
-              {project?.members.map((member) => (
-                <SelectItem key={member._id} value={member._id}>
-                  <Flex align="center" gap="sm">
-                    <Avatar name={member.name} src={member.image} size="xs" className="size-5" />
-                    <div className="min-w-0">
-                      <Flex align="center" gap="xs">
-                        <Typography variant="small">{member.name}</Typography>
-                        {member.outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
-                      </Flex>
-                      {member.outOfOffice ? (
-                        <Typography variant="caption" color="secondary">
-                          {formatOutOfOfficeUntil(member.outOfOffice)}
-                        </Typography>
-                      ) : null}
-                    </div>
-                  </Flex>
-                </SelectItem>
-              ))}
-            </FormSelectRadix>
+              )}
+            />
           )}
         </form.Field>
 

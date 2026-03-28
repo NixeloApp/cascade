@@ -27,7 +27,7 @@ import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import {
   COLOR_PICKER_CLASSES,
@@ -390,25 +390,22 @@ export function CreateEventModal({
                   <Stack gap="xs">
                     <Label htmlFor="event-project">Link to Project</Label>
                     <Select
-                      value={selectedWorkspaceId || "none"}
-                      onValueChange={(value) =>
+                      id="event-project"
+                      onChange={(value) =>
                         setSelectedWorkspaceId(
                           value === "none" ? undefined : (value as Id<"projects">),
                         )
                       }
-                    >
-                      <SelectTrigger id="event-project">
-                        <SelectValue placeholder="No project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No project</SelectItem>
-                        {projects?.page?.map((project) => (
-                          <SelectItem key={project._id} value={project._id}>
-                            {project.name} ({project.key})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      options={[
+                        { value: "none", label: "No project" },
+                        ...((projects?.page?.map((project) => ({
+                          value: project._id,
+                          label: `${project.name} (${project.key})`,
+                        })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
+                      ]}
+                      placeholder="No project"
+                      value={selectedWorkspaceId || "none"}
+                    />
                   </Stack>
 
                   {/* Actions - Keep inside form.Subscribe to access isSubmitting */}

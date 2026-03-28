@@ -6,79 +6,12 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { fireEvent, render, screen } from "@/test/custom-render";
 import { RoadmapHeaderControls } from "./RoadmapHeaderControls";
 
-const SelectContext = createContext<{
-  disabled?: boolean;
-  onValueChange?: (value: string) => void;
-  value?: string;
-}>({});
-
-const selectWidthClasses = {
-  full: "w-full",
-  xs: "w-24",
-  sm: "w-36",
-  md: "w-48",
-  lg: "w-56",
-} as const;
-
 const SegmentedControlContext = createContext<{
   onValueChange?: (value: string) => void;
   value?: string;
 }>({});
 
-vi.mock("../ui/Select", () => ({
-  Select: ({
-    children,
-    disabled,
-    onValueChange,
-    value,
-  }: {
-    children: ReactNode;
-    disabled?: boolean;
-    onValueChange?: (value: string) => void;
-    value?: string;
-  }) => (
-    <SelectContext.Provider value={{ disabled, onValueChange, value }}>
-      <div>{children}</div>
-    </SelectContext.Provider>
-  ),
-  SelectTrigger: ({
-    children,
-    className,
-    width,
-    ...props
-  }: {
-    children: ReactNode;
-    className?: string;
-    width?: keyof typeof selectWidthClasses;
-  } & Record<string, unknown>) => (
-    <button
-      type="button"
-      className={[width ? selectWidthClasses[width] : undefined, className]
-        .filter(Boolean)
-        .join(" ")}
-      {...props}
-    >
-      {children}
-    </button>
-  ),
-  SelectValue: ({ children, placeholder }: { children?: ReactNode; placeholder?: string }) => {
-    const context = useContext(SelectContext);
-    return <span>{children ?? context.value ?? placeholder}</span>;
-  },
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button
-        type="button"
-        onClick={() => context.onValueChange?.(value)}
-        disabled={context.disabled}
-      >
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("../ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("../ui/SegmentedControl", () => ({
   SegmentedControl: ({

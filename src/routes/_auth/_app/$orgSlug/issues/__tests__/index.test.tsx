@@ -110,25 +110,7 @@ vi.mock("@/components/ui/Input", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/Select", () => ({
-  Select: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectTrigger: ({
-    children,
-    "aria-label": ariaLabel,
-    "data-testid": testId,
-  }: {
-    children: ReactNode;
-    "aria-label"?: string;
-    "data-testid"?: string;
-  }) => (
-    <button type="button" aria-label={ariaLabel} data-testid={testId}>
-      {children}
-    </button>
-  ),
-  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-}));
+vi.mock("@/components/ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("@/components/Kanban/ViewModeToggle", () => ({
   ViewModeToggle: () => {

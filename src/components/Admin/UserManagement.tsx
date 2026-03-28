@@ -27,7 +27,7 @@ import { Input } from "../ui/form";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
 import { Typography } from "../ui/Typography";
@@ -149,17 +149,15 @@ function InviteFormDialog({
           <Stack gap="sm">
             <Label htmlFor="role">Role</Label>
             <Select
+              onChange={onRoleChange}
+              options={[
+                { value: "user", label: "User" },
+                { value: "superAdmin", label: "Super Admin" },
+              ]}
+              placeholder="Select role"
+              testId={TEST_IDS.INVITES.ROLE_SELECT}
               value={role}
-              onValueChange={(value) => onRoleChange(value as "user" | "superAdmin")}
-            >
-              <SelectTrigger data-testid={TEST_IDS.INVITES.ROLE_SELECT}>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="superAdmin">Super Admin</SelectItem>
-              </SelectContent>
-            </Select>
+            />
             <Typography variant="caption">
               Super Admins have full system access and can manage all users.
             </Typography>

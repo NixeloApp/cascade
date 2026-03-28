@@ -17,7 +17,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Flex } from "../ui/Flex";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Switch } from "../ui/Switch";
 import { SettingsSection, SettingsSectionRow } from "./SettingsSection";
 /**
@@ -156,20 +156,13 @@ export function PreferencesTab() {
           description="Use a specific timezone for issue, meeting, and audit timestamps."
           action={
             <Select
+              className="w-full sm:w-60"
+              id="timezone"
+              onChange={(value) => void handleTimezoneChange(value)}
+              options={timezones.map((timezone) => ({ value: timezone, label: timezone }))}
+              placeholder="Select timezone"
               value={selectedTimezone}
-              onValueChange={(value) => void handleTimezoneChange(value)}
-            >
-              <SelectTrigger id="timezone" className="w-full sm:w-60">
-                <SelectValue placeholder="Select timezone" />
-              </SelectTrigger>
-              <SelectContent>
-                {timezones.map((tz) => (
-                  <SelectItem key={tz} value={tz}>
-                    {tz}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           }
         />
       </SettingsSection>

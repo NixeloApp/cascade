@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** Open
-> **Last Updated:** 2026-03-27
+> **Last Updated:** 2026-03-28
 
 ## Principles
 
@@ -18,6 +18,7 @@
 Every shadcn compound component gets one wrapper. Subcomponent exports are deleted. Feature code imports only the wrapper.
 
 ### SelectField (replaces 7 Select subcomponent exports)
+- **Status:** Done (2026-03-28)
 - **Files to update:** 36
 - **API:**
   ```tsx
@@ -34,6 +35,7 @@ Every shadcn compound component gets one wrapper. Subcomponent exports are delet
 - **Supports:** `disabled`, `size`, grouped options via `groups` prop, `data-testid`
 - **Delete:** `SelectTrigger`, `SelectContent`, `SelectItem`, `SelectValue`, `SelectGroup`, `SelectLabel`, `SelectSeparator` exports from `ui/Select.tsx`
 - **End state:** 0 feature files importing Select subcomponents
+- **Landed:** Wrapper-only `Select` API, grouped/custom-render support, empty-string option handling, migrated feature call sites, updated Storybook, and test-harness consolidation onto one shared mock.
 
 ### PopoverField (replaces 8 Popover subcomponent exports)
 - **Files to update:** 14

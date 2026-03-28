@@ -13,22 +13,8 @@ import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor, within } from "@/test/custom-render";
 import { SprintManager } from "./SprintManager";
 
-interface SelectContextValue {
-  onValueChange?: (value: string) => void;
-}
-
 interface RadioGroupContextValue {
   onValueChange?: (value: string) => void;
-}
-
-interface SelectProps {
-  children: ReactNode;
-  onValueChange?: (value: string) => void;
-}
-
-interface SelectItemProps {
-  children: ReactNode;
-  value: string;
 }
 
 interface RadioGroupProps {
@@ -72,25 +58,9 @@ vi.mock("@convex/_generated/api", () => ({
   },
 }));
 
-const selectContext = createContext<SelectContextValue>({});
 const radioGroupContext = createContext<RadioGroupContextValue>({});
 
-vi.mock("../ui/Select", () => ({
-  Select: ({ children, onValueChange }: SelectProps) => (
-    <selectContext.Provider value={{ onValueChange }}>{children}</selectContext.Provider>
-  ),
-  SelectTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: SelectItemProps) => {
-    const { onValueChange } = useContext(selectContext);
-    return (
-      <button type="button" onClick={() => onValueChange?.(value)}>
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("../ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("../ui/RadioGroup", () => ({
   RadioGroup: ({ children, onValueChange }: RadioGroupProps) => (

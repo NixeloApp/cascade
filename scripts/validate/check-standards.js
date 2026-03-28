@@ -124,7 +124,7 @@ function matchesPattern(rel, patterns) {
 
 /** Check if file is a test file */
 function isTestFile(rel) {
-  return rel.includes(".test.tsx") || rel.includes(".spec.tsx");
+  return rel.includes(".test.tsx") || rel.includes(".spec.tsx") || rel.includes("/__tests__/");
 }
 
 /** Check if file is in ui/ directory */

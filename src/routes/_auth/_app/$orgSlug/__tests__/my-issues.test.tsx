@@ -129,48 +129,7 @@ vi.mock("@/components/ui/SegmentedControl", () => ({
   },
 }));
 
-const SelectContext = createContext<{
-  onValueChange?: (value: string) => void;
-  value: string;
-} | null>(null);
-
-vi.mock("@/components/ui/Select", () => ({
-  Select: ({
-    children,
-    onValueChange,
-    value,
-  }: {
-    children: ReactNode;
-    onValueChange?: (value: string) => void;
-    value: string;
-  }) => (
-    <SelectContext.Provider value={{ value, onValueChange }}>{children}</SelectContext.Provider>
-  ),
-  SelectTrigger: ({
-    children,
-    "data-testid": testId,
-  }: {
-    children: ReactNode;
-    "data-testid"?: string;
-  }) => (
-    <button type="button" data-testid={testId}>
-      {children}
-    </button>
-  ),
-  SelectValue: () => {
-    const context = useContext(SelectContext);
-    return <span>{context?.value}</span>;
-  },
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button type="button" role="option" onClick={() => context?.onValueChange?.(value)}>
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("@/components/ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("@/components/ui/Stack", () => ({
   Stack: ({
@@ -355,7 +314,7 @@ describe("MyIssuesBoardPage", () => {
 
     render(<MyIssuesBoardPage />);
 
-    await user.click(screen.getByRole("option", { name: "Lowest" }));
+    await user.click(screen.getByRole("button", { name: "Lowest" }));
 
     const filteredEmptyState = screen.getByTestId(TEST_IDS.PAGE.EMPTY_STATE);
     expect(filteredEmptyState).toBeInTheDocument();

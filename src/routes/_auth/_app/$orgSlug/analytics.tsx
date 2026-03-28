@@ -5,13 +5,7 @@ import { useState } from "react";
 import { OrganizationAnalyticsDashboard } from "@/components/Analytics/OrganizationAnalyticsDashboard";
 import { PageContent } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -66,18 +60,13 @@ function AnalyticsPage() {
       trend={trend ?? undefined}
       headerActions={
         <Flex align="center" gap="sm">
-          <Select value={timePeriod} onValueChange={(v) => setTimePeriod(v as TimePeriod)}>
-            <SelectTrigger width="sm" data-testid={TEST_IDS.ANALYTICS.ORG_PERIOD_SELECT}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TIME_PERIODS.map((p) => (
-                <SelectItem key={p.value} value={p.value}>
-                  {p.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Select
+            onChange={(value) => setTimePeriod(value as TimePeriod)}
+            options={TIME_PERIODS}
+            testId={TEST_IDS.ANALYTICS.ORG_PERIOD_SELECT}
+            value={timePeriod}
+            width="sm"
+          />
         </Flex>
       }
     />

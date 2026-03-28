@@ -21,13 +21,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -164,64 +158,41 @@ function IssueFilterBar({
         <PageControlsGroup className="sm:justify-end">
           <Select
             value={filters.statusFilter || "all"}
-            onValueChange={(v) => filters.setStatusFilter(v === "all" ? undefined : v)}
-          >
-            <SelectTrigger
-              width="sm"
-              aria-label="Issue status filter"
-              data-testid={TEST_IDS.ISSUE.STATUS_FILTER}
-            >
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {statusOptions.map((opt) => (
-                <SelectItem key={opt.id} value={opt.id}>
-                  {opt.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(nextValue) =>
+              filters.setStatusFilter(nextValue === "all" ? undefined : nextValue)
+            }
+            ariaLabel="Issue status filter"
+            options={[
+              { value: "all", label: "All Statuses" },
+              ...statusOptions.map((option) => ({ value: option.id, label: option.name })),
+            ]}
+            testId={TEST_IDS.ISSUE.STATUS_FILTER}
+            width="sm"
+          />
 
           <Select
             value={filters.priorityFilter || "all"}
-            onValueChange={(v) => filters.setPriorityFilter(v === "all" ? undefined : v)}
-          >
-            <SelectTrigger
-              width="sm"
-              aria-label="Issue priority filter"
-              data-testid={TEST_IDS.ISSUE.PRIORITY_FILTER}
-            >
-              <SelectValue placeholder="All Priorities" />
-            </SelectTrigger>
-            <SelectContent>
-              {PRIORITY_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(nextValue) =>
+              filters.setPriorityFilter(nextValue === "all" ? undefined : nextValue)
+            }
+            ariaLabel="Issue priority filter"
+            options={PRIORITY_OPTIONS}
+            placeholder="All Priorities"
+            testId={TEST_IDS.ISSUE.PRIORITY_FILTER}
+            width="sm"
+          />
 
           <Select
             value={filters.typeFilter || "all"}
-            onValueChange={(v) => filters.setTypeFilter(v === "all" ? undefined : v)}
-          >
-            <SelectTrigger
-              width="sm"
-              aria-label="Issue type filter"
-              data-testid={TEST_IDS.ISSUE.TYPE_FILTER}
-            >
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              {TYPE_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(nextValue) =>
+              filters.setTypeFilter(nextValue === "all" ? undefined : nextValue)
+            }
+            ariaLabel="Issue type filter"
+            options={TYPE_OPTIONS}
+            placeholder="All Types"
+            testId={TEST_IDS.ISSUE.TYPE_FILTER}
+            width="sm"
+          />
 
           {filters.hasActiveFilters && (
             <Button

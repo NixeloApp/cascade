@@ -8,13 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { CardSection } from "@/components/ui/CardSection";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -168,56 +162,40 @@ function OrganizationCalendarFilterControls(props: {
   return (
     <Flex gap="sm" className="w-full sm:w-auto">
       <Select
-        value={props.selectedWorkspaceId === "all" ? undefined : props.selectedWorkspaceId}
-        onValueChange={(value) => props.onWorkspaceChange(value as Id<"workspaces"> | "all")}
-      >
-        <SelectTrigger
-          aria-label="Workspace filter"
-          data-testid={TEST_IDS.ORG_CALENDAR.WORKSPACE_FILTER}
-          width="lg"
-        >
-          <SelectValue placeholder="All workspaces" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All workspaces</SelectItem>
-          {props.workspaces.map((workspace) => (
-            <SelectItem key={workspace._id} value={workspace._id}>
-              {workspace.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        ariaLabel="Workspace filter"
+        onChange={props.onWorkspaceChange}
+        options={[
+          { value: "all", label: "All workspaces" },
+          ...props.workspaces.map((workspace) => ({
+            value: workspace._id,
+            label: workspace.name,
+          })),
+        ]}
+        testId={TEST_IDS.ORG_CALENDAR.WORKSPACE_FILTER}
+        value={props.selectedWorkspaceId}
+        width="lg"
+      />
       <Select
         disabled={!props.canSelectTeam}
-        value={
-          props.canSelectTeam && props.selectedTeamId !== "all" ? props.selectedTeamId : undefined
+        ariaLabel="Team filter"
+        onChange={props.onTeamChange}
+        options={
+          [
+            ...(props.canSelectTeam ? [{ value: "all", label: "All teams" }] : []),
+            ...props.workspaceTeams.map((team) => ({ value: team._id, label: team.name })),
+          ] as Array<{ value: "all" | Id<"teams">; label: string }>
         }
-        onValueChange={(value) => props.onTeamChange(value as Id<"teams"> | "all")}
-      >
-        <SelectTrigger
-          aria-label="Team filter"
-          data-testid={TEST_IDS.ORG_CALENDAR.TEAM_FILTER}
-          width="lg"
-        >
-          <SelectValue
-            placeholder={
-              props.canSelectTeam
-                ? props.workspaceTeams.length > 0
-                  ? "All teams"
-                  : "No teams in workspace"
-                : "Select workspace first"
-            }
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {props.canSelectTeam ? <SelectItem value="all">All teams</SelectItem> : null}
-          {props.workspaceTeams.map((team) => (
-            <SelectItem key={team._id} value={team._id}>
-              {team.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        placeholder={
+          props.canSelectTeam
+            ? props.workspaceTeams.length > 0
+              ? "All teams"
+              : "No teams in workspace"
+            : "Select workspace first"
+        }
+        testId={TEST_IDS.ORG_CALENDAR.TEAM_FILTER}
+        value={props.selectedTeamId}
+        width="lg"
+      />
     </Flex>
   );
 }

@@ -6,13 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -67,17 +61,19 @@ function WorkspaceSprintsPage() {
           <Typography variant="small" color="secondary">
             {filtered.length} {filtered.length === 1 ? "sprint" : "sprints"}
           </Typography>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-            <SelectTrigger width="sm" aria-label="Filter by status">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="planned">Planned</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
+          <Select
+            ariaLabel="Filter by status"
+            onChange={(value) => setStatusFilter(value as StatusFilter)}
+            options={[
+              { value: "all", label: "All statuses" },
+              { value: "active", label: "Active" },
+              { value: "planned", label: "Planned" },
+              { value: "completed", label: "Completed" },
+            ]}
+            placeholder="All statuses"
+            value={statusFilter}
+            width="sm"
+          />
         </Flex>
 
         {filtered.length === 0 && activeSprints.length > 0 ? (

@@ -11,7 +11,7 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 /**
@@ -54,21 +54,20 @@ export function LinkedRepositories({ showHeading = true }: { showHeading?: boole
       <Stack gap="xs">
         <Label htmlFor="project-selector">Select Project</Label>
         <Select
+          id="project-selector"
+          onChange={(value) =>
+            setSelectedWorkspace(value === "" ? null : (value as Id<"projects">))
+          }
+          options={[
+            { value: "", label: "-- Select a project --" },
+            ...((projects?.page?.map((project) => ({
+              value: project._id,
+              label: `${project.name} (${project.key})`,
+            })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
+          ]}
+          placeholder="-- Select a project --"
           value={selectedWorkspace || ""}
-          onValueChange={(value) => setSelectedWorkspace(value as Id<"projects">)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="-- Select a project --" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">-- Select a project --</SelectItem>
-            {projects?.page?.map((project) => (
-              <SelectItem key={project._id} value={project._id}>
-                {project.name} ({project.key})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       </Stack>
 
       {/* Repository list */}

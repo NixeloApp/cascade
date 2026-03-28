@@ -23,13 +23,7 @@ import { Textarea } from "@/components/ui/form/Textarea";
 import { Grid } from "@/components/ui/Grid";
 import { Progress } from "@/components/ui/Progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { SkeletonProjectCard } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -695,25 +689,26 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                         <Stack gap="sm">
                           <Typography variant="label">Select target sprint:</Typography>
                           <Select
-                            value={targetSprintId ?? ""}
-                            onValueChange={(value) => setTargetSprintId(value as Id<"sprints">)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a sprint" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableTargetSprints.map((sprint) => (
-                                <SelectItem key={sprint._id} value={sprint._id}>
-                                  <Flex align="center" gap="sm">
-                                    <Typography variant="small">{sprint.name}</Typography>
-                                    <Badge size="sm" statusTone={getStatusBadgeTone(sprint.status)}>
-                                      {sprint.status}
-                                    </Badge>
-                                  </Flex>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            onChange={(value) => setTargetSprintId(value as Id<"sprints">)}
+                            options={availableTargetSprints.map((sprint) => ({
+                              label: sprint.name,
+                              sprintStatus: sprint.status,
+                              value: sprint._id,
+                            }))}
+                            placeholder="Select a sprint"
+                            renderOption={(option) => (
+                              <Flex align="center" gap="sm">
+                                <Typography variant="small">{option.label}</Typography>
+                                <Badge
+                                  size="sm"
+                                  statusTone={getStatusBadgeTone(option.sprintStatus)}
+                                >
+                                  {option.sprintStatus}
+                                </Badge>
+                              </Flex>
+                            )}
+                            value={targetSprintId ?? undefined}
+                          />
                         </Stack>
                       )}
                     </Stack>

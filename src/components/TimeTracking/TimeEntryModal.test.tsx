@@ -12,11 +12,6 @@ import { showError, showSuccess } from "@/lib/toast";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
 import { TimeEntryModal } from "./TimeEntryModal";
 
-const SelectContext = createContext<{
-  onValueChange?: (value: string) => void;
-  value?: string;
-}>({});
-
 const SegmentedControlContext = createContext<{
   onValueChange?: (value: string) => void;
   value?: string;
@@ -233,47 +228,7 @@ vi.mock("../ui/SegmentedControl", () => ({
   },
 }));
 
-vi.mock("../ui/Select", () => ({
-  Select: ({
-    children,
-    value,
-    onValueChange,
-  }: {
-    children: ReactNode;
-    value?: string;
-    onValueChange?: (value: string) => void;
-  }) => (
-    <SelectContext.Provider value={{ value, onValueChange }}>
-      <div>{children}</div>
-    </SelectContext.Provider>
-  ),
-  SelectTrigger: ({
-    children,
-    id,
-    className,
-  }: {
-    children: ReactNode;
-    id?: string;
-    className?: string;
-  }) => (
-    <button id={id} type="button" className={className}>
-      {children}
-    </button>
-  ),
-  SelectValue: ({ placeholder }: { placeholder?: string }) => {
-    const context = useContext(SelectContext);
-    return <span>{context.value ?? placeholder}</span>;
-  },
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button type="button" onClick={() => context.onValueChange?.(value)}>
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("../ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("../ui/Stack", () => ({
   Stack: ({

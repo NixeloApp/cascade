@@ -10,7 +10,7 @@
 
 ## Core (Components & Validators)
 
-- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — Encapsulate shadcn components (Select 36 files, Popover 14, Command 8). String props not ReactNode. Ban raw HTML elements. Shrink variant axes to < 20. Raw Tailwind to 0.
+- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — `Select` encapsulation is done. Remaining work: Popover/Command wrappers, string prop cleanup, raw HTML ban, variant shrink, raw Tailwind to 0.
 
 ## Features
 

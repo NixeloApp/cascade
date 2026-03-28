@@ -17,13 +17,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import {
   Table,
@@ -2084,20 +2078,14 @@ function SequenceAnalyticsCard({
           description="Inspect top-line outcomes and step-level tracking for a selected campaign."
           action={
             <Select
-              value={selectedSequenceId ?? ""}
-              onValueChange={(value) => onSelectSequence(value as Id<"outreachSequences">)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a sequence" />
-              </SelectTrigger>
-              <SelectContent>
-                {sequences.map((sequence) => (
-                  <SelectItem key={sequence._id} value={sequence._id}>
-                    {sequence.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={onSelectSequence}
+              options={sequences.map((sequence) => ({
+                value: sequence._id,
+                label: sequence.name,
+              }))}
+              placeholder="Select a sequence"
+              value={selectedSequenceId}
+            />
           }
         />
 
@@ -2198,23 +2186,17 @@ function RecipientTimelineCard({
           description="Track sent, opened, clicked, replied, bounced, and unsubscribe events for a single enrollment."
           action={
             <Select
-              value={selectedEnrollmentId ?? ""}
-              onValueChange={(value) => onSelectEnrollment(value as Id<"outreachEnrollments">)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an enrollment" />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedSequenceEnrollments.map((enrollment) => (
-                  <SelectItem key={enrollment._id} value={enrollment._id}>
-                    {getTimelineEnrollmentLabel(
-                      contacts.find((candidate) => candidate._id === enrollment.contactId),
-                      enrollment._id,
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={onSelectEnrollment}
+              options={selectedSequenceEnrollments.map((enrollment) => ({
+                value: enrollment._id,
+                label: getTimelineEnrollmentLabel(
+                  contacts.find((candidate) => candidate._id === enrollment.contactId),
+                  enrollment._id,
+                ),
+              }))}
+              placeholder="Select an enrollment"
+              value={selectedEnrollmentId}
+            />
           }
         />
 
@@ -2750,20 +2732,14 @@ function SequenceDialogContent({
             placeholder="Enterprise follow-up"
           />
           <Select
+            onChange={(value) => onFieldChange("mailboxId", value)}
+            options={mailboxes.map((mailbox) => ({
+              value: mailbox._id,
+              label: mailbox.email,
+            }))}
+            placeholder="Select mailbox"
             value={sequenceForm.mailboxId}
-            onValueChange={(value) => onFieldChange("mailboxId", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select mailbox" />
-            </SelectTrigger>
-            <SelectContent>
-              {mailboxes.map((mailbox) => (
-                <SelectItem key={mailbox._id} value={mailbox._id}>
-                  {mailbox.email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
           <Input
             value={sequenceForm.trackingDomain}
             onChange={(event) => onFieldChange("trackingDomain", event.target.value)}

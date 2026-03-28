@@ -2,8 +2,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@/test/custom-render";
 import {
@@ -15,57 +13,7 @@ import {
   PropertyRow,
 } from "./InlinePropertyEdit";
 
-const SelectContext = createContext<{
-  disabled?: boolean;
-  onValueChange?: (value: string) => void;
-  value?: string;
-}>({});
-
-vi.mock("@/components/ui/Select", () => ({
-  Select: ({
-    children,
-    value,
-    onValueChange,
-    disabled,
-  }: {
-    children: ReactNode;
-    value?: string;
-    onValueChange?: (value: string) => void;
-    disabled?: boolean;
-  }) => (
-    <SelectContext.Provider value={{ disabled, onValueChange, value }}>
-      <div>{children}</div>
-    </SelectContext.Provider>
-  ),
-  SelectTrigger: ({
-    children,
-    "aria-label": ariaLabel,
-  }: {
-    children: ReactNode;
-    "aria-label"?: string;
-  }) => (
-    <button type="button" aria-label={ariaLabel}>
-      {children}
-    </button>
-  ),
-  SelectValue: ({ children }: { children?: ReactNode }) => {
-    const context = useContext(SelectContext);
-    return <span>{children ?? context.value}</span>;
-  },
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button
-        type="button"
-        onClick={() => context.onValueChange?.(value)}
-        disabled={context.disabled}
-      >
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("@/components/ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("@/components/ui/Icon", () => ({
   Icon: () => <span data-testid="inline-icon" />,
@@ -80,12 +28,12 @@ describe("InlinePropertyEdit", () => {
     render(
       <>
         <InlinePrioritySelect value={"medium" as IssuePriority} onChange={onPriorityChange} />
-        <InlineTypeSelect value={"feature" as IssueTypeWithSubtask} onChange={onTypeChange} />
+        <InlineTypeSelect value={"task" as IssueTypeWithSubtask} onChange={onTypeChange} />
       </>,
     );
 
-    expect(screen.getByLabelText("Change priority")).toHaveTextContent("medium");
-    expect(screen.getByLabelText("Change type")).toHaveTextContent("feature");
+    expect(screen.getByLabelText("Change priority")).toHaveValue("medium");
+    expect(screen.getByLabelText("Change type")).toHaveValue("task");
 
     await user.click(screen.getByRole("button", { name: "high" }));
     expect(onPriorityChange).toHaveBeenCalledWith("high");

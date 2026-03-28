@@ -30,13 +30,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Section } from "@/components/ui/Section";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -1192,21 +1186,16 @@ function ActionItemCard({
                 <Flex direction="column" directionSm="row" gap="sm" alignSm="center">
                   <FlexItem flex="1">
                     <Select
+                      ariaLabel={`Project for action item ${index + 1}`}
                       key={`${summaryId}-${index}-${selectedProjectId ?? "none"}`}
                       defaultValue={selectedProjectId ?? undefined}
-                      onValueChange={(value) => onProjectChange(value as Id<"projects">)}
-                    >
-                      <SelectTrigger aria-label={`Project for action item ${index + 1}`}>
-                        <SelectValue placeholder="Choose project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableProjects.map((project) => (
-                          <SelectItem key={project._id} value={project._id}>
-                            {project.key} - {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onChange={onProjectChange}
+                      options={availableProjects.map((project) => ({
+                        value: project._id,
+                        label: `${project.key} - ${project.name}`,
+                      }))}
+                      placeholder="Choose project"
+                    />
                   </FlexItem>
                   <Button
                     variant="secondary"
@@ -1953,21 +1942,19 @@ function ScheduleRecordingDialog({
               Project (Optional)
             </Label>
             <Select
+              ariaLabel="Recording project"
+              id="meeting-recording-project"
+              onChange={(value) => setProjectId(value as ProjectFilter)}
+              options={[
+                { value: "all", label: "No project" },
+                ...((projects?.map((project) => ({
+                  value: project._id,
+                  label: `${project.key} - ${project.name}`,
+                })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
+              ]}
+              placeholder="No project"
               value={projectId}
-              onValueChange={(value) => setProjectId(value as ProjectFilter)}
-            >
-              <SelectTrigger id="meeting-recording-project" aria-label="Recording project">
-                <SelectValue placeholder="No project" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">No project</SelectItem>
-                {projects?.map((project) => (
-                  <SelectItem key={project._id} value={project._id}>
-                    {project.key} - {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </Stack>
 
           <Checkbox
@@ -2108,69 +2095,42 @@ export function MeetingsWorkspace() {
 
                 <Grid cols={1} colsSm={2} colsXl={4} gap="sm">
                   <Select
+                    ariaLabel="Filter by status"
+                    onChange={(value) => setStatusFilter(value as StatusFilter)}
+                    options={STATUS_FILTER_OPTIONS}
+                    placeholder="All statuses"
                     value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-                  >
-                    <SelectTrigger aria-label="Filter by status">
-                      <SelectValue placeholder="All statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_FILTER_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
 
                   <Select
+                    ariaLabel="Filter by platform"
+                    onChange={(value) => setPlatformFilter(value as PlatformFilter)}
+                    options={PLATFORM_FILTER_OPTIONS}
+                    placeholder="All platforms"
                     value={platformFilter}
-                    onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
-                  >
-                    <SelectTrigger aria-label="Filter by platform">
-                      <SelectValue placeholder="All platforms" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PLATFORM_FILTER_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
 
                   <Select
+                    ariaLabel="Filter by project"
+                    onChange={(value) => setProjectFilter(value as ProjectFilter)}
+                    options={[
+                      { value: "all", label: "All projects" },
+                      ...((projects?.map((project) => ({
+                        value: project._id,
+                        label: `${project.key} - ${project.name}`,
+                      })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
+                    ]}
+                    placeholder="All projects"
                     value={projectFilter}
-                    onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
-                  >
-                    <SelectTrigger aria-label="Filter by project">
-                      <SelectValue placeholder="All projects" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All projects</SelectItem>
-                      {projects?.map((project) => (
-                        <SelectItem key={project._id} value={project._id}>
-                          {project.key} - {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
 
                   <Select
+                    ariaLabel="Filter by date"
+                    onChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
+                    options={TIME_WINDOW_OPTIONS}
+                    placeholder="All dates"
                     value={timeWindowFilter}
-                    onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
-                  >
-                    <SelectTrigger aria-label="Filter by date">
-                      <SelectValue placeholder="All dates" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIME_WINDOW_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </Grid>
 
                 {filteredRecordings !== undefined && (

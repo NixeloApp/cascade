@@ -227,27 +227,7 @@ vi.mock("../ui/SegmentedControl", () => ({
   },
 }));
 
-vi.mock("../ui/Select", () => ({
-  Select: ({
-    value,
-    onValueChange,
-  }: {
-    value: string;
-    onValueChange: (value: string) => void;
-    children: ReactNode;
-  }) => (
-    <select aria-label="role-select" onChange={(e) => onValueChange(e.target.value)} value={value}>
-      <option value="user">User</option>
-      <option value="superAdmin">Super Admin</option>
-    </select>
-  ),
-  SelectContent: ({ children }: { children: ReactNode }) => <>{children}</>,
-  SelectItem: ({ value, children }: { value: string; children: ReactNode }) => (
-    <option value={value}>{children}</option>
-  ),
-  SelectTrigger: () => null,
-  SelectValue: () => null,
-}));
+vi.mock("../ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("../ui/Stack", () => ({
   Stack: ({ children }: { children: ReactNode }) => <div>{children}</div>,

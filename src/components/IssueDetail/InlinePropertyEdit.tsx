@@ -10,20 +10,14 @@
 
 import type { Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
-import type { ReactNode } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select, type SelectOption } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
 import type { UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { User } from "@/lib/icons";
@@ -37,25 +31,39 @@ import {
 } from "@/lib/issue-utils";
 import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
 
-interface InlineSelectProps {
+interface InlineSelectProps<TValue extends string, TOption extends SelectOption<TValue>> {
   label: string;
-  value: string;
-  onChange: (value: string) => void;
-  children: ReactNode;
+  value: TValue;
+  onChange: (value: TValue) => void;
+  options: TOption[];
   disabled?: boolean;
+  renderOption?: (option: TOption) => ReactNode;
+  renderValue?: (option: TOption) => ReactNode;
 }
 
 /**
  * Generic inline select wrapper with consistent styling
  */
-function InlineSelect({ label, value, onChange, children, disabled }: InlineSelectProps) {
+function InlineSelect<TValue extends string, TOption extends SelectOption<TValue>>({
+  label,
+  value,
+  onChange,
+  options,
+  disabled,
+  renderOption,
+  renderValue,
+}: InlineSelectProps<TValue, TOption>) {
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger variant="inlineEdit" aria-label={label}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>{children}</SelectContent>
-    </Select>
+    <Select
+      ariaLabel={label}
+      disabled={disabled}
+      onChange={onChange}
+      options={options}
+      renderOption={renderOption}
+      renderValue={renderValue}
+      value={value}
+      variant="inlineEdit"
+    />
   );
 }
 
@@ -70,26 +78,27 @@ interface PrioritySelectProps {
 }
 
 export function InlinePrioritySelect({ value, onChange, disabled }: PrioritySelectProps) {
+  const options = ISSUE_PRIORITIES.map((priority) => ({
+    icon: PRIORITY_ICONS[priority],
+    label: priority,
+    toneClassName: getPriorityColor(priority),
+    value: priority,
+  }));
+
   return (
     <InlineSelect
       label="Change priority"
-      value={value}
-      onChange={(v) => onChange(v as IssuePriority)}
+      onChange={onChange}
+      options={options}
+      renderOption={(option) => (
+        <Flex align="center" gap="sm">
+          <Icon icon={option.icon} size="sm" className={option.toneClassName} />
+          <span className="capitalize">{option.label}</span>
+        </Flex>
+      )}
       disabled={disabled}
-    >
-      {ISSUE_PRIORITIES.map((priority) => (
-        <SelectItem key={priority} value={priority}>
-          <Flex align="center" gap="sm">
-            <Icon
-              icon={PRIORITY_ICONS[priority]}
-              size="sm"
-              className={getPriorityColor(priority)}
-            />
-            <span className="capitalize">{priority}</span>
-          </Flex>
-        </SelectItem>
-      ))}
-    </InlineSelect>
+      value={value}
+    />
   );
 }
 
@@ -104,22 +113,26 @@ interface TypeSelectProps {
 }
 
 export function InlineTypeSelect({ value, onChange, disabled }: TypeSelectProps) {
+  const options = ISSUE_TYPES_WITH_SUBTASK.map((type) => ({
+    icon: ISSUE_TYPE_ICONS[type],
+    label: getTypeLabel(type),
+    value: type,
+  }));
+
   return (
     <InlineSelect
       label="Change type"
-      value={value}
-      onChange={(v) => onChange(v as IssueTypeWithSubtask)}
+      onChange={onChange}
+      options={options}
+      renderOption={(option) => (
+        <Flex align="center" gap="sm">
+          <Icon icon={option.icon} size="sm" />
+          {option.label}
+        </Flex>
+      )}
       disabled={disabled}
-    >
-      {ISSUE_TYPES_WITH_SUBTASK.map((type) => (
-        <SelectItem key={type} value={type}>
-          <Flex align="center" gap="sm">
-            <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
-            {getTypeLabel(type)}
-          </Flex>
-        </SelectItem>
-      ))}
-    </InlineSelect>
+      value={value}
+    />
   );
 }
 
@@ -158,52 +171,66 @@ function AssigneeOption({
 }
 
 export function InlineAssigneeSelect({ value, members, onChange, disabled }: AssigneeSelectProps) {
-  const selectedMember = members.find((m) => m._id === value);
+  const options = [
+    {
+      image: undefined,
+      label: "Unassigned",
+      name: "Unassigned",
+      outOfOffice: undefined,
+      value: "unassigned",
+    },
+    ...members.map((member) => ({
+      image: member.image,
+      label: member.name,
+      name: member.name,
+      outOfOffice: member.outOfOffice,
+      value: member._id,
+    })),
+  ];
 
   return (
     <Select
-      value={value || "unassigned"}
-      onValueChange={(v) => onChange(v === "unassigned" ? null : (v as Id<"users">))}
+      ariaLabel="Change assignee"
       disabled={disabled}
-    >
-      <SelectTrigger variant="inlineEdit" aria-label="Change assignee">
-        <SelectValue>
-          {selectedMember ? (
-            <AssigneeOption
-              name={selectedMember.name}
-              image={selectedMember.image}
-              outOfOffice={selectedMember.outOfOffice}
-            />
-          ) : (
-            <Flex align="center" gap="sm">
-              <IconCircle variant="muted" className="size-5">
-                <User className="size-3 text-ui-text-secondary" />
-              </IconCircle>
-              <span>Unassigned</span>
-            </Flex>
-          )}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="unassigned">
+      onChange={(nextValue) =>
+        onChange(nextValue === "unassigned" ? null : (nextValue as Id<"users">))
+      }
+      options={options}
+      renderOption={(option) =>
+        option.value === "unassigned" ? (
           <Flex align="center" gap="sm">
             <IconCircle variant="muted" className="size-5">
               <User className="size-3 text-ui-text-secondary" />
             </IconCircle>
             Unassigned
           </Flex>
-        </SelectItem>
-        {members.map((member) => (
-          <SelectItem key={member._id} value={member._id}>
-            <AssigneeOption
-              name={member.name}
-              image={member.image}
-              outOfOffice={member.outOfOffice}
-            />
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+        ) : (
+          <AssigneeOption
+            image={option.image}
+            name={option.name}
+            outOfOffice={option.outOfOffice}
+          />
+        )
+      }
+      renderValue={(option) =>
+        option.value === "unassigned" ? (
+          <Flex align="center" gap="sm">
+            <IconCircle variant="muted" className="size-5">
+              <User className="size-3 text-ui-text-secondary" />
+            </IconCircle>
+            <span>Unassigned</span>
+          </Flex>
+        ) : (
+          <AssigneeOption
+            image={option.image}
+            name={option.name}
+            outOfOffice={option.outOfOffice}
+          />
+        )
+      }
+      value={value ?? "unassigned"}
+      variant="inlineEdit"
+    />
   );
 }
 
@@ -227,18 +254,19 @@ export function InlineStatusSelect({
   const currentState = workflowStates.find((s) => s.id === value);
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger variant="inlineEdit" aria-label="Change status">
-        <SelectValue>{currentState?.name || value}</SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {workflowStates.map((state) => (
-          <SelectItem key={state.id} value={state.id}>
-            {state.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Select
+      ariaLabel="Change status"
+      disabled={disabled}
+      onChange={onChange}
+      options={workflowStates.map((state) => ({
+        category: state.category,
+        label: state.name,
+        value: state.id,
+      }))}
+      renderValue={(option) => option.label ?? currentState?.name ?? value}
+      value={value}
+      variant="inlineEdit"
+    />
   );
 }
 
@@ -253,7 +281,7 @@ interface StoryPointsInputProps {
 }
 
 export function InlineStoryPointsInput({ value, onChange, disabled }: StoryPointsInputProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     if (newValue === "") {
       onChange(null);
