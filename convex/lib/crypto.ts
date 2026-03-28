@@ -6,7 +6,7 @@ import { generateRandomString } from "@oslojs/crypto/random";
  */
 export function generateOTP(): string {
   const random: RandomReader = {
-    read(bytes: Uint8Array) {
+    read(bytes: Uint8Array<ArrayBuffer>) {
       crypto.getRandomValues(bytes);
     },
   };
