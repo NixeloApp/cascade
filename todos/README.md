@@ -14,6 +14,7 @@
 
 ## Design / UI Debt
 
+- [ ] [component-export-cleanup.md](./component-export-cleanup.md) — Remove leaked subcomponent exports from IssueDetail barrel, Roadmap, ProfileContent, KanbanColumn.
 - [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — Re-triage the remaining raw-styling backlog after the validator overhaul and delete or fix it until the baseline reaches zero.
 - [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot review discipline, coverage depth, and human visual QA gaps.
 
