@@ -11,7 +11,12 @@ import { useState } from "react";
 import { PresenceIndicator } from "@/components/PresenceIndicator";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getDocumentHeaderActionButtonClassName,
+  getDocumentHeaderToggleButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
+import { Container } from "@/components/ui/Container";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
+import { getDocumentHeaderResponsiveWidthClassName } from "@/components/ui/documentHeaderSurfaceClassNames";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
 import { Icon } from "@/components/ui/Icon";
@@ -26,7 +32,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { Typography } from "@/components/ui/Typography";
+import { DocumentTitleText, Typography } from "@/components/ui/Typography";
 import {
   Archive,
   Download,
@@ -160,9 +166,9 @@ function OwnerDocumentActions({
     <Flex wrap align="center" gap="xs">
       <Button
         variant="unstyled"
-        chrome={document.isPublic ? "documentHeaderPublicActive" : "documentHeaderNeutral"}
-        chromeSize="documentHeaderToggle"
+        size="content"
         onClick={() => void onTogglePublic()}
+        className={getDocumentHeaderToggleButtonClassName(document.isPublic)}
       >
         {document.isPublic ? "Public" : "Private"}
       </Button>
@@ -225,7 +231,7 @@ function DocumentHeaderActions({
   ownerActions,
 }: DocumentHeaderActionsProps) {
   return (
-    <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
+    <Flex wrap align="center" gap="xs" className={getDocumentHeaderResponsiveWidthClassName()}>
       <PresenceIndicator roomId={document._id} userId={userId} />
 
       <DocumentSyncStatusBadge syncState={syncState} />
@@ -252,32 +258,32 @@ function DocumentHeaderActions({
       <Tooltip content="View version history">
         <Button
           variant="unstyled"
-          chrome="documentHeaderNeutral"
-          chromeSize="documentHeaderAction"
+          size="content"
           onClick={onShowVersionHistory}
           leftIcon={<Icon icon={History} size="sm" aria-hidden="true" />}
           aria-label="Version history"
+          className={getDocumentHeaderActionButtonClassName("neutral")}
         >
-          <Typography variant="small" as="span" className="hidden sm:inline">
-            History
-          </Typography>
-          {versionCount !== undefined && versionCount > 0 && (
-            <Badge variant="secondary" className="ml-1">
-              {versionCount}
-            </Badge>
-          )}
+          <Flex as="span" inline align="center" gap="xs">
+            <Typography variant="small" as="span" className="hidden sm:inline">
+              History
+            </Typography>
+            {versionCount !== undefined && versionCount > 0 ? (
+              <Badge variant="secondary">{versionCount}</Badge>
+            ) : null}
+          </Flex>
         </Button>
       </Tooltip>
 
       <Tooltip content="Import from Markdown file">
         <Button
           variant="unstyled"
-          chrome="documentHeaderAccent"
-          chromeSize="documentHeaderAction"
+          size="content"
           onClick={() => void onImportMarkdown()}
           disabled={!editorReady}
           leftIcon={<Icon icon={Upload} size="sm" aria-hidden="true" />}
           aria-label="Import from Markdown"
+          className={getDocumentHeaderActionButtonClassName("accent")}
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
             Import
@@ -288,12 +294,12 @@ function DocumentHeaderActions({
       <Tooltip content="Export as Markdown file">
         <Button
           variant="unstyled"
-          chrome="documentHeaderAccent"
-          chromeSize="documentHeaderAction"
+          size="content"
           onClick={() => void onExportMarkdown()}
           disabled={!editorReady}
           leftIcon={<Icon icon={Download} size="sm" aria-hidden="true" />}
           aria-label="Export as Markdown"
+          className={getDocumentHeaderActionButtonClassName("accent")}
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
             Export
@@ -357,32 +363,25 @@ export function DocumentHeader({
     }
   };
 
-  const titleComponent = (
-    <Typography
-      as="h2"
+  const titleComponent = document.isOwner ? (
+    <Card
+      variant="ghost"
+      hoverable
+      radius="md"
+      padding="none"
       data-testid={TEST_IDS.DOCUMENT.TITLE}
-      role={document.isOwner ? "button" : undefined}
-      tabIndex={document.isOwner ? 0 : undefined}
-      variant={document.isOwner ? "documentTitleInteractive" : "documentTitle"}
-      onClick={document.isOwner ? handleTitleEdit : undefined}
-      onKeyDown={
-        document.isOwner
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleTitleEdit();
-              }
-            }
-          : undefined
-      }
+      onClick={handleTitleEdit}
+      className="inline-flex self-start border-transparent px-2 py-1 shadow-none"
     >
-      {document.title}
-    </Typography>
+      <DocumentTitleText as="span">{document.title}</DocumentTitleText>
+    </Card>
+  ) : (
+    <DocumentTitleText data-testid={TEST_IDS.DOCUMENT.TITLE}>{document.title}</DocumentTitleText>
   );
 
   return (
     <Card recipe="documentHeaderShell" padding="md">
-      <div className="mx-auto w-full max-w-5xl">
+      <Container size="5xl">
         <Stack gap="sm">
           <Flex
             direction="column"
@@ -392,7 +391,7 @@ export function DocumentHeader({
             justify="between"
             gap="md"
           >
-            <FlexItem flex="1" className="w-full sm:w-auto">
+            <FlexItem flex="1" className={getDocumentHeaderResponsiveWidthClassName()}>
               {isEditingTitle ? (
                 <Input
                   type="text"
@@ -438,7 +437,7 @@ export function DocumentHeader({
             </MetadataItem>
           </Metadata>
         </Stack>
-      </div>
+      </Container>
     </Card>
   );
 }

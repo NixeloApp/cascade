@@ -155,7 +155,7 @@ function SidebarTeamProjects({
 
         {status === "CanLoadMore" && (
           <div className={getCardRecipeClassName("sidebarTeamLoadMore")}>
-            <Button variant="link" size="none" onClick={() => loadMore(10)}>
+            <Button variant="link" size="content" onClick={() => loadMore(10)}>
               <Typography variant="caption" color="brand">
                 Load more...
               </Typography>

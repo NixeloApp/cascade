@@ -123,7 +123,7 @@ function StoryCard({ audience, body, evidence, icon, iconTone, stat, statLabel, 
               <Icon icon={icon} size="md" tone={iconTone} />
             </IconCircle>
             <Stack gap="xs">
-              <Typography variant="pageHeaderEyebrow">{audience}</Typography>
+              <Typography variant="eyebrowWide">{audience}</Typography>
               <Typography variant="label">{statLabel}</Typography>
             </Stack>
           </Flex>
@@ -146,7 +146,7 @@ function StoryCard({ audience, body, evidence, icon, iconTone, stat, statLabel, 
           ))}
         </Stack>
 
-        <Button asChild variant="link" size="none">
+        <Button asChild variant="link" size="content">
           <a href="#product-showcase">
             See the connected workflow
             <Icon icon={ArrowRight} size="sm" />
@@ -161,7 +161,7 @@ function ProofEvidenceRow({ label, value }: EvidenceRow) {
   return (
     <Card recipe="overlayInset" variant="section" padding="sm">
       <Stack gap="xs">
-        <Typography variant="pageHeaderEyebrow">{label}</Typography>
+        <Typography variant="eyebrowWide">{label}</Typography>
         <Typography variant="caption">{value}</Typography>
       </Stack>
     </Card>

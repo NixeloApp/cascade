@@ -17,7 +17,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon as AppIcon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Popover } from "@/components/ui/Popover";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -213,21 +213,26 @@ export function NotificationItem({
             </Tooltip>
           )}
           {onSnooze && (
-            <Popover open={snoozePopoverOpen} onOpenChange={setSnoozePopoverOpen}>
-              <Tooltip content="Snooze">
-                <PopoverTrigger asChild>
-                  <IconButton
-                    variant="ghost"
-                    size="xs"
-                    reveal="responsive"
-                    onClick={(e) => e.stopPropagation()}
-                    aria-label="Snooze notification"
-                  >
-                    <AppIcon icon={Clock} size="xsPlus" />
-                  </IconButton>
-                </PopoverTrigger>
-              </Tooltip>
-              <PopoverContent align="end" recipe="notificationMenu" className="w-48">
+            <Popover
+              align="end"
+              className="w-48"
+              open={snoozePopoverOpen}
+              onOpenChange={setSnoozePopoverOpen}
+              recipe="notificationMenu"
+              tooltip={{ content: "Snooze" }}
+              trigger={
+                <IconButton
+                  variant="ghost"
+                  size="xs"
+                  reveal="responsive"
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Snooze notification"
+                >
+                  <AppIcon icon={Clock} size="xsPlus" />
+                </IconButton>
+              }
+            >
+              {() => (
                 <Stack gap="xs">
                   <Typography variant="label">Snooze until</Typography>
                   {SNOOZE_OPTIONS.map((option) => (
@@ -250,7 +255,7 @@ export function NotificationItem({
                     </Button>
                   ))}
                 </Stack>
-              </PopoverContent>
+              )}
             </Popover>
           )}
           <Tooltip content="Archive">

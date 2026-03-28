@@ -23,6 +23,10 @@ import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import {
+  getOrganizationSettingsHoursInputClassName,
+  getOrganizationSettingsNameInputClassName,
+} from "../ui/organizationSettingsSurfaceClassNames";
 import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
@@ -153,7 +157,7 @@ export function OrganizationSettings() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Acme Corp"
-              className="max-w-md"
+              className={getOrganizationSettingsNameInputClassName()}
             />
             <Typography variant="caption" color="secondary">
               Changing your organization name will also update your URL slug.
@@ -177,7 +181,7 @@ export function OrganizationSettings() {
                 onChange={(e) =>
                   setFormData({ ...formData, defaultMaxHoursPerWeek: Number(e.target.value) })
                 }
-                className="max-w-30"
+                className={getOrganizationSettingsHoursInputClassName()}
               />
               <Typography variant="caption" color="secondary">
                 Maximum hours a team member can log per week.
@@ -195,7 +199,7 @@ export function OrganizationSettings() {
                 onChange={(e) =>
                   setFormData({ ...formData, defaultMaxHoursPerDay: Number(e.target.value) })
                 }
-                className="max-w-30"
+                className={getOrganizationSettingsHoursInputClassName()}
               />
               <Typography variant="caption" color="secondary">
                 Maximum hours a team member can log per day.

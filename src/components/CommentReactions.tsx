@@ -14,9 +14,10 @@ import { Smile } from "@/lib/icons";
 import { showError } from "@/lib/toast";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
 import { Button } from "./ui/Button";
+import { getReactionPillButtonClassName } from "./ui/buttonSurfaceClassNames";
 import { Flex } from "./ui/Flex";
 import { IconButton } from "./ui/IconButton";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
+import { Popover } from "./ui/Popover";
 import { Tooltip } from "./ui/Tooltip";
 
 interface CommentReactionsProps {
@@ -49,43 +50,48 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
           <Tooltip key={reaction.emoji} content={hasReacted ? "Remove reaction" : "Add reaction"}>
             <Button
               variant="unstyled"
-              chrome={hasReacted ? "reactionActive" : "reaction"}
-              chromeSize="reactionPill"
+              size="content"
               onClick={() => handleToggle(reaction.emoji)}
               aria-label={`${reaction.emoji} reaction, ${reaction.userIds.length} vote${reaction.userIds.length === 1 ? "" : "s"}`}
               aria-pressed={hasReacted}
+              className={getReactionPillButtonClassName(Boolean(hasReacted))}
             >
-              <span>{reaction.emoji}</span>
-              <span>{reaction.userIds.length}</span>
+              {`${reaction.emoji} ${reaction.userIds.length}`}
             </Button>
           </Tooltip>
         );
       })}
 
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <Tooltip content="Add reaction">
-          <PopoverTrigger asChild>
-            <IconButton size="xs" aria-label="Add reaction">
-              <Smile size={16} />
-            </IconButton>
-          </PopoverTrigger>
-        </Tooltip>
-        <PopoverContent side="top" align="start" recipe="reactionPicker">
+      <Popover
+        align="start"
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        recipe="reactionPicker"
+        side="top"
+        tooltip={{ content: "Add reaction" }}
+        trigger={
+          <IconButton size="xs" aria-label="Add reaction">
+            <Smile size={16} />
+          </IconButton>
+        }
+      >
+        {() => (
           <Flex gap="xs">
             {COMMON_EMOJIS.map((emoji) => (
               <Tooltip key={emoji} content={emoji}>
                 <Button
                   variant="ghost"
-                  size="iconSm"
+                  size="icon"
                   onClick={() => handleToggle(emoji)}
                   aria-label={`React with ${emoji}`}
+                  className="size-8"
                 >
                   {emoji}
                 </Button>
               </Tooltip>
             ))}
           </Flex>
-        </PopoverContent>
+        )}
       </Popover>
     </Flex>
   );

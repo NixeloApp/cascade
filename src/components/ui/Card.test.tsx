@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
-import { Card, CardBody, CardHeader, cardRecipeVariants } from "./Card";
+import { Card, CardBody, CardHeader, getCardRecipeClassName } from "./Card";
 
 describe("Card", () => {
   describe("Basic Rendering", () => {
@@ -362,6 +362,13 @@ describe("CardHeader", () => {
 
       expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
     });
+
+    it("should render a badge alongside the title", () => {
+      render(<CardHeader title="Title" badge={<span>Active</span>} />);
+
+      expect(screen.getByRole("heading", { name: "Title" })).toBeInTheDocument();
+      expect(screen.getByText("Active")).toBeInTheDocument();
+    });
   });
 
   describe("Description", () => {
@@ -486,9 +493,9 @@ describe("CardHeader", () => {
   });
 });
 
-describe("cardRecipeVariants", () => {
+describe("getCardRecipeClassName", () => {
   it("returns the expected classes for control rail surfaces", () => {
-    const classes = cardRecipeVariants({ recipe: "controlRail" });
+    const classes = getCardRecipeClassName("controlRail");
     expect(classes).toContain("rounded-full");
     expect(classes).toContain("shadow-card");
     expect(classes).toContain("backdrop-blur-xl");

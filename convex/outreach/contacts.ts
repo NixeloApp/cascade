@@ -10,7 +10,133 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
+import { validateEmail } from "../lib/constrainedValidators";
 import { conflict, notFound, validation } from "../lib/errors";
+
+const IMPORT_RESULT_SAMPLE_LIMIT = 5;
+
+export interface OutreachContactImportInput {
+  company?: string;
+  customFields?: Record<string, string>;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  tags?: string[];
+  timezone?: string;
+}
+
+export interface OutreachContactImportBatchResult {
+  imported: number;
+  sampleExistingEmails: string[];
+  sampleInvalidEmails: string[];
+  sampleSuppressedEmails: string[];
+  skipped: number;
+  skippedExisting: number;
+  skippedInvalid: number;
+  skippedSuppressed: number;
+}
+
+interface OutreachContactImportStorage {
+  findExistingContact: (
+    organizationId: Id<"organizations">,
+    email: string,
+  ) => Promise<{ _id: string } | null>;
+  findSuppression: (
+    organizationId: Id<"organizations">,
+    email: string,
+  ) => Promise<{ _id: string } | null>;
+  insertContact: (contact: {
+    company?: string;
+    createdAt: number;
+    createdBy: Id<"users">;
+    customFields?: Record<string, string>;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    organizationId: Id<"organizations">;
+    source: "csv_import";
+    tags?: string[];
+    timezone?: string;
+  }) => Promise<unknown>;
+}
+
+function createImportBatchResult(): OutreachContactImportBatchResult {
+  return {
+    imported: 0,
+    sampleExistingEmails: [],
+    sampleInvalidEmails: [],
+    sampleSuppressedEmails: [],
+    skipped: 0,
+    skippedExisting: 0,
+    skippedInvalid: 0,
+    skippedSuppressed: 0,
+  };
+}
+
+function pushImportResultSample(samples: string[], email: string) {
+  if (samples.length >= IMPORT_RESULT_SAMPLE_LIMIT || samples.includes(email)) {
+    return;
+  }
+
+  samples.push(email);
+}
+
+export async function importContactsForOrganization(
+  storage: OutreachContactImportStorage,
+  organizationId: Id<"organizations">,
+  userId: Id<"users">,
+  contacts: OutreachContactImportInput[],
+): Promise<OutreachContactImportBatchResult> {
+  const result = createImportBatchResult();
+
+  for (const contact of contacts) {
+    const email = contact.email.toLowerCase().trim();
+
+    try {
+      validateEmail(email);
+    } catch {
+      result.skipped += 1;
+      result.skippedInvalid += 1;
+      pushImportResultSample(result.sampleInvalidEmails, email);
+      continue;
+    }
+
+    const existing = await storage.findExistingContact(organizationId, email);
+
+    if (existing) {
+      result.skipped += 1;
+      result.skippedExisting += 1;
+      pushImportResultSample(result.sampleExistingEmails, email);
+      continue;
+    }
+
+    const suppressed = await storage.findSuppression(organizationId, email);
+
+    if (suppressed) {
+      result.skipped += 1;
+      result.skippedSuppressed += 1;
+      pushImportResultSample(result.sampleSuppressedEmails, email);
+      continue;
+    }
+
+    await storage.insertContact({
+      organizationId,
+      email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      company: contact.company,
+      timezone: contact.timezone,
+      customFields: contact.customFields,
+      tags: contact.tags,
+      source: "csv_import",
+      createdBy: userId,
+      createdAt: Date.now(),
+    });
+    result.imported += 1;
+  }
+
+  return result;
+}
 
 // =============================================================================
 // Queries
@@ -119,58 +245,28 @@ export const importBatch = authenticatedMutation({
     const user = await ctx.db.get(ctx.userId);
     if (!user?.defaultOrganizationId) throw validation("organization", "No default organization");
 
-    const orgId = user.defaultOrganizationId;
-    let imported = 0;
-    let skipped = 0;
-
-    for (const contact of args.contacts) {
-      const email = contact.email.toLowerCase().trim();
-
-      // Skip invalid emails
-      if (!email.includes("@")) {
-        skipped++;
-        continue;
-      }
-
-      // Deduplicate
-      const existing = await ctx.db
-        .query("outreachContacts")
-        .withIndex("by_organization_email", (q) => q.eq("organizationId", orgId).eq("email", email))
-        .first();
-
-      if (existing) {
-        skipped++;
-        continue;
-      }
-
-      // Check suppression list
-      const suppressed = await ctx.db
-        .query("outreachSuppressions")
-        .withIndex("by_organization_email", (q) => q.eq("organizationId", orgId).eq("email", email))
-        .first();
-
-      if (suppressed) {
-        skipped++;
-        continue;
-      }
-
-      await ctx.db.insert("outreachContacts", {
-        organizationId: orgId,
-        email,
-        firstName: contact.firstName,
-        lastName: contact.lastName,
-        company: contact.company,
-        timezone: contact.timezone,
-        customFields: contact.customFields,
-        tags: contact.tags,
-        source: "csv_import",
-        createdBy: ctx.userId,
-        createdAt: Date.now(),
-      });
-      imported++;
-    }
-
-    return { imported, skipped };
+    return await importContactsForOrganization(
+      {
+        findExistingContact: (organizationId, email) =>
+          ctx.db
+            .query("outreachContacts")
+            .withIndex("by_organization_email", (q) =>
+              q.eq("organizationId", organizationId).eq("email", email),
+            )
+            .first(),
+        findSuppression: (organizationId, email) =>
+          ctx.db
+            .query("outreachSuppressions")
+            .withIndex("by_organization_email", (q) =>
+              q.eq("organizationId", organizationId).eq("email", email),
+            )
+            .first(),
+        insertContact: (contact) => ctx.db.insert("outreachContacts", contact),
+      },
+      user.defaultOrganizationId,
+      ctx.userId,
+      args.contacts,
+    );
   },
 });
 

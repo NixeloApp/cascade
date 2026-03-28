@@ -6,6 +6,8 @@ import { Bot } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getAlertCountBadgeClassName } from "../ui/badgeSurfaceClassNames";
+import { getAiAssistantFabButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { Icon } from "../ui/Icon";
 import { AI_CONFIG } from "./config";
 
@@ -66,20 +68,27 @@ export function AIAssistantButton({
 
   return (
     <Button
-      variant="assistantFab"
-      size="none"
+      variant="unstyled"
+      size="content"
       onClick={onClick}
-      className={cn("fixed", positionClasses, getFabSizeClasses(size), "z-30 group", className)}
+      className={cn(
+        getAiAssistantFabButtonClassName(),
+        positionClasses,
+        getFabSizeClasses(size),
+        className,
+      )}
       title={tooltipText}
       aria-label={ariaLabel}
     >
       <Icon icon={Bot} size="lg" />
       {unreadCount > 0 && (
         <Badge
-          variant="alertCount"
-          size="fabAlertCount"
+          variant="error"
           shape="pill"
-          className="absolute -top-1 -right-1 animate-pulse"
+          className={cn(
+            getAlertCountBadgeClassName("fab"),
+            "absolute -top-1 -right-1 animate-pulse",
+          )}
         >
           {displayCount}
         </Badge>

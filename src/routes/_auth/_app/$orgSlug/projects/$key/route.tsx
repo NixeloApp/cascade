@@ -3,6 +3,7 @@ import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-rout
 import { PageContent, PageControls, PageError, PageHeader, PageStack } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getProjectHeaderKeyBadgeClassName } from "@/components/ui/badgeSurfaceClassNames";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Inline } from "@/components/ui/Inline";
 import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -167,7 +169,7 @@ function ProjectSectionNav({
                   className="gap-1"
                   aria-label="More project sections"
                 >
-                  <span>More</span>
+                  <Inline>More</Inline>
                   <Icon icon={ChevronDown} size="xs" tone="tertiary" />
                 </Button>
               </RouteNavItem>
@@ -245,7 +247,11 @@ export function ProjectLayout() {
             spacing="stack"
             actions={
               <>
-                <Badge variant="projectHeaderKey" shape="pill">
+                <Badge
+                  variant="secondary"
+                  shape="pill"
+                  className={getProjectHeaderKeyBadgeClassName()}
+                >
                   {project.key}
                 </Badge>
                 <Badge variant="neutral" size="sm">

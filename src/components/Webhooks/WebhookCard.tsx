@@ -37,7 +37,9 @@ export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
                 {webhook.isActive ? "Active" : "Inactive"}
               </Badge>
             </Flex>
-            <Typography variant="monoWrap">{webhook.url}</Typography>
+            <Typography variant="mono" className="break-all">
+              {webhook.url}
+            </Typography>
             <Flex wrap gap="xs">
               {webhook.events.map((event) => (
                 <Badge key={event} variant="brand" size="sm">

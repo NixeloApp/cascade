@@ -1857,7 +1857,8 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_organization", ["organizationId"])
     .index("by_user_provider", ["userId", "provider"])
-    .index("by_active", ["isActive"]),
+    .index("by_active", ["isActive"])
+    .index("by_active_and_provider", ["isActive", "provider"]),
 
   // Single-use OAuth state nonces for outreach mailbox connection flows
   outreachOAuthNonces: defineTable({
@@ -1957,8 +1958,10 @@ const applicationTables = {
   })
     .index("by_enrollment", ["enrollmentId"])
     .index("by_sequence", ["sequenceId"])
+    .index("by_sequence_and_created_at", ["sequenceId", "createdAt"])
     .index("by_type", ["type"])
     .index("by_organization_type", ["organizationId", "type"])
+    .index("by_organization_and_created_at", ["organizationId", "createdAt"])
     .index("by_created_at", ["createdAt"]),
 
   // Click tracking URL mapping — linkId → original URL

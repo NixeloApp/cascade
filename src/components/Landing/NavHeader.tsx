@@ -1,6 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { Button } from "@/components/ui/Button";
+import {
+  getLandingBrandButtonClassName,
+  getLandingNavButtonClassName,
+  getLandingPrimaryButtonClassName,
+  getLandingThemeButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import {
@@ -13,6 +19,8 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Inline } from "@/components/ui/Inline";
+import { ResponsiveText } from "@/components/ui/ResponsiveText";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -43,8 +51,8 @@ export function NavHeader() {
             <Button
               asChild
               variant="unstyled"
-              chrome="landingBrandLink"
-              chromeSize="landingBrandLink"
+              size="content"
+              className={getLandingBrandButtonClassName()}
             >
               <Link to={ROUTES.home.path}>
                 <NixeloLogo />
@@ -63,8 +71,8 @@ export function NavHeader() {
                   key={item.label}
                   asChild
                   variant="unstyled"
-                  chrome="landingNavLink"
-                  chromeSize="landingNavPill"
+                  size="content"
+                  className={getLandingNavButtonClassName()}
                 >
                   <a href={item.href}>{item.label}</a>
                 </Button>
@@ -76,12 +84,12 @@ export function NavHeader() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="unstyled"
-                    chrome="landingThemeToggle"
-                    chromeSize="landingThemeToggle"
+                    size="icon"
+                    className={getLandingThemeButtonClassName()}
                   >
                     <Sun className="h-icon-theme-toggle w-icon-theme-toggle rotate-0 scale-100 transition-all duration-default" />
                     <Moon className="absolute h-icon-theme-toggle w-icon-theme-toggle rotate-90 scale-0 transition-all duration-default" />
-                    <span className="sr-only">Toggle theme</span>
+                    <Inline className="sr-only">Toggle theme</Inline>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -110,9 +118,8 @@ export function NavHeader() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="unstyled"
-                    chrome="landingNavLink"
-                    chromeSize="landingNavPill"
-                    className="lg:hidden"
+                    size="content"
+                    className={cn(getLandingNavButtonClassName(), "lg:hidden")}
                   >
                     <Icon icon={Menu} size="sm" />
                     Menu
@@ -150,30 +157,28 @@ export function NavHeader() {
                 <Button
                   asChild
                   variant="unstyled"
-                  chrome="landingNavLink"
-                  chromeSize="landingNavPill"
-                  className="hidden lg:inline-flex"
+                  size="content"
+                  className={cn(getLandingNavButtonClassName(), "hidden lg:inline-flex")}
                 >
                   <Link to={ROUTES.signin.path}>Sign in</Link>
                 </Button>
                 <Button
                   asChild
-                  variant="landingPrimary"
-                  size="none"
-                  className="hidden sm:inline-flex"
+                  variant="unstyled"
+                  size="content"
+                  className={cn(getLandingPrimaryButtonClassName(), "hidden sm:inline-flex")}
                 >
                   <Link to={ROUTES.signup.path}>
-                    <span className="hidden md:inline">Get Started</span>
-                    <span className="md:hidden">Start</span>
+                    <ResponsiveText short="Start" long="Get Started" breakpoint="md" />
                   </Link>
                 </Button>
               </Unauthenticated>
               <Authenticated>
                 <Button
                   asChild
-                  variant="landingPrimary"
-                  size="none"
-                  className="hidden sm:inline-flex"
+                  variant="unstyled"
+                  size="content"
+                  className={cn(getLandingPrimaryButtonClassName(), "hidden sm:inline-flex")}
                 >
                   <Link to={ROUTES.app.path}>Go to App</Link>
                 </Button>

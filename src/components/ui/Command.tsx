@@ -1,9 +1,8 @@
 /**
- * Command Palette
+ * Command menu wrapper built on cmdk.
  *
- * Command menu component built on cmdk library.
- * Provides search input, item groups, and keyboard navigation.
- * Used in global search and command dialogs.
+ * The wrapper owns the search input, list sections, empty/loading states,
+ * and item/group rendering so feature code never imports cmdk subcomponents.
  */
 
 "use client";
@@ -12,8 +11,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
 import * as React from "react";
-import { cardRecipeVariants } from "@/components/ui/Card";
+import { getCardRecipeClassName } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
+import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
 
 const commandVariants = cva("flex h-full w-full flex-col overflow-hidden text-ui-text", {
@@ -28,14 +28,6 @@ const commandVariants = cva("flex h-full w-full flex-col overflow-hidden text-ui
     recipe: "default",
   },
 });
-
-type CommandProps = React.ComponentProps<typeof CommandPrimitive> &
-  VariantProps<typeof commandVariants>;
-
-const Command = ({ className, recipe, ...props }: CommandProps) => (
-  <CommandPrimitive className={cn(commandVariants({ recipe }), className)} {...props} />
-);
-Command.displayName = CommandPrimitive.displayName;
 
 const commandListVariants = cva("min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-3", {
   variants: {
@@ -84,7 +76,7 @@ const commandItemVariants = cva(
         default: "",
         palette: "cursor-pointer data-[selected=true]:bg-brand-subtle",
         slashMenu:
-          "mx-1 rounded border-transparent px-2 py-2 cursor-pointer data-[selected=true]:border-transparent data-[selected=true]:bg-ui-bg-hover data-[selected=true]:shadow-none [&_svg]:text-ui-text-secondary",
+          "mx-1 cursor-pointer rounded border-transparent px-2 py-2 data-[selected=true]:border-transparent data-[selected=true]:bg-ui-bg-hover data-[selected=true]:shadow-none [&_svg]:text-ui-text-secondary",
       },
     },
     defaultVariants: {
@@ -93,19 +85,222 @@ const commandItemVariants = cva(
   },
 );
 
-interface CommandDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  children: React.ReactNode;
-  title?: string;
-  description?: string;
-  onFocusOutside?: React.ComponentProps<typeof Dialog>["onFocusOutside"];
+type CommandRecipe = VariantProps<typeof commandVariants>["recipe"];
+type CommandViewport = VariantProps<typeof commandListVariants>["viewport"];
+type CommandEmptyTone = VariantProps<typeof commandEmptyVariants>["tone"];
+type CommandGroupRecipe = VariantProps<typeof commandGroupVariants>["recipe"];
+type CommandItemRecipe = VariantProps<typeof commandItemVariants>["recipe"];
+
+export interface CommandSearchConfig {
+  ariaLabel?: string;
+  className?: string;
+  placeholder?: string;
+  testId?: string;
+  value: string;
+  onValueChange: (value: string) => void;
 }
 
+export interface CommandItemConfig {
+  className?: string;
+  disabled?: boolean;
+  keywords?: string[];
+  onSelect?: (value: string) => void;
+  recipe?: CommandItemRecipe;
+  render: React.ReactNode;
+  selected?: boolean;
+  testId?: string;
+  value: string;
+}
+
+export interface CommandGroupSection {
+  className?: string;
+  heading?: string;
+  id: string;
+  items: readonly CommandItemConfig[];
+  recipe?: CommandGroupRecipe;
+  testId?: string;
+  type?: "group";
+}
+
+export interface CommandContentSection {
+  className?: string;
+  content: React.ReactNode;
+  id: string;
+  testId?: string;
+  type: "content";
+}
+
+export type CommandSection = CommandContentSection | CommandGroupSection;
+
+type CommandPrimitiveProps = Omit<
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive>,
+  "children"
+>;
+
+export interface CommandProps extends CommandPrimitiveProps, VariantProps<typeof commandVariants> {
+  emptyMessage?: string;
+  emptyTone?: CommandEmptyTone;
+  footer?: React.ReactNode;
+  groupRecipe?: CommandGroupRecipe;
+  header?: React.ReactNode;
+  itemRecipe?: CommandItemRecipe;
+  listClassName?: string;
+  listTestId?: string;
+  loading?: boolean;
+  loadingContent?: React.ReactNode;
+  loadingMessage?: string;
+  recipe?: CommandRecipe;
+  search?: CommandSearchConfig;
+  sections?: readonly CommandSection[];
+  viewport?: CommandViewport;
+}
+
+interface CommandDialogProps {
+  children: React.ReactNode;
+  description?: string;
+  onFocusOutside?: React.ComponentProps<typeof Dialog>["onFocusOutside"];
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  title?: string;
+}
+
+function renderSection(
+  section: CommandSection,
+  defaultGroupRecipe?: CommandGroupRecipe,
+  defaultItemRecipe?: CommandItemRecipe,
+) {
+  if (section.type === "content") {
+    if (!section.className && !section.testId) {
+      return <React.Fragment key={section.id}>{section.content}</React.Fragment>;
+    }
+
+    return (
+      <div key={section.id} className={section.className} data-testid={section.testId}>
+        {section.content}
+      </div>
+    );
+  }
+
+  if (section.items.length === 0) {
+    return null;
+  }
+
+  return (
+    <CommandPrimitive.Group
+      key={section.id}
+      className={cn(
+        getCardRecipeClassName("commandSection"),
+        commandGroupVariants({ recipe: section.recipe ?? defaultGroupRecipe }),
+        section.className,
+      )}
+      data-testid={section.testId}
+      heading={section.heading}
+    >
+      {section.items.map((item) => (
+        <CommandPrimitive.Item
+          key={`${section.id}-${item.value}`}
+          className={cn(
+            commandItemVariants({ recipe: item.recipe ?? defaultItemRecipe }),
+            item.className,
+          )}
+          data-selected={item.selected ? "true" : undefined}
+          data-testid={item.testId}
+          disabled={item.disabled}
+          keywords={item.keywords}
+          onSelect={item.onSelect}
+          value={item.value}
+        >
+          {item.render}
+        </CommandPrimitive.Item>
+      ))}
+    </CommandPrimitive.Group>
+  );
+}
+
+export const Command = React.forwardRef<React.ElementRef<typeof CommandPrimitive>, CommandProps>(
+  (
+    {
+      className,
+      emptyMessage,
+      emptyTone,
+      footer,
+      groupRecipe,
+      header,
+      itemRecipe,
+      listClassName,
+      listTestId,
+      loading = false,
+      loadingContent,
+      loadingMessage = "Loading...",
+      recipe,
+      search,
+      sections = [],
+      viewport,
+      ...props
+    },
+    ref,
+  ) => (
+    <CommandPrimitive ref={ref} className={cn(commandVariants({ recipe }), className)} {...props}>
+      {search ? (
+        <div
+          className={cn(getCardRecipeClassName("overlayInset"), "mx-4 mt-4 flex items-center px-3")}
+          cmdk-input-wrapper=""
+        >
+          <Search className="mr-2 h-4 w-4 shrink-0 text-ui-text-tertiary" />
+          <CommandPrimitive.Input
+            aria-label={search.ariaLabel}
+            className={cn(
+              "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-ui-text-tertiary disabled:cursor-not-allowed disabled:opacity-50",
+              search.className,
+            )}
+            data-testid={search.testId}
+            placeholder={search.placeholder}
+            value={search.value}
+            onValueChange={search.onValueChange}
+          />
+        </div>
+      ) : null}
+
+      {header}
+
+      <CommandPrimitive.List
+        className={cn(commandListVariants({ viewport }), listClassName)}
+        data-testid={listTestId}
+      >
+        {loading
+          ? (loadingContent ?? (
+              <div className={commandEmptyVariants({ tone: emptyTone })}>
+                <Typography variant="small" color={emptyTone === "muted" ? "secondary" : undefined}>
+                  {loadingMessage}
+                </Typography>
+              </div>
+            ))
+          : null}
+
+        {!loading && emptyMessage ? (
+          <CommandPrimitive.Empty className={commandEmptyVariants({ tone: emptyTone })}>
+            <Typography variant="small" color={emptyTone === "muted" ? "secondary" : undefined}>
+              {emptyMessage}
+            </Typography>
+          </CommandPrimitive.Empty>
+        ) : null}
+
+        {!loading
+          ? sections.map((section) => renderSection(section, groupRecipe, itemRecipe))
+          : null}
+      </CommandPrimitive.List>
+
+      {footer}
+    </CommandPrimitive>
+  ),
+);
+
+Command.displayName = CommandPrimitive.displayName;
+
 /**
- * CommandDialog - Command palette wrapped in a dialog.
+ * CommandDialog - command palette shell wrapped in a dialog.
  */
-function CommandDialog({
+export function CommandDialog({
   open,
   onOpenChange,
   children,
@@ -123,128 +318,9 @@ function CommandDialog({
       description={description}
       onFocusOutside={onFocusOutside}
     >
-      <Command className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:pb-2 [&_[cmdk-group-heading]]:pt-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-ui-text-tertiary [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-2 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+      <div className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:pb-2 [&_[cmdk-group-heading]]:pt-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-ui-text-tertiary [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-2 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
         {children}
-      </Command>
+      </div>
     </Dialog>
   );
 }
-
-const CommandInput = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
-  <div
-    className={cn(
-      cardRecipeVariants({ recipe: "overlayInset" }),
-      "mx-4 mt-4 flex items-center px-3",
-    )}
-    cmdk-input-wrapper=""
-  >
-    <Search className="mr-2 h-4 w-4 shrink-0 text-ui-text-tertiary" />
-    <CommandPrimitive.Input
-      ref={ref}
-      className={cn(
-        "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-ui-text-tertiary disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    />
-  </div>
-));
-
-CommandInput.displayName = CommandPrimitive.Input.displayName;
-
-const CommandList = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List> &
-    VariantProps<typeof commandListVariants>
->(({ className, viewport, ...props }, ref) => (
-  <CommandPrimitive.List
-    ref={ref}
-    className={cn(commandListVariants({ viewport }), className)}
-    {...props}
-  />
-));
-
-CommandList.displayName = CommandPrimitive.List.displayName;
-
-const CommandEmpty = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive.Empty>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty> &
-    VariantProps<typeof commandEmptyVariants>
->(({ className, tone, ...props }, ref) => (
-  <CommandPrimitive.Empty
-    ref={ref}
-    className={cn(commandEmptyVariants({ tone }), className)}
-    {...props}
-  />
-));
-
-CommandEmpty.displayName = CommandPrimitive.Empty.displayName;
-
-const CommandGroup = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive.Group>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group> &
-    VariantProps<typeof commandGroupVariants>
->(({ className, recipe, ...props }, ref) => (
-  <CommandPrimitive.Group
-    ref={ref}
-    className={cn(
-      cardRecipeVariants({ recipe: "commandSection" }),
-      commandGroupVariants({ recipe }),
-      className,
-    )}
-    {...props}
-  />
-));
-
-CommandGroup.displayName = CommandPrimitive.Group.displayName;
-
-const CommandSeparator = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive.Separator>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
->(({ className, ...props }, ref) => (
-  <CommandPrimitive.Separator
-    ref={ref}
-    className={cn("-mx-1 h-px bg-ui-border", className)}
-    {...props}
-  />
-));
-CommandSeparator.displayName = CommandPrimitive.Separator.displayName;
-
-const CommandItem = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item> &
-    VariantProps<typeof commandItemVariants>
->(({ className, recipe, ...props }, ref) => (
-  <CommandPrimitive.Item
-    ref={ref}
-    className={cn(commandItemVariants({ recipe }), className)}
-    {...props}
-  />
-));
-
-CommandItem.displayName = CommandPrimitive.Item.displayName;
-
-const CommandShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => {
-  return (
-    <span
-      className={cn("ml-auto text-xs tracking-widest text-ui-text-tertiary", className)}
-      {...props}
-    />
-  );
-};
-CommandShortcut.displayName = "CommandShortcut";
-
-export {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-};

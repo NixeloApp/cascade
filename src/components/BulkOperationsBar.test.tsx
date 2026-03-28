@@ -7,33 +7,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { BulkOperationsBar } from "./BulkOperationsBar";
 
-// Mock Radix Select to use native select for testability
-vi.mock("./ui/Select", () => ({
-  Select: ({ children }: { children: React.ReactNode; onValueChange: (value: string) => void }) => (
-    <div data-testid="select-root">{children}</div>
-  ),
-  SelectTrigger: ({
-    children,
-    className,
-    ...props
-  }: {
-    children: React.ReactNode;
-    className?: string;
-  }) => (
-    <button type="button" className={className} data-testid="select-trigger" {...props}>
-      {children}
-    </button>
-  ),
-  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
-  SelectContent: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="select-content">{children}</div>
-  ),
-  SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => (
-    <button type="button" data-testid={`select-item-${value}`} data-value={value}>
-      {children}
-    </button>
-  ),
-}));
+vi.mock("./ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 // Mock dependencies
 vi.mock("convex/react", () => ({
@@ -517,19 +491,19 @@ describe("BulkOperationsBar - Component Behavior", () => {
 
       // Check Status
       const statusLabel = screen.getByText("Status");
-      const statusTrigger = screen.getAllByTestId("select-trigger")[0];
+      const statusTrigger = screen.getByLabelText("Status");
       expect(statusLabel.tagName).toBe("LABEL");
       expect(statusLabel).toHaveAttribute("for", statusTrigger.id);
 
       // Check Priority
       const priorityLabel = screen.getByText("Priority");
-      const priorityTrigger = screen.getAllByTestId("select-trigger")[1];
+      const priorityTrigger = screen.getByLabelText("Priority");
       expect(priorityLabel.tagName).toBe("LABEL");
       expect(priorityLabel).toHaveAttribute("for", priorityTrigger.id);
 
       // Check Assignee
       const assigneeLabel = screen.getByText("Assignee");
-      const assigneeTrigger = screen.getAllByTestId("select-trigger")[2];
+      const assigneeTrigger = screen.getByLabelText("Assignee");
       expect(assigneeLabel.tagName).toBe("LABEL");
       expect(assigneeLabel).toHaveAttribute("for", assigneeTrigger.id);
 

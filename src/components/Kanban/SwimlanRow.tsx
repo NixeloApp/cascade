@@ -11,6 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { Button } from "@/components/ui/Button";
+import { getSwimlaneHeaderButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -82,10 +83,10 @@ export function SwimlanRow({
       <Button
         onClick={handleToggle}
         variant="unstyled"
-        chrome="swimlaneHeader"
-        chromeSize="swimlaneHeader"
+        size="content"
         aria-expanded={!isCollapsed}
         aria-controls={`swimlane-${config.id}`}
+        className={getSwimlaneHeaderButtonClassName()}
       >
         {isCollapsed ? (
           <Icon icon={ChevronRight} size="sm" tone="tertiary" />

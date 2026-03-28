@@ -5,6 +5,7 @@ import { Mail } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import { Inline } from "../ui/Inline";
 
 interface AuthEmailFormSectionProps {
   open: boolean;
@@ -33,7 +34,7 @@ export function AuthEmailFormSection({
     <Stack gap={open ? "md" : "sm"} className={className}>
       {open ? (
         <Stack gap="md" className="animate-fade-in" data-testid={TEST_IDS.AUTH.EMAIL_FORM}>
-          <span data-testid={TEST_IDS.AUTH.FORM_READY} hidden aria-hidden="true" />
+          <Inline data-testid={TEST_IDS.AUTH.FORM_READY} hidden aria-hidden="true" />
           {children}
         </Stack>
       ) : null}

@@ -10,17 +10,33 @@
 
 import { DAY } from "@convex/lib/timeUtils";
 import type { Value } from "platejs";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getSectionToggleButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
+import {
+  getDocumentSidebarClosedToggleClassName,
+  getDocumentSidebarEmptyContentsClassName,
+  getDocumentSidebarHeaderClassName,
+  getDocumentSidebarInfoRowClassName,
+  getDocumentSidebarSectionBodyClassName,
+  getDocumentSidebarSectionChevronClassName,
+  getDocumentSidebarSectionClassName,
+  getDocumentSidebarSectionTitleClassName,
+  getDocumentSidebarShellClassName,
+  getDocumentSidebarTocButtonClassName,
+  getDocumentSidebarTocIconClassName,
+  getDocumentSidebarTocTextClassName,
+} from "@/components/ui/documentSidebarSurfaceClassNames";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
+import { Inline } from "@/components/ui/Inline";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
-import { getDocumentHeadingAnchorId } from "@/lib/documents/headingAnchors";
+import { getDocumentHeadingAnchorElement } from "@/lib/documents/headingAnchors";
 import {
   ChevronDown,
   FileText,
@@ -60,6 +76,18 @@ interface DocumentSidebarProps {
   onHeadingClick?: (headingId: string) => void;
 }
 
+const MIN_HEADING_LEVEL = 1;
+const MAX_HEADING_LEVEL = 6;
+const BASE_HEADING_INDENT_PX = 8;
+const HEADING_LEVEL_INDENT_STEP_PX = 12;
+
+function getHeadingIndentStyle(level: number): CSSProperties {
+  const normalizedLevel = Math.min(MAX_HEADING_LEVEL, Math.max(MIN_HEADING_LEVEL, level));
+  return {
+    paddingLeft: `${(normalizedLevel - MIN_HEADING_LEVEL) * HEADING_LEVEL_INDENT_STEP_PX + BASE_HEADING_INDENT_PX}px`,
+  };
+}
+
 /**
  * Section wrapper with collapsible header
  */
@@ -77,26 +105,30 @@ function SidebarSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <section className="border-b border-ui-border/30 last:border-b-0">
+    <section className={getDocumentSidebarSectionClassName()}>
       <Button
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        chromeSize="sectionToggle"
+        className={getSectionToggleButtonClassName()}
       >
         <Flex align="center" gap="sm">
           <Icon icon={SectionIcon} size="sm" />
-          <Typography variant="eyebrow" as="span" className="text-left">
+          <Typography
+            variant="eyebrow"
+            as="span"
+            className={getDocumentSidebarSectionTitleClassName()}
+          >
             {title}
           </Typography>
         </Flex>
         <Icon
           icon={ChevronDown}
           size="xs"
-          className={cn("transition-transform duration-default", !isOpen && "-rotate-90")}
+          className={getDocumentSidebarSectionChevronClassName(isOpen)}
         />
       </Button>
-      {isOpen && <div className="p-2 pt-0">{children}</div>}
+      {isOpen && <div className={getDocumentSidebarSectionBodyClassName()}>{children}</div>}
     </section>
   );
 }
@@ -184,7 +216,7 @@ function TableOfContents({
 }) {
   if (headings.length === 0) {
     return (
-      <div className="p-1 text-ui-text-tertiary">
+      <div className={getDocumentSidebarEmptyContentsClassName()}>
         <Flex align="center" gap="sm">
           <Icon icon={FileText} size="sm" />
           <Typography variant="small">No headings found</Typography>
@@ -201,12 +233,17 @@ function TableOfContents({
           variant="ghost"
           size="sm"
           onClick={() => onHeadingClick?.(heading.id)}
-          className="justify-start w-full truncate text-ui-text-secondary"
-          style={{ paddingLeft: `${(heading.level - 1) * 12 + 8}px` }}
+          className={getDocumentSidebarTocButtonClassName()}
+          style={getHeadingIndentStyle(heading.level)}
           title={heading.text}
         >
-          <Icon icon={Hash} size="xs" tone="tertiary" className="shrink-0" />
-          <span className="truncate">{heading.text}</span>
+          <Icon
+            icon={Hash}
+            size="xs"
+            tone="tertiary"
+            className={getDocumentSidebarTocIconClassName()}
+          />
+          <Inline className={getDocumentSidebarTocTextClassName()}>{heading.text}</Inline>
         </Button>
       ))}
     </Stack>
@@ -220,7 +257,12 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   const isPlainValue = typeof value === "string" || typeof value === "number";
 
   return (
-    <div className={cn(getCardRecipeClassName("documentSidebarInfoRow"), "p-1")}>
+    <div
+      className={cn(
+        getCardRecipeClassName("documentSidebarInfoRow"),
+        getDocumentSidebarInfoRowClassName(),
+      )}
+    >
       <Flex align="center" justify="between">
         <Typography variant="small" color="secondary">
           {label}
@@ -255,7 +297,7 @@ export function DocumentSidebar({
   // Handle heading click - scroll to element
   const handleHeadingClick = (headingId: string) => {
     onHeadingClick?.(headingId);
-    const element = document.getElementById(getDocumentHeadingAnchorId(headingId));
+    const element = getDocumentHeadingAnchorElement(headingId);
     if (element instanceof HTMLElement) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
     }
@@ -267,7 +309,7 @@ export function DocumentSidebar({
         variant="ghost"
         size="icon"
         onClick={onToggle}
-        className="fixed right-4 top-20 z-10"
+        className={getDocumentSidebarClosedToggleClassName()}
         aria-label="Open document sidebar"
         title="Open sidebar"
       >
@@ -280,10 +322,15 @@ export function DocumentSidebar({
     <Card
       recipe="documentSidebarShell"
       padding="none"
-      className="h-full w-sidebar shrink-0 overflow-y-auto"
+      className={getDocumentSidebarShellClassName()}
     >
       {/* Close button */}
-      <div className={cn(getCardRecipeClassName("documentSidebarHeader"), "p-2")}>
+      <div
+        className={cn(
+          getCardRecipeClassName("documentSidebarHeader"),
+          getDocumentSidebarHeaderClassName(),
+        )}
+      >
         <Flex align="center" justify="between">
           <Typography variant="label">Document</Typography>
           <IconButton

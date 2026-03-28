@@ -268,7 +268,7 @@ function MetricCard({ label, value, icon, color }: MetricCardProps) {
         <Badge variant={METRIC_BADGE_VARIANTS[color]} shape="pill" size="md">
           <Flex as="span" align="center" gap="xs">
             <Icon icon={icon} size="sm" />
-            <span>{label}</span>
+            {label}
           </Flex>
         </Badge>
         <Typography variant="h3">{value}</Typography>

@@ -3,6 +3,7 @@
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
+import { getRoadmapTodayBadgeClassName } from "../ui/badgeSurfaceClassNames";
 
 interface RoadmapTodayMarkerProps {
   offsetPx: number;
@@ -25,9 +26,9 @@ export function RoadmapTodayMarker({ offsetPx, variant }: RoadmapTodayMarkerProp
     >
       {variant === "header" ? (
         <Badge
-          variant="roadmapToday"
+          variant="error"
           shape="pill"
-          className="absolute top-2 left-0 -translate-x-1/2"
+          className={cn(getRoadmapTodayBadgeClassName(), "absolute top-2 left-0 -translate-x-1/2")}
         >
           Today
         </Badge>

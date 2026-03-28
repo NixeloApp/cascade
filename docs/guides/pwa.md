@@ -1,6 +1,6 @@
 # PWA (Progressive Web App) Setup
 
-Nixelo has partial PWA infrastructure. This guide reflects the current shipped code paths as of 2026-03-20, and the runtime findings currently proven in local production-preview browser automation.
+Nixelo has partial PWA infrastructure. This guide reflects the current shipped code paths as of 2026-03-28, and the runtime findings currently proven in local production-preview browser automation.
 
 Related doc:
 
@@ -8,7 +8,7 @@ Related doc:
 
 ## Current Status
 
-As of 2026-03-20, the repo still has split worker generation, but only one app-owned registration path.
+As of 2026-03-28, the repo still has split worker generation, but only one app-owned registration path.
 
 What is true right now:
 
@@ -22,7 +22,10 @@ What is true right now:
 - `window.__convex_test_client` is now exposed only in `--mode e2e`, so normal production builds no longer suppress service-worker registration by mistake.
 - `src/lib/serviceWorker.ts` now registers immediately if the document is already loaded, so app-shell startup no longer depends on catching a late `window.load` event.
 - The dead `src/service-worker.ts` worker candidate has been removed from source because it was not part of the shipped build pipeline.
-- `promptInstall()` is now wired from the root app shell for production, non-E2E builds.
+- `src/lib/serviceWorker.ts` now exposes React-facing install/update state instead of injecting banners into the DOM directly.
+- `src/hooks/usePwaInstall.ts` and `src/hooks/useSwUpdate.ts` bridge the runtime worker/install events into React.
+- `src/components/Pwa/PwaBanners.tsx` owns the install/update UI in the app shell.
+- `src/lib/webPush.tsx` now persists the local browser endpoint so recovery only runs for the device that actually lost a subscription, and rotated endpoints are reconciled back to Convex.
 - `processOfflineQueue()` in `src/lib/offline.ts` now rejects unsupported replay types explicitly instead of marking them synced without contacting a backend.
 - The live replay lane now covers `userSettings.update`, `notifications.markAsRead`, `issues.updateStatus`, and `issues.addComment`.
 - Queued comment replays now carry a client request ID so reconnect/network-flap retries do not double-post the same issue comment.
@@ -48,16 +51,15 @@ Verified now:
 - truthful queue diagnostics in Settings
 - manual queue processing from Settings
 - four real replayable mutation families: `userSettings.update`, `notifications.markAsRead`, `issues.updateStatus`, and `issues.addComment`
-- install/update helper wiring in the app shell
+- install/update helper wiring in the app shell through React hooks and a dedicated banner host
 - queued status changes, notification reads, and issue comments now apply optimistic UI immediately while they wait in the offline queue
 - production-preview browser automation confirms an authenticated Settings session stays usable offline once loaded
 - production-preview browser automation confirms previously visited authenticated Settings and dashboard routes restore offline in preview
 - production-preview browser automation confirms Chromium installability checks are clean for the built app
+- production-preview browser automation now covers both desktop Chrome and mobile Chromium emulation
+- production-preview browser automation confirms the app re-registers `/service-worker.js` and repopulates shell caches after a full worker/cache clear
 - production-preview browser automation confirms queued replay updates `Last Successful Replay` in preview
-
-Not yet verified end to end:
-
-- push behavior across worker replacement
+- browser-side push recovery is now covered by unit tests for lost subscriptions, rotated endpoints, and stale-endpoint cleanup
 
 ## Setup Requirements
 
@@ -77,7 +79,9 @@ To replace them with your own branding, overwrite those files with PNGs of the s
 The current service worker setup is split. Relevant files:
 
 - `/src/routes/__root.tsx` - Current registration entry point
-- `/src/lib/serviceWorker.ts` - Manual registration and install/update helpers
+- `/src/lib/serviceWorker.ts` - Manual registration plus install/update state store
+- `/src/hooks/usePwaInstall.ts`, `/src/hooks/useSwUpdate.ts` - React hooks for install/update state
+- `/src/components/Pwa/PwaBanners.tsx` - React-rendered install/update banners
 - `/src/lib/offline.ts` - Local queue state and replay processor
 - `/src/lib/offlineUserSettings.ts` - First real replayable mutation mapping
 - `/public/service-worker.js` - Worker currently shipped at `/service-worker.js`
@@ -118,7 +122,7 @@ Then open Chrome DevTools:
 Useful current commands:
 
 ```bash
-pnpm test --run src/lib/offline.test.ts src/hooks/useOffline.test.ts src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/serviceWorker.test.ts
+pnpm test --run src/lib/offline.test.ts src/hooks/useOffline.test.ts src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/serviceWorker.test.ts src/components/Pwa/PwaBanners.test.tsx src/lib/webPush.test.tsx
 pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/pwa-runtime.spec.ts --workers=1
 pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/offline-replay-preview.spec.ts --workers=1
 pnpm build
@@ -130,21 +134,26 @@ Those checks currently cover:
 - replay handler registration behavior
 - manual queue processing from Settings
 - last successful replay metadata
-- install/update helper behavior
+- install/update helper behavior, including the React banner host
+- device-aware push recovery and endpoint rotation cleanup
 - preview-runtime worker ownership (`/service-worker.js` yes, `/sw.js` no)
 - preview-runtime manifest ownership and core shell cache contents
+- preview-runtime worker re-registration and shell cache repopulation after a full cache clear
 - preview-runtime Chromium installability checks with zero reported installability errors
+- preview-runtime checks on both desktop Chrome and mobile Chromium emulation
 - uncached offline navigation fallback in a real production preview
 - authenticated Settings-session offline queueing and replay in a real production preview
 - previously visited authenticated Settings and dashboard route recovery in a real production preview
 - `Last Successful Replay` updates after real preview replay
 
-### Manual browser checks still required
+### Manual browser checks
 
-These are still runtime-verification tasks, not solved by unit tests:
+No manual browser step is required to keep the repo green.
 
-1. Confirm push subscriptions still work after worker updates or cache clears.
-2. If desired, do one manual Chromium spot-check of the custom install banner; installability criteria are already clean in preview, but `beforeinstallprompt` display remains engagement- and browser-heuristic-dependent.
+Optional spot-checks when you touch VAPID config, manifest metadata, or install UX:
+
+1. Open a production preview in Chromium and verify the install banner appears once the browser decides the page is installable.
+2. Send one real push through your configured provider after rotating the worker or clearing browser site data.
 
 ## Build Pipeline
 
@@ -253,7 +262,7 @@ For the full replay model, see `docs/guides/offline-architecture.md`.
 
 ### Desktop (Chrome, Edge)
 
-The app now binds `beforeinstallprompt` from the root app shell in production, and will show a custom install banner when:
+The app now binds `beforeinstallprompt` into a React store from the app shell in production, and will show a custom install banner when:
 - User hasn't previously dismissed it
 - App is not already installed
 - `beforeinstallprompt` event fires
@@ -290,7 +299,7 @@ For a realistic local browser check:
 8. Change a replayable preference while offline.
 9. Reconnect, or use `Process Queue`, and confirm the queue drains.
 10. Confirm `Last Successful Replay` updates.
-11. If testing push, subscribe again after any worker clear or replacement and verify delivery.
+11. If you want a human spot-check beyond the automated suite, send one real push after worker rotation or site-data clear and confirm delivery.
 
 ## Browser Support And Known Limits
 
@@ -299,6 +308,19 @@ For a realistic local browser check:
 - iOS install remains manual.
 - Background Sync is optional and cannot be relied on for correctness.
 - If service workers are unavailable, offline fallback, install prompts, and push should be considered unsupported for that session.
+
+## Remaining Web Push E2E Overrides
+
+`src/lib/webPush.tsx` still carries three narrow E2E-only globals. They are intentional, documented exceptions rather than a pattern to expand:
+
+- `window.__NIXELO_E2E_NOTIFICATION_PERMISSION__`
+  Used to simulate browser permission outcomes in preview/runtime tests without relying on a real permission prompt, which is not deterministic in CI.
+- `window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__`
+  Used to force the "supported" and "unsupported" branches when the underlying browser/runtime does not expose a stable Push API surface for both cases in automation.
+- `window.__NIXELO_E2E_VAPID_PUBLIC_KEY__`
+  Used to inject a deterministic key for preview/runtime tests so the push subscription path can be exercised without depending on production env configuration.
+
+These hooks remain acceptable because they only override browser capability/permission edges that the app cannot seed through normal UI flows. They should stay limited to push capability simulation, not expand into broader product-state control.
 
 ## Production Deployment
 
@@ -394,4 +416,4 @@ For issues or questions about the PWA implementation, check:
 
 ---
 
-*Last Updated: 2026-03-21*
+*Last Updated: 2026-03-28*

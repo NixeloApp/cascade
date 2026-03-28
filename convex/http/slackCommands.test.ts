@@ -36,6 +36,8 @@ describe("Slack Slash Command HTTP Handler", () => {
 
   afterEach(() => {
     process.env = originalEnv;
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it("should reject oversized slash command text", async () => {
@@ -372,6 +374,10 @@ describe("Slack Slash Command HTTP Handler", () => {
   });
 
   it("should reject Slack signatures with future timestamp beyond tolerance", async () => {
+    const fixedNow = new Date("2026-03-28T13:00:00Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(fixedNow);
+
     const runMutation = vi.fn();
     const ctx = { runMutation } as unknown as ActionCtx;
     const body = new URLSearchParams({
@@ -379,7 +385,7 @@ describe("Slack Slash Command HTTP Handler", () => {
       user_id: "U-OK",
       text: "create test",
     }).toString();
-    const futureTimestamp = Math.floor(Date.now() / 1000) + 301;
+    const futureTimestamp = Math.floor(fixedNow.getTime() / 1000) + 301;
     const request = await buildSignedRequestWithTimestamp(body, signingSecret, futureTimestamp);
 
     const response = await handleSlashCommandHandler(ctx, request);

@@ -16,6 +16,7 @@ import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { LogOut, Settings } from "@/lib/icons";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
+import { getQuietRoundIconButtonClassName } from "./ui/buttonSurfaceClassNames";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +43,12 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button chrome="quiet" chromeSize="icon" aria-label="User menu">
+        <Button
+          variant="unstyled"
+          size="icon"
+          aria-label="User menu"
+          className={getQuietRoundIconButtonClassName()}
+        >
           <Avatar name={user.name} email={user.email} src={user.image} size="md" variant="brand" />
         </Button>
       </DropdownMenuTrigger>
@@ -60,7 +66,7 @@ export function UserMenu() {
           <DropdownMenuGroup>
             <DropdownMenuItem asChild icon={<Icon icon={Settings} size="sm" />}>
               <Link to={ROUTES.settings.profile.path} params={{ orgSlug }} className="w-full">
-                <span>Settings</span>
+                Settings
               </Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -71,7 +77,7 @@ export function UserMenu() {
           variant="danger"
           icon={<Icon icon={LogOut} size="sm" />}
         >
-          <span>Sign out</span>
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

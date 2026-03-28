@@ -67,6 +67,12 @@ describe("AdminTab", () => {
   });
 
   it("updates the active admin section when the hash changes", () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
     render(<AdminTab />);
 
     window.history.pushState({}, "", `#${getAdminSectionId("hour-compliance")}`);
@@ -76,5 +82,6 @@ describe("AdminTab", () => {
       "aria-current",
       "page",
     );
+    expect(scrollIntoView).toHaveBeenCalled();
   });
 });

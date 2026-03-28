@@ -64,9 +64,13 @@ The clients page manages billing contacts for agency-style organizations and pro
 1. **Route component**: `ClientsListPage` is a 310-line file that contains the full page plus two inline components: `ClientCard` and `PortalTokenDetails`.
 2. **Queries**: Fetches `api.clients.list` for the client list and `api.projects.getCurrentUserProjects` to scope portal token generation to a project.
 3. **Create form**: An inline form at the top of the page with four input fields (name, email, company, hourly rate) and a "Create client" button. Form state is managed with individual `useState` hooks. Fields reset on success.
-4. **Portal link generation**: `handleGeneratePortalLink` calls `clientPortalApi.generateToken` with permissions scoped to the first matching project. The generated link is stored in local state (`generatedPortalLinks` map).
-5. **Token management**: `handleRefreshPortalTokens` calls `clientPortalApi.listTokensByClient` and stores results in local state. `handleRevokePortalToken` revokes a specific token and refreshes the list.
-6. **anyApi usage**: Portal API calls use `anyApi.clientPortal` because the `clientPortal` module may not be in the standard generated API.
+4. **Portal link generation**: each client card now requires an explicit project selection before
+   generating a portal token, so the portal scope is chosen intentionally rather than inferred from
+   the first project in the list.
+5. **Token management**: portal tokens are reactive on each client card; revoke actions update the
+   current card without a manual refresh pass.
+6. **Public portal route**: the generated link opens the separate public portal routes documented in
+   [`42-client-portal/CURRENT.md`](../42-client-portal/CURRENT.md).
 7. **Loading gate**: While `clients` is falsy, renders `<PageContent isLoading>`.
 
 ---

@@ -16,6 +16,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
+import { getFramedCompactPillButtonClassName } from "./ui/buttonSurfaceClassNames";
 import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
@@ -99,7 +100,12 @@ export function AdvancedSearchModal({
       footerClassName="sm:justify-between"
       footer={
         <>
-          <Button onClick={() => onOpenChange(false)} chrome="framed" chromeSize="compactPill">
+          <Button
+            onClick={() => onOpenChange(false)}
+            variant="unstyled"
+            size="content"
+            className={getFramedCompactPillButtonClassName()}
+          >
             Close
           </Button>
           <div className="hidden sm:block">
@@ -148,7 +154,7 @@ export function AdvancedSearchModal({
             renderLabel={(type) => (
               <Flex align="center" gap="xs" as="span">
                 <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
-                <span>{type}</span>
+                {type}
               </Flex>
             )}
           />

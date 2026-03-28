@@ -39,23 +39,7 @@ vi.mock("./ui/Card", () => ({
   Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock("./ui/Command", () => ({
-  Command: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CommandList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CommandItem: ({
-    children,
-    onSelect,
-    value,
-  }: {
-    children: ReactNode;
-    onSelect?: (value: string) => void;
-    value: string;
-  }) => (
-    <button type="button" onClick={() => onSelect?.(value)}>
-      {children}
-    </button>
-  ),
-}));
+vi.mock("./ui/Command", async () => await import("@/test/__tests__/commandMock"));
 
 vi.mock("./ui/Flex", () => ({
   Flex: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -80,11 +64,7 @@ vi.mock("./ui/IconButton", () => ({
   ),
 }));
 
-vi.mock("./ui/Popover", () => ({
-  Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PopoverTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PopoverContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-}));
+vi.mock("./ui/Popover", async () => await import("@/test/__tests__/popoverMock"));
 
 vi.mock("./ui/Textarea", () => ({
   Textarea: forwardRef(function Textarea(
@@ -221,6 +201,7 @@ describe("MentionInput", () => {
     textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     fireEvent.click(textarea);
 
+    await user.click(screen.getByRole("button", { name: "Insert emoji" }));
     await user.click(screen.getByRole("button", { name: "😀" }));
 
     await waitFor(() => {

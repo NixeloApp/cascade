@@ -30,11 +30,15 @@ export const ROUTES = {
     build: (token?: string) =>
       token ? `/unsubscribe?token=${encodeURIComponent(token)}` : "/unsubscribe",
   },
-  invite: {
-    path: "/invite/$token" as const,
-    build: (token: string) => `/invite/${token}`,
+  join: {
+    path: "/join/$token" as const,
+    build: (token: string) => `/join/${token}`,
   },
-  portal: {
+  /** @deprecated Legacy redirect — kept so old /invite/ emails still work. */
+  inviteLegacy: {
+    path: "/invite/$token" as const,
+  },
+  clientPortal: {
     entry: {
       path: "/portal/$token" as const,
       build: (token: string) => `/portal/${token}`,
@@ -91,6 +95,10 @@ export const ROUTES = {
   outreachGoogleAuth: {
     path: "/outreach/google/auth" as const,
     build: () => "/outreach/google/auth",
+  },
+  outreachMicrosoftAuth: {
+    path: "/outreach/microsoft/auth" as const,
+    build: () => "/outreach/microsoft/auth",
   },
   team: {
     path: "/$orgSlug/team" as const,

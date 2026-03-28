@@ -17,13 +17,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import {
   Table,
@@ -35,7 +29,7 @@ import {
 } from "@/components/ui/Table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, MetricText, Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -75,12 +69,21 @@ type SequenceStepListItem = SequenceListItem["steps"][number];
 type MailboxHealthListItem = FunctionReturnType<
   typeof outreachApi.analytics.getMailboxHealth
 >[number];
+type MailboxLimitUpdateResult = FunctionReturnType<typeof outreachApi.mailboxes.updateLimit>;
 type SequenceOverview = NonNullable<
   FunctionReturnType<typeof outreachApi.analytics.getOrganizationOverview>
 >;
+type ContactPerformanceSummary = FunctionReturnType<
+  typeof outreachApi.analytics.getContactPerformance
+>;
+type ContactPerformanceRow = ContactPerformanceSummary["rows"][number];
 type EnrollmentTimeline = NonNullable<
   FunctionReturnType<typeof outreachApi.analytics.getContactTimeline>
 >;
+type ContactImportPreview = ReturnType<typeof parseOutreachContactImportCsv>;
+type ImportPreviewState = { ok: true; value: ContactImportPreview } | { error: string; ok: false };
+type ContactImportBatchResult = FunctionReturnType<typeof outreachApi.contacts.importBatch>;
+type OutreachMailboxProvider = MailboxListItem["provider"];
 
 interface ContactFormState {
   company: string;
@@ -130,10 +133,43 @@ const DEFAULT_SEQUENCE_FORM: SequenceFormState = {
 };
 
 const MAX_SEQUENCE_STEPS = 5;
-const GMAIL_AUTH_ORIGIN = new URL(getConvexSiteUrl()).origin;
+const OUTREACH_AUTH_ORIGIN = new URL(getConvexSiteUrl()).origin;
+const MAILBOX_CONNECT_PROVIDERS = [
+  "google",
+  "microsoft",
+] as const satisfies OutreachMailboxProvider[];
+const MAILBOX_PROVIDER_CONFIG: Record<
+  OutreachMailboxProvider,
+  {
+    authRoute: () => string;
+    blockedPopupMessage: string;
+    connectLabel: string;
+    popupTitle: string;
+    testId: string;
+  }
+> = {
+  google: {
+    authRoute: () => ROUTES.outreachGoogleAuth.build(),
+    blockedPopupMessage: "Please allow popups to connect a Gmail mailbox.",
+    connectLabel: "Connect Gmail",
+    popupTitle: "Outreach Gmail OAuth",
+    testId: TEST_IDS.OUTREACH.ACTION_CONNECT_GMAIL,
+  },
+  microsoft: {
+    authRoute: () => ROUTES.outreachMicrosoftAuth.build(),
+    blockedPopupMessage: "Please allow popups to connect a Microsoft 365 mailbox.",
+    connectLabel: "Connect Microsoft 365",
+    popupTitle: "Outreach Microsoft 365 OAuth",
+    testId: TEST_IDS.OUTREACH.ACTION_CONNECT_MICROSOFT,
+  },
+};
 
-function buildGmailAuthUrl(userId: Id<"users">, organizationId: Id<"organizations">): string {
-  const authUrl = new URL(ROUTES.outreachGoogleAuth.build(), getConvexSiteUrl());
+function buildMailboxAuthUrl(
+  provider: OutreachMailboxProvider,
+  userId: Id<"users">,
+  organizationId: Id<"organizations">,
+): string {
+  const authUrl = new URL(MAILBOX_PROVIDER_CONFIG[provider].authRoute(), getConvexSiteUrl());
   authUrl.searchParams.set("userId", userId);
   authUrl.searchParams.set("organizationId", organizationId);
   return authUrl.toString();
@@ -204,8 +240,64 @@ function formatOutreachDateTime(value?: number): string {
   return formatTimestamp(value);
 }
 
+function formatPluralizedCount(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 function getProviderLabel(provider: MailboxListItem["provider"]): string {
   return provider === "google" ? "Gmail" : "Microsoft 365";
+}
+
+function getDeliverabilityLabel(status: MailboxHealthListItem["deliverabilityStatus"]): string {
+  switch (status) {
+    case "healthy":
+      return "Healthy";
+    case "watch":
+      return "Watch";
+    case "at_risk":
+      return "At Risk";
+  }
+}
+
+function getDeliverabilityBadgeVariant(
+  status: MailboxHealthListItem["deliverabilityStatus"],
+): "success" | "warning" | "error" {
+  switch (status) {
+    case "healthy":
+      return "success";
+    case "watch":
+      return "warning";
+    case "at_risk":
+      return "error";
+  }
+}
+
+function MailboxConnectButtons({
+  onConnectMailbox,
+  size = "sm",
+}: {
+  onConnectMailbox: (provider: OutreachMailboxProvider) => void;
+  size?: "sm" | "md";
+}) {
+  return (
+    <Flex gap="sm" wrap>
+      {MAILBOX_CONNECT_PROVIDERS.map((provider) => {
+        const config = MAILBOX_PROVIDER_CONFIG[provider];
+        return (
+          <Button
+            key={provider}
+            variant={provider === "google" ? "primary" : "secondary"}
+            size={size}
+            onClick={() => onConnectMailbox(provider)}
+            data-testid={config.testId}
+          >
+            <Icon icon={ArrowUpRight} size="sm" />
+            {config.connectLabel}
+          </Button>
+        );
+      })}
+    </Flex>
+  );
 }
 
 function getStatusBadgeVariant(
@@ -217,7 +309,10 @@ function getStatusBadgeVariant(
       return "success";
     case "paused":
       return "warning";
+    case "opened":
+    case "clicked":
     case "replied":
+    case "sent":
       return "info";
     case "bounced":
     case "unsubscribed":
@@ -240,7 +335,7 @@ function MetricTile({
     <Card padding="md" variant="soft" className="h-full">
       <Stack gap="xs">
         <Typography variant="eyebrowWide">{title}</Typography>
-        <Typography variant="dashboardStatValueStrong">{value}</Typography>
+        <MetricText>{value}</MetricText>
         <Typography variant="caption">{description}</Typography>
       </Stack>
     </Card>
@@ -259,7 +354,7 @@ function SectionTitle({
   return (
     <Flex justify="between" align="start" direction="column" directionSm="row" gap="sm">
       <Stack gap="xs">
-        <Typography variant="cardTitle" as="h3">
+        <Typography variant="h5" as="h3">
           {title}
         </Typography>
         <Typography variant="caption">{description}</Typography>
@@ -303,6 +398,7 @@ export function OutreachWorkspace() {
     outreachApi.analytics.getOrganizationOverview,
     {},
   );
+  const contactPerformance = useAuthenticatedQuery(outreachApi.analytics.getContactPerformance, {});
   const enrollments = useAuthenticatedQuery(
     outreachApi.enrollments.listBySequence,
     selectedSequenceId ? { sequenceId: selectedSequenceId } : "skip",
@@ -352,7 +448,8 @@ export function OutreachWorkspace() {
     sequences === undefined ||
     mailboxes === undefined ||
     mailboxHealth === undefined ||
-    organizationOverview === undefined
+    organizationOverview === undefined ||
+    contactPerformance === undefined
   ) {
     return (
       <PageLayout>
@@ -383,7 +480,7 @@ export function OutreachWorkspace() {
   const headerActions = getHeaderActions({
     activeTab,
     hasMailboxes: mailboxes.length > 0,
-    onConnectMailbox: () => handleConnectMailbox(),
+    onConnectMailbox: handleConnectMailbox,
     onCreateContact: () => openContactDialog(),
     onCreateSequence: () => openSequenceDialog(mailboxes),
     onImportContacts: () => setIsImportDialogOpen(true),
@@ -501,9 +598,14 @@ export function OutreachWorkspace() {
       return;
     }
 
+    if (importPreview.value.contacts.length === 0) {
+      showError("No importable contacts found. Fix the rows flagged in the preview first.");
+      return;
+    }
+
     try {
       const result = await importContacts({ contacts: importPreview.value.contacts });
-      showSuccess(`Imported ${result.imported} contacts and skipped ${result.skipped}.`);
+      showSuccess(formatContactImportResultMessage(result));
       setImportText("");
       setIsImportDialogOpen(false);
       setActiveTab("contacts");
@@ -522,11 +624,19 @@ export function OutreachWorkspace() {
     }
 
     try {
-      await updateMailboxLimit({
+      const result = (await updateMailboxLimit({
         mailboxId,
         dailySendLimit: parsedValue,
-      });
-      showSuccess("Mailbox daily limit updated");
+      })) as MailboxLimitUpdateResult;
+      const statusLabel = getDeliverabilityLabel(result.deliverabilityStatus).toLowerCase();
+
+      if (result.hasCapacityOverride) {
+        showSuccess(
+          `Mailbox ceiling saved. Deliverability is currently keeping effective volume at ${result.effectiveDailyLimit}/day (${statusLabel}, ${result.warmupStageLabel}).`,
+        );
+      } else {
+        showSuccess(`Mailbox daily limit updated to ${result.configuredDailyLimit}/day`);
+      }
     } catch (error) {
       showError(error, "Failed to update mailbox limit");
     }
@@ -574,7 +684,7 @@ export function OutreachWorkspace() {
     <PageLayout maxWidth="full">
       <PageHeader
         title="Outreach"
-        description="Run Gmail-first outbound sequences, manage recipients, control mailbox capacity, and inspect engagement without leaving the workspace."
+        description="Run outbound sequences, manage recipients, control mailbox capacity, and inspect engagement across connected Gmail and Microsoft 365 senders."
         actions={headerActions}
       />
 
@@ -689,7 +799,9 @@ export function OutreachWorkspace() {
 
           <AnalyticsTabContent
             contactTimeline={contactTimeline}
+            contactPerformance={contactPerformance}
             contacts={contacts}
+            mailboxes={mailboxes}
             selectedEnrollmentId={selectedEnrollmentId}
             selectedSequence={selectedSequence}
             selectedSequenceEnrollments={selectedSequenceEnrollments}
@@ -859,7 +971,7 @@ export function OutreachWorkspace() {
     setIsSequenceDialogOpen(true);
   }
 
-  function handleConnectMailbox() {
+  function handleConnectMailbox(provider: OutreachMailboxProvider) {
     if (!currentUser?._id) {
       showError("We could not verify your account. Refresh and try again.");
       return;
@@ -869,16 +981,17 @@ export function OutreachWorkspace() {
     const height = 760;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
-    const gmailAuthUrl = buildGmailAuthUrl(currentUser._id, organizationId);
+    const providerConfig = MAILBOX_PROVIDER_CONFIG[provider];
+    const authUrl = buildMailboxAuthUrl(provider, currentUser._id, organizationId);
 
     const popup = window.open(
-      gmailAuthUrl,
-      "Outreach Gmail OAuth",
+      authUrl,
+      providerConfig.popupTitle,
       `width=${width},height=${height},left=${left},top=${top},popup=yes`,
     );
 
     if (!popup) {
-      showError("Please allow popups to connect a Gmail mailbox.");
+      showError(providerConfig.blockedPopupMessage);
     }
   }
 }
@@ -897,7 +1010,7 @@ function OverviewTabContent({
   mailboxHealth: MailboxHealthListItem[];
   overview: SequenceOverview;
   sequences: SequenceListItem[];
-  onConnectMailbox: () => void;
+  onConnectMailbox: (provider: OutreachMailboxProvider) => void;
   onCreateSequence: () => void;
 }) {
   return (
@@ -989,8 +1102,8 @@ function OverviewTabContent({
                 <EmptyState
                   icon={Mail}
                   title="No connected mailboxes"
-                  description="Connect Gmail to unlock sending."
-                  action={{ label: "Connect Gmail", onClick: onConnectMailbox }}
+                  description="Connect Gmail or Microsoft 365 to unlock sending."
+                  action={<MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />}
                   size="compact"
                 />
               ) : (
@@ -1156,12 +1269,12 @@ function SequencesSidebar({
                 key={sequence._id}
                 onClick={() => onSelectSequence(sequence._id)}
                 variant="unstyled"
-                size="card"
+                size="content"
                 className={cn(
                   getCardRecipeClassName(
                     selectedSequenceId === sequence._id ? "selectionRowSelected" : "selectionRow",
                   ),
-                  "p-4",
+                  "group relative w-full overflow-hidden p-4 text-left",
                 )}
               >
                 <Stack gap="xs">
@@ -1461,8 +1574,9 @@ function SequenceEnrollmentsCard({
                       <Button
                         type="button"
                         variant="ghost"
-                        size="contentStart"
+                        size="content"
                         onClick={() => onSelectEnrollment(enrollment._id)}
+                        className="text-left"
                       >
                         <Stack gap="xs">
                           <Typography variant="label" as="span">
@@ -1629,7 +1743,7 @@ function MailboxesTabContent({
   mailboxHealth: MailboxHealthListItem[];
   mailboxLimitInputs: Record<string, string>;
   mailboxes: MailboxListItem[];
-  onConnectMailbox: () => void;
+  onConnectMailbox: (provider: OutreachMailboxProvider) => void;
   onDisconnectMailbox: (mailbox: MailboxListItem) => void;
   onLimitInputChange: (mailboxId: Id<"outreachMailboxes">, value: string) => void;
   onSaveMailboxLimit: (mailboxId: Id<"outreachMailboxes">) => void;
@@ -1638,10 +1752,10 @@ function MailboxesTabContent({
     <TabsContent value="mailboxes" data-testid={TEST_IDS.OUTREACH.MAILBOXES_SECTION}>
       <Stack gap="md">
         <Alert variant="info">
-          <AlertTitle>Gmail-first mailbox connections</AlertTitle>
+          <AlertTitle>Mailbox connections</AlertTitle>
           <AlertDescription>
-            Outlook support exists in the schema, but this product surface intentionally ships the
-            Gmail path first so users can connect, throttle, and monitor one provider cleanly.
+            Gmail and Microsoft 365 are both supported for outbound sending. Reply polling remains
+            Gmail-only while the Microsoft path focuses on connection, throttling, and delivery.
           </AlertDescription>
         </Alert>
 
@@ -1649,8 +1763,8 @@ function MailboxesTabContent({
           <EmptyState
             icon={Mail}
             title="No connected mailboxes"
-            description="Connect a Gmail inbox to unlock sending, health checks, and reply tracking."
-            action={{ label: "Connect Gmail", onClick: onConnectMailbox }}
+            description="Connect Gmail or Microsoft 365 to unlock sending, throttling, and mailbox health checks."
+            action={<MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />}
           />
         ) : (
           <Grid cols={1} colsLg={2} gap="lg">
@@ -1692,51 +1806,17 @@ function MailboxCard({
   return (
     <Card padding="md" variant="soft" data-testid={TEST_IDS.OUTREACH.MAILBOX_CARD}>
       <Stack gap="md">
-        <Flex justify="between" align="start" gap="sm">
-          <Stack gap="xs">
-            <Typography variant="large" as="span">
-              {mailbox.displayName || mailbox.email}
-            </Typography>
-            <Typography variant="caption" as="span">
-              {mailbox.email} • {getProviderLabel(mailbox.provider)}
-            </Typography>
-          </Stack>
-          <Badge variant={mailbox.isActive ? "success" : "warning"}>
-            {mailbox.isActive ? "Connected" : "Disconnected"}
-          </Badge>
-        </Flex>
-
-        <Grid cols={1} colsMd={2} gap="md">
-          <MetricTile
-            title="Daily Capacity"
-            value={`${health?.todaySent ?? 0}/${health?.dailyLimit ?? mailbox.dailySendLimit}`}
-            description={`${health?.remaining ?? 0} sends left today`}
-          />
-          <MetricTile
-            title="Minute Window"
-            value={`${health?.minuteSent ?? 0}/${health?.minuteLimit ?? mailbox.minuteSendLimit}`}
-            description={`${health?.minuteRemaining ?? 0} sends left in the current minute`}
-          />
-        </Grid>
-
-        <Stack gap="sm">
-          <Typography variant="eyebrowWide" as="label" htmlFor={inputId}>
-            Daily send limit
-          </Typography>
-          <Flex gap="sm" direction="column" directionSm="row">
-            <Input
-              id={inputId}
-              type="number"
-              min={1}
-              max={100}
-              value={limitValue}
-              onChange={(event) => onLimitInputChange(mailbox._id, event.target.value)}
-            />
-            <Button variant="secondary" onClick={() => onSaveMailboxLimit(mailbox._id)}>
-              Save limit
-            </Button>
-          </Flex>
-        </Stack>
+        <MailboxCardHeader health={health} mailbox={mailbox} />
+        <MailboxCardMetrics health={health} mailbox={mailbox} />
+        <MailboxDeliverabilityAlert health={health} />
+        <MailboxLimitEditor
+          health={health}
+          inputId={inputId}
+          limitValue={limitValue}
+          mailbox={mailbox}
+          onLimitInputChange={onLimitInputChange}
+          onSaveMailboxLimit={onSaveMailboxLimit}
+        />
 
         <Flex justify="between" align="center" wrap gap="sm">
           <Typography variant="meta" as="span">
@@ -1756,9 +1836,150 @@ function MailboxCard({
   );
 }
 
+function MailboxCardHeader({
+  health,
+  mailbox,
+}: {
+  health?: MailboxHealthListItem;
+  mailbox: MailboxListItem;
+}) {
+  return (
+    <Flex justify="between" align="start" gap="sm">
+      <Stack gap="xs">
+        <LargeText as="span">{mailbox.displayName || mailbox.email}</LargeText>
+        <Typography variant="caption" as="span">
+          {mailbox.email} • {getProviderLabel(mailbox.provider)}
+        </Typography>
+      </Stack>
+      <Flex gap="xs" wrap justify="end">
+        <Badge variant={mailbox.isActive ? "success" : "warning"}>
+          {mailbox.isActive ? "Connected" : "Disconnected"}
+        </Badge>
+        {health ? (
+          <Badge variant={getDeliverabilityBadgeVariant(health.deliverabilityStatus)}>
+            {getDeliverabilityLabel(health.deliverabilityStatus)}
+          </Badge>
+        ) : null}
+      </Flex>
+    </Flex>
+  );
+}
+
+function MailboxCardMetrics({
+  health,
+  mailbox,
+}: {
+  health?: MailboxHealthListItem;
+  mailbox: MailboxListItem;
+}) {
+  return (
+    <Grid cols={1} colsMd={3} gap="md">
+      <MetricTile
+        title="Effective Daily Cap"
+        value={`${health?.todaySent ?? 0}/${health?.effectiveDailyLimit ?? mailbox.dailySendLimit}`}
+        description={`${health?.remaining ?? 0} sends left today after warmup and deliverability safeguards`}
+      />
+      <MetricTile
+        title="Minute Window"
+        value={`${health?.minuteSent ?? 0}/${health?.minuteLimit ?? mailbox.minuteSendLimit}`}
+        description={`${health?.minuteRemaining ?? 0} sends left in the current minute`}
+      />
+      <MetricTile
+        title="Warmup Stage"
+        value={health?.warmupStageLabel ?? "Days 1-3"}
+        description={`Mailbox age ${health?.warmupAgeDays ?? 1} day${health?.warmupAgeDays === 1 ? "" : "s"} • recommended ceiling ${health?.warmupRecommendedDailyLimit ?? mailbox.dailySendLimit}/day`}
+      />
+    </Grid>
+  );
+}
+
+function MailboxDeliverabilityAlert({ health }: { health?: MailboxHealthListItem }) {
+  if (!health) {
+    return null;
+  }
+
+  return (
+    <Alert variant={getMailboxAlertVariant(health.deliverabilityStatus)}>
+      <AlertTitle>{health.deliverabilitySummary}</AlertTitle>
+      <AlertDescription>
+        <Stack gap="xs">
+          <Typography variant="caption">
+            Recent {health.recentSent} sends • Bounce {formatPercent(health.recentBounceRate)} •
+            Reply {formatPercent(health.recentReplyRate)} • Unsubscribe{" "}
+            {formatPercent(health.recentUnsubscribeRate)}
+          </Typography>
+          {health.deliverabilityGuidance.map((item) => (
+            <Typography key={item} variant="caption">
+              {item}
+            </Typography>
+          ))}
+        </Stack>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function getMailboxAlertVariant(
+  status: MailboxHealthListItem["deliverabilityStatus"],
+): "error" | "info" | "warning" {
+  switch (status) {
+    case "at_risk":
+      return "error";
+    case "watch":
+      return "warning";
+    case "healthy":
+      return "info";
+  }
+}
+
+function MailboxLimitEditor({
+  health,
+  inputId,
+  limitValue,
+  mailbox,
+  onLimitInputChange,
+  onSaveMailboxLimit,
+}: {
+  health?: MailboxHealthListItem;
+  inputId: string;
+  limitValue: string;
+  mailbox: MailboxListItem;
+  onLimitInputChange: (mailboxId: Id<"outreachMailboxes">, value: string) => void;
+  onSaveMailboxLimit: (mailboxId: Id<"outreachMailboxes">) => void;
+}) {
+  return (
+    <Stack gap="sm">
+      <Typography variant="eyebrowWide" as="label" htmlFor={inputId}>
+        Configured daily ceiling
+      </Typography>
+      <Flex gap="sm" direction="column" directionSm="row">
+        <Input
+          id={inputId}
+          type="number"
+          min={1}
+          max={100}
+          value={limitValue}
+          onChange={(event) => onLimitInputChange(mailbox._id, event.target.value)}
+        />
+        <Button variant="secondary" onClick={() => onSaveMailboxLimit(mailbox._id)}>
+          Save ceiling
+        </Button>
+      </Flex>
+      {health?.hasCapacityOverride ? (
+        <Typography variant="caption">
+          Warmup and deliverability safeguards are currently capping actual send volume at{" "}
+          {health.effectiveDailyLimit}/day even if the configured ceiling is higher.
+        </Typography>
+      ) : null}
+    </Stack>
+  );
+}
+
 function AnalyticsTabContent({
   contactTimeline,
+  contactPerformance,
   contacts,
+  mailboxes,
   selectedEnrollmentId,
   selectedSequence,
   selectedSequenceEnrollments,
@@ -1772,7 +1993,9 @@ function AnalyticsTabContent({
   onSelectSequence,
 }: {
   contactTimeline: FunctionReturnType<typeof outreachApi.analytics.getContactTimeline> | undefined;
+  contactPerformance: ContactPerformanceSummary;
   contacts: ContactListItem[];
+  mailboxes: MailboxListItem[];
   selectedEnrollmentId?: Id<"outreachEnrollments">;
   selectedSequence?: SequenceListItem;
   selectedSequenceEnrollments: EnrollmentListItem[];
@@ -1787,25 +2010,46 @@ function AnalyticsTabContent({
 }) {
   return (
     <TabsContent value="analytics" data-testid={TEST_IDS.OUTREACH.ANALYTICS_SECTION}>
-      <Grid cols={1} colsLg={12} gap="lg">
-        <SequenceAnalyticsCard
-          selectedSequence={selectedSequence}
-          selectedSequenceId={selectedSequenceId}
-          sequenceFunnel={sequenceFunnel}
-          sequenceStats={sequenceStats}
-          sequences={sequences}
-          onSelectSequence={onSelectSequence}
-        />
-        <RecipientTimelineCard
-          contactTimeline={contactTimeline}
-          contacts={contacts}
-          selectedEnrollmentId={selectedEnrollmentId}
-          selectedSequenceEnrollments={selectedSequenceEnrollments ?? []}
-          selectedTimelineContact={selectedTimelineContact}
-          selectedTimelineEnrollment={selectedTimelineEnrollment}
-          onSelectEnrollment={onSelectEnrollment}
-        />
-      </Grid>
+      <Stack gap="lg">
+        <Grid cols={1} colsLg={12} gap="lg">
+          <SequenceAnalyticsCard
+            selectedSequence={selectedSequence}
+            selectedSequenceId={selectedSequenceId}
+            sequenceFunnel={sequenceFunnel}
+            sequenceStats={sequenceStats}
+            sequences={sequences}
+            onSelectSequence={onSelectSequence}
+          />
+          <RecipientTimelineCard
+            contactTimeline={contactTimeline}
+            contacts={contacts}
+            selectedEnrollmentId={selectedEnrollmentId}
+            selectedSequenceEnrollments={selectedSequenceEnrollments ?? []}
+            selectedTimelineContact={selectedTimelineContact}
+            selectedTimelineEnrollment={selectedTimelineEnrollment}
+            onSelectEnrollment={onSelectEnrollment}
+          />
+        </Grid>
+        <Grid cols={1} colsLg={12} gap="lg">
+          <SequenceLeaderboardCard
+            mailboxes={mailboxes}
+            selectedSequenceId={selectedSequenceId}
+            sequences={sequences}
+            onSelectSequence={onSelectSequence}
+          />
+          <ContactEngagementCard
+            contactPerformance={contactPerformance}
+            onInspectContact={(row) => {
+              if (row.latestSequenceId) {
+                onSelectSequence(row.latestSequenceId);
+              }
+              if (row.latestEnrollmentId) {
+                onSelectEnrollment(row.latestEnrollmentId);
+              }
+            }}
+          />
+        </Grid>
+      </Stack>
     </TabsContent>
   );
 }
@@ -1833,20 +2077,14 @@ function SequenceAnalyticsCard({
           description="Inspect top-line outcomes and step-level tracking for a selected campaign."
           action={
             <Select
-              value={selectedSequenceId ?? ""}
-              onValueChange={(value) => onSelectSequence(value as Id<"outreachSequences">)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a sequence" />
-              </SelectTrigger>
-              <SelectContent>
-                {sequences.map((sequence) => (
-                  <SelectItem key={sequence._id} value={sequence._id}>
-                    {sequence.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={onSelectSequence}
+              options={sequences.map((sequence) => ({
+                value: sequence._id,
+                label: sequence.name,
+              }))}
+              placeholder="Select a sequence"
+              value={selectedSequenceId}
+            />
           }
         />
 
@@ -1947,23 +2185,17 @@ function RecipientTimelineCard({
           description="Track sent, opened, clicked, replied, bounced, and unsubscribe events for a single enrollment."
           action={
             <Select
-              value={selectedEnrollmentId ?? ""}
-              onValueChange={(value) => onSelectEnrollment(value as Id<"outreachEnrollments">)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an enrollment" />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedSequenceEnrollments.map((enrollment) => (
-                  <SelectItem key={enrollment._id} value={enrollment._id}>
-                    {getTimelineEnrollmentLabel(
-                      contacts.find((candidate) => candidate._id === enrollment.contactId),
-                      enrollment._id,
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={onSelectEnrollment}
+              options={selectedSequenceEnrollments.map((enrollment) => ({
+                value: enrollment._id,
+                label: getTimelineEnrollmentLabel(
+                  contacts.find((candidate) => candidate._id === enrollment.contactId),
+                  enrollment._id,
+                ),
+              }))}
+              placeholder="Select an enrollment"
+              value={selectedEnrollmentId}
+            />
           }
         />
 
@@ -2015,6 +2247,206 @@ function RecipientTimelineCard({
               </Stack>
             )}
           </>
+        )}
+      </Stack>
+    </Card>
+  );
+}
+
+function SequenceLeaderboardCard({
+  mailboxes,
+  selectedSequenceId,
+  sequences,
+  onSelectSequence,
+}: {
+  mailboxes: MailboxListItem[];
+  selectedSequenceId?: Id<"outreachSequences">;
+  sequences: SequenceListItem[];
+  onSelectSequence: (sequenceId: Id<"outreachSequences">) => void;
+}) {
+  const sequenceRows = getSequenceLeaderboardRows(sequences, mailboxes);
+
+  return (
+    <Card
+      padding="md"
+      variant="soft"
+      className="lg:col-span-7"
+      data-testid={TEST_IDS.OUTREACH.ANALYTICS_SEQUENCE_LEADERBOARD}
+    >
+      <Stack gap="md">
+        <SectionTitle
+          title="Sequence leaderboard"
+          description="Compare every sequence by delivery volume and engagement rates, then jump straight into the detailed funnel."
+        />
+
+        {sequenceRows.length === 0 ? (
+          <EmptyState
+            icon={Rocket}
+            title="No sequence analytics yet"
+            description="Create a sequence and start enrolling contacts to compare campaign performance here."
+            size="compact"
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Sequence</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Recipients</TableHead>
+                <TableHead>Sent</TableHead>
+                <TableHead>Open</TableHead>
+                <TableHead>Reply</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sequenceRows.map((row) => (
+                <TableRow key={row.sequenceId}>
+                  <TableCell>
+                    <Stack gap="xs">
+                      <Typography variant="label" as="span">
+                        {row.name}
+                      </Typography>
+                      <Typography variant="meta" as="span">
+                        {row.mailboxLabel}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>
+                  </TableCell>
+                  <TableCell>{formatCount(row.enrolled)}</TableCell>
+                  <TableCell>{formatCount(row.sent)}</TableCell>
+                  <TableCell>{formatPercent(row.openRate)}</TableCell>
+                  <TableCell>{formatPercent(row.replyRate)}</TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant={row.sequenceId === selectedSequenceId ? "secondary" : "ghost"}
+                      onClick={() => onSelectSequence(row.sequenceId)}
+                    >
+                      {row.sequenceId === selectedSequenceId ? "Viewing" : "Inspect"}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Stack>
+    </Card>
+  );
+}
+
+function ContactEngagementCard({
+  contactPerformance,
+  onInspectContact,
+}: {
+  contactPerformance: ContactPerformanceSummary;
+  onInspectContact: (row: ContactPerformanceRow) => void;
+}) {
+  return (
+    <Card
+      padding="md"
+      variant="soft"
+      className="lg:col-span-5"
+      data-testid={TEST_IDS.OUTREACH.ANALYTICS_CONTACT_ENGAGEMENT}
+    >
+      <Stack gap="md">
+        <SectionTitle
+          title="Contact engagement"
+          description="Spot the most engaged recipients and jump directly into the enrollment behind their latest activity."
+        />
+        {contactPerformance.coverage.isPartial ? (
+          <Alert variant="warning">
+            <AlertTitle>Analytics window is capped</AlertTitle>
+            <AlertDescription>
+              Contact analytics currently cover up to {contactPerformance.coverage.contactLimit}{" "}
+              contacts, {contactPerformance.coverage.enrollmentLimit} enrollments, and the most
+              recent {contactPerformance.coverage.recentEventLimit} tracked events.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {contactPerformance.rows.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="No contact engagement yet"
+            description="Tracked contact activity appears here after a sequence sends or a recipient interacts."
+            size="compact"
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Contact</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Sent</TableHead>
+                <TableHead>Open</TableHead>
+                <TableHead>Reply</TableHead>
+                <TableHead>Last activity</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contactPerformance.rows.map((row) => (
+                <TableRow key={row.contactId}>
+                  <TableCell>
+                    <Stack gap="xs">
+                      <Typography variant="label" as="span">
+                        {row.name}
+                      </Typography>
+                      <Typography variant="meta" as="span">
+                        {[row.email, row.company].filter(Boolean).join(" • ")}
+                      </Typography>
+                      {row.latestSequenceName ? (
+                        <Typography variant="meta" as="span">
+                          Latest sequence: {row.latestSequenceName}
+                        </Typography>
+                      ) : null}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Stack gap="xs">
+                      <Badge variant={getStatusBadgeVariant(row.latestStatus)}>
+                        {row.latestStatus}
+                      </Badge>
+                      <Typography variant="meta" as="span">
+                        {formatPluralizedCount(row.liveEnrollmentCount, "live enrollment")}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>{formatCount(row.sent)}</TableCell>
+                  <TableCell>{formatPercent(row.openRate)}</TableCell>
+                  <TableCell>{formatPercent(row.replyRate)}</TableCell>
+                  <TableCell>
+                    <Stack gap="xs">
+                      {row.lastActivityType ? (
+                        <Badge variant={getStatusBadgeVariant(row.lastActivityType)}>
+                          {row.lastActivityType}
+                        </Badge>
+                      ) : null}
+                      <Typography variant="meta" as="span">
+                        {row.lastActivityAt
+                          ? formatOutreachDateTime(row.lastActivityAt)
+                          : "No tracked events yet"}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onInspectContact(row)}
+                      disabled={!row.latestSequenceId && !row.latestEnrollmentId}
+                    >
+                      Inspect
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </Stack>
     </Card>
@@ -2113,10 +2545,7 @@ function ImportContactsDialogContent({
   onImportTextChange,
   onOpenChange,
 }: {
-  importPreview:
-    | { ok: true; value: ReturnType<typeof parseOutreachContactImportCsv> }
-    | { error: string; ok: false }
-    | undefined;
+  importPreview: ImportPreviewState | undefined;
   importText: string;
   isOpen: boolean;
   onClose: () => void;
@@ -2137,7 +2566,12 @@ function ImportContactsDialogContent({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={onImportContacts} disabled={!importPreview || !importPreview.ok}>
+          <Button
+            onClick={onImportContacts}
+            disabled={
+              !importPreview || !importPreview.ok || importPreview.value.contacts.length === 0
+            }
+          >
             Import contacts
           </Button>
         </Flex>
@@ -2163,14 +2597,7 @@ function ImportContactsDialogContent({
   );
 }
 
-function ImportPreviewAlert({
-  importPreview,
-}: {
-  importPreview:
-    | { ok: true; value: ReturnType<typeof parseOutreachContactImportCsv> }
-    | { error: string; ok: false }
-    | undefined;
-}) {
+function ImportPreviewAlert({ importPreview }: { importPreview: ImportPreviewState | undefined }) {
   if (!importPreview) {
     return null;
   }
@@ -2184,12 +2611,58 @@ function ImportPreviewAlert({
     );
   }
 
+  const issuePreview = importPreview.value.issues.slice(0, 5);
+  const hasIssues = importPreview.value.issues.length > 0;
+  const hasImportableContacts = importPreview.value.contacts.length > 0;
+
   return (
-    <Alert variant="success">
-      <AlertTitle>Ready to import</AlertTitle>
+    <Alert variant={hasIssues ? "warning" : "success"}>
+      <AlertTitle>
+        {hasImportableContacts
+          ? hasIssues
+            ? "Import will skip some rows"
+            : "Ready to import"
+          : "No importable contacts yet"}
+      </AlertTitle>
       <AlertDescription>
-        {importPreview.value.contacts.length} contacts across {importPreview.value.headers.length}{" "}
-        columns. Empty rows skipped: {importPreview.value.skippedEmptyRows}.
+        <Stack gap="sm">
+          <Typography variant="p">
+            {formatPluralizedCount(importPreview.value.contacts.length, "contact")} ready across{" "}
+            {formatPluralizedCount(importPreview.value.headers.length, "column")}. Empty rows
+            skipped: {importPreview.value.skippedEmptyRows}.
+          </Typography>
+          {hasIssues ? (
+            <>
+              <Typography variant="p">
+                {formatPluralizedCount(importPreview.value.issues.length, "row")} need attention
+                before they can import. Duplicate email rows only keep the first occurrence.
+              </Typography>
+              <Stack gap="xs">
+                {issuePreview.map((issue) => (
+                  <Typography
+                    key={`${issue.kind}-${issue.rowNumber}-${issue.email ?? "missing-email"}`}
+                    variant="caption"
+                  >
+                    {issue.message}
+                  </Typography>
+                ))}
+                {importPreview.value.issues.length > issuePreview.length ? (
+                  <Typography variant="caption">
+                    {formatPluralizedCount(
+                      importPreview.value.issues.length - issuePreview.length,
+                      "additional row",
+                    )}{" "}
+                    omitted from this preview.
+                  </Typography>
+                ) : null}
+              </Stack>
+            </>
+          ) : null}
+          <Typography variant="caption">
+            Existing contacts and suppressed emails are rechecked during import before anything is
+            inserted.
+          </Typography>
+        </Stack>
       </AlertDescription>
     </Alert>
   );
@@ -2256,20 +2729,14 @@ function SequenceDialogContent({
             placeholder="Enterprise follow-up"
           />
           <Select
+            onChange={(value) => onFieldChange("mailboxId", value)}
+            options={mailboxes.map((mailbox) => ({
+              value: mailbox._id,
+              label: mailbox.email,
+            }))}
+            placeholder="Select mailbox"
             value={sequenceForm.mailboxId}
-            onValueChange={(value) => onFieldChange("mailboxId", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select mailbox" />
-            </SelectTrigger>
-            <SelectContent>
-              {mailboxes.map((mailbox) => (
-                <SelectItem key={mailbox._id} value={mailbox._id}>
-                  {mailbox.email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
           <Input
             value={sequenceForm.trackingDomain}
             onChange={(event) => onFieldChange("trackingDomain", event.target.value)}
@@ -2434,6 +2901,60 @@ function getTimelineEnrollmentLabel(
   );
 }
 
+function getSequenceLeaderboardRows(
+  sequences: SequenceListItem[],
+  mailboxes: MailboxListItem[],
+): Array<{
+  enrolled: number;
+  mailboxLabel: string;
+  name: string;
+  openRate: number;
+  replyRate: number;
+  sent: number;
+  sequenceId: Id<"outreachSequences">;
+  status: SequenceListItem["status"];
+}> {
+  const mailboxEmailById = new Map(mailboxes.map((mailbox) => [mailbox._id, mailbox.email]));
+
+  return sequences
+    .map((sequence) => {
+      const stats = sequence.stats ?? {
+        bounced: 0,
+        enrolled: 0,
+        opened: 0,
+        replied: 0,
+        sent: 0,
+        unsubscribed: 0,
+      };
+      const sent = stats.sent;
+      const openRate = sent > 0 ? Math.round((stats.opened / sent) * 1000) / 10 : 0;
+      const replyRate = sent > 0 ? Math.round((stats.replied / sent) * 1000) / 10 : 0;
+
+      return {
+        enrolled: stats.enrolled,
+        mailboxLabel: mailboxEmailById.get(sequence.mailboxId) ?? "Mailbox disconnected",
+        name: sequence.name,
+        openRate,
+        replyRate,
+        sent,
+        sequenceId: sequence._id,
+        status: sequence.status,
+      };
+    })
+    .sort((left, right) => {
+      if (right.replyRate !== left.replyRate) {
+        return right.replyRate - left.replyRate;
+      }
+      if (right.openRate !== left.openRate) {
+        return right.openRate - left.openRate;
+      }
+      if (right.sent !== left.sent) {
+        return right.sent - left.sent;
+      }
+      return left.name.localeCompare(right.name);
+    });
+}
+
 function renderEventMetadata(
   event: NonNullable<
     FunctionReturnType<typeof outreachApi.analytics.getContactTimeline>
@@ -2500,7 +3021,7 @@ function getLaunchChecklistMessage({
   noSequenceCreated: boolean;
 }) {
   if (noMailboxConnected) {
-    return "Connect a Gmail mailbox first. Sequences and enrollments stay blocked until a sender is available.";
+    return "Connect a mailbox first. Sequences and enrollments stay blocked until a sender is available.";
   }
 
   if (noSequenceCreated) {
@@ -2584,7 +3105,7 @@ function useMailboxConnectedListener(
 ) {
   useEffect(() => {
     const handleMailboxConnected = (event: MessageEvent) => {
-      if (event.origin !== GMAIL_AUTH_ORIGIN) {
+      if (event.origin !== OUTREACH_AUTH_ORIGIN) {
         return;
       }
 
@@ -2616,6 +3137,35 @@ function safeParseImportPreview(
   }
 }
 
+function formatContactImportResultMessage(result: ContactImportBatchResult): string {
+  const parts = [`Imported ${formatPluralizedCount(result.imported, "contact")}.`];
+  const skippedParts: string[] = [];
+
+  if (result.skippedExisting > 0) {
+    skippedParts.push(
+      `${formatPluralizedCount(result.skippedExisting, "contact")} already existed`,
+    );
+  }
+  if (result.skippedSuppressed > 0) {
+    skippedParts.push(
+      `${formatPluralizedCount(result.skippedSuppressed, "contact")} were suppressed`,
+    );
+  }
+  if (result.skippedInvalid > 0) {
+    skippedParts.push(
+      `${formatPluralizedCount(result.skippedInvalid, "contact")} had invalid email addresses`,
+    );
+  }
+
+  if (skippedParts.length > 0) {
+    parts.push(`Skipped ${skippedParts.join(", ")}.`);
+  } else if (result.skipped > 0) {
+    parts.push(`Skipped ${formatPluralizedCount(result.skipped, "contact")}.`);
+  }
+
+  return parts.join(" ");
+}
+
 function updateSequenceDraftStep(
   index: number,
   key: SequenceFormStepField,
@@ -2640,7 +3190,7 @@ function getHeaderActions({
 }: {
   activeTab: OutreachTab;
   hasMailboxes: boolean;
-  onConnectMailbox: () => void;
+  onConnectMailbox: (provider: OutreachMailboxProvider) => void;
   onCreateContact: () => void;
   onCreateSequence: () => void;
   onImportContacts: () => void;
@@ -2670,22 +3220,14 @@ function getHeaderActions({
   }
 
   if (activeTab === "mailboxes") {
-    return (
-      <Button size="sm" onClick={onConnectMailbox}>
-        <Icon icon={ArrowUpRight} size="sm" />
-        Connect Gmail
-      </Button>
-    );
+    return <MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />;
   }
 
   if (activeTab === "sequences") {
     return (
       <Flex gap="sm" wrap>
         {!hasMailboxes ? (
-          <Button size="sm" onClick={onConnectMailbox}>
-            <Icon icon={ArrowUpRight} size="sm" />
-            Connect Gmail
-          </Button>
+          <MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />
         ) : null}
         <Button
           size="sm"
@@ -2702,10 +3244,7 @@ function getHeaderActions({
   return (
     <Flex gap="sm" wrap>
       {!hasMailboxes ? (
-        <Button variant="secondary" size="sm" onClick={onConnectMailbox}>
-          <Icon icon={ArrowUpRight} size="sm" />
-          Connect Gmail
-        </Button>
+        <MailboxConnectButtons onConnectMailbox={onConnectMailbox} size="sm" />
       ) : null}
       <Button
         variant="secondary"

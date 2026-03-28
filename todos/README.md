@@ -1,32 +1,26 @@
 # Nixelo Todo Index
 
-> **Last Updated:** 2026-03-27
+> **Last Updated:** 2026-03-28
 
-## Quick Wins
+## P0
 
-- [ ] [e2e-test-id-cleanup.md](./e2e-test-id-cleanup.md) — Recording card title targeting and sprint test ID halfway pattern. Two small fixes.
-- [ ] [offline-pwa.md](./offline-pwa.md) — Move serviceWorker banners from raw DOM to React. Fix AdminTab/DocumentSidebar getElementById. Push/worker verification.
-- [ ] [naming-and-route-normalization.md](./naming-and-route-normalization.md) — Route/API naming ambiguity, kill `-*.test.tsx` convention, file-route readability.
+- [ ] [outcome-driven-validation-overhaul.md](./outcome-driven-validation-overhaul.md) — Deep repo-state audit, blocking validator cleanup, noisy-green test cleanup, and a burn-the-baselines-to-zero plan.
+- [ ] [ban-defensive-fallback-chains.md](./ban-defensive-fallback-chains.md) — Validators to ban deep ternary fallback chains and silent `undefined` render returns in owned code.
 
-## Core (Components & Validators)
-
-- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — Encapsulate shadcn components (Select 36 files, Popover 14, Command 8). String props not ReactNode. Ban raw HTML elements. Shrink variant axes to < 20. Raw Tailwind to 0.
-
-## Features
+## Product / Platform
 
 - [ ] [meeting-intelligence.md](./meeting-intelligence.md) — Provider rollout, capture-platform direction, collaboration reality check.
-- [ ] [email-outreach.md](./email-outreach.md) — Reliability polish, analytics depth, provider expansion.
+- [ ] [email-outreach.md](./email-outreach.md) — Deferred post-MVP outreach capabilities that are still unscheduled.
 - [ ] [cal-com-features.md](./cal-com-features.md) — Scheduling, branding, portal ideas needing product decisions.
-- [ ] [plane-features.md](./plane-features.md) — External notification routing.
-- [ ] [feature-docs-expansion.md](./feature-docs-expansion.md) — Current-state feature docs need coverage and standard structure.
 
-## E2E & Visual
+## Design / UI Debt
 
-- [ ] [e2e-screenshot-consolidation.md](./e2e-screenshot-consolidation.md) — Nearly complete. Session orchestration reusability and docs remain.
-- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Automated guardrails done. Human review passes and screenshot coverage depth pending.
+- [ ] [component-export-cleanup.md](./component-export-cleanup.md) — Remove leaked subcomponent exports from IssueDetail barrel, Roadmap, ProfileContent, KanbanColumn.
+- [ ] [design-system-primitive-simplification.md](./design-system-primitive-simplification.md) — Re-triage the remaining raw-styling backlog after the validator overhaul and delete or fix it until the baseline reaches zero.
+- [ ] [visual-consistency-hardening.md](./visual-consistency-hardening.md) — Screenshot review discipline, coverage depth, and human visual QA gaps.
 
 ## Human Todos (manual action required)
 
 - [ ] [../human-todos/service-signups.md](../human-todos/service-signups.md) — Sign up for free services, get API keys, set env vars.
 - [ ] [../human-todos/ai-recording-todos.md](../human-todos/ai-recording-todos.md) — Voice AI setup and recording infrastructure.
-- [ ] [../human-todos/email-outreach.md](../human-todos/email-outreach.md) — Email outreach setup tasks.
+- [ ] [../human-todos/email-outreach.md](../human-todos/email-outreach.md) — Email outreach rollout blockers and manual setup.

@@ -117,7 +117,7 @@ function CreateProjectFooter({
             {isSubmitting ? (
               <Flex align="center" gap="sm">
                 <LoadingSpinner size="sm" />
-                <span>Creating...</span>
+                Creating...
               </Flex>
             ) : (
               "Create Project"

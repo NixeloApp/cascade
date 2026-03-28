@@ -9,7 +9,7 @@ import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Typography } from "../ui/Typography";
 import type { GroupBy, RoadmapEpic, TimelineSpan, TimelineZoom, ViewMode } from "./types";
 import { GROUP_BY_OPTIONS, TIMELINE_SPANS, TIMELINE_ZOOM_OPTIONS } from "./types";
@@ -200,48 +200,32 @@ function RoadmapFilterControls({
     >
       <RoadmapTimelineRangeLabel timelineRangeLabel={timelineRangeLabel} />
 
-      <Select value={filterEpic === "all" ? "all" : filterEpic} onValueChange={handleEpicChange}>
-        <SelectTrigger width={epicFilterWidth}>
-          <SelectValue placeholder="All Epics" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Epics</SelectItem>
-          {epics.map((epic) => (
-            <SelectItem key={epic._id} value={epic._id}>
-              {epic.title}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Select
+        onChange={handleEpicChange}
+        options={[
+          { value: "all", label: "All Epics" },
+          ...epics.map((epic) => ({ value: epic._id, label: epic.title })),
+        ]}
+        placeholder="All Epics"
+        value={filterEpic === "all" ? "all" : filterEpic}
+        width={epicFilterWidth}
+      />
 
-      <Select value={String(timelineSpan)} onValueChange={handleTimelineSpanChange}>
-        <SelectTrigger
-          width={timelineSpanWidth}
-          data-testid={TEST_IDS.ROADMAP.TIMELINE_SPAN_SELECT}
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {TIMELINE_SPANS.map((span) => (
-            <SelectItem key={span.value} value={String(span.value)}>
-              {span.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Select
+        onChange={handleTimelineSpanChange}
+        options={TIMELINE_SPANS.map((span) => ({ value: String(span.value), label: span.label }))}
+        testId={TEST_IDS.ROADMAP.TIMELINE_SPAN_SELECT}
+        value={String(timelineSpan)}
+        width={timelineSpanWidth}
+      />
 
-      <Select value={groupBy} onValueChange={handleGroupByChange}>
-        <SelectTrigger width={groupByWidth} data-testid={TEST_IDS.ROADMAP.GROUP_BY_SELECT}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {GROUP_BY_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Select
+        onChange={handleGroupByChange}
+        options={GROUP_BY_OPTIONS}
+        testId={TEST_IDS.ROADMAP.GROUP_BY_SELECT}
+        value={groupBy}
+        width={groupByWidth}
+      />
     </Flex>
   );
 }

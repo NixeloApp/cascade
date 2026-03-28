@@ -32,7 +32,7 @@ jobs:
           - id: validate
             name: Validate
           - id: screenshots-check
-            name: Screenshot Manifest
+            name: Screenshot Integrity
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,7 +80,7 @@ jobs:
         if: matrix.id == 'validate'
         run: pnpm run static:validate
 
-      - name: Screenshot Manifest
+      - name: Screenshot Integrity
         if: matrix.id == 'screenshots-check'
         run: pnpm run static:screenshots
 

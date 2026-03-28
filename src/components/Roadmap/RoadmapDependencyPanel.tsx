@@ -16,7 +16,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import type { DependencyLine, RoadmapDependencyItem, RoadmapIssue } from "./types";
@@ -187,27 +187,22 @@ export function RoadmapDependencyPanel({
           {canEdit ? (
             <Flex align="center" gap="sm" wrap>
               <Select
-                value={dependencyTargetIssueId}
-                onValueChange={(value) =>
+                onChange={(value) =>
                   setDependencyTargetIssueId(
-                    value === ROADMAP_DEPENDENCY_TARGET_NONE
-                      ? ROADMAP_DEPENDENCY_TARGET_NONE
-                      : (value as Id<"issues">),
+                    value as typeof ROADMAP_DEPENDENCY_TARGET_NONE | Id<"issues">,
                   )
                 }
-              >
-                <SelectTrigger width="lg">
-                  <SelectValue placeholder="Issue this blocks" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ROADMAP_DEPENDENCY_TARGET_NONE}>Select issue</SelectItem>
-                  {availableTargetIssues.map((issue) => (
-                    <SelectItem key={issue._id} value={issue._id}>
-                      {issue.key} · {issue.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={[
+                  { value: ROADMAP_DEPENDENCY_TARGET_NONE, label: "Select issue" },
+                  ...availableTargetIssues.map((issue) => ({
+                    value: issue._id,
+                    label: `${issue.key} · ${issue.title}`,
+                  })),
+                ]}
+                placeholder="Issue this blocks"
+                value={dependencyTargetIssueId}
+                width="lg"
+              />
               <Button
                 variant="secondary"
                 size="sm"

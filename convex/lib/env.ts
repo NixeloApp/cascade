@@ -64,6 +64,22 @@ export function isGoogleOAuthConfigured(): boolean {
 }
 
 // ===========================================
+// Microsoft OAuth
+// ===========================================
+
+export function getMicrosoftClientId(): string {
+  return requireEnv("AUTH_MICROSOFT_ID");
+}
+
+export function getMicrosoftClientSecret(): string {
+  return requireEnv("AUTH_MICROSOFT_SECRET");
+}
+
+export function isMicrosoftOAuthConfigured(): boolean {
+  return !!process.env.AUTH_MICROSOFT_ID && !!process.env.AUTH_MICROSOFT_SECRET;
+}
+
+// ===========================================
 // GitHub OAuth (for repository linking, not authentication)
 // ===========================================
 

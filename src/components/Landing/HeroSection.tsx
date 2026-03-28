@@ -3,11 +3,14 @@ import { ROUTES } from "@/config/routes";
 import { ArrowRight } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getLandingHeroBadgeClassName } from "../ui/badgeSurfaceClassNames";
+import { getLandingPrimaryButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Inline } from "../ui/Inline";
 import { Stack } from "../ui/Stack";
-import { Typography } from "../ui/Typography";
+import { LeadText, Typography } from "../ui/Typography";
 import { ProductShowcase } from "./ProductShowcase";
 
 const heroSignals = [
@@ -30,7 +33,7 @@ export function HeroSection() {
                 justify="center"
                 style={{ animation: "var(--animation-fade-in)", animationFillMode: "backwards" }}
               >
-                <Badge variant="landingHero" shape="pill">
+                <Badge variant="outline" shape="pill" className={getLandingHeroBadgeClassName()}>
                   Docs, delivery, and time tracking in one operating system
                 </Badge>
               </Flex>
@@ -44,13 +47,12 @@ export function HeroSection() {
                 }}
               >
                 Replace scattered project tools{" "}
-                <span className="bg-linear-to-r from-landing-accent via-landing-accent-teal to-status-success-text bg-clip-text text-transparent">
+                <Inline className="bg-linear-to-r from-landing-accent via-landing-accent-teal to-status-success-text bg-clip-text text-transparent">
                   with one sharper workspace.
-                </span>
+                </Inline>
               </Typography>
 
-              <Typography
-                variant="lead"
+              <LeadText
                 style={{
                   animation: "var(--animation-slide-up)",
                   animationDelay: "0.2s",
@@ -59,7 +61,7 @@ export function HeroSection() {
               >
                 Nixelo keeps specs, tasks, client updates, and AI assistance in the same flow so
                 teams can search faster, act faster, and stop duplicating context.
-              </Typography>
+              </LeadText>
             </Stack>
           </Container>
 
@@ -76,7 +78,12 @@ export function HeroSection() {
                 animationFillMode: "backwards",
               }}
             >
-              <Button asChild variant="landingPrimary" size="none">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className={getLandingPrimaryButtonClassName()}
+              >
                 <Link to={ROUTES.signup.path}>Get Started Free</Link>
               </Button>
               <Button asChild variant="secondary" size="lg">

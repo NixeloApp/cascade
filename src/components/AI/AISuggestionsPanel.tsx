@@ -6,6 +6,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { AlertTriangle, Calendar, Check, Lightbulb, Sparkles, Target, X } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getAiPrimaryActionButtonClassName } from "../ui/buttonSurfaceClassNames";
 import { Card } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -13,6 +14,7 @@ import { Icon } from "../ui/Icon";
 import { InlineSpinner } from "../ui/LoadingSpinner";
 import { MetadataTimestamp } from "../ui/Metadata";
 import { Progress } from "../ui/Progress";
+import { ResponsiveText } from "../ui/ResponsiveText";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Skeleton } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
@@ -60,23 +62,22 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
       >
         <Stack gap="md">
           <Button
-            variant="accentGradient"
-            size="touchWide"
+            variant="unstyled"
+            size="md"
             onClick={handleGenerateInsights}
             disabled={isGenerating}
+            className={getAiPrimaryActionButtonClassName()}
           >
             <Flex align="center" justify="center" gap="sm">
               {isGenerating ? (
                 <>
                   <InlineSpinner size="sm" variant="inherit" className="sm:size-5" />
-                  <span className="hidden sm:inline">Analyzing Project...</span>
-                  <span className="sm:hidden">Analyzing...</span>
+                  <ResponsiveText short="Analyzing..." long="Analyzing Project..." />
                 </>
               ) : (
                 <>
                   <Icon icon={Sparkles} size="md" />
-                  <span className="hidden sm:inline">Generate AI Insights</span>
-                  <span className="sm:hidden">Generate Insights</span>
+                  <ResponsiveText short="Generate Insights" long="Generate AI Insights" />
                 </>
               )}
             </Flex>

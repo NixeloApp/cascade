@@ -22,10 +22,32 @@ import { CreateIssueModal } from "./IssueDetail";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import {
+  getCalendarIssueButtonClassName,
+  getMobileTouchTargetButtonClassName,
+} from "./ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { Dot } from "./ui/Dot";
 import { Icon } from "./ui/Icon";
 import { IconButton } from "./ui/IconButton";
+import {
+  getIssuesCalendarContentClassName,
+  getIssuesCalendarDayCellClassName,
+  getIssuesCalendarEmptyDayCellClassName,
+  getIssuesCalendarGridCardClassName,
+  getIssuesCalendarGridViewportClassName,
+  getIssuesCalendarIssueContentClassName,
+  getIssuesCalendarIssueRowClassName,
+  getIssuesCalendarIssueTitleClassName,
+  getIssuesCalendarIssueTypeIconClassName,
+  getIssuesCalendarMonthLabelClassName,
+  getIssuesCalendarNavigationButtonClassName,
+  getIssuesCalendarNavigationClassName,
+  getIssuesCalendarPriorityLegendDotClassName,
+  getIssuesCalendarShellClassName,
+  getIssuesCalendarWeekdayHeaderRowClassName,
+  getIssuesCalendarWeekdayLabelClassName,
+} from "./ui/issuesCalendarSurfaceClassNames";
 import { Typography } from "./ui/Typography";
 
 interface IssuesCalendarViewProps {
@@ -36,13 +58,12 @@ interface IssuesCalendarViewProps {
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 const PRIORITY_LEGEND_ITEMS = [
-  { label: "Highest", className: "bg-status-error" },
-  { label: "High", className: "bg-status-warning" },
-  { label: "Medium", className: "bg-accent-ring" },
-  { label: "Low", className: "bg-brand-ring" },
-  { label: "Lowest", className: "bg-ui-text-secondary" },
+  { label: "Highest", tone: "highest" },
+  { label: "High", tone: "high" },
+  { label: "Medium", tone: "medium" },
+  { label: "Low", tone: "low" },
+  { label: "Lowest", tone: "lowest" },
 ] as const;
-const DAY_CELL_HEIGHT_CLASS = "min-h-32 md:min-h-24";
 const MAX_VISIBLE_ISSUES_PER_DAY = 3;
 
 function getMonthRangeTimestamps(year: number, month: number): { from: number; to: number } {
@@ -190,7 +211,7 @@ export function IssuesCalendarView({
         key={`empty-${i}`}
         variant="ghost"
         radius="none"
-        className={cn(DAY_CELL_HEIGHT_CLASS, "bg-ui-bg-secondary")}
+        className={getIssuesCalendarEmptyDayCellClassName()}
       />,
     );
   }
@@ -206,7 +227,7 @@ export function IssuesCalendarView({
         recipe={getDayCellRecipe(isTodayDate, dragOverDay === day)}
         data-testid={`calendar-day-${day}`}
         padding="sm"
-        className={cn("group transition-colors", DAY_CELL_HEIGHT_CLASS)}
+        className={getIssuesCalendarDayCellClassName()}
         onDragOver={(e) => handleDragOver(e, day)}
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, day)}
@@ -250,11 +271,10 @@ export function IssuesCalendarView({
               >
                 <Button
                   variant="unstyled"
-                  chrome="calendarIssue"
-                  chromeSize="calendarIssue"
+                  size="content"
                   onClick={() => setSelectedIssue(issue._id)}
                   className={cn(
-                    "w-full",
+                    getCalendarIssueButtonClassName(),
                     canEdit && "cursor-grab",
                     draggedIssue === issue._id && "opacity-50",
                   )}
@@ -262,12 +282,19 @@ export function IssuesCalendarView({
                   onDragStart={(e) => handleDragStart(e, issue._id)}
                   onDragEnd={handleDragEnd}
                 >
-                  <Flex align="center" gap="xs" className="w-full">
+                  <Flex align="center" gap="xs" className={getIssuesCalendarIssueRowClassName()}>
                     <Dot className={getPriorityColor(issue.priority)} />
-                    <FlexItem flex="1" className="min-w-0">
+                    <FlexItem flex="1" className={getIssuesCalendarIssueContentClassName()}>
                       <Flex align="center" gap="xs">
-                        <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
-                        <Typography variant="caption" className="truncate">
+                        <Icon
+                          icon={ISSUE_TYPE_ICONS[issue.type]}
+                          size="xs"
+                          className={getIssuesCalendarIssueTypeIconClassName()}
+                        />
+                        <Typography
+                          variant="caption"
+                          className={getIssuesCalendarIssueTitleClassName()}
+                        >
                           {issue.title}
                         </Typography>
                       </Flex>
@@ -288,8 +315,8 @@ export function IssuesCalendarView({
   }
 
   return (
-    <FlexItem flex="1" className="overflow-auto">
-      <Stack gap="xl" className="m-3 sm:m-6">
+    <FlexItem flex="1" className={getIssuesCalendarShellClassName()}>
+      <Stack gap="xl" className={getIssuesCalendarContentClassName()}>
         {/* Header */}
         <Flex
           direction="column"
@@ -306,21 +333,21 @@ export function IssuesCalendarView({
             align="center"
             gap="md"
             justify="between"
-            className="w-full sm:w-auto sm:justify-start"
+            className={getIssuesCalendarNavigationClassName()}
           >
             <Tooltip content="Previous month">
               <IconButton
                 variant="ghost"
                 size="sm"
                 onClick={() => navigateMonth(-1)}
-                className="size-11 sm:size-8"
+                className={getIssuesCalendarNavigationButtonClassName()}
                 aria-label="Previous month"
               >
                 <Icon icon={ChevronLeft} size="md" />
               </IconButton>
             </Tooltip>
 
-            <Typography variant="h3" className="w-full text-center sm:min-w-48">
+            <Typography variant="h3" className={getIssuesCalendarMonthLabelClassName()}>
               {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </Typography>
 
@@ -329,27 +356,32 @@ export function IssuesCalendarView({
                 variant="ghost"
                 size="sm"
                 onClick={() => navigateMonth(1)}
-                className="size-11 sm:size-8"
+                className={getIssuesCalendarNavigationButtonClassName()}
                 aria-label="Next month"
               >
                 <Icon icon={ChevronRight} size="md" />
               </IconButton>
             </Tooltip>
 
-            <Button variant="secondary" size="touchSm" onClick={() => setCurrentDate(new Date())}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setCurrentDate(new Date())}
+              className={getMobileTouchTargetButtonClassName()}
+            >
               Today
             </Button>
           </Flex>
         </Flex>
 
         {/* Calendar Grid */}
-        <div className="overflow-x-auto">
-          <Card padding="none" className="min-w-160 overflow-hidden">
+        <div className={getIssuesCalendarGridViewportClassName()}>
+          <Card padding="none" className={getIssuesCalendarGridCardClassName()}>
             {/* Weekday Headers */}
-            <Grid cols={7} className="border-b border-ui-border bg-ui-bg-secondary">
+            <Grid cols={7} className={getIssuesCalendarWeekdayHeaderRowClassName()}>
               {WEEKDAY_LABELS.map((day) => (
                 <div key={day} className={getCardRecipeClassName("calendarWeekdayHeaderCell")}>
-                  <Typography variant="label" className="text-center">
+                  <Typography variant="label" className={getIssuesCalendarWeekdayLabelClassName()}>
                     {day}
                   </Typography>
                 </div>
@@ -365,7 +397,7 @@ export function IssuesCalendarView({
         <Flex align="center" gap="xl">
           {PRIORITY_LEGEND_ITEMS.map((item) => (
             <Flex key={item.label} align="center" gap="sm">
-              <Dot size="lg" className={item.className} />
+              <Dot size="lg" className={getIssuesCalendarPriorityLegendDotClassName(item.tone)} />
               <Typography variant="small" color="secondary">
                 {item.label}
               </Typography>

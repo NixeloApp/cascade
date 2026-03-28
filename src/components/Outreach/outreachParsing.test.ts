@@ -46,6 +46,7 @@ describe("outreachParsing", () => {
         },
       },
     ]);
+    expect(parsed.issues).toEqual([]);
     expect(parsed.skippedEmptyRows).toBe(0);
   });
 
@@ -69,5 +70,52 @@ describe("outreachParsing", () => {
 
   it("normalizes tag input into a unique trimmed list", () => {
     expect(parseContactTagsInput("vip, west; vip | beta")).toEqual(["vip", "west", "beta"]);
+  });
+
+  it("keeps valid rows importable while surfacing duplicate and invalid email rows", () => {
+    const parsed = parseOutreachContactImportCsv(
+      [
+        "email,first name",
+        "alex@example.com,Alex",
+        "alex@example.com,Alex Duplicate",
+        "bad-email,Bad",
+        ",Missing",
+        "jamie@example.com,Jamie",
+      ].join("\n"),
+    );
+
+    expect(parsed.contacts).toEqual([
+      { email: "alex@example.com", firstName: "Alex" },
+      { email: "jamie@example.com", firstName: "Jamie" },
+    ]);
+    expect(parsed.issues).toEqual([
+      {
+        email: "alex@example.com",
+        kind: "duplicate_email",
+        message:
+          "Row 3 duplicates alex@example.com, so only the first occurrence will be imported.",
+        rowNumber: 3,
+      },
+      {
+        email: "bad-email",
+        kind: "invalid_email",
+        message: "Row 4 has an invalid email address (bad-email).",
+        rowNumber: 4,
+      },
+      {
+        kind: "missing_email",
+        message: "Row 5 is missing an email address.",
+        rowNumber: 5,
+      },
+    ]);
+  });
+
+  it("returns issues instead of throwing when a CSV has rows but nothing importable", () => {
+    const parsed = parseOutreachContactImportCsv(
+      ["email,first name", "bad-email,Bad", ",Missing"].join("\n"),
+    );
+
+    expect(parsed.contacts).toEqual([]);
+    expect(parsed.issues).toHaveLength(2);
   });
 });

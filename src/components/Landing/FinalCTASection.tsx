@@ -105,8 +105,8 @@ export function FinalCTASection() {
                   <Stack gap="lg">
                     <Flex align="center" justify="between" gap="md" wrap>
                       <Stack gap="xs">
-                        <Typography variant="pageHeaderEyebrow">First operating cycle</Typography>
-                        <Typography variant="cardTitle">
+                        <Typography variant="eyebrowWide">First operating cycle</Typography>
+                        <Typography variant="h5" as="h3">
                           The first win is fewer rebuilds, not a prettier rollout deck
                         </Typography>
                       </Stack>
@@ -131,8 +131,8 @@ export function FinalCTASection() {
                 >
                   <Stack gap="lg" className="h-full">
                     <Stack gap="sm">
-                      <Typography variant="pageHeaderEyebrow">Choose the next move</Typography>
-                      <Typography variant="cardTitle">
+                      <Typography variant="eyebrowWide">Choose the next move</Typography>
+                      <Typography variant="h5" as="h3">
                         Start free, review the rollout, or walk the product once more
                       </Typography>
                       <Typography variant="small" color="secondary">
@@ -156,7 +156,7 @@ export function FinalCTASection() {
                       <Button asChild variant="secondary" size="lg" className="w-full">
                         <a href="#pricing">Review rollout stages</a>
                       </Button>
-                      <Button asChild variant="link" size="none">
+                      <Button asChild variant="link" size="content">
                         <a href="#product-showcase">
                           See the workflow tour
                           <Icon icon={ArrowRight} size="sm" />
@@ -192,7 +192,7 @@ function LaunchStepCard({
               <Icon icon={icon} size="sm" tone={iconTone} />
             </IconCircle>
             <Stack gap="xs">
-              <Typography variant="pageHeaderEyebrow">{stage}</Typography>
+              <Typography variant="eyebrowWide">{stage}</Typography>
               <Typography variant="label">{title}</Typography>
             </Stack>
           </Flex>
@@ -218,7 +218,7 @@ function ClosingSignalRow({ label, value }: ClosingSignal) {
   return (
     <CardSection size="compact" className={getCardRecipeClassName("overlayInset")}>
       <Stack gap="xs">
-        <Typography variant="pageHeaderEyebrow">{label}</Typography>
+        <Typography variant="eyebrowWide">{label}</Typography>
         <Typography variant="caption">{value}</Typography>
       </Stack>
     </CardSection>

@@ -6,10 +6,15 @@ import { formatDuration, formatHours } from "@/lib/formatting";
 import { Play } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
+import {
+  getStartTimerButtonClassName,
+  getStopTimerButtonClassName,
+} from "../ui/buttonSurfaceClassNames";
 import { Card } from "../ui/Card";
 import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Inline } from "../ui/Inline";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
@@ -81,7 +86,7 @@ export function TimerWidget() {
               >
                 <Button
                   variant="unstyled"
-                  size="none"
+                  size="content"
                   className="max-w-timer-description truncate text-brand-indigo-text cursor-help"
                 >
                   {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
@@ -93,9 +98,10 @@ export function TimerWidget() {
           {/* Stop button */}
           <Button
             onClick={handleStop}
-            chrome="timerStrip"
-            chromeSize="compactPill"
+            variant="unstyled"
+            size="content"
             aria-label="Stop timer"
+            className={getStopTimerButtonClassName()}
           >
             Stop
           </Button>
@@ -108,12 +114,13 @@ export function TimerWidget() {
     <>
       <Button
         onClick={() => setShowTimeEntryModal(true)}
-        chrome="framed"
-        chromeSize="pill"
+        variant="unstyled"
+        size="content"
         leftIcon={<Icon icon={Play} size="sm" fill="currentColor" />}
         aria-label="Start timer"
+        className={getStartTimerButtonClassName()}
       >
-        <span className="hidden sm:inline">Start Timer</span>
+        <Inline className="hidden sm:inline">Start Timer</Inline>
       </Button>
 
       <TimeEntryModal

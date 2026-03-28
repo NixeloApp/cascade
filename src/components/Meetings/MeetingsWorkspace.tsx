@@ -15,6 +15,7 @@ import { PageContent } from "@/components/layout";
 import { Avatar, type AvatarProps } from "@/components/ui/Avatar";
 import { Badge, type BadgeProps } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getMobileTouchWideButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { CardSection } from "@/components/ui/CardSection";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -23,6 +24,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
+import { Inline } from "@/components/ui/Inline";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { List } from "@/components/ui/List";
@@ -30,13 +32,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Section } from "@/components/ui/Section";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -535,8 +531,8 @@ function RecordingListItem({
             <Stack gap="xs">
               <Typography variant="label">{recording.title}</Typography>
               <Typography variant="caption" color="secondary">
-                {formatMeetingPlatform(recording.meetingPlatform)} <span aria-hidden="true">•</span>{" "}
-                {formatRelativeTime(recording.createdAt)}
+                {formatMeetingPlatform(recording.meetingPlatform)}{" "}
+                <Inline aria-hidden="true">•</Inline> {formatRelativeTime(recording.createdAt)}
               </Typography>
               {"matchExcerpt" in recording && recording.matchExcerpt && (
                 <Typography variant="caption" color="secondary">
@@ -607,8 +603,9 @@ function MemoryItemMeta({
 }) {
   return (
     <Typography variant="caption" color="secondary">
-      {recordingTitle} <span aria-hidden="true">•</span> {formatMeetingPlatform(meetingPlatform)}{" "}
-      <span aria-hidden="true">•</span> {formatRelativeTime(createdAt)}
+      {recordingTitle} <Inline aria-hidden="true">•</Inline>{" "}
+      {formatMeetingPlatform(meetingPlatform)} <Inline aria-hidden="true">•</Inline>{" "}
+      {formatRelativeTime(createdAt)}
     </Typography>
   );
 }
@@ -662,9 +659,9 @@ function MeetingMemorySection({
       gap="sm"
       data-testid={TEST_IDS.MEETINGS.MEMORY_SECTION}
     >
-      <span className="sr-only" data-testid={TEST_IDS.MEETINGS.MEMORY_DESCRIPTION}>
+      <Inline className="sr-only" data-testid={TEST_IDS.MEETINGS.MEMORY_DESCRIPTION}>
         {description}
-      </span>
+      </Inline>
       {projectLenses.length > 0 && (
         <Flex gap="xs" wrap>
           <Button
@@ -904,7 +901,7 @@ function TranscriptSegmentList({
   if (!hasTranscriptSegments(transcript.segments)) {
     return (
       <Card variant="soft" padding="md">
-        <Typography as="pre" variant="monoBlock">
+        <Typography as="pre" variant="mono" className="whitespace-pre-wrap">
           {transcript.fullText}
         </Typography>
       </Card>
@@ -1070,7 +1067,7 @@ function TranscriptSegmentList({
             Raw Transcript
           </Typography>
           <ScrollArea size="contentSm">
-            <Typography as="pre" variant="monoBlock">
+            <Typography as="pre" variant="mono" className="whitespace-pre-wrap">
               {transcript.fullText}
             </Typography>
           </ScrollArea>
@@ -1114,7 +1111,7 @@ function LinkedIssueDetails({ issueId }: { issueId: Id<"issues"> }) {
           {issue.title}
         </Typography>
         {organization && (
-          <Button asChild variant="link" size="none">
+          <Button asChild variant="link" size="content">
             <Link
               to={ROUTES.issues.detail.path}
               params={{ orgSlug: organization.orgSlug, key: issue.key }}
@@ -1192,21 +1189,16 @@ function ActionItemCard({
                 <Flex direction="column" directionSm="row" gap="sm" alignSm="center">
                   <FlexItem flex="1">
                     <Select
+                      ariaLabel={`Project for action item ${index + 1}`}
                       key={`${summaryId}-${index}-${selectedProjectId ?? "none"}`}
                       defaultValue={selectedProjectId ?? undefined}
-                      onValueChange={(value) => onProjectChange(value as Id<"projects">)}
-                    >
-                      <SelectTrigger aria-label={`Project for action item ${index + 1}`}>
-                        <SelectValue placeholder="Choose project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableProjects.map((project) => (
-                          <SelectItem key={project._id} value={project._id}>
-                            {project.key} - {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onChange={onProjectChange}
+                      options={availableProjects.map((project) => ({
+                        value: project._id,
+                        label: `${project.key} - ${project.name}`,
+                      }))}
+                      placeholder="Choose project"
+                    />
                   </FlexItem>
                   <Button
                     variant="secondary"
@@ -1469,13 +1461,14 @@ function FocusedMeetingDetailTab({
       <Button
         type="button"
         variant={isActive ? "secondary" : "ghost"}
-        size="touchWide"
+        size="md"
         role="tab"
         id={`meeting-detail-tab-${value}`}
         aria-controls={`meeting-detail-panel-${value}`}
         aria-selected={isActive}
         data-state={isActive ? "active" : "inactive"}
         onClick={() => onSelect(value)}
+        className={getMobileTouchWideButtonClassName()}
       >
         {label}
       </Button>
@@ -1953,21 +1946,19 @@ function ScheduleRecordingDialog({
               Project (Optional)
             </Label>
             <Select
+              ariaLabel="Recording project"
+              id="meeting-recording-project"
+              onChange={(value) => setProjectId(value as ProjectFilter)}
+              options={[
+                { value: "all", label: "No project" },
+                ...((projects?.map((project) => ({
+                  value: project._id,
+                  label: `${project.key} - ${project.name}`,
+                })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
+              ]}
+              placeholder="No project"
               value={projectId}
-              onValueChange={(value) => setProjectId(value as ProjectFilter)}
-            >
-              <SelectTrigger id="meeting-recording-project" aria-label="Recording project">
-                <SelectValue placeholder="No project" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">No project</SelectItem>
-                {projects?.map((project) => (
-                  <SelectItem key={project._id} value={project._id}>
-                    {project.key} - {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </Stack>
 
           <Checkbox
@@ -2108,69 +2099,42 @@ export function MeetingsWorkspace() {
 
                 <Grid cols={1} colsSm={2} colsXl={4} gap="sm">
                   <Select
+                    ariaLabel="Filter by status"
+                    onChange={(value) => setStatusFilter(value as StatusFilter)}
+                    options={STATUS_FILTER_OPTIONS}
+                    placeholder="All statuses"
                     value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-                  >
-                    <SelectTrigger aria-label="Filter by status">
-                      <SelectValue placeholder="All statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_FILTER_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
 
                   <Select
+                    ariaLabel="Filter by platform"
+                    onChange={(value) => setPlatformFilter(value as PlatformFilter)}
+                    options={PLATFORM_FILTER_OPTIONS}
+                    placeholder="All platforms"
                     value={platformFilter}
-                    onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
-                  >
-                    <SelectTrigger aria-label="Filter by platform">
-                      <SelectValue placeholder="All platforms" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PLATFORM_FILTER_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
 
                   <Select
+                    ariaLabel="Filter by project"
+                    onChange={(value) => setProjectFilter(value as ProjectFilter)}
+                    options={[
+                      { value: "all", label: "All projects" },
+                      ...((projects?.map((project) => ({
+                        value: project._id,
+                        label: `${project.key} - ${project.name}`,
+                      })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
+                    ]}
+                    placeholder="All projects"
                     value={projectFilter}
-                    onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
-                  >
-                    <SelectTrigger aria-label="Filter by project">
-                      <SelectValue placeholder="All projects" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All projects</SelectItem>
-                      {projects?.map((project) => (
-                        <SelectItem key={project._id} value={project._id}>
-                          {project.key} - {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
 
                   <Select
+                    ariaLabel="Filter by date"
+                    onChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
+                    options={TIME_WINDOW_OPTIONS}
+                    placeholder="All dates"
                     value={timeWindowFilter}
-                    onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
-                  >
-                    <SelectTrigger aria-label="Filter by date">
-                      <SelectValue placeholder="All dates" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIME_WINDOW_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </Grid>
 
                 {filteredRecordings !== undefined && (

@@ -32,10 +32,8 @@ export class SprintsPage extends BasePage {
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
-    this.anyStartSprintButton = page.locator('[data-testid^="sprint-start-trigger-"]').first();
-    this.anyCompleteSprintButton = page
-      .locator('[data-testid^="sprint-complete-trigger-"]')
-      .first();
+    this.anyStartSprintButton = page.getByTestId(TEST_IDS.SPRINT.START_TRIGGER).first();
+    this.anyCompleteSprintButton = page.getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER).first();
     this.startDialog = page.getByTestId(TEST_IDS.SPRINT.START_DIALOG);
     this.startDateInput = page.getByTestId(TEST_IDS.SPRINT.START_DATE_INPUT);
     this.startEndDateInput = page.getByTestId(TEST_IDS.SPRINT.START_END_DATE_INPUT);
@@ -96,11 +94,11 @@ export class SprintsPage extends BasePage {
   }
 
   getStartButton(sprintName: string): Locator {
-    return this.page.getByTestId(TEST_IDS.SPRINT.START_TRIGGER(sprintName));
+    return this.getSprintCard(sprintName).getByTestId(TEST_IDS.SPRINT.START_TRIGGER);
   }
 
   getCompleteButton(sprintName: string): Locator {
-    return this.page.getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER(sprintName));
+    return this.getSprintCard(sprintName).getByTestId(TEST_IDS.SPRINT.COMPLETE_TRIGGER);
   }
 
   getStartPresetButton(presetId: string): Locator {
@@ -144,5 +142,13 @@ export class SprintsPage extends BasePage {
     await this.workloadTrigger.waitFor({ state: "visible", timeout: 5000 });
     await this.workloadTrigger.click();
     await this.workloadPopover.waitFor({ state: "visible", timeout: 5000 });
+  }
+
+  private getSprintCard(sprintName: string): Locator {
+    return this.sprintCards
+      .filter({
+        has: this.page.getByTestId(TEST_IDS.SPRINT.NAME).filter({ hasText: sprintName }),
+      })
+      .first();
   }
 }

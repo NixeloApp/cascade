@@ -100,7 +100,7 @@ function StatusBadge({ status }: { status: string }) {
     <Badge size="sm" variant={config.variant}>
       <Flex as="span" align="center" gap="xs">
         {config.icon}
-        <span>{config.label}</span>
+        {config.label}
       </Flex>
     </Badge>
   );
@@ -428,7 +428,7 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
           <CollapsibleContent>
             <Card variant="soft" padding="md">
               <ScrollArea size="contentLg">
-                <Typography as="pre" variant="monoBlock">
+                <Typography as="pre" variant="mono" className="whitespace-pre-wrap">
                   {transcript.fullText}
                 </Typography>
               </ScrollArea>

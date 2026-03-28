@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { ErrorCodeText, LargeText, Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { FileQuestion } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -34,17 +34,13 @@ export function NotFoundPage() {
           </IconCircle>
 
           {/* Large error code with tight tracking */}
-          <Typography variant="errorCodeDisplay">404</Typography>
+          <ErrorCodeText>404</ErrorCodeText>
 
           {/* Message with secondary text styling */}
           <Stack gap="sm" align="center">
-            <Typography
-              variant="large"
-              color="secondary"
-              data-testid={TEST_IDS.PAGE.NOT_FOUND_HEADING}
-            >
+            <LargeText color="secondary" data-testid={TEST_IDS.PAGE.NOT_FOUND_HEADING}>
               Page not found
-            </Typography>
+            </LargeText>
             <Typography color="tertiary">
               The page you are looking for does not exist or has been moved.
             </Typography>

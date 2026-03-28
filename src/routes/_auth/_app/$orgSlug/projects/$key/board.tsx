@@ -16,13 +16,7 @@ import { SprintProgressBar, SprintWorkload } from "@/components/Sprints";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useProjectByKey } from "@/hooks/useProjectByKey";
@@ -140,25 +134,26 @@ function BoardPage() {
 
               <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
               {project.boardType === "scrum" && sprints && (
-                <Select value={selectedSprint?._id || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger width="md" data-testid={TEST_IDS.BOARD.SPRINT_TRIGGER}>
-                    <SelectValue placeholder="Active Sprint" />
-                  </SelectTrigger>
-                  <SelectContent data-testid={TEST_IDS.BOARD.SPRINT_CONTENT}>
-                    <SelectItem value="active" data-testid={TEST_IDS.BOARD.SPRINT_OPTION("active")}>
-                      Active Sprint
-                    </SelectItem>
-                    {sprints.map((sprint) => (
-                      <SelectItem
-                        key={sprint._id}
-                        value={sprint._id}
-                        data-testid={TEST_IDS.BOARD.SPRINT_OPTION(sprint._id)}
-                      >
-                        {sprint.name} ({sprint.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Select
+                  contentTestId={TEST_IDS.BOARD.SPRINT_CONTENT}
+                  onChange={handleSprintChange}
+                  options={[
+                    {
+                      label: "Active Sprint",
+                      testId: TEST_IDS.BOARD.SPRINT_OPTION("active"),
+                      value: "active",
+                    },
+                    ...sprints.map((sprint) => ({
+                      label: `${sprint.name} (${sprint.status})`,
+                      testId: TEST_IDS.BOARD.SPRINT_OPTION(sprint._id),
+                      value: sprint._id,
+                    })),
+                  ]}
+                  placeholder="Active Sprint"
+                  testId={TEST_IDS.BOARD.SPRINT_TRIGGER}
+                  value={selectedSprint?._id || "active"}
+                  width="md"
+                />
               )}
             </Flex>
           </Flex>
@@ -177,28 +172,26 @@ function BoardPage() {
           mobileActions={
             <>
               {showMobileSprintControls && sprints && (
-                <Select value={selectedSprint?._id || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger
-                    data-testid={TEST_IDS.BOARD.SPRINT_TRIGGER}
-                    className="h-7 min-w-24 border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft"
-                  >
-                    <SelectValue placeholder="Sprint" />
-                  </SelectTrigger>
-                  <SelectContent data-testid={TEST_IDS.BOARD.SPRINT_CONTENT}>
-                    <SelectItem value="active" data-testid={TEST_IDS.BOARD.SPRINT_OPTION("active")}>
-                      Active Sprint
-                    </SelectItem>
-                    {sprints.map((sprint) => (
-                      <SelectItem
-                        key={sprint._id}
-                        value={sprint._id}
-                        data-testid={TEST_IDS.BOARD.SPRINT_OPTION(sprint._id)}
-                      >
-                        {sprint.name} ({sprint.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Select
+                  className="h-7 min-w-24 border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft"
+                  contentTestId={TEST_IDS.BOARD.SPRINT_CONTENT}
+                  onChange={handleSprintChange}
+                  options={[
+                    {
+                      label: "Active Sprint",
+                      testId: TEST_IDS.BOARD.SPRINT_OPTION("active"),
+                      value: "active",
+                    },
+                    ...sprints.map((sprint) => ({
+                      label: `${sprint.name} (${sprint.status})`,
+                      testId: TEST_IDS.BOARD.SPRINT_OPTION(sprint._id),
+                      value: sprint._id,
+                    })),
+                  ]}
+                  placeholder="Sprint"
+                  testId={TEST_IDS.BOARD.SPRINT_TRIGGER}
+                  value={selectedSprint?._id || "active"}
+                />
               )}
               <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
             </>

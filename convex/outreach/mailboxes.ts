@@ -16,6 +16,7 @@ import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { isEncrypted } from "../lib/encryption";
 import { notFound, validation } from "../lib/errors";
 import { outreachMailboxProviders } from "../validators";
+import { loadMailboxDeliverabilitySnapshots } from "./deliverability";
 import { buildMailboxRateLimitDefaults } from "./mailboxRateLimits";
 import { encryptMailboxTokensForStorage } from "./mailboxTokens";
 
@@ -277,5 +278,20 @@ export const updateLimit = authenticatedMutation({
       dailySendLimit: args.dailySendLimit,
       updatedAt: Date.now(),
     });
+
+    const refreshedMailbox = await ctx.db.get(args.mailboxId);
+    if (!refreshedMailbox) throw notFound("mailbox", args.mailboxId);
+    const deliverabilitySnapshots = await loadMailboxDeliverabilitySnapshots(ctx, [
+      refreshedMailbox,
+    ]);
+    const deliverability = deliverabilitySnapshots.get(refreshedMailbox._id);
+
+    return {
+      configuredDailyLimit: args.dailySendLimit,
+      deliverabilityStatus: deliverability?.deliverabilityStatus ?? "healthy",
+      effectiveDailyLimit: deliverability?.effectiveDailyLimit ?? args.dailySendLimit,
+      hasCapacityOverride: deliverability?.hasCapacityOverride ?? false,
+      warmupStageLabel: deliverability?.warmupStage.label ?? "Days 1-3",
+    };
   },
 });

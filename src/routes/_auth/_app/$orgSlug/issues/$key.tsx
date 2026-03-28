@@ -80,7 +80,12 @@ function IssuePageContent({
             hasCopied={detail.hasCopied}
             onCopyKey={detail.handleCopyKey}
             breadcrumb={
-              <Button asChild variant="ghostLink" size="content">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className="text-ui-text-secondary hover:text-ui-text active:scale-100"
+              >
                 <Link to={ROUTES.projects.board.path} params={{ orgSlug, key: projectKey }}>
                   <Icon icon={ChevronLeft} size="sm" />
                   {projectKey}

@@ -10,14 +10,9 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CardSection } from "@/components/ui/CardSection";
 import { Flex } from "@/components/ui/Flex";
+import { Inline } from "@/components/ui/Inline";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -200,7 +195,7 @@ function MobileMyIssuesColumnSelector({
     >
       {columns.map((column) => (
         <SegmentedControlItem key={column.key} value={column.key} width="fill" iconSpacing>
-          <span className="truncate">{column.label}</span>
+          <Inline className="truncate">{column.label}</Inline>
           <Badge variant="neutral" size="sm" shape="pill">
             {column.totalCount}
           </Badge>
@@ -318,52 +313,28 @@ export function MyIssuesBoardPage() {
         actions={
           <Flex gap="sm" align="center" wrap>
             <Select
+              ariaLabel="My issues priority filter"
+              onChange={(value) => setPriorityFilter(value as PriorityFilter)}
+              options={PRIORITY_OPTIONS.map((option) => ({
+                ...option,
+                testId: getMyIssuesPriorityFilterOptionTestId(option.value),
+              }))}
+              testId={TEST_IDS.MY_ISSUES.PRIORITY_FILTER}
               value={priorityFilter}
-              onValueChange={(v) => setPriorityFilter(v as PriorityFilter)}
-            >
-              <SelectTrigger
-                width="sm"
-                aria-label="My issues priority filter"
-                data-testid={TEST_IDS.MY_ISSUES.PRIORITY_FILTER}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PRIORITY_OPTIONS.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                    data-testid={getMyIssuesPriorityFilterOptionTestId(opt.value)}
-                  >
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              width="sm"
+            />
 
             <Select
+              ariaLabel="My issues due date filter"
+              onChange={(value) => setDueDateFilter(value as DueDateFilter)}
+              options={DUE_DATE_OPTIONS.map((option) => ({
+                ...option,
+                testId: getMyIssuesDueDateFilterOptionTestId(option.value),
+              }))}
+              testId={TEST_IDS.MY_ISSUES.DUE_DATE_FILTER}
               value={dueDateFilter}
-              onValueChange={(v) => setDueDateFilter(v as DueDateFilter)}
-            >
-              <SelectTrigger
-                width="sm"
-                aria-label="My issues due date filter"
-                data-testid={TEST_IDS.MY_ISSUES.DUE_DATE_FILTER}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DUE_DATE_OPTIONS.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                    data-testid={getMyIssuesDueDateFilterOptionTestId(opt.value)}
-                  >
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              width="sm"
+            />
 
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={resetFilters}>

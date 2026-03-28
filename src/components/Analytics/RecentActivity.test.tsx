@@ -1,5 +1,6 @@
 import { HOUR } from "@convex/lib/timeUtils";
 import { describe, expect, it } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { RecentActivity } from "./RecentActivity";
 
@@ -90,17 +91,19 @@ describe("RecentActivity", () => {
 
   describe("Timeline", () => {
     it("should show timeline line when multiple activities", () => {
-      const { container } = render(<RecentActivity activities={mockActivities} />);
+      render(<RecentActivity activities={mockActivities} />);
 
-      const timelineLine = container.querySelector(".absolute.left-4.top-4.bottom-4");
-      expect(timelineLine).toBeInTheDocument();
+      expect(
+        screen.getByTestId(TEST_IDS.ANALYTICS.RECENT_ACTIVITY_TIMELINE_RAIL),
+      ).toBeInTheDocument();
     });
 
     it("should not show timeline line for single activity", () => {
-      const { container } = render(<RecentActivity activities={[mockActivities[0]]} />);
+      render(<RecentActivity activities={[mockActivities[0]]} />);
 
-      const timelineLine = container.querySelector(".absolute.left-4.top-4.bottom-4");
-      expect(timelineLine).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(TEST_IDS.ANALYTICS.RECENT_ACTIVITY_TIMELINE_RAIL),
+      ).not.toBeInTheDocument();
     });
   });
 

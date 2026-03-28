@@ -98,7 +98,7 @@ function FeatureCard({
           </Typography>
         </Stack>
 
-        <Button asChild variant="link" size="none">
+        <Button asChild variant="link" size="content">
           <a href="#learn-more">
             Learn more
             <ArrowRight size={16} />

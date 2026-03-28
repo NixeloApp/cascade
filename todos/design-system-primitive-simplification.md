@@ -1,141 +1,16 @@
 # Design System Primitive Simplification
 
-> **Priority:** P1
-> **Status:** Open
-> **Last Updated:** 2026-03-27
+> **Priority:** P2
+> **Status:** Paused pending validator overhaul
+> **Last Updated:** 2026-03-28
 
-## Principles
+## Remaining
 
-1. **Components own their rendering.** Text props are `string`, not `ReactNode`. The component decides how to render them via `<Typography>`.
-2. **One public API per component.** No subcomponent exports. If the wrapper can't handle a use case, extend the wrapper — don't re-expose primitives.
-3. **No raw HTML elements.** No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in production code. Use `Typography`, `Flex`, etc.
-4. **Variants are tight.** If a variant axis has 60+ options, it's a smell. Shared primitives are building blocks, not escape hatches.
+- [ ] Re-triage the remaining raw-styling backlog after [`outcome-driven-validation-overhaul.md`](./outcome-driven-validation-overhaul.md) lands. Do not continue single-surface helper extraction just to reduce a baseline.
+- [ ] Only land a remaining raw-styling slice if it also fixes a real UX inconsistency, deletes duplicated code across multiple call sites, or simplifies a shared API.
+- [ ] Delete any remaining slice that cannot clear that bar instead of preserving it as “debt” forever.
+- [ ] Re-evaluate whether the current `58 violations across 52 files` baseline represents real duplication/product problems or just validator residue.
+- [ ] Burn the baseline to `0` by deleting fake abstractions, inlining single-use helper laundering, promoting real shared APIs, or fixing the actual UI inconsistency.
+- [ ] If the backlog still matters after re-triage, start with the smallest unresolved surfaces that actually improve shipped UI: `src/components/IssueDetailSheet.tsx`, `src/components/Onboarding/OnboardingChecklist.tsx`, and `src/components/Plate/SlashMenu.tsx`.
 
----
-
-## 1. Encapsulate shadcn Components
-
-Every shadcn compound component gets one wrapper. Subcomponent exports are deleted. Feature code imports only the wrapper.
-
-### SelectField (replaces 7 Select subcomponent exports)
-- **Files to update:** 36
-- **API:**
-  ```tsx
-  <SelectField
-    value={status}
-    onChange={setStatus}
-    placeholder="Status"
-    options={[
-      { value: "open", label: "Open" },
-      { value: "closed", label: "Closed" },
-    ]}
-  />
-  ```
-- **Supports:** `disabled`, `size`, grouped options via `groups` prop, `data-testid`
-- **Delete:** `SelectTrigger`, `SelectContent`, `SelectItem`, `SelectValue`, `SelectGroup`, `SelectLabel`, `SelectSeparator` exports from `ui/Select.tsx`
-- **End state:** 0 feature files importing Select subcomponents
-
-### PopoverField (replaces 8 Popover subcomponent exports)
-- **Files to update:** 14
-- **API:**
-  ```tsx
-  <PopoverField trigger={<Button>Pick</Button>}>
-    {(close) => <PickerContent onDone={close} />}
-  </PopoverField>
-  ```
-- **Supports:** `align`, `side`, `sideOffset`, controlled `open`/`onOpenChange`, `data-testid`
-- **Delete:** `PopoverTrigger`, `PopoverContent`, `PopoverAnchor`, `PopoverBody`, `PopoverHeader`, `PopoverFooter`, `PopoverTitle`, `PopoverDescription` exports
-- **End state:** 0 feature files importing Popover subcomponents
-
-### CommandMenu (replaces 7 Command subcomponent exports)
-- **Files to update:** 8
-- **API:**
-  ```tsx
-  <CommandMenu
-    items={items}
-    onSelect={handleSelect}
-    emptyMessage="No results"
-    searchPlaceholder="Search..."
-  />
-  ```
-- **Supports:** grouped items, custom item rendering via `renderItem`, loading state, keyboard navigation
-- **Delete:** `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandSeparator`, `CommandShortcut` exports (keep `CommandDialog` as it's already a good wrapper)
-- **End state:** 0 feature files importing Command subcomponents
-
-### Already done (reference pattern)
-- **Dialog** — single `Dialog` component, 0 leakage, enforces `title`/`description`
-- **Sheet** — single `Sheet` component, 0 leakage
-- **AlertDialog** — single `AlertDialog` + `ConfirmDialog`, 0 leakage
-
----
-
-## 2. String Props, Not ReactNode
-
-Components own text rendering. Callers pass strings.
-
-### OverviewBand
-- **Change:** `metrics.value: ReactNode` → `string | number`, `metrics.detail: ReactNode` → `string`
-- **Impact:** Eliminates `<span data-testid>` wrappers in TimeTrackingPage
-- **End state:** Component renders values via `<Typography>`, accepts `data-testid` on the metric config
-
-### PageHeader
-- **Change:** `description: ReactNode` → `string`, `eyebrow: ReactNode` → `string`
-- **Impact:** Eliminates `<span data-testid>` in AnalyticsDashboard
-- **End state:** Component renders description via `<Typography>`, accepts `descriptionTestId` prop
-
-### CardHeader
-- **Change:** `title: ReactNode` → `string`, `description: ReactNode` → `string`
-- **Add:** `badge?: ReactNode` slot prop so EntityCard stops wrapping title in `<Flex>`
-- **End state:** EntityCard passes `title="..."` + `badge={<Badge>Active</Badge>}` instead of `title={<Flex>...</Flex>}`
-
-### SectionIntro
-- **Change:** `eyebrow: ReactNode` → `string`, `title: ReactNode` → `string`, `description: ReactNode` → `string`
-- **End state:** All callers pass plain strings (they already do, just typed wrong)
-
----
-
-## 3. Ban Raw HTML Elements
-
-No `<span>`, `<strong>`, `<em>`, `<p>`, `<h1>`–`<h6>` in `src/` production files.
-
-- [ ] Add validator rule banning raw inline/block text elements in production code (exclude test files)
-- [ ] Exceptions whitelist: `hidden aria-hidden` markers, drop targets, structural DOM inside ui/ primitives
-- [ ] Use `<Typography>` for all text. It renders `<span>` by default and accepts all HTML attributes including `data-testid`.
-
----
-
-## 4. Shrink Oversized Variant Surfaces
-
-### Card.tsx
-- **Current:** `recipe` axis at 199 options
-- **End state:** < 20 recipes. Move one-off visual treatments to feature components or CVA variants owned by the feature, not the primitive.
-
-### Button.tsx
-- **Current:** `chrome` (39), `chromeSize` (37), `variant` (18), `size` (14)
-- **End state:** `variant` < 10, `size` < 6. Collapse `chrome`/`chromeSize` into the variant system or move to feature-owned wrappers.
-
-### Typography.tsx
-- **Current:** `variant` (60), `color` (11)
-- **End state:** `variant` < 20. Group related variants into semantic categories (headings, body, labels, captions). Remove dead variants.
-
-### Badge.tsx
-- **Current:** `variant` at 24
-- **End state:** `variant` < 12. Split status/priority/type badges into feature-owned components if they carry domain semantics.
-
----
-
-## 5. Raw Tailwind Ratchet
-
-- **Current:** 102 violations across 73 files
-- **End state:** 0 violations
-- **Start with:** calendar-body-month (4), IssueCard (4), GlobalSearch (3), ProductShowcase (3), RoadmapView (3)
-
----
-
-## Exit Criteria
-
-- [ ] Every shadcn compound component has one wrapper. 0 feature files import subcomponents.
-- [ ] Text props are `string` across OverviewBand, PageHeader, CardHeader, SectionIntro.
-- [ ] 0 raw `<span>`/`<strong>`/`<em>`/`<p>`/`<h1>`–`<h6>` in production code outside ui/ and documented exceptions.
-- [ ] No variant axis above 20 options in shared primitives.
 - [ ] Raw Tailwind violations at 0.

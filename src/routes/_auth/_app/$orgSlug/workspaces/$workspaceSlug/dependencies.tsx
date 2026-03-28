@@ -7,13 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -365,47 +359,38 @@ function DependencyFilters({
 }: DependencyFiltersProps) {
   return (
     <Flex align="center" gap="sm" wrap>
-      <Select value={teamId} onValueChange={(value) => setTeamId(value as Id<"teams"> | "all")}>
-        <SelectTrigger className="w-full sm:w-52 bg-ui-bg">
-          <SelectValue placeholder="All teams" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All teams</SelectItem>
-          {workspaceTeams.map((team) => (
-            <SelectItem key={team._id} value={team._id}>
-              {team.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Select
+        className="w-full sm:w-52 bg-ui-bg"
+        onChange={setTeamId}
+        options={[
+          { value: "all", label: "All teams" },
+          ...workspaceTeams.map((team) => ({ value: team._id, label: team.name })),
+        ]}
+        placeholder="All teams"
+        value={teamId}
+      />
 
-      <Select value={status} onValueChange={setStatus}>
-        <SelectTrigger className="w-full sm:w-44 bg-ui-bg">
-          <SelectValue placeholder="Any status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Any status</SelectItem>
-          {statusOptions.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Select
+        className="w-full sm:w-44 bg-ui-bg"
+        onChange={setStatus}
+        options={[
+          { value: "all", label: "Any status" },
+          ...statusOptions.map((option) => ({ value: option, label: option })),
+        ]}
+        placeholder="Any status"
+        value={status}
+      />
 
-      <Select value={priority} onValueChange={setPriority}>
-        <SelectTrigger className="w-full sm:w-44 bg-ui-bg">
-          <SelectValue placeholder="Any priority" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Any priority</SelectItem>
-          {priorityOptions.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Select
+        className="w-full sm:w-44 bg-ui-bg"
+        onChange={setPriority}
+        options={[
+          { value: "all", label: "Any priority" },
+          ...priorityOptions.map((option) => ({ value: option, label: option })),
+        ]}
+        placeholder="Any priority"
+        value={priority}
+      />
     </Flex>
   );
 }

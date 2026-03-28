@@ -31,8 +31,12 @@ export function AuthFlowIntro({
         <Icon icon={icon} size={iconSize} />
       </IconCircle>
       <Stack gap="xs">
-        <Typography variant="authTitle">{title}</Typography>
-        {description ? <Typography variant="authBody">{description}</Typography> : null}
+        <Typography variant="h4">{title}</Typography>
+        {description ? (
+          <Typography variant="small" color="secondary">
+            {description}
+          </Typography>
+        ) : null}
       </Stack>
     </Stack>
   );

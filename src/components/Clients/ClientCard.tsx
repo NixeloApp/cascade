@@ -17,7 +17,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 import { Flex } from "../ui/Flex";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -145,18 +145,15 @@ export function ClientCard({ client, projects }: ClientCardProps) {
             <Stack gap="sm">
               <Flex wrap gap="sm" align="end">
                 {projects.length > 1 ? (
-                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects.map((p) => (
-                        <SelectItem key={p._id} value={p._id}>
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Select
+                    onChange={setSelectedProjectId}
+                    options={projects.map((project) => ({
+                      value: project._id,
+                      label: project.name,
+                    }))}
+                    placeholder="Select project"
+                    value={selectedProjectId}
+                  />
                 ) : null}
                 <Button
                   variant="secondary"

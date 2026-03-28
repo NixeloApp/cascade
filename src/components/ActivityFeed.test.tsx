@@ -228,15 +228,11 @@ describe("ActivityFeed", () => {
     expect(screen.getByText("assignee: Sam Lee")).toBeInTheDocument();
     expect(screen.getByText("linked dependency")).toBeInTheDocument();
     expect(screen.getByText("relative:1700000000000")).toBeInTheDocument();
-    expect(
-      container.querySelector(".absolute.left-3.top-6.bottom-6.w-px.bg-ui-border"),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ACTIVITY.RAIL)).toBeInTheDocument();
 
     rerender(<ActivityFeed projectId={projectId} compact={true} />);
 
-    expect(
-      container.querySelector(".absolute.left-3.top-6.bottom-6.w-px.bg-ui-border"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.ACTIVITY.RAIL)).not.toBeInTheDocument();
     expect(screen.queryByText("status: In Progress")).not.toBeInTheDocument();
     expect(screen.queryByText("assignee: Sam Lee")).not.toBeInTheDocument();
   });

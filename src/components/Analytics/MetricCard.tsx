@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Inline } from "../ui/Inline";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -39,7 +40,7 @@ export function MetricCard({
           <Typography variant="h2">{value}</Typography>
           {subtitle && <Typography variant="meta">{subtitle}</Typography>}
         </Stack>
-        <span aria-hidden="true">
+        <Inline aria-hidden="true">
           {typeof icon === "string" ? (
             <Typography variant="h2" as="span" color="secondary">
               {icon}
@@ -47,7 +48,7 @@ export function MetricCard({
           ) : (
             <Icon icon={icon} size="xl" tone="secondary" />
           )}
-        </span>
+        </Inline>
       </Flex>
     </Card>
   );

@@ -16,7 +16,7 @@ export function CalendarBodyMarginDayMargin(): React.ReactElement {
             {hour !== 0 && (
               <Typography
                 as="time"
-                variant="calendarTimeLabel"
+                variant="caption"
                 dateTime={`${String(hour).padStart(2, "0")}:00`}
                 className="absolute -top-2 left-1 sm:left-2"
               >

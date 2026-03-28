@@ -12,6 +12,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import type { Page } from "@playwright/test";
+import { waitForExpectedContent } from "../utils/page-readiness";
 import {
   assertScreenshotHashIsNotLoadingState,
   getScreenshotHash,
@@ -313,24 +314,7 @@ export async function captureScreenshotBuffer(page: Page): Promise<Buffer> {
 }
 
 /**
- * Registered callback for page-specific content readiness checks.
- * Must be set via `registerWaitForExpectedContent` before `takeScreenshot` is called.
- */
-let waitForExpectedContentFn:
-  | ((page: Page, url: string, name: string, prefix?: string) => Promise<void>)
-  | null = null;
-
-/** Register the page-readiness callback used by takeScreenshot. */
-export function registerWaitForExpectedContent(
-  fn: (page: Page, url: string, name: string, prefix?: string) => Promise<void>,
-): void {
-  waitForExpectedContentFn = fn;
-}
-
-/**
  * Navigate to a URL, wait for readiness, and capture a screenshot.
- *
- * Requires `registerWaitForExpectedContent` to have been called first.
  */
 export async function takeScreenshot(
   page: Page,
@@ -362,9 +346,7 @@ export async function takeScreenshot(
     // Navigation timeout is acceptable -- page may still be usable
   }
   await waitForScreenshotReady(page);
-  if (waitForExpectedContentFn) {
-    await waitForExpectedContentFn(page, url, name, prefix);
-  }
+  await waitForExpectedContent(page, url, name, prefix);
   await waitForScreenshotReady(page);
   const screenshot = await captureScreenshotBuffer(page);
   const screenshotHash = getScreenshotHash(screenshot);

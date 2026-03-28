@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/Breadcrumb";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { PageTitleText, Typography } from "@/components/ui/Typography";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 
@@ -21,10 +21,11 @@ interface BreadcrumbData {
 
 interface PageHeaderProps {
   title: string;
-  description?: ReactNode;
+  description?: string;
   actions?: ReactNode;
   breadcrumbs?: BreadcrumbData[];
-  eyebrow?: ReactNode;
+  eyebrow?: string;
+  descriptionTestId?: string;
   className?: string;
   spacing?: "standalone" | "stack";
 }
@@ -36,6 +37,7 @@ export function PageHeader({
   actions,
   breadcrumbs,
   eyebrow,
+  descriptionTestId,
   className,
   spacing = "standalone",
 }: PageHeaderProps): ReactNode {
@@ -71,11 +73,20 @@ export function PageHeader({
           directionSm="row"
         >
           <Stack gap="xs" className="min-w-0">
-            {eyebrow ? <Typography variant="pageHeaderEyebrow">{eyebrow}</Typography> : null}
-            <Typography variant="pageHeaderTitle" as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
+            {eyebrow ? <Typography variant="eyebrowWide">{eyebrow}</Typography> : null}
+            <PageTitleText as="h2" data-testid={TEST_IDS.PAGE.HEADER_TITLE}>
               {title}
-            </Typography>
-            {description && <Typography variant="pageHeaderDescription">{description}</Typography>}
+            </PageTitleText>
+            {description ? (
+              <Typography
+                variant="small"
+                color="tertiary"
+                className="max-w-3xl leading-5"
+                data-testid={descriptionTestId}
+              >
+                {description}
+              </Typography>
+            ) : null}
           </Stack>
           {actions && (
             <Flex gap="sm" align="center" wrap className="w-full shrink-0 sm:w-auto sm:justify-end">

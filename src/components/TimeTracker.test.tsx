@@ -83,6 +83,13 @@ vi.mock("./ui/Typography", () => ({
     children: ReactNode;
     as?: "div" | "span";
   }) => <Component>{children}</Component>,
+  LargeText: ({
+    children,
+    as: Component = "div",
+  }: {
+    children: ReactNode;
+    as?: "div" | "span";
+  }) => <Component>{children}</Component>,
 }));
 
 vi.mock("./TimeTracking/TimeEntryModal", () => ({

@@ -22,6 +22,15 @@ edge-resize, dependency arrows, zoom, grouping, and epic filtering.
 
 ---
 
+## Permissions & Access
+
+- Route requires authenticated access to the selected project.
+- `canEdit` is granted to editor-and-up roles and removes drag/resize writes for viewers.
+- The route resolves the project key before rendering the roadmap shell, so inaccessible or missing
+  projects never show a partial timeline.
+
+---
+
 ## Screenshot Matrix
 
 ### Canonical route captures
@@ -154,6 +163,40 @@ timeline context visible instead of pinning a desktop-width toolbar beside the h
 
 ---
 
+## Primary Flow
+
+1. User opens the project roadmap route.
+2. The route resolves the project, active sprint context, and edit permissions.
+3. `RoadmapView` renders the default timeline window with dependency arrows enabled.
+4. The user scans the left issue rail and timeline bars, then adjusts the view with span, grouping,
+   zoom, and epic-filter controls.
+5. Clicking a bar opens issue detail in-context; users with edit access can also drag or resize bars
+   to save new dates directly.
+
+---
+
+## Alternate / Failure Flows
+
+- Grouped mode collapses the roadmap into group headers with nested issue rows.
+- The timeline selector, milestone state, and detail-open state are all part of the reviewed
+  screenshot matrix, not just ad hoc local testing.
+- Viewers can still inspect the roadmap and open issue details, but they do not get drag/resize
+  timeline writes.
+- Dense dependency graphs are still functional, but the current route does not attempt advanced
+  collision avoidance for overlapping SVG arrows.
+
+---
+
+## Empty / Loading / Error States
+
+- While the lazy route and project context resolve, the route wrapper keeps the standard app shell
+  loading behavior rather than rendering an incomplete timeline.
+- If no dated issues are available, the route renders the explicit empty-roadmap state that is
+  captured across all reviewed viewports.
+- Missing or inaccessible projects are handled at the route layer before `RoadmapView` renders.
+
+---
+
 ## State Coverage
 
 ### States the current spec explicitly covers
@@ -209,6 +252,18 @@ timeline context visible instead of pinning a desktop-width toolbar beside the h
 | `convex/issueLinks.ts` | — | `getForProject` dependency query |
 | `convex/e2e.ts` | — | E2E-only roadmap state controller for deterministic default, empty, and milestone seeded variants |
 | `e2e/screenshot-pages.ts` | — | Canonical plus grouped, detail, empty, milestone, and selector states |
+
+---
+
+## Acceptance Criteria
+
+- The route documents both the canonical timeline and the reviewed grouped, detail-open, empty,
+  milestone, and selector-open states.
+- A reviewer can tell which behavior is viewer-safe vs editor-only without reading the route code.
+- Empty and missing-resource behavior is described explicitly instead of being implied by
+  screenshots alone.
+- The current doc points to the route wrapper, roadmap modules, backend queries, and screenshot
+  entry points that define the surface.
 
 ---
 

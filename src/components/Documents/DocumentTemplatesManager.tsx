@@ -290,8 +290,9 @@ export function DocumentTemplatesManager({
                         <FlexItem flex="1">
                           <Button
                             variant="unstyled"
-                            size="contentStart"
+                            size="content"
                             onClick={() => void onSelectTemplate?.(template)}
+                            className="text-left"
                           >
                             <Flex align="start" gap="md">
                               <TemplateIcon value={template.icon} className="size-6" />

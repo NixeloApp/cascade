@@ -1,5 +1,6 @@
 import { addDays, addMonths, addWeeks, format, subDays, subMonths, subWeeks } from "date-fns";
 import { Button } from "@/components/ui/Button";
+import { getCalendarControlButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
@@ -41,34 +42,39 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
   return (
     <Flex align="center" gap="xs" gapSm="sm" wrap>
       <Button
-        chrome="calendarHeaderControl"
-        chromeSize="calendarHeaderPill"
+        variant="unstyled"
+        size="content"
         onClick={() => setDate(new Date())}
         data-testid={TEST_IDS.CALENDAR.TODAY_BUTTON}
+        className={getCalendarControlButtonClassName("pill")}
       >
         Today
       </Button>
       <Button
-        chrome="calendarHeaderControl"
-        chromeSize="calendarHeaderIcon"
+        variant="unstyled"
+        size="content"
         onClick={handleDateBackward}
         aria-label="Previous month"
         data-testid={TEST_IDS.CALENDAR.PREV_BUTTON}
+        className={getCalendarControlButtonClassName("icon")}
       >
         <ChevronLeft className="min-size-5 min-" />
       </Button>
       <time dateTime={format(date, "yyyy-MM-dd")} className="min-w-16 text-center sm:min-w-35">
-        <Typography as="span" variant="calendarHeaderDate">
-          <span className="sm:hidden">{format(date, "MMM d")}</span>
-          <span className="hidden sm:inline">{format(date, "MMMM d, yyyy")}</span>
+        <Typography as="span" variant="label" className="sm:hidden">
+          {format(date, "MMM d")}
+        </Typography>
+        <Typography as="span" variant="h5" className="hidden sm:inline">
+          {format(date, "MMMM d, yyyy")}
         </Typography>
       </time>
       <Button
-        chrome="calendarHeaderControl"
-        chromeSize="calendarHeaderIcon"
+        variant="unstyled"
+        size="content"
         onClick={handleDateForward}
         aria-label="Next month"
         data-testid={TEST_IDS.CALENDAR.NEXT_BUTTON}
+        className={getCalendarControlButtonClassName("icon")}
       >
         <ChevronRight className="min-size-5 min-" />
       </Button>

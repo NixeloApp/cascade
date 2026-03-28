@@ -7,6 +7,8 @@
 import type { PlateElementProps } from "platejs/react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
+import { getMentionBadgeClassName } from "@/components/ui/badgeSurfaceClassNames";
+import { cn } from "@/lib/utils";
 
 interface MentionValue {
   id: string;
@@ -36,9 +38,9 @@ export function MentionElement({
   return (
     <Badge
       {...attributes}
-      variant="mention"
+      variant="brand"
       size="sm"
-      className={className}
+      className={cn(getMentionBadgeClassName(), className)}
       contentEditable={false}
     >
       {value?.image && <Avatar name={value.text} src={value.image} size="xs" />}@

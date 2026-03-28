@@ -17,9 +17,11 @@ export function CalendarHeaderDate(): React.ReactElement {
       </div>
       <div className="min-w-0" data-testid={TEST_IDS.CALENDAR.HEADER_DATE}>
         <Flex align="center" gap="xs" gapSm="sm">
-          <Typography variant="calendarHeaderTitle">
-            <span className="sm:hidden">{format(date, "MMM yyyy")}</span>
-            <span className="hidden sm:inline">{format(date, "MMMM yyyy")}</span>
+          <Typography as="p" variant="label" className="sm:hidden">
+            {format(date, "MMM yyyy")}
+          </Typography>
+          <Typography as="p" variant="h4" className="hidden sm:block">
+            {format(date, "MMMM yyyy")}
           </Typography>
           <CalendarHeaderDateBadge />
         </Flex>

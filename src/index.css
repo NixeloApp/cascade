@@ -364,6 +364,11 @@
     100% { background-position: -200% 0; }
   }
 
+  @keyframes splash-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
   /* Pulse for loading states */
   @keyframes pulse {
     0%, 100% { opacity: 1; }
@@ -858,6 +863,10 @@ body {
     var(--color-ui-bg-soft) 75%
   );
   background-size: 200% 100%;
+}
+
+.animate-splash-shimmer {
+  animation: splash-shimmer 1.5s infinite linear;
 }
 
 .animate-pulse {

@@ -1,17 +1,10 @@
 # Email Outreach
 
 > **Priority:** P2
-> **Status:** In Progress
-> **Last Updated:** 2026-03-26
+> **Status:** Deferred post-MVP follow-up
+> **Last Updated:** 2026-03-28
 
-## Remaining Work
-
-- [ ] Contact import dedup UX and richer validation feedback for larger CSV uploads.
-- [ ] Better per-contact and per-sequence analytics views beyond the current operational dashboard.
-- [ ] Outlook / Microsoft 365 mailbox connection and send path, if multi-provider outreach stays in scope.
-- [ ] Deliverability monitoring and mailbox warmup strategy if outbound volume increases.
-
-## Deferred
+## Remaining
 
 - [ ] Multiple mailbox rotation.
 - [ ] Warmup network.

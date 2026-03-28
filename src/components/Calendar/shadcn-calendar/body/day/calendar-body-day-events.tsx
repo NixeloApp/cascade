@@ -1,5 +1,6 @@
 import { isSameDay } from "date-fns";
 import { Button } from "@/components/ui/Button";
+import { getCalendarSidebarEventButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Dot";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -42,9 +43,10 @@ export function CalendarBodyDayEvents(): React.ReactElement {
           <Button
             key={event.id}
             data-testid={TEST_IDS.CALENDAR.EVENT_ITEM}
-            chrome="calendarSidebarEvent"
-            chromeSize="calendarSidebarEvent"
+            variant="unstyled"
+            size="content"
             onClick={() => onEventClick(event)}
+            className={getCalendarSidebarEventButtonClassName()}
           >
             <Flex as="span" align="center" gap="sm">
               <Dot className={getDotColorClass(event.color)} />

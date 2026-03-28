@@ -7,7 +7,7 @@
  */
 
 import type { Updater, ValidationError } from "@tanstack/react-form";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import type { CheckboxProps } from "@/components/ui/form/Checkbox";
 import type { InputProps } from "@/components/ui/form/Input";
@@ -15,10 +15,10 @@ import type { SelectProps } from "@/components/ui/form/Select";
 import type { TextareaProps } from "@/components/ui/form/Textarea";
 import { Label } from "@/components/ui/Label";
 import {
-  SelectContent,
-  Select as SelectRoot,
-  SelectTrigger,
-  SelectValue,
+  type SelectProps as RichSelectProps,
+  Select as SelectField,
+  type SelectOption,
+  type SelectOptionGroup,
 } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -185,7 +185,11 @@ export function FormSelect<TName extends string, TValue>({
 // FormSelectRadix
 // ============================================================================
 
-interface FormSelectRadixProps<TName extends string, TValue extends string> extends BaseFieldProps {
+interface FormSelectRadixProps<
+  TName extends string,
+  TValue extends string,
+  TOption extends SelectOption<TValue> = SelectOption<TValue>,
+> extends BaseFieldProps {
   field: {
     name: TName;
     state: {
@@ -197,22 +201,40 @@ interface FormSelectRadixProps<TName extends string, TValue extends string> exte
     handleChange: (updater: Updater<TValue>) => void;
     handleBlur: () => void;
   };
-  children: React.ReactNode;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
+  groups?: SelectOptionGroup<TValue, TOption>[];
+  options?: TOption[];
+  renderOption?: (option: TOption) => ReactNode;
+  renderValue?: (option: TOption) => ReactNode;
+  selectClassName?: string;
+  testId?: string;
+  width?: RichSelectProps<TValue, TOption>["width"];
 }
 
 /**
  * Rich Select field connected to TanStack Form (using Radix UI)
  */
-export function FormSelectRadix<TName extends string, TValue extends string>({
+export function FormSelectRadix<
+  TName extends string,
+  TValue extends string,
+  TOption extends SelectOption<TValue> = SelectOption<TValue>,
+>({
   field,
   label,
   helperText,
-  children,
-  placeholder,
   className,
-}: FormSelectRadixProps<TName, TValue>) {
+  disabled,
+  groups,
+  options,
+  placeholder,
+  renderOption,
+  renderValue,
+  selectClassName,
+  testId,
+  width,
+}: FormSelectRadixProps<TName, TValue, TOption>) {
   const error = getFieldError(field);
   const value = (field.state.value as string) ?? "";
   const id = useId();
@@ -223,18 +245,25 @@ export function FormSelectRadix<TName extends string, TValue extends string>({
   return (
     <Stack gap="sm" className={className}>
       {label && <Label htmlFor={id}>{label}</Label>}
-      <SelectRoot
+      <SelectField
+        ariaDescribedBy={describedBy}
+        ariaInvalid={!!error}
+        className={selectClassName}
+        disabled={disabled}
+        groups={groups}
+        id={id}
         value={value}
-        onValueChange={(val) => {
-          field.handleChange(val as TValue);
+        onChange={(nextValue) => {
+          field.handleChange(nextValue as TValue);
           field.handleBlur();
         }}
-      >
-        <SelectTrigger id={id} aria-invalid={!!error} aria-describedby={describedBy}>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>{children}</SelectContent>
-      </SelectRoot>
+        options={options}
+        placeholder={placeholder}
+        renderOption={renderOption}
+        renderValue={renderValue}
+        testId={testId}
+        width={width}
+      />
       {error && (
         <Typography id={errorId} variant="small" color="error" className="font-medium">
           {error}

@@ -14,6 +14,7 @@ import { SprintBurnChart } from "@/components/Analytics/SprintBurnChart";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getSprintPresetButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -23,13 +24,8 @@ import { Textarea } from "@/components/ui/form/Textarea";
 import { Grid } from "@/components/ui/Grid";
 import { Progress } from "@/components/ui/Progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { ResponsiveText } from "@/components/ui/ResponsiveText";
+import { Select } from "@/components/ui/Select";
 import { SkeletonProjectCard } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -140,7 +136,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
   const pointProgress = hasPoints ? (sprint.completedPoints / sprint.totalPoints) * 100 : 0;
 
   return (
-    <Card padding="md" className="animate-fade-in">
+    <Card padding="md" className="animate-fade-in" data-testid={TEST_IDS.SPRINT.CARD}>
       <Flex
         direction="column"
         align="start"
@@ -152,7 +148,9 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         <FlexItem flex="1" className="w-full sm:w-auto">
           <Stack gap="sm">
             <Flex wrap align="center" gap="sm">
-              <Typography variant="h5">{sprint.name}</Typography>
+              <Typography variant="h5" data-testid={TEST_IDS.SPRINT.NAME}>
+                {sprint.name}
+              </Typography>
               <Badge size="md" statusTone={getStatusBadgeTone(sprint.status)}>
                 {sprint.status}
               </Badge>
@@ -218,7 +216,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                 onClick={() => void onStartSprint(sprint._id)}
                 variant="success"
                 size="sm"
-                data-testid={TEST_IDS.SPRINT.START_TRIGGER(sprint.name)}
+                data-testid={TEST_IDS.SPRINT.START_TRIGGER}
               >
                 Start Sprint
               </Button>
@@ -228,7 +226,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                 onClick={() => void onCompleteSprint(sprint._id)}
                 variant="secondary"
                 size="sm"
-                data-testid={TEST_IDS.SPRINT.COMPLETE_TRIGGER(sprint.name)}
+                data-testid={TEST_IDS.SPRINT.COMPLETE_TRIGGER}
               >
                 Complete Sprint
               </Button>
@@ -465,8 +463,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             variant="primary"
             data-testid={TEST_IDS.SPRINT.CREATE_BUTTON}
           >
-            <span className="hidden sm:inline">Create Sprint</span>
-            <span className="sm:hidden">+ Sprint</span>
+            <ResponsiveText short="+ Sprint" long="Create Sprint" />
           </Button>
         )}
       </Flex>
@@ -504,10 +501,9 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                   <Button
                     key={preset.id}
                     variant="unstyled"
-                    chrome={selectedPreset === preset.id ? "sprintPresetSelected" : "sprintPreset"}
-                    chromeSize="sprintPreset"
+                    size="content"
                     onClick={() => setSelectedPreset(preset.id)}
-                    className="items-start justify-start text-left flex-col"
+                    className={getSprintPresetButtonClassName(selectedPreset === preset.id)}
                   >
                     <Typography variant="label" className="block">
                       {preset.label}
@@ -693,25 +689,26 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                         <Stack gap="sm">
                           <Typography variant="label">Select target sprint:</Typography>
                           <Select
-                            value={targetSprintId ?? ""}
-                            onValueChange={(value) => setTargetSprintId(value as Id<"sprints">)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a sprint" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableTargetSprints.map((sprint) => (
-                                <SelectItem key={sprint._id} value={sprint._id}>
-                                  <Flex align="center" gap="sm">
-                                    <Typography variant="small">{sprint.name}</Typography>
-                                    <Badge size="sm" statusTone={getStatusBadgeTone(sprint.status)}>
-                                      {sprint.status}
-                                    </Badge>
-                                  </Flex>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            onChange={(value) => setTargetSprintId(value as Id<"sprints">)}
+                            options={availableTargetSprints.map((sprint) => ({
+                              label: sprint.name,
+                              sprintStatus: sprint.status,
+                              value: sprint._id,
+                            }))}
+                            placeholder="Select a sprint"
+                            renderOption={(option) => (
+                              <Flex align="center" gap="sm">
+                                <Typography variant="small">{option.label}</Typography>
+                                <Badge
+                                  size="sm"
+                                  statusTone={getStatusBadgeTone(option.sprintStatus)}
+                                >
+                                  {option.sprintStatus}
+                                </Badge>
+                              </Flex>
+                            )}
+                            value={targetSprintId ?? undefined}
+                          />
                         </Stack>
                       )}
                     </Stack>
@@ -793,11 +790,10 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                     <Button
                       key={preset.id}
                       variant="unstyled"
-                      chrome={startPreset === preset.id ? "sprintPresetSelected" : "sprintPreset"}
-                      chromeSize="sprintPreset"
+                      size="content"
                       onClick={() => setStartPreset(preset.id)}
                       data-testid={TEST_IDS.SPRINT.START_PRESET(preset.id)}
-                      className="items-start justify-start text-left flex-col"
+                      className={getSprintPresetButtonClassName(startPreset === preset.id)}
                     >
                       <Typography variant="label" className="block">
                         {preset.label}

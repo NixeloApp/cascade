@@ -208,9 +208,9 @@ export function EmptyState({
       <EmptyStateBadge size={size} surface={surface} variant={variant} />
       <EmptyStateIcon icon={icon} iconColorClass={iconColorClass} size={size} surface={surface} />
       <Typography
-        variant={size === "compact" ? "large" : "h4"}
+        variant={size === "compact" ? "label" : "h4"}
         as="h3"
-        className={cn("mb-2", size === "compact" && "text-sm")}
+        className={cn("mb-2", size === "compact" && "text-sm font-semibold")}
       >
         {title}
       </Typography>

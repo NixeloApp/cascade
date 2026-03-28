@@ -9,11 +9,18 @@
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { type ActionCtx, action, internalMutation } from "./_generated/server";
+import {
+  type ActionCtx,
+  action,
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
+import { listProjectNotificationUserIds } from "./lib/projectNotificationDestinations";
 import { getPlainTextFromDescription } from "./lib/richText";
 import { safeFetch } from "./lib/safeFetch";
 import { notDeleted } from "./lib/softDeleteHelpers";
@@ -231,7 +238,6 @@ export const sendMessage = action({
   },
   returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
-    // Get webhook
     const webhook = await ctx.runQuery(api.pumble.getWebhook, {
       webhookId: args.webhookId,
     });
@@ -244,35 +250,67 @@ export const sendMessage = action({
       throw validation("webhook", "Webhook is not active");
     }
 
-    const payload = buildPumblePayload(args.text, args.title, args.color, args.fields);
+    await ctx.runAction(internal.pumble.deliverMessageInternal, {
+      webhookId: args.webhookId,
+      text: args.text,
+      title: args.title,
+      color: args.color,
+      fields: args.fields,
+    });
 
-    try {
-      // Send message to Pumble
-      // Use safeFetch to prevent SSRF
-      const response = await safeFetch(webhook.webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+    return { success: true } as const;
+  },
+});
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw validation("pumble", `Pumble API error: ${response.status} ${error}`);
-      }
-
-      // Success
-      await updateStats(ctx, args.webhookId, true);
-
-      return { success: true } as const;
-    } catch (error) {
-      // Failure
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      await updateStats(ctx, args.webhookId, false, errorMessage);
-
-      throw error;
+export const getWebhookForDelivery = internalQuery({
+  args: { webhookId: v.id("pumbleWebhooks") },
+  returns: v.union(
+    v.object({
+      webhookId: v.id("pumbleWebhooks"),
+      webhookUrl: v.string(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const webhook = await ctx.db.get(args.webhookId);
+    if (!webhook || !webhook.isActive) {
+      return null;
     }
+
+    return {
+      webhookId: webhook._id,
+      webhookUrl: webhook.webhookUrl,
+    };
+  },
+});
+
+export const deliverMessageInternal = internalAction({
+  args: {
+    webhookId: v.id("pumbleWebhooks"),
+    text: v.string(),
+    title: v.optional(v.string()),
+    color: v.optional(v.string()),
+    fields: v.optional(
+      v.array(
+        v.object({
+          title: v.string(),
+          value: v.string(),
+          short: v.optional(v.boolean()),
+        }),
+      ),
+    ),
+  },
+  returns: v.object({ success: v.literal(true) }),
+  handler: async (ctx, args) => {
+    await deliverPumbleWebhookMessage(ctx, {
+      webhookId: args.webhookId,
+      text: args.text,
+      title: args.title,
+      color: args.color,
+      fields: args.fields,
+    });
+
+    return { success: true } as const;
   },
 });
 
@@ -331,29 +369,32 @@ export const testWebhook = action({
 });
 
 /** Sends issue notifications to Pumble webhooks when issue events occur. */
-export const sendIssueNotification = action({
+export const sendIssueNotification = internalAction({
   args: {
     issueId: v.id("issues"),
-    event: v.string(), // "issue.created", "issue.updated", "issue.assigned"
+    event: v.union(
+      v.literal("issue.created"),
+      v.literal("issue.updated"),
+      v.literal("issue.assigned"),
+      v.literal("issue.completed"),
+      v.literal("issue.deleted"),
+      v.literal("comment.created"),
+    ),
     userId: v.optional(v.id("users")), // User who triggered the event
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
-    // Get issue details
-    const issue = await ctx.runQuery(api.issues.getIssue, {
-      id: args.issueId,
+    const issue = await ctx.runQuery(internal.slack.getIssueContext, {
+      issueId: args.issueId,
     });
+    if (!issue) {
+      return { success: true } as const;
+    }
 
-    if (!issue) return;
-
-    // Find active webhooks for this project
-    const webhooks = await ctx.runQuery(api.pumble.listWebhooks, {});
-
-    const activeWebhooks = webhooks.filter(
-      (w) =>
-        w.isActive &&
-        w.events.includes(args.event) &&
-        (!w.projectId || w.projectId === issue.projectId),
-    );
+    const activeWebhooks = await ctx.runQuery(internal.pumble.listProjectDestinationsForEvent, {
+      projectId: issue.projectId,
+      event: args.event,
+    });
 
     // Send notification to each webhook
     for (const webhook of activeWebhooks) {
@@ -361,7 +402,7 @@ export const sendIssueNotification = action({
         const color = getColorForEvent(args.event);
         const title = getTitleForEvent(args.event);
 
-        await ctx.runAction(api.pumble.sendMessage, {
+        await ctx.runAction(internal.pumble.deliverMessageInternal, {
           webhookId: webhook._id,
           text: getPlainTextFromDescription(issue.description) || "No description",
           title,
@@ -389,7 +430,7 @@ export const sendIssueNotification = action({
             },
             {
               title: "Assignee",
-              value: issue.assignee?.name || "Unassigned",
+              value: issue.assigneeName || "Unassigned",
               short: true,
             },
           ],
@@ -402,11 +443,75 @@ export const sendIssueNotification = action({
         });
       }
     }
+
+    return { success: true } as const;
+  },
+});
+
+/** List deliverable Pumble webhooks owned by project participants for one issue event. */
+export const listProjectDestinationsForEvent = internalQuery({
+  args: {
+    projectId: v.id("projects"),
+    event: v.union(
+      v.literal("issue.created"),
+      v.literal("issue.updated"),
+      v.literal("issue.assigned"),
+      v.literal("issue.completed"),
+      v.literal("issue.deleted"),
+      v.literal("comment.created"),
+    ),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("pumbleWebhooks"),
+      webhookUrl: v.string(),
+      name: v.string(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const userIds = await listProjectNotificationUserIds(ctx, args.projectId);
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    const webhookLists = await Promise.all(
+      userIds.map((userId) =>
+        ctx.db
+          .query("pumbleWebhooks")
+          .withIndex("by_user_active", (q) => q.eq("userId", userId).eq("isActive", true))
+          .take(BOUNDED_LIST_LIMIT),
+      ),
+    );
+
+    const destinations: Array<{
+      _id: Id<"pumbleWebhooks">;
+      webhookUrl: string;
+      name: string;
+    }> = [];
+
+    for (const userWebhooks of webhookLists) {
+      for (const webhook of userWebhooks) {
+        const matchesProject =
+          webhook.projectId === undefined || webhook.projectId === args.projectId;
+        if (!matchesProject || !webhook.events.includes(args.event)) {
+          continue;
+        }
+
+        destinations.push({
+          _id: webhook._id,
+          webhookUrl: webhook.webhookUrl,
+          name: webhook.name,
+        });
+      }
+    }
+
+    return destinations;
   },
 });
 
 // Helper functions
-function getColorForEvent(event: string): string {
+/** Choose the accent color for a Pumble issue event notification. */
+export function getColorForEvent(event: string): string {
   switch (event) {
     case "issue.created":
       return RUNTIME_COLORS.SUCCESS;
@@ -423,7 +528,8 @@ function getColorForEvent(event: string): string {
   }
 }
 
-function getTitleForEvent(event: string): string {
+/** Choose the title line for a Pumble issue event notification. */
+export function getTitleForEvent(event: string): string {
   switch (event) {
     case "issue.created":
       return `🆕 New Issue Created`;
@@ -441,7 +547,9 @@ function getTitleForEvent(event: string): string {
 }
 
 async function updateStats(
-  ctx: ActionCtx,
+  ctx: {
+    runMutation: ActionCtx["runMutation"];
+  },
   webhookId: Id<"pumbleWebhooks">,
   success: boolean,
   error?: string,
@@ -461,7 +569,8 @@ async function updateStats(
   }
 }
 
-function buildPumblePayload(
+/** Build the webhook payload body expected by Pumble incoming webhooks. */
+export function buildPumblePayload(
   text: string,
   title?: string,
   color?: string,
@@ -491,4 +600,49 @@ function buildPumblePayload(
     payload.text = title || `${text.substring(0, 50)}...`;
   }
   return payload;
+}
+
+/** Deliver a message to one active Pumble webhook and persist delivery stats. */
+export async function deliverPumbleWebhookMessage(
+  ctx: {
+    runMutation: ActionCtx["runMutation"];
+    runQuery: ActionCtx["runQuery"];
+  },
+  args: {
+    webhookId: Id<"pumbleWebhooks">;
+    text: string;
+    title?: string;
+    color?: string;
+    fields?: Array<{ title: string; value: string; short?: boolean }>;
+  },
+): Promise<void> {
+  const webhook = await ctx.runQuery(internal.pumble.getWebhookForDelivery, {
+    webhookId: args.webhookId,
+  });
+  if (!webhook) {
+    return;
+  }
+
+  const payload = buildPumblePayload(args.text, args.title, args.color, args.fields);
+
+  try {
+    const response = await safeFetch(webhook.webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw validation("pumble", `Pumble API error: ${response.status} ${error}`);
+    }
+
+    await updateStats(ctx, args.webhookId, true);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    await updateStats(ctx, args.webhookId, false, errorMessage);
+    throw error;
+  }
 }

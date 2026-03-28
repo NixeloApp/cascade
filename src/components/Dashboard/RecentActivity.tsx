@@ -2,6 +2,14 @@ import { TrendingUp } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
+import {
+  getDashboardRecentActivityAvatarShellClassName,
+  getDashboardRecentActivityContentClassName,
+  getDashboardRecentActivityIssueKeyClassName,
+  getDashboardRecentActivityItemClassName,
+  getDashboardRecentActivityRailClassName,
+  getDashboardRecentActivityScrollAreaClassName,
+} from "../ui/dashboardRecentActivitySurfaceClassNames";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { IconCircle } from "../ui/IconCircle";
@@ -50,22 +58,31 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             surface="bare"
           />
         ) : (
-          <div className="relative max-h-96 overflow-y-auto pr-2 scrollbar-subtle">
+          <div
+            className={getDashboardRecentActivityScrollAreaClassName()}
+            data-testid={TEST_IDS.DASHBOARD.RECENT_ACTIVITY_SCROLL}
+          >
             {/* Timeline line */}
             {activities.length > 1 && (
-              <div className="absolute bottom-4 left-4 top-4 w-px bg-ui-border/60" />
+              <div
+                className={getDashboardRecentActivityRailClassName()}
+                data-testid={TEST_IDS.DASHBOARD.RECENT_ACTIVITY_TIMELINE_RAIL}
+              />
             )}
 
             <Flex direction="column" gap="none">
               {activities.map((activity: Activity) => (
-                <div key={activity._id} className="relative px-2 py-2">
+                <div key={activity._id} className={getDashboardRecentActivityItemClassName()}>
                   <Flex gap="md" align="start">
                     {/* User avatar */}
-                    <IconCircle size="sm" className="relative z-10 bg-ui-bg">
+                    <IconCircle
+                      size="sm"
+                      className={getDashboardRecentActivityAvatarShellClassName()}
+                    >
                       <Avatar name={activity.userName} size="md" variant="brand" />
                     </IconCircle>
 
-                    <FlexItem flex="1" className="min-w-0">
+                    <FlexItem flex="1" className={getDashboardRecentActivityContentClassName()}>
                       <Stack gap="xs">
                         <Typography variant="small">
                           <Typography as="strong" variant="strong">
@@ -73,7 +90,11 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                           </Typography>{" "}
                           {activity.action}
                         </Typography>
-                        <Badge variant="issueKey" size="sm" className="w-fit">
+                        <Badge
+                          variant="secondary"
+                          size="sm"
+                          className={getDashboardRecentActivityIssueKeyClassName()}
+                        >
                           {activity.issueKey}
                         </Badge>
                         <Metadata separator="|">

@@ -17,7 +17,7 @@ import { CreateIssueModal } from "@/components/IssueDetail";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, Typography } from "@/components/ui/Typography";
 import { createKeyboardShortcuts, createKeySequences } from "@/config/keyboardShortcuts";
 import { ROUTES } from "@/config/routes";
 import { IssueViewModeProvider } from "@/contexts/IssueViewModeContext";
@@ -72,9 +72,7 @@ function OrgError({ title, message }: { title: string; message: string }) {
   return (
     <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-4">
       <div className="text-center">
-        <Typography variant="authStatusTitle" className="mb-2">
-          {title}
-        </Typography>
+        <LargeText className="mb-2 text-xl font-medium">{title}</LargeText>
         <Typography variant="p" color="secondary">
           {message}
         </Typography>

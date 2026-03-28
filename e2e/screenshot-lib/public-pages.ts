@@ -82,27 +82,27 @@ const PUBLIC_SCREENSHOT_TARGETS = [
   {
     group: "seeded",
     name: "invite",
-    resolvePath: (seed) => (seed?.inviteToken ? ROUTES.invite.build(seed.inviteToken) : null),
+    resolvePath: (seed) => (seed?.inviteToken ? ROUTES.join.build(seed.inviteToken) : null),
   },
   {
     group: "seedless",
     name: "invite-invalid",
-    resolvePath: () => "/invite/screenshot-test-token",
+    resolvePath: () => ROUTES.join.build("screenshot-test-token"),
   },
   {
     group: "seedless",
     name: "invite-expired",
-    resolvePath: () => `${ROUTES.invite.build("screenshot-test-token")}?previewState=expired`,
+    resolvePath: () => `${ROUTES.join.build("screenshot-test-token")}?previewState=expired`,
   },
   {
     group: "seedless",
     name: "invite-revoked",
-    resolvePath: () => `${ROUTES.invite.build("screenshot-test-token")}?previewState=revoked`,
+    resolvePath: () => `${ROUTES.join.build("screenshot-test-token")}?previewState=revoked`,
   },
   {
     group: "seedless",
     name: "invite-accepted",
-    resolvePath: () => `${ROUTES.invite.build("screenshot-test-token")}?previewState=accepted`,
+    resolvePath: () => `${ROUTES.join.build("screenshot-test-token")}?previewState=accepted`,
   },
   {
     group: "seeded",
@@ -115,14 +115,15 @@ const PUBLIC_SCREENSHOT_TARGETS = [
   {
     group: "seeded",
     name: "portal",
-    resolvePath: (seed) => (seed?.portalToken ? ROUTES.portal.entry.build(seed.portalToken) : null),
+    resolvePath: (seed) =>
+      seed?.portalToken ? ROUTES.clientPortal.entry.build(seed.portalToken) : null,
   },
   {
     group: "seeded",
     name: "portal-project",
     resolvePath: (seed) =>
       seed?.portalToken && seed.portalProjectId
-        ? ROUTES.portal.project.build(seed.portalToken, seed.portalProjectId)
+        ? ROUTES.clientPortal.project.build(seed.portalToken, seed.portalProjectId)
         : null,
   },
 ] satisfies PublicScreenshotTargetDefinition[];

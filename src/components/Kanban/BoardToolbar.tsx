@@ -10,7 +10,7 @@ import { CheckSquare, RotateCcw } from "@/lib/icons";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
-import { Typography } from "../ui/Typography";
+import { LargeText, Typography } from "../ui/Typography";
 import { DisplayPropertiesSelector } from "./DisplayPropertiesSelector";
 import { SwimlanSelector } from "./SwimlanSelector";
 import { ViewModeToggle } from "./ViewModeToggle";
@@ -68,10 +68,9 @@ export function BoardToolbar({
     >
       <Flex align="center" justify="between" gap="xs" gapSm="sm">
         <div className="hidden sm:block">
-          <Typography variant="boardSurfaceTitle">
-            <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
-            <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
-          </Typography>
+          <LargeText as="h2" className="text-xs sm:text-lg">
+            {sprintId ? "Sprint Board" : "Kanban Board"}
+          </LargeText>
           <Typography variant="caption" className="mt-1 hidden sm:block">
             Move work between stages, keep limits visible, and start new items from the right
             column.
@@ -84,7 +83,7 @@ export function BoardToolbar({
             </Flex>
 
             {/* Undo/Redo buttons */}
-            <div className="mr-2 hidden sm:block sm:mr-4">
+            <div className="hidden sm:block">
               <Flex align="center" gap="xs">
                 <Tooltip content="Undo (Ctrl+Z)">
                   <IconButton
@@ -159,7 +158,7 @@ export function BoardToolbar({
               aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
               className={cn("hidden sm:inline-block", selectionMode && "shadow-soft")}
             >
-              <span>{selectionMode ? "Exit Selection" : "Select Multiple"}</span>
+              {selectionMode ? "Exit Selection" : "Select Multiple"}
             </Button>
           </Flex>
         )}

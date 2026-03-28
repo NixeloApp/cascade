@@ -153,9 +153,7 @@ describe("NotificationCenter", () => {
 
     render(<NotificationCenter />);
 
-    // Badge should not be visible at all when count is 0
-    const badge = document.querySelector(".bg-red-500");
-    expect(badge).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.HEADER.NOTIFICATION_BADGE)).not.toBeInTheDocument();
     // Check default aria-label
     expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
   });

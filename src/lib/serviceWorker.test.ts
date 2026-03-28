@@ -35,6 +35,7 @@ describe("serviceWorker helpers", () => {
       value: {
         getItem: vi.fn(() => null),
         setItem: vi.fn(),
+        removeItem: vi.fn(),
       },
     });
 
@@ -88,11 +89,11 @@ describe("serviceWorker helpers", () => {
     });
   });
 
-  it("shows the install banner once and stores dismissal", async () => {
+  it("tracks install prompt availability and stores dismissal state", async () => {
     const serviceWorker = await import("./serviceWorker");
 
-    serviceWorker.promptInstall();
-    serviceWorker.promptInstall();
+    serviceWorker.ensureInstallPromptTracking();
+    serviceWorker.ensureInstallPromptTracking();
 
     const promptEvent = new Event("beforeinstallprompt");
     Object.defineProperty(promptEvent, "preventDefault", {
@@ -107,16 +108,22 @@ describe("serviceWorker helpers", () => {
 
     window.dispatchEvent(promptEvent);
 
-    expect(document.getElementById("pwa-install-banner")).not.toBeNull();
+    expect(serviceWorker.getPwaInstallSnapshot()).toEqual({
+      canInstall: true,
+      isPrompting: false,
+    });
     expect(window.localStorage.getItem).toHaveBeenCalledWith("pwa-install-dismissed");
 
-    document.getElementById("pwa-dismiss-button")?.dispatchEvent(new MouseEvent("click"));
+    serviceWorker.dismissPwaInstall();
 
     expect(window.localStorage.setItem).toHaveBeenCalledWith("pwa-install-dismissed", "true");
-    expect(document.getElementById("pwa-install-banner")).toBeNull();
+    expect(serviceWorker.getPwaInstallSnapshot()).toEqual({
+      canInstall: false,
+      isPrompting: false,
+    });
   });
 
-  it("shows only one update banner and posts SKIP_WAITING when accepted", async () => {
+  it("tracks update availability and posts SKIP_WAITING when applied", async () => {
     const serviceWorker = await import("./serviceWorker");
 
     const listeners = new Map<string, EventListener>();
@@ -148,12 +155,17 @@ describe("serviceWorker helpers", () => {
     listeners.get("statechange")?.(new Event("statechange"));
     listeners.get("statechange")?.(new Event("statechange"));
 
-    expect(document.querySelectorAll("#sw-update-banner")).toHaveLength(1);
+    expect(serviceWorker.getSwUpdateSnapshot()).toEqual({
+      isUpdateAvailable: true,
+    });
 
-    document.getElementById("sw-update-button")?.dispatchEvent(new MouseEvent("click"));
+    expect(serviceWorker.applySwUpdate()).toBe(true);
 
     expect(waitingWorkerPostMessage).toHaveBeenCalledWith({
       type: "SKIP_WAITING",
+    });
+    expect(serviceWorker.getSwUpdateSnapshot()).toEqual({
+      isUpdateAvailable: false,
     });
   });
 });

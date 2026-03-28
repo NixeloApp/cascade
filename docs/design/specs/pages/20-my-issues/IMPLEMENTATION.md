@@ -80,7 +80,7 @@ identity-scoped backend query path.
 
 | Test File | Coverage |
 |-----------|----------|
-| `src/routes/_auth/_app/$orgSlug/-my-issues.test.tsx` | true empty, filtered empty recovery, project grouping, first-page loading |
+| `src/routes/_auth/_app/$orgSlug/__tests__/my-issues.test.tsx` | true empty, filtered empty recovery, project grouping, first-page loading |
 | `e2e/pages/my-issues.page.ts` | page-object readiness, filter interactions, and loading-state assertions |
 | `e2e/screenshot-lib/interactive-captures.ts` | filter-active, filtered-empty, and loading screenshots |
 | `e2e/screenshot-pages.ts` | canonical + state screenshot registration for spec `20-my-issues` |

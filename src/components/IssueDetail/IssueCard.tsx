@@ -20,10 +20,19 @@ import type { Id } from "@convex/_generated/dataModel";
 import { memo, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getIssueCardOverlayButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import {
+  getIssueCardAssigneeFallbackClassName,
+  getIssueCardDragHandleIconClassName,
+  getIssueCardHeaderClassName,
+  getIssueCardLabelsClassName,
+  getIssueCardRootClassName,
+  getIssueCardTitleClassName,
+} from "@/components/ui/issueCardSurfaceClassNames";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { type CardDisplayOptions, DEFAULT_CARD_DISPLAY } from "@/lib/card-display-utils";
@@ -169,10 +178,7 @@ function IssueCardAssigneeAvatar({
           variant="neutral"
         />
       ) : (
-        <Card
-          recipe="issueAssigneeFallback"
-          className="inline-flex size-5 items-center justify-center text-xs font-medium"
-        >
+        <Card recipe="issueAssigneeFallback" className={getIssueCardAssigneeFallbackClassName()}>
           {assignee.name.charAt(0).toUpperCase()}
         </Card>
       )}
@@ -214,7 +220,7 @@ function IssueCardHeader({
   handleCheckboxCheckedChange,
 }: IssueCardSectionProps) {
   return (
-    <Flex align="start" justify="between" className="mb-1 sm:mb-2">
+    <Flex align="start" justify="between" className={getIssueCardHeaderClassName()}>
       <Flex align="center" gap="xs" className="min-w-0">
         {canEdit && !selectionMode && (
           <div
@@ -222,10 +228,7 @@ function IssueCardHeader({
             data-testid={TEST_IDS.ISSUE.DRAG_HANDLE}
             className="cursor-grab pointer-events-auto"
           >
-            <GripVertical
-              className="size-3 shrink-0 -ml-0.5 text-ui-text-tertiary opacity-40"
-              aria-hidden="true"
-            />
+            <GripVertical className={getIssueCardDragHandleIconClassName()} aria-hidden="true" />
           </div>
         )}
         {selectionMode && (
@@ -271,7 +274,7 @@ function IssueCardLabels({ issue, display, handleClick }: IssueCardFooterProps) 
   }
 
   return (
-    <Flex wrap gap="xs" className="mb-1.5 sm:mb-2">
+    <Flex wrap gap="xs" className={getIssueCardLabelsClassName()}>
       {issue.labels.slice(0, 3).map((label) => (
         <IssueCardLabelBadge
           key={label.name}
@@ -540,22 +543,16 @@ export const IssueCard = memo(function IssueCard({
       ref={cardRef}
       data-testid={TEST_IDS.ISSUE.CARD}
       recipe={issueCardRecipe}
-      className={cn(
-        "group relative w-full text-left",
-        isDragging && "opacity-50 scale-95",
-        // Drop indicator edges
-        closestEdge === "top" &&
-          "before:absolute before:left-0 before:right-0 before:-top-1 before:h-0.5 before:bg-brand before:rounded-full",
-        closestEdge === "bottom" &&
-          "after:absolute after:left-0 after:right-0 after:-bottom-1 after:h-0.5 after:bg-brand after:rounded-full",
-      )}
+      className={getIssueCardRootClassName({ isDragging, closestEdge })}
     >
       {/* Primary Action Overlay Button */}
       <Button
-        variant="overlay"
+        variant="unstyled"
+        size="content"
         onClick={handleClick}
         aria-label={getIssueAccessibleLabel(issue)}
         data-testid={TEST_IDS.ISSUE.CARD_TRIGGER(issue.key)}
+        className={getIssueCardOverlayButtonClassName()}
       />
 
       {/* Content Wrapper - pointer-events-none allows clicks to pass through to overlay */}
@@ -577,7 +574,7 @@ export const IssueCard = memo(function IssueCard({
           <Typography
             variant="label"
             as="p"
-            className="mb-1 line-clamp-2 pointer-events-auto leading-snug sm:mb-2"
+            className={getIssueCardTitleClassName()}
             data-testid={TEST_IDS.ISSUE.TITLE}
             onClick={handleClick}
           >

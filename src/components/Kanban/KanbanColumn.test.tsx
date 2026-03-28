@@ -163,13 +163,43 @@ describe("KanbanColumn", () => {
       expect(screen.getByTestId(TEST_IDS.BOARD.COLUMN_WIP_WARNING)).toBeInTheDocument();
       expect(screen.getByText("Over limit")).toBeInTheDocument();
     });
+
+    it("should apply warning shell classes when at the WIP limit", () => {
+      const stateWithWip = { ...mockState, wipLimit: 1 };
+      render(<KanbanColumn {...defaultProps} state={stateWithWip} />);
+
+      const columnShell = screen.getByRole("region", { name: "To Do column" }).firstElementChild;
+      expect(columnShell).toBeInstanceOf(HTMLElement);
+      if (!(columnShell instanceof HTMLElement)) {
+        throw new Error("Expected the column shell element");
+      }
+      expect(columnShell).toHaveClass("border-status-warning/50");
+    });
+
+    it("should apply error shell classes when over the WIP limit", () => {
+      const stateWithWip = { ...mockState, wipLimit: 1 };
+      const issues = [
+        mockIssue,
+        { ...mockIssue, _id: "issue-2" as Id<"issues">, key: "TEST-2", order: 1 },
+      ];
+      render(<KanbanColumn {...defaultProps} state={stateWithWip} issues={issues} />);
+
+      const columnShell = screen.getByRole("region", { name: "To Do column" }).firstElementChild;
+      expect(columnShell).toBeInstanceOf(HTMLElement);
+      if (!(columnShell instanceof HTMLElement)) {
+        throw new Error("Expected the column shell element");
+      }
+      expect(columnShell).toHaveClass("border-status-error/50", "bg-status-error/5");
+    });
   });
 
   describe("Collapsed State", () => {
     it("should render collapsed view when isCollapsed is true", () => {
       render(<KanbanColumn {...defaultProps} isCollapsed={true} />);
 
-      expect(screen.getByRole("region", { name: "To Do column (collapsed)" })).toBeInTheDocument();
+      const column = screen.getByRole("region", { name: "To Do column (collapsed)" });
+      expect(column).toBeInTheDocument();
+      expect(column).toHaveClass("w-11", "snap-start", "animate-slide-up");
       expect(screen.getByLabelText("Expand To Do column")).toBeInTheDocument();
     });
 

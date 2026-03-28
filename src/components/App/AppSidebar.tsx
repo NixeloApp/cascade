@@ -15,16 +15,22 @@ import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getSidebarSectionBadgeClassName } from "@/components/ui/badgeSurfaceClassNames";
+import {
+  getFullOverlayDismissButtonClassName,
+  getListRowButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon as AppIcon, type IconSize } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
+import { Inline } from "@/components/ui/Inline";
 import { Input } from "@/components/ui/Input";
 import { NavItem as NavItemBase } from "@/components/ui/NavItem";
 import { Separator } from "@/components/ui/Separator";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip, TooltipProvider } from "@/components/ui/Tooltip";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -172,7 +178,7 @@ function NavSubItem({
               iconClassName="shrink-0"
             />
           )}
-          <span className="truncate">{label}</span>
+          <Inline className="truncate">{label}</Inline>
         </Link>
       </NavItemBase>
     </Tooltip>
@@ -236,9 +242,9 @@ function WorkspacesSectionContent({
           <Button
             variant="ghost"
             size="sm"
-            chromeSize="listRow"
             onClick={onCreateProject}
             leftIcon={<AppIcon icon={Plus} size="sm" />}
+            className={getListRowButtonClassName()}
           >
             New Project
           </Button>
@@ -616,9 +622,8 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
       {isMobileOpen && (
         <Button
           variant="unstyled"
-          chrome="backdrop"
-          chromeSize="backdrop"
-          className="z-40 lg:hidden cursor-default"
+          size="content"
+          className={getFullOverlayDismissButtonClassName()}
           onClick={closeMobile}
           onKeyDown={(e) => e.key === "Escape" && closeMobile()}
           aria-label="Close sidebar"
@@ -655,7 +660,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                             )}
                           >
                             <Flex align="center" justify="center" className="h-full">
-                              <Typography variant="sidebarOrgInitial">
+                              <Typography as="span" variant="label" className="text-current">
                                 {organizationName.charAt(0).toUpperCase()}
                               </Typography>
                             </Flex>
@@ -664,9 +669,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                             <Typography variant="eyebrow" color="tertiary">
                               Workspace
                             </Typography>
-                            <Typography variant="large" className="max-w-36 truncate">
-                              {organizationName}
-                            </Typography>
+                            <LargeText className="truncate">{organizationName}</LargeText>
                           </div>
                         </Flex>
                       </div>
@@ -779,7 +782,11 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   {!showCollapsed && (
                     <li className="list-none">
                       <div className="p-sidebar-nav mb-sidebar-section-label mt-sidebar-section-gap">
-                        <Badge variant="sidebarSection" shape="pill">
+                        <Badge
+                          variant="secondary"
+                          shape="pill"
+                          className={getSidebarSectionBadgeClassName()}
+                        >
                           Products
                         </Badge>
                       </div>
@@ -1120,14 +1127,14 @@ function CollapsibleSection({
                 recipe={isActive ? "sidebarSectionIconActive" : "sidebarSectionIcon"}
                 iconClassName="size-4.5"
               />
-              <span className="truncate">{label}</span>
+              <Inline className="truncate">{label}</Inline>
             </Flex>
           </Link>
         ) : (
           <FlexItem grow>
             <Flex align="center" gap="sm" className="min-w-0">
               <SidebarIconShell icon={Icon} recipe="sidebarSectionIcon" iconClassName="size-4.5" />
-              <span className="truncate">{label}</span>
+              <Inline className="truncate">{label}</Inline>
             </Flex>
           </FlexItem>
         )}

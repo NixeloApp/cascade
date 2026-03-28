@@ -2,6 +2,7 @@ import { api } from "@convex/_generated/api";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Inline } from "@/components/ui/Inline";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpdate";
@@ -77,7 +78,7 @@ export function DashboardCustomizeModal() {
           <Flex align="center" justify="between" gap="sm">
             <Label htmlFor="show-stats">
               <Stack gap="none">
-                <span>Quick Stats</span>
+                <Inline>Quick Stats</Inline>
                 <Typography variant="caption" color="secondary" as="span">
                   Show issue and project counts
                 </Typography>
@@ -93,7 +94,7 @@ export function DashboardCustomizeModal() {
           <Flex align="center" justify="between" gap="sm">
             <Label htmlFor="show-activity">
               <Stack gap="none">
-                <span>Recent Activity</span>
+                <Inline>Recent Activity</Inline>
                 <Typography variant="caption" color="secondary" as="span">
                   Show your latest actions and history
                 </Typography>
@@ -109,7 +110,7 @@ export function DashboardCustomizeModal() {
           <Flex align="center" justify="between" gap="sm">
             <Label htmlFor="show-workspaces">
               <Stack gap="none">
-                <span>My Workspaces</span>
+                <Inline>My Workspaces</Inline>
                 <Typography variant="caption" color="secondary" as="span">
                   Show list of projects you belong to
                 </Typography>

@@ -8,10 +8,13 @@ import { EDITOR_HIGHLIGHT_COLOR_OPTIONS, EDITOR_TEXT_COLOR_OPTIONS } from "@conv
 import { useEditorRef } from "platejs/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { getToolbarButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { ColorSwatchButton } from "@/components/ui/ColorSwatchButton";
+import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Inline } from "@/components/ui/Inline";
+import { Popover } from "@/components/ui/Popover";
 import { ChevronDown, Highlighter, type LucideIcon, Type } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 
@@ -43,42 +46,39 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <Popover
+      align="start"
+      open={open}
+      onOpenAutoFocus={(e) => e.preventDefault()}
+      onOpenChange={setOpen}
+      recipe="colorPicker"
+      side="top"
+      sideOffset={8}
+      trigger={
         <Button
           variant="unstyled"
-          chrome={currentColor ? "toolbarActive" : "toolbar"}
-          chromeSize="toolbarControl"
+          size="content"
           aria-label={tooltip}
           title={tooltip}
           data-testid={type === "fontColor" ? TEST_IDS.EDITOR.FONT_COLOR_TRIGGER : undefined}
+          className={getToolbarButtonClassName(Boolean(currentColor), "control")}
         >
-          <span style={{ position: "relative", display: "inline-flex" }}>
+          <Flex as="span" inline className="relative">
             <Icon icon={TriggerIcon} size="sm" />
-            <span
+            <Inline
               aria-hidden="true"
+              className="absolute inset-x-0 -bottom-0.5 h-0.5"
               style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: -2,
-                height: 2,
-                borderRadius: 9999,
                 backgroundColor:
                   currentColor || (type === "fontColor" ? "currentColor" : "transparent"),
               }}
             />
-          </span>
+          </Flex>
           <Icon icon={ChevronDown} size="xs" opacity={0.5} />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        recipe="colorPicker"
-        side="top"
-        align="start"
-        sideOffset={8}
-        onOpenAutoFocus={(e) => e.preventDefault()}
-      >
+      }
+    >
+      {() => (
         <Grid cols={6} gap="xs">
           {colors.map((color) => (
             <ColorSwatchButton
@@ -95,7 +95,7 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
             />
           ))}
         </Grid>
-      </PopoverContent>
+      )}
     </Popover>
   );
 }

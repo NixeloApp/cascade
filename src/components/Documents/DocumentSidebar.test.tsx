@@ -1,7 +1,7 @@
 import { DAY, HOUR } from "@convex/lib/timeUtils";
 import type { Value } from "platejs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getDocumentHeadingAnchorId } from "@/lib/documents/headingAnchors";
+import { setDocumentHeadingAnchorElement } from "@/lib/documents/headingAnchors";
 import { fireEvent, render, screen } from "@/test/custom-render";
 import { DocumentSidebar } from "./DocumentSidebar";
 
@@ -65,9 +65,8 @@ describe("DocumentSidebar", () => {
     const onHeadingClick = vi.fn();
     const scrollIntoView = vi.fn();
     const targetHeading = document.createElement("div");
-    targetHeading.id = getDocumentHeadingAnchorId("next-steps");
     targetHeading.scrollIntoView = scrollIntoView;
-    document.body.appendChild(targetHeading);
+    setDocumentHeadingAnchorElement("next-steps", targetHeading);
 
     render(
       <DocumentSidebar
@@ -86,11 +85,14 @@ describe("DocumentSidebar", () => {
     expect(screen.getByText("Archived")).toBeInTheDocument();
     expect(screen.getByText("Atlas")).toBeInTheDocument();
     expect(screen.queryByText("Paragraph content")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Overview/ })).toHaveStyle({ paddingLeft: "8px" });
+    expect(screen.getByRole("button", { name: /Next Steps/ })).toHaveStyle({ paddingLeft: "20px" });
 
     fireEvent.click(screen.getByRole("button", { name: /Next Steps/ }));
 
     expect(onHeadingClick).toHaveBeenCalledWith("next-steps");
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
+    setDocumentHeadingAnchorElement("next-steps", null);
   });
 
   it("shows the empty contents state when no headings exist", () => {
@@ -119,5 +121,28 @@ describe("DocumentSidebar", () => {
     expect(screen.getByText("Private")).toBeInTheDocument();
     expect(screen.queryByText("Archived")).not.toBeInTheDocument();
     expect(screen.queryByText("Atlas")).not.toBeInTheDocument();
+  });
+
+  it("applies the maximum supported toc indent for deepest headings", () => {
+    const deepHeadingValue: Value = [
+      {
+        type: "h6",
+        id: "max-depth",
+        children: [{ text: "Max Heading" }],
+      },
+    ];
+
+    render(
+      <DocumentSidebar
+        editorValue={deepHeadingValue}
+        documentInfo={documentInfo}
+        isOpen={true}
+        onToggle={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /Max Heading/ })).toHaveStyle({
+      paddingLeft: "68px",
+    });
   });
 });

@@ -112,11 +112,13 @@ function WorkspaceSettingsForm({ workspace }: WorkspaceSettingsFormProps) {
                   <Button
                     key={emoji}
                     variant={icon === emoji ? "primary" : "outline"}
-                    size="workspaceIcon"
+                    size="icon"
                     onClick={() => setIcon(emoji)}
                     aria-label={`Select ${emoji} icon`}
                   >
-                    {emoji}
+                    <Typography as="span" variant="h4">
+                      {emoji}
+                    </Typography>
                   </Button>
                 ))}
               </Flex>

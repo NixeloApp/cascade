@@ -15,7 +15,7 @@ import { AlertTriangle, Home, RotateCcw } from "@/lib/icons";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
-import { Typography } from "./ui/Typography";
+import { ErrorCodeText, LargeText, Typography } from "./ui/Typography";
 
 interface Props {
   children: ReactNode;
@@ -74,13 +74,11 @@ export class ErrorBoundary extends Component<Props, State> {
               </IconCircle>
 
               {/* Large error code with tight tracking */}
-              <Typography variant="errorCodeDisplay">500</Typography>
+              <ErrorCodeText>500</ErrorCodeText>
 
               {/* Message with secondary text styling */}
               <Stack gap="sm" align="center">
-                <Typography variant="large" color="secondary">
-                  Something went wrong
-                </Typography>
+                <LargeText color="secondary">Something went wrong</LargeText>
                 <Typography color="tertiary">
                   We encountered an unexpected error. Please try refreshing the page.
                 </Typography>

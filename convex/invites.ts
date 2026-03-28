@@ -19,6 +19,7 @@ import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { WEEK } from "./lib/timeUtils";
 import { RUNTIME_COLORS } from "./shared/colors";
+import { ROUTES } from "./shared/routes";
 import { inviteRoles, projectRoles } from "./validators";
 
 // Helper: Check if user is a organization admin
@@ -284,7 +285,7 @@ export const sendInvite = authenticatedMutation({
     });
 
     // Send email
-    const inviteLink = `${getSiteUrl()}/invite/${token}`;
+    const inviteLink = `${getSiteUrl()}${ROUTES.join.build(token)}`;
     const emailContent = buildInviteEmail(
       inviteLink,
       !!args.projectId,
@@ -381,7 +382,7 @@ export const resendInvite = authenticatedMutation({
     }
 
     // Send email with invite link again using the shared helper
-    const inviteLink = `${getSiteUrl()}/invite/${invite.token}`;
+    const inviteLink = `${getSiteUrl()}${ROUTES.join.build(invite.token)}`;
     const emailContent = buildInviteEmail(
       inviteLink,
       !!invite.projectId,

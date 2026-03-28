@@ -434,7 +434,7 @@ function CommentAttachmentLink({
   return (
     <Button
       variant="link"
-      size="none"
+      size="content"
       className="text-ui-text-secondary"
       leftIcon={<Icon icon={Paperclip} size="sm" />}
       asChild

@@ -34,6 +34,22 @@ describe("OverviewBand", () => {
     expect(within(workspaceMetricElement).getByText("Current grouping")).toBeInTheDocument();
   });
 
+  it("renders wrapper-owned metric test ids without JSX wrappers", () => {
+    render(
+      <OverviewBand
+        title="Time summary"
+        description="Metrics reflect the active project and date range."
+        metrics={[
+          { label: "Logged", value: "3h", testId: "logged-metric" },
+          { label: "Entries", value: 12, testId: "entries-metric" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByTestId("logged-metric")).toHaveTextContent("3h");
+    expect(screen.getByTestId("entries-metric")).toHaveTextContent("12");
+  });
+
   it("renders without eyebrow or aside when they are omitted", () => {
     render(
       <OverviewBand

@@ -3,6 +3,7 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ConvexReactClient, useConvex } from "convex/react";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PwaBanners } from "@/components/Pwa/PwaBanners";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
@@ -33,9 +34,9 @@ import { getVapidPublicKey, WebPushProvider } from "@/lib/webPush";
 import { LazyPostHog } from "../components/LazyPostHog";
 import { NotFoundPage } from "../components/NotFoundPage";
 import { TooltipProvider } from "../components/ui/Tooltip";
-import { Typography } from "../components/ui/Typography";
+import { ErrorCodeText, LargeText, Typography } from "../components/ui/Typography";
 import { ThemeProvider } from "../contexts/ThemeContext";
-import { promptInstall, register as registerServiceWorker } from "../lib/serviceWorker";
+import { register as registerServiceWorker } from "../lib/serviceWorker";
 
 declare global {
   interface Window {
@@ -79,7 +80,6 @@ function RootComponent() {
   useEffect(() => {
     if (import.meta.env.PROD) {
       registerServiceWorker();
-      promptInstall();
     }
   }, []);
 
@@ -110,12 +110,12 @@ function RootComponent() {
                 </IconCircle>
 
                 {/* Large error code with tight tracking */}
-                <Typography variant="errorCodeDisplay">503</Typography>
+                <ErrorCodeText>503</ErrorCodeText>
 
                 {/* Message with secondary text styling */}
-                <Typography variant="large" color="secondary" className="mt-4">
+                <LargeText color="secondary" className="mt-4">
                   Service Unavailable
-                </Typography>
+                </LargeText>
                 <Typography color="tertiary" className="mt-2">
                   The application could not connect to the backend services. Please try again later.
                 </Typography>
@@ -127,6 +127,7 @@ function RootComponent() {
               </Flex>
             </Flex>
           )}
+          <PwaBanners />
           <Toaster />
         </TooltipProvider>
       </LazyPostHog>

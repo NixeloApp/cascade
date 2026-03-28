@@ -17,12 +17,6 @@ const { mockUseListNavigation } = vi.hoisted(() => ({
   mockUseListNavigation: vi.fn(),
 }));
 
-const SelectContext = createContext<{
-  disabled?: boolean;
-  onValueChange?: (value: string) => void;
-  value?: string;
-}>({});
-
 const SegmentedControlContext = createContext<{
   onValueChange?: (value: string) => void;
   value?: string;
@@ -42,52 +36,7 @@ vi.mock("@/hooks/useListNavigation", () => ({
   useListNavigation: mockUseListNavigation,
 }));
 
-vi.mock("./ui/Select", () => ({
-  Select: ({
-    children,
-    value,
-    onValueChange,
-    disabled,
-  }: {
-    children: ReactNode;
-    value?: string;
-    onValueChange?: (value: string) => void;
-    disabled?: boolean;
-  }) => (
-    <SelectContext.Provider value={{ disabled, onValueChange, value }}>
-      <div>{children}</div>
-    </SelectContext.Provider>
-  ),
-  SelectTrigger: ({
-    children,
-    className,
-    ...props
-  }: {
-    children: ReactNode;
-    className?: string;
-  } & Record<string, unknown>) => (
-    <button type="button" className={className} {...props}>
-      {children}
-    </button>
-  ),
-  SelectValue: ({ children, placeholder }: { children?: ReactNode; placeholder?: string }) => {
-    const context = useContext(SelectContext);
-    return <span>{children ?? context.value ?? placeholder}</span>;
-  },
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button
-        type="button"
-        onClick={() => context.onValueChange?.(value)}
-        disabled={context.disabled}
-      >
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("./ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("./ui/SegmentedControl", () => ({
   SegmentedControl: ({
@@ -1392,8 +1341,8 @@ describe("RoadmapView", () => {
     render(<RoadmapView projectId={projectId} />);
 
     // Epic filter should show "All Epics" default and the epic option
-    expect(screen.getByText("All Epics")).toBeInTheDocument();
-    expect(screen.getByText("My Epic")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All Epics" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "My Epic" })).toBeInTheDocument();
   });
 
   it("hides resize handles when canEdit is false", () => {

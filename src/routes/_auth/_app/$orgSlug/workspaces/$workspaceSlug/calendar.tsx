@@ -4,13 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { CalendarView } from "@/components/Calendar/CalendarView";
 import { Flex } from "@/components/ui/Flex";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -40,21 +34,18 @@ function WorkspaceCalendarPage() {
           Workspace scope
         </Typography>
         <Select
+          className="w-full sm:w-56 bg-ui-bg"
+          onChange={(value) => setSelectedTeamId(value as Id<"teams"> | "all")}
+          options={[
+            { value: "all", label: "All teams" },
+            ...((workspaceTeams ?? []).map((team) => ({
+              value: team._id,
+              label: team.name,
+            })) as Array<{ value: Id<"teams">; label: string }>),
+          ]}
+          placeholder="All teams"
           value={selectedTeamId}
-          onValueChange={(value) => setSelectedTeamId(value as Id<"teams"> | "all")}
-        >
-          <SelectTrigger className="w-full sm:w-56 bg-ui-bg">
-            <SelectValue placeholder="All teams" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All teams</SelectItem>
-            {(workspaceTeams ?? []).map((team) => (
-              <SelectItem key={team._id} value={team._id}>
-                {team.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       </Flex>
       <CalendarView
         workspaceId={workspaceId}

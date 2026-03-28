@@ -1,15 +1,13 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { getLastCommandProps, resetCommandMock } from "@/test/__tests__/commandMock";
 import { render, renderHook, screen } from "@/test/custom-render";
 import { type CommandAction, CommandPalette, useCommands } from "./CommandPalette";
-
-let latestFilter: ((value: string, search: string) => number) | undefined;
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: vi.fn(),
@@ -23,60 +21,7 @@ vi.mock("@/hooks/useOrgContext", () => ({
   useOrganization: vi.fn(),
 }));
 
-vi.mock("./ui/Command", () => ({
-  CommandDialog: ({
-    open,
-    title,
-    children,
-  }: {
-    open: boolean;
-    title: string;
-    children: ReactNode;
-  }) =>
-    open ? (
-      <div role="dialog" aria-label={title}>
-        {children}
-      </div>
-    ) : null,
-  Command: ({
-    children,
-    filter,
-  }: {
-    children: ReactNode;
-    filter?: (value: string, search: string) => number;
-  }) => {
-    latestFilter = filter;
-    return <div>{children}</div>;
-  },
-  CommandInput: ({
-    value,
-    onValueChange,
-    placeholder,
-    "aria-label": ariaLabel,
-  }: {
-    value?: string;
-    onValueChange?: (value: string) => void;
-    placeholder?: string;
-    "aria-label"?: string;
-  }) => (
-    <input
-      aria-label={ariaLabel}
-      placeholder={placeholder}
-      value={value}
-      onChange={(event) => onValueChange?.(event.target.value)}
-    />
-  ),
-  CommandList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CommandEmpty: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  CommandGroup: ({ heading, children }: { heading: string; children: ReactNode }) => (
-    <section aria-label={heading}>{children}</section>
-  ),
-  CommandItem: ({ children, onSelect }: { children: ReactNode; onSelect?: () => void }) => (
-    <button type="button" onClick={onSelect}>
-      {children}
-    </button>
-  ),
-}));
+vi.mock("./ui/Command", async () => await import("@/test/__tests__/commandMock"));
 
 const mockUseNavigate = vi.mocked(useNavigate);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
@@ -86,7 +31,7 @@ const mockNavigate = vi.fn();
 describe("CommandPalette", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    latestFilter = undefined;
+    resetCommandMock();
   });
 
   it("groups commands, closes after selection, and resets search when reopened", async () => {
@@ -151,6 +96,8 @@ describe("CommandPalette", () => {
     ];
 
     render(<CommandPalette isOpen onClose={vi.fn()} commands={commands} />);
+
+    const latestFilter = getLastCommandProps()?.filter;
 
     expect(latestFilter?.("create-issue", "create")).toBe(1);
     expect(latestFilter?.("create-issue", "composer")).toBe(1);

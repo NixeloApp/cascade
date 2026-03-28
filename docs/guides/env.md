@@ -83,6 +83,8 @@ These run on Convex's servers. Set via `npx convex env set` or the Convex Dashbo
 | `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
 | `GOOGLE_CLIENT_ID` | Same as AUTH_GOOGLE_ID (for Calendar sync) |
 | `GOOGLE_CLIENT_SECRET` | Same as AUTH_GOOGLE_SECRET |
+| `AUTH_MICROSOFT_ID` | Microsoft OAuth client ID (for Microsoft 365 outreach mailbox connection) |
+| `AUTH_MICROSOFT_SECRET` | Microsoft OAuth client secret |
 
 ### AI Features (Optional)
 
@@ -204,6 +206,7 @@ Before deploying to production:
 - [ ] Set all Convex env vars via dashboard or CLI
 - [ ] Configure email provider with verified domain
 - [ ] Update Google OAuth redirect URIs for production domain
+- [ ] Update Microsoft OAuth redirect URIs for production domain
 - [ ] Set bot service env vars on your bot server
 
 ---

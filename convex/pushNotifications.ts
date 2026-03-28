@@ -31,6 +31,73 @@ export interface PushSubscriptionData {
   };
 }
 
+interface SubscribeArgs {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  expirationTime?: number;
+  userAgent?: string;
+  previousEndpoint?: string;
+}
+
+function validatePushEndpoint(endpoint: string, fieldName: "endpoint" | "previousEndpoint") {
+  try {
+    new URL(endpoint);
+  } catch {
+    throw validation(fieldName, "Invalid push endpoint URL");
+  }
+}
+
+async function upsertPushSubscription(ctx: MutationCtx, userId: Id<"users">, args: SubscribeArgs) {
+  const existing = await ctx.db
+    .query("pushSubscriptions")
+    .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
+    .first();
+
+  if (existing) {
+    await ctx.db.patch(existing._id, {
+      userId,
+      p256dh: args.p256dh,
+      auth: args.auth,
+      expirationTime: args.expirationTime,
+      userAgent: args.userAgent,
+    });
+    return existing._id;
+  }
+
+  return ctx.db.insert("pushSubscriptions", {
+    userId,
+    endpoint: args.endpoint,
+    p256dh: args.p256dh,
+    auth: args.auth,
+    expirationTime: args.expirationTime,
+    userAgent: args.userAgent,
+    createdAt: Date.now(),
+  });
+}
+
+async function removePreviousSubscriptionIfOwned(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  endpoint: string | undefined,
+  currentEndpoint: string,
+) {
+  if (!endpoint || endpoint === currentEndpoint) {
+    return;
+  }
+
+  validatePushEndpoint(endpoint, "previousEndpoint");
+
+  const previousSubscription = await ctx.db
+    .query("pushSubscriptions")
+    .withIndex("by_endpoint", (q) => q.eq("endpoint", endpoint))
+    .first();
+
+  if (previousSubscription?.userId === userId) {
+    await ctx.db.delete(previousSubscription._id);
+  }
+}
+
 // ============================================================================
 // Queries
 // ============================================================================
@@ -122,46 +189,17 @@ export const subscribe = authenticatedMutation({
     auth: v.string(),
     expirationTime: v.optional(v.number()),
     userAgent: v.optional(v.string()),
+    previousEndpoint: v.optional(v.string()),
   },
   returns: v.object({
     success: v.boolean(),
     id: v.id("pushSubscriptions"),
   }),
   handler: async (ctx, args) => {
-    // Validate endpoint is a valid URL
-    try {
-      new URL(args.endpoint);
-    } catch {
-      throw validation("endpoint", "Invalid push endpoint URL");
-    }
+    validatePushEndpoint(args.endpoint, "endpoint");
 
-    // Check for existing subscription with same endpoint
-    const existing = await ctx.db
-      .query("pushSubscriptions")
-      .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
-      .first();
-
-    if (existing) {
-      // Update existing subscription (endpoint reused, keys may differ)
-      await ctx.db.patch(existing._id, {
-        p256dh: args.p256dh,
-        auth: args.auth,
-        expirationTime: args.expirationTime,
-        userAgent: args.userAgent,
-      });
-      return { success: true, id: existing._id };
-    }
-
-    // Create new subscription
-    const id = await ctx.db.insert("pushSubscriptions", {
-      userId: ctx.userId,
-      endpoint: args.endpoint,
-      p256dh: args.p256dh,
-      auth: args.auth,
-      expirationTime: args.expirationTime,
-      userAgent: args.userAgent,
-      createdAt: Date.now(),
-    });
+    const id = await upsertPushSubscription(ctx, ctx.userId, args);
+    await removePreviousSubscriptionIfOwned(ctx, ctx.userId, args.previousEndpoint, args.endpoint);
 
     // Enable push in preferences if not already
     const prefs = await ctx.db

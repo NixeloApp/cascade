@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -198,7 +198,7 @@ describe("Pumble Integration", () => {
   });
 
   describe("sendIssueNotification", () => {
-    it("should fail when called without user context (bug reproduction)", async () => {
+    it("supports scheduler-safe delivery without relying on authenticated user context", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const { organizationId } = await createOrganizationAdmin(t, userId);
@@ -219,16 +219,20 @@ describe("Pumble Integration", () => {
         events: ["issue.created"],
       });
 
-      // Simulate scheduler call (unauthenticated)
-      // This action calls listWebhooks which checks ctx.userId
-      // It should fail because ctx.userId is missing
-      await expect(async () => {
-        await t.action(api.pumble.sendIssueNotification, {
-          issueId,
-          event: "issue.created",
-          userId, // pass userId as arg, but ctx.userId is separate
-        });
-      }).rejects.toThrow(/Unauthenticated|Not authorized/i);
+      mockSafeFetch.mockResolvedValue(new Response("OK", { status: 200 }));
+
+      await t.action(internal.pumble.sendIssueNotification, {
+        issueId,
+        event: "issue.created",
+        userId,
+      });
+
+      expect(mockSafeFetch).toHaveBeenCalledWith(
+        "https://hooks.pumble.com/notify",
+        expect.objectContaining({
+          method: "POST",
+        }),
+      );
     });
 
     it("should send notification when called by authenticated user", async () => {
@@ -252,8 +256,7 @@ describe("Pumble Integration", () => {
 
       mockSafeFetch.mockResolvedValue(new Response("OK", { status: 200 }));
 
-      // Authenticated call
-      await asUser.action(api.pumble.sendIssueNotification, {
+      await t.action(internal.pumble.sendIssueNotification, {
         issueId,
         event: "issue.created",
         userId,
@@ -297,7 +300,7 @@ describe("Pumble Integration", () => {
 
       mockSafeFetch.mockResolvedValue(new Response("OK", { status: 200 }));
 
-      await asUser.action(api.pumble.sendIssueNotification, {
+      await t.action(internal.pumble.sendIssueNotification, {
         issueId,
         event: "issue.created",
         userId,

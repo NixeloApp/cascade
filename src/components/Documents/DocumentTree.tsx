@@ -11,6 +11,10 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import {
+  getDocumentTreeDisclosureButtonClassName,
+  getDocumentTreeRowButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import {
   DropdownMenu,
@@ -160,11 +164,12 @@ function DocumentTreeSection({
   return (
     <div>
       <Button
-        chrome={muted ? "documentTreeSectionMuted" : "documentTreeSection"}
-        chromeSize="documentTreeSection"
+        variant="unstyled"
+        size="content"
         onClick={onToggle}
         aria-expanded={expanded}
         aria-controls={id}
+        className={getDocumentTreeRowButtonClassName(muted)}
       >
         <TreeChevronIcon isExpanded={expanded} />
         {icon}
@@ -380,11 +385,12 @@ function ExpandToggle({
   }
   return (
     <Button
-      chrome="documentTreeToggle"
-      chromeSize="documentTreeToggle"
+      variant="unstyled"
+      size="content"
       onClick={onToggle}
       aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title}`}
       aria-expanded={isExpanded}
+      className={getDocumentTreeDisclosureButtonClassName()}
     >
       <TreeChevronIcon isExpanded={isExpanded} />
     </Button>

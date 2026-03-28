@@ -13,13 +13,14 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Archive } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
+import { getQuietCompactPillButtonClassName } from "./ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { Input } from "./ui/Input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
+import { Select } from "./ui/Select";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -234,7 +235,12 @@ export function BulkOperationsBar({
               <Typography variant="label">
                 {count} issue{count !== 1 ? "s" : ""} selected
               </Typography>
-              <Button chrome="quiet" chromeSize="compactPill" onClick={onClearSelection}>
+              <Button
+                variant="unstyled"
+                size="content"
+                onClick={onClearSelection}
+                className={getQuietCompactPillButtonClassName()}
+              >
                 Clear
               </Button>
             </Flex>
@@ -266,110 +272,97 @@ export function BulkOperationsBar({
                   <Typography as="label" htmlFor={statusId} variant="label" color="secondary">
                     Status
                   </Typography>
-                  <Select onValueChange={handleUpdateStatus}>
-                    <SelectTrigger id={statusId}>
-                      <SelectValue placeholder="Select status..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {workflowStates.map((state) => (
-                        <SelectItem key={state.id} value={state.id}>
-                          {state.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Select
+                    id={statusId}
+                    onChange={handleUpdateStatus}
+                    options={workflowStates.map((state) => ({
+                      value: state.id,
+                      label: state.name,
+                    }))}
+                    placeholder="Select status..."
+                  />
                 </Stack>
 
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={priorityId} variant="label" color="secondary">
                     Priority
                   </Typography>
-                  <Select onValueChange={handleUpdatePriority}>
-                    <SelectTrigger id={priorityId}>
-                      <SelectValue placeholder="Select priority..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="highest">Highest</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="lowest">Lowest</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Select
+                    id={priorityId}
+                    onChange={handleUpdatePriority}
+                    options={[
+                      { value: "highest", label: "Highest" },
+                      { value: "high", label: "High" },
+                      { value: "medium", label: "Medium" },
+                      { value: "low", label: "Low" },
+                      { value: "lowest", label: "Lowest" },
+                    ]}
+                    placeholder="Select priority..."
+                  />
                 </Stack>
 
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={assigneeId} variant="label" color="secondary">
                     Assignee
                   </Typography>
-                  <Select onValueChange={handleAssign}>
-                    <SelectTrigger id={assigneeId}>
-                      <SelectValue placeholder="Select assignee..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {members?.map((member: { userId: string; userName: string }) => (
-                        <SelectItem key={member.userId} value={member.userId}>
-                          {member.userName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Select
+                    id={assigneeId}
+                    onChange={handleAssign}
+                    options={[
+                      { value: "unassigned", label: "Unassigned" },
+                      ...(members?.map((member: { userId: string; userName: string }) => ({
+                        value: member.userId,
+                        label: member.userName,
+                      })) ?? []),
+                    ]}
+                    placeholder="Select assignee..."
+                  />
                 </Stack>
 
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={sprintId} variant="label" color="secondary">
                     Sprint
                   </Typography>
-                  <Select onValueChange={handleMoveToSprint}>
-                    <SelectTrigger id={sprintId}>
-                      <SelectValue placeholder="Select sprint..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="backlog">Backlog</SelectItem>
-                      {sprints?.map((sprint) => (
-                        <SelectItem key={sprint._id} value={sprint._id}>
-                          {sprint.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Select
+                    id={sprintId}
+                    onChange={handleMoveToSprint}
+                    options={[
+                      { value: "backlog", label: "Backlog" },
+                      ...(sprints?.map((sprint) => ({
+                        value: sprint._id,
+                        label: sprint.name,
+                      })) ?? []),
+                    ]}
+                    placeholder="Select sprint..."
+                  />
                 </Stack>
 
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={labelId} variant="label" color="secondary">
                     Add Label
                   </Typography>
-                  <Select onValueChange={handleAddLabel}>
-                    <SelectTrigger id={labelId}>
-                      <SelectValue placeholder="Select label..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {labels?.map((label) => (
-                        <SelectItem key={label._id} value={label.name}>
-                          {label.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Select
+                    id={labelId}
+                    onChange={handleAddLabel}
+                    options={
+                      labels?.map((label) => ({ value: label.name, label: label.name })) ?? []
+                    }
+                    placeholder="Select label..."
+                  />
                 </Stack>
 
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={removeLabelId} variant="label" color="secondary">
                     Remove Label
                   </Typography>
-                  <Select onValueChange={handleRemoveLabel}>
-                    <SelectTrigger id={removeLabelId}>
-                      <SelectValue placeholder="Select label..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {labels?.map((label) => (
-                        <SelectItem key={label._id} value={label.name}>
-                          {label.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Select
+                    id={removeLabelId}
+                    onChange={handleRemoveLabel}
+                    options={
+                      labels?.map((label) => ({ value: label.name, label: label.name })) ?? []
+                    }
+                    placeholder="Select label..."
+                  />
                 </Stack>
 
                 <Stack gap="xs">
@@ -384,7 +377,12 @@ export function BulkOperationsBar({
                         onChange={(e) => handleUpdateStartDate(e.target.value)}
                       />
                     </FlexItem>
-                    <Button chrome="quiet" chromeSize="compactPill" onClick={handleClearStartDate}>
+                    <Button
+                      variant="unstyled"
+                      size="content"
+                      onClick={handleClearStartDate}
+                      className={getQuietCompactPillButtonClassName()}
+                    >
                       Clear
                     </Button>
                   </Flex>
@@ -402,7 +400,12 @@ export function BulkOperationsBar({
                         onChange={(e) => handleUpdateDueDate(e.target.value)}
                       />
                     </FlexItem>
-                    <Button chrome="quiet" chromeSize="compactPill" onClick={handleClearDueDate}>
+                    <Button
+                      variant="unstyled"
+                      size="content"
+                      onClick={handleClearDueDate}
+                      className={getQuietCompactPillButtonClassName()}
+                    >
                       Clear
                     </Button>
                   </Flex>

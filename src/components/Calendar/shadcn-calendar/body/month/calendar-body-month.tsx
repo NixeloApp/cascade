@@ -22,10 +22,24 @@ import { useState } from "react";
 import { getDotColorClass } from "@/components/Calendar/calendar-colors";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  type CalendarDayBadgeTone,
+  getCalendarDayBadgeClassName,
+} from "@/components/ui/badgeSurfaceClassNames";
+import {
+  getCalendarControlButtonClassName,
+  getCalendarMonthOverflowButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
+import {
+  getCalendarMonthDesktopEventListClassName,
+  getCalendarMonthMobileEventListClassName,
+  getCalendarMonthOverflowTriggerClassName,
+} from "@/components/ui/calendarMonthSurfaceClassNames";
 import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
@@ -76,12 +90,12 @@ function getDayCellRecipe(day: Date, visibleMonth: Date, today: Date) {
   return isSameMonth(day, visibleMonth) ? "calendarMonthDayCell" : "calendarMonthDayCellAdjacent";
 }
 
-function getDayBadgeVariant(day: Date, visibleMonth: Date, today: Date) {
+function getDayBadgeTone(day: Date, visibleMonth: Date, today: Date): CalendarDayBadgeTone {
   if (isSameDay(day, today)) {
-    return "calendarDayToday";
+    return "today";
   }
 
-  return isSameMonth(day, visibleMonth) ? "calendarDayCurrent" : "calendarDayMuted";
+  return isSameMonth(day, visibleMonth) ? "current" : "muted";
 }
 
 function CalendarMonthWeekdayHeader({ day }: { day: string }) {
@@ -103,7 +117,7 @@ function CalendarMonthMobileEventList({ dayEvents }: { dayEvents: CalendarEventT
   }
 
   return (
-    <Flex wrap gap="xs" className="mt-1 md:hidden">
+    <Flex wrap gap="xs" mt="xs" className={getCalendarMonthMobileEventListClassName()}>
       {dayEvents.slice(0, 3).map((event) => (
         <Dot
           key={`dot-${event.id}`}
@@ -140,37 +154,41 @@ function CalendarMonthDesktopEventList({
 }) {
   return (
     <AnimatePresence mode="wait">
-      <div className="mt-1 hidden md:block">
+      <Stack gap="xs" mt="xs" className={getCalendarMonthDesktopEventListClassName()}>
         {dayEvents.slice(0, 3).map((event) => (
-          <div key={event.id} className="mb-1 last:mb-0">
-            <CalendarEvent
-              event={event}
-              className="relative h-auto"
-              month
-              draggable
-              isDragging={draggedEventId === event.id}
-              onDragStart={(dragEvent) => {
-                dragEvent.stopPropagation();
-                dragEvent.dataTransfer?.setData("text/plain", event.id);
-                dragEvent.dataTransfer?.setDragImage(dragEvent.currentTarget, 16, 16);
-                setDraggedEventId(event.id);
-                setDropTargetDate(dayKey);
-              }}
-              onDragEnd={() => {
-                setDraggedEventId(null);
-                setDropTargetDate(null);
-              }}
-            />
-          </div>
+          <CalendarEvent
+            key={event.id}
+            event={event}
+            className="relative h-auto"
+            month
+            draggable
+            isDragging={draggedEventId === event.id}
+            onDragStart={(dragEvent) => {
+              dragEvent.stopPropagation();
+              dragEvent.dataTransfer?.setData("text/plain", event.id);
+              dragEvent.dataTransfer?.setDragImage(dragEvent.currentTarget, 16, 16);
+              setDraggedEventId(event.id);
+              setDropTargetDate(dayKey);
+            }}
+            onDragEnd={() => {
+              setDraggedEventId(null);
+              setDropTargetDate(null);
+            }}
+          />
         ))}
         {dayEvents.length > 3 && (
-          <Button asChild chrome="calendarMonthOverflow" chromeSize="calendarMonthOverflow">
+          <Button
+            asChild
+            variant="unstyled"
+            size="content"
+            className={getCalendarMonthOverflowButtonClassName()}
+          >
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="mt-0.5"
+              className={getCalendarMonthOverflowTriggerClassName()}
               onClick={(e) => {
                 e.stopPropagation();
                 openDay(day);
@@ -180,7 +198,7 @@ function CalendarMonthDesktopEventList({
             </motion.button>
           </Button>
         )}
-      </div>
+      </Stack>
     </AnimatePresence>
   );
 }
@@ -215,7 +233,7 @@ function CalendarMonthDayCell({
   setDropTargetDate: (dayKey: string | null) => void;
 }) {
   const dayCellRecipe = getDayCellRecipe(day, date, today);
-  const dayBadgeVariant = getDayBadgeVariant(day, date, today);
+  const dayBadgeTone = getDayBadgeTone(day, date, today);
 
   return (
     <Card
@@ -253,17 +271,22 @@ function CalendarMonthDayCell({
         <span data-testid={TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET} hidden aria-hidden="true" />
       ) : null}
       <Flex align="start" justify="between" gap="xs">
-        <Badge variant={dayBadgeVariant} size="calendarDay" shape="pill">
+        <Badge
+          variant={dayBadgeTone === "today" ? "brand" : "outline"}
+          shape="pill"
+          className={getCalendarDayBadgeClassName(dayBadgeTone)}
+        >
           {format(day, "d")}
         </Badge>
         <Button
           type="button"
-          chrome="calendarHeaderControl"
-          chromeSize="calendarHeaderIcon"
+          variant="unstyled"
+          size="content"
           reveal="responsive"
           aria-label={`Add event for ${format(day, "MMMM d, yyyy")}`}
           data-testid={TEST_IDS.CALENDAR.QUICK_ADD_DAY}
           title={`Add event for ${format(day, "MMMM d, yyyy")}`}
+          className={getCalendarControlButtonClassName("icon")}
           onClick={(e) => {
             e.stopPropagation();
             onAddEvent(day);

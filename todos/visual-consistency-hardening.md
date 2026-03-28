@@ -1,18 +1,8 @@
 # Visual Consistency Hardening
 
 > **Priority:** P2
-> **Status:** In Progress — automated guardrails done, human review passes pending
+> **Status:** Open
 > **Last Updated:** 2026-03-27
-
-## What Was Done
-
-Automated guardrails are in place and enforced:
-- Icon tone drift validator: 0 violations
-- Nested Cards validator: 0 violations
-- Surface shells validator: enforced at owned boundaries
-- Control chrome drift, shared shape drift validators: 0 violations
-- Tablet/mobile coverage: universal across all 42 spec folders
-- Raw Tailwind/styling baselines ratcheted (can only decrease)
 
 ## Remaining
 

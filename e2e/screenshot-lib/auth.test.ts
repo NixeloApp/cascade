@@ -2,10 +2,10 @@ import type { Page } from "@playwright/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ROUTES } from "../../convex/shared/routes";
 import { loginPageUserWithRepair } from "../utils/fixture-auth";
+import { waitForSpinnersHidden } from "../utils/page-readiness";
 import { waitForDashboardReady, waitForScreenshotReady } from "../utils/wait-helpers";
 import { ensureAuthenticatedScreenshotPage } from "./auth";
 import { BASE_URL, SCREENSHOT_AUTH_USER } from "./config";
-import { waitForSpinnersHidden } from "./readiness";
 
 vi.mock("../utils/fixture-auth", () => ({
   loginPageUserWithRepair: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock("../utils/wait-helpers", () => ({
   waitForScreenshotReady: vi.fn(),
 }));
 
-vi.mock("./readiness", () => ({
+vi.mock("../utils/page-readiness", () => ({
   waitForSpinnersHidden: vi.fn(),
 }));
 

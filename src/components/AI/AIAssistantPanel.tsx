@@ -16,7 +16,7 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Sheet } from "../ui/Sheet";
 import { Tabs, TabsList, TabsTrigger } from "../ui/Tabs";
-import { Typography } from "../ui/Typography";
+import { LargeText, Typography } from "../ui/Typography";
 import { AIChat } from "./AIChat";
 import { AIErrorFallback } from "./AIErrorFallback";
 import { AISuggestionsPanel } from "./AISuggestionsPanel";
@@ -74,14 +74,9 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
                 <Icon icon={Bot} size="lg" />
                 <div>
                   <SheetPrimitive.Title asChild>
-                    <Typography
-                      variant="large"
-                      as="h2"
-                      color="default"
-                      className="text-brand-foreground"
-                    >
+                    <LargeText as="h2" color="default" className="text-brand-foreground">
                       AI Assistant
-                    </Typography>
+                    </LargeText>
                   </SheetPrimitive.Title>
                   <SheetPrimitive.Description asChild>
                     <Typography variant="meta" as="p" className="text-brand-subtle">

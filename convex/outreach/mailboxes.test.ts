@@ -104,4 +104,37 @@ describe("outreach mailboxes", () => {
     expect(mailboxes[0].minuteSendLimit).toBe(3);
     expect(mailboxes[0].minuteSendCount).toBe(2);
   });
+
+  it("returns the effective deliverability cap when a user raises the configured ceiling", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const { organizationId } = await createOrganizationAdmin(t, userId);
+    const asUser = asAuthenticatedUser(t, userId);
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(userId, { defaultOrganizationId: organizationId });
+    });
+
+    const mailboxId = await asUser.mutation(api.outreach.mailboxes.createMailbox, {
+      provider: "google",
+      email: "founder@example.com",
+      displayName: "Founder",
+      accessToken: "token-one",
+      refreshToken: "refresh-one",
+      expiresAt: Date.now() + MAILBOX_TTL_MS,
+    });
+
+    const result = await asUser.mutation(api.outreach.mailboxes.updateLimit, {
+      mailboxId,
+      dailySendLimit: 90,
+    });
+
+    expect(result).toMatchObject({
+      configuredDailyLimit: 90,
+      deliverabilityStatus: "healthy",
+      effectiveDailyLimit: 15,
+      hasCapacityOverride: true,
+      warmupStageLabel: "Days 1-3",
+    });
+  });
 });

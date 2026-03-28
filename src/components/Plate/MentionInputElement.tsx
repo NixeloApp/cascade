@@ -13,11 +13,14 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getMentionInputBadgeClassName } from "@/components/ui/badgeSurfaceClassNames";
+import { getListRowButtonClassName } from "@/components/ui/buttonSurfaceClassNames";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { cn } from "@/lib/utils";
 
 interface MentionUser extends TMentionItemBase {
   id: string;
@@ -134,13 +137,12 @@ export function MentionInputElement({
     <Badge
       {...attributes}
       ref={inputRef}
-      variant="mentionInput"
-      size="mentionInput"
+      variant="secondary"
       role="combobox"
       tabIndex={0}
       aria-expanded="true"
       aria-haspopup="listbox"
-      className={className}
+      className={cn(getMentionInputBadgeClassName(), className)}
       onKeyDown={handleKeyDown}
       onBlur={inputProps.onBlur}
     >
@@ -157,10 +159,10 @@ export function MentionInputElement({
               <Button
                 key={item.id}
                 variant="unstyled"
-                chrome={index === selectedIndex ? "listRowActive" : "listRow"}
-                chromeSize="listRow"
+                size="content"
                 onClick={() => onSelectItem(item)}
                 onMouseEnter={() => setSelectedIndex(index)}
+                className={getListRowButtonClassName(index === selectedIndex)}
               >
                 <Flex align="center" gap="sm">
                   <Avatar name={item.text} src={item.image} size="sm" />

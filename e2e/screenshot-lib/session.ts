@@ -3,6 +3,7 @@ import * as path from "node:path";
 import type { Browser, BrowserContextOptions, Page, StorageState } from "@playwright/test";
 import type { TestUser } from "../config";
 import { E2E_TIMEZONE } from "../constants";
+import { formatViewportThemeConfigLabel, runConfigMatrix } from "../utils/config-matrix";
 import { withBrowserPageTarget, withLaunchedBrowser } from "../utils/page-targets";
 import { type SeedScreenshotResult, testUserService } from "../utils/test-user-service";
 import { ensureAuthenticatedScreenshotPage } from "./auth";
@@ -346,7 +347,7 @@ export function emptyCaptureGroupRequiresPrimaryBootstrap(
 }
 
 export function formatConfigLabel(viewport: ViewportName, theme: ThemeName): string {
-  return `${viewport}-${theme}`;
+  return formatViewportThemeConfigLabel({ theme, viewport });
 }
 
 export function setCurrentConfig(viewport: ViewportName, theme: ThemeName, mode: string): void {
@@ -869,7 +870,7 @@ export async function runSeedlessPublicScreenshotPhase(
   configs: ScreenshotCaptureConfig[],
 ): Promise<void> {
   console.log("\n  📋 Phase 0: Public pages (no seed required)");
-  for (const config of configs) {
+  await runConfigMatrix(configs, async ({ config }) => {
     await capturePublicStatesForConfig(
       launchBrowser,
       config.viewport,
@@ -877,7 +878,7 @@ export async function runSeedlessPublicScreenshotPhase(
       undefined,
       "seedless",
     );
-  }
+  });
 }
 
 export async function runEmptyScreenshotPhase(
@@ -893,7 +894,7 @@ export async function runEmptyScreenshotPhase(
   const orgSlug = getScreenshotExecutionOrgSlug(executionContext);
 
   console.log("\n  📋 Phase 1: Empty states (before seeding)");
-  for (const config of configs) {
+  await runConfigMatrix(configs, async ({ config, label }) => {
     try {
       await captureEmptyStatesForConfig(
         launchBrowser,
@@ -909,9 +910,9 @@ export async function runEmptyScreenshotPhase(
         throw error;
       }
       captureState.captureFailures++;
-      console.log(`    ⚠️ ${config.viewport}-${config.theme} empty capture failed: ${message}`);
+      console.log(`    ⚠️ ${label} empty capture failed: ${message}`);
     }
-  }
+  });
 }
 
 export async function runSeededScreenshotPhase(
@@ -943,7 +944,7 @@ export async function runSeededScreenshotPhase(
       "filled-state",
     );
 
-    for (const config of configs) {
+    await runConfigMatrix(configs, async ({ config }) => {
       await captureFilledStatesForConfig(
         launchBrowser,
         config.viewport,
@@ -955,11 +956,11 @@ export async function runSeededScreenshotPhase(
           includeSeededPublicPages: seededPhaseBehavior.includeSeededPublicPages,
         },
       );
-    }
+    });
     return;
   }
 
-  for (const config of configs) {
+  await runConfigMatrix(configs, async ({ config }) => {
     await capturePublicStatesForConfig(
       launchBrowser,
       config.viewport,
@@ -967,7 +968,7 @@ export async function runSeededScreenshotPhase(
       seedResult,
       "seeded",
     );
-  }
+  });
 }
 
 export async function runScreenshotCaptureExecutionStep(

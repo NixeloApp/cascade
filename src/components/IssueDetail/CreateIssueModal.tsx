@@ -20,6 +20,10 @@ import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getAiPrimaryActionButtonClassName,
+  getCalendarControlButtonClassName,
+} from "@/components/ui/buttonSurfaceClassNames";
 import { ColorPicker } from "@/components/ui/ColorPicker";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
@@ -27,16 +31,7 @@ import { Input, Select } from "@/components/ui/form";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { IssueLabelChip } from "@/components/ui/IssueLabelChip";
-import {
-  Popover,
-  PopoverBody,
-  PopoverContent,
-  PopoverFooter,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@/components/ui/Popover";
-import { SelectItem } from "@/components/ui/Select";
+import { Popover } from "@/components/ui/Popover";
 import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Typography } from "@/components/ui/Typography";
@@ -218,7 +213,8 @@ function CreateIssueAiAction({
         type="button"
         onClick={onGenerateSuggestions}
         isLoading={isGeneratingAI}
-        variant="accentGradient"
+        variant="unstyled"
+        className={getAiPrimaryActionButtonClassName()}
         leftIcon={<Icon icon={Sparkles} size="sm" />}
       >
         Get AI Suggestions
@@ -304,35 +300,11 @@ function CreateIssueLabelsSection({
             </IssueLabelChip>
           );
         })}
-        <Popover open={showCreateLabel} onOpenChange={onCreateOpenChange}>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" size="xs" aria-label="Create new label">
-              <Icon icon={Plus} size="sm" />
-              New
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" padding="none" className="w-64">
-            <PopoverHeader>
-              <PopoverTitle>Create Label</PopoverTitle>
-            </PopoverHeader>
-            <PopoverBody>
-              <Stack gap="md">
-                <Input
-                  placeholder="Label name"
-                  value={newLabelName}
-                  onChange={(e) => onNewLabelNameChange(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      onCreateLabel();
-                    }
-                  }}
-                  autoFocus
-                />
-                <ColorPicker value={newLabelColor} onChange={onNewLabelColorChange} label="Color" />
-              </Stack>
-            </PopoverBody>
-            <PopoverFooter>
+        <Popover
+          align="start"
+          className="w-64"
+          footer={
+            <>
               <Button
                 type="button"
                 variant="secondary"
@@ -350,8 +322,40 @@ function CreateIssueLabelsSection({
               >
                 Create
               </Button>
-            </PopoverFooter>
-          </PopoverContent>
+            </>
+          }
+          header={<Typography variant="label">Create Label</Typography>}
+          open={showCreateLabel}
+          onOpenChange={onCreateOpenChange}
+          padding="none"
+          trigger={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-label="Create new label"
+              className={getCalendarControlButtonClassName("pill")}
+            >
+              <Icon icon={Plus} size="sm" />
+              New
+            </Button>
+          }
+        >
+          <Stack gap="md">
+            <Input
+              placeholder="Label name"
+              value={newLabelName}
+              onChange={(e) => onNewLabelNameChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onCreateLabel();
+                }
+              }}
+              autoFocus
+            />
+            <ColorPicker value={newLabelColor} onChange={onNewLabelColorChange} label="Color" />
+          </Stack>
         </Popover>
       </Flex>
     </Stack>
@@ -1105,67 +1109,93 @@ export function CreateIssueModal({
         <Grid cols={1} colsSm={2} gap="lg">
           <form.Field name="type">
             {(field) => (
-              <FormSelectRadix field={field} label="Type" placeholder="Select type">
-                {ISSUE_TYPES_WITH_SUBTASK.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    <Flex align="center" gap="sm">
-                      <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
-                      {getTypeLabel(type)}
-                    </Flex>
-                  </SelectItem>
-                ))}
-              </FormSelectRadix>
+              <FormSelectRadix
+                field={field}
+                label="Type"
+                options={ISSUE_TYPES_WITH_SUBTASK.map((type) => ({
+                  icon: ISSUE_TYPE_ICONS[type],
+                  label: getTypeLabel(type),
+                  value: type,
+                }))}
+                placeholder="Select type"
+                renderOption={(option) => (
+                  <Flex align="center" gap="sm">
+                    <Icon icon={option.icon} size="sm" />
+                    {option.label}
+                  </Flex>
+                )}
+              />
             )}
           </form.Field>
 
           <form.Field name="priority">
             {(field) => (
-              <FormSelectRadix field={field} label="Priority" placeholder="Select priority">
-                {ISSUE_PRIORITIES.map((priority) => (
-                  <SelectItem key={priority} value={priority}>
-                    <Flex align="center" gap="sm">
-                      <Icon
-                        icon={PRIORITY_ICONS[priority]}
-                        size="sm"
-                        className={getPriorityColor(priority)}
-                      />
-                      {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                    </Flex>
-                  </SelectItem>
-                ))}
-              </FormSelectRadix>
+              <FormSelectRadix
+                field={field}
+                label="Priority"
+                options={ISSUE_PRIORITIES.map((priority) => ({
+                  icon: PRIORITY_ICONS[priority],
+                  label: priority.charAt(0).toUpperCase() + priority.slice(1),
+                  toneClassName: getPriorityColor(priority),
+                  value: priority,
+                }))}
+                placeholder="Select priority"
+                renderOption={(option) => (
+                  <Flex align="center" gap="sm">
+                    <Icon icon={option.icon} size="sm" className={option.toneClassName} />
+                    {option.label}
+                  </Flex>
+                )}
+              />
             )}
           </form.Field>
         </Grid>
 
         <form.Field name="assigneeId">
           {(field) => (
-            <FormSelectRadix field={field} label="Assignee" placeholder="Select assignee">
-              <SelectItem value="unassigned">
+            <FormSelectRadix
+              field={field}
+              label="Assignee"
+              options={[
+                {
+                  image: undefined,
+                  label: "Unassigned",
+                  memberName: "Unassigned",
+                  outOfOffice: undefined,
+                  value: "unassigned",
+                },
+                ...(project?.members.map((member) => ({
+                  image: member.image,
+                  label: member.name,
+                  memberName: member.name,
+                  outOfOffice: member.outOfOffice,
+                  value: member._id,
+                })) ?? []),
+              ]}
+              placeholder="Select assignee"
+              renderOption={(option) => (
                 <Flex align="center" gap="sm">
-                  <Avatar name="Unassigned" size="xs" variant="neutral" />
-                  Unassigned
+                  <Avatar
+                    name={option.memberName}
+                    src={option.image}
+                    size="xs"
+                    variant={option.value === "unassigned" ? "neutral" : undefined}
+                    className={option.value === "unassigned" ? undefined : "size-5"}
+                  />
+                  <div className="min-w-0">
+                    <Flex align="center" gap="xs">
+                      <Typography variant="small">{option.memberName}</Typography>
+                      {option.outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
+                    </Flex>
+                    {option.outOfOffice ? (
+                      <Typography variant="caption" color="secondary">
+                        {formatOutOfOfficeUntil(option.outOfOffice)}
+                      </Typography>
+                    ) : null}
+                  </div>
                 </Flex>
-              </SelectItem>
-              {project?.members.map((member) => (
-                <SelectItem key={member._id} value={member._id}>
-                  <Flex align="center" gap="sm">
-                    <Avatar name={member.name} src={member.image} size="xs" className="size-5" />
-                    <div className="min-w-0">
-                      <Flex align="center" gap="xs">
-                        <Typography variant="small">{member.name}</Typography>
-                        {member.outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
-                      </Flex>
-                      {member.outOfOffice ? (
-                        <Typography variant="caption" color="secondary">
-                          {formatOutOfOfficeUntil(member.outOfOffice)}
-                        </Typography>
-                      ) : null}
-                    </div>
-                  </Flex>
-                </SelectItem>
-              ))}
-            </FormSelectRadix>
+              )}
+            />
           )}
         </form.Field>
 

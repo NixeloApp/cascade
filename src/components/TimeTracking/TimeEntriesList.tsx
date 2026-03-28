@@ -265,7 +265,7 @@ export function TimeEntriesList({
                           <Badge variant="warning">
                             <Flex as="span" inline align="center" gap="xs">
                               <Icon icon={Lock} size="xs" />
-                              <span>Locked</span>
+                              Locked
                             </Flex>
                           </Badge>
                         )}

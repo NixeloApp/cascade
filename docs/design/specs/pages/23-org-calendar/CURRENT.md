@@ -82,5 +82,5 @@ The previous mobile default-state weakness is fixed on this branch. Remaining wo
 | `convex/calendarEvents.ts` | Calendar event queries and mutations |
 | `convex/workspaces.ts` | Workspace list query |
 | `convex/teams.ts` | Team list query (`getOrganizationTeams`) |
-| `src/routes/_auth/_app/$orgSlug/-calendar.test.tsx` | Route-level tests for loading, filter semantics, and stale-search normalization |
+| `src/routes/_auth/_app/$orgSlug/__tests__/calendar.test.tsx` | Route-level tests for loading, filter semantics, and stale-search normalization |
 | `e2e/pages/calendar.page.ts` | Calendar page object for workspace/team scope interactions |

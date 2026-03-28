@@ -14,6 +14,15 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { getRoadmapGroupBadgeClassName } from "../ui/badgeSurfaceClassNames";
+import {
+  getRoadmapGroupButtonClassName,
+  getRoadmapIssueLinkButtonClassName,
+  getRoadmapSubtaskToggleButtonClassName,
+  getRoadmapTimelineBarButtonClassName,
+  getRoadmapTimelineMilestoneButtonClassName,
+  getRoadmapTimelineResizeHandleButtonClassName,
+} from "../ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
@@ -73,13 +82,14 @@ export function RoadmapTimelineBar({
         }}
       >
         <Button
-          chrome="roadmapTimelineHitArea"
-          chromeSize="roadmapTimelineFill"
+          variant="unstyled"
+          size="content"
           data-testid={`roadmap-milestone-${issue._id}`}
           onMouseDown={(e) => onBarDragStart(e, issue._id, issue.startDate, issue.dueDate)}
           onClick={() => onOpenIssue(issue._id)}
           title={getRoadmapBarTitle(issue, canEdit)}
           aria-label={`View milestone ${issue.key}`}
+          className={getRoadmapTimelineMilestoneButtonClassName()}
         >
           <div
             className={cn(
@@ -109,24 +119,26 @@ export function RoadmapTimelineBar({
       <Flex align="center" className="h-full">
         {canEdit && issue.startDate ? (
           <Button
-            chrome="roadmapResizeHandle"
-            chromeSize="roadmapResizeLeft"
+            variant="unstyled"
+            size="content"
             reveal={true}
             onMouseDown={(e) => onResizeStart(e, issue._id, "left", issue.startDate, issue.dueDate)}
             title="Drag to change start date"
+            className={getRoadmapTimelineResizeHandleButtonClassName("left")}
           >
             <div className="h-roadmap-grip w-roadmap-grip bg-ui-text-tertiary" />
           </Button>
         ) : null}
 
         <Button
-          chrome="roadmapTimelineHitArea"
-          chromeSize="roadmapTimelineLabel"
+          variant="unstyled"
+          size="content"
           data-testid={`roadmap-bar-${issue._id}`}
           onMouseDown={(e) => onBarDragStart(e, issue._id, issue.startDate, issue.dueDate)}
           onClick={() => onOpenIssue(issue._id)}
           title={getRoadmapBarTitle(issue, canEdit)}
           aria-label={`View issue ${issue.key}`}
+          className={getRoadmapTimelineBarButtonClassName()}
         >
           <Flex align="center" justify="center" className="h-full">
             <Typography variant="label" className="truncate text-brand-foreground">
@@ -137,13 +149,14 @@ export function RoadmapTimelineBar({
 
         {canEdit ? (
           <Button
-            chrome="roadmapResizeHandle"
-            chromeSize="roadmapResizeRight"
+            variant="unstyled"
+            size="content"
             reveal={true}
             onMouseDown={(e) =>
               onResizeStart(e, issue._id, "right", issue.startDate, issue.dueDate)
             }
             title="Drag to change due date"
+            className={getRoadmapTimelineResizeHandleButtonClassName("right")}
           >
             <div className="h-roadmap-grip w-roadmap-grip bg-ui-text-tertiary" />
           </Button>
@@ -169,13 +182,14 @@ export function RoadmapGroupRow({
   return (
     <Button
       type="button"
-      chrome="roadmapGroupRow"
-      chromeSize="roadmapGroupRow"
+      variant="unstyled"
+      size="content"
       onClick={() => onToggle(group.key)}
       aria-expanded={!group.collapsed}
       aria-label={`Toggle ${group.label} group`}
       style={style}
       data-testid={`roadmap-group-${group.key}`}
+      className={getRoadmapGroupButtonClassName()}
     >
       <Flex align="center">
         <FlexItem flex="none" className={getStickyGroupColumnClassName()}>
@@ -190,9 +204,10 @@ export function RoadmapGroupRow({
                 {getTimelineGroupLabel(group)}
               </Typography>
               <Badge
-                variant="roadmapGroup"
+                variant="secondary"
                 size="md"
                 shape="pill"
+                className={getRoadmapGroupBadgeClassName()}
                 {...getTimelineGroupBadgeTone(group)}
               >
                 {group.label}
@@ -276,11 +291,12 @@ export function RoadmapIssueIdentity({
           {hasChildren ? (
             <Button
               type="button"
-              chrome="roadmapSubtaskToggle"
-              chromeSize="roadmapSubtaskToggle"
+              variant="unstyled"
+              size="content"
               onClick={() => onToggleChildren(issue._id)}
               aria-expanded={!childrenCollapsed}
               aria-label={childToggleLabel}
+              className={getRoadmapSubtaskToggleButtonClassName()}
             >
               <Icon icon={childrenCollapsed ? ChevronRight : ChevronDown} size="sm" />
             </Button>
@@ -289,10 +305,10 @@ export function RoadmapIssueIdentity({
           )}
           {hasChildren ? <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" /> : null}
           <Button
-            chrome={selected ? "roadmapIssueKeyActive" : "roadmapIssueKey"}
-            chromeSize="roadmapIssueKey"
+            variant="unstyled"
+            size="content"
             onClick={() => onOpenIssue(issue._id)}
-            className="truncate"
+            className={getRoadmapIssueLinkButtonClassName(selected)}
           >
             {issue.key}
           </Button>

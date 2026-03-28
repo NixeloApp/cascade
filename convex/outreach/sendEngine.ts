@@ -13,14 +13,16 @@
 
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { buildTerminalEnrollmentPatch } from "../lib/lifecyclePatches";
 import { logger } from "../lib/logger";
 import { MINUTE } from "../lib/timeUtils";
+import { outreachMailboxProviders } from "../validators";
 import { isSuppressed, suppress } from "./contacts";
+import { loadMailboxDeliverabilitySnapshots } from "./deliverability";
 import { advanceEnrollment, stopEnrollment } from "./enrollments";
 import {
   buildComplianceFooter,
@@ -68,6 +70,41 @@ export const findDueEnrollments = internalQuery({
 // Step 2: Process batch (internal action — orchestrates sends)
 // =============================================================================
 
+/** Resolve unique mailboxes for a batch of enrollments and compute their effective daily limits. */
+export const batchMailboxDeliverability = internalQuery({
+  args: { enrollmentIds: v.array(v.id("outreachEnrollments")) },
+  handler: async (ctx, args): Promise<Record<string, number>> => {
+    const mailboxMap = new Map<Id<"outreachMailboxes">, Doc<"outreachMailboxes">>();
+    const enrollmentToMailbox = new Map<Id<"outreachEnrollments">, Id<"outreachMailboxes">>();
+
+    for (const enrollmentId of args.enrollmentIds) {
+      const enrollment = await ctx.db.get(enrollmentId);
+      if (!enrollment) continue;
+      const sequence = await ctx.db.get(enrollment.sequenceId);
+      if (!sequence) continue;
+      enrollmentToMailbox.set(enrollmentId, sequence.mailboxId);
+      if (!mailboxMap.has(sequence.mailboxId)) {
+        const mailbox = await ctx.db.get(sequence.mailboxId);
+        if (mailbox) mailboxMap.set(mailbox._id, mailbox);
+      }
+    }
+
+    const mailboxes = [...mailboxMap.values()];
+    if (mailboxes.length === 0) return {};
+
+    const snapshots = await loadMailboxDeliverabilitySnapshots(ctx, mailboxes);
+
+    // Return enrollmentId → effectiveDailyLimit mapping
+    const result: Record<string, number> = {};
+    for (const [enrollmentId, mailboxId] of enrollmentToMailbox) {
+      const mailbox = mailboxMap.get(mailboxId);
+      result[enrollmentId] =
+        snapshots.get(mailboxId)?.effectiveDailyLimit ?? mailbox?.dailySendLimit ?? 0;
+    }
+    return result;
+  },
+});
+
 /** Cron entry point: find due enrollments and send emails */
 export const processDueEnrollments = internalAction({
   args: {},
@@ -76,6 +113,12 @@ export const processDueEnrollments = internalAction({
 
     if (due.length === 0) return { processed: 0 };
 
+    // Pre-fetch deliverability for all mailboxes in the batch (one query, not per-enrollment)
+    const effectiveLimits = await ctx.runQuery(
+      internal.outreach.sendEngine.batchMailboxDeliverability,
+      { enrollmentIds: due.map((e) => e._id) },
+    );
+
     let processed = 0;
     let skipped = 0;
 
@@ -83,6 +126,7 @@ export const processDueEnrollments = internalAction({
       // Pre-send checks (run as mutation for DB access)
       const checkResult = await ctx.runMutation(internal.outreach.sendEngine.checkPreSend, {
         enrollmentId: enrollment._id,
+        cachedEffectiveDailyLimit: effectiveLimits[enrollment._id],
       });
 
       if (!checkResult.canSend) {
@@ -102,6 +146,7 @@ export const processDueEnrollments = internalAction({
         contactId: enrollment.contactId,
         step: enrollment.currentStep,
         mailboxId: checkResult.mailboxId,
+        mailboxProvider: checkResult.mailboxProvider,
         to: checkResult.contactEmail,
         subject: checkResult.renderedSubject,
         body: checkResult.renderedBody,
@@ -144,7 +189,10 @@ export const processDueEnrollments = internalAction({
 
 /** Validate enrollment is still sendable, render template, check limits */
 export const checkPreSend = internalMutation({
-  args: { enrollmentId: v.id("outreachEnrollments") },
+  args: {
+    enrollmentId: v.id("outreachEnrollments"),
+    cachedEffectiveDailyLimit: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
     const fail = { canSend: false as const };
 
@@ -172,8 +220,16 @@ export const checkPreSend = internalMutation({
     if (!mailbox?.isActive) return fail;
 
     const rateLimits = getMailboxRateLimitSnapshot(mailbox);
+    let effectiveDailyLimit: number;
+    if (args.cachedEffectiveDailyLimit !== undefined) {
+      effectiveDailyLimit = args.cachedEffectiveDailyLimit;
+    } else {
+      const deliverabilitySnapshots = await loadMailboxDeliverabilitySnapshots(ctx, [mailbox]);
+      effectiveDailyLimit =
+        deliverabilitySnapshots.get(mailbox._id)?.effectiveDailyLimit ?? mailbox.dailySendLimit;
+    }
 
-    if (rateLimits.todaySendCount >= mailbox.dailySendLimit) return fail;
+    if (rateLimits.todaySendCount >= effectiveDailyLimit) return fail;
     if (rateLimits.minuteSendCount >= rateLimits.minuteSendLimit) return fail;
 
     // Validate step exists
@@ -212,6 +268,7 @@ export const checkPreSend = internalMutation({
     return {
       canSend: true as const,
       mailboxId: sequence.mailboxId,
+      mailboxProvider: mailbox.provider,
       contactEmail: contact.email,
       renderedSubject,
       renderedBody,
@@ -234,6 +291,7 @@ export const sendSequenceEmail = internalAction({
     contactId: v.id("outreachContacts"),
     step: v.number(),
     mailboxId: v.id("outreachMailboxes"),
+    mailboxProvider: outreachMailboxProviders,
     to: v.string(),
     subject: v.string(),
     body: v.string(),
@@ -245,8 +303,22 @@ export const sendSequenceEmail = internalAction({
     ctx,
     args,
   ): Promise<{ success: boolean; error?: string; gmailThreadId?: string }> => {
-    // Delegate to Gmail sender (Microsoft Graph can be added later)
-    const result = await ctx.runAction(internal.outreach.gmail.sendViaGmailAction, {
+    if (args.mailboxProvider === "google") {
+      const result = await ctx.runAction(internal.outreach.gmail.sendViaGmailAction, {
+        mailboxId: args.mailboxId,
+        enrollmentId: args.enrollmentId,
+        to: args.to,
+        subject: args.subject,
+        body: args.body,
+        fromEmail: args.fromEmail,
+        fromName: args.fromName,
+        trackingDomain: args.trackingDomain,
+      });
+
+      return { success: result.success, error: result.error, gmailThreadId: result.threadId };
+    }
+
+    const result = await ctx.runAction(internal.outreach.microsoft.sendViaMicrosoftAction, {
       mailboxId: args.mailboxId,
       enrollmentId: args.enrollmentId,
       to: args.to,
@@ -257,7 +329,7 @@ export const sendSequenceEmail = internalAction({
       trackingDomain: args.trackingDomain,
     });
 
-    return { success: result.success, error: result.error, gmailThreadId: result.threadId };
+    return { success: result.success, error: result.error };
   },
 });
 

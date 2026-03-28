@@ -9,11 +9,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
 import { TimeTrackingPage } from "./TimeTrackingPage";
 
-const SelectContext = createContext<{
-  onValueChange?: (value: string) => void;
-  value?: string;
-}>({});
-
 const TabsContext = createContext<{
   onValueChange?: (value: string) => void;
   value?: string;
@@ -52,7 +47,7 @@ vi.mock("../ui/OverviewBand", () => ({
     eyebrow: string;
     title: string;
     description: string;
-    metrics: Array<{ label: string; value: string | number; detail: string }>;
+    metrics: Array<{ label: string; value: string | number; detail: string; testId?: string }>;
     aside?: ReactNode;
   }) => (
     <div>
@@ -62,7 +57,7 @@ vi.mock("../ui/OverviewBand", () => ({
       {metrics.map((metric) => (
         <div key={metric.label}>
           <div>{metric.label}</div>
-          <div>{metric.value}</div>
+          <div data-testid={metric.testId}>{metric.value}</div>
           <div>{metric.detail}</div>
         </div>
       ))}
@@ -71,47 +66,7 @@ vi.mock("../ui/OverviewBand", () => ({
   ),
 }));
 
-vi.mock("../ui/Select", () => ({
-  Select: ({
-    children,
-    value,
-    onValueChange,
-  }: {
-    children: ReactNode;
-    value?: string;
-    onValueChange?: (value: string) => void;
-  }) => (
-    <SelectContext.Provider value={{ value, onValueChange }}>
-      <div>{children}</div>
-    </SelectContext.Provider>
-  ),
-  SelectTrigger: ({
-    children,
-    id,
-    "data-testid": dataTestId,
-  }: {
-    children: ReactNode;
-    id?: string;
-    "data-testid"?: string;
-  }) => (
-    <button id={id} type="button" data-testid={dataTestId}>
-      {children}
-    </button>
-  ),
-  SelectValue: ({ placeholder }: { placeholder?: string }) => {
-    const context = useContext(SelectContext);
-    return <span>{context.value ?? placeholder}</span>;
-  },
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button type="button" onClick={() => context.onValueChange?.(value)}>
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("../ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("../ui/Stack", () => ({
   Stack: ({
@@ -272,7 +227,7 @@ describe("TimeTrackingPage", () => {
     expect(screen.getByText("Time Entries")).toBeInTheDocument();
     expect(screen.getByText("Burn Rate & Costs")).toBeInTheDocument();
     expect(screen.getByText("Hourly Rates")).toBeInTheDocument();
-    expect(screen.getByText("All Projects")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.PROJECT_FILTER)).toHaveValue("all");
     expect(screen.getAllByText("Last 7 Days").length).toBeGreaterThan(0);
     expect(screen.getByText(/^entries:all:/)).toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.TIME_TRACKING.CONTENT)).toBeInTheDocument();

@@ -1,106 +1,113 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Typography } from "./Typography";
+import {
+  DocumentTitleText,
+  PageTitleText,
+  SectionTitleText,
+  TYPOGRAPHY_VARIANTS,
+  Typography,
+} from "./Typography";
 
 describe("Typography", () => {
-  it("applies the projectHeaderTitle variant", () => {
+  it("keeps the shared variant surface under the design-system limit", () => {
+    expect(TYPOGRAPHY_VARIANTS).toHaveLength(18);
+  });
+
+  it("maps h2 to a heading with shared heading styles", () => {
     render(
-      <Typography variant="projectHeaderTitle" data-testid="title">
+      <Typography variant="h2" data-testid="title">
         Project Alpha
       </Typography>,
     );
     const title = screen.getByTestId("title");
-    expect(title.className).toContain("truncate");
-    expect(title.className).toContain("text-sm");
-    expect(title.className).toContain("sm:text-2xl");
+    expect(title.tagName).toBe("H2");
+    expect(title.className).toContain("text-3xl");
+    expect(title.className).toContain("font-semibold");
     expect(title.className).toContain("tracking-tight");
   });
 
-  it("maps wikiCardTitle to an h3 with truncation styles", () => {
+  it("maps h3 to a heading with shared heading styles", () => {
     render(
-      <Typography variant="wikiCardTitle" data-testid="wiki-title">
+      <Typography variant="h3" data-testid="wiki-title">
         Engineering Playbook
       </Typography>,
     );
     const title = screen.getByTestId("wiki-title");
     expect(title.tagName).toBe("H3");
-    expect(title.className).toContain("line-clamp-1");
     expect(title.className).toContain("text-2xl");
+    expect(title.className).toContain("tracking-tight");
   });
 
-  it("maps metricLabel to a paragraph with uppercase tracking", () => {
+  it("maps eyebrowWide to a paragraph with uppercase tracking", () => {
     render(
-      <Typography variant="metricLabel" data-testid="metric-label">
+      <Typography variant="eyebrowWide" data-testid="metric-label">
         Teams
       </Typography>,
     );
     const label = screen.getByTestId("metric-label");
     expect(label.tagName).toBe("P");
     expect(label.className).toContain("uppercase");
-    expect(label.className).toContain("tracking-wide");
+    expect(label.className).toContain("tracking-widest");
   });
 
-  it("maps fieldSectionLabel to a paragraph with uppercase form-label styling", () => {
+  it("maps label to a paragraph with shared label styling", () => {
     render(
-      <Typography variant="fieldSectionLabel" data-testid="field-section-label">
+      <Typography variant="label" data-testid="field-section-label">
         Custom Fields
       </Typography>,
     );
     const label = screen.getByTestId("field-section-label");
     expect(label.tagName).toBe("P");
     expect(label.className).toContain("text-sm");
-    expect(label.className).toContain("uppercase");
-    expect(label.className).toContain("tracking-wide");
+    expect(label.className).toContain("font-medium");
   });
 
-  it("maps searchTriggerLabel to a paragraph with responsive search-hint sizing", () => {
+  it("maps caption to a paragraph with helper-text sizing", () => {
     render(
-      <Typography variant="searchTriggerLabel" data-testid="search-trigger-label">
+      <Typography variant="caption" data-testid="search-trigger-label">
         Search, jump, or create...
       </Typography>,
     );
     const label = screen.getByTestId("search-trigger-label");
     expect(label.tagName).toBe("P");
-    expect(label.className).toContain("hidden");
-    expect(label.className).toContain("truncate");
     expect(label.className).toContain("text-xs");
-    expect(label.className).toContain("sm:text-sm");
+    expect(label.className).toContain("text-ui-text-secondary");
   });
 
-  it("maps issueKeyMono to a paragraph with compact mono issue-key styling", () => {
+  it("maps mono to a span with compact mono styling", () => {
     render(
-      <Typography variant="issueKeyMono" data-testid="issue-key-mono">
+      <Typography variant="mono" data-testid="issue-key-mono">
         DEMO-1
       </Typography>,
     );
     const label = screen.getByTestId("issue-key-mono");
-    expect(label.tagName).toBe("P");
-    expect(label.className).toContain("text-sm");
+    expect(label.tagName).toBe("SPAN");
+    expect(label.className).toContain("text-xs");
     expect(label.className).toContain("font-mono");
     expect(label.className).toContain("tracking-tight");
   });
 
-  it("maps monoBlock to a paragraph with wrapped mono block styling", () => {
+  it("supports preformatted mono blocks via className overrides", () => {
     render(
-      <Typography variant="monoBlock" data-testid="mono-block">
+      <Typography as="pre" variant="mono" className="whitespace-pre-wrap" data-testid="mono-block">
         Line one
       </Typography>,
     );
     const block = screen.getByTestId("mono-block");
-    expect(block.tagName).toBe("P");
+    expect(block.tagName).toBe("PRE");
     expect(block.className).toContain("font-mono");
     expect(block.className).toContain("whitespace-pre-wrap");
     expect(block.className).toContain("text-xs");
   });
 
-  it("maps monoWrap to a paragraph with break-all mono styling", () => {
+  it("supports mono wrapping overrides through className", () => {
     render(
-      <Typography variant="monoWrap" data-testid="mono-wrap">
+      <Typography variant="mono" className="break-all" data-testid="mono-wrap">
         https://example.com/hooks/issues
       </Typography>,
     );
     const block = screen.getByTestId("mono-wrap");
-    expect(block.tagName).toBe("P");
+    expect(block.tagName).toBe("SPAN");
     expect(block.className).toContain("font-mono");
     expect(block.className).toContain("break-all");
     expect(block.className).toContain("text-xs");
@@ -116,114 +123,40 @@ describe("Typography", () => {
     expect(block.className).toContain("text-brand-active");
   });
 
-  it("maps metricLabelWide to a paragraph with wide uppercase metric styling", () => {
+  it("maps strong to a span", () => {
     render(
-      <Typography variant="metricLabelWide" data-testid="metric-label-wide">
-        Projects
-      </Typography>,
-    );
-    const label = screen.getByTestId("metric-label-wide");
-    expect(label.tagName).toBe("P");
-    expect(label.className).toContain("text-xs");
-    expect(label.className).toContain("uppercase");
-    expect(label.className).toContain("tracking-widest");
-  });
-
-  it("maps landingSectionTitle to an h2 with landing hero sizing", () => {
-    render(
-      <Typography variant="landingSectionTitle" data-testid="landing-section-title">
-        Run calmer delivery
-      </Typography>,
-    );
-    const title = screen.getByTestId("landing-section-title");
-    expect(title.tagName).toBe("H2");
-    expect(title.className).toContain("text-4xl");
-    expect(title.className).toContain("md:text-5xl");
-    expect(title.className).toContain("tracking-tight");
-  });
-
-  it("maps landingMetricValue to a paragraph with responsive emphasis", () => {
-    render(
-      <Typography variant="landingMetricValue" data-testid="landing-metric-value">
-        18
-      </Typography>,
-    );
-    const value = screen.getByTestId("landing-metric-value");
-    expect(value.tagName).toBe("P");
-    expect(value.className).toContain("text-3xl");
-    expect(value.className).toContain("sm:text-4xl");
-    expect(value.className).toContain("font-bold");
-  });
-
-  it("maps boardSurfaceTitle to an h2 with compact toolbar sizing", () => {
-    render(
-      <Typography variant="boardSurfaceTitle" data-testid="board-surface-title">
-        Sprint Board
-      </Typography>,
-    );
-    const title = screen.getByTestId("board-surface-title");
-    expect(title.tagName).toBe("H2");
-    expect(title.className).toContain("text-xs");
-    expect(title.className).toContain("sm:text-lg");
-    expect(title.className).toContain("tracking-tight");
-  });
-
-  it("maps boardColumnTitleCompact to a paragraph with responsive truncation", () => {
-    render(
-      <Typography variant="boardColumnTitleCompact" data-testid="board-column-title-compact">
-        In Progress
-      </Typography>,
-    );
-    const title = screen.getByTestId("board-column-title-compact");
-    expect(title.tagName).toBe("P");
-    expect(title.className).toContain("truncate");
-    expect(title.className).toContain("text-xs");
-    expect(title.className).toContain("sm:text-sm");
-  });
-
-  it("maps errorCodeDisplay to a shared error-code heading", () => {
-    render(
-      <Typography variant="errorCodeDisplay" data-testid="error-code">
-        404
-      </Typography>,
-    );
-    const code = screen.getByTestId("error-code");
-    expect(code.tagName).toBe("H1");
-    expect(code.className).toContain("text-8xl");
-    expect(code.className).toContain("tracking-tightest");
-  });
-
-  it("maps authStatusTitle to a paragraph with medium title styling", () => {
-    render(
-      <Typography variant="authStatusTitle" data-testid="auth-status-title">
-        Account Error
-      </Typography>,
-    );
-    const title = screen.getByTestId("auth-status-title");
-    expect(title.tagName).toBe("P");
-    expect(title.className).toContain("text-xl");
-    expect(title.className).toContain("font-medium");
-  });
-
-  it("maps boardColumnTitle to a paragraph with secondary board styling", () => {
-    render(
-      <Typography variant="boardColumnTitle" data-testid="board-column-title">
-        To Do
-      </Typography>,
-    );
-    const title = screen.getByTestId("board-column-title");
-    expect(title.tagName).toBe("P");
-    expect(title.className).toContain("text-sm");
-    expect(title.className).toContain("font-medium");
-    expect(title.className).toContain("text-ui-text-secondary");
-  });
-
-  it("maps sidebarOrgInitial to a span", () => {
-    render(
-      <Typography variant="sidebarOrgInitial" data-testid="initials">
+      <Typography variant="strong" data-testid="initials">
         NX
       </Typography>,
     );
     expect(screen.getByTestId("initials").tagName).toBe("SPAN");
+  });
+
+  it("renders page titles through the shared responsive wrapper", () => {
+    render(<PageTitleText data-testid="page-title">Workspace Overview</PageTitleText>);
+    const title = screen.getByTestId("page-title");
+    expect(title.tagName).toBe("H2");
+    expect(title.className).toContain("text-xl");
+    expect(title.className).toContain("lg:text-3xl");
+  });
+
+  it("renders section titles through the shared landing wrapper", () => {
+    render(
+      <SectionTitleText as="h3" data-testid="section-title">
+        Pricing should explain rollout
+      </SectionTitleText>,
+    );
+    const title = screen.getByTestId("section-title");
+    expect(title.tagName).toBe("H3");
+    expect(title.className).toContain("text-2xl");
+    expect(title.className).toContain("sm:text-3xl");
+  });
+
+  it("renders document titles through the shared document wrapper", () => {
+    render(<DocumentTitleText data-testid="document-title">Launch Plan</DocumentTitleText>);
+    const title = screen.getByTestId("document-title");
+    expect(title.tagName).toBe("H2");
+    expect(title.className).toContain("text-2xl");
+    expect(title.className).toContain("lg:text-4xl");
   });
 });

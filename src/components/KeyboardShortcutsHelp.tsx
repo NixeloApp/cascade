@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Search } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
+import { getFramedCompactPillButtonClassName } from "./ui/buttonSurfaceClassNames";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
@@ -272,7 +273,12 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       footerClassName="sm:justify-between"
       footer={
         <>
-          <Button onClick={() => handleOpenChange(false)} chrome="framed" chromeSize="compactPill">
+          <Button
+            onClick={() => handleOpenChange(false)}
+            variant="unstyled"
+            size="content"
+            className={getFramedCompactPillButtonClassName()}
+          >
             Close
           </Button>
           <div className="hidden sm:block">

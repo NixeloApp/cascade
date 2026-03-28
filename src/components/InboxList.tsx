@@ -1018,11 +1018,12 @@ function InboxIssueActions({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            size="iconSm"
+            size="icon"
             variant="ghost"
             aria-label={`More actions for ${item.issue.key}`}
             leftIcon={<Icon icon={MoreHorizontal} size="sm" />}
             data-testid={TEST_IDS.PROJECT_INBOX.ROW_MORE_ACTIONS_BUTTON}
+            className="size-8"
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

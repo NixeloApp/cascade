@@ -15,7 +15,7 @@ import { Icon, type IconTone } from "../ui/Icon";
 import { IconCircle } from "../ui/IconCircle";
 import { SectionIntro } from "../ui/SectionIntro";
 import { Stack } from "../ui/Stack";
-import { Typography } from "../ui/Typography";
+import { MetricText, SectionTitleText, Typography } from "../ui/Typography";
 
 type PlanCta =
   | {
@@ -193,7 +193,7 @@ function PlanPricingCard({
               <Icon icon={icon} size="md" tone={iconTone} />
             </IconCircle>
             <Stack gap="xs">
-              <Typography variant="pageHeaderEyebrow">{audience}</Typography>
+              <Typography variant="eyebrowWide">{audience}</Typography>
               <Typography variant="h4">{name}</Typography>
             </Stack>
           </Flex>
@@ -206,9 +206,9 @@ function PlanPricingCard({
         </Flex>
 
         <Stack gap="xs">
-          <Typography as="h2" variant="landingPriceValue">
+          <MetricText as="h2" heavy="bold">
             {price}
-          </Typography>
+          </MetricText>
           <Typography variant="label">{launchMode}</Typography>
           <Typography variant="small" color="secondary">
             {description}
@@ -223,7 +223,7 @@ function PlanPricingCard({
 
         <CardSection size="compact" className={getCardRecipeClassName("overlayInset")}>
           <Stack gap="xs">
-            <Typography variant="pageHeaderEyebrow">Best when</Typography>
+            <Typography variant="eyebrowWide">Best when</Typography>
             <Typography variant="caption">{proof}</Typography>
           </Stack>
         </CardSection>
@@ -255,9 +255,9 @@ function PricingContinuityCard() {
           <Badge variant="outline" shape="pill" className="w-fit">
             Same operating model at every stage
           </Badge>
-          <Typography variant="landingShowcaseTitle">
+          <SectionTitleText as="h3">
             Pricing should explain rollout, not imply a product switch
-          </Typography>
+          </SectionTitleText>
           <Typography variant="small" color="secondary">
             Nixelo is not a pilot tool that later turns into a different enterprise product. The
             same workflow stays intact from the first team through the stricter rollout.
@@ -272,7 +272,7 @@ function PricingContinuityCard() {
               className={cn(getCardRecipeClassName("overlayInset"), "h-full")}
             >
               <Stack gap="xs">
-                <Typography variant="pageHeaderEyebrow">{signal.label}</Typography>
+                <Typography variant="eyebrowWide">{signal.label}</Typography>
                 <Typography variant="caption">{signal.value}</Typography>
               </Stack>
             </CardSection>

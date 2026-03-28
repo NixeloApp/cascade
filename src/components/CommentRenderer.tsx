@@ -83,7 +83,7 @@ const MARKDOWN_PATTERNS: Array<{
     regex: /\[([^\]]+)\]\(([^)]+)\)/g,
     hasSecondCapture: true,
     render: (text, url) => (
-      <Button asChild variant="link" size="none">
+      <Button asChild variant="link" size="content">
         <a href={url} target="_blank" rel="noopener noreferrer">
           {text}
         </a>

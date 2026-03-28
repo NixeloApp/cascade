@@ -19,9 +19,10 @@ import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Dialog } from "./ui/Dialog";
 import { Icon } from "./ui/Icon";
+import { Inline } from "./ui/Inline";
 import { Skeleton } from "./ui/Skeleton";
 import { Tooltip } from "./ui/Tooltip";
-import { Typography } from "./ui/Typography";
+import { MonoText } from "./ui/Typography";
 
 interface IssueDetailModalProps {
   issueId: Id<"issues">;
@@ -50,7 +51,7 @@ export function IssueDetailModal({
         size="xl"
       >
         <Stack as="output" aria-live="polite" aria-busy="true" gap="lg" className="block">
-          <span className="sr-only">Loading...</span>
+          <Inline className="sr-only">Loading...</Inline>
           <Skeleton className="w-3/4" />
           <Stack gap="xs">
             <Skeleton className="w-full" />
@@ -77,9 +78,9 @@ export function IssueDetailModal({
         <Flex align="center" gap="sm">
           <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />
           <Flex align="center" gap="xs">
-            <Typography variant="issueKeyMono" data-testid={TEST_IDS.ISSUE.DETAIL_KEY}>
+            <MonoText as="span" size="sm" data-testid={TEST_IDS.ISSUE.DETAIL_KEY}>
               {issue.key}
-            </Typography>
+            </MonoText>
             <Tooltip content={detail.hasCopied ? "Copied!" : "Copy issue key"}>
               <Button
                 variant="ghost"

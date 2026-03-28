@@ -1,6 +1,7 @@
 import { TEST_USERS } from "./config";
 import { authenticatedTest as test } from "./fixtures";
 import { IssueDetailPage } from "./pages";
+import { SEEDED_MEETING_RECORDINGS } from "./utils/seeded-meetings";
 import { testUserService } from "./utils/test-user-service";
 
 function getWorkerFixtureEmail(parallelIndex: number): string {
@@ -44,11 +45,20 @@ test.describe("Meetings", () => {
     }
 
     await meetingsPage.goto();
-    await meetingsPage.expectRecordingVisible("Weekly Product Sync");
-    await meetingsPage.expectRecordingVisible("Client Launch Review");
+    await meetingsPage.expectRecordingVisibleAt(
+      SEEDED_MEETING_RECORDINGS.weeklyProductSync.index,
+      SEEDED_MEETING_RECORDINGS.weeklyProductSync.title,
+    );
+    await meetingsPage.expectRecordingVisibleAt(
+      SEEDED_MEETING_RECORDINGS.clientLaunchReview.index,
+      SEEDED_MEETING_RECORDINGS.clientLaunchReview.title,
+    );
 
-    await meetingsPage.openRecording("Weekly Product Sync");
-    await meetingsPage.expectRecordingDetail("Weekly Product Sync");
+    await meetingsPage.openRecordingAt(
+      SEEDED_MEETING_RECORDINGS.weeklyProductSync.index,
+      SEEDED_MEETING_RECORDINGS.weeklyProductSync.title,
+    );
+    await meetingsPage.expectRecordingDetail(SEEDED_MEETING_RECORDINGS.weeklyProductSync.title);
 
     await meetingsPage.filterTranscript("pricing");
     await meetingsPage.expectTranscriptMatch(
@@ -81,7 +91,7 @@ test.describe("Meetings", () => {
     }
 
     await meetingsPage.goto();
-    await meetingsPage.expectRecordingDetail("Weekly Product Sync");
+    await meetingsPage.expectRecordingDetail(SEEDED_MEETING_RECORDINGS.weeklyProductSync.title);
     await meetingsPage.expectActionItemCreateIssueEnabled(actionItemDescription);
 
     await meetingsPage.createIssueFromActionItem(actionItemDescription);

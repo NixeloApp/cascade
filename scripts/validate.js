@@ -7,7 +7,7 @@
  *   3. API calls            — validates api.X.Y calls match Convex exports
  *   4. Query issues         — N+1 queries, unbounded .collect(), missing indexes
  *   5. Arbitrary Tailwind      — arbitrary values like h-[50px]
- *   6. Raw styling             — raw className utilities + inline style props outside approved areas
+ *   6. Classname ownership     — raw className utilities, inline style props, and single-consumer class laundering helpers outside approved areas
  *   7. Surface shells         — reusable rounded/bg/border/shadow shells must use owned recipes
  *   8. Design-system ownership — recipe/chrome APIs required in high-drift surfaces
  *   9. Layout prop usage       — JSX should use Flex/Stack props instead of className hacks
@@ -52,7 +52,7 @@
  *  48. Screenshot harness structure — ratchets private helper counts in screenshot modules
  *  49. Screenshot production hooks — blocks removed screenshot-only editor hooks from re-entering product code
  *  50. E2E loading overrides   — keeps the remaining documented production loading exceptions centralized
- *  51. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
+ *  51. Screenshot integrity    — blocks repeated screenshot hashes beyond legit dual-write
  *  52. Typography drift        — blocks Typography/style drift outside owned primitives
  *  53. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
  *  54. Shared shape drift      — blocks repeated inline entity summary shapes
@@ -150,8 +150,8 @@ const checks = [
     modulePath: new URL("./validate/check-arbitrary-tw.js", import.meta.url).href,
   },
   {
-    name: "Raw styling",
-    modulePath: new URL("./validate/check-raw-styling.js", import.meta.url).href,
+    name: "Classname ownership",
+    modulePath: new URL("./validate/check-classname-ownership.js", import.meta.url).href,
   },
   {
     name: "Surface shells",

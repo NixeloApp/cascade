@@ -54,8 +54,7 @@ if (isUser(body)) {
 1. **Explicit types for function parameters** — always type arguments
 2. **Return types** — add explicit return types for exported/public functions. Omit for React components (JSX inference) and Convex handlers (framework inference).
 3. **Proper error handling** with typed catches
-4. **No `@ts-ignore` or `@ts-nocheck`** — fix the actual issues
-5. **No `biome-ignore`** unless absolutely necessary with justification
+4. **No `@ts-ignore`, `@ts-nocheck`, `biome-ignore`, or `@convex-validation-ignore`** — fix the actual issue. These annotations hide bugs. If the validator or type checker flags something, the code is wrong — fix the code, not the check.
 
 ---
 

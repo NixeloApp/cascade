@@ -27,7 +27,7 @@ import { Input } from "../ui/form";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
 import { Typography } from "../ui/Typography";
@@ -123,7 +123,7 @@ function InviteFormDialog({
             form="invite-form"
             isLoading={isSubmitting}
             disabled={!email.trim()}
-            data-testid={TEST_IDS.INVITE.SEND_BUTTON}
+            data-testid={TEST_IDS.INVITES.SEND_BUTTON}
           >
             Send Invitation
           </Button>
@@ -142,24 +142,22 @@ function InviteFormDialog({
               placeholder="user@example.com"
               required
               autoFocus
-              data-testid={TEST_IDS.INVITE.EMAIL_INPUT}
+              data-testid={TEST_IDS.INVITES.EMAIL_INPUT}
             />
           </Stack>
 
           <Stack gap="sm">
             <Label htmlFor="role">Role</Label>
             <Select
+              onChange={onRoleChange}
+              options={[
+                { value: "user", label: "User" },
+                { value: "superAdmin", label: "Super Admin" },
+              ]}
+              placeholder="Select role"
+              testId={TEST_IDS.INVITES.ROLE_SELECT}
               value={role}
-              onValueChange={(value) => onRoleChange(value as "user" | "superAdmin")}
-            >
-              <SelectTrigger data-testid={TEST_IDS.INVITE.ROLE_SELECT}>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="superAdmin">Super Admin</SelectItem>
-              </SelectContent>
-            </Select>
+            />
             <Typography variant="caption">
               Super Admins have full system access and can manage all users.
             </Typography>
@@ -243,7 +241,7 @@ function InvitationsPanel({
             }}
           />
         ) : (
-          <Table aria-label="User invitations" data-testid={TEST_IDS.INVITE.TABLE}>
+          <Table aria-label="User invitations" data-testid={TEST_IDS.INVITES.TABLE}>
             <TableHeader>
               <TableRow>
                 <TableHead className="whitespace-nowrap">Email</TableHead>
@@ -257,7 +255,7 @@ function InvitationsPanel({
             </TableHeader>
             <TableBody>
               {invites.map((invite) => (
-                <TableRow key={invite._id} data-testid={TEST_IDS.INVITE.ROW}>
+                <TableRow key={invite._id} data-testid={TEST_IDS.INVITES.ROW}>
                   <TableCell className="whitespace-nowrap">
                     <Typography variant="small">{invite.email}</Typography>
                   </TableCell>

@@ -12,13 +12,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
 import { Grid } from "@/components/ui/Grid";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import {
@@ -366,19 +360,16 @@ function CreateDraftDialog({
             <Typography variant="label" className="mb-1 block">
               Client
             </Typography>
-            <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger aria-label="Select client">
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_CLIENT}>No client</SelectItem>
-                {clients.map((c) => (
-                  <SelectItem key={c._id} value={c._id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Select
+              ariaLabel="Select client"
+              onChange={setClientId}
+              options={[
+                { value: NO_CLIENT, label: "No client" },
+                ...clients.map((client) => ({ value: client._id, label: client.name })),
+              ]}
+              placeholder="Select a client"
+              value={clientId}
+            />
           </div>
         ) : null}
 
@@ -472,29 +463,18 @@ export function InvoicesListPage() {
         actions={
           <Flex align="center" gap="sm">
             <Select
-              value={status}
-              onValueChange={(value) => setStatus(value as InvoiceStatusFilter)}
               disabled={isLoading}
-            >
-              <SelectTrigger
-                width="sm"
-                aria-label="Invoice status filter"
-                data-testid={TEST_IDS.INVOICES.STATUS_FILTER}
-              >
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                {INVOICE_STATUS_OPTIONS.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value}
-                    data-testid={getInvoiceStatusOptionTestId(option.value)}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              ariaLabel="Invoice status filter"
+              onChange={(value) => setStatus(value as InvoiceStatusFilter)}
+              options={INVOICE_STATUS_OPTIONS.map((option) => ({
+                ...option,
+                testId: getInvoiceStatusOptionTestId(option.value),
+              }))}
+              placeholder="All statuses"
+              testId={TEST_IDS.INVOICES.STATUS_FILTER}
+              value={status}
+              width="sm"
+            />
             <Button
               onClick={() => setShowCreateDialog(true)}
               disabled={isLoading}

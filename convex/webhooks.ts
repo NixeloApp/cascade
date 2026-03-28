@@ -18,6 +18,7 @@ import {
 } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { logAudit } from "./lib/audit";
+import { boundedCollectWithFilter } from "./lib/boundedQueries";
 import { notFound, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
@@ -189,7 +190,8 @@ export const trigger = internalAction({
   },
 });
 
-async function triggerSingleWebhook(
+/** Deliver one webhook execution, persist the execution log, and update delivery metadata. */
+export async function triggerSingleWebhook(
   ctx: ActionCtx,
   webhook: Doc<"webhooks">,
   event: string,
@@ -257,15 +259,18 @@ export const getActiveWebhooksForEvent = internalQuery({
     event: v.string(),
   },
   handler: async (ctx, args) => {
-    // Use project index (not global active scan) for better performance
-    const webhooks = await ctx.db
-      .query("webhooks")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter(notDeleted)
-      .take(MAX_PAGE_SIZE);
-
-    // Filter for active webhooks that handle this event
-    return webhooks.filter((w) => w.isActive && w.events.includes(args.event));
+    const { items } = await boundedCollectWithFilter(
+      ctx.db
+        .query("webhooks")
+        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+        .filter(notDeleted)
+        .filter((q) => q.eq(q.field("isActive"), true)),
+      {
+        filter: (w) => w.events.includes(args.event),
+        targetLimit: MAX_PAGE_SIZE,
+      },
+    );
+    return items;
   },
 });
 

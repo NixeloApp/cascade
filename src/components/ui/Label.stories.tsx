@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Checkbox } from "./Checkbox";
 import { Input } from "./Input";
 import { Label } from "./Label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
+import { Select } from "./Select";
 
 const meta: Meta<typeof Label> = {
   title: "UI/Label",
@@ -319,17 +319,16 @@ export const WithSelect: Story = {
   render: () => (
     <div className="flex flex-col gap-2 w-64">
       <Label htmlFor="country-select">Country</Label>
-      <Select>
-        <SelectTrigger id="country-select">
-          <SelectValue placeholder="Select your country" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="us">United States</SelectItem>
-          <SelectItem value="uk">United Kingdom</SelectItem>
-          <SelectItem value="ca">Canada</SelectItem>
-          <SelectItem value="au">Australia</SelectItem>
-        </SelectContent>
-      </Select>
+      <Select
+        id="country-select"
+        options={[
+          { value: "us", label: "United States" },
+          { value: "uk", label: "United Kingdom" },
+          { value: "ca", label: "Canada" },
+          { value: "au", label: "Australia" },
+        ]}
+        placeholder="Select your country"
+      />
     </div>
   ),
   parameters: {
@@ -347,16 +346,15 @@ export const WithSelectRequired: Story = {
       <Label htmlFor="role-select">
         Role <span className="text-status-error">*</span>
       </Label>
-      <Select>
-        <SelectTrigger id="role-select">
-          <SelectValue placeholder="Select a role" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="admin">Admin</SelectItem>
-          <SelectItem value="editor">Editor</SelectItem>
-          <SelectItem value="viewer">Viewer</SelectItem>
-        </SelectContent>
-      </Select>
+      <Select
+        id="role-select"
+        options={[
+          { value: "admin", label: "Admin" },
+          { value: "editor", label: "Editor" },
+          { value: "viewer", label: "Viewer" },
+        ]}
+        placeholder="Select a role"
+      />
       <Label variant="hint">Choose the appropriate access level.</Label>
     </div>
   ),
@@ -373,16 +371,19 @@ export const WithSelectDisabled: Story = {
   render: () => (
     <div className="flex flex-col gap-2 w-64">
       <Label htmlFor="disabled-select">Department</Label>
-      <Select disabled defaultValue="engineering">
-        <SelectTrigger id="disabled-select">
-          <SelectValue placeholder="Select department" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="engineering">Engineering</SelectItem>
-          <SelectItem value="design">Design</SelectItem>
-          <SelectItem value="product">Product</SelectItem>
-        </SelectContent>
-      </Select>
+      <Select
+        defaultValue="engineering"
+        disabled
+        id="disabled-select"
+        options={
+          [
+            { value: "engineering", label: "Engineering" },
+            { value: "design", label: "Design" },
+            { value: "product", label: "Product" },
+          ] as Array<{ value: string; label: string }>
+        }
+        placeholder="Select department"
+      />
       <Label variant="hint">Contact admin to change department.</Label>
     </div>
   ),
@@ -481,17 +482,16 @@ export const FormPatternComplete: Story = {
         <Label htmlFor="complete-role">
           Role <span className="text-status-error">*</span>
         </Label>
-        <Select>
-          <SelectTrigger id="complete-role">
-            <SelectValue placeholder="Select your role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="developer">Developer</SelectItem>
-            <SelectItem value="designer">Designer</SelectItem>
-            <SelectItem value="manager">Manager</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
+        <Select
+          id="complete-role"
+          options={[
+            { value: "developer", label: "Developer" },
+            { value: "designer", label: "Designer" },
+            { value: "manager", label: "Manager" },
+            { value: "other", label: "Other" },
+          ]}
+          placeholder="Select your role"
+        />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -588,15 +588,14 @@ export const AccessibilityExample: Story = {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="accessible-select">Accessible Select</Label>
-        <Select>
-          <SelectTrigger id="accessible-select">
-            <SelectValue placeholder="Click the label to focus" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="option1">Option 1</SelectItem>
-            <SelectItem value="option2">Option 2</SelectItem>
-          </SelectContent>
-        </Select>
+        <Select
+          id="accessible-select"
+          options={[
+            { value: "option1", label: "Option 1" },
+            { value: "option2", label: "Option 2" },
+          ]}
+          placeholder="Click the label to focus"
+        />
       </div>
     </div>
   ),

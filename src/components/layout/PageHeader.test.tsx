@@ -37,6 +37,20 @@ describe("PageHeader", () => {
     expect(container.firstChild).toHaveClass("mb-4", "sm:mb-5", "custom-shell");
   });
 
+  it("renders a wrapper-owned description test id when requested", () => {
+    render(
+      <PageHeader
+        title="Workspace overview"
+        description="Track work across teams."
+        descriptionTestId="page-header-description"
+      />,
+    );
+
+    expect(screen.getByTestId("page-header-description")).toHaveTextContent(
+      "Track work across teams.",
+    );
+  });
+
   it("renders an eyebrow only when one is provided", () => {
     render(<PageHeader title="Workspace overview" eyebrow="Operations" />);
 

@@ -3,8 +3,6 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
-import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -20,12 +18,6 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
 }
-
-interface SelectContextValue {
-  onValueChange: (value: string) => void;
-}
-
-const SelectContext = createContext<SelectContextValue | null>(null);
 
 vi.mock("@convex/_generated/api", () => ({
   api: {
@@ -75,35 +67,7 @@ vi.mock("../ui/ConfirmDialog", () => ({
     ) : null,
 }));
 
-vi.mock("../ui/Select", () => ({
-  Select: ({
-    children,
-    onValueChange,
-  }: {
-    children: ReactNode;
-    onValueChange: (value: string) => void;
-  }) => (
-    <SelectContext.Provider value={{ onValueChange }}>
-      <div>{children}</div>
-    </SelectContext.Provider>
-  ),
-  SelectTrigger: ({ children }: { children: ReactNode }) => (
-    <button type="button">{children}</button>
-  ),
-  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    if (!context) {
-      throw new Error("SelectItem used outside Select");
-    }
-    return (
-      <button type="button" onClick={() => context.onValueChange(value)}>
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("../ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);

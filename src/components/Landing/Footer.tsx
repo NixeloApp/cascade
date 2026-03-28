@@ -2,12 +2,17 @@ import { ROUTES } from "@/config/routes";
 import { ShieldCheck } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import {
+  getFooterLinkButtonClassName,
+  getFooterSocialButtonClassName,
+} from "../ui/buttonSurfaceClassNames";
 import { Card } from "../ui/Card";
 import { Container } from "../ui/Container";
 import { Dot } from "../ui/Dot";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { IconCircle } from "../ui/IconCircle";
+import { Inline } from "../ui/Inline";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { NixeloLogo } from "./Icons";
@@ -79,7 +84,7 @@ export function Footer() {
           <Grid cols={1} colsSm={2} colsLg={4} gap="lg">
             {FOOTER_COLUMNS.map((column) => (
               <Stack key={column.title} gap="lg">
-                <Typography as="h4" variant="cardTitle">
+                <Typography variant="h5" as="h4">
                   {column.title}
                 </Typography>
                 <Stack as="ul" gap="sm" className="list-none">
@@ -88,8 +93,8 @@ export function Footer() {
                       <Button
                         asChild
                         variant="unstyled"
-                        chrome="footerLink"
-                        chromeSize="footerLink"
+                        size="content"
+                        className={getFooterLinkButtonClassName()}
                       >
                         <a href={link.href}>{link.label}</a>
                       </Button>
@@ -113,13 +118,18 @@ export function Footer() {
             </Typography>
 
             <Flex align="center" gap="xl">
-              <Button asChild variant="unstyled" chrome="footerSocial" chromeSize="footerSocial">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className={getFooterSocialButtonClassName()}
+              >
                 <a
                   href="https://www.facebook.com/nixeloapp/"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span className="sr-only">Follow us on Facebook</span>
+                  <Inline className="sr-only">Follow us on Facebook</Inline>
                   <svg
                     className="size-5"
                     fill="currentColor"
@@ -130,13 +140,18 @@ export function Footer() {
                   </svg>
                 </a>
               </Button>
-              <Button asChild variant="unstyled" chrome="footerSocial" chromeSize="footerSocial">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className={getFooterSocialButtonClassName()}
+              >
                 <a
                   href="https://www.tiktok.com/@nixeloapp"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span className="sr-only">Follow us on TikTok</span>
+                  <Inline className="sr-only">Follow us on TikTok</Inline>
                   <svg
                     className="size-5"
                     fill="currentColor"
@@ -147,9 +162,14 @@ export function Footer() {
                   </svg>
                 </a>
               </Button>
-              <Button asChild variant="unstyled" chrome="footerSocial" chromeSize="footerSocial">
+              <Button
+                asChild
+                variant="unstyled"
+                size="content"
+                className={getFooterSocialButtonClassName()}
+              >
                 <a href="https://www.patreon.com/nixelo" target="_blank" rel="noopener noreferrer">
-                  <span className="sr-only">Support us on Patreon</span>
+                  <Inline className="sr-only">Support us on Patreon</Inline>
                   <svg
                     className="size-5"
                     fill="currentColor"

@@ -85,7 +85,7 @@ Tired of paying $10+/user/month for Jira and Confluence? Nixelo gives you:
 
 - Responsive design (mobile, tablet, desktop)
 - Progressive Web App (installable)
-- Offline support — queued mutations replay on reconnect with exponential backoff
+- Offline support — cached shell plus queued settings, notification, status, and comment mutations replay on reconnect
 - Dark mode
 
 ## Quick Start
@@ -143,15 +143,16 @@ nixelo/
 
 ```bash
 pnpm dev              # Start frontend + backend
-pnpm run static       # Typecheck + lint + validate + screenshot manifest checks
+pnpm run static       # Typecheck + lint + validate + screenshot integrity checks
 pnpm run fixme        # Auto-fix lint/format + typecheck
 pnpm run biome        # Lint with auto-fix
 pnpm run typecheck    # TypeScript check
 pnpm run validate     # 61 custom validators
 pnpm test             # Unit tests (Vitest)
 pnpm e2e:ui           # E2E tests (Playwright, interactive)
-pnpm screenshots      # Capture visual baselines
-pnpm screenshots:diff # Compare against approved baselines
+pnpm screenshots           # Capture visual baselines locally
+pnpm screenshots:integrity # Verify approved screenshot artifacts
+pnpm screenshots:approve   # Update the approved screenshot manifest
 ```
 
 ## Deployment

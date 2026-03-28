@@ -26,6 +26,15 @@ full settings workspace:
 
 ---
 
+## Permissions & Access
+
+- Profile, preferences, notifications, offline, security, api keys, and integrations are standard
+  authenticated settings tabs.
+- Admin and project-settings branches depend on admin role and route context.
+- Developer tooling stays behind test-email gating and does not appear for normal accounts.
+
+---
+
 ## Screenshot Matrix
 
 ### Canonical route captures
@@ -90,6 +99,50 @@ full settings workspace:
 
 ---
 
+## Primary Flow
+
+1. The settings route resolves the requested tab from validated search params.
+2. `SETTINGS_TABS` decides visibility based on role and developer-email gates.
+3. The shared settings shell renders one responsive tab band and a single active tab panel.
+4. Users move between profile/preferences/notifications/offline/security/api/integration/admin
+   branches without losing route-owned tab state.
+
+---
+
+## Alternate / Failure Flows
+
+### Integrations setup and connected branches
+
+- **GitHub**: disconnected state offers popup-based connect; connected state shows the GitHub
+  username, linked repositories inset, and a destructive disconnect confirm.
+- **Slack**: disconnected state offers popup-based connect; connected state shows workspace name
+  plus incoming-webhook availability.
+- **Google Calendar**: disconnected state offers popup connect and blocked-popup error handling;
+  connected state exposes sync enable/disable and sync-direction radio controls.
+- **Pumble**: empty state is an owned `EmptyState` with `Add Your First Webhook`; connected state
+  shows webhook cards with test, enable/disable, edit, and delete flows.
+
+### Exceptional states already covered by tests
+
+- Notifications permission denied banner.
+- Google popup blocked.
+- GitHub and Slack postMessage origin validation.
+- Pumble empty-state, active webhook actions, and destructive confirm.
+- Project delete confirm dialog inside the project settings branch.
+
+---
+
+## Empty / Loading / Error States
+
+- Hidden tabs are removed from the tab band entirely rather than rendering disabled placeholders.
+- Notifications and offline tabs render explicit warning or empty queue states instead of blank
+  shells.
+- Integration cards use setup/disconnected summaries until a connection record exists.
+- Project and destructive admin states render inside the same settings shell instead of routing to
+  ad hoc full-page branches.
+
+---
+
 ## Current Problems
 
 | # | Problem | Area | Severity |
@@ -109,7 +162,22 @@ full settings workspace:
 | `src/components/Settings/SettingsSection.tsx` | Shared settings section anatomy |
 | `src/components/Settings/SettingsIntegrationSection.tsx` | Shared integrations anatomy |
 | `src/components/Settings/AdminTab.tsx` | Admin tab shell |
+| `src/components/Settings/GitHubIntegration.tsx` | GitHub setup / connected / disconnect flow |
+| `src/components/Settings/SlackIntegration.tsx` | Slack workspace setup and connected summary |
+| `src/components/Settings/GoogleCalendarIntegration.tsx` | Google Calendar setup, sync toggles, and disconnect flow |
+| `src/components/Settings/PumbleIntegration.tsx` | Pumble empty state, webhook list, add/edit/delete actions |
+| `src/components/Settings/*.test.tsx` | Integration exceptional-state and destructive-flow coverage |
 | `e2e/screenshot-pages.ts` | Settings screenshot routing and tab-state capture |
+
+---
+
+## Acceptance Criteria
+
+- The doc explains how route-owned tab state, role gating, and developer-only tabs work.
+- The reviewed screenshot matrix and the test-backed exceptional integration flows are both called
+  out explicitly.
+- A contributor can tell where setup, connected, disconnect, and permission-denied states live
+  without reading the integration components first.
 
 ---
 

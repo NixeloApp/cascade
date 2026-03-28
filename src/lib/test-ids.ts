@@ -238,6 +238,8 @@ export const TEST_IDS = {
     NOTIFICATION_BUTTON: "header-notification-button",
     /** @see src/components/NotificationCenter.tsx */
     NOTIFICATION_PANEL: "header-notification-panel",
+    /** @see src/components/NotificationCenter.tsx */
+    NOTIFICATION_BADGE: "header-notification-badge",
     /** @see src/components/CommandPalette.tsx */
     COMMAND_PALETTE_BUTTON: "header-command-palette-button",
     /** @see src/components/GlobalSearch.tsx */
@@ -443,6 +445,8 @@ export const TEST_IDS = {
     FEED: "activity-feed",
     /** @see src/components/ActivityFeed.tsx */
     ENTRY: "activity-entry",
+    /** @see src/components/ActivityFeed.tsx - timeline rail in non-compact mode */
+    RAIL: "activity-rail",
     /** @see src/components/ActivityFeed.tsx - shown when no activity */
     EMPTY_STATE: "activity-empty-state",
     /** @see src/components/ActivityFeed.tsx - relative timestamp on each entry */
@@ -473,7 +477,7 @@ export const TEST_IDS = {
     /** @see src/components/Sprints/SprintManager.tsx */
     EMPTY_STATE: "sprints-empty-state",
     /** @see src/components/Sprints/SprintManager.tsx */
-    START_TRIGGER: (sprintName: string) => `sprint-start-trigger-${toTestIdFragment(sprintName)}`,
+    START_TRIGGER: "sprint-start-trigger",
     /** @see src/components/Sprints/SprintManager.tsx */
     START_DIALOG: "sprint-start-dialog",
     /** @see src/components/Sprints/SprintManager.tsx */
@@ -487,8 +491,7 @@ export const TEST_IDS = {
     /** @see src/components/Sprints/SprintManager.tsx */
     START_CONFIRM_BUTTON: "sprint-start-confirm-button",
     /** @see src/components/Sprints/SprintManager.tsx */
-    COMPLETE_TRIGGER: (sprintName: string) =>
-      `sprint-complete-trigger-${toTestIdFragment(sprintName)}`,
+    COMPLETE_TRIGGER: "sprint-complete-trigger",
     /** @see src/components/Sprints/SprintManager.tsx */
     COMPLETE_DIALOG: "sprint-complete-dialog",
     /** @see src/components/Sprints/SprintManager.tsx */
@@ -560,6 +563,7 @@ export const TEST_IDS = {
     CHART_VELOCITY: "analytics-chart-velocity",
     CHART_ASSIGNEE: "analytics-chart-assignee",
     RECENT_ACTIVITY: "analytics-recent-activity",
+    RECENT_ACTIVITY_TIMELINE_RAIL: "analytics-recent-activity-timeline-rail",
     /** Metric card labels */
     METRIC_TOTAL_ISSUES: "analytics-metric-total-issues",
     METRIC_UNASSIGNED: "analytics-metric-unassigned",
@@ -689,10 +693,10 @@ export const TEST_IDS = {
   },
 
   // ============================================================
-  // Invites (User Management)
+  // User Invites (Admin Settings)
   // ============================================================
 
-  INVITE: {
+  INVITES: {
     /** @see src/components/Admin/UserManagement.tsx - Email input in invite form */
     EMAIL_INPUT: "invite-email-input",
     /** @see src/components/Admin/UserManagement.tsx - Role select in invite form */
@@ -703,10 +707,17 @@ export const TEST_IDS = {
     TABLE: "invite-table",
     /** @see src/components/Admin/UserManagement.tsx - Invite row in table */
     ROW: "invite-row",
-    /** @see src/routes/invite.$token.tsx - Public invite state screen wrapper */
-    STATE_SCREEN: "invite-state-screen",
-    /** @see src/routes/invite.$token.tsx - Loading state */
-    LOADING: "invite-loading",
+  },
+
+  // ============================================================
+  // Public Join Flow
+  // ============================================================
+
+  JOIN: {
+    /** @see src/routes/join.$token.tsx - Public join state screen wrapper */
+    STATE_SCREEN: "join-state-screen",
+    /** @see src/routes/join.$token.tsx - Loading state */
+    LOADING: "join-loading",
   },
 
   // ============================================================
@@ -744,6 +755,10 @@ export const TEST_IDS = {
     QUICK_STATS: "dashboard-quick-stats",
     /** @see src/components/Dashboard/RecentActivity.tsx */
     RECENT_ACTIVITY: "dashboard-recent-activity",
+    /** @see src/components/Dashboard/RecentActivity.tsx */
+    RECENT_ACTIVITY_SCROLL: "dashboard-recent-activity-scroll",
+    /** @see src/components/Dashboard/RecentActivity.tsx */
+    RECENT_ACTIVITY_TIMELINE_RAIL: "dashboard-recent-activity-timeline-rail",
     /** @see src/components/Dashboard/WorkspacesList.tsx */
     WORKSPACES_LIST: "dashboard-workspaces-list",
     /** @see src/components/Dashboard/DashboardCustomizeModal.tsx */
@@ -978,6 +993,10 @@ export const TEST_IDS = {
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ACTION_NEW_CONTACT: "outreach-action-new-contact",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_CONNECT_GMAIL: "outreach-action-connect-gmail",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ACTION_CONNECT_MICROSOFT: "outreach-action-connect-microsoft",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ACTION_NEW_SEQUENCE: "outreach-action-new-sequence",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ACTION_ENROLL_CONTACTS: "outreach-action-enroll-contacts",
@@ -1003,6 +1022,10 @@ export const TEST_IDS = {
     MAILBOXES_SECTION: "outreach-mailboxes-section",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     ANALYTICS_SECTION: "outreach-analytics-section",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ANALYTICS_SEQUENCE_LEADERBOARD: "outreach-analytics-sequence-leaderboard",
+    /** @see src/components/Outreach/OutreachWorkspace.tsx */
+    ANALYTICS_CONTACT_ENGAGEMENT: "outreach-analytics-contact-engagement",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */
     CONTACT_DIALOG: "outreach-contact-dialog",
     /** @see src/components/Outreach/OutreachWorkspace.tsx */

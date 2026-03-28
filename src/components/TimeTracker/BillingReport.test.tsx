@@ -1,17 +1,11 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showSuccess } from "@/lib/toast";
 import { render, screen } from "@/test/custom-render";
 import { BillingReport } from "./BillingReport";
-
-const SelectContext = createContext<{
-  onValueChange?: (value: string) => void;
-  value?: string;
-}>({});
 
 vi.mock("@/lib/toast", () => ({
   showInfo: vi.fn(),
@@ -93,37 +87,7 @@ vi.mock("../ui/Progress", () => ({
   Progress: ({ value }: { value: number }) => <div data-testid="billing-progress">{value}</div>,
 }));
 
-vi.mock("../ui/Select", () => ({
-  Select: ({
-    children,
-    value,
-    onValueChange,
-  }: {
-    children: ReactNode;
-    value?: string;
-    onValueChange?: (value: string) => void;
-  }) => (
-    <SelectContext.Provider value={{ value, onValueChange }}>
-      <div>{children}</div>
-    </SelectContext.Provider>
-  ),
-  SelectTrigger: ({ children }: { children: ReactNode }) => (
-    <button type="button">{children}</button>
-  ),
-  SelectValue: ({ placeholder }: { placeholder?: string }) => {
-    const context = useContext(SelectContext);
-    return <span>{context.value ?? placeholder}</span>;
-  },
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
-    const context = useContext(SelectContext);
-    return (
-      <button type="button" onClick={() => context.onValueChange?.(value)}>
-        {children}
-      </button>
-    );
-  },
-}));
+vi.mock("../ui/Select", async () => await import("@/test/__tests__/selectMock"));
 
 vi.mock("../ui/Typography", () => ({
   Typography: ({ children }: { children: ReactNode }) => <div>{children}</div>,

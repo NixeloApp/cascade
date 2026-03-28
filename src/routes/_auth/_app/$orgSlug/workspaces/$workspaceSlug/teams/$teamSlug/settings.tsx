@@ -11,13 +11,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Flex } from "@/components/ui/Flex";
 import { Checkbox, Input, Textarea } from "@/components/ui/form";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -275,21 +269,12 @@ function MembersSection({ teamId, members, canEdit }: MembersSectionProps) {
                   {canEdit ? (
                     <>
                       <Select
-                        value={member.role}
-                        onValueChange={(value) => handleRoleChange(member.userId, value)}
                         disabled={changingRoleFor === member.userId}
-                      >
-                        <SelectTrigger width="sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TEAM_ROLE_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onChange={(value) => handleRoleChange(member.userId, value)}
+                        options={TEAM_ROLE_OPTIONS}
+                        value={member.role}
+                        width="sm"
+                      />
                       <Button
                         variant="ghostDanger"
                         size="sm"

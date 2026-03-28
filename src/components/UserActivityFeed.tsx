@@ -28,6 +28,7 @@ import { Card, getCardRecipeClassName } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
+import { Inline } from "./ui/Inline";
 import { SkeletonList } from "./ui/Skeleton";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
@@ -247,9 +248,9 @@ export function UserActivityFeed({
                     <FlexItem flex="1" className="min-w-0">
                       <Stack gap="xs">
                         <Typography variant="small" className="m-0">
-                          <span className={getActionColorClass(activity.action)}>
+                          <Inline className={getActionColorClass(activity.action)}>
                             {formatActivityMessage(activity)}
-                          </span>{" "}
+                          </Inline>{" "}
                           <Typography as="code" variant="meta" className="text-brand">
                             {activity.issueKey}
                           </Typography>

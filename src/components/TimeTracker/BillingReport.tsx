@@ -28,7 +28,7 @@ import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -309,22 +309,19 @@ export function BillingReport({ projectId }: BillingReportProps) {
         </div>
         <Flex gap="sm">
           <Select
-            value={dateRange}
-            onValueChange={(value) => {
+            onChange={(value) => {
               if (value === "week" || value === "month" || value === "all") {
                 setDateRange(value);
               }
             }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select date range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="week">Last 7 days</SelectItem>
-              <SelectItem value="month">Last 30 days</SelectItem>
-              <SelectItem value="all">All time</SelectItem>
-            </SelectContent>
-          </Select>
+            options={[
+              { value: "week", label: "Last 7 days" },
+              { value: "month", label: "Last 30 days" },
+              { value: "all", label: "All time" },
+            ]}
+            placeholder="Select date range"
+            value={dateRange}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button leftIcon={<Icon icon={Download} size="sm" />}>Export</Button>

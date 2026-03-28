@@ -27,7 +27,7 @@ export function PortalProjectView({ token, project }: PortalProjectViewProps) {
           <Typography variant="small" color="secondary">
             Project key: {project.key}
           </Typography>
-          <Button asChild variant="link" size="none">
+          <Button asChild variant="link" size="content">
             <Link
               to="/portal/$token/projects/$projectId"
               params={{ token, projectId: project._id }}

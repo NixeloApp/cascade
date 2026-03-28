@@ -28,7 +28,7 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { MetadataItem } from "../ui/Metadata";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Typography } from "../ui/Typography";
 import { getEventBadgeClass } from "./calendar-colors";
 
@@ -212,7 +212,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                 <Icon icon={LinkIcon} size="md" tone="tertiary" className="shrink-0" />
                 <Stack gap="xs" align="start">
                   <Typography variant="caption">Meeting Link</Typography>
-                  <Button asChild variant="link" size="none">
+                  <Button asChild variant="link" size="content">
                     <a href={event.meetingUrl} target="_blank" rel="noopener noreferrer">
                       Join Meeting
                     </a>
@@ -282,26 +282,23 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                         </Flex>
 
                         <Select
-                          value={attendee.status || "none"}
-                          onValueChange={(value) => {
+                          disabled={isSavingAttendance}
+                          onChange={(value) => {
                             if (value === "none") return;
                             handleMarkAttendance(
                               attendee.userId as Id<"users">,
                               value as "present" | "tardy" | "absent",
                             );
                           }}
-                          disabled={isSavingAttendance}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Not marked" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Not marked</SelectItem>
-                            <SelectItem value="present">Present</SelectItem>
-                            <SelectItem value="tardy">Tardy</SelectItem>
-                            <SelectItem value="absent">Absent</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          options={[
+                            { value: "none", label: "Not marked" },
+                            { value: "present", label: "Present" },
+                            { value: "tardy", label: "Tardy" },
+                            { value: "absent", label: "Absent" },
+                          ]}
+                          placeholder="Not marked"
+                          value={attendee.status || "none"}
+                        />
                       </Flex>
                     </div>
                   ))}

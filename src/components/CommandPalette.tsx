@@ -19,15 +19,7 @@ import type { LucideIcon } from "@/lib/icons";
 import { FileText, FolderKanban, Home, LayoutGrid, Plus } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
-import {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "./ui/Command";
+import { Command, CommandDialog, type CommandSection } from "./ui/Command";
 import { ShortcutHint } from "./ui/KeyboardShortcut";
 import { Typography } from "./ui/Typography";
 export interface CommandAction {
@@ -74,6 +66,26 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
     onClose();
   };
 
+  const sections: CommandSection[] = Object.entries(groupedCommands).map(([group, cmds]) => ({
+    id: group,
+    heading: group,
+    items: cmds.map((cmd) => ({
+      value: cmd.id,
+      onSelect: () => handleSelect(cmd),
+      render: (
+        <>
+          {cmd.icon ? <Icon icon={cmd.icon} size="md" /> : null}
+          <FlexItem flex="1">
+            <Typography variant="label" as="p">
+              {cmd.label}
+            </Typography>
+            {cmd.description ? <Typography variant="caption">{cmd.description}</Typography> : null}
+          </FlexItem>
+        </>
+      ),
+    })),
+  }));
+
   return (
     <CommandDialog
       open={isOpen}
@@ -84,6 +96,8 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
       <Command
         recipe="palette"
         data-testid={TEST_IDS.EDITOR.COMMAND_PALETTE}
+        emptyMessage="No commands found"
+        emptyTone="muted"
         filter={(value, search) => {
           const cmd = commands.find((c) => c.id === value);
           if (!cmd) return 0;
@@ -95,48 +109,28 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
 
           return labelMatch || descMatch || keywordMatch ? 1 : 0;
         }}
-      >
-        <CommandInput
-          placeholder="Type a command or search..."
-          value={search}
-          onValueChange={setSearch}
-          aria-label="Command menu"
-        />
-        <CommandList viewport="palette">
-          <CommandEmpty tone="muted">No commands found</CommandEmpty>
-          {Object.entries(groupedCommands).map(([group, cmds]) => (
-            <CommandGroup key={group} heading={group} recipe="palette">
-              {cmds.map((cmd) => (
-                <CommandItem
-                  key={cmd.id}
-                  value={cmd.id}
-                  onSelect={() => handleSelect(cmd)}
-                  recipe="palette"
-                >
-                  {cmd.icon && <Icon icon={cmd.icon} size="md" />}
-                  <FlexItem flex="1">
-                    <Typography variant="label" as="p">
-                      {cmd.label}
-                    </Typography>
-                    {cmd.description && (
-                      <Typography variant="caption">{cmd.description}</Typography>
-                    )}
-                  </FlexItem>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          ))}
-        </CommandList>
-        <Card recipe="listFooterBar" padding="sm" radius="none">
-          <Typography as="div" variant="meta" color="tertiary">
-            <Flex wrap gap="md">
-              <ShortcutHint keys="up+down">Navigate</ShortcutHint>
-              <ShortcutHint keys="Enter">Select</ShortcutHint>
-              <ShortcutHint keys="Esc">Close</ShortcutHint>
-            </Flex>
-          </Typography>
-        </Card>
-      </Command>
+        footer={
+          <Card recipe="listFooterBar" padding="sm" radius="none">
+            <Typography as="div" variant="meta" color="tertiary">
+              <Flex wrap gap="md">
+                <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+                <ShortcutHint keys="Enter">Select</ShortcutHint>
+                <ShortcutHint keys="Esc">Close</ShortcutHint>
+              </Flex>
+            </Typography>
+          </Card>
+        }
+        groupRecipe="palette"
+        itemRecipe="palette"
+        search={{
+          placeholder: "Type a command or search...",
+          value: search,
+          onValueChange: setSearch,
+          ariaLabel: "Command menu",
+        }}
+        sections={sections}
+        viewport="palette"
+      />
     </CommandDialog>
   );
 }

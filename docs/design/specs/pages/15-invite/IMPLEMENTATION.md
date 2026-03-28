@@ -9,7 +9,7 @@
 
 | File | Action | Changes |
 |------|--------|---------|
-| `src/routes/invite.$token.tsx` | REWRITE | Remove card, simplify layout, use AuthPageLayout |
+| `src/routes/join.$token.tsx` | REWRITE | Remove card, simplify layout, use AuthPageLayout |
 
 ---
 
@@ -24,13 +24,13 @@ The current implementation has good logic (state handling, auth branching) but b
 
 ---
 
-## invite.$token.tsx - Target Structure
+## join.$token.tsx - Target Structure
 
 ```tsx
 import { AuthPageLayout, AuthRedirect, SignInForm } from "@/components/auth";
 // ... other imports
 
-function InviteRoute() {
+function JoinRoute() {
   const { token } = Route.useParams();
   // ... existing state and mutations
 

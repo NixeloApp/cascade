@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
+import { LargeText, Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import {
   useAuthenticatedMutation,
@@ -268,9 +268,9 @@ function AppLayout() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <Stack gap="sm" className="text-center">
-          <Typography variant="authStatusTitle" color="error">
+          <LargeText color="error" className="text-xl font-medium">
             Account Error
-          </Typography>
+          </LargeText>
           <Typography variant="p" color="secondary">
             Your user profile could not be found. Please sign out and try again.
           </Typography>
@@ -335,9 +335,9 @@ function InitializeOrganization() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <Stack gap="sm" className="text-center">
-          <Typography variant="authStatusTitle" color="error">
+          <LargeText color="error" className="text-xl font-medium">
             Error
-          </Typography>
+          </LargeText>
           <Typography variant="p" color="secondary">
             {error}
           </Typography>

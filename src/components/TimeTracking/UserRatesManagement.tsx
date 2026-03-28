@@ -24,7 +24,7 @@ import { Input, Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
 import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Select } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -118,11 +118,9 @@ export function UserRatesManagement() {
                       </Badge>
                     </Flex>
                     <Typography variant="caption" color="secondary">
-                      {rate.projectId ? (
-                        <span>Project-specific rate</span>
-                      ) : (
-                        <span>Default rate (applies to all projects)</span>
-                      )}
+                      {rate.projectId
+                        ? "Project-specific rate"
+                        : "Default rate (applies to all projects)"}
                     </Typography>
                     {rate.notes && (
                       <Typography variant="caption" color="tertiary">
@@ -178,23 +176,19 @@ export function UserRatesManagement() {
           <Stack gap="xs">
             <Label htmlFor="rate-apply-to">Apply To</Label>
             <Select
+              className="w-full"
+              id="rate-apply-to"
+              onChange={(value) => setSelectedProject(value as "default" | Id<"projects">)}
+              options={[
+                { value: "default", label: "All Projects (Default)" },
+                ...((projects?.page?.map((project) => ({
+                  value: project._id,
+                  label: `${project.name} (Override)`,
+                })) ?? []) as Array<{ value: Id<"projects">; label: string }>),
+              ]}
+              placeholder="Select project..."
               value={selectedProject}
-              onValueChange={(value) =>
-                setSelectedProject(value === "default" ? "default" : (value as Id<"projects">))
-              }
-            >
-              <SelectTrigger id="rate-apply-to" className="w-full">
-                <SelectValue placeholder="Select project..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">All Projects (Default)</SelectItem>
-                {projects?.page?.map((project) => (
-                  <SelectItem key={project._id} value={project._id}>
-                    {project.name} (Override)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
             <Typography variant="caption" color="tertiary">
               Project-specific rates override the default rate
             </Typography>
@@ -258,17 +252,19 @@ export function UserRatesManagement() {
             </FlexItem>
             <Stack gap="xs">
               <Label htmlFor="rate-currency">Currency</Label>
-              <Select value={currency} onValueChange={(value) => setCurrency(value)}>
-                <SelectTrigger id="rate-currency" width="xs">
-                  <SelectValue placeholder="Currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                  <SelectItem value="CAD">CAD</SelectItem>
-                </SelectContent>
-              </Select>
+              <Select
+                id="rate-currency"
+                onChange={setCurrency}
+                options={[
+                  { value: "USD", label: "USD" },
+                  { value: "EUR", label: "EUR" },
+                  { value: "GBP", label: "GBP" },
+                  { value: "CAD", label: "CAD" },
+                ]}
+                placeholder="Currency"
+                value={currency}
+                width="xs"
+              />
             </Stack>
           </Flex>
 

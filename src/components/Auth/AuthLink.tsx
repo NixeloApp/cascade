@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import { getAuthLinkButtonClassName } from "../ui/buttonSurfaceClassNames";
 
 interface AuthLinkProps {
   to: string;
@@ -15,7 +16,12 @@ interface AuthLinkProps {
  */
 export function AuthLink({ to, children, className = "" }: AuthLinkProps) {
   return (
-    <Button asChild variant="authLink" size="none" className={cn("cursor-pointer", className)}>
+    <Button
+      asChild
+      variant="unstyled"
+      size="content"
+      className={cn(getAuthLinkButtonClassName(), "cursor-pointer", className)}
+    >
       <Link to={to}>{children}</Link>
     </Button>
   );
@@ -42,11 +48,11 @@ export function AuthLinkButton({
 }: AuthLinkButtonProps) {
   return (
     <Button
-      variant={variant === "muted" ? "authLinkMuted" : "authLink"}
-      size="none"
+      variant="unstyled"
+      size="content"
       onClick={onClick}
       disabled={disabled}
-      className={cn("cursor-pointer", className)}
+      className={cn(getAuthLinkButtonClassName(variant === "muted"), "cursor-pointer", className)}
     >
       {children}
     </Button>

@@ -57,6 +57,7 @@ Note:
 | `pnpm e2e:debug` | `playwright test --debug` |
 | `pnpm e2e:cross-browser:smoke` | `E2E_CROSS_BROWSER=1 playwright test e2e/landing.spec.ts --workers=1 --reporter=line` |
 | `pnpm screenshots` | `tsx --env-file=.env.local e2e/screenshot-pages.ts` |
+| `pnpm screenshots:integrity` | `node scripts/screenshot-diff.js` |
 | `pnpm screenshots:diff` | `node scripts/screenshot-diff.js` |
 | `pnpm screenshots:approve` | `node scripts/screenshot-diff.js --approve` |
 
@@ -68,17 +69,19 @@ Recommended loop:
 
 ```bash
 pnpm screenshots
+pnpm screenshots:integrity
 pnpm run validate
-pnpm screenshots:diff
 ```
 
 Rules:
 
 - `pnpm run validate` includes informational audits for uncovered routes, missing page-spec docs, missing canonical page screenshot variants, and missing canonical screenshots for spec'd modals.
 - `pnpm run validate` also includes advisory consistency audits for `Typography` drift, owned-control chrome drift, and repeated inline entity-summary shapes.
+- `pnpm screenshots` is a local generation workflow. It captures new artifacts and should not be treated as a default CI job.
+- `pnpm screenshots:integrity` is the static/CI gate. It only compares committed screenshots against the approved manifest.
 - `pnpm screenshots` writes captures into `docs/design/specs/pages/*/screenshots` for spec-owned pages and `e2e/screenshots/` for fallback pages.
 - Spec'd modal captures belong in `docs/design/specs/modals/screenshots/` using `<modal-slug>-desktop-dark.png`, `<modal-slug>-desktop-light.png`, `<modal-slug>-tablet-light.png`, and `<modal-slug>-mobile-light.png`.
-- `pnpm screenshots:diff` must be clean before treating a visual baseline as unchanged.
+- `pnpm screenshots:integrity` must be clean before treating a visual baseline as unchanged.
 - If screenshot drift is intentional, run `pnpm screenshots:approve` in the same change set that updates the UI.
 
 ## PR Review Checklist (E2E Reliability)

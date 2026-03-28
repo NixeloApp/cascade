@@ -1,9 +1,16 @@
 import { Clock } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
-import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
+import {
+  getAnalyticsRecentActivityAvatarClassName,
+  getAnalyticsRecentActivityContentClassName,
+  getAnalyticsRecentActivityItemClassName,
+  getAnalyticsRecentActivityListClassName,
+  getAnalyticsRecentActivityMetadataClassName,
+  getAnalyticsRecentActivityRailClassName,
+} from "../ui/analyticsRecentActivitySurfaceClassNames";
 import { Badge } from "../ui/Badge";
-import { getCardRecipeClassName } from "../ui/Card";
+import { getIssueKeyBadgeClassName } from "../ui/badgeSurfaceClassNames";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Metadata, MetadataTimestamp } from "../ui/Metadata";
@@ -41,21 +48,24 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
             surface="bare"
           />
         ) : (
-          <Stack gap="none" className="relative">
+          <Stack gap="none" className={getAnalyticsRecentActivityListClassName()}>
             {activities.length > 1 ? (
-              <div className="absolute left-4 top-4 bottom-4 w-px bg-ui-border" />
+              <div
+                className={getAnalyticsRecentActivityRailClassName()}
+                data-testid={TEST_IDS.ANALYTICS.RECENT_ACTIVITY_TIMELINE_RAIL}
+              />
             ) : null}
 
             {activities.map((activity) => (
-              <div key={activity._id} className={cn(getCardRecipeClassName("timelineItem"), "p-3")}>
+              <div key={activity._id} className={getAnalyticsRecentActivityItemClassName()}>
                 <Flex gap="md" align="start">
                   <Avatar
                     name={activity.userName}
                     size="md"
                     variant="neutral"
-                    className="relative z-10"
+                    className={getAnalyticsRecentActivityAvatarClassName()}
                   />
-                  <FlexItem flex="1" className="min-w-0">
+                  <FlexItem flex="1" className={getAnalyticsRecentActivityContentClassName()}>
                     <Typography variant="small">
                       <Typography as="strong" variant="strong">
                         {activity.userName}
@@ -70,12 +80,16 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
                         </>
                       ) : null}
                       {activity.issueKey ? (
-                        <Badge variant="issueKey" size="sm">
+                        <Badge
+                          variant="secondary"
+                          size="sm"
+                          className={getIssueKeyBadgeClassName()}
+                        >
                           {activity.issueKey}
                         </Badge>
                       ) : null}
                     </Typography>
-                    <Metadata className="mt-1.5">
+                    <Metadata className={getAnalyticsRecentActivityMetadataClassName()}>
                       <MetadataTimestamp date={activity._creationTime} format="absolute" />
                     </Metadata>
                   </FlexItem>
